@@ -8,6 +8,7 @@ use Closure;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
 use InvalidArgumentException;
+use Laravel\Mcp\Server\Tool;
 use Sunrice\Fields\FieldRegistry;
 use Sunrice\Frontend\GlobalsRepository;
 use Sunrice\Frontend\MenuBuilder;
@@ -47,6 +48,9 @@ class Sunrice
 
     /** @var array<string, array{name: string, label: string, group: string}> */
     protected array $permissions = [];
+
+    /** @var array<int, class-string> */
+    protected array $mcpTools = [];
 
     public function version(): string
     {
@@ -182,6 +186,34 @@ class Sunrice
     public function permissions(): array
     {
         return array_values($this->permissions);
+    }
+
+    /**
+     * Add a tool to the MCP server AI agents connect to, beside Sunrice's
+     * own. The class extends `Sunrice\Mcp\Tools\SunriceTool` (or laravel/mcp's
+     * `Tool`): it runs as the token's user, and checks what that user may do
+     * itself, with `$this->authorize()` or `$request->user()->can()`.
+     *
+     * @param  class-string  $class
+     */
+    public function registerMcpTool(string $class): void
+    {
+        if (class_exists(Tool::class) && ! is_subclass_of($class, Tool::class)) {
+            throw new InvalidArgumentException("MCP tool \"{$class}\" has to extend Laravel\\Mcp\\Server\\Tool: Sunrice\\Mcp\\Tools\\SunriceTool does.");
+        }
+        if (! in_array($class, $this->mcpTools, true)) {
+            $this->mcpTools[] = $class;
+        }
+    }
+
+    /**
+     * Tools registered with registerMcpTool().
+     *
+     * @return array<int, class-string>
+     */
+    public function mcpTools(): array
+    {
+        return $this->mcpTools;
     }
 
     /**
