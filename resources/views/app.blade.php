@@ -31,6 +31,10 @@
             : null;
         if ($dist !== null) {
             Vite::useBuildDirectory($dist);
+            // The site's own dev server (`npm run dev` writes public/hot) serves the site's
+            // files, not the admin's. Left to look there, @vite would ask that server for the
+            // admin's script, and the admin would be blank for as long as it runs.
+            Vite::useHotFile(public_path($dist.'/hot'));
         }
     @endphp
     @if ($dist !== null)

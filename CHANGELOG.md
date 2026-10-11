@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Fixed: the admin was blank while the site's own Vite dev server was
+  running (`npm run dev` for the site's CSS and scripts). It asked that
+  server for its script. It now always loads its own published bundle.
 - Activity log: a **Source** column and filter (Admin, AI agent, System).
   Changes made through an AI agent show the access token's name
   (`AI agent · Claude Desktop`), and reordering through the agent's
