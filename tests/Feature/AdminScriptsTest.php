@@ -32,6 +32,33 @@ it('loads site scripts and styles in the admin, after its own bundle', function 
     }
 });
 
+it('loads its own built bundle while the site\'s Vite dev server is running', function () {
+    // The admin's assets as `sunrice:install` publishes them, and the file `npm run dev` writes for the site.
+    $published = public_path('vendor/sunrice');
+    $existed = is_dir($published);
+    $manifest = $published.'/manifest.json';
+    $kept = is_file($manifest) ? file_get_contents($manifest) : null;
+    $hot = public_path('hot');
+    @mkdir($published, 0755, true);
+    file_put_contents($manifest, json_encode(['resources/js/app.tsx' => ['file' => 'assets/app-test.js', 'src' => 'resources/js/app.tsx', 'isEntry' => true, 'css' => ['assets/app-test.css']]]));
+    file_put_contents($hot, 'http://localhost:5173');
+
+    try {
+        $html = $this->get('/cms')->assertOk()->getContent();
+    } finally {
+        @unlink($hot);
+        $kept === null ? @unlink($manifest) : file_put_contents($manifest, $kept);
+        if (! $existed) {
+            @rmdir($published);
+        }
+    }
+
+    expect($html)
+        ->toContain(asset('vendor/sunrice/assets/app-test.js'))
+        ->toContain(asset('vendor/sunrice/assets/app-test.css'))
+        ->not->toContain('localhost:5173');
+});
+
 it('loads nothing extra by default', function () {
     expect(app(\Sunrice\Sunrice::class)->adminScripts())->toBe([])
         ->and(app(\Sunrice\Sunrice::class)->adminStyles())->toBe([]);
