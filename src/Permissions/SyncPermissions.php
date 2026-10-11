@@ -37,7 +37,16 @@ class SyncPermissions
             ->pluck('name')
             ->all();
 
-        $toCreate = array_diff($wanted, $existing);
+        // A package's permission ("commerce.orders.refund") is none of the
+        // sunrice.% above: without this it would be created again by every
+        // sync after the first, which fails, since it is there.
+        $ofPackages = array_values(array_filter($wanted, fn (string $name) => ! str_starts_with($name, 'sunrice.')));
+        $present = $ofPackages === [] ? $existing : [
+            ...$existing,
+            ...Permission::query()->where('guard_name', $guard)->whereIn('name', $ofPackages)->pluck('name')->all(),
+        ];
+
+        $toCreate = array_diff($wanted, $present);
         // Never delete global permissions — only entity-scoped ones that are gone.
         $globalNames = array_column($this->registry->global(), 'name');
         $toDelete = array_diff(array_diff($existing, $globalNames), $wanted);

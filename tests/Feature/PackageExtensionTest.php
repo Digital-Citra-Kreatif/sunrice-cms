@@ -196,6 +196,10 @@ it('registers package permissions for roles', function () {
     app(SyncPermissions::class)->handle();
     expect(Permission::query()->where('name', 'commerce.orders.refund')->exists())->toBeTrue();
 
+    // A second sync finds it there: one runs whenever a collection, a taxonomy or a form is saved.
+    expect(app(SyncPermissions::class)->handle()['created'])->toBe(0)
+        ->and(Permission::query()->where('name', 'commerce.orders.refund')->count())->toBe(1);
+
     // A sync without the registration (package removed) leaves it alone: only sunrice.* names are cleaned up.
     $fresh = new Sunrice;
     app()->instance(Sunrice::class, $fresh);
