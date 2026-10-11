@@ -2,10 +2,17 @@
 
 declare(strict_types=1);
 
+use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
+use Laravel\Mcp\Request as McpRequest;
+use Laravel\Mcp\Response as McpResponse;
+use Laravel\Mcp\Server\Attributes\Description;
+use Laravel\Mcp\Server\Testing\TestListResponse;
 use Spatie\Permission\Models\Permission;
+use Sunrice\Mcp\SunriceServer;
+use Sunrice\Mcp\Tools\SunriceTool;
 use Sunrice\Permissions\PermissionRegistry;
 use Sunrice\Permissions\SyncPermissions;
 use Sunrice\Resources\Action;
@@ -17,6 +24,22 @@ use Workbench\App\Sunrice\ProductResource;
 
 use function Pest\Laravel\get;
 use function Pest\Laravel\post;
+
+#[Description('Refund an order.')]
+class RefundOrderTool extends SunriceTool
+{
+    protected string $name = 'refund_order';
+
+    public function handle(McpRequest $request): McpResponse
+    {
+        return $this->json(['refunded' => $request->get('order'), 'by' => $request->user()?->email]);
+    }
+
+    public function schema(JsonSchema $schema): array
+    {
+        return ['order' => $schema->integer()->required()];
+    }
+}
 
 class ActionProductResource extends ProductResource
 {
@@ -202,6 +225,26 @@ it('registers package permissions for roles', function () {
     app(SyncPermissions::class)->handle();
     expect(Permission::query()->where('name', 'commerce.orders.refund')->exists())->toBeTrue();
 });
+
+it('adds a package\'s tool to the MCP server, run as the token\'s user', function () {
+    app(Sunrice::class)->registerMcpTool(RefundOrderTool::class);
+    app(Sunrice::class)->registerMcpTool(RefundOrderTool::class);
+    $admin = actingAsSuperAdmin();
+
+    // Listed after Sunrice's own, once.
+    $names = array_column((new ReflectionProperty(TestListResponse::class, 'items'))->getValue(SunriceServer::actingAs($admin)->tools()), 'name');
+    expect(array_count_values($names)['refund_order'] ?? 0)->toBe(1)
+        ->and($names)->toContain('get_site_info')
+        ->and(array_search('refund_order', $names, true))->toBeGreaterThan(array_search('get_site_info', $names, true));
+
+    SunriceServer::actingAs($admin)->tool(RefundOrderTool::class, ['order' => 7])
+        ->assertOk()
+        ->assertSee(['refunded', $admin->email]);
+});
+
+it('takes only MCP tools for MCP tools', function () {
+    app(Sunrice::class)->registerMcpTool(User::class);
+})->throws(InvalidArgumentException::class, 'has to extend');
 
 it('keeps the sunrice. prefix for Sunrice\'s own permissions', function () {
     app(Sunrice::class)->registerPermission('sunrice.commerce.refund', 'Refund');

@@ -12,6 +12,7 @@ use Laravel\Mcp\Server\Attributes\Instructions;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Attributes\Version;
 use Sunrice\Activity\ActivityLogger;
+use Sunrice\Sunrice;
 
 #[Name('Sunrice CMS')]
 #[Version('1.0.0')]
@@ -90,11 +91,15 @@ class SunriceServer extends Server
     ];
 
     /**
-     * Over stdio (`php artisan mcp:start sunrice`, an agent on the server
-     * itself) there is no token: act as sunrice.mcp.local_user.
+     * Adds the tools packages registered. Over stdio (`php artisan
+     * mcp:start sunrice`, an agent on the server itself) there is no
+     * token: act as sunrice.mcp.local_user.
      */
     protected function boot(): void
     {
+        // Tools of packages (Sunrice::registerMcpTool()), after Sunrice's own.
+        $this->tools = array_values(array_unique([...$this->tools, ...app(Sunrice::class)->mcpTools()]));
+
         $guard = Auth::guard(config('sunrice.auth.guard', 'web'));
         $email = config('sunrice.mcp.local_user');
         if ($guard->user() !== null || ! app()->runningInConsole() || ! is_string($email) || $email === '') {

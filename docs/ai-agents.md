@@ -70,6 +70,8 @@ email of the user it acts as.
 | Commands | `run_command` (only the commands in `sunrice.mcp.commands`) |
 | Activity | `get_activity`: the [activity log](activity-log.md), filtered by days, source, action, type, user or text; `mine: true` for what this token changed (needs **View the activity log**) |
 
+Packages add tools of their own with `Sunrice::registerMcpTool()` (see [Packages](packages.md#tools-for-ai-agents)); they are listed after these.
+
 ## Translating content
 
 The agent can translate everything stored per language in the database.

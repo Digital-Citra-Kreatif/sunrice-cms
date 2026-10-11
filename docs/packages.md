@@ -64,6 +64,9 @@ class CommerceServiceProvider extends ServiceProvider
         Sunrice::registerPermission('commerce.orders.view', 'View orders', 'Commerce');
         Sunrice::registerPermission('commerce.orders.refund', 'Refund orders', 'Commerce');
 
+        // A tool for AI agents, beside Sunrice's own (see Tools for AI agents).
+        Sunrice::registerMcpTool(RefundOrder::class);
+
         // A list + editor for a table, with actions (see Model resources).
         Sunrice::registerResource(OrderResource::class);
 
@@ -99,6 +102,46 @@ Check them as usual: `$user->can('commerce.orders.refund')`,
 
 Resources get their own permissions automatically
 (`sunrice.resources.{key}.view|create|edit|delete|export`).
+
+## Tools for AI agents
+
+`Sunrice::registerMcpTool($class)` adds a tool to the [MCP server](ai-agents.md)
+agents connect to, listed after Sunrice's own. Extend
+`Sunrice\Mcp\Tools\SunriceTool`:
+
+```php
+use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Laravel\Mcp\Request;
+use Laravel\Mcp\Response;
+use Laravel\Mcp\Server\Attributes\Description;
+use Sunrice\Mcp\Tools\SunriceTool;
+
+#[Description('Refund an order. Ask the user before refunding.')]
+class RefundOrder extends SunriceTool
+{
+    protected string $name = 'refund_order';
+
+    public function handle(Request $request): Response
+    {
+        $args = $request->validate(['order' => ['required', 'integer']]);
+        $this->authorize('commerce.orders.refund');
+        // ...
+
+        return $this->json(['refunded' => $args['order']]);
+    }
+
+    public function schema(JsonSchema $schema): array
+    {
+        return ['order' => $schema->integer()->description('The order\'s id.')->required()];
+    }
+}
+```
+
+The tool runs as the user who owns the access token, and what it changes
+is in the activity log with source "ai" like any other tool's. It checks
+what that user may do itself: `$this->authorize()` throws when they may
+not. The description is what the agent reads to decide when to call it,
+so say what the tool does and when not to use it.
 
 ## Lists and editors: resources and actions
 
