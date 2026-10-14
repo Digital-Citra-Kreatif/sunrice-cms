@@ -103,7 +103,7 @@ class EditLocksController extends Controller
             $locale = Locales::isAvailable($locale) ? $locale : Locales::main();
             abort_unless(Gate::allows(Locales::isMain($locale) ? 'update' : 'translate', $model), 403);
         } elseif ($model instanceof GlobalSet) {
-            $locale = $model->translatable && Locales::isAvailable($locale) ? $locale : '';
+            $locale = Locales::isAvailable($locale) ? $locale : Locales::main();
             abort_unless(Gate::allows('update', $model), 403);
         } else {
             // A term's languages are edited together.

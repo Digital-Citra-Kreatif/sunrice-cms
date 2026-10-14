@@ -150,7 +150,7 @@ permission; other languages also accept **translate**.
 | date | `Carbon` |
 | asset | `Asset` (`->url()`, `->url('thumbnail'\|'medium'\|'large')`, `->alt`); multiple → collection |
 | entries | collection of `Entry`, resolved for the active language |
-| terms | collection of `Term` (`->name`, `->url`) |
+| terms | collection of `Term` (`->name`, `->url`), in the page language |
 | link | `['url' => ..., 'label' => ..., 'new_tab' => bool]` |
 | group | array of child values |
 | repeater | collection of row arrays (hidden rows removed; `->byKey('key')`) |
@@ -160,7 +160,9 @@ Entries also expose `$entry->title`, `->slug`, `->url`, `->published_at`,
 `->author`, `->terms` and `->isFallback` (true when a language shows the
 main-language content because its translation isn't Ready). Terms expose
 `->name`, `->slug`, `->url`, `->urlIn($collection)` (the term's page for
-one collection) and `->get('handle')` for taxonomy-blueprint fields. Globals: `sunrice_global('handle')->field` or
+one collection) and `->get('handle')` for taxonomy-blueprint fields, all
+in the page language (the Ready translation, otherwise the main one),
+including `$entry->terms`. Globals: `sunrice_global('handle')->field` or
 `->get('field', 'default')`.
 
 Render flexible content with one partial per block type:

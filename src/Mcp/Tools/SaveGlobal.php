@@ -15,7 +15,7 @@ use Sunrice\Models\Blueprint;
 use Sunrice\Models\GlobalSet;
 use Sunrice\Support\Locales;
 
-#[Description('Create a global set (give title and blueprint; group "global" or "template_part") or change one: title, blueprint and translatable can change later too. `values` are merged by field handle into the values of `locale` (translatable sets; default the main language).')]
+#[Description('Create a global set (give title and blueprint; group "global" or "template_part") or change one: title and blueprint can change later too. `values` are merged by field handle into the values of `locale` (default the main language). Another language only keeps its translatable fields; the others are shared with the main language.')]
 class SaveGlobal extends SunriceTool
 {
     protected string $name = 'save_global';
@@ -27,7 +27,6 @@ class SaveGlobal extends SunriceTool
             'title' => ['nullable', 'string', 'max:255'],
             'blueprint' => ['nullable', 'string'],
             'group' => ['nullable', Rule::in(['global', 'template_part'])],
-            'translatable' => ['nullable', 'boolean'],
             'locale' => ['nullable', 'string'],
             'values' => ['nullable', 'array'],
         ]);
@@ -45,13 +44,12 @@ class SaveGlobal extends SunriceTool
                 'title' => $args['title'] ?? ucfirst(str_replace('_', ' ', $args['handle'])),
                 'group' => $args['group'] ?? 'global',
                 'blueprint_id' => $blueprint->id,
-                'translatable' => (bool) ($args['translatable'] ?? false),
             ]);
             ContentChanged::dispatch('global_saved');
             $created = true;
         } else {
             $this->authorize('update', $set);
-            $meta = array_intersect_key($args, array_flip(['title', 'group', 'translatable']));
+            $meta = array_intersect_key($args, array_flip(['title', 'group']));
             if (! empty($args['blueprint'])) {
                 $blueprint = $this->findByHandle(Blueprint::class, $args['blueprint']);
                 if ($blueprint === null) {
@@ -67,10 +65,10 @@ class SaveGlobal extends SunriceTool
         }
 
         if (isset($args['values'])) {
-            $locale = $set->translatable ? ($args['locale'] ?? Locales::main()) : null;
+            $locale = $args['locale'] ?? Locales::main();
             app(SaveGlobalValues::class)->handle($set, [
                 'locale' => $locale,
-                'values' => array_replace($set->valuesFor($locale ?? Locales::main()), $args['values']),
+                'values' => array_replace($set->valuesFor($locale), $args['values']),
             ]);
         }
 
@@ -84,7 +82,6 @@ class SaveGlobal extends SunriceTool
             'title' => $schema->string(),
             'blueprint' => $schema->string()->description('Blueprint handle (required when creating).'),
             'group' => $schema->string()->enum(['global', 'template_part']),
-            'translatable' => $schema->boolean()->description('Values differ per language.'),
             'locale' => $schema->string(),
             'values' => $schema->object()->description('Field values by handle (merged).'),
         ];

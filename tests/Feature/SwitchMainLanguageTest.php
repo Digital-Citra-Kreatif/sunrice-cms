@@ -169,7 +169,7 @@ it('swaps titles and menu labels and fills missing global values', function () {
     $this->pages->update(['title' => 'Halaman', 'settings' => array_merge($this->pages->settings, ['titles' => ['en' => 'Pages']])]);
     $menu = Menu::create(['handle' => 'main', 'title' => 'Main']);
     $item = MenuItem::create(['menu_id' => $menu->id, 'type' => 'url', 'url' => '/', 'labels' => ['id' => 'Beranda']]);
-    $set = GlobalSet::factory()->create(['translatable' => true]);
+    $set = GlobalSet::factory()->create();
     $set->setValuesFor('id', ['phone' => '123']);
 
     artisan('sunrice:switch-main-language', ['locale' => 'en', '--force' => true])->assertSuccessful();

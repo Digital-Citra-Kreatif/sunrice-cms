@@ -81,8 +81,8 @@ It is told which tool does what:
 | --- | --- |
 | Entries | `translate_entry` (machine translation, when an API key is set; saved as drafts), or it writes the translation itself with `update_entry` and `locale` |
 | Listing pages | `save_listing` with `locale` (heading, intro, fields, SEO) |
-| Terms | `save_term` with `translations: {locale: {name, slug, data, seo}}` |
-| Globals | `save_global` with `locale` (only sets marked translatable) |
+| Terms | `save_term` with `translations: {locale: {name, slug, data, seo, is_ready}}` |
+| Globals | `save_global` with `locale` |
 | Menu labels | `save_menu` item `labels: {locale: text}` |
 | Collection and taxonomy names | `save_collection` / `save_taxonomy` `settings.titles: {locale: name}` |
 | Everything at once | `run_command sunrice:translate` (needs the command permission; see [Machine translation](translation.md)) |

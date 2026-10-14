@@ -10,6 +10,7 @@ use Sunrice\Models\KeptEdit;
 use Sunrice\Models\Taxonomy;
 use Sunrice\Models\Term;
 use Sunrice\Permissions\SyncPermissions;
+use Sunrice\Support\Locales;
 use Workbench\App\Models\User;
 
 use function Pest\Laravel\actingAs;
@@ -112,7 +113,7 @@ it('checks versions for terms and globals too', function () {
     put("/cms/terms/{$term->id}", $payload('Two', $loaded))->assertSessionHasErrors('version');
 
     $set = GlobalSet::create(['handle' => 'site', 'title' => 'Site', 'group' => 'global', 'blueprint_id' => Blueprint::factory()->create()->id]);
-    $set->values()->create(['locale' => null, 'data' => ['a' => 1]]);
+    $set->values()->create(['locale' => Locales::main(), 'data' => ['a' => 1]]);
     $old = Versions::global($set->values()->first());
     put("/cms/globals/{$set->id}", ['values' => ['a' => 2], 'version' => $old])->assertSessionHasNoErrors();
     put("/cms/globals/{$set->id}", ['values' => ['a' => 3], 'version' => $old])->assertSessionHasErrors('version');

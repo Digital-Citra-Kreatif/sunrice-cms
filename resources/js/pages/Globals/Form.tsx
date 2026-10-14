@@ -8,19 +8,22 @@ import { useUnsavedChanges } from '@/lib/use-unsaved-changes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CollapsibleCard } from '@/components/app/collapsible-card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import FieldRenderer from '@/fields/FieldRenderer';
+import { TranslationModeProvider } from '@/fields/translation-mode';
 import { adminUrl } from '@/lib/route';
 import { InputError } from '@/components/app/input-error';
 import type { AdminTab, Json, SharedProps } from '@/types';
 
 interface Props {
-    globalSet: { id: number; handle: string; title: string; group: string; blueprint_id: number | null; translatable: boolean } | null;
+    globalSet: { id: number; handle: string; title: string; group: string; blueprint_id: number | null } | null;
     blueprint: AdminTab[] | null;
+    /** Per language: the main language's values, with that language's translated text laid over. */
     values: Record<string, Record<string, Json>> | null;
+    /** Languages with translated text of their own. */
+    translated?: string[] | null;
     /** Fingerprints of the loaded values per language: a save is refused if they changed meanwhile. */
     versions?: Record<string, string> | null;
     blueprints: { id: number; title: string }[];
@@ -36,7 +39,7 @@ const valueErrors = (errors: Record<string, string>) =>
 /** Settings errors come back as meta.title etc. when saved with the content. */
 const metaError = (errors: Record<string, string>, key: string) => errors[`meta.${key}`] ?? errors[key];
 
-export default function GlobalForm({ globalSet, blueprint, values, versions, blueprints, locales, mainLocale = locales[0], related }: Props) {
+export default function GlobalForm({ globalSet, blueprint, values, translated, versions, blueprints, locales, mainLocale = locales[0], related }: Props) {
     const { adminPath } = usePage<SharedProps>().props;
     const isNew = globalSet === null;
     const listUrl = adminUrl('globals', adminPath);
@@ -48,21 +51,16 @@ export default function GlobalForm({ globalSet, blueprint, values, versions, blu
         title: globalSet?.title ?? '',
         group: globalSet?.group ?? 'global',
         blueprint_id: globalSet?.blueprint_id ?? ('' as number | ''),
-        translatable: globalSet?.translatable ?? false,
     };
     const [meta, setMeta] = React.useState(savedMeta);
     // After a save the page reloads with the stored settings: start from them again.
     const savedMetaKey = JSON.stringify(savedMeta);
     React.useEffect(() => setMeta(JSON.parse(savedMetaKey)), [savedMetaKey]);
-    const metaDirty = !isNew && (meta.title !== savedMeta.title || meta.blueprint_id !== savedMeta.blueprint_id || meta.translatable !== savedMeta.translatable);
+    const metaDirty = !isNew && (meta.title !== savedMeta.title || meta.blueprint_id !== savedMeta.blueprint_id);
 
-    const [locale, setLocale] = React.useState(globalSet?.translatable ? mainLocale : '_shared');
+    const [locale, setLocale] = React.useState(mainLocale);
     const [data, setData] = React.useState<Record<string, Json>>({});
-
-    // Translatable switched on/off (or the global just created): pick the right row.
-    React.useEffect(() => {
-        setLocale(globalSet?.translatable ? mainLocale : '_shared');
-    }, [globalSet?.id, globalSet?.translatable, mainLocale]);
+    const secondary = locale !== mainLocale;
 
     // Load the language's saved values when it changes or after a save. Keyed
     // on the saved content, so a failed save (same values) keeps the edits.
@@ -76,7 +74,7 @@ export default function GlobalForm({ globalSet, blueprint, values, versions, blu
     const lock = useEditLock({
         type: 'global',
         id: globalSet?.id,
-        locale: locale === '_shared' ? '' : locale,
+        locale,
         enabled: !isNew,
         getUnsaved: () => (JSON.stringify(data) !== saved ? { data } : null),
         leaveTo: listUrl,
@@ -115,11 +113,11 @@ export default function GlobalForm({ globalSet, blueprint, values, versions, blu
         }
         if (!dirty && !overwrite) return;
         router.put(adminUrl(`globals/${globalSet.id}`, adminPath), {
-            locale: locale === '_shared' ? null : locale,
+            locale,
             values: data,
             version: versions?.[locale] ?? '',
             overwrite,
-            ...(metaDirty ? { meta: { title: meta.title, blueprint_id: meta.blueprint_id, translatable: meta.translatable } } : {}),
+            ...(metaDirty ? { meta: { title: meta.title, blueprint_id: meta.blueprint_id } } : {}),
         }, options);
     };
     useUnsavedChanges((dirty || newDirty) && !processing, () => save());
@@ -138,15 +136,6 @@ export default function GlobalForm({ globalSet, blueprint, values, versions, blu
             </Select>
             <InputError message={metaError(errors, 'blueprint_id')} />
         </div>
-    );
-    const translatableBox = (
-        <label className="flex items-start gap-2 text-sm">
-            <Checkbox className="mt-0.5" checked={meta.translatable} onCheckedChange={(c) => setMeta({ ...meta, translatable: !!c })} />
-            <span>
-                Translatable
-                <span className="block text-xs text-muted-foreground">Each language has its own values.</span>
-            </span>
-        </label>
     );
 
     return (
@@ -173,10 +162,15 @@ export default function GlobalForm({ globalSet, blueprint, values, versions, blu
                 </div>
             </div>
 
-            {!isNew && globalSet.translatable && (
+            {!isNew && locales.length > 1 && (
                 <Tabs value={locale} onValueChange={switchLocale} activationMode="manual">
                     <TabsList>
-                        {locales.map((l) => <TabsTrigger key={l} value={l} className="uppercase">{l}</TabsTrigger>)}
+                        {locales.map((l) => (
+                            <TabsTrigger key={l} value={l} className="gap-1.5 uppercase">
+                                {l}
+                                {translated?.includes(l) && <span className="size-1.5 rounded-full bg-emerald-500" aria-label="translated" />}
+                            </TabsTrigger>
+                        ))}
                     </TabsList>
                 </Tabs>
             )}
@@ -225,13 +219,19 @@ export default function GlobalForm({ globalSet, blueprint, values, versions, blu
                             </Select>
                         </div>
                         <div className="max-w-sm">{blueprintSelect}</div>
-                        {translatableBox}
                     </CollapsibleCard>
                 ) : (
-                    <CollapsibleCard title="Content" storageKey="global:content-open" hasErrors={Object.keys(valueErrors(errors)).some((k) => k.startsWith('data.'))}>
+                    <CollapsibleCard
+                        title="Content"
+                        description={secondary && <>Only translatable fields differ per language. Text you leave as it is follows {mainLocale.toUpperCase()}.</>}
+                        storageKey="global:content-open"
+                        hasErrors={Object.keys(valueErrors(errors)).some((k) => k.startsWith('data.'))}
+                    >
                         <fieldset disabled={lock.readOnly} className="min-w-0">
                             {fields.length > 0 ? (
-                                <FieldRenderer fields={fields} values={data} errors={valueErrors(errors)} onChange={setData} />
+                                <TranslationModeProvider secondary={secondary} mainLocale={mainLocale}>
+                                    <FieldRenderer fields={fields} values={data} errors={valueErrors(errors)} onChange={setData} />
+                                </TranslationModeProvider>
                             ) : (
                                 <p className="text-sm text-muted-foreground">This blueprint has no fields yet. Add some to the blueprint, then fill them in here.</p>
                             )}
@@ -255,7 +255,6 @@ export default function GlobalForm({ globalSet, blueprint, values, versions, blu
                                     <InputError message={metaError(errors, 'title')} />
                                 </div>
                                 {blueprintSelect}
-                                {translatableBox}
                                 <p className="text-xs text-muted-foreground">
                                     Handle <code>{globalSet.handle}</code>, used in templates: <code>sunrice_global(&apos;{globalSet.handle}&apos;)</code>.
                                 </p>

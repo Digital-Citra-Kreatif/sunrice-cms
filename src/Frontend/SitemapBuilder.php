@@ -81,7 +81,7 @@ class SitemapBuilder
             $taxonomy->terms()->with('translations')->lazyById(200)->each(function ($term) use ($sitemap, $urls, $routes, $taxonomy): void {
                 $term->setRelation('taxonomy', $taxonomy);
                 foreach (Locales::available() as $locale) {
-                    $resolved = $term->translation($locale);
+                    $resolved = $term->readyTranslation($locale);
                     if (! Locales::isMain($locale) && $resolved === null) {
                         continue;
                     }

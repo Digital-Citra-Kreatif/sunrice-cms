@@ -324,21 +324,30 @@ it('builds a menu with nested items', function () {
 });
 
 it('creates a global set and saves values per locale', function () {
-    $blueprint = Blueprint::factory()->create();
+    $blueprint = Blueprint::factory()->create(['fields' => [
+        ['handle' => 'text', 'type' => 'text'],
+        ['handle' => 'year', 'type' => 'number'],
+    ]]);
 
     post('/cms/globals', [
         'handle' => 'footer', 'title' => 'Footer', 'group' => 'global',
-        'blueprint_id' => $blueprint->id, 'translatable' => true,
+        'blueprint_id' => $blueprint->id,
     ])->assertRedirect();
 
     $set = GlobalSet::where('handle', 'footer')->first();
-    expect($set->translatable)->toBeTrue();
 
-    put("/cms/globals/{$set->id}", ['locale' => 'id', 'values' => ['text' => 'Hak cipta']])->assertRedirect();
-    put("/cms/globals/{$set->id}", ['locale' => 'en', 'values' => ['text' => 'Copyright']])->assertRedirect();
+    put("/cms/globals/{$set->id}", ['locale' => 'id', 'values' => ['text' => 'Hak cipta', 'year' => 7]])->assertRedirect();
+    // The editor posts every field; English keeps only its text.
+    put("/cms/globals/{$set->id}", ['locale' => 'en', 'values' => ['text' => 'Copyright', 'year' => 8]])->assertRedirect();
 
-    expect($set->valuesFor('en'))->toBe(['text' => 'Copyright'])
-        ->and($set->valuesFor('id'))->toBe(['text' => 'Hak cipta']);
+    expect($set->valueFor('en')->data)->toBe(['text' => 'Copyright'])
+        ->and($set->valuesFor('en'))->toEqual(['text' => 'Copyright', 'year' => 7])
+        ->and($set->valuesFor('id'))->toEqual(['text' => 'Hak cipta', 'year' => 7]);
+
+    get("/cms/globals/{$set->id}/edit")->assertInertia(fn (Assert $page) => $page
+        ->where('values.en.year', 7)
+        ->where('values.en.text', 'Copyright')
+        ->where('translated', ['en']));
 });
 
 // ---------------- users / roles ----------------
@@ -434,9 +443,9 @@ it('updates global settings through the meta route', function () {
     $blueprint = Blueprint::factory()->create();
     $set = GlobalSet::create(['handle' => 'site', 'title' => 'Site', 'group' => 'global', 'blueprint_id' => $blueprint->id]);
 
-    put("/cms/globals/{$set->id}/meta", ['title' => 'Site info', 'blueprint_id' => $blueprint->id, 'translatable' => true])
+    put("/cms/globals/{$set->id}/meta", ['title' => 'Site info', 'blueprint_id' => $blueprint->id])
         ->assertSessionHas('success');
-    expect($set->fresh()->title)->toBe('Site info')->and($set->fresh()->translatable)->toBeTrue();
+    expect($set->fresh()->title)->toBe('Site info');
 });
 
 it('saves a global set\'s values and settings with one save', function () {
@@ -446,7 +455,7 @@ it('saves a global set\'s values and settings with one save', function () {
 
     put("/cms/globals/{$set->id}", [
         'values' => ['text' => 'Hello'],
-        'meta' => ['title' => 'Site info', 'blueprint_id' => $other->id, 'translatable' => false],
+        'meta' => ['title' => 'Site info', 'blueprint_id' => $other->id],
     ])->assertSessionHasNoErrors()->assertSessionHas('success');
 
     $set->refresh();

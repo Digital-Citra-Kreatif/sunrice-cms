@@ -20,6 +20,7 @@ use Sunrice\Models\Scopes\HiddenWithParent;
  * @property string $slug
  * @property array<string,mixed> $data
  * @property array<string,mixed>|null $seo
+ * @property bool $is_ready
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  *
@@ -36,7 +37,7 @@ class TermTranslation extends Model
 
     protected $attributes = ['data' => '{}'];
 
-    protected $casts = ['data' => 'array', 'seo' => 'array'];
+    protected $casts = ['data' => 'array', 'seo' => 'array', 'is_ready' => 'boolean'];
 
     protected static function newFactory(): TermTranslationFactory
     {

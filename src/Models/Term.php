@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Sunrice\Database\Factories\TermFactory;
 use Sunrice\Fields\HydrationContext;
+use Sunrice\Fields\TranslationOverlay;
 use Sunrice\Frontend\UrlGenerator;
 use Sunrice\Models\Collection as ContentCollection;
 use Sunrice\Models\Scopes\HiddenWithParent;
@@ -138,18 +139,23 @@ class Term extends Model
     }
 
     /**
-     * Whole-term fallback mirroring Entry::resolveFor.
+     * The translation the site shows in $locale: the main language's, or
+     * another language's once it is Ready. Null when there is none.
+     */
+    public function readyTranslation(string $locale): ?TermTranslation
+    {
+        $translation = $this->translation($locale);
+
+        return Locales::isMain($locale) || $translation?->is_ready ? $translation : null;
+    }
+
+    /**
+     * Whole-term fallback mirroring Entry::resolveFor: the Ready
+     * translation for $locale, otherwise the main-language one.
      */
     public function resolveFor(string $locale): TermTranslation
     {
-        $resolved = $this->mainTranslation();
-
-        if (! Locales::isMain($locale)) {
-            $translation = $this->translation($locale);
-            if ($translation !== null) {
-                $resolved = $translation;
-            }
-        }
+        $resolved = $this->readyTranslation($locale) ?? $this->mainTranslation();
 
         $this->resolved = $resolved ?? new TermTranslation([
             'locale' => $locale,
@@ -163,22 +169,33 @@ class Term extends Model
         return $this->resolved;
     }
 
+    /**
+     * The translation templates read. A term nobody resolved (such as
+     * $entry->terms) resolves itself for the page's language.
+     */
+    public function renderedTranslation(): ?TermTranslation
+    {
+        if ($this->resolved === null && $this->exists) {
+            $this->resolveFor(Locales::current());
+        }
+
+        return $this->resolved;
+    }
+
     public function getNameAttribute(): ?string
     {
-        $t = $this->resolved ?? $this->mainTranslation();
-
-        return $t === null ? null : $t->name;
+        return $this->renderedTranslation()?->name;
     }
 
     public function getSlugAttribute(): ?string
     {
-        $t = $this->resolved ?? $this->mainTranslation();
-
-        return $t === null ? null : $t->slug;
+        return $this->renderedTranslation()?->slug;
     }
 
     public function getUrlAttribute(): ?string
     {
+        $this->renderedTranslation();
+
         return app(UrlGenerator::class)->term($this, $this->resolvedLocale);
     }
 
@@ -188,6 +205,8 @@ class Term extends Model
      */
     public function urlIn(ContentCollection $collection): string
     {
+        $this->renderedTranslation();
+
         return app(UrlGenerator::class)->term($this, $this->resolvedLocale, $collection);
     }
 
@@ -197,7 +216,8 @@ class Term extends Model
      */
     public function get(string $handle): mixed
     {
-        $data = ($this->resolved ?? $this->mainTranslation())->data ?? [];
+        $translation = $this->renderedTranslation();
+        $data = $translation === null ? [] : $this->dataFor($translation);
         $blueprint = $this->taxonomy?->blueprint;
 
         if ($blueprint === null) {
@@ -209,6 +229,27 @@ class Term extends Model
             $data[$handle] ?? null,
             new HydrationContext($this->resolvedLocale ?? Locales::main()),
         );
+    }
+
+    /**
+     * A translation's field data: the main language's values with this
+     * language's translatable ones laid over (see TranslationOverlay).
+     *
+     * @param  array<string, mixed>|null  $overlay
+     * @param  array<string, mixed>|null  $main
+     * @return array<string, mixed>
+     */
+    public function dataFor(TermTranslation $translation, ?array $overlay = null, ?array $main = null): array
+    {
+        $overlay ??= (array) ($translation->data ?? []);
+        if (Locales::isMain($translation->locale)) {
+            return $overlay;
+        }
+
+        $schema = $this->taxonomy?->blueprint?->schema();
+        $main ??= (array) ($this->mainTranslation()->data ?? []);
+
+        return $schema === null ? $overlay : TranslationOverlay::merge($schema->fields(), $main, $overlay);
     }
 
     /**

@@ -11,9 +11,8 @@ use Sunrice\Models\GlobalSet;
 use Sunrice\Support\Locales;
 
 /**
- * Resolves global set values for templates. Non-translatable sets
- * read their shared row; translatable sets read the locale row and
- * fall back to the main-locale row as a whole (never field mixing).
+ * Resolves global set values for templates: the main language's values
+ * with the language's translatable ones laid over (like entries).
  */
 class GlobalsRepository
 {
@@ -47,11 +46,9 @@ class GlobalsRepository
             return null;
         }
 
-        $resolvedLocale = $set->translatable ? $locale : Locales::main();
-
         return [
-            'locale' => $resolvedLocale,
-            'values' => $set->valuesFor($resolvedLocale),
+            'locale' => $locale,
+            'values' => $set->valuesFor($locale),
             'blueprint' => $set->blueprint_id,
         ];
     }

@@ -65,8 +65,8 @@ term or a global set first holds it; the open page renews the hold every
   back to the list. Their unsaved changes are not lost: they're kept
   aside, and the editor page shows them with **Load into the form** or
   **Discard**. Nothing is written into the draft until someone saves.
-- Each language of an entry (and of a translatable global set) is held
-  separately, so translators can work side by side.
+- Each language of an entry (and of a global set) is held separately, so
+  translators can work side by side.
 - The same person in two tabs is never locked out by themselves.
 - Saves also check the version: if what you opened was saved by someone
   else since (say, from a tab that never held the lock), the save is

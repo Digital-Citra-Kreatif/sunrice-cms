@@ -7,7 +7,7 @@ import { adminUrl } from '@/lib/route';
 import { useCan } from '@/lib/can';
 import type { SharedProps } from '@/types';
 
-interface Row { id: number; handle: string; title: string; group: string; translatable: boolean; blueprint: { id: number; title: string } | null }
+interface Row { id: number; handle: string; title: string; group: string; blueprint: { id: number; title: string } | null }
 
 export default function GlobalsIndex({ globals }: { globals: Row[] }) {
     const { adminPath } = usePage<SharedProps>().props;

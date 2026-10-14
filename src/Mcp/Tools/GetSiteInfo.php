@@ -64,7 +64,7 @@ class GetSiteInfo extends SunriceTool
                 'collections' => $t->collections->pluck('handle')->all(),
                 'terms' => $t->terms()->count(),
             ])->all(),
-            'globals' => GlobalSet::query()->orderBy('title')->get(['id', 'handle', 'title', 'group', 'translatable'])->toArray(),
+            'globals' => GlobalSet::query()->orderBy('title')->get(['id', 'handle', 'title', 'group'])->toArray(),
             'menus' => Menu::query()->orderBy('title')->get(['id', 'handle', 'title'])->toArray(),
             'forms' => Form::query()->orderBy('title')->get(['id', 'handle', 'title'])->toArray(),
             'field_types' => array_keys(app(FieldRegistry::class)->all()),

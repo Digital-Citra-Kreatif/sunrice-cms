@@ -93,7 +93,7 @@ class TermsController extends Controller
         $urls = app(UrlGenerator::class);
         $hasPages = (bool) $taxonomy->setting('has_archive');
         $paginator = new LengthAwarePaginator(
-            $rows->values()->forPage($page, $perPage)->map(function (array $item) use ($titleOf, $byId, $taxonomy, $hasPages, $urls, $main): array {
+            $rows->values()->forPage($page, $perPage)->map(function (array $item) use ($titleOf, $byId, $taxonomy, $hasPages, $urls, $main, $locales): array {
                 /** @var Term $t */
                 $t = $item['term'];
 
@@ -104,7 +104,7 @@ class TermsController extends Controller
                     'slug' => $t->translations->firstWhere('locale', $main)->slug ?? '',
                     'parent' => $titleOf($byId->get($t->parent_id)) ?? '—',
                     'entries' => $t->entries_count,
-                    'languages' => $t->translations->pluck('locale')->map(fn ($l) => strtoupper((string) $l))->implode(' '),
+                    'languages' => $t->translations->sortBy(fn (TermTranslation $tr) => array_search($tr->locale, $locales, true))->map(fn (TermTranslation $tr) => strtoupper($tr->locale).(Locales::isMain($tr->locale) || $tr->is_ready ? '' : ' (not ready)'))->implode(', '),
                     'created_at' => $t->created_at?->format('j M Y'),
                     // The term's page, when the taxonomy has term pages.
                     'url' => $hasPages ? $urls->term($t->setRelation('taxonomy', $taxonomy), $main) : null,
@@ -243,11 +243,14 @@ class TermsController extends Controller
                 'version' => Versions::term($term),
                 'parent_id' => $term->parent_id,
                 'template' => $term->template,
-                'translations' => $term->translations->keyBy('locale')->map(fn (TermTranslation $tr) => [
+                // Other languages get the main language's values with their
+                // own translated text laid over, as the editor shows them.
+                'translations' => $term->setRelation('taxonomy', $taxonomy)->translations->keyBy('locale')->map(fn (TermTranslation $tr) => [
                     'title' => $tr->name,
                     'slug' => $tr->slug,
-                    'data' => (object) ($tr->data ?? []),
+                    'data' => (object) $term->dataFor($tr),
                     'seo' => (object) ($tr->seo ?? []),
+                    'is_ready' => Locales::isMain($tr->locale) || $tr->is_ready,
                 ]),
                 'urls' => $hasPages
                     ? collect(Locales::available())->mapWithKeys(fn (string $l) => [$l => app(UrlGenerator::class)->term($term->setRelation('taxonomy', $taxonomy), $l)])

@@ -76,8 +76,8 @@ it('renders a page with globals, a menu and flexible content blocks', function (
     $siteBlueprint = Blueprint::create(['handle' => 'site', 'title' => 'Site', 'fields' => [
         ['handle' => 'name', 'type' => 'text', 'label' => 'Name'],
     ]]);
-    $site = GlobalSet::factory()->create(['handle' => 'site', 'blueprint_id' => $siteBlueprint->id, 'translatable' => false]);
-    $site->values()->create(['locale' => null, 'data' => ['name' => 'Acme Studio']]);
+    $site = GlobalSet::factory()->create(['handle' => 'site', 'blueprint_id' => $siteBlueprint->id]);
+    $site->values()->create(['locale' => Locales::main(), 'data' => ['name' => 'Acme Studio']]);
 
     $menu = Menu::factory()->create(['handle' => 'main']);
     MenuItem::query()->create([

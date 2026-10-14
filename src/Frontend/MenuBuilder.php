@@ -179,7 +179,7 @@ class MenuBuilder
         }
 
         return [
-            'title' => ($term->translation($locale) ?? $term->mainTranslation())?->name,
+            'title' => ($term->readyTranslation($locale) ?? $term->mainTranslation())?->name,
             'url' => $this->urls->term($term, $locale),
         ];
     }

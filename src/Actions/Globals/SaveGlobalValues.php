@@ -10,8 +10,8 @@ use Sunrice\Models\GlobalValue;
 use Sunrice\Support\Locales;
 
 /**
- * Validates and persists one locale's values for a global set.
- * Locale is ignored (shared row) when the set is not translatable.
+ * Validates and persists one language's values for a global set: all
+ * of them for the main language, the translatable ones for another.
  */
 class SaveGlobalValues
 {
@@ -23,14 +23,14 @@ class SaveGlobalValues
         $validated = validator($attributes, [
             'locale' => ['nullable', 'string', 'max:10'],
             'values' => ['array'],
-        ])->after(function ($v) use ($set) {
+        ])->after(function ($v) {
             $locale = $v->safe()?->toArray()['locale'] ?? null;
-            if ($set->translatable && $locale !== null && ! Locales::isAvailable($locale)) {
+            if ($locale !== null && ! Locales::isAvailable($locale)) {
                 $v->errors()->add('locale', 'Unknown locale.');
             }
         })->validate();
 
-        $locale = $set->translatable ? ($validated['locale'] ?? Locales::main()) : null;
+        $locale = $validated['locale'] ?? Locales::main();
 
         $values = $validated['values'] ?? [];
         $schema = $set->blueprint?->schema();

@@ -32,8 +32,8 @@ use Sunrice\Support\SiteSettings;
  *   Entries of non-translatable collections are relabeled.
  * - Listing pages convert like entries; collection/taxonomy titles and
  *   menu labels swap so every language shows what it showed before.
- * - Terms and translatable globals store whole copies per language and
- *   need no conversion; a missing new-main copy is filled from the old.
+ * - Terms and globals convert like entries (overlay data); a missing
+ *   new-main term is filled from the old one.
  * - Redirects recorded for unprefixed URLs move to the new main language.
  *   Old URLs keep working: /{new-main}/… redirects to the unprefixed URL
  *   and an old main-language slug redirects to its prefixed page.
@@ -84,7 +84,7 @@ class SwitchMainLanguage
             }
         });
 
-        foreach (GlobalSet::query()->where('translatable', true)->with('values')->get() as $set) {
+        foreach (GlobalSet::query()->with('values')->get() as $set) {
             if ($set->values->firstWhere('locale', $from) !== null && $set->values->firstWhere('locale', $to) === null) {
                 $report['missing_globals'][] = (string) $set->title;
             }
@@ -246,20 +246,35 @@ class SwitchMainLanguage
     protected function switchTerms(string $from, string $to): int
     {
         $copied = 0;
-        Term::withTrashed()->with('translations')->chunkById(200, function ($terms) use ($from, $to, &$copied): void {
+        Term::withTrashed()->with(['translations', 'taxonomy.blueprint'])->chunkById(200, function ($terms) use ($from, $to, &$copied): void {
             foreach ($terms as $term) {
                 $old = $term->translations->firstWhere('locale', $from);
-                if ($old === null || $term->translations->firstWhere('locale', $to) !== null) {
+                if ($old === null) {
                     continue;
                 }
-                $term->translations()->create([
-                    'taxonomy_id' => $term->taxonomy_id,
-                    'locale' => $to,
-                    'name' => $old->name,
-                    'slug' => $old->slug,
-                    'data' => $old->data ?? [],
-                ]);
-                $copied++;
+                $new = $term->translations->firstWhere('locale', $to);
+                if ($new === null) {
+                    // --copy-missing: the old main term, as an untranslated copy.
+                    $new = $term->translations()->make([
+                        'taxonomy_id' => $term->taxonomy_id,
+                        'locale' => $to,
+                        'name' => $old->name,
+                        'slug' => $old->slug,
+                        'data' => [],
+                        'seo' => $old->seo,
+                    ]);
+                    $copied++;
+                }
+
+                $fields = $term->taxonomy?->blueprint?->schema()->fields();
+                [$newData, $oldData] = $this->swapData($fields, (array) ($old->data ?? []), (array) ($new->data ?? []));
+                $new->data = $newData;
+                $new->is_ready = true;
+                $new->save();
+                $old->data = $oldData;
+                // The old main language was the original: keep it shown.
+                $old->is_ready = true;
+                $old->save();
             }
         });
 
@@ -269,15 +284,41 @@ class SwitchMainLanguage
     protected function switchGlobals(string $from, string $to): int
     {
         $copied = 0;
-        foreach (GlobalSet::query()->where('translatable', true)->with('values')->get() as $set) {
+        foreach (GlobalSet::query()->with(['values', 'blueprint'])->get() as $set) {
             $old = $set->values->firstWhere('locale', $from);
-            if ($old !== null && $set->values->firstWhere('locale', $to) === null) {
-                $set->values()->create(['locale' => $to, 'data' => $old->data]);
-                $copied++;
+            if ($old === null) {
+                continue;
             }
+            $new = $set->values->firstWhere('locale', $to) ?? $set->values()->make(['locale' => $to, 'data' => []]);
+            $copied += $new->exists ? 0 : 1;
+
+            [$newData, $oldData] = $this->swapData($set->blueprint?->schema()->fields(), (array) ($old->data ?? []), (array) ($new->data ?? []));
+            $new->data = $newData;
+            $new->save();
+            $old->data = $oldData;
+            $old->save();
         }
 
         return $copied;
+    }
+
+    /**
+     * The new main language's full data and the old main language's
+     * overlay, from the old full data and the new language's overlay.
+     *
+     * @param  array<int, array<string, mixed>>|null  $fields
+     * @param  array<string, mixed>  $oldData
+     * @param  array<string, mixed>  $newOverlay
+     * @return array{0: array<string, mixed>, 1: array<string, mixed>}
+     */
+    protected function swapData(?array $fields, array $oldData, array $newOverlay): array
+    {
+        if ($fields === null) {
+            return [$newOverlay ?: $oldData, $oldData];
+        }
+        $newData = TranslationOverlay::merge($fields, $oldData, $newOverlay);
+
+        return [$newData, TranslationOverlay::extract($fields, $oldData, $newData)];
     }
 
     /** Listing pages: like entries (overlay data), heading/intro fall back. */

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Events\ContentChanged;
+use Sunrice\Fields\TranslationOverlay;
 use Sunrice\Models\Taxonomy;
 use Sunrice\Models\Term;
 use Sunrice\Models\TermTranslation;
@@ -19,7 +20,11 @@ use Sunrice\Support\SlugValidator;
 class SaveTerm
 {
     /**
-     * @param  array{parent_id?: int|null, template?: string|null, translations?: array<string, array{title?: string, name?: string, slug?: string, data?: array<string, mixed>}>}  $attributes
+     * Each language posts its full field data; a secondary language
+     * stores only its translatable values (TranslationOverlay), like
+     * entries. A new translation is Ready unless is_ready says otherwise.
+     *
+     * @param  array{parent_id?: int|null, template?: string|null, translations?: array<string, array{title?: string, name?: string, slug?: string, data?: array<string, mixed>, is_ready?: bool}>}  $attributes
      */
     public function handle(Taxonomy $taxonomy, array $attributes, ?Term $term = null): Term
     {
@@ -52,6 +57,7 @@ class SaveTerm
             'translations.*.title' => ['required', 'string', 'max:255'],
             'translations.*.slug' => ['nullable', 'string', 'max:255', new ValidSlug($term === null ? [] : $term->translations()->pluck('slug')->all())],
             'translations.*.data' => ['array'],
+            'translations.*.is_ready' => ['nullable', 'boolean'],
             'translations.*.seo' => ['nullable', 'array'],
             'translations.*.seo.title' => ['nullable', 'string', 'max:255'],
             'translations.*.seo.description' => ['nullable', 'string', 'max:500'],
@@ -66,6 +72,15 @@ class SaveTerm
                 }
             }
         })->validate();
+
+        $schema = $taxonomy->blueprint?->schema();
+        if ($schema !== null) {
+            foreach ($validated['translations'] as $locale => $t) {
+                if (array_key_exists('data', $t)) {
+                    validator($attributes, $schema->rules("translations.{$locale}.data"))->validate();
+                }
+            }
+        }
 
         return DB::transaction(fn () => $this->persist($taxonomy, $validated, $term));
     }
@@ -86,7 +101,14 @@ class SaveTerm
         }
         $term->save();
 
-        foreach ($validated['translations'] as $locale => $t) {
+        // The main language first: the others are stored relative to it.
+        $schema = $taxonomy->blueprint?->schema();
+        $main = Locales::main();
+        $translations = $validated['translations'];
+        uksort($translations, fn ($a, $b) => ($b === $main) <=> ($a === $main));
+        $mainData = (array) ($term->mainTranslation()->data ?? []);
+
+        foreach ($translations as $locale => $t) {
             $translation = TermTranslation::firstOrNew([
                 'term_id' => $term->id,
                 'locale' => $locale,
@@ -97,7 +119,26 @@ class SaveTerm
             $translation->slug = $slug !== null && $slug !== ''
                 ? $slug
                 : SlugValidator::uniqueForTerm(SlugValidator::fromTitle($t['title']), $taxonomy->id, $locale, $term->id);
-            $translation->data = $t['data'] ?? $translation->data ?? [];
+            if (array_key_exists('data', $t)) {
+                $data = (array) $t['data'];
+                if ($schema !== null) {
+                    $data = $schema->normalize($data);
+                    if ($locale !== $main) {
+                        $data = TranslationOverlay::extract($schema->fields(), $data, $mainData);
+                    }
+                }
+                $translation->data = $data;
+            } elseif (! $translation->exists) {
+                $translation->data = [];
+            }
+            if ($locale === $main) {
+                $mainData = (array) $translation->data;
+                $translation->is_ready = true;
+            } elseif (array_key_exists('is_ready', $t) && $t['is_ready'] !== null) {
+                $translation->is_ready = (bool) $t['is_ready'];
+            } elseif (! $translation->exists) {
+                $translation->is_ready = true;
+            }
             if (array_key_exists('seo', $t)) {
                 $translation->seo = array_filter((array) $t['seo'], fn ($v) => $v !== null && $v !== '' && $v !== false) ?: null;
             }

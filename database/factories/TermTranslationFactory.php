@@ -27,6 +27,7 @@ class TermTranslationFactory extends Factory
             'name' => $name,
             'slug' => Str::slug($name),
             'data' => [],
+            'is_ready' => true,
         ];
     }
 }

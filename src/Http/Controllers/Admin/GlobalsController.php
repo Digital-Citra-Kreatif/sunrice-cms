@@ -17,6 +17,7 @@ use Sunrice\Events\ContentChanged;
 use Sunrice\Locks\Versions;
 use Sunrice\Models\Blueprint;
 use Sunrice\Models\GlobalSet;
+use Sunrice\Models\GlobalValue;
 use Sunrice\Support\Locales;
 
 class GlobalsController extends Controller
@@ -34,7 +35,6 @@ class GlobalsController extends Controller
                     'handle' => $g->handle,
                     'title' => $g->title,
                     'group' => $g->group,
-                    'translatable' => (bool) $g->translatable,
                     'blueprint' => $g->blueprint?->only('id', 'title'),
                 ]),
         ]);
@@ -56,7 +56,6 @@ class GlobalsController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'group' => ['required', Rule::in(['global', 'template_part'])],
             'blueprint_id' => ['required', 'integer', 'exists:sunrice_blueprints,id'],
-            'translatable' => ['boolean'],
         ]);
 
         $set = GlobalSet::create($validated);
@@ -83,14 +82,12 @@ class GlobalsController extends Controller
             'meta' => ['nullable', 'array'],
             'meta.title' => ['required_with:meta', 'string', 'max:255'],
             'meta.blueprint_id' => ['required_with:meta', 'integer', 'exists:sunrice_blueprints,id'],
-            'meta.translatable' => ['boolean'],
         ]);
         $meta = $validated['meta'] ?? null;
         unset($validated['meta']);
 
-        if (! $globalSet->translatable) {
-            $validated['locale'] = null;
-        } elseif (! Locales::isAvailable($validated['locale'] ?? '')) {
+        $validated['locale'] ??= Locales::main();
+        if (! Locales::isAvailable($validated['locale'])) {
             return back()->with('error', 'Unknown language. Reload the page and try again.');
         }
         Versions::ensureUnchanged($request->input('version'), Versions::global($globalSet->values()->where('locale', $validated['locale'])->first()), $request->boolean('overwrite'));
@@ -98,7 +95,7 @@ class GlobalsController extends Controller
         app(SaveGlobalValues::class)->handle($globalSet, $validated);
         // Settings after the values, which were edited with the current blueprint.
         if (is_array($meta)) {
-            $globalSet->update(array_intersect_key($meta, array_flip(['title', 'blueprint_id', 'translatable'])));
+            $globalSet->update(array_intersect_key($meta, array_flip(['title', 'blueprint_id'])));
         }
         ContentChanged::dispatch('global_saved');
 
@@ -112,7 +109,6 @@ class GlobalsController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'blueprint_id' => ['required', 'integer', 'exists:sunrice_blueprints,id'],
-            'translatable' => ['boolean'],
         ]);
 
         $globalSet->update($validated);
@@ -134,10 +130,14 @@ class GlobalsController extends Controller
     protected function form(?GlobalSet $set): Response
     {
         return Inertia::render('Globals/Form', [
-            'globalSet' => $set?->only('id', 'handle', 'title', 'group', 'blueprint_id', 'translatable'),
+            'globalSet' => $set?->only('id', 'handle', 'title', 'group', 'blueprint_id'),
             'blueprint' => $set?->blueprint?->schema()->toAdminTabs(),
-            'values' => $set?->values->keyBy(fn ($v) => $v->locale ?? '_shared')->map->data,
-            'versions' => $set?->values->keyBy(fn ($v) => $v->locale ?? '_shared')->map(fn ($v) => Versions::global($v)),
+            // Other languages: the main language's values with their own
+            // translated text laid over, as the editor shows them.
+            'values' => $set === null ? null : collect(Locales::available())->mapWithKeys(fn (string $l) => [$l => (object) $set->valuesFor($l)]),
+            // Languages with translated text of their own.
+            'translated' => $set?->values->filter(fn (GlobalValue $v) => ! Locales::isMain((string) $v->locale) && $v->data !== [])->pluck('locale')->values(),
+            'versions' => $set?->values->keyBy('locale')->map(fn ($v) => Versions::global($v)),
             'blueprints' => Blueprint::query()->orderBy('title')->get(['id', 'title', 'handle']),
             'locales' => Locales::available(),
             'mainLocale' => Locales::main(),

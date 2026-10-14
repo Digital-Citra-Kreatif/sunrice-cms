@@ -114,7 +114,7 @@ class UrlGenerator
         $main = $term->mainTranslation();
         $slug = $main === null ? '' : $main->slug;
         if (! Locales::isMain($locale)) {
-            $translation = $term->translation($locale);
+            $translation = $term->readyTranslation($locale);
             if ($translation !== null) {
                 $slug = $translation->slug;
             }
