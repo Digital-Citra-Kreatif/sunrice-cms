@@ -14,7 +14,7 @@ use Sunrice\Models\GlobalSet;
 use Sunrice\Support\Locales;
 
 #[IsReadOnly]
-#[Description('Read a global set (site-wide values such as contact details, social links, footer text, or a template part) with its fields and the stored values of every language.')]
+#[Description('Read a global set (site-wide values such as contact details, social links, footer text, or a template part) with its fields and its values in every language (other languages: the main language\'s values with their translated text laid over; only translatable fields differ).')]
 class GetGlobal extends SunriceTool
 {
     protected string $name = 'get_global';
@@ -28,15 +28,14 @@ class GetGlobal extends SunriceTool
         $this->authorize('viewAny', GlobalSet::class);
 
         $values = [];
-        foreach ($set->translatable ? Locales::available() : [null] as $locale) {
-            $values[$locale ?? 'all'] = $set->valuesFor($locale ?? Locales::main());
+        foreach (Locales::available() as $locale) {
+            $values[$locale] = $set->valuesFor($locale);
         }
 
         return $this->json([
             'handle' => $set->handle,
             'title' => $set->title,
             'group' => $set->group,
-            'translatable' => (bool) $set->translatable,
             'blueprint' => $set->blueprint?->handle,
             'fields' => $set->blueprint === null ? [] : Presenter::fields($set->blueprint->schema()->fields()),
             'values' => $values,

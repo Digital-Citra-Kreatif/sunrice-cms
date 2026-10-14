@@ -305,10 +305,10 @@ it('changes a global set and merges SEO settings key by key', function () {
     $blueprint = Blueprint::factory()->create(['handle' => 'contact_info']);
     $other = Blueprint::factory()->create(['handle' => 'footer']);
     mcpResult(SunriceServer::actingAs($this->admin)->tool(Tools\SaveGlobal::class, ['handle' => 'contact', 'blueprint' => 'contact_info']));
-    $saved = mcpResult(SunriceServer::actingAs($this->admin)->tool(Tools\SaveGlobal::class, ['handle' => 'contact', 'title' => 'Contact details', 'blueprint' => 'footer', 'translatable' => true]));
+    $saved = mcpResult(SunriceServer::actingAs($this->admin)->tool(Tools\SaveGlobal::class, ['handle' => 'contact', 'title' => 'Contact details', 'blueprint' => 'footer']));
     expect($saved['saved'])->toBeTrue();
     $set = GlobalSet::query()->where('handle', 'contact')->first();
-    expect($set->title)->toBe('Contact details')->and($set->blueprint_id)->toBe($other->id)->and($set->translatable)->toBeTrue();
+    expect($set->title)->toBe('Contact details')->and($set->blueprint_id)->toBe($other->id);
 
     mcpResult(SunriceServer::actingAs($this->admin)->tool(Tools\SaveCollection::class, ['handle' => 'pages', 'settings' => ['seo' => ['description' => 'Our pages']]]));
     $collection = mcpResult(SunriceServer::actingAs($this->admin)->tool(Tools\SaveCollection::class, ['handle' => 'pages', 'settings' => ['seo' => ['title_field' => 'headline']]]));

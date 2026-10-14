@@ -42,7 +42,6 @@
         @if ($entry->terms->isNotEmpty())
             <ul class="tags">
                 @foreach ($entry->terms as $term)
-                    @php($term->resolveFor($locale))
                     @if ($term->taxonomy?->setting('has_archive'))
                         <li><a href="{{ $term->urlIn($entry->collection) }}">{{ $term->name }}</a></li>
                     @else

@@ -5,18 +5,24 @@ declare(strict_types=1);
 namespace Sunrice\Console;
 
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Model;
+use Sunrice\Fields\BlueprintSchema;
 use Sunrice\Fields\TranslationOverlay;
 use Sunrice\Models\Entry;
-use Sunrice\Models\EntryTranslation;
+use Sunrice\Models\GlobalSet;
+use Sunrice\Models\GlobalValue;
+use Sunrice\Models\Term;
+use Sunrice\Models\TermTranslation;
 use Sunrice\Support\Locales;
 
 /**
- * sunrice:upgrade-translations — one-off conversion of entries saved
- * before translations shared the main language's layout:
+ * sunrice:upgrade-translations — one-off conversion of entries, terms
+ * and globals saved before translations shared the main language's
+ * layout:
  *
  * - gives main-language repeater rows and flexible blocks stable ids;
- * - rewrites every secondary translation (live data and draft) to store
- *   only its translated values, keyed by those ids.
+ * - rewrites every secondary translation (live data and entry drafts)
+ *   to store only its translated values, keyed by those ids.
  *
  * Safe to run more than once. Old revisions are left alone; they are
  * read the same way when restored.
@@ -25,7 +31,7 @@ class UpgradeTranslationsCommand extends Command
 {
     protected $signature = 'sunrice:upgrade-translations {--dry-run : Report what would change without saving}';
 
-    protected $description = 'Convert entry translations to the shared-layout format (translated text only)';
+    protected $description = 'Convert entry, term and global translations to the shared-layout format (translated text only)';
 
     public function handle(): int
     {
@@ -39,6 +45,19 @@ class UpgradeTranslationsCommand extends Command
                     $changed += $this->upgrade($entry, $dryRun);
                 }
             });
+
+        Term::withTrashed()
+            ->with(['translations', 'taxonomy.blueprint'])
+            ->chunkById(200, function ($terms) use ($dryRun, &$changed): void {
+                foreach ($terms as $term) {
+                    $fields = $term->taxonomy?->blueprint?->schema();
+                    $changed += $this->upgradeRows($term->translations->all(), $fields, $dryRun);
+                }
+            });
+
+        foreach (GlobalSet::query()->with(['values', 'blueprint'])->get() as $set) {
+            $changed += $this->upgradeRows($set->values->all(), $set->blueprint?->schema(), $dryRun);
+        }
 
         $this->info(($dryRun ? 'Would update ' : 'Updated ')."{$changed} translation(s).");
 
@@ -97,6 +116,38 @@ class UpgradeTranslationsCommand extends Command
     }
 
     /**
+     * Terms and globals: one row per language with a `data` column.
+     *
+     * @param  array<int, TermTranslation|GlobalValue>  $rows
+     */
+    protected function upgradeRows(array $rows, ?BlueprintSchema $schema, bool $dryRun): int
+    {
+        $main = collect($rows)->first(fn (Model $row) => Locales::isMain((string) $row->getAttribute('locale')));
+        if ($schema === null || $main === null) {
+            return 0;
+        }
+
+        $fields = $schema->fields();
+        $changed = 0;
+        $mainData = $schema->normalize((array) ($main->getAttribute('data') ?? []));
+        if (! static::same($mainData, $main->getAttribute('data'))) {
+            $changed += $this->save($main, ['data' => $mainData], $dryRun);
+        }
+
+        foreach ($rows as $row) {
+            if ($row === $main) {
+                continue;
+            }
+            $data = TranslationOverlay::extract($fields, TranslationOverlay::merge($fields, $mainData, (array) ($row->getAttribute('data') ?? [])), $mainData);
+            if (! static::same($data, $row->getAttribute('data'))) {
+                $changed += $this->save($row, ['data' => $data], $dryRun);
+            }
+        }
+
+        return $changed;
+    }
+
+    /**
      * Equal JSON values, ignoring object key order (MySQL and jsonb
      * reorder keys on save).
      */
@@ -120,7 +171,7 @@ class UpgradeTranslationsCommand extends Command
     /**
      * @param  array<string, mixed>  $attributes
      */
-    protected function save(EntryTranslation $translation, array $attributes, bool $dryRun): int
+    protected function save(Model $translation, array $attributes, bool $dryRun): int
     {
         if (! $dryRun) {
             // Not an editorial change: leave timestamps (and "outdated" flags) alone.

@@ -32,7 +32,7 @@ class ListTerms extends SunriceTool
         }
         $this->authorize('viewAny', [Term::class, $taxonomy->id]);
 
-        $terms = Term::query()->where('taxonomy_id', $taxonomy->id)->with('translations')
+        $terms = Term::query()->where('taxonomy_id', $taxonomy->id)->with(['translations', 'taxonomy.blueprint'])
             ->when(! empty($args['trashed']), fn (Builder $q) => $q->onlyTrashed())
             ->when($args['search'] ?? null, fn (Builder $q, string $s) => $q->whereHas('translations', fn (Builder $t) => $t->whereLike('name', "%{$s}%")))
             ->orderBy('sort_order')->limit(500)->get();

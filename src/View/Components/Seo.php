@@ -180,7 +180,7 @@ class Seo extends Component
             return (array) ($this->entry->seo ?? []);
         }
         if ($this->term !== null) {
-            $translation = $this->term->resolved ?? $this->term->translation($this->locale) ?? $this->term->mainTranslation();
+            $translation = $this->term->resolved ?? $this->term->readyTranslation($this->locale) ?? $this->term->mainTranslation();
 
             return $translation === null ? [] : (array) ($translation->seo ?? []);
         }
@@ -212,7 +212,7 @@ class Seo extends Component
             $data = $this->entry->data;
         } elseif ($this->term !== null) {
             $blueprint = $this->term->taxonomy?->blueprint;
-            $translation = $this->term->resolved ?? $this->term->translation($this->locale) ?? $this->term->mainTranslation();
+            $translation = $this->term->resolved ?? $this->term->readyTranslation($this->locale) ?? $this->term->mainTranslation();
             $data = $translation === null ? [] : (array) ($translation->data ?? []);
         } else {
             return [];
@@ -302,7 +302,7 @@ class Seo extends Component
     protected function termIsFallback(): bool
     {
         return $this->entry === null && $this->term !== null
-            && ! Locales::isMain($this->locale) && $this->term->translation($this->locale) === null;
+            && ! Locales::isMain($this->locale) && $this->term->readyTranslation($this->locale) === null;
     }
 
     /** @return array<string, string> */
@@ -337,7 +337,7 @@ class Seo extends Component
 
     /**
      * Listing and term pages exist in every language: link them all. A
-     * term only counts in a language it has a translation for.
+     * term only counts in a language it has a Ready translation for.
      *
      * @return array<string, string>
      */
@@ -351,7 +351,7 @@ class Seo extends Component
         if ($this->term !== null) {
             $urls = array_filter(
                 $urls,
-                fn (string $locale) => Locales::isMain($locale) || $this->term->translation($locale) !== null,
+                fn (string $locale) => Locales::isMain($locale) || $this->term->readyTranslation($locale) !== null,
                 ARRAY_FILTER_USE_KEY,
             );
         }

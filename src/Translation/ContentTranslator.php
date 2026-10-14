@@ -25,7 +25,11 @@ use Sunrice\Support\SlugValidator;
  *   translation is never marked Ready, so editors review it and publish
  *   as usual. Only translated text is stored; the layout and non-text
  *   fields keep coming from the main language (TranslationOverlay).
- * - Terms, translatable globals and menu labels are written directly.
+ * - Terms: a new translation is saved not Ready, so editors review it
+ *   and switch it on; an existing one keeps its state. Like entries,
+ *   only translated text is stored.
+ * - Globals and menu labels are written directly (globals store only
+ *   their translated text).
  *
  * Existing translations are kept unless $force is set. A target value that
  * is identical to the source counts as untranslated (the admin pre-fills
@@ -161,15 +165,21 @@ class ContentTranslator
                     continue;
                 }
 
+                $fields = $term->taxonomy?->blueprint?->schema()->fields() ?? [];
                 $strings = ['name' => ['value' => (string) $source->name, 'rich' => false]]
-                    + TranslatableStrings::collect($term->taxonomy?->blueprint?->schema()->fields() ?? [], (array) $source->data, 'data.');
+                    + TranslatableStrings::collect($fields, $term->dataFor($source), 'data.');
 
+                // The target's text laid over the main data, so every string has a slot.
                 $target = $term->translation($this->to);
-                $work = ['name' => $target->name ?? '', 'data' => (array) ($target->data ?? []) + (array) $source->data];
+                $work = ['name' => $target->name ?? '', 'data' => $term->dataFor($target ?? new TermTranslation(['locale' => $this->to]))];
 
                 $work = $this->translateInto($work, $strings, ($term->taxonomy->title ?? 'Term').' “'.$source->name.'”');
                 if ($work === null) {
                     continue;
+                }
+
+                if (! Locales::isMain($this->to) && $fields !== []) {
+                    $work['data'] = TranslationOverlay::extract($fields, (array) $work['data'], (array) ($term->mainTranslation()->data ?? []));
                 }
 
                 if ($target === null) {
@@ -180,6 +190,8 @@ class ContentTranslator
                         'name' => $work['name'],
                         'slug' => SlugValidator::uniqueForTerm(Str::slug((string) $work['name']), $term->taxonomy_id, $this->to, $term->id),
                         'data' => $work['data'],
+                        // Machine-translated: shown once an editor marks it Ready.
+                        'is_ready' => Locales::isMain($this->to),
                     ]);
                 } else {
                     $target->forceFill(['name' => $work['name'], 'data' => $work['data']])->save();
@@ -190,19 +202,20 @@ class ContentTranslator
 
     public function globals(): void
     {
-        GlobalSet::query()->where('translatable', true)->with(['blueprint', 'values'])->get()
+        GlobalSet::query()->with(['blueprint', 'values'])->get()
             ->each(function (GlobalSet $set): void {
-                $sourceData = (array) ($set->values->firstWhere('locale', $this->from)->data ?? []);
-                $strings = TranslatableStrings::collect($set->blueprint?->schema()->fields() ?? [], $sourceData, 'data.');
-                $target = $set->values->firstWhere('locale', $this->to);
-                $work = ['data' => (array) ($target->data ?? []) + $sourceData];
+                if ($set->valueFor($this->from) === null) {
+                    return;
+                }
+                $strings = TranslatableStrings::collect($set->blueprint?->schema()->fields() ?? [], $set->valuesFor($this->from), 'data.');
+                $work = ['data' => $set->valuesFor($this->to)];
 
                 $work = $this->translateInto($work, $strings, 'Site content “'.$set->title.'”');
                 if ($work === null) {
                     return;
                 }
 
-                $set->values()->updateOrCreate(['locale' => $this->to], ['data' => $work['data']]);
+                $set->setValuesFor($this->to, (array) $work['data']);
             });
     }
 

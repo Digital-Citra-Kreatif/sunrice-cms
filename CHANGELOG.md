@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- **Terms and globals translate like entries.** Each field's Translatable
+  setting decides what differs per language; everything else (images,
+  numbers, relations, repeater rows) is shared with the main language and
+  changed once. Term translations get a **Ready** switch: other languages
+  show the main-language term until it is on. Translations typed in the
+  admin or by an agent start Ready; ones made by `sunrice:translate` wait
+  for review. Global sets lose their set-wide Translatable switch: a set
+  that wasn't translatable keeps its values as the main language's, and
+  its text fields become translatable by default (switch off any that must
+  stay identical). `$entry->terms` now gives names and links in the page
+  language without `resolveFor()`. Run `php artisan migrate`, then
+  `php artisan sunrice:upgrade-translations` to trim stored term and global
+  translations to their translated text.
 - Fixed: the admin was blank while the site's own Vite dev server was
   running (`npm run dev` for the site's CSS and scripts). It asked that
   server for its script. It now always loads its own published bundle.

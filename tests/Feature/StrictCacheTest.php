@@ -37,7 +37,7 @@ it('serves pages, menus, globals and lists from a warm cache without cached obje
     $menu = Menu::create(['handle' => 'main', 'title' => 'Main']);
     MenuItem::create(['menu_id' => $menu->id, 'type' => 'url', 'url' => '/blog', 'labels' => [Locales::main() => 'Blog']]);
     $blueprint = Blueprint::create(['handle' => 'site', 'title' => 'Site', 'fields' => [['handle' => 'tagline', 'type' => 'text']]]);
-    $set = GlobalSet::create(['handle' => 'site', 'title' => 'Site', 'group' => 'global', 'blueprint_id' => $blueprint->id, 'translatable' => true]);
+    $set = GlobalSet::create(['handle' => 'site', 'title' => 'Site', 'group' => 'global', 'blueprint_id' => $blueprint->id]);
     $set->values()->create(['locale' => Locales::main(), 'data' => ['tagline' => 'Fresh news']]);
 
     $slug = $first->translations()->first()->slug;

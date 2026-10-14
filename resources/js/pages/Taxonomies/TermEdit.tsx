@@ -5,6 +5,7 @@ import { ArrowLeft, ExternalLink, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CollapsibleCard } from '@/components/app/collapsible-card';
@@ -13,6 +14,7 @@ import { TemplateHelp } from '@/components/app/template-help';
 import { useBreadcrumbs } from '@/components/app/breadcrumbs';
 import { KeptEditsNotice, VersionConflict, useEditLock } from '@/components/app/edit-lock';
 import FieldRenderer from '@/fields/FieldRenderer';
+import { TranslationModeProvider } from '@/fields/translation-mode';
 import { SEO_FIELDS } from '@/lib/seo-fields';
 import { adminUrl } from '@/lib/route';
 import { useCan } from '@/lib/can';
@@ -25,6 +27,8 @@ interface TranslationValues {
     slug: string;
     data: Record<string, Json>;
     seo: Record<string, Json>;
+    /** Other languages: shown on the site once Ready (the main language always is). */
+    is_ready: boolean;
 }
 
 interface Props {
@@ -53,12 +57,14 @@ interface TermForm {
     translations: Record<string, TranslationValues>;
 }
 
-const initialForm = (term: Props['term'], locales: string[]): TermForm => ({
+const initialForm = (term: Props['term'], locales: string[], mainLocale: string): TermForm => ({
     parent_id: term?.parent_id ?? null,
     template: term?.template ?? '',
     translations: Object.fromEntries(locales.map((l) => {
         const t = term?.translations[l];
-        return [l, { title: t?.title ?? '', slug: t?.slug ?? '', data: (t?.data ?? {}) as Record<string, Json>, seo: (t?.seo ?? {}) as Record<string, Json> }];
+        // A language without a translation starts from the main language's fields.
+        const data = t?.data ?? (l === mainLocale ? {} : term?.translations[mainLocale]?.data ?? {});
+        return [l, { title: t?.title ?? '', slug: t?.slug ?? '', data: data as Record<string, Json>, seo: (t?.seo ?? {}) as Record<string, Json>, is_ready: t?.is_ready ?? true }];
     })),
 });
 
@@ -68,18 +74,18 @@ export default function TermEdit({ taxonomy, term, parents, locales, mainLocale,
     const can = useCan();
     const isNew = term === null;
     const [locale, setLocale] = React.useState(mainLocale);
-    const [form, setForm] = React.useState<TermForm>(() => initialForm(term, locales));
-    const [saved, setSaved] = React.useState(() => JSON.stringify(initialForm(term, locales)));
+    const [form, setForm] = React.useState<TermForm>(() => initialForm(term, locales, mainLocale));
+    const [saved, setSaved] = React.useState(() => JSON.stringify(initialForm(term, locales, mainLocale)));
     const [errors, setErrors] = React.useState<Record<string, string>>({});
     const [processing, setProcessing] = React.useState(false);
     const formRef = React.useRef<HTMLFormElement>(null);
 
     // Fresh props after a save: they become the saved state.
     React.useEffect(() => {
-        const next = initialForm(term, locales);
+        const next = initialForm(term, locales, mainLocale);
         setForm(next);
         setSaved(JSON.stringify(next));
-    }, [term, locales]);
+    }, [term, locales, mainLocale]);
 
     const listUrl = adminUrl(`taxonomies/${taxonomy.handle}/terms`, adminPath);
     // Only one person edits a term at a time (all its languages together).
@@ -101,6 +107,11 @@ export default function TermEdit({ taxonomy, term, parents, locales, mainLocale,
     };
     const current = form.translations[locale];
     const fields = (blueprint ?? []).flatMap((t) => t.fields ?? []);
+    const secondary = locale !== mainLocale;
+    // Fields that aren't translatable always show the main language's value.
+    const shownData = secondary
+        ? { ...current.data, ...Object.fromEntries(fields.filter((f) => f.translatable === false).map((f) => [f.handle, form.translations[mainLocale]?.data[f.handle] ?? null])) }
+        : current.data;
     const setTranslation = (patch: Partial<TranslationValues>) =>
         setForm({ ...form, translations: { ...form.translations, [locale]: { ...current, ...patch } } });
     const localeHasError = (l: string) => Object.keys(errors).some((k) => k.startsWith(`translations.${l}`));
@@ -197,7 +208,9 @@ export default function TermEdit({ taxonomy, term, parents, locales, mainLocale,
                             >
                                 {l}
                                 {l !== mainLocale && (form.translations[l]?.title ?? '').trim() !== '' && (
-                                    <span className="size-1.5 rounded-full bg-emerald-500" aria-label="translated" />
+                                    form.translations[l].is_ready
+                                        ? <span className="size-1.5 rounded-full bg-emerald-500" aria-label="translated" />
+                                        : <span className="size-1.5 rounded-full bg-amber-500" aria-label="not ready" />
                                 )}
                             </TabsTrigger>
                         ))}
@@ -226,13 +239,28 @@ export default function TermEdit({ taxonomy, term, parents, locales, mainLocale,
                                 <InputError message={errors[`translations.${locale}.slug`]} />
                             </div>
                         </div>
-                        {locale !== mainLocale && (
-                            <p className="-mt-2 text-xs text-muted-foreground">
-                                Optional. Leave the title empty to show the {mainLocale.toUpperCase()} version in this language.
-                            </p>
+                        {secondary && (
+                            <>
+                                <p className="-mt-2 text-xs text-muted-foreground">
+                                    Optional. Leave the title empty to show the {mainLocale.toUpperCase()} version in this language.
+                                </p>
+                                <label className="flex items-start gap-2 text-sm">
+                                    <Switch className="mt-0.5" checked={current.is_ready} onCheckedChange={(v) => setTranslation({ is_ready: v })} />
+                                    <span>
+                                        Ready
+                                        <span className="block text-xs text-muted-foreground">
+                                            {current.is_ready
+                                                ? 'Shown on the site in this language.'
+                                                : `Not shown yet: the site shows the ${mainLocale.toUpperCase()} version until it's ready.`}
+                                        </span>
+                                    </span>
+                                </label>
+                            </>
                         )}
                         {fields.length > 0 ? (
-                            <FieldRenderer fields={fields} values={current.data} errors={errorsFor('data')} onChange={(data) => setTranslation({ data })} />
+                            <TranslationModeProvider secondary={secondary} mainLocale={mainLocale}>
+                                <FieldRenderer fields={fields} values={shownData} errors={errorsFor('data')} onChange={(data) => setTranslation({ data })} />
+                            </TranslationModeProvider>
                         ) : (
                             <p className="text-xs text-muted-foreground">
                                 Need more on terms, such as a description or image? Pick a blueprint in{' '}

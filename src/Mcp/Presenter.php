@@ -10,6 +10,7 @@ use Sunrice\Models\Collection;
 use Sunrice\Models\Entry;
 use Sunrice\Models\EntryTranslation;
 use Sunrice\Models\Term;
+use Sunrice\Models\TermTranslation;
 use Sunrice\Support\Locales;
 
 /**
@@ -135,11 +136,13 @@ class Presenter
             'id' => $term->id,
             'parent_id' => $term->parent_id,
             'template' => $term->template,
-            'translations' => $term->translations->mapWithKeys(fn ($t) => [$t->locale => [
+            // Other languages: the main language's values with their translated text laid over.
+            'translations' => $term->translations->mapWithKeys(fn (TermTranslation $t) => [$t->locale => [
                 'name' => $t->name,
                 'slug' => $t->slug,
-                'data' => $t->data ?? [],
+                'data' => $term->dataFor($t),
                 'seo' => $t->seo ?? [],
+                'is_ready' => Locales::isMain($t->locale) || $t->is_ready,
             ]])->all(),
         ];
     }

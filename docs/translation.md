@@ -2,8 +2,8 @@
 
 `php artisan sunrice:translate` translates your site with an LLM:
 
-- **Content** in the database: entries, taxonomy terms, translatable
-  globals (including template parts) and menu labels.
+- **Content** in the database: entries, taxonomy terms, globals
+  (including template parts) and menu labels.
 - **Interface text** in your Laravel language files: `lang/{locale}/*.php`
   (including subfolders) and `lang/{locale}.json`.
 
@@ -78,5 +78,9 @@ text counts as untranslated (untranslated text shows the main language's). Use `
   marked Ready. Live pages don't change: editors review the draft in the
   admin, then publish and mark the translation Ready. New translations get
   a slug made from the translated title.
-- **Terms, globals, menu labels and language files** have no draft step and
-  are written directly. Run with `--dry-run` first to see what will change.
+- **Terms** have no draft: a new term translation is saved with **Ready**
+  off, so the site keeps showing the main language until an editor checks
+  it and switches Ready on in the term editor. A term translation that
+  already exists keeps its Ready state.
+- **Globals, menu labels and language files** have no draft step and are
+  written directly. Run with `--dry-run` first to see what will change.

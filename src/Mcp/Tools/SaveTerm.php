@@ -15,7 +15,7 @@ use Sunrice\Mcp\Presenter;
 use Sunrice\Models\Term;
 use Sunrice\Support\Locales;
 
-#[Description('Create a term (no id) or update one (id), or trash / restore one (action). translations: {locale: {name, slug, data, seo}}; the main language is required when creating, other languages are optional and a language you leave out is kept as is. parent_id for hierarchical taxonomies. Trashing a term also trashes its child terms.')]
+#[Description('Create a term (no id) or update one (id), or trash / restore one (action). translations: {locale: {name, slug, data, seo, is_ready}}; the main language is required when creating, other languages are optional and a language you leave out is kept as is. Another language keeps only its translatable fields (the rest are shared with the main language) and is shown on the site once Ready: new ones are, unless is_ready: false. parent_id for hierarchical taxonomies. Trashing a term also trashes its child terms.')]
 class SaveTerm extends SunriceTool
 {
     protected string $name = 'save_term';
@@ -55,7 +55,7 @@ class SaveTerm extends SunriceTool
         // Languages not sent keep their current values.
         $translations = [];
         foreach ($term === null ? [] : $term->translations as $t) {
-            $translations[$t->locale] = ['title' => $t->name, 'slug' => $t->slug, 'data' => $t->data ?? [], 'seo' => $t->seo ?? []];
+            $translations[$t->locale] = ['title' => $t->name, 'slug' => $t->slug, 'data' => $term->dataFor($t), 'seo' => $t->seo ?? []];
         }
         foreach ((array) ($args['translations'] ?? []) as $locale => $t) {
             $t = (array) $t;
@@ -65,6 +65,7 @@ class SaveTerm extends SunriceTool
                 'slug' => $t['slug'] ?? $current['slug'] ?? null,
                 'data' => array_replace((array) ($current['data'] ?? []), (array) ($t['data'] ?? [])),
                 'seo' => array_replace((array) ($current['seo'] ?? []), (array) ($t['seo'] ?? [])),
+                'is_ready' => isset($t['is_ready']) ? (bool) $t['is_ready'] : null,
             ];
         }
         if (! isset($translations[Locales::main()])) {
@@ -86,7 +87,7 @@ class SaveTerm extends SunriceTool
             'taxonomy' => $schema->string()->description('Taxonomy handle, when creating.'),
             'id' => $schema->integer()->description('Term id, to update, trash or restore.'),
             'action' => $schema->string()->enum(['save', 'trash', 'restore'])->description('Default save.'),
-            'translations' => $schema->object()->description('{locale: {name, slug, data, seo}}'),
+            'translations' => $schema->object()->description('{locale: {name, slug, data, seo, is_ready}}'),
             'parent_id' => $schema->integer()->nullable(),
             'template' => $schema->string()->description('Blade view for this term\'s page.'),
         ];

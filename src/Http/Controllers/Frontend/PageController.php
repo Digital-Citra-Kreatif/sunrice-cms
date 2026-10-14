@@ -161,7 +161,10 @@ class PageController extends Controller
         $translation = TermTranslation::query()
             ->where('taxonomy_id', $match->taxonomy->id)
             ->where('slug', $match->slug)
-            ->where(fn ($q) => $q->where('locale', $locale)->orWhere('locale', Locales::main()))
+            // Like entries: the locale's Ready slug, or the main-language one.
+            ->where(fn ($q) => $q
+                ->where(fn ($q) => $q->where('locale', $locale)->where('is_ready', true))
+                ->orWhere('locale', Locales::main()))
             ->whereHas('term', fn ($q) => $q->whereNull('deleted_at'))
             ->orderByRaw('(locale = ?) desc', [$locale])
             ->first();
@@ -234,6 +237,7 @@ class PageController extends Controller
             ->where('taxonomy_id', $match->taxonomy->id)
             ->where('slug', $match->slug)
             ->where('locale', '!=', $locale)
+            ->where('is_ready', true)
             ->whereIn('locale', Locales::available())
             ->whereHas('term', fn ($q) => $q->whereNull('deleted_at'))
             ->first();

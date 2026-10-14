@@ -20,7 +20,6 @@ class GlobalSetFactory extends Factory
             'title' => fake()->words(2, true),
             'blueprint_id' => Blueprint::factory(),
             'group' => 'global',
-            'translatable' => false,
         ];
     }
 }

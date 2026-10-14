@@ -20,9 +20,28 @@ publication status. This is not configurable.
 A translation that exists but is not `Ready` is **not** served publicly,
 and its slug is not routable: fallback pages use the main-language slug.
 
+Terms work the same way: a term page, link or name in another language
+uses that language's translation once it is Ready, otherwise the
+main-language one. Globals have no Ready step: text nobody translated
+shows the main language's.
+
+## What is stored where
+
+| | Shared (one row) | Per language |
+| --- | --- | --- |
+| Entries | `sunrice_entries` (status, dates, template, order) | `sunrice_entry_translations`: title, slug, SEO, Ready, draft, translated field text |
+| Terms | `sunrice_terms` (parent, order, template) | `sunrice_term_translations`: name, slug, SEO, Ready, translated field text |
+| Globals | `sunrice_globals` (handle, blueprint) | `sunrice_global_values`: translated field text |
+| Listing pages | | `archive_data` per language: heading, intro, SEO, translated field text |
+| Menu labels, collection/taxonomy titles | | JSON `{locale: text}` maps (empty falls back to the main language) |
+
+Which terms an entry has (the attached taxonomies) is the same in every
+language.
+
 ## Shared layout, translated text
 
-The main language owns an entry's **layout**: which repeater rows and
+Entries, terms, globals and listing pages all store their fields the same
+way. The main language owns the **layout**: which repeater rows and
 flexible blocks exist, their order, their keys and Show/Hide state, and
 every field that isn't translatable (images, toggles, numbers, dates…).
 A translation stores **only its translated text**, keyed by row/block id,
@@ -38,7 +57,10 @@ and is always rendered inside the current main-language layout. So:
 Each field has a **Translatable** switch in the blueprint/fieldset builder
 (`translatable: true|false` in the definition). Unset, it follows the field
 type: `text`, `textarea`, `rich_text` and `link` are translatable;
-everything else is shared. `group`, `repeater` and `flexible` are
+everything else is shared. The same switch applies wherever the blueprint
+is used: entries, terms, globals and listing pages. (Global sets have no
+set-wide translatable switch: a phone number or code in a text field
+stays shared once you switch that field off.) `group`, `repeater` and `flexible` are
 containers: their children decide, and switching a container off shares
 the whole thing.
 
@@ -74,17 +96,23 @@ and `hidden`. A secondary translation's `data` looks like:
 }
 ```
 
-Translations saved by earlier versions (a full copy of the data) are still
-read correctly, matched by position. Run `php artisan
-sunrice:upgrade-translations` once to give existing rows ids and convert
-them; it is safe to run again.
+Translations saved by earlier versions (a full copy of the data, for
+entries, terms and globals) are still read correctly, matched by
+position. Run `php artisan sunrice:upgrade-translations` once to give
+existing rows ids and trim them to their translated text; it is safe to
+run again.
 
 ## Draft / Ready per translation
 
-Each translation has `is_ready` (Draft/Ready). Ready translations are
-publishable; publish copies the `draft` payload to the live columns and
-records a `Revision`. `sunrice.revisions.keep` caps revisions per
+Each entry translation has `is_ready` (Draft/Ready). Ready translations
+are publishable; publish copies the `draft` payload to the live columns
+and records a `Revision`. `sunrice.revisions.keep` caps revisions per
 translation.
+
+Term translations have `is_ready` too (the **Ready** switch in the term
+editor), without drafts. A translation typed in the admin or saved by an
+agent is Ready unless you switch it off; one made by
+`sunrice:translate` waits for an editor to switch it on.
 
 ## Changing the main language
 
@@ -110,8 +138,9 @@ What it does (in one transaction):
   text. Drafts and revisions are converted the same way, and both
   languages stay published. Entries of non-translatable collections are
   relabeled to the new language.
-- **Terms, globals:** stored whole per language; missing new-main copies
-  are filled from the old main language (terms need `--copy-missing`).
+- **Terms, globals:** converted like entries. Terms with no version in
+  the new language need `--copy-missing`; globals without one keep
+  showing the old main values.
 - **Listing pages, collection/taxonomy titles, menu labels:** swapped so
   every language shows what it showed before.
 - **URLs:** new-main pages become unprefixed and `/{new}/…` redirects to

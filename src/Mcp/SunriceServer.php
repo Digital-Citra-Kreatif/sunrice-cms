@@ -34,8 +34,9 @@ Start with get_site_info: handles, languages, field types and your permissions.
 Translating (get_site_info → languages: main is the source, the other available languages are translations):
 - Entries: translate_entry (machine translation, when the site has an API key), or translate yourself and save with update_entry locale (title, slug, data, seo). get_entry shows each language and missing_languages; seo_audit lists entries missing a translation. Only translatable fields need a value; the rest are shared with the main language.
 - Listing pages: get_listing, then save_listing with locale (title, intro, data, seo).
-- Terms: save_term with translations {locale: {name, slug, data, seo}}.
-- Globals: save_global with locale and values (only sets marked translatable; others are shared).
+- Terms: save_term with translations {locale: {name, slug, data, seo, is_ready}}. Another language is shown on the site once it is Ready (new ones are, unless is_ready: false).
+- Globals: save_global with locale and values.
+- Terms and globals work like entries: only translatable fields have a value per language; the rest are shared with the main language.
 - Menus: save_menu item labels {locale: text} (empty = the target's title in that language).
 - Collection and taxonomy names: save_collection / save_taxonomy settings.titles {locale: name}.
 - Whole site at once: run_command sunrice:translate (entries, terms, globals, menus and language files; entries become drafts to review).

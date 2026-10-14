@@ -95,7 +95,7 @@ it('creates menus, globals and taxonomies via factories', function () {
     $menu->items()->create(['type' => 'url', 'url' => 'https://x.test', 'labels' => ['id' => 'X'], 'sort_order' => 0]);
     expect($menu->rootItems)->toHaveCount(1);
 
-    $global = GlobalSet::factory()->create(['translatable' => true]);
+    $global = GlobalSet::factory()->create();
     $global->values()->create(['locale' => 'id', 'data' => ['name' => 'Situs']]);
     expect($global->valueFor('id')->data)->toBe(['name' => 'Situs']);
 

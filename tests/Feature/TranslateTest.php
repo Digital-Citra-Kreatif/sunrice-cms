@@ -149,7 +149,7 @@ it('skips fields that are already translated unless --force is used', function (
     expect(Entry::query()->find($entry->id)->translation('en')->draft['data']['intro'])->toBe('[en] Pagi');
 });
 
-it('translates terms, translatable globals and menu labels', function () {
+it('translates terms, globals and menu labels', function () {
     fakeTranslations();
     $taxonomy = Taxonomy::factory()->create(['handle' => 'topics']);
     $term = Term::factory()->create(['taxonomy_id' => $taxonomy->id]);
@@ -157,9 +157,10 @@ it('translates terms, translatable globals and menu labels', function () {
 
     $siteBlueprint = Blueprint::create(['handle' => 'tr-site', 'title' => 'Site', 'fields' => [
         ['handle' => 'tagline', 'type' => 'text', 'label' => 'Tagline'],
+        ['handle' => 'phone', 'type' => 'text', 'label' => 'Phone', 'translatable' => false],
     ]]);
-    $site = GlobalSet::factory()->create(['handle' => 'site', 'blueprint_id' => $siteBlueprint->id, 'translatable' => true]);
-    $site->values()->create(['locale' => 'id', 'data' => ['tagline' => 'Cepat dan ringan']]);
+    $site = GlobalSet::factory()->create(['handle' => 'site', 'blueprint_id' => $siteBlueprint->id]);
+    $site->values()->create(['locale' => 'id', 'data' => ['tagline' => 'Cepat dan ringan', 'phone' => '0812']]);
 
     $menu = Menu::factory()->create(['handle' => 'main']);
     $item = MenuItem::query()->create([
@@ -172,7 +173,12 @@ it('translates terms, translatable globals and menu labels', function () {
 
     expect($term->fresh()->translation('en')->name)->toBe('[en] Berita')
         ->and($term->fresh()->translation('en')->slug)->toBe('en-berita')
-        ->and($site->values()->where('locale', 'en')->first()->data['tagline'])->toBe('[en] Cepat dan ringan')
+        // A machine-translated term waits for an editor to mark it Ready.
+        ->and($term->fresh()->translation('en')->is_ready)->toBeFalse()
+        ->and($term->fresh()->readyTranslation('en'))->toBeNull()
+        // Globals keep only the translated text; the phone number stays shared.
+        ->and($site->values()->where('locale', 'en')->first()->data)->toBe(['tagline' => '[en] Cepat dan ringan'])
+        ->and($site->fresh()->valuesFor('en'))->toEqual(['tagline' => '[en] Cepat dan ringan', 'phone' => '0812'])
         // Compare per key: MySQL's JSON type does not keep object key order.
         ->and($item->fresh()->labels['id'])->toBe('Beranda')
         ->and($item->fresh()->labels['en'])->toBe('[en] Beranda');

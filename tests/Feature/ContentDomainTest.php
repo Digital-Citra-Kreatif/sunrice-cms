@@ -34,7 +34,7 @@ it('resolves a term translation with whole-term fallback', function () {
     // No 'en' translation → falls back to main locale.
     expect($term->resolveFor('en')->slug)->toBe('main-slug');
 
-    $term->translations()->create([
+    $english = $term->translations()->create([
         'taxonomy_id' => $taxonomy->id,
         'locale' => 'en',
         'name' => 'English',
@@ -42,6 +42,10 @@ it('resolves a term translation with whole-term fallback', function () {
         'data' => [],
     ]);
 
+    // Not Ready yet → still the main locale.
+    expect($term->resolveFor('en')->slug)->toBe('main-slug');
+
+    $english->update(['is_ready' => true]);
     expect($term->resolveFor('en')->slug)->toBe('english-slug')
         ->and($term->resolveFor(Locales::main())->slug)->toBe('main-slug');
 });
@@ -197,16 +201,16 @@ it('marks the active menu item per request, not from the cached menu', function 
 
 // ---------------- globals domain (T10.3) ----------------
 
-it('returns global values with whole-set locale fallback', function () {
+it('returns global values, falling back to the main language', function () {
     $blueprint = Blueprint::create(['handle' => 'footer', 'title' => 'Footer', 'fields' => [
         ['handle' => 'tagline', 'type' => 'text', 'label' => 'Tagline', 'config' => []],
     ]]);
-    $set = GlobalSet::factory()->create(['blueprint_id' => $blueprint->id, 'translatable' => true]);
+    $set = GlobalSet::factory()->create(['blueprint_id' => $blueprint->id]);
     $set->values()->create(['locale' => Locales::main(), 'data' => ['tagline' => 'Halo']]);
 
     $globals = app(GlobalsRepository::class);
 
-    // Missing 'en' row → whole-set fallback to main locale.
+    // No 'en' row: the main language's values.
     expect($globals->get($set->handle, 'en')->get('tagline'))->toBe('Halo');
     expect($globals->get($set->handle)->get('tagline'))->toBe('Halo');
     expect($globals->get($set->handle)->tagline)->toBe('Halo');
@@ -217,13 +221,24 @@ it('returns global values with whole-set locale fallback', function () {
     expect($globals->get($set->handle, 'en')->get('tagline'))->toBe('Hello');
 });
 
-it('reads non-translatable globals from the shared row', function () {
+it('shares a global\'s non-translatable fields with every language', function () {
     $blueprint = Blueprint::create(['handle' => 'social', 'title' => 'Social', 'fields' => [
-        ['handle' => 'twitter', 'type' => 'text', 'label' => 'Twitter', 'config' => []],
+        ['handle' => 'twitter', 'type' => 'text', 'label' => 'Twitter', 'translatable' => false],
+        ['handle' => 'tagline', 'type' => 'text', 'label' => 'Tagline'],
     ]]);
-    $set = GlobalSet::factory()->create(['blueprint_id' => $blueprint->id, 'translatable' => false]);
-    $set->values()->create(['locale' => null, 'data' => ['twitter' => '@sunrice']]);
+    $set = GlobalSet::factory()->create(['blueprint_id' => $blueprint->id]);
+    $set->setValuesFor(Locales::main(), ['twitter' => '@sunrice', 'tagline' => 'Halo']);
+    $set->setValuesFor('en', ['twitter' => '@other', 'tagline' => 'Hello']);
 
-    expect(app(GlobalsRepository::class)->get($set->handle, 'en')->get('twitter'))->toBe('@sunrice')
+    // Only the translated text is stored for English.
+    expect($set->valueFor('en')->data)->toBe(['tagline' => 'Hello']);
+
+    $en = app(GlobalsRepository::class)->get($set->handle, 'en');
+    expect($en->get('twitter'))->toBe('@sunrice')->and($en->get('tagline'))->toBe('Hello')
         ->and(sunrice_global($set->handle)->twitter)->toBe('@sunrice');
+
+    // Changing the shared value once changes it everywhere.
+    $set->setValuesFor(Locales::main(), ['twitter' => '@new', 'tagline' => 'Halo']);
+    Cache::flush();
+    expect(app(GlobalsRepository::class)->get($set->handle, 'en')->get('twitter'))->toBe('@new');
 });
