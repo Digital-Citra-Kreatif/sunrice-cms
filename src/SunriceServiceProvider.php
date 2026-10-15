@@ -345,7 +345,6 @@ class SunriceServiceProvider extends PackageServiceProvider
             Console\RegenerateImageSizesCommand::class,
             Console\OptimizeImagesCommand::class,
             Console\TranslateCommand::class,
-            Console\UpgradeTranslationsCommand::class,
             Console\SeedRolesCommand::class,
             Console\TwoFactorCommand::class,
             Console\OrphansCommand::class,

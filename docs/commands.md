@@ -14,7 +14,6 @@ Every Sunrice command, what it does and its options. Run
 | `sunrice:mcp-token {email}` | Creates an access token for AI agents acting as that user (shown once). `--name=`, `--list`, `--revoke=ID`. See [AI agents](ai-agents.md). |
 | `sunrice:prune-activity` | Deletes [activity log](activity-log.md) entries older than 180 days (`sunrice.activity.prune_days`); `--days=30` for another age. |
 | `sunrice:two-factor {on\|off}` | Turns two-factor (emailed code) login on or off; no argument shows the current state. The way back in if mail breaks while it's on. See [Mail](mail.md#two-factor-login). |
-| `sunrice:upgrade-translations` | One-time conversion of entry, term and global translations to the shared-layout format (translated text only). `--dry-run` reports only. |
 
 After upgrading the package:
 

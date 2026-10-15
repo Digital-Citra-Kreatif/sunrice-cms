@@ -24,9 +24,8 @@ use Sunrice\Models\Fieldset;
  * merge() lays the overlay over the main data; extract() turns full
  * editor data back into an overlay. Values equal to the main language
  * are not stored, so untranslated text keeps following the main
- * language. Rows/blocks saved before they had ids are matched by
- * position ("#0", "#1", ...); a legacy full-copy translation (lists
- * instead of maps) is read the same way.
+ * language. Main-language rows/blocks without ids are matched by
+ * position ("#0", "#1", ...).
  */
 class TranslationOverlay
 {
@@ -220,9 +219,8 @@ class TranslationOverlay
     }
 
     /**
-     * Overlay items by key. Accepts the overlay map, or a legacy list of
-     * full rows/blocks (whose values are the translation). With $full,
-     * reads full main data instead (values of rows/blocks by key).
+     * Overlay items by key. With $full, reads full main data instead
+     * (values of rows/blocks by key, and by position).
      *
      * @param  array<array-key, mixed>  $value
      * @return array<string, array<string, mixed>>
@@ -232,7 +230,7 @@ class TranslationOverlay
         $idKey = $type === 'flexible' ? 'id' : '_id';
         $items = [];
 
-        if (! $full && ! array_is_list($value)) {
+        if (! $full) {
             foreach ($value as $key => $item) {
                 if (is_array($item)) {
                     $items[(string) $key] = $type === 'flexible' ? (array) ($item['values'] ?? []) : $item;
@@ -248,8 +246,7 @@ class TranslationOverlay
             }
             $values = $type === 'flexible' ? (array) ($item['values'] ?? []) : $item;
             $items[static::keyOf($item, (int) $i, $idKey)] = $values;
-            // Also reachable by position, so rows that gained ids after
-            // the translation was saved still line up.
+            // Also reachable by position, for rows without ids.
             $items['#'.$i] ??= $values;
         }
 

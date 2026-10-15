@@ -12,9 +12,9 @@
   that wasn't translatable keeps its values as the main language's, and
   its text fields become translatable by default (switch off any that must
   stay identical). `$entry->terms` now gives names and links in the page
-  language without `resolveFor()`. Run `php artisan migrate`, then
-  `php artisan sunrice:upgrade-translations` to trim stored term and global
-  translations to their translated text.
+  language without `resolveFor()`. Run `php artisan migrate`.
+  `sunrice:upgrade-translations` is removed: translations saved before
+  shared layouts are no longer converted or read.
 - Fixed: the admin was blank while the site's own Vite dev server was
   running (`npm run dev` for the site's CSS and scripts). It asked that
   server for its script. It now always loads its own published bundle.
@@ -163,8 +163,7 @@
   adding, reordering or hiding blocks and swapping images happens once for
   every language. Fields have a **Translatable** switch in the blueprint
   builder (text types on by default); shared fields are read-only when
-  editing a translation. Run `php artisan sunrice:upgrade-translations` once
-  to convert existing translations (old ones still render meanwhile).
+  editing a translation.
 - Repeater rows and flexible blocks get an optional **key** and a **Show**
   switch: hidden items are skipped on the site, and templates can fetch an
   item with `$entry->get('sections')->byKey('hero')`. Rows now carry a

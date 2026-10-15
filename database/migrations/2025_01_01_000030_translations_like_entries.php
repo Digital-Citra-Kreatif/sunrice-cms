@@ -18,9 +18,6 @@ return new class extends Migration
      * - Global sets lose their set-wide "translatable" switch: each
      *   field's own Translatable setting decides. The shared row of a
      *   set that wasn't translatable becomes its main-language row.
-     *
-     * Stored translations keep working as they are (full copies are read
-     * like overlays); `sunrice:upgrade-translations` trims them.
      */
     public function up(): void
     {

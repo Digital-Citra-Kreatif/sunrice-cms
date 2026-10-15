@@ -109,7 +109,7 @@ it('saves entry translations as unready drafts holding only the translated text'
         ->and($en->draft['data']['intro'])->toBe('[en] Selamat datang')
         ->and($en->draft['data']['body'])->toStartWith('[en]')->toContain('<strong>tebal</strong>')
         // Shared fields stay with the main language; rows are matched by id
-        // (or by position for rows saved before they had one).
+        // (or by position for rows without one).
         ->and($en->draft['data'])->not->toHaveKey('code')->not->toHaveKey('featured')
         ->and($en->draft['data']['faq']['#0']['question'])->toBe('[en] Apa itu?')
         ->and($en->draft['seo']['title'])->toBe('[en] Judul SEO');
