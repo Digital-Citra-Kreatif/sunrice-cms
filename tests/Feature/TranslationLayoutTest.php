@@ -179,49 +179,6 @@ it('renders a translation inside the main layout, following later layout changes
     expect($features)->toHaveCount(2)->and($features->byKey('speed')['title'])->toBe('Fast');
 });
 
-it('reads legacy full-copy translations by position', function () {
-    $entry = landingEntry(mainLanding());
-    $legacy = mainLanding();
-    $legacy['intro'] = 'Welcome';
-    $legacy['code'] = 'OLD';
-    $legacy['features'][0]['title'] = 'Fast';
-
-    $entry->translations()->create([
-        'collection_id' => $entry->collection_id, 'locale' => 'en', 'title' => 'Home', 'slug' => 'home',
-        'is_ready' => true, 'content_published_at' => now(), 'data' => $legacy,
-    ]);
-
-    $entry = Entry::query()->with('translations')->findOrFail($entry->id);
-    $entry->resolveFor('en');
-
-    expect($entry->data['intro'])->toBe('Welcome')
-        ->and($entry->data['code'])->toBe('SKU-1')
-        ->and($entry->data['features'][0]['title'])->toBe('Fast')
-        ->and($entry->data['features'][0]['_id'])->toBe($entry->mainTranslation()->data['features'][0]['_id']);
-});
-
-it('upgrades legacy translations to the shared layout', function () {
-    $entry = createEntry($this->pages, 'Beranda', mainLanding()); // saved without ids
-    $legacy = mainLanding();
-    $legacy['features'][0]['title'] = 'Fast';
-    $legacy['code'] = 'OLD';
-    $entry->translations()->create([
-        'collection_id' => $entry->collection_id, 'locale' => 'en', 'title' => 'Home', 'slug' => 'home',
-        'is_ready' => true, 'data' => $legacy,
-    ]);
-
-    $this->artisan('sunrice:upgrade-translations')->expectsOutputToContain('Updated 2 translation(s)')->assertSuccessful();
-
-    $entry = Entry::query()->with('translations')->findOrFail($entry->id);
-    $rowId = $entry->mainTranslation()->data['features'][0]['_id'];
-
-    expect($rowId)->toBeString()
-        ->and($entry->translation('en')->data)->toEqual(['features' => [$rowId => ['title' => 'Fast']]]);
-
-    // Running it again changes nothing.
-    $this->artisan('sunrice:upgrade-translations')->expectsOutputToContain('Updated 0 translation(s)')->assertSuccessful();
-});
-
 it('previews an unready translation from its draft over the main draft layout', function () {
     $entry = landingEntry(mainLanding());
     $en = EntryTranslation::query()->create([

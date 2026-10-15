@@ -9,7 +9,6 @@ use Sunrice\Models\Blueprint;
 use Sunrice\Models\GlobalSet;
 use Sunrice\Models\Taxonomy;
 use Sunrice\Models\Term;
-use Sunrice\Models\TermTranslation;
 use Sunrice\Support\Locales;
 
 use function Pest\Laravel\artisan;
@@ -116,27 +115,6 @@ it('gives an entry\'s terms in the page language without resolving them', functi
 
     app()->setLocale('id');
     expect($entry->fresh()->terms->first()->name)->toBe('Berita');
-});
-
-it('trims term and global copies saved before, with upgrade-translations', function () {
-    $term = Term::factory()->create(['taxonomy_id' => $this->topics->id]);
-    $term->translations()->first()->update(['data' => ['description' => 'Kabar', 'color' => 'red']]);
-    TermTranslation::query()->create([
-        'term_id' => $term->id, 'taxonomy_id' => $this->topics->id, 'locale' => 'en', 'name' => 'News', 'slug' => 'news',
-        'data' => ['description' => 'News', 'color' => 'red'], 'is_ready' => true,
-    ]);
-
-    $set = GlobalSet::factory()->create(['blueprint_id' => $this->blueprint->id]);
-    $set->values()->create(['locale' => 'id', 'data' => ['description' => 'Halo', 'color' => 'red']]);
-    $set->values()->create(['locale' => 'en', 'data' => ['description' => 'Hello', 'color' => 'blue']]);
-
-    // Read like overlays already: the shared value comes from the main language.
-    expect($set->valuesFor('en'))->toEqual(['description' => 'Hello', 'color' => 'red']);
-
-    artisan('sunrice:upgrade-translations')->assertSuccessful();
-
-    expect($term->translation('en')->data)->toBe(['description' => 'News'])
-        ->and($set->fresh()->valueFor('en')->data)->toBe(['description' => 'Hello']);
 });
 
 it('switches the main language for terms and globals like entries', function () {

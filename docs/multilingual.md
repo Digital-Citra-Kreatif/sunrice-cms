@@ -96,11 +96,8 @@ and `hidden`. A secondary translation's `data` looks like:
 }
 ```
 
-Translations saved by earlier versions (a full copy of the data, for
-entries, terms and globals) are still read correctly, matched by
-position. Run `php artisan sunrice:upgrade-translations` once to give
-existing rows ids and trim them to their translated text; it is safe to
-run again.
+Main-language rows and blocks without ids (content created in code,
+for example) are matched by position until they are next saved.
 
 ## Draft / Ready per translation
 
