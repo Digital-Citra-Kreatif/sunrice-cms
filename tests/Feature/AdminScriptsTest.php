@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Foundation\Vite;
 use Sunrice\Facades\Sunrice;
 
 beforeEach(function () {
@@ -43,9 +44,15 @@ it('loads its own built bundle while the site\'s Vite dev server is running', fu
     file_put_contents($manifest, json_encode(['resources/js/app.tsx' => ['file' => 'assets/app-test.js', 'src' => 'resources/js/app.tsx', 'isEntry' => true, 'css' => ['assets/app-test.css']]]));
     file_put_contents($hot, 'http://localhost:5173');
 
+    // Vite keeps each manifest it reads for the whole run: forget the real
+    // one an earlier test may have loaded, and this fake one afterwards.
+    $forgetManifests = fn () => (new ReflectionProperty(Vite::class, 'manifests'))->setValue(null, []);
+    $forgetManifests();
+
     try {
         $html = $this->get('/cms')->assertOk()->getContent();
     } finally {
+        $forgetManifests();
         @unlink($hot);
         $kept === null ? @unlink($manifest) : file_put_contents($manifest, $kept);
         if (! $existed) {
