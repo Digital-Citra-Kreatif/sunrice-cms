@@ -92,6 +92,26 @@ class Collection extends Model
     }
 
     /**
+     * Handles of the `entries` fields named in the entry route besides
+     * {slug}: '/projects/{project}/{slug}' → ['project']. Each fills its
+     * segment with the slug of the entry that field links to.
+     *
+     * @return array<int, string>
+     */
+    public function routeParameters(): array
+    {
+        return static::parametersOf($this->entryRoute());
+    }
+
+    /** @return array<int, string> */
+    public static function parametersOf(string $route): array
+    {
+        preg_match_all('#\{([a-z][a-z0-9_]*)\}#', $route, $m);
+
+        return array_values(array_diff(array_unique($m[1]), ['slug']));
+    }
+
+    /**
      * Turns what an editor typed into a URL pattern: 'blog' and '/blog/'
      * become '/blog/{slug}', '/' becomes '/{slug}' (site root), patterns
      * with {slug} are kept. Empty means "follow the handle" (null).
