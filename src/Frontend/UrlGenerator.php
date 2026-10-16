@@ -29,7 +29,33 @@ class UrlGenerator
             return Locales::prefix($locale) ?: '/';
         }
 
-        return Locales::prefix($locale).str_replace('{slug}', $this->slugPath($entry, $locale), $collection->entryRoute());
+        return Locales::prefix($locale).$this->fillRoute($collection->entryRoute(), $entry, $locale, $this->slugPath($entry, $locale));
+    }
+
+    /**
+     * Puts the slug path and each linked entry's slug into the route:
+     * '/projects/{project}/{slug}' → '/projects/tower-a/unit-1'. A
+     * field that links to nothing fills its segment with '-'.
+     */
+    public function fillRoute(string $route, Entry $entry, string $locale, string $slugPath): string
+    {
+        foreach (Collection::parametersOf($route) as $field) {
+            $route = str_replace('{'.$field.'}', $this->linkedSlug($entry, $field, $locale), $route);
+        }
+
+        return str_replace('{slug}', $slugPath, $route);
+    }
+
+    /** Slug of the first entry the `entries` field $field links to. */
+    protected function linkedSlug(Entry $entry, string $field, string $locale): string
+    {
+        // Relationships are shared by every language: read the main one.
+        $ids = (array) ($entry->mainTranslation()?->data[$field] ?? []);
+        $id = (int) (reset($ids) ?: 0);
+        $linked = $id === 0 ? null : Entry::query()->with('translations')->find($id);
+        $slug = $linked === null ? '' : $this->entrySlug($linked, $locale);
+
+        return $slug === '' ? '-' : $slug;
     }
 
     /**
@@ -78,7 +104,7 @@ class UrlGenerator
             return null;
         }
 
-        return Locales::prefix($translation->locale).str_replace('{slug}', $this->slugPath($entry, $translation->locale, $translation->slug), $entry->collection->entryRoute());
+        return Locales::prefix($translation->locale).$this->fillRoute($entry->collection->entryRoute(), $entry, $translation->locale, $this->slugPath($entry, $translation->locale, $translation->slug));
     }
 
     public function entrySlug(Entry $entry, string $locale): string

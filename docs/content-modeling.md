@@ -7,7 +7,9 @@ Settings:
 
 - `route` — public URL of entries. Type a prefix (`blog` → `/blog/{slug}`),
   a full pattern (`/news/{slug}`) or `/` for the site root; empty follows
-  the handle (`/{handle}/{slug}`). Each collection needs its own.
+  the handle (`/{handle}/{slug}`). Each collection needs its own. The
+  pattern can also name an Entries field (see
+  [Related entries in URLs](#related-entries-in-urls)).
 - `icon` — sidebar icon in the admin.
 - `archive_route` — archive URL when `has_archive` is on.
 - `has_single`, `has_archive` — toggle detail/archive pages.
@@ -126,6 +128,33 @@ child's URL starts with its parents' slugs: with the route `/{slug}`,
 In templates, `$entry->parent`, `$entry->ancestors()` (top-down, for
 breadcrumbs) and `sunrice_entries('pages')->childrenOf($entry)->get()`
 (sub-navigation; `childrenOf(null)` for top-level pages).
+
+## Related entries in URLs
+
+A collection's URL can include the slug of an entry it links to. For
+*Units* that each belong to a *Project*:
+
+1. Give the Units blueprint an **Entries** field `project`, limited to the
+   `projects` collection, with a maximum of 1.
+2. Set the Units route to `/projects/{project}/{slug}`.
+
+A unit whose `project` field links to *Tower A* now lives at
+`/projects/tower-a/unit-1`. On the project's page, list its units with
+`sunrice_entries('units')->whereEntry('project', $entry)->get()`.
+
+- Any `{name}` besides `{slug}` must be an Entries field of the
+  collection's blueprint; saving the collection checks this. When the
+  field links to several entries, the first one is used.
+- A unit is found by its own slug (unique per collection and language),
+  so a URL with the wrong or an old project slug redirects (`301`) to the
+  unit's address. Renaming a project or moving a unit to another one
+  keeps old links working.
+- Each language uses the linked entry's slug in that language, falling
+  back to the main language's.
+- A unit that links to no project uses `-` for that segment:
+  `/projects/-/unit-1`. Make the field required to avoid this.
+- Keep a fixed prefix (`/projects/...`): a pattern that starts with
+  `{project}` competes with root-level pages and language prefixes.
 
 ## Taxonomies
 

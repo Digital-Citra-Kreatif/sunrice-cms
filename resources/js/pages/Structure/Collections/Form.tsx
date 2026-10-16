@@ -227,6 +227,10 @@ export default function CollectionsForm({ collection, blueprints, taxonomies }: 
                             Leave empty to use the handle (<code>/{handle}/&#123;slug&#125;</code>). Type a prefix such as{' '}
                             <code>blog</code>, a full pattern such as <code>/news/&#123;slug&#125;</code>, or <code>/</code> for the site root. Each collection needs its own.
                         </p>
+                        <p className="text-xs text-muted-foreground">
+                            To put a related entry in the URL, name one of this collection's Entries fields:{' '}
+                            <code>/projects/&#123;project&#125;/&#123;slug&#125;</code> uses the slug of the entry the <code>project</code> field links to.
+                        </p>
                         <InputError message={errors['settings.route']} />
                         <label className="flex items-center gap-3 text-sm">
                             <Checkbox checked={settings.hierarchical} onCheckedChange={(c) => setSetting('hierarchical', !!c)} />

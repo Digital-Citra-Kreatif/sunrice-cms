@@ -117,7 +117,10 @@ class PageController extends Controller
         $entry = $translation->entry;
         // Rendering reads every language (URLs, hreflang, fallbacks): load them once.
         $entry->loadMissing(['translations', 'collection.blueprint']);
-        if ($nested && (int) Setting::get('homepage_entry_id') !== (int) $entry->id) {
+        // Nested slugs and '{project}' segments must be the entry's own;
+        // otherwise (a moved page, a renamed project) send it to its address.
+        $checkPath = $nested || $match->collection->routeParameters() !== [];
+        if ($checkPath && (int) Setting::get('homepage_entry_id') !== (int) $entry->id) {
             $canonical = app(UrlGenerator::class)->entryUrl($entry, $locale);
             if ($canonical !== null && $canonical !== Locales::prefix($locale).'/'.$path) {
                 $query = request()->getQueryString();

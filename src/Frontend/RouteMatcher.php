@@ -126,14 +126,20 @@ class RouteMatcher
     protected function route(string $pattern, RouteMatch $match, bool $nested = false): array
     {
         $pattern = '/'.trim($pattern, '/');
-        $regex = '#^'.preg_quote($pattern, '#').'$#';
-        $regex = str_replace(preg_quote('{slug}', '#'), $nested ? '(?<slug>[^/]+(?:/[^/]+)*)' : '(?<slug>[^/]+)', $regex);
+        $placeholder = '#\{[a-z][a-z0-9_]*\}#';
+        $parts = preg_split('#(\{[a-z][a-z0-9_]*\})#', $pattern, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [$pattern];
+        $regex = '#^'.implode('', array_map(fn (string $part) => match (true) {
+            $part === '{slug}' => $nested ? '(?<slug>[^/]+(?:/[^/]+)*)' : '(?<slug>[^/]+)',
+            // '{project}' segments take any slug; the entry page checks they're its own.
+            preg_match($placeholder, $part) === 1 => '[^/]+',
+            default => preg_quote($part, '#'),
+        }, $parts)).'$#';
 
         return [
             'regex' => $regex,
             'match' => $match,
-            'dynamic' => str_contains($pattern, '{slug}'),
-            'literal' => strlen(str_replace('{slug}', '', $pattern)),
+            'dynamic' => preg_match($placeholder, $pattern) === 1,
+            'literal' => strlen((string) preg_replace($placeholder, '', $pattern)),
         ];
     }
 }

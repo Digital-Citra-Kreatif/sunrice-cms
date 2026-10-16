@@ -8,6 +8,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Events\ContentChanged;
+use Sunrice\Models\Blueprint;
 use Sunrice\Models\Collection;
 use Sunrice\Permissions\SyncPermissions;
 
@@ -85,6 +86,7 @@ class SaveCollection
         $handle = $validated['handle'] ?? $collection?->handle;
         $settings = $this->normalizeRoute($settings, (string) $handle);
         $this->ensureUniqueRoute($settings, (string) $handle, $collection);
+        $this->ensureRouteFields($settings, (string) $handle, Arr::get($validated, 'blueprint_id', $collection?->blueprint_id));
 
         $collection ??= new Collection;
         $collection->fill([
@@ -184,12 +186,44 @@ class SaveCollection
         $taken = Collection::query()
             ->when($collection !== null, fn ($q) => $q->whereKeyNot($collection->getKey()))
             ->get()
-            ->first(fn (Collection $other) => $other->setting('has_single', true) !== false && $other->entryRoute() === $route);
+            ->first(fn (Collection $other) => $other->setting('has_single', true) !== false && $this->routeShape($other->entryRoute()) === $this->routeShape($route));
 
         if ($taken !== null) {
             throw ValidationException::withMessages([
                 'settings.route' => "The URL {$route} is already used by the \"{$taken->title}\" collection. Choose another route prefix.",
             ]);
+        }
+    }
+
+    /** '/projects/{project}/{slug}' and '/projects/{site}/{slug}' match the same URLs. */
+    protected function routeShape(string $route): string
+    {
+        return (string) preg_replace('#\{[a-z][a-z0-9_]*\}#', '{}', $route);
+    }
+
+    /**
+     * Every placeholder besides {slug} must name an `entries` field of
+     * the collection's blueprint: its linked entry's slug fills the segment.
+     *
+     * @param  array<string, mixed>  $settings
+     *
+     * @throws ValidationException
+     */
+    protected function ensureRouteFields(array $settings, string $handle, mixed $blueprintId): void
+    {
+        if (($settings['has_single'] ?? true) === false) {
+            return;
+        }
+
+        $route = (new Collection(['handle' => $handle, 'settings' => $settings]))->entryRoute();
+        $schema = $blueprintId === null ? null : Blueprint::query()->find($blueprintId)?->schema();
+
+        foreach (Collection::parametersOf($route) as $field) {
+            if (($schema?->field($field)['type'] ?? null) !== 'entries') {
+                throw ValidationException::withMessages([
+                    'settings.route' => "{{$field}} in the URL must be the handle of an Entries field in this collection's blueprint.",
+                ]);
+            }
         }
     }
 }
