@@ -178,7 +178,9 @@ it('emails a commenter about an approved reply, with a link to stop', function (
         return $mail->hasTo('ada@example.com')
             && str_contains($text, 'Bob replied to your comment')
             && str_contains($text, 'I agree')
-            && str_contains($text, '/sunrice/comments/unsubscribe/');
+            && str_contains($text, '/sunrice/comments/unsubscribe/')
+            // Plain text: nothing HTML-escaped in the signed link.
+            && ! str_contains($text, '&amp;');
     });
 
     get(URL::signedRoute('sunrice.frontend.comments.unsubscribe', ['comment' => $parent->id]))->assertOk();
