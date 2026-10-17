@@ -123,12 +123,13 @@ it('rate limits comments per visitor', function () {
 it('asks for the captcha when the settings say so', function () {
     config(['sunrice.forms.captcha' => ['provider' => 'turnstile', 'site_key' => 'site-123', 'secret_key' => 'secret-456']]);
     config(['sunrice.comments.captcha' => true]);
-    Http::fake(['challenges.cloudflare.com/*' => Http::response(['success' => false])]);
+    Http::fake(['challenges.cloudflare.com/*' => Http::sequence()->push(['success' => false])->push(['success' => true])]);
 
+    // No token, then one the provider rejects, then one it confirms.
     post("/sunrice/comments/{$this->entry->id}", guestComment())->assertSessionHasErrorsIn('comments', '_captcha');
+    post("/sunrice/comments/{$this->entry->id}", guestComment(['cf-turnstile-response' => 'bad']))->assertSessionHasErrorsIn('comments', '_captcha');
     expect(Comment::query()->count())->toBe(0);
 
-    Http::fake(['challenges.cloudflare.com/*' => Http::response(['success' => true])]);
     post("/sunrice/comments/{$this->entry->id}", guestComment(['cf-turnstile-response' => 'ok']))->assertSessionHasNoErrors();
     expect(Comment::query()->count())->toBe(1);
 });
@@ -201,7 +202,8 @@ it('shows the approved thread with replies and a form', function () {
 
     $html = Blade::render('<x-sunrice::comments :entry="$entry" />', ['entry' => $this->entry]);
 
-    expect($html)->toContain('2 komentar')
+    // Outside a request: the app's own language, English.
+    expect($html)->toContain('2 comments')
         ->toContain('id="comment-'.$first->id.'"')
         ->toContain('Line one<br>')
         ->toContain('<a href="https://example.com/x" rel="nofollow ugc noopener" target="_blank">https://example.com/x</a>')
@@ -232,7 +234,7 @@ it('shows nothing where comments are off, and no form when closed', function () 
     Comment::factory()->create(['entry_id' => $this->entry->id, 'body' => 'Still here']);
     $this->entry->update(['comments_closed' => true]);
     $html = Blade::render('<x-sunrice::comments :entry="$entry" />', ['entry' => $this->entry->fresh()]);
-    expect($html)->toContain('Still here')->toContain('Komentar ditutup.')->not->toContain('id="comment-form"');
+    expect($html)->toContain('Still here')->toContain('Comments are closed.')->not->toContain('id="comment-form"');
 });
 
 it('lines up replies below the deepest level', function () {
