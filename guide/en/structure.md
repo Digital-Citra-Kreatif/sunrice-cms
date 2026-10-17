@@ -55,7 +55,7 @@ Go to **Manage → Blueprints**. The list shows how many **Fields** each has and
 1. Open **Add field** and pick a type. The field appears at the bottom.
 2. Click it to open it and fill in **Handle** (internal name), **Label** (what editors see) and optional **Instructions** (a hint under the field).
 3. Tick **Required** if the entry can't be saved without it.
-4. Use the **Translatable** switch: on means the value differs per language ("differs per language"); off means one value for all languages ("shared by all languages"). Text fields are translatable by default; images, numbers and toggles are shared.
+4. Use the **Translatable** switch: on means the value differs per language ("differs per language"); off means one value for all languages ("shared by all languages"). Text fields are translatable by default; images, numbers and toggles are shared. The setting applies wherever the blueprint is used.
 5. Fill in the type's **Settings**, if any.
 6. Drag fields by their grip to reorder them; the bin icon removes one.
 
@@ -67,9 +67,6 @@ Go to **Manage → Blueprints**. The list shows how many **Fields** each has and
 - **group** (a few fields kept together), **repeater** (rows the editor adds as needed, such as opening hours), **flexible** (content blocks the editor stacks freely, each block type being a fieldset).
 - **fieldset** (includes a fieldset's fields here).
 - **file** is meant for [forms](forms.md).
-
-> [!NOTE]
-> A field's **Required** and **Translatable** settings apply wherever the blueprint is used: entries, terms, globals and listing pages.
 
 ## Fieldsets
 
