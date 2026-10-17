@@ -40,9 +40,7 @@ After upgrades: `php artisan sunrice:publish-assets && php artisan migrate && ph
 The same guides are readable inside the admin under **Manage → Docs**
 (permission `sunrice.docs.view`).
 
-The full product contract lives in [`SPEC.md`](SPEC.md); the build plan
-in [`EXECUTION_PLAN.md`](EXECUTION_PLAN.md); contributor/agent rules in
-[`AGENTS.md`](AGENTS.md).
+Contributor and agent rules live in [`AGENTS.md`](AGENTS.md).
 
 ## Developing the package
 

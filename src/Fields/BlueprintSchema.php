@@ -188,7 +188,7 @@ class BlueprintSchema
 
     /**
      * Clean incoming data for storage. Keys not in the schema are kept
-     * untouched (SPEC: blueprint switching preserves hidden data).
+     * untouched (blueprint switching preserves hidden data).
      *
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
