@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\View\Components;
 
+use Illuminate\Contracts\Support\MessageBag as MessageBagContract;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\MessageBag;
@@ -131,7 +132,7 @@ class Comments extends Component
         return request()->fullUrlWithoutQuery(['reply_to']).'#comment-form';
     }
 
-    public function commentErrors(): MessageBag
+    public function commentErrors(): MessageBagContract
     {
         /** @var ViewErrorBag|null $errors */
         $errors = session('errors');
