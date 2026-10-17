@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Carbon;
 use Sunrice\Database\Factories\CommentFactory;
 
@@ -167,6 +168,7 @@ class Comment extends Model
             return static::query()->whereRaw('1 = 0');
         }
 
-        return static::query()->withTrashed()->where('status', self::SPAM)->where('created_at', '<=', now()->subDays((int) $days));
+        // Trashed spam too (withTrashed(), without the macro's loose type).
+        return static::query()->withoutGlobalScope(SoftDeletingScope::class)->where('status', self::SPAM)->where('created_at', '<=', now()->subDays((int) $days));
     }
 }
