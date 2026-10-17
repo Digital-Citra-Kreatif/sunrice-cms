@@ -167,6 +167,6 @@ class Comment extends Model
             return static::query()->whereRaw('1 = 0');
         }
 
-        return static::withTrashed()->where('status', self::SPAM)->where('created_at', '<=', now()->subDays((int) $days));
+        return static::query()->withTrashed()->where('status', self::SPAM)->where('created_at', '<=', now()->subDays((int) $days));
     }
 }
