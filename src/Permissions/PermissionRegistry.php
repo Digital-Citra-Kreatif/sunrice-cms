@@ -137,6 +137,7 @@ class PermissionRegistry
             ['sunrice.run-commands', 'Let AI agents run maintenance commands', 'Admin'],
             ['sunrice.activity.view', 'View the activity log', 'Admin'],
             ['sunrice.activity.prune', 'Delete old activity log entries', 'Admin'],
+            ['sunrice.error-log.view', 'Let AI agents read the error log', 'Admin'],
         ];
 
         foreach (static::CRUD_AREAS as $area => [$label, $group]) {

@@ -34,6 +34,7 @@ so nobody loses access.
 | `sunrice.run-commands` | Let AI agents run the maintenance commands listed in `sunrice.mcp.commands`. |
 | `sunrice.activity.view` | See the [activity log](activity-log.md) (Manage → Activity log). |
 | `sunrice.activity.prune` | Delete old activity log entries from the admin. |
+| `sunrice.error-log.view` | Let AI agents read recent errors from the Laravel log (`read_error_log`). Logs can hold visitors' data, so only Administrator has it by default. |
 
 Super admins are protected: only another super admin can edit or delete a
 super-admin user, give or remove the super-admin role, or change that role.

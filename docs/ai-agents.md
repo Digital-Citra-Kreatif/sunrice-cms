@@ -68,6 +68,7 @@ email of the user it acts as.
 | Languages | `translate_entry` (machine translation with the configured service; the agent can also translate and save with `update_entry`) |
 | Templates | `get_template_guide`, `read_template`, `write_template`, `render_page` |
 | Commands | `run_command` (only the commands in `sunrice.mcp.commands`) |
+| Errors | `read_error_log`: recent errors from the Laravel log, grouped, with the file, line and stack trace, so the agent can explain the cause and suggest a fix (needs **Let AI agents read the error log**) |
 | Activity | `get_activity`: the [activity log](activity-log.md), filtered by days, source, action, type, user or text; `mine: true` for what this token changed (needs **View the activity log**) |
 
 Packages add tools of their own with `Sunrice::registerMcpTool()` (see [Packages](packages.md#tools-for-ai-agents)); they are listed after these.
@@ -126,6 +127,8 @@ is kept in `storage/app/sunrice/template-backups/`.
     'path' => 'mcp',                              // the endpoint: POST /mcp
     'local_user' => env('SUNRICE_MCP_USER'),      // for `mcp:start sunrice`
     'templates' => env('SUNRICE_MCP_TEMPLATES', true),
+    'error_log' => env('SUNRICE_MCP_ERROR_LOG', true), // read_error_log
+    'log_path' => env('SUNRICE_MCP_LOG_PATH'),         // default storage/logs
     'commands' => ['sunrice:publish-scheduled', 'sunrice:translate', 'cache:clear', /* … */],
 ],
 ```
@@ -145,6 +148,11 @@ minute per token.
 - Tools follow the token user's permissions: `read_docs` needs **Read the
   developer docs**, like the admin's Docs page. Without it the agent still
   has its built-in instructions, `get_site_info` and `get_template_guide`.
+- `read_error_log` only reads: the last 2 MB of the three newest files in
+  `storage/logs`. Passwords, tokens, keys and database credentials in
+  messages are masked, but logs can still hold visitors' data (emails,
+  URLs), so the permission is for administrators. Turn the tool off with
+  `SUNRICE_MCP_ERROR_LOG=false`.
 - Give agents a user with only the permissions they need, e.g. an Editor
   for content work.
 - Agents are told to ask before deleting or publishing large changes,
