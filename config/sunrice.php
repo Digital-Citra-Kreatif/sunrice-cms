@@ -347,6 +347,9 @@ return [
         // Super admins' agents may write Blade templates and theme files
         // (Blade runs PHP: turn off where that isn't wanted).
         'templates' => env('SUNRICE_MCP_TEMPLATES', true),
+        // read_error_log: recent errors from the Laravel log, secrets masked.
+        'error_log' => env('SUNRICE_MCP_ERROR_LOG', true),
+        'log_path' => env('SUNRICE_MCP_LOG_PATH'), // default storage/logs
         'commands' => [
             'sunrice:publish-scheduled',
             'sunrice:sync-permissions',

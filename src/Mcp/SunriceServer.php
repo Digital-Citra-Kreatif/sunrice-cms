@@ -44,6 +44,8 @@ Translating (get_site_info → languages: main is the source, the other availabl
 
 Everything you change is recorded in the activity log under your user, with source "ai" and your access token's name. get_activity reads the log (if you have the "View the activity log" permission): use it to answer "what changed recently?" or "what did you do?" (mine: true).
 
+When the user reports an error or a broken page, read_error_log shows the recent errors from the Laravel log (if you have the "Let AI agents read the error log" permission): explain the likely cause and recommend a fix. Don't change code or settings to fix it without asking.
+
 Ask the user before deleting anything or publishing large changes. Use read_docs for details (it needs the "Read the developer docs" permission).
 MD)]
 class SunriceServer extends Server
@@ -84,6 +86,7 @@ class SunriceServer extends Server
         Tools\UpdateSiteSettings::class,
         Tools\SeoAudit::class,
         Tools\GetActivity::class,
+        Tools\ReadErrorLog::class,
         Tools\GetTemplateGuide::class,
         Tools\ReadTemplate::class,
         Tools\WriteTemplate::class,
