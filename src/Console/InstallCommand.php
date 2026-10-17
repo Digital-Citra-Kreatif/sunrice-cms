@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace Sunrice\Console;
 
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
+use ReflectionClass;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\Traits\HasRoles;
 use Sunrice\Actions\Assets\UploadAsset;
 use Sunrice\Database\Seeders\RolesSeeder;
@@ -17,6 +21,7 @@ use Sunrice\Permissions\SyncPermissions;
  * sunrice:install — publishes config and assets, publishes the
  * spatie/laravel-permission migration when the app doesn't have it yet,
  * runs migrations, syncs permissions and creates the Super Admin role.
+ * Adds the HasRoles trait to the app's user model when it is missing.
  * Optionally creates a super admin user (interactive or --no-user).
  * Safe to run again.
  */
@@ -101,7 +106,10 @@ class InstallCommand extends Command
     }
 
     /**
-     * Whether the user model can hold roles (uses HasRoles).
+     * Whether the user model can hold roles (uses HasRoles). When it
+     * doesn't, the trait is added to the model's source file; the class
+     * already loaded in this process stays without it, so createUser()
+     * then writes the role assignment directly.
      */
     protected function checkUserModel(): bool
     {
@@ -110,13 +118,68 @@ class InstallCommand extends Command
             return true; // createUser() reports the missing model.
         }
 
-        if (! in_array(HasRoles::class, class_uses_recursive($model), true)) {
-            $this->components->warn("Add `use \\Spatie\\Permission\\Traits\\HasRoles;` to {$model} to use roles and permissions.");
+        if (in_array(HasRoles::class, class_uses_recursive($model), true)) {
+            return true;
+        }
 
+        if ($this->addHasRolesTrait($model)) {
+            $this->components->twoColumnDetail('User model', "HasRoles trait added to {$model}");
+
+            return true;
+        }
+
+        $this->components->warn("Add `use \\Spatie\\Permission\\Traits\\HasRoles;` to {$model} to use roles and permissions.");
+
+        return false;
+    }
+
+    /**
+     * Add `use HasRoles;` (and its import) to the model's source file.
+     * Only touches writable files inside the application, never vendor.
+     */
+    protected function addHasRolesTrait(string $model): bool
+    {
+        $file = (new ReflectionClass($model))->getFileName();
+        if ($file === false || ! is_writable($file) || ! str_starts_with($file, base_path())
+            || str_starts_with($file, base_path('vendor'))) {
             return false;
         }
 
-        return true;
+        $source = (string) file_get_contents($file);
+        $short = class_basename($model);
+
+        // Opening brace of the class body.
+        if (preg_match('/^\s*(?:(?:final|abstract|readonly)\s+)*class\s+'.preg_quote($short, '/').'\b[^{]*\{/m', $source, $match, PREG_OFFSET_CAPTURE) !== 1) {
+            return false;
+        }
+        $bodyStart = $match[0][1] + strlen($match[0][0]);
+
+        // Append to the first trait list (`use HasFactory, Notifiable;`), or open one.
+        $body = substr($source, $bodyStart);
+        if (preg_match('/\A((?:\s*(?:\/\*.*?\*\/|\/\/[^\n]*))*\s*use\s+)([^;{]+);/s', $body, $traits) === 1) {
+            $body = substr_replace($body, $traits[1].rtrim($traits[2]).', HasRoles;', 0, strlen($traits[0]));
+        } else {
+            $body = "\n    use HasRoles;\n".$body;
+        }
+        $source = substr($source, 0, $bodyStart).$body;
+
+        // Import the trait after the last top-level import, or the namespace.
+        $import = 'use '.HasRoles::class.';';
+        if (! str_contains($source, $import)) {
+            $header = substr($source, 0, $match[0][1]);
+            if (preg_match_all('/^use\s+[^;]+;$/m', $header, $uses, PREG_OFFSET_CAPTURE) > 0) {
+                $last = end($uses[0]);
+                $at = $last[1] + strlen($last[0]);
+                $source = substr_replace($source, "\n".$import, $at, 0);
+            } elseif (preg_match('/^namespace\s+[^;]+;$/m', $header, $ns, PREG_OFFSET_CAPTURE) === 1) {
+                $at = $ns[0][1] + strlen($ns[0][0]);
+                $source = substr_replace($source, "\n\n".$import, $at, 0);
+            } else {
+                return false;
+            }
+        }
+
+        return file_put_contents($file, $source) !== false;
     }
 
     protected function createUser(Role $role): void
@@ -142,13 +205,30 @@ class InstallCommand extends Command
             ['name' => $name, 'password' => Hash::make($password)],
         );
 
-        if (! method_exists($user, 'assignRole')) {
-            $this->components->warn("User {$email} was created but could not be given the Super Admin role.");
-
-            return;
+        if (method_exists($user, 'assignRole')) {
+            $user->assignRole($role);
+        } else {
+            // The trait was just added to the model file, but this process
+            // still has the old class loaded: write the pivot row directly.
+            $this->attachRole($user, $role);
         }
 
-        $user->assignRole($role);
         $this->components->twoColumnDetail('Super admin', $email);
+    }
+
+    protected function attachRole(Model $user, Role $role): void
+    {
+        $registrar = app(PermissionRegistrar::class);
+        $row = [
+            $registrar->pivotRole => $role->getKey(),
+            'model_type' => $user->getMorphClass(),
+            config('permission.column_names.model_morph_key', 'model_id') => $user->getKey(),
+        ];
+        if ($registrar->teams) {
+            $row[$registrar->teamsKey] = $registrar->getPermissionsTeamId();
+        }
+
+        DB::table(config('permission.table_names.model_has_roles', 'model_has_roles'))->insertOrIgnore($row);
+        $registrar->forgetCachedPermissions();
     }
 }

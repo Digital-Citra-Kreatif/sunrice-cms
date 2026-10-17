@@ -81,3 +81,53 @@ it('does not create a role-less admin when the user model lacks HasRoles', funct
 
     expect(User::query()->count())->toBe(0);
 });
+
+it('adds HasRoles to the app user model and creates the super admin', function () {
+    $file = base_path('app/Models/InstallTestAppUser.php');
+    @mkdir(dirname($file), 0777, true);
+    file_put_contents($file, <<<'PHP'
+        <?php
+
+        namespace App\Models;
+
+        use Illuminate\Foundation\Auth\User as Authenticatable;
+        use Illuminate\Notifications\Notifiable;
+
+        class InstallTestAppUser extends Authenticatable
+        {
+            /** @use Notifiable */
+            use Notifiable;
+
+            protected $table = 'users';
+
+            protected $guarded = [];
+        }
+        PHP);
+
+    try {
+        require_once $file;
+        config(['sunrice.auth.user_model' => 'App\Models\InstallTestAppUser']);
+
+        artisan('sunrice:install')
+            ->expectsOutputToContain('HasRoles trait added')
+            ->expectsQuestion('Super admin name', 'Ada')
+            ->expectsQuestion('Super admin email', 'ada@example.com')
+            ->expectsQuestion('Super admin password', 'secret-password')
+            ->assertSuccessful();
+
+        $source = file_get_contents($file);
+        expect($source)->toContain("use Illuminate\\Notifications\\Notifiable;\nuse Spatie\\Permission\\Traits\\HasRoles;\n")
+            ->and($source)->toContain('use Notifiable, HasRoles;');
+
+        // The loaded class still lacks the trait, so check the pivot row.
+        $user = User::query()->where('email', 'ada@example.com')->firstOrFail();
+        $assigned = DB::table('model_has_roles')
+            ->where('role_id', Role::findByName(config('sunrice.super_admin_role'))->getKey())
+            ->where('model_type', 'App\Models\InstallTestAppUser')
+            ->where('model_id', $user->getKey())
+            ->exists();
+        expect($assigned)->toBeTrue();
+    } finally {
+        @unlink($file);
+    }
+});

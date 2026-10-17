@@ -18,9 +18,11 @@ roles (see [permissions](permissions.md#default-roles)). It is safe to run
 again.
 
 Your user model must use `Spatie\Permission\Traits\HasRoles`. If it
-doesn't, the install command warns and skips creating the super admin
-(it couldn't be given the role); add the trait and run `sunrice:install`
-again:
+doesn't, the install command adds the trait (and its import) to the
+model's file for you, then creates the super admin as usual. It only
+edits a writable model file inside your application; otherwise it warns
+and skips creating the super admin, so add the trait yourself and run
+`sunrice:install` again:
 
 ```php
 use Spatie\Permission\Traits\HasRoles;
