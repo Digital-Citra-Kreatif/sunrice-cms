@@ -42,6 +42,7 @@ export default function CollectionsForm({ collection, blueprints, taxonomies }: 
             translatable: collection?.settings?.translatable !== false,
             has_single: collection?.settings?.has_single !== false,
             hierarchical: !!collection?.settings?.hierarchical,
+            comments: !!collection?.settings?.comments,
             route: (collection?.settings?.route as string) ?? '',
             has_archive: !!collection?.settings?.has_archive,
             archive_route: (collection?.settings?.archive_route as string) ?? '',
@@ -240,6 +241,17 @@ export default function CollectionsForm({ collection, blueprints, taxonomies }: 
                             <p className="pl-7 text-xs text-muted-foreground">
                                 A child entry's URL starts with its parent's: <code>/about</code> → <code>/about/team</code>. Pick the parent in the
                                 entry editor. Moving an entry to another parent redirects its old URL.
+                            </p>
+                        )}
+                        <label className="flex items-center gap-3 text-sm">
+                            <Checkbox checked={settings.comments} onCheckedChange={(c) => setSetting('comments', !!c)} />
+                            Allow comments
+                        </label>
+                        {settings.comments && (
+                            <p className="pl-7 text-xs text-muted-foreground">
+                                Visitors can comment and reply on each entry's page. Show them with{' '}
+                                <code>&lt;x-sunrice::comments :entry="$entry" /&gt;</code> in the template. Moderation, captcha and email notifications are in
+                                Settings → Comments; each entry can also close its own comments.
                             </p>
                         )}
                         <Label htmlFor="template">Entry template</Label>

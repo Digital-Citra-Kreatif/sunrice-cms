@@ -47,6 +47,7 @@ class RolesSeeder extends Seeder
                 'sunrice.assets.*',
                 'sunrice.forms.*.view-submissions',
                 'sunrice.forms.*.export-submissions',
+                'sunrice.comments.*',
             ],
 
             // Writes and manages their own entries; an editor publishes.

@@ -53,6 +53,7 @@ The main language can only be changed before any content exists.
 | `sunrice.forms.rate_limit` | `{attempts: 5, per_minutes: 1}` | Per-IP+form submission limit. |
 | `sunrice.forms.captcha.*` | provider `turnstile`, no keys | Captcha for public forms (`SUNRICE_CAPTCHA_PROVIDER`: `turnstile`, `recaptcha` or `hcaptcha`; `SUNRICE_CAPTCHA_SITE_KEY`, `SUNRICE_CAPTCHA_SECRET_KEY`). With both keys set, each form can turn on "Require captcha". See [Forms](forms.md#captcha). |
 | `sunrice.revisions.keep` | `50` | Revisions kept per entry translation. |
+| `sunrice.comments.*` | see [Comments](comments.md) | Moderation, sign-in, captcha, rate limit, closing, reply depth, notifications and spam pruning. Settings → Comments overrides them. |
 | `sunrice.activity.enabled` | `env('SUNRICE_ACTIVITY_LOG', true)` | Record who created, changed or deleted what. See [Activity log](activity-log.md). |
 | `sunrice.activity.prune_days` | `180` | What `sunrice:prune-activity` and the admin's Prune button delete by default: entries older than this many days. |
 | `sunrice.super_admin_role` | `Super Admin` | Role that bypasses all permissions. |

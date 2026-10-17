@@ -30,6 +30,7 @@ use Sunrice\Http\Middleware\HandleSunriceInertiaRequests;
 use Sunrice\Models\Asset;
 use Sunrice\Models\Blueprint;
 use Sunrice\Models\Collection;
+use Sunrice\Models\Comment;
 use Sunrice\Models\Entry;
 use Sunrice\Models\Fieldset;
 use Sunrice\Models\Form;
@@ -385,7 +386,7 @@ class SunriceServiceProvider extends PackageServiceProvider
     {
         $this->callAfterResolving(Schedule::class, function ($schedule): void {
             $schedule->command('sunrice:publish-scheduled')->everyMinute();
-            $schedule->command('model:prune', ['--model' => FormSubmission::class])->daily();
+            $schedule->command('model:prune', ['--model' => [FormSubmission::class, Comment::class]])->daily();
         });
     }
 

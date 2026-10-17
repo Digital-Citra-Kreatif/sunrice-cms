@@ -6,6 +6,7 @@ namespace Sunrice\Actions\Settings;
 
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Sunrice\Models\Comment;
 use Sunrice\Models\EntryTranslation;
 use Sunrice\Models\Setting;
 use Sunrice\Support\Branding;
@@ -29,6 +30,7 @@ class SaveSiteSettings
     {
         $validated = validator($input, [
             ...static::seoRules(),
+            ...static::commentRules(),
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:500'],
             'timezone' => ['required', 'timezone:all'],
@@ -93,6 +95,8 @@ class SaveSiteSettings
             'security' => [
                 'two_factor' => (bool) ($validated['security']['two_factor'] ?? false),
             ],
+            // Kept as they are when not sent (e.g. an older admin page).
+            'comments' => array_key_exists('comments', $input) ? static::comments((array) ($validated['comments'] ?? [])) : (array) (SiteSettings::current()['comments'] ?? []),
         ]);
 
         Setting::set('homepage_entry_id', $validated['homepage_entry_id'] ?? null);
@@ -108,6 +112,53 @@ class SaveSiteSettings
             'seo.image' => ['nullable', 'integer', Rule::exists('sunrice_assets', 'id')],
             'seo.title_suffix' => ['boolean'],
             'seo.title_separator' => ['nullable', 'string', 'max:5'],
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public static function commentRules(): array
+    {
+        return [
+            'comments' => ['array'],
+            'comments.moderation' => ['nullable', Rule::in(Comment::MODERATION)],
+            'comments.require_login' => ['boolean'],
+            'comments.captcha' => ['boolean'],
+            'comments.rate_limit' => ['array'],
+            'comments.rate_limit.attempts' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'comments.rate_limit.per_minutes' => ['nullable', 'integer', 'min:1', 'max:1440'],
+            'comments.close_after_days' => ['nullable', 'integer', 'min:1', 'max:3650'],
+            'comments.max_depth' => ['nullable', 'integer', 'min:1', 'max:10'],
+            'comments.notify' => ['boolean'],
+            'comments.notify_roles' => ['array'],
+            'comments.notify_roles.*' => ['string', Rule::exists((string) config('permission.table_names.roles', 'roles'), 'name')],
+            'comments.notify_emails' => ['array'],
+            'comments.notify_emails.*' => ['email', 'max:255'],
+            'comments.reply_notifications' => ['boolean'],
+        ];
+    }
+
+    /**
+     * Comment settings from validated input.
+     *
+     * @param  array<string, mixed>  $comments
+     * @return array<string, mixed>
+     */
+    public static function comments(array $comments): array
+    {
+        return [
+            'moderation' => $comments['moderation'] ?? 'first_time',
+            'require_login' => (bool) ($comments['require_login'] ?? false),
+            'captcha' => (bool) ($comments['captcha'] ?? false),
+            'rate_limit' => [
+                'attempts' => (int) ($comments['rate_limit']['attempts'] ?? 3),
+                'per_minutes' => (int) ($comments['rate_limit']['per_minutes'] ?? 1),
+            ],
+            'close_after_days' => isset($comments['close_after_days']) ? (int) $comments['close_after_days'] : null,
+            'max_depth' => (int) ($comments['max_depth'] ?? 3),
+            'notify' => (bool) ($comments['notify'] ?? false),
+            'notify_roles' => array_values(array_unique((array) ($comments['notify_roles'] ?? []))),
+            'notify_emails' => array_values(array_unique(array_map('mb_strtolower', (array) ($comments['notify_emails'] ?? [])))),
+            'reply_notifications' => (bool) ($comments['reply_notifications'] ?? false),
         ];
     }
 

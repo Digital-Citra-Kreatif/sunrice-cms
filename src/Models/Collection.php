@@ -171,6 +171,12 @@ class Collection extends Model
         return $this->setting('has_single', true) !== false;
     }
 
+    /** Comments need a page to show on: single pages and the setting on. */
+    public function allowsComments(): bool
+    {
+        return (bool) $this->setting('comments', false) && $this->hasSinglePages();
+    }
+
     /**
      * The listing page's heading and intro in a language, falling back
      * to the main language: ['title' => ?string, 'intro' => ?string].

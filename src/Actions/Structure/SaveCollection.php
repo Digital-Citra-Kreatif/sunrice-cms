@@ -47,6 +47,7 @@ class SaveCollection
             'settings.archivable' => ['boolean'],
             'settings.has_single' => ['boolean'],
             'settings.hierarchical' => ['boolean'],
+            'settings.comments' => ['boolean'],
             'settings.sort' => ['nullable', Rule::in(array_keys(Collection::SORTS))],
             'settings.sort_direction' => ['nullable', Rule::in(['asc', 'desc'])],
             // Fields for the listing page, edited from the collection's entries list.

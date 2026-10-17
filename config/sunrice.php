@@ -289,6 +289,43 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Comments
+    |--------------------------------------------------------------------------
+    |
+    | Discussions on entries of collections with "Allow comments" on. These
+    | are the defaults: Settings → Comments in the admin overrides them.
+    |
+    | moderation:     all (every comment waits for approval), first_time (a
+    |                 commenter's comments wait until one is approved) or none.
+    | require_login:  Only signed-in users may comment.
+    | captcha:        Ask for the captcha (keys under forms.captcha).
+    | rate_limit:     Comments per IP within per_minutes.
+    | close_after_days: Stop new comments on entries published longer ago.
+    | max_depth:      Nesting shown on the site; deeper replies line up
+    |                 at the last level.
+    | notify:         Email moderators about new comments: notify_roles
+    |                 (role names; empty = everyone who can moderate
+    |                 comments) and notify_emails (extra addresses).
+    | reply_notifications: Commenters may ask to be emailed about replies.
+    | prune_spam_after_days: Delete spam after this many days (null keeps it).
+    |
+    */
+    'comments' => [
+        'moderation' => 'first_time',
+        'require_login' => false,
+        'captcha' => false,
+        'rate_limit' => ['attempts' => 3, 'per_minutes' => 1],
+        'close_after_days' => null,
+        'max_depth' => 3,
+        'notify' => true,
+        'notify_roles' => [],
+        'notify_emails' => [],
+        'reply_notifications' => true,
+        'prune_spam_after_days' => 30,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Revisions
     |--------------------------------------------------------------------------
     |

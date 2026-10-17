@@ -30,6 +30,7 @@ use Sunrice\Support\Locales;
  * @property string|null $template
  * @property Carbon|null $published_at
  * @property int $sort_order
+ * @property bool $comments_closed
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
@@ -48,6 +49,7 @@ class Entry extends Model
     protected $casts = [
         'published_at' => 'datetime',
         'sort_order' => 'integer',
+        'comments_closed' => 'boolean',
     ];
 
     /** Deepest nesting of entries in a hierarchical collection. */
@@ -173,6 +175,29 @@ class Entry extends Model
     public function translations(): HasMany
     {
         return $this->hasMany(EntryTranslation::class);
+    }
+
+    /** @return HasMany<Comment, $this> */
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    /**
+     * Whether visitors can add comments now: the collection allows them,
+     * the entry isn't closed, and it isn't older than
+     * sunrice.comments.close_after_days. Approved comments stay visible
+     * when closed (see Collection::allowsComments()).
+     */
+    public function acceptsComments(): bool
+    {
+        if ($this->comments_closed || ! $this->collection?->allowsComments()) {
+            return false;
+        }
+
+        $days = config('sunrice.comments.close_after_days');
+
+        return $days === null || $this->published_at === null || $this->published_at->gt(now()->subDays((int) $days));
     }
 
     /** @return BelongsToMany<Term, $this> */
