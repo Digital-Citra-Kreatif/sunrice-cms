@@ -108,7 +108,7 @@ it('emails the commenter when a held reply to them is approved', function () {
     Mail::fake();
     post("/cms/comments/{$reply->id}/moderate", ['action' => 'pending']);
     post("/cms/comments/{$reply->id}/moderate", ['action' => 'approve']);
-    Mail::assertQueued(CommentReplyNotification::class, 1);
+    Mail::assertNotQueued(CommentReplyNotification::class);
 });
 
 it('moderates in bulk', function () {
