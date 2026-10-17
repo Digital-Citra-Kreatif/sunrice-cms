@@ -311,3 +311,47 @@
 .sunrice-docs blockquote { border-left: 3px solid var(--border); padding-left: 1rem; color: var(--muted-foreground); }
 .sunrice-docs hr { border: 0; border-top: 1px solid var(--border); margin: 2rem 0; }
 .sunrice-docs td:first-child code { white-space: nowrap; }
+
+/* Callouts: "> [!TIP]" and friends. Technical notes look like code, so
+   readers who don't touch code can tell them apart and skip them. */
+.sunrice-docs .sunrice-callout {
+    --callout: var(--primary);
+    margin: 0 0 1rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid color-mix(in oklab, var(--callout) 30%, transparent);
+    border-left-width: 3px;
+    border-radius: 0.5rem;
+    background: color-mix(in oklab, var(--callout) 7%, transparent);
+}
+.sunrice-docs .sunrice-callout > :last-child { margin-bottom: 0; }
+.sunrice-docs .sunrice-callout p { margin: 0 0 0.5rem; }
+.sunrice-docs .sunrice-callout-title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--callout);
+}
+.sunrice-docs .sunrice-callout-tip { --callout: oklch(0.6 0.13 155); }
+.sunrice-docs .sunrice-callout-note { --callout: oklch(0.6 0.13 245); }
+.sunrice-docs .sunrice-callout-warning { --callout: oklch(0.68 0.15 70); }
+.sunrice-docs .sunrice-callout-tip .sunrice-callout-title::before { content: "✓"; }
+.sunrice-docs .sunrice-callout-note .sunrice-callout-title::before { content: "i"; font-family: ui-serif, Georgia, serif; font-style: italic; font-weight: 700; }
+.sunrice-docs .sunrice-callout-warning .sunrice-callout-title::before { content: "!"; font-weight: 800; }
+.sunrice-docs .sunrice-callout-technical {
+    --callout: oklch(0.58 0.16 290);
+    background: color-mix(in oklab, var(--muted) 85%, transparent);
+    border-style: dashed;
+    border-left-style: solid;
+    font-size: 0.875rem;
+}
+.sunrice-docs .sunrice-callout-technical .sunrice-callout-title {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    text-transform: none;
+    letter-spacing: 0;
+}
+.sunrice-docs .sunrice-callout-technical .sunrice-callout-title::before { content: "</>"; }
+.sunrice-docs .sunrice-callout-technical code { background: var(--background); }

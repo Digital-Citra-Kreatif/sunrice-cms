@@ -132,6 +132,7 @@ class PermissionRegistry
             ['sunrice.access-admin', 'Access the admin panel', 'Admin'],
             ['sunrice.settings.edit', 'Edit settings', 'Admin'],
             ['sunrice.view-drafts', 'See unpublished entries on the site while signed in', 'Admin'],
+            ['sunrice.guide.view', 'Read the user guide', 'Admin'],
             ['sunrice.docs.view', 'Read the developer docs', 'Admin'],
             ['sunrice.ai-access', 'Connect AI agents (MCP) with an access token', 'Admin'],
             ['sunrice.run-commands', 'Let AI agents run maintenance commands', 'Admin'],

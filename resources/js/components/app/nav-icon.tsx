@@ -1,6 +1,6 @@
 import {
     Blocks, BookOpen, Bot, Briefcase, Calendar, ChartColumn, Circle, ClipboardList, CreditCard, Database, ExternalLink, FileText,
-    Folder, Globe, History, Home, Image, Inbox, LayoutGrid, LayoutTemplate, Library, Link, ListTree, Mail, MapPin, Megaphone, MessageSquare, Newspaper,
+    Folder, Globe, History, Home, Image, Inbox, LayoutGrid, LayoutTemplate, Library, LifeBuoy, Link, ListTree, Mail, MapPin, Megaphone, MessageSquare, Newspaper,
     Package, Settings, ShoppingBag, ShoppingCart, Shield, Star, Tags, Users, Wrench,
     type LucideIcon,
 } from 'lucide-react';
@@ -31,6 +31,7 @@ const icons: Record<string, LucideIcon> = {
     'layout-grid': LayoutGrid,
     'layout-template': LayoutTemplate,
     library: Library,
+    'life-buoy': LifeBuoy,
     link: Link,
     'list-tree': ListTree,
     mail: Mail,
