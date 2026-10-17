@@ -53,6 +53,7 @@ use Sunrice\Policies\TermPolicy;
 use Sunrice\Policies\UserPolicy;
 use Sunrice\Support\CoreTranslations;
 use Sunrice\Support\SiteSettings;
+use Sunrice\View\Components\Comments as CommentsComponent;
 use Sunrice\View\Components\Entries;
 use Sunrice\View\Components\EntryFilter;
 use Sunrice\View\Components\Form as FormComponent;
@@ -217,6 +218,13 @@ class SunriceServiceProvider extends PackageServiceProvider
             return Limit::perMinutes((int) ($conf['per_minutes'] ?? 1), (int) ($conf['attempts'] ?? 5))->by($key);
         });
 
+        // Comments: per IP across the site, from Settings → Comments.
+        RateLimiter::for('sunrice-comments', function (Request $request) {
+            $conf = (array) config('sunrice.comments.rate_limit', ['attempts' => 3, 'per_minutes' => 1]);
+
+            return Limit::perMinutes(max(1, (int) ($conf['per_minutes'] ?? 1)), max(1, (int) ($conf['attempts'] ?? 3)))->by('comments|'.$request->ip());
+        });
+
         // The forgot / reset password forms: per IP, so they can't be used to
         // flood inboxes or guess reset tokens.
         RateLimiter::for('sunrice-password', fn (Request $request) => Limit::perMinute(
@@ -253,6 +261,7 @@ class SunriceServiceProvider extends PackageServiceProvider
         Blade::component(Seo::class, 'sunrice::seo');
         Blade::component(SiteCode::class, 'sunrice::code');
         Blade::component(FormComponent::class, 'sunrice::form');
+        Blade::component(CommentsComponent::class, 'sunrice::comments');
     }
 
     protected function registerAdminRoutes(): void

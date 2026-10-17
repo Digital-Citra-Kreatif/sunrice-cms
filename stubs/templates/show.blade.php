@@ -52,4 +52,7 @@
             @includeFirst(['sunrice.blocks.'.$block->type, 'sunrice.blocks.default'], ['block' => $block])
         @endforeach
     </article>
+
+    {{-- Comments and replies, when the collection has "Allow comments" on. --}}
+    <x-sunrice::comments :entry="$entry" />
 @endsection

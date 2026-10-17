@@ -53,6 +53,9 @@
     </article>
 
     {{-- An "entries" field returns the picked entries, resolved for the active language. --}}
+    {{-- Comments and replies, when the collection has "Allow comments" on. --}}
+    <x-sunrice::comments :entry="$entry" />
+
     @if (($related = $entry->get('related')) && $related->isNotEmpty())
         <section class="block">
             <h2>{{ __('sunrice::frontend.related') }}</h2>
