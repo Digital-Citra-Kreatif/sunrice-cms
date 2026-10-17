@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useForm } from '@inertiajs/react';
 import { Image as ImageIcon, LoaderCircle, Mail, Plus, TriangleAlert, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { CollapsibleCard } from '@/components/app/collapsible-card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,6 +27,20 @@ interface Settings {
     code: { head: string | null; body_start: string | null; body_end: string | null };
     branding?: { name: string | null; tagline: string | null; logo: number | null; font: string | null; color: string | null };
     security?: { two_factor: boolean };
+    comments?: Partial<CommentSettings>;
+}
+
+interface CommentSettings {
+    moderation: 'all' | 'first_time' | 'none';
+    require_login: boolean;
+    captcha: boolean;
+    rate_limit: { attempts: number | ''; per_minutes: number | '' };
+    close_after_days: number | '';
+    max_depth: number | '';
+    notify: boolean;
+    notify_roles: string[];
+    notify_emails: string[];
+    reply_notifications: boolean;
 }
 
 interface MailInfo {
@@ -46,9 +61,11 @@ interface Props {
     brandLogo?: { id: number; url: string; filename: string } | null;
     fonts?: { value: string; label: string }[];
     mail?: MailInfo;
+    roles?: string[];
+    captchaConfigured?: boolean;
 }
 
-export default function SettingsEdit({ settings, homepage, timezones, mainLocked, brandLogo = null, fonts = [], mail }: Props) {
+export default function SettingsEdit({ settings, homepage, timezones, mainLocked, brandLogo = null, fonts = [], mail, roles = [], captchaConfigured = false }: Props) {
     const { adminPath } = usePage<SharedProps>().props;
     const [home, setHome] = React.useState<PickedEntry[]>(homepage ? [homepage] : []);
     const [logo, setLogo] = React.useState(brandLogo);
@@ -79,6 +96,21 @@ export default function SettingsEdit({ settings, homepage, timezones, mainLocked
         security: {
             two_factor: !!settings.security?.two_factor,
         },
+        comments: {
+            moderation: settings.comments?.moderation ?? 'first_time',
+            require_login: !!settings.comments?.require_login,
+            captcha: !!settings.comments?.captcha,
+            rate_limit: {
+                attempts: settings.comments?.rate_limit?.attempts ?? 3,
+                per_minutes: settings.comments?.rate_limit?.per_minutes ?? 1,
+            },
+            close_after_days: settings.comments?.close_after_days ?? '',
+            max_depth: settings.comments?.max_depth ?? 3,
+            notify: settings.comments?.notify !== false,
+            notify_roles: settings.comments?.notify_roles ?? [],
+            notify_emails: settings.comments?.notify_emails ?? [],
+            reply_notifications: settings.comments?.reply_notifications !== false,
+        } as CommentSettings,
     });
     const testMail = useForm({ test_email: '' });
     const sendTestMail = () => testMail.post(adminUrl('settings/test-mail', adminPath), { preserveScroll: true });
@@ -411,6 +443,14 @@ export default function SettingsEdit({ settings, homepage, timezones, mainLocked
                 )}
             </CollapsibleCard>
 
+            <CommentsCard
+                value={form.data.comments}
+                onChange={(next) => form.setData('comments', { ...form.data.comments, ...next })}
+                roles={roles}
+                captchaConfigured={captchaConfigured}
+                errors={errors}
+            />
+
             <div>
                 <Button type="submit" disabled={form.processing}>
                     {form.processing && <LoaderCircle className="animate-spin" />} Save settings
@@ -464,4 +504,128 @@ function readableOn(hex: string): string {
     const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
     const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
     return 1.05 / (luminance + 0.05) >= (luminance + 0.05) / 0.05 ? '#ffffff' : '#111111';
+}
+
+const NUMBER = (value: string): number | '' => (value === '' ? '' : Number(value));
+
+/** Settings → Comments: moderation, spam protection and notifications. */
+function CommentsCard({ value, onChange, roles, captchaConfigured, errors }: {
+    value: CommentSettings;
+    onChange: (next: Partial<CommentSettings>) => void;
+    roles: string[];
+    captchaConfigured: boolean;
+    errors: Record<string, string>;
+}) {
+    // Typed as text; stored as a list of addresses.
+    const [emails, setEmails] = React.useState(value.notify_emails.join(', '));
+    const emailError = Object.entries(errors).find(([key]) => key.startsWith('comments.notify_emails'))?.[1];
+    const hasErrors = Object.keys(errors).some((key) => key.startsWith('comments.'));
+
+    const toggle = (key: keyof CommentSettings, label: string, help: React.ReactNode, disabled = false) => (
+        <label className="flex items-start gap-3">
+            <Switch checked={!!value[key]} disabled={disabled} onCheckedChange={(v) => onChange({ [key]: v } as Partial<CommentSettings>)} />
+            <span className="grid gap-0.5 text-sm">
+                <span className="font-medium">{label}</span>
+                <span className="text-xs text-muted-foreground">{help}</span>
+            </span>
+        </label>
+    );
+
+    return (
+        <CollapsibleCard
+            title="Comments"
+            description="For collections with Allow comments on (Structure → Collections → Pages & URLs)."
+            storageKey="settings:comments"
+            hasErrors={hasErrors}
+            contentClassName="flex flex-col gap-5"
+        >
+            <div className="grid gap-2">
+                <Label>New comments</Label>
+                <Select value={value.moderation} onValueChange={(v) => onChange({ moderation: v as CommentSettings['moderation'] })}>
+                    <SelectTrigger className="w-full sm:w-96"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="first_time">Hold a commenter's first comment for approval</SelectItem>
+                        <SelectItem value="all">Hold every comment for approval</SelectItem>
+                        <SelectItem value="none">Publish comments right away</SelectItem>
+                    </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                    With the first option, once one of a commenter's comments is approved, their next ones appear at once. Comments by people who can moderate are always published.
+                </p>
+                <InputError message={errors['comments.moderation']} />
+            </div>
+
+            {toggle('require_login', 'Only signed-in users can comment', 'Guests see the comments but not the form.')}
+            {toggle(
+                'captcha',
+                'Ask for a captcha',
+                captchaConfigured
+                    ? 'Uses the captcha set up for forms.'
+                    : <>No captcha keys are set: add <code className="font-mono">SUNRICE_CAPTCHA_SITE_KEY</code> and <code className="font-mono">SUNRICE_CAPTCHA_SECRET_KEY</code> to .env first (see the Forms docs).</>,
+                !captchaConfigured && !value.captcha,
+            )}
+
+            <div className="grid gap-2">
+                <Label>Rate limit</Label>
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                    <Input type="number" min={1} max={100} className="w-20" value={value.rate_limit.attempts} onChange={(e) => onChange({ rate_limit: { ...value.rate_limit, attempts: NUMBER(e.target.value) } })} />
+                    comments per visitor every
+                    <Input type="number" min={1} max={1440} className="w-20" value={value.rate_limit.per_minutes} onChange={(e) => onChange({ rate_limit: { ...value.rate_limit, per_minutes: NUMBER(e.target.value) } })} />
+                    minutes
+                </div>
+                <InputError message={errors['comments.rate_limit.attempts'] ?? errors['comments.rate_limit.per_minutes']} />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-2">
+                    <Label htmlFor="comments-close">Close comments after (days)</Label>
+                    <Input id="comments-close" type="number" min={1} placeholder="Never" value={value.close_after_days} onChange={(e) => onChange({ close_after_days: NUMBER(e.target.value) })} />
+                    <p className="text-xs text-muted-foreground">Counted from the entry's publish date. Existing comments stay visible.</p>
+                    <InputError message={errors['comments.close_after_days']} />
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="comments-depth">Reply levels shown</Label>
+                    <Input id="comments-depth" type="number" min={1} max={10} value={value.max_depth} onChange={(e) => onChange({ max_depth: NUMBER(e.target.value) })} />
+                    <p className="text-xs text-muted-foreground">Deeper replies line up at the last level.</p>
+                    <InputError message={errors['comments.max_depth']} />
+                </div>
+            </div>
+
+            {toggle('notify', 'Email moderators about new comments', 'Sent for every new comment, with a link to approve it.')}
+            {value.notify && (
+                <div className="grid gap-4 pl-12">
+                    <div className="grid gap-2">
+                        <Label>Roles</Label>
+                        <div className="flex flex-wrap gap-x-5 gap-y-2">
+                            {roles.map((role) => (
+                                <label key={role} className="flex items-center gap-2 text-sm">
+                                    <Checkbox
+                                        checked={value.notify_roles.includes(role)}
+                                        onCheckedChange={(c) => onChange({ notify_roles: c ? [...value.notify_roles, role] : value.notify_roles.filter((r) => r !== role) })}
+                                    />
+                                    {role}
+                                </label>
+                            ))}
+                        </div>
+                        <p className="text-xs text-muted-foreground">None ticked: everyone who can moderate comments.</p>
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="comments-emails">Also send to</Label>
+                        <Input
+                            id="comments-emails"
+                            value={emails}
+                            placeholder="editor@example.com, team@example.com"
+                            onChange={(e) => {
+                                setEmails(e.target.value);
+                                onChange({ notify_emails: e.target.value.split(/[\s,;]+/).filter((email) => email !== '') });
+                            }}
+                        />
+                        <InputError message={emailError} />
+                    </div>
+                </div>
+            )}
+
+            {toggle('reply_notifications', 'Let commenters get an email when someone replies', 'Adds a "Notify me of replies" box to the form. Each email has a link to stop them.')}
+        </CollapsibleCard>
+    );
 }

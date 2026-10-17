@@ -13,6 +13,7 @@ Settings:
 - `icon` — sidebar icon in the admin.
 - `archive_route` — archive URL when `has_archive` is on.
 - `has_single`, `has_archive` — toggle detail/archive pages.
+- `comments` — visitors can comment on entries (see [Comments](comments.md)).
 - `hierarchical` — entries can have a parent entry (see
   [Parent pages](#parent-pages)).
 - `translatable`, `sluggable`, `dated`, `archivable`.

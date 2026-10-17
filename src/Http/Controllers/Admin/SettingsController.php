@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Notification;
 use Inertia\Inertia;
 use Inertia\Response;
 use Sunrice\Actions\Settings\SaveSiteSettings;
+use Spatie\Permission\Models\Role;
 use Sunrice\Events\ContentChanged;
 use Sunrice\Models\Asset;
 use Sunrice\Models\Collection;
@@ -21,6 +22,7 @@ use Sunrice\Models\Setting;
 use Sunrice\Models\Taxonomy;
 use Sunrice\Notifications\TestMail;
 use Sunrice\Support\Branding;
+use Sunrice\Support\Captcha;
 use Sunrice\Support\SeoFields;
 use Sunrice\Support\SiteSettings;
 use Throwable;
@@ -46,6 +48,9 @@ class SettingsController extends Controller
                 ? null
                 : ['id' => $logo->id, 'url' => $logo->url(), 'filename' => $logo->filename],
             'mail' => static::mailInfo(),
+            // Settings → Comments: who gets the new-comment emails.
+            'roles' => Role::query()->orderBy('name')->pluck('name'),
+            'captchaConfigured' => Captcha::configured(),
             'fonts' => collect(Branding::FONTS)->map(fn (array $font, string $key) => ['value' => $key, 'label' => $font[0]])->values(),
         ]);
     }

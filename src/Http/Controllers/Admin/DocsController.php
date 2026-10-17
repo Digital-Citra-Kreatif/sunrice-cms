@@ -22,7 +22,7 @@ class DocsController extends Controller
     /** Guides in sidebar order (file names without .md). */
     public const SECTIONS = [
         'Getting started' => ['installation', 'configuration', 'commands', 'upgrading'],
-        'Content' => ['content-modeling', 'custom-fields', 'assets', 'forms'],
+        'Content' => ['content-modeling', 'custom-fields', 'assets', 'forms', 'comments'],
         'Frontend' => ['templates', 'blade-components', 'helpers'],
         'Languages' => ['multilingual', 'translation'],
         'Admin' => ['permissions', 'activity-log', 'extending', 'resources', 'packages', 'ai-agents'],

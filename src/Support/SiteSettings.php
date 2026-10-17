@@ -21,6 +21,7 @@ use Throwable;
  *   seo.noindex/twitter_site/image/title_suffix/title_separator → sunrice.seo.*
  *   code.head/body_start/body_end  → sunrice.code.*
  *   security.two_factor        → sunrice.auth.two_factor
+ *   comments.*                 → sunrice.comments.*
  */
 class SiteSettings
 {
@@ -48,6 +49,16 @@ class SiteSettings
         'branding.font' => 'sunrice.branding.font',
         'branding.color' => 'sunrice.branding.color',
         'security.two_factor' => 'sunrice.auth.two_factor',
+        'comments.moderation' => 'sunrice.comments.moderation',
+        'comments.require_login' => 'sunrice.comments.require_login',
+        'comments.captcha' => 'sunrice.comments.captcha',
+        'comments.rate_limit' => 'sunrice.comments.rate_limit',
+        'comments.close_after_days' => 'sunrice.comments.close_after_days',
+        'comments.max_depth' => 'sunrice.comments.max_depth',
+        'comments.notify' => 'sunrice.comments.notify',
+        'comments.notify_roles' => 'sunrice.comments.notify_roles',
+        'comments.notify_emails' => 'sunrice.comments.notify_emails',
+        'comments.reply_notifications' => 'sunrice.comments.reply_notifications',
     ];
 
     /**

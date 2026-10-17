@@ -154,6 +154,9 @@ class PermissionRegistry
             ['sunrice.assets.upload', 'Upload assets', 'Assets'],
             ['sunrice.assets.edit', 'Edit asset details and replace files', 'Assets'],
             ['sunrice.assets.delete', 'Delete assets', 'Assets'],
+            ['sunrice.comments.view', 'View comments', 'Comments'],
+            ['sunrice.comments.moderate', 'Approve, reply to and edit comments, mark spam', 'Comments'],
+            ['sunrice.comments.delete', 'Delete comments', 'Comments'],
         );
 
         return array_map(fn (array $d) => ['name' => $d[0], 'label' => $d[1], 'group' => $d[2]], $defs);
