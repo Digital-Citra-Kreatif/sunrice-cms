@@ -21,7 +21,7 @@ super admin user. Open the admin at `/cms` (set `SUNRICE_ADMIN_PATH` to
 change it).
 
 Your user model needs `Spatie\Permission\Traits\HasRoles` — the
-installer warns if it is missing. Add a scheduler entry for scheduled
+installer adds it to your model if it is missing. Add a scheduler entry for scheduled
 publishing and submission pruning: `* * * * * php artisan schedule:run`.
 
 After upgrades: `php artisan sunrice:publish-assets && php artisan migrate && php artisan sunrice:sync-permissions`.
