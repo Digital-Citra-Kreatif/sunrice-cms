@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Sunrice;
 
 use Closure;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
 use InvalidArgumentException;
@@ -51,6 +53,12 @@ class Sunrice
 
     /** @var array<int, class-string> */
     protected array $mcpTools = [];
+
+    /** @var array<string, array{key: string, label: string, href: string, can: string|callable|null}> */
+    protected array $settingsTabs = [];
+
+    /** @var array<int, callable> */
+    protected array $userScopes = [];
 
     public function version(): string
     {
@@ -285,6 +293,106 @@ class Sunrice
     public function navigationItems(): array
     {
         return $this->navigationItems;
+    }
+
+    /**
+     * Add a tab to the Settings page, next to General and SEO, for a
+     * package's own settings screen.
+     *
+     * - $key: a unique name ("store"); pages pass it to the SettingsTabs
+     *   component as `current`.
+     * - $href: a path inside the admin ("commerce/settings").
+     * - $can: who sees it, like addNavigationItem(). Null shows it to
+     *   everyone who can open the admin.
+     */
+    public function addSettingsTab(string $key, string $label, string $href, string|callable|null $can = null): void
+    {
+        if (in_array($key, ['general', 'seo'], true)) {
+            throw new InvalidArgumentException("Settings tab \"{$key}\" is built in: use another key.");
+        }
+        $this->settingsTabs[$key] = ['key' => $key, 'label' => $label, 'href' => $href, 'can' => $can];
+    }
+
+    /**
+     * The Settings tabs this user may open: the built-in General and SEO
+     * tabs (with sunrice.settings.edit), then the registered ones.
+     *
+     * @return array<int, array{key: string, label: string, href: string}>
+     */
+    public function settingsTabs(mixed $user): array
+    {
+        if ($user === null) {
+            return [];
+        }
+
+        $tabs = [];
+        if ($user->can('sunrice.settings.edit')) {
+            $tabs[] = ['key' => 'general', 'label' => 'General', 'href' => 'settings'];
+            $tabs[] = ['key' => 'seo', 'label' => 'SEO', 'href' => 'settings/seo'];
+        }
+        foreach ($this->settingsTabs as $tab) {
+            $can = $tab['can'];
+            $allowed = match (true) {
+                $can === null => true,
+                is_string($can) => $user->can($can),
+                default => (bool) $can($user),
+            };
+            if ($allowed) {
+                $tabs[] = ['key' => $tab['key'], 'label' => $tab['label'], 'href' => $tab['href']];
+            }
+        }
+
+        return $tabs;
+    }
+
+    /**
+     * Create the structure a package or starter kit needs — fieldsets,
+     * blueprints, taxonomies, collections, globals, forms, draft entries
+     * and menus — by handle. Safe to run again: matching items are left
+     * alone, differing ones are reported and only overwritten with $force.
+     * See docs/content-modeling.md § Importing structure.
+     *
+     * @param  array<string, mixed>  $definition
+     *
+     * @throws Structure\StructureImportFailed
+     */
+    public function importStructure(array $definition, bool $dryRun = false, bool $force = false): Structure\ImportReport
+    {
+        return app(Structure\StructureImporter::class)->import($definition, $dryRun, $force);
+    }
+
+    /**
+     * Narrow which accounts the admin's Users screen lists, and which ones
+     * user pickers offer (e.g. "move their content to"), for a package
+     * whose accounts aren't staff, such as a shop's customers. The scope
+     * receives the user model's query builder; it may return it or change
+     * it in place. Accounts it hides can still be opened by their address.
+     *
+     *     Sunrice::usersQueryUsing(fn (Builder $query) => $query->whereDoesntHave(...));
+     */
+    public function usersQueryUsing(callable $scope): void
+    {
+        $this->userScopes[] = $scope;
+    }
+
+    /**
+     * A query over the user model with every usersQueryUsing() scope applied.
+     *
+     * @return Builder<Model>
+     */
+    public function usersQuery(): Builder
+    {
+        /** @var class-string<Model> $model */
+        $model = config('sunrice.auth.user_model');
+        $query = $model::query();
+        foreach ($this->userScopes as $scope) {
+            $result = $scope($query);
+            if ($result instanceof Builder) {
+                $query = $result;
+            }
+        }
+
+        return $query;
     }
 
     /**

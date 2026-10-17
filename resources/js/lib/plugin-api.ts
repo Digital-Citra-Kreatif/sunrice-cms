@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useBreadcrumbs } from '@/components/app/breadcrumbs';
 import { CollapsibleCard } from '@/components/app/collapsible-card';
 import { InputError } from '@/components/app/input-error';
+import { SettingsTabs } from '@/components/app/settings-tabs';
 import { DataTable } from '@/components/data-table/DataTable';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -93,9 +94,10 @@ const api = {
     /**
      * Larger admin building blocks: the list table (search, filters, sort,
      * pages, bulk actions), the editor's field list (every field type), a
-     * collapsible card and a field error.
+     * collapsible card, a field error and the Settings page's tab bar (on a
+     * package's settings tab: <SettingsTabs current="store" />).
      */
-    components: { DataTable, FieldRenderer, CollapsibleCard, InputError },
+    components: { DataTable, FieldRenderer, CollapsibleCard, InputError, SettingsTabs },
     /** fetch() returning JSON, with the admin's CSRF token and error handling. */
     fetchJson,
     /** Toast notifications: Sunrice.toast.success('Saved'), .error(…). */

@@ -223,3 +223,72 @@ and default URLs. Renaming one doesn't update any of those, so the admin
 warns before you save a new handle. Only rename when you'll update every
 reference too.
 
+
+## Importing structure
+
+A package or starter kit can create the collections, blueprints,
+taxonomies and other structure it needs from a definition, instead of
+asking people to click them together:
+
+```php
+use Sunrice\Facades\Sunrice;
+
+$report = Sunrice::importStructure([
+    'fieldsets' => [
+        ['handle' => 'specs', 'title' => 'Specs', 'fields' => [/* field definitions */]],
+    ],
+    'blueprints' => [
+        ['handle' => 'product', 'title' => 'Product', 'fields' => [/* … */]],
+        ['handle' => 'brand', 'title' => 'Brand', 'fields' => [/* … */]],
+    ],
+    'taxonomies' => [
+        ['handle' => 'brands', 'title' => 'Brands', 'blueprint' => 'brand',
+         'settings' => ['has_archive' => true, 'route' => '/brands/{slug}']],
+    ],
+    'collections' => [
+        ['handle' => 'products', 'title' => 'Products', 'blueprint' => 'product',
+         'taxonomies' => ['brands'], 'archive_blueprint' => null,
+         'settings' => ['route' => '/products/{slug}', 'has_archive' => true, 'archive_route' => '/products']],
+    ],
+    'globals' => [['handle' => 'store', 'title' => 'Store', 'blueprint' => 'store', 'group' => 'global']],
+    'forms' => [['handle' => 'product_inquiry', 'title' => 'Product inquiry', 'fields' => [/* … */], 'settings' => [/* … */]]],
+    'entries' => [['collection' => 'pages', 'slug' => 'terms', 'title' => 'Terms & Conditions', 'data' => [/* … */]]],
+    'menus' => [['handle' => 'shop', 'title' => 'Shop', 'items' => [
+        ['type' => 'collection', 'target' => 'products', 'labels' => ['id' => 'Toko'], 'children' => [
+            ['type' => 'entry', 'target' => 'pages/terms'],
+        ]],
+        ['type' => 'url', 'url' => '/cart'],
+    ]]],
+]);
+```
+
+From the command line, with a `.php` file returning that array or a
+`.json` file:
+
+```bash
+php artisan sunrice:import-structure database/structure.php --dry-run
+php artisan sunrice:import-structure database/structure.php
+php artisan sunrice:import-structure database/structure.php --force
+```
+
+- Items are matched by handle (entries by collection and slug in the main
+  language) and saved through the same actions as the admin, so the same
+  validation applies. Blueprints, taxonomies and collections refer to each
+  other by handle. Every section is optional.
+- Handles of collections, taxonomies, globals, forms and menus are
+  lowercase letters, digits and `_`.
+- **Run it again safely.** An item that exists and matches is left alone
+  (`unchanged`). One that exists but differs — an admin edited it, or the
+  definition changed — is reported (`changed`, with the fields that
+  differ) and kept as it is; `force` overwrites it (`updated`). Settings
+  the definition doesn't name are kept either way.
+- Entries are created as drafts and menus with their items; existing ones
+  are never changed.
+- A dry run reports what would happen and saves nothing. An invalid item
+  stops the import with its name (`collections.products: …`) and nothing
+  is saved.
+- Permissions for new collections, taxonomies and forms are created
+  (`sunrice:sync-permissions` isn't needed).
+- The report (`Sunrice\Structure\ImportReport`) lists each item with its
+  type, handle, result and differences: `$report->items('changed')`,
+  `$report->status('collection', 'products')`, `$report->toArray()`.

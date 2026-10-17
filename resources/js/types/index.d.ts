@@ -34,11 +34,20 @@ export interface Branding {
     is_default: boolean;
 }
 
+export interface SettingsTab {
+    key: string;
+    label: string;
+    /** A path inside the admin, e.g. "settings/seo". */
+    href: string;
+}
+
 export interface SharedProps {
     auth: { user: User | null };
     branding?: Branding;
     permissions: string[] | ['*'];
     navigation: NavGroup[];
+    /** Settings page tabs this user may open (built-in and registered by packages). */
+    settingsTabs?: SettingsTab[];
     locales: LocaleInfo;
     flash: { success?: string | null; error?: string | null; id?: string | null };
     adminPath: string;

@@ -57,5 +57,5 @@ it('requires someone to receive reassigned content', function () {
 
 it('reports what each user created on the users page', function () {
     get('/cms/users')->assertInertia(fn ($page) => $page
-        ->where('users', fn ($users) => collect($users)->firstWhere('email', 'leaver@example.com')['content'] === ['entries' => 1, 'assets' => 1]));
+        ->where('rows.data', fn ($users) => collect($users)->firstWhere('email', 'leaver@example.com')['content'] === ['entries' => 1, 'assets' => 1]));
 });

@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Sunrice\Http\Controllers\Admin;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -19,38 +21,86 @@ use Inertia\Response;
 use Spatie\Permission\Models\Role;
 use Sunrice\Actions\Users\DeleteUser;
 use Sunrice\Activity\ActivityLogger;
+use Sunrice\Admin\Table\Column;
+use Sunrice\Admin\Table\TableQuery;
 use Sunrice\Models\Asset;
 use Sunrice\Models\Entry;
+use Sunrice\Sunrice;
 
 class UsersController extends Controller
 {
     use AuthorizesRequests;
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $model = config('sunrice.auth.user_model');
         $this->authorize('viewAny', $model);
 
-        // What each user created, for the delete dialog.
-        $entries = Entry::query()->whereNotNull('author_id')->groupBy('author_id')->selectRaw('author_id, count(*) as total')->pluck('total', 'author_id');
-        $assets = Asset::query()->whereNotNull('uploaded_by')->groupBy('uploaded_by')->selectRaw('uploaded_by, count(*) as total')->pluck('total', 'uploaded_by');
+        $table = TableQuery::for(app(Sunrice::class)->usersQuery()->with('roles:id,name'))
+            ->searchable(['name', 'email'])
+            ->filter('role', fn (Builder $q, mixed $value) => $value === 'none'
+                ? $q->whereDoesntHave('roles')
+                : $q->whereHas('roles', fn (Builder $r) => $r->where('name', $value)))
+            ->sortable(['name', 'email', 'created_at'])
+            ->apply($request);
+        if ($table->meta()['sort'] === null) {
+            $table->builder()->orderBy('name')->orderBy((new $model)->getKeyName());
+        }
+        $rows = $table->defaultPerPage(TablePreferencesController::perPageFor($request, 'users', 25))->paginate($request);
+
+        // What each listed user created, for the delete dialog.
+        $ids = $rows->getCollection()->map(fn (Model $u) => $u->getKey())->all();
+        $entries = Entry::query()->whereIn('author_id', $ids)->groupBy('author_id')->selectRaw('author_id, count(*) as total')->pluck('total', 'author_id');
+        $assets = Asset::query()->whereIn('uploaded_by', $ids)->groupBy('uploaded_by')->selectRaw('uploaded_by, count(*) as total')->pluck('total', 'uploaded_by');
+        $roles = Role::query()->orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('Users/Index', [
-            'users' => $model::query()->with('roles:id,name')->orderBy('name')->get()
-                ->map(fn ($u) => [
-                    'id' => $u->getKey(),
-                    'name' => $u->name,
-                    'email' => $u->email,
-                    'roles' => $u->roles->pluck('name'),
-                    'content' => ['entries' => (int) ($entries[$u->getKey()] ?? 0), 'assets' => (int) ($assets[$u->getKey()] ?? 0)],
-                    // What this user may do to that account (super admins are protected).
-                    'can' => [
-                        'update' => request()->user()->can('update', $u),
-                        'delete' => request()->user()->can('delete', $u),
-                    ],
-                ]),
-            'roles' => Role::query()->orderBy('name')->get(['id', 'name']),
+            'columns' => [
+                new Column('name', 'Name', sortable: true),
+                new Column('email', 'Email', sortable: true),
+                new Column('roles', 'Roles'),
+            ],
+            'rows' => $rows->through(fn (Model $u): array => [
+                'id' => $u->getKey(),
+                'name' => $u->getAttribute('name'),
+                'email' => $u->getAttribute('email'),
+                'roles' => $u->getAttribute('roles')->pluck('name'),
+                'content' => ['entries' => (int) ($entries[$u->getKey()] ?? 0), 'assets' => (int) ($assets[$u->getKey()] ?? 0)],
+                // What the current user may do to that account (super admins are protected).
+                'can' => [
+                    'update' => $request->user()->can('update', $u),
+                    'delete' => $request->user()->can('delete', $u),
+                ],
+            ]),
+            'meta' => $table->meta(),
+            'filters' => [[
+                'key' => 'role',
+                'label' => 'Role',
+                'type' => 'select',
+                'options' => [
+                    ...$roles->map(fn (Role $r) => ['value' => $r->name, 'label' => $r->name])->all(),
+                    ['value' => 'none', 'label' => 'No role'],
+                ],
+            ]],
+            'roles' => $roles,
+            // Who could receive a deleted user's content.
+            'others' => static::others(),
         ]);
+    }
+
+    /**
+     * Accounts that can receive a deleted user's content: the users the
+     * Users screen lists (Sunrice::usersQueryUsing() scopes applied).
+     *
+     * @return Collection<int, array{id: mixed, name: mixed, email: mixed}>
+     */
+    protected static function others(mixed $except = null): Collection
+    {
+        return app(Sunrice::class)->usersQuery()
+            ->when($except !== null, fn (Builder $q) => $q->whereKeyNot($except))
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Model $u) => ['id' => $u->getKey(), 'name' => $u->getAttribute('name'), 'email' => $u->getAttribute('email')]);
     }
 
     public function create(): Response
@@ -83,9 +133,7 @@ class UsersController extends Controller
             ],
             'roles' => Role::query()->orderBy('name')->get(['id', 'name']),
             // Who could receive this user's content when deleting them.
-            'others' => $user === null ? [] : config('sunrice.auth.user_model')::query()
-                ->whereKeyNot($user->getKey())->orderBy('name')->get()
-                ->map(fn (Model $u) => ['id' => $u->getKey(), 'name' => $u->getAttribute('name'), 'email' => $u->getAttribute('email')]),
+            'others' => $user === null ? [] : static::others($user->getKey()),
         ]);
     }
 
@@ -167,7 +215,7 @@ class UsersController extends Controller
             'reassign_to' => ['nullable', 'required_if:content,reassign'],
         ]);
         $reassignTo = ($validated['content'] ?? null) === 'reassign'
-            ? $model::query()->find($validated['reassign_to'])
+            ? app(Sunrice::class)->usersQuery()->find($validated['reassign_to'])
             : null;
         if (($validated['content'] ?? null) === 'reassign' && $reassignTo === null) {
             return back()->withErrors(['reassign_to' => 'Choose another user to receive the content.']);

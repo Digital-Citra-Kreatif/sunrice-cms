@@ -7,6 +7,7 @@ namespace Sunrice\Http\Middleware;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Sunrice\Admin\Navigation;
+use Sunrice\Sunrice;
 use Sunrice\Support\Branding;
 use Sunrice\Support\Locales;
 
@@ -48,6 +49,7 @@ class HandleSunriceInertiaRequests extends Middleware
                 ? []
                 : ($this->isSuperAdmin($user) ? ['*'] : $user->getAllPermissions()->pluck('name')->all()),
             'navigation' => fn () => $user === null ? [] : app(Navigation::class)->for($user),
+            'settingsTabs' => fn () => app(Sunrice::class)->settingsTabs($user),
             'branding' => fn () => Branding::shared(),
             'locales' => fn () => [
                 'main' => Locales::main(),

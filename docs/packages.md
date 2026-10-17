@@ -247,7 +247,7 @@ waits for its scripts before showing a package's page.
 | `adminUrl(path)` | `'commerce/orders'` → `'/cms/commerce/orders'`, with the site's admin path. |
 | `useBreadcrumbs(crumbs)` | The header's trail, for pages the sidebar doesn't list. |
 | `ui` | `Button`, `Input`, `Textarea`, `Label`, `Checkbox`, `Switch`, `Badge`, `Card*`, `Dialog*`, `Select*`, `Table*`, `Tabs*`. |
-| `components` | `DataTable` (the list table), `FieldRenderer` (fields of any type), `CollapsibleCard`, `InputError`. |
+| `components` | `DataTable` (the list table), `FieldRenderer` (fields of any type), `CollapsibleCard`, `InputError`, `SettingsTabs` (the Settings page's tab bar, see [Settings tabs](extending.md#settings-tabs)). |
 | `fetchJson(url, init)` | `fetch` with the CSRF token, returning JSON. |
 | `toast` | `toast.success('…')`, `toast.error('…')`. |
 | `version` | The API version (2). |

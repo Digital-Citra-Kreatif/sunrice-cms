@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- **Structure import**: `Sunrice::importStructure()` and
+  `php artisan sunrice:import-structure {file}` create fieldsets,
+  blueprints, taxonomies, collections, globals, forms, draft entries and
+  menus by handle, for packages and starter kits. Safe to rerun: items that
+  differ are reported and only overwritten with `--force`; `--dry-run`
+  saves nothing.
+- **Users list**: paged, searchable (name, email) and filterable by role.
+  Packages whose accounts aren't staff (a shop's customers) leave them out
+  with `Sunrice::usersQueryUsing()`; the scope also applies to the "move
+  their content to" picker.
+- **Settings tabs**: packages add tabs to the Settings page next to General
+  and SEO with `Sunrice::addSettingsTab()`, and show the same tab bar on
+  their own page (`window.Sunrice.components.SettingsTabs`). The sidebar's
+  Settings link opens the first tab a user may see.
 - **Terms and globals translate like entries.** Each field's Translatable
   setting decides what differs per language; everything else (images,
   numbers, relations, repeater rows) is shared with the main language and

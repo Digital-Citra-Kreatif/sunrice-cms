@@ -98,8 +98,11 @@ class Navigation
         if ($user->can('sunrice.activity.view')) {
             $admin[] = ['label' => 'Activity log', 'href' => 'activity', 'icon' => 'history'];
         }
-        if ($user->can('sunrice.settings.edit')) {
-            $admin[] = ['label' => 'Settings', 'href' => 'settings', 'icon' => 'settings'];
+        // Settings opens its first tab this user may see (a package's
+        // tab when they can't edit the site settings themselves).
+        $settingsTab = app(Sunrice::class)->settingsTabs($user)[0] ?? null;
+        if ($settingsTab !== null) {
+            $admin[] = ['label' => 'Settings', 'href' => $settingsTab['href'], 'icon' => 'settings'];
         }
         if ($user->can('sunrice.ai-access')) {
             $admin[] = ['label' => 'AI access', 'href' => 'ai-access', 'icon' => 'bot'];
