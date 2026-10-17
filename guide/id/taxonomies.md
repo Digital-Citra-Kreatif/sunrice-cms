@@ -9,7 +9,7 @@ Taksonomi membantu Anda mengelompokkan entri berdasarkan topik. **Taksonomi** ad
 - Taksonomi dapat bersifat **hierarkis**: term dapat berada di bawah term induk (misalnya *Asia* di bawah *Perjalanan*). Tag biasanya datar, sedangkan kategori sering kali hierarkis.
 - Setiap term memiliki judul dan slug (bagian dari alamat web) dalam setiap bahasa situs.
 
-Membuat taksonomi dan memilih koleksi yang memakainya adalah tugas pengelola situs; lihat [Struktur](structure.md#taxonomies-in-structure).
+Membuat taksonomi dan memilih koleksi yang memakainya adalah tugas pengelola situs; lihat [Struktur](structure.md#taksonomi).
 
 ## Mengelola term
 

@@ -46,7 +46,7 @@ Biasanya pengelola situs atau pengembang yang membuat global set, karena desain 
 1. Buka **Structure → Globals**, lalu klik **New global**.
 2. Di kartu **Details**, isi **Title** (**Handle** terisi otomatis).
 3. Pilih **Group**: **Global** atau **Template part**.
-4. Pilih **Blueprint**. Jika Anda memerlukan kolom baru, buat blueprint terlebih dahulu (lihat [Struktur](structure.md#blueprints)).
+4. Pilih **Blueprint**. Jika Anda memerlukan kolom baru, buat blueprint terlebih dahulu (lihat [Struktur](structure.md#blueprint)).
 5. Klik **Create**. Set terbuka sehingga Anda dapat mengisi nilainya.
 
 Jika kartu **Content** bertuliskan "This blueprint has no fields yet", tambahkan kolom ke blueprint-nya lalu kembali lagi.
