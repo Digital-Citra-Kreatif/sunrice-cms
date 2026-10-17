@@ -692,6 +692,8 @@ class EntriesController extends Controller
                 'term_ids' => $entry->terms->pluck('id'),
                 'template' => $entry->template,
                 'parent_id' => $entry->parent_id,
+                // The Comments card (loads its list itself, when the collection allows comments).
+                'comments_closed' => $entry->comments_closed,
                 // {taxonomy id: [term ids]} for the Taxonomies card.
                 'terms_by_taxonomy' => (object) $entry->terms->groupBy('taxonomy_id')->map(fn ($terms) => $terms->pluck('id')->values())->all(),
                 'translations' => $translations,

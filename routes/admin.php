@@ -133,6 +133,12 @@ Route::middleware([Middleware\Authenticate::class, Middleware\EnsureCanAccessAdm
     Route::delete('globals/{globalSet}', [Admin\GlobalsController::class, 'destroy'])->name('globals.destroy');
 
     // Site settings
+    Route::get('comments', [Admin\CommentsController::class, 'index'])->name('comments.index');
+    Route::post('comments/bulk', [Admin\CommentsController::class, 'bulk'])->name('comments.bulk');
+    Route::post('comments/{comment}/moderate', [Admin\CommentsController::class, 'moderate'])->whereNumber('comment')->name('comments.moderate');
+    Route::put('comments/{comment}', [Admin\CommentsController::class, 'update'])->name('comments.update');
+    Route::post('comments/{comment}/reply', [Admin\CommentsController::class, 'reply'])->name('comments.reply');
+    Route::put('entries/{entry}/comments-closed', [Admin\CommentsController::class, 'close'])->name('comments.close');
     Route::get('activity', [Admin\ActivityLogController::class, 'index'])->name('activity.index');
     Route::post('activity/prune', [Admin\ActivityLogController::class, 'prune'])->name('activity.prune');
     Route::get('settings', [Admin\SettingsController::class, 'edit'])->name('settings.edit');

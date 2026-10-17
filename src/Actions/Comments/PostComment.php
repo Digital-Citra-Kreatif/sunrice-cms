@@ -17,6 +17,10 @@ use Sunrice\Support\CommentNotifier;
  * Stores a visitor's comment or reply on an entry. Guests give a name
  * and email; signed-in users comment as themselves. Whether it waits
  * for approval follows Settings → Comments (Comment::initialStatus).
+ *
+ * With meta `admin` (a moderator replying from the admin), closed
+ * entries still take the reply, and a held comment being answered is
+ * approved first.
  */
 class PostComment
 {
@@ -24,13 +28,14 @@ class PostComment
 
     /**
      * @param  array<string, mixed>  $input  body, parent_id, author_name, author_email, notify_replies
-     * @param  array{ip?: string|null, user_agent?: string|null, locale?: string}  $meta
+     * @param  array{ip?: string|null, user_agent?: string|null, locale?: string, admin?: bool}  $meta
      *
      * @throws ValidationException
      */
     public function handle(Entry $entry, array $input, ?Authenticatable $user = null, array $meta = []): Comment
     {
-        if (! $entry->acceptsComments()) {
+        $admin = (bool) ($meta['admin'] ?? false);
+        if (! $admin && ! $entry->acceptsComments()) {
             throw ValidationException::withMessages(['body' => __('sunrice::frontend.comments_closed')]);
         }
         if ($user === null && config('sunrice.comments.require_login')) {
@@ -52,9 +57,14 @@ class PostComment
         // Replies only to approved comments of the same entry.
         $parent = null;
         if (! empty($validated['parent_id'])) {
-            $parent = Comment::query()->approved()->where('entry_id', $entry->id)->find((int) $validated['parent_id']);
+            $parent = Comment::query()->where('entry_id', $entry->id)
+                ->when(! $admin, fn ($q) => $q->approved())
+                ->find((int) $validated['parent_id']);
             if ($parent === null) {
                 throw ValidationException::withMessages(['parent_id' => __('sunrice::frontend.comment_reply_gone')]);
+            }
+            if (! $parent->isApproved()) {
+                app(ModerateComment::class)->handle($parent, 'approve');
             }
         }
 

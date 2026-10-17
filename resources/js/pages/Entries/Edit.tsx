@@ -13,6 +13,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InputError } from '@/components/app/input-error';
 import { CollapsibleCard } from '@/components/app/collapsible-card';
+import { EntryComments } from '@/components/app/entry-comments';
 import { useUnsavedChanges } from '@/lib/use-unsaved-changes';
 import { useBreadcrumbs } from '@/components/app/breadcrumbs';
 import FieldRenderer from '@/fields/FieldRenderer';
@@ -52,7 +53,7 @@ interface Props {
     collection: { id: number; handle: string; title: string; settings?: Record<string, unknown> };
     entry: {
         id: number; status: string; published_at: string | null; blueprint_id: number | null;
-        author_id: number | null; term_ids: number[]; template?: string | null; parent_id?: number | null; terms_by_taxonomy?: Record<number, number[]>; translations: Record<string, TranslationState>;
+        author_id: number | null; term_ids: number[]; template?: string | null; parent_id?: number | null; comments_closed?: boolean; terms_by_taxonomy?: Record<number, number[]>; translations: Record<string, TranslationState>;
     } | null;
     blueprint: AdminTab[] | null;
     blueprints: { id: number; title: string }[];
@@ -471,6 +472,9 @@ export default function EntryEdit({ collection, entry, blueprint, blueprints, pa
                                 />
                             </fieldset>
                         </CollapsibleCard>
+                    )}
+                    {entry && collection.settings?.comments === true && collection.settings?.has_single !== false && can('sunrice.comments.view') && (
+                        <EntryComments entryId={entry.id} closed={!!entry.comments_closed} />
                     )}
                 </div>
 

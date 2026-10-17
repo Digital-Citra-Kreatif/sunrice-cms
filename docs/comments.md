@@ -65,6 +65,29 @@ when the rate limit is hit).
 
 Both are queued: run a [queue worker](mail.md#queue-worker).
 
+## Moderating
+
+**Content → Comments** lists every comment, newest first, with tabs for
+All (pending and approved), Pending, Approved, Spam and Trash, a search
+over the text, name and email, and a collection filter. Each comment
+shows the entry it's on, the comment it answers and its language, with:
+
+- **Approve / Unapprove / Spam**, one by one or for the selected comments.
+- **Reply**: published at once under your name, even when the entry is
+  closed. Replying to a held comment approves it first.
+- **Edit**: fix a typo or remove a link.
+- **Trash**, then **Restore** or **Delete forever** (needs
+  `sunrice.comments.delete`).
+
+The entry editor has a **Comments** card with the entry's latest
+comments, the same actions, and the **Accept new comments on this entry**
+switch. Its actions don't reload the editor, so unsaved changes stay.
+The moderators' email links straight to the comments waiting on that
+entry.
+
+A reply's author is emailed (when they asked) the first time the reply is
+approved; approving it again later doesn't send another.
+
 ## Settings → Comments
 
 | Setting | Default | What it does |

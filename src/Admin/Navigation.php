@@ -27,7 +27,9 @@ class Navigation
         $groups = [];
 
         $content = [];
+        $comments = false;
         foreach (Collection::query()->orderBy('sort_order')->orderBy('title')->get() as $collection) {
+            $comments = $comments || $collection->allowsComments();
             if ($user->can('viewAny', [Entry::class, $collection->id])) {
                 $content[] = [
                     'label' => $collection->title,
@@ -35,6 +37,10 @@ class Navigation
                     'icon' => (string) ($collection->setting('icon') ?: 'file-text'),
                 ];
             }
+        }
+        // One Comments page for every collection that has them.
+        if ($comments && $user->can('sunrice.comments.view')) {
+            $content[] = ['label' => 'Comments', 'href' => 'comments', 'icon' => 'message-square'];
         }
         if ($content !== []) {
             $groups[] = ['label' => 'Content', 'items' => $content];

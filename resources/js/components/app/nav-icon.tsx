@@ -1,6 +1,6 @@
 import {
     Blocks, BookOpen, Bot, Briefcase, Calendar, ChartColumn, Circle, ClipboardList, CreditCard, Database, ExternalLink, FileText,
-    Folder, Globe, History, Home, Image, Inbox, LayoutGrid, LayoutTemplate, Library, Link, ListTree, Mail, MapPin, Megaphone, Newspaper,
+    Folder, Globe, History, Home, Image, Inbox, LayoutGrid, LayoutTemplate, Library, Link, ListTree, Mail, MapPin, Megaphone, MessageSquare, Newspaper,
     Package, Settings, ShoppingBag, ShoppingCart, Shield, Star, Tags, Users, Wrench,
     type LucideIcon,
 } from 'lucide-react';
@@ -36,6 +36,7 @@ const icons: Record<string, LucideIcon> = {
     mail: Mail,
     'map-pin': MapPin,
     megaphone: Megaphone,
+    'message-square': MessageSquare,
     newspaper: Newspaper,
     package: Package,
     settings: Settings,
