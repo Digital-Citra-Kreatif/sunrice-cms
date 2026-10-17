@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sunrice\Actions\Comments;
 
 use Illuminate\Validation\Rule;
+use InvalidArgumentException;
 use Sunrice\Events\ContentChanged;
 use Sunrice\Models\Comment;
 use Sunrice\Support\CommentNotifier;
@@ -34,6 +35,7 @@ class ModerateComment
             'trash' => $comment->delete(),
             'restore' => $comment->restore(),
             'delete' => $comment->forceDelete(),
+            default => throw new InvalidArgumentException("Unknown comment action: {$action}"),
         };
 
         $isVisible = $action !== 'delete' && $comment->isApproved() && ! $comment->trashed();
