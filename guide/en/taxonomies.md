@@ -9,7 +9,7 @@ Taxonomies let you group entries by topic. A **taxonomy** is a kind of grouping,
 - A taxonomy can be **hierarchical**: terms can sit under a parent term (for example *Asia* under *Travel*). Tags are usually flat; categories are often hierarchical.
 - Each term has a title and a slug (the part of the web address) in every language of the site.
 
-Creating a taxonomy and choosing which collections use it is a site manager's job; see [Structure](structure.md#taxonomies-in-structure).
+Creating a taxonomy and choosing which collections use it is a site manager's job; see [Structure](structure.md#taxonomies).
 
 ## Managing terms
 

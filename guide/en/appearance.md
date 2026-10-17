@@ -41,7 +41,7 @@ Ask a developer, or someone comfortable editing code, to:
 - Change the layout, colours, fonts or spacing of the public site.
 - Change where the menu, search box or language switcher appears.
 - Add a new kind of page or a new block type.
-- Add new fields to a collection's blueprint, so editors get new things to fill in. Someone with access to **Manage → Blueprints** can also do this, but the templates then need updating to show the new field.
+- Add new fields to a collection's blueprint, so editors get new things to fill in. Someone with access to **Manage → Blueprints** can also do this (see [Structure](structure.md)), but the templates then need updating to show the new field.
 
 > [!TECHNICAL]
 > Styles are in `public/sunrice-theme/app.css` (plain CSS; it can be replaced with a Vite or Tailwind build). Blocks are rendered by `resources/views/sunrice/blocks/{handle}.blade.php`, one file per fieldset handle. See [Templates](docs:templates.md) and [Blade components](docs:blade-components.md).

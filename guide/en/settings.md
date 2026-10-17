@@ -1,12 +1,12 @@
 # Settings
 
-The Settings page holds the choices that apply to the whole site: its name, languages, homepage, email, login security, comments and search-engine options. Open it from the sidebar with **Manage → Settings**. You need the **Edit settings** permission to see it.
+The Settings page holds choices that apply to the whole site. Open it with **Manage → Settings**; you need the **Edit settings** permission.
 
 ## Finding your way around
 
-At the top of the page are tabs: **General** and **SEO**. Some sites show extra tabs added by an installed package (for example a shop's own settings); those work the same way.
+At the top are two tabs, **General** and **SEO**. Some sites show extra tabs added by an installed package, such as a shop's settings.
 
-The **General** tab is divided into cards: **General**, **Languages**, **Branding**, **Code snippets**, **Email**, **Security** and **Comments**. Click a card's title to fold it away or open it again; the page remembers which cards you closed.
+The **General** tab is divided into cards: **General**, **Languages**, **Branding**, **Code snippets**, **Email**, **Security** and **Comments**. Click a card's title to fold it or open it again.
 
 To save your changes:
 
@@ -15,7 +15,7 @@ To save your changes:
 3. A "Settings saved." message confirms it.
 
 > [!TIP]
-> If you try to leave the page with unsaved changes, the admin warns you first, so you don't lose your edits by accident.
+> If you try to leave with unsaved changes, the admin warns you first.
 
 ## General
 
@@ -50,21 +50,21 @@ For translating content itself, see [Translations](translations.md).
 
 ## Branding
 
-Branding changes how the **admin** looks, not your public website. Use it to give the admin your organisation's name and colours.
+Branding changes how the **admin** looks, not your public website.
 
 - **Panel name** and **Tagline**: shown in the sidebar, on the login page and in browser tabs. Changing the name also hides the "Powered by Sunrice CMS" note.
 - **Logo**: click **Choose logo** to pick an image from your media library. A square SVG or PNG works best; it is also used as the browser tab icon.
 - **Font**: the typeface used in the admin.
-- **Accent color**: the colour of primary buttons, the active menu item and focus outlines. Use the colour picker or type a code such as `#1e66f5`. **Reset** returns to the neutral default. A small preview shows a button in your colour.
+- **Accent color**: the colour of primary buttons, the active menu item and focus outlines. Use the colour picker or type a code such as `#1e66f5`; **Reset** returns to the neutral default.
 
 After saving, the page reloads so the new look takes effect.
 
 > [!TIP]
-> Each person can also switch the admin between **Light**, **Dark** and **System** from their own menu at the bottom of the sidebar. That choice only affects them.
+> Each person can switch the admin between **Light**, **Dark** and **System** in their user menu at the bottom of the sidebar.
 
 ## Code snippets
 
-Here you can paste small pieces of code that must appear on every page, such as analytics, a tag manager or a site-verification tag from a search engine. There are three boxes: **In <head>**, **Start of <body>** and **End of <body>**. Paste the code your provider gives you into the box they tell you to use, and save.
+Paste small pieces of code that must appear on every page, such as analytics, a tag manager or a search engine's verification tag, into **In <head>**, **Start of <body>** or **End of <body>**, as your provider tells you, and save.
 
 > [!WARNING]
 > Snippets are printed exactly as you paste them, on every page. A broken snippet can break the look of the whole site. Only paste code from sources you trust.
@@ -74,9 +74,7 @@ Here you can paste small pieces of code that must appear on every page, such as 
 
 ## Email
 
-The site sends emails for login codes, password resets, form notifications and comment notifications. This card shows how email is currently set up: the **Mailer**, the **Server** and the **From** address. These details can't be changed here.
-
-If a yellow warning says the mailer "doesn't deliver email", messages are only written to a log file and nobody receives them. Ask your developer to set up email.
+The site sends login codes, password resets, form and comment notifications by email. This card shows the current setup (**Mailer**, **Server**, **From**); it can't be changed here. If a yellow warning says the mailer "doesn't deliver email", messages only go to a log file: ask your developer to set up email.
 
 To check that email works:
 
@@ -89,7 +87,7 @@ To check that email works:
 
 ## Security
 
-Switch on **Two-factor login with an emailed code** to make logins safer. After entering their password, everyone must also enter a 6-digit code sent to their email address, then click **Verify and log in**. The code expires after a few minutes, and **send a new code** asks for another one.
+Switch on **Two-factor login with an emailed code** to make logins safer: after their password, everyone must also enter a 6-digit code sent to their email address.
 
 > [!WARNING]
 > Turn this on only after a test email has reached you. If login codes can't be delivered, nobody can log in, including you.
@@ -107,9 +105,9 @@ The **SEO** tab holds the site-wide search-engine and sharing options. Save it w
 
 In the **Search engines & sharing** card:
 
-- **Hide the whole site from search engines**: asks search engines not to list any page, and empties the sitemap. Useful for a test copy of the site; make sure it is off on your live site.
+- **Hide the whole site from search engines**: asks search engines not to list any page and empties the sitemap. Meant for test copies; keep it off on your live site.
 - **Add the site name to page titles**: shows titles like "About us | My Site" in browser tabs and search results. The **Separator** box sets the character between them.
 - **X/Twitter handle**: your account, such as `@acme`, added to share previews.
 - **Default share image**: click **Choose image** to pick the picture shown when a page without its own image is shared on social media.
 
-Below, **Fields used for SEO** lists each collection and taxonomy. For each one you can choose which field fills the **Meta title**, **Meta description** and **Share image** when an entry leaves its own SEO fields empty. **Automatic** picks a fitting field for you; **None** uses nothing. For more on SEO, see [SEO](seo.md).
+Below, **Fields used for SEO** lets you choose, per collection and taxonomy, which field fills the **Meta title**, **Meta description** and **Share image** when an entry leaves its own SEO fields empty. **Automatic** picks a fitting field; **None** uses nothing. See [SEO](seo.md).
