@@ -89,6 +89,55 @@ added with `addNavigationItem()`.
 An unknown name shows a small dot. Collections use the same names in their
 **Icon** setting.
 
+## Settings tabs
+
+The Settings page has General and SEO tabs. A package or app can add its
+own tab for a settings screen it serves (with `Sunrice::adminRoutes()` and
+a page registered by an admin script):
+
+```php
+Sunrice::addSettingsTab(
+    key: 'store',                  // unique; General and SEO are "general" and "seo"
+    label: 'Store',
+    href: 'commerce/settings',     // a path inside the admin
+    can: 'commerce.settings.view', // who sees it (optional): ability name or callable
+);
+```
+
+- The tab shows after the built-in ones, for users who pass `can`. General
+  and SEO need `sunrice.settings.edit`.
+- The sidebar's **Settings** link opens the first tab the user may see, so
+  someone who may only change the store settings still finds them.
+- Show the same tab bar on your page, with your tab current:
+
+  ```jsx
+  const { components } = window.Sunrice;
+  <components.SettingsTabs current="store" />
+  ```
+
+  It reads the tabs from the page's shared `settingsTabs` prop, and hides
+  itself when the user can see only one tab.
+
+## Accounts that aren't staff
+
+Users (Manage → Users) lists every account of the user model, paged, with
+search and a role filter. A package whose accounts aren't staff, such as a
+shop's customers, can leave them out:
+
+```php
+use Illuminate\Database\Eloquent\Builder;
+
+Sunrice::usersQueryUsing(fn (Builder $query) => $query->whereDoesntHave(
+    'roles', fn (Builder $roles) => $roles->where('name', 'Customer'),
+));
+```
+
+The scope applies to the Users list and to the user pickers ("move their
+content to" when deleting a user). Hidden accounts can still be opened
+by their address (`/cms/users/{id}/edit`), so the package can link to
+them. `Sunrice::usersQuery()` returns the scoped query for your own
+screens.
+
 ## Pages inside the admin: resources
 
 To manage one of your own Eloquent models in the admin, register a

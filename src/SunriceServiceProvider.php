@@ -351,6 +351,7 @@ class SunriceServiceProvider extends PackageServiceProvider
             Console\McpTokenCommand::class,
             Console\DemoContentCommand::class,
             Console\PruneActivityCommand::class,
+            Console\ImportStructureCommand::class,
         ]);
     }
 
