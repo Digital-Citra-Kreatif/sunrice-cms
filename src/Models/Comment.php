@@ -66,6 +66,17 @@ class Comment extends Model
         return CommentFactory::new();
     }
 
+    protected static function booted(): void
+    {
+        // A comment deleted for good leaves its replies in the thread, at
+        // the top level (the foreign key does the same where it's enforced).
+        static::forceDeleting(function (Comment $comment): void {
+            static::query()->withoutGlobalScope(SoftDeletingScope::class)
+                ->where('parent_id', $comment->id)
+                ->update(['parent_id' => null]);
+        });
+    }
+
     /** @return BelongsTo<Entry, $this> */
     public function entry(): BelongsTo
     {
