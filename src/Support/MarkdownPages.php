@@ -84,7 +84,7 @@ class MarkdownPages
             function (array $m) use ($docsUrl) {
                 $url = $docsUrl === null ? null : $docsUrl($m[1]);
 
-                return $url === null ? $m[3] : '<a href="'.e($url).($m[2] ?? '').'">'.$m[3].'</a>';
+                return $url === null ? $m[3] : '<a href="'.e($url).$m[2].'">'.$m[3].'</a>';
             },
             $html,
         );

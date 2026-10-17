@@ -58,7 +58,7 @@ class GuideController extends Controller
             'headings' => MarkdownPages::headings($markdown),
             'sections' => static::sections($locale),
             'locale' => $locale,
-            'locales' => collect(static::LOCALES)->map(fn (string $label, string $code) => ['code' => $code, 'label' => $label])->values(),
+            'locales' => array_map(fn (string $code, string $label) => ['code' => $code, 'label' => $label], array_keys(static::LOCALES), static::LOCALES),
         ]);
     }
 
