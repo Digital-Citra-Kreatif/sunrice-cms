@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 use Spatie\Honeypot\ProtectAgainstSpam;
+use Sunrice\Http\Controllers\Frontend\CommentController;
 use Sunrice\Http\Controllers\Frontend\FormSubmitController;
 use Sunrice\Http\Controllers\Frontend\PageController;
 use Sunrice\Http\Controllers\Frontend\PreviewController;
@@ -20,6 +21,15 @@ use Sunrice\Support\Locales;
 Route::post('sunrice/forms/{form:handle}', FormSubmitController::class)
     ->middleware([ProtectAgainstSpam::class, 'throttle:sunrice-forms'])
     ->name('sunrice.frontend.forms.submit');
+
+// Comments and replies (<x-sunrice::comments>), and the link in reply emails.
+Route::post('sunrice/comments/{entry}', [CommentController::class, 'store'])
+    ->whereNumber('entry')
+    ->middleware([ProtectAgainstSpam::class, 'throttle:sunrice-comments'])
+    ->name('sunrice.frontend.comments.store');
+Route::get('sunrice/comments/unsubscribe/{comment}', [CommentController::class, 'unsubscribe'])
+    ->middleware('signed')
+    ->name('sunrice.frontend.comments.unsubscribe');
 
 // Signed editor preview — lives under the admin path prefix.
 Route::get(config('sunrice.admin.path', 'cms').'/preview/{entry}/{locale}', PreviewController::class)

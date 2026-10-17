@@ -285,3 +285,19 @@ submission the visitor lands back on the form (`#sunrice-form-{handle}`),
 and messages name fields by their label. When the form requires a captcha
 ([Forms → Captcha](forms.md#captcha)), the component adds the widget above
 the submit button and its message (`$component->captchaError()`).
+
+## `<x-sunrice::comments>`
+
+An entry's discussion: its approved comments as a thread, and a form for
+comments and replies.
+
+```blade
+<x-sunrice::comments :entry="$entry" />
+<x-sunrice::comments :entry="$entry" :depth="2" class="my-comments" />
+```
+
+It renders nothing unless the entry's collection has **Allow comments**
+on, and shows "Comments are closed" instead of the form when the entry no
+longer takes new ones. `depth` overrides the reply levels from Settings →
+Comments. See [Comments](comments.md#showing-comments) for the markup,
+its CSS classes and how to override it.

@@ -15,6 +15,56 @@ Each entry can also close its own comments; its approved comments stay
 visible. Every language of an entry shares one thread, and each comment
 records the language it was written in.
 
+## Showing comments
+
+Put the component in the entry template (the starter `show` templates
+already have it):
+
+```blade
+<x-sunrice::comments :entry="$entry" />
+```
+
+It lists the approved comments, oldest first, with their replies nested
+under them, and a form for a new comment. Each comment has a **Reply**
+link that opens the form under it (`?reply_to=id`, no JavaScript needed).
+Guests give a name and an email (never shown); signed-in users comment
+as themselves. Comments are plain text: line breaks are kept and links
+become clickable with `rel="nofollow ugc"`.
+
+After posting, the visitor comes back to the thread with "Your comment is
+posted" (or "will appear once it is approved"). The form has the same
+honeypot as forms, the rate limit from Settings → Comments and, when it's
+on, the captcha.
+
+The markup uses these classes: `sunrice-comments` (the section, `#comments`),
+`sunrice-comments-list`, `sunrice-comment` (`#comment-{id}`),
+`sunrice-comment-meta`, `sunrice-comment-body`, `sunrice-comment-reply`,
+`sunrice-comment-replies`, `sunrice-comment-form` (`#comment-form`) and
+`sunrice-comments-status`. The starter theme styles them. To change the
+markup, publish the views (`php artisan vendor:publish
+--tag=sunrice-views`) and edit them in
+`resources/views/vendor/sunrice/components/`: `comments.blade.php`,
+`comments/item.blade.php` and `comments/form.blade.php`.
+
+Posting from JavaScript: `POST /sunrice/comments/{entry id}` with `body`,
+`parent_id`, `author_name`, `author_email`, `notify_replies`, `_locale`
+and the CSRF token, `Accept: application/json`. It answers
+`{success: true, status, message, id}` or `{errors}` with `422` (`429`
+when the rate limit is hit).
+
+## Emails
+
+- **To moderators:** every new comment, with a link to moderate it, when
+  **Email moderators about new comments** is on. It goes to the ticked
+  roles' users (or, with none ticked, everyone who can moderate comments)
+  and the extra addresses. Moderators' own comments don't send it.
+- **To commenters:** when a reply to their comment goes live, if they
+  ticked "Email me when someone replies". It's written in the language
+  they commented in and ends with a link that stops these emails for that
+  comment. Replying to yourself sends nothing.
+
+Both are queued: run a [queue worker](mail.md#queue-worker).
+
 ## Settings → Comments
 
 | Setting | Default | What it does |

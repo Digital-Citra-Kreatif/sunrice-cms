@@ -5,6 +5,11 @@ Sunrice sends these emails, all through Laravel's mailer:
 - **Form notifications.** A form whose settings list notification
   addresses sends a `FormSubmittedNotification` for every submission.
   It is **queued**.
+- **Comment notifications.** Moderators get a `NewCommentNotification`
+  for each new comment, and commenters who asked for it a
+  `CommentReplyNotification` when a reply to them goes live, in the
+  language they commented in (see [Comments](comments.md#emails)). Both
+  are **queued**.
 - **Admin password resets.** The "Forgot password?" link on the admin
   login page sends a reset link right away (not queued).
 - **Login codes.** With [two-factor login](#two-factor-login) on, a

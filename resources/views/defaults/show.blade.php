@@ -23,6 +23,9 @@
             @endif
         @endforeach
     </article>
+    @if ($entry)
+        <x-sunrice::comments :entry="$entry" />
+    @endif
     <x-sunrice::code position="body_end" />
 </body>
 </html>
