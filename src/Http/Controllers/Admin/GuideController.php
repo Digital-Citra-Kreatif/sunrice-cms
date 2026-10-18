@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Sunrice\Support\MarkdownPages;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * The user guide inside the admin (Manage → Guide): how to work with the
@@ -54,12 +55,24 @@ class GuideController extends Controller
                 fn (string $slug) => route('sunrice.admin.guide.show', $slug, false),
                 fn (string $slug) => $canDocs && is_file(DocsController::path($slug)) ? route('sunrice.admin.docs.show', $slug, false) : null,
                 $locale,
+                fn (string $file) => route('sunrice.admin.guide.image', $file, false),
             ),
             'headings' => MarkdownPages::headings($markdown),
             'sections' => static::sections($locale),
             'locale' => $locale,
             'locales' => array_map(fn (string $code, string $label) => ['code' => $code, 'label' => $label], array_keys(static::LOCALES), static::LOCALES),
         ]);
+    }
+
+    /** A screenshot from guide/images, shared by every language. */
+    public function image(string $file): BinaryFileResponse
+    {
+        Gate::authorize('sunrice.guide.view');
+
+        $path = dirname(__DIR__, 4).'/guide/images/'.$file;
+        abort_unless(is_file($path), 404);
+
+        return response()->file($path, ['Cache-Control' => 'private, max-age=86400']);
     }
 
     /** The guide file for a page, in the language or else in English. */

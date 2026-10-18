@@ -311,6 +311,10 @@
 .sunrice-docs blockquote { border-left: 3px solid var(--border); padding-left: 1rem; color: var(--muted-foreground); }
 .sunrice-docs hr { border: 0; border-top: 1px solid var(--border); margin: 2rem 0; }
 .sunrice-docs td:first-child code { white-space: nowrap; }
+.sunrice-docs a.sunrice-shot { display: block; margin: 0.25rem 0 1.25rem; text-decoration: none; }
+.sunrice-docs a.sunrice-shot img { display: block; max-width: 100%; height: auto; border: 1px solid var(--border); border-radius: 0.6rem; box-shadow: 0 6px 24px -14px rgb(0 0 0 / 0.35); transition: box-shadow 150ms; }
+.sunrice-docs a.sunrice-shot:hover img { box-shadow: 0 10px 30px -14px rgb(0 0 0 / 0.5); }
+.sunrice-docs li > a.sunrice-shot { margin: 0.6rem 0 0.9rem; }
 
 /* Callouts: "> [!TIP]" and friends. Technical notes look like code, so
    readers who don't touch code can tell them apart and skip them. */
