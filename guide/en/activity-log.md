@@ -33,6 +33,8 @@ The newest changes are at the top. Each line has these columns:
 | **Activity** | A sentence about the change, such as Updated entry “About us (Pages)”. |
 | **Details** | Which fields changed. |
 
+![The activity log with its search box, filters and the Date, User, Source, Action, Activity and Details columns](images/activity-log-overview.webp)
+
 In **Details**, translated fields show their language, as in `title (en)`, and `draft` means the change was saved as a draft and isn't live yet. For example, `title (en, draft)` means the English title was changed in a draft.
 
 > [!NOTE]
@@ -69,6 +71,8 @@ The search box (**Search by name, user or token…**) finds lines by the name of
 2. Optionally type the token's name in the search box to see one agent only.
 3. Optionally set **Period**, for example **Last 7 days**.
 
+![The Source filter open with AI agent marked, next to the search box and the Period filter](images/activity-log-filters.webp)
+
 > [!TIP]
 > To answer "who deleted this page?", search for the page's title and set **Action** to deleted or trashed.
 
@@ -79,6 +83,8 @@ The log grows with every save. You can delete old lines to keep it small. This n
 1. Click **Prune** at the top of the page.
 2. In **Older than (days)**, enter an age. The suggested value is usually 180.
 3. Click **Delete old entries**.
+
+![The Prune the activity log dialog with the Older than (days) box and the Delete old entries button](images/activity-log-prune.webp)
 
 A message tells you how many lines were deleted, and the prune itself is recorded as a new line, "Pruned activity log".
 

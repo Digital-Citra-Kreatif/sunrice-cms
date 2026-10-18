@@ -33,6 +33,8 @@ Perubahan terbaru ada di paling atas. Setiap baris memiliki kolom berikut:
 | **Activity** | Kalimat tentang perubahan, misalnya Updated entry “About us (Pages)”. |
 | **Details** | Field mana yang berubah. |
 
+![Log aktivitas dengan kotak pencarian, filter, serta kolom Date, User, Source, Action, Activity, dan Details](images/activity-log-overview.webp)
+
 Di **Details**, field yang diterjemahkan menampilkan bahasanya, seperti `title (en)`, dan `draft` berarti perubahan disimpan sebagai draf dan belum tayang. Contohnya, `title (en, draft)` berarti judul bahasa Inggris diubah dalam draf.
 
 > [!NOTE]
@@ -69,6 +71,8 @@ Kotak pencarian (**Search by name, user or token…**) mencari baris berdasarkan
 2. Jika perlu, ketik nama token di kotak pencarian untuk melihat satu agen saja.
 3. Jika perlu, atur **Period**, misalnya **Last 7 days**.
 
+![Filter Source yang terbuka dengan pilihan AI agent ditandai, di samping kotak pencarian dan filter Period](images/activity-log-filters.webp)
+
 > [!TIP]
 > Untuk menjawab "siapa yang menghapus halaman ini?", cari judul halaman itu dan atur **Action** ke deleted atau trashed.
 
@@ -79,6 +83,8 @@ Log bertambah setiap kali ada penyimpanan. Anda dapat menghapus baris lama agar 
 1. Klik **Prune** di bagian atas halaman.
 2. Di **Older than (days)**, isi batas usia dalam hari. Nilai yang disarankan biasanya 180.
 3. Klik **Delete old entries**.
+
+![Dialog Prune the activity log dengan kotak Older than (days) dan tombol Delete old entries](images/activity-log-prune.webp)
 
 Sebuah pesan memberi tahu berapa baris yang dihapus, dan pemangkasan itu sendiri dicatat sebagai baris baru, "Pruned activity log".
 

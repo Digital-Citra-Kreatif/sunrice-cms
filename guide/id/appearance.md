@@ -48,7 +48,9 @@ Mintalah developer, atau orang yang terbiasa mengedit kode, untuk:
 
 ### Memilih template untuk satu halaman
 
-Beberapa entri memerlukan desain khusus, misalnya halaman landing. Jika developer telah membuat template tambahan untuk itu, buka entrinya dan ketik nama template tersebut di kartu **Template** pada panel samping. Biarkan kosong untuk memakai template biasa dari koleksinya. Kartu ini menunjukkan file mana yang dipakai bila kosong.
+Beberapa entri memerlukan desain khusus, misalnya halaman landing. Jika developer telah membuat template tambahan untuk itu, buka entrinya, klik kartu **Template** pada panel samping untuk membukanya, lalu ketik nama template tersebut di sana. Biarkan kosong untuk memakai template biasa dari koleksinya. Kartu ini menunjukkan file mana yang dipakai bila kosong.
+
+![Kartu Template yang terbuka di panel samping editor entri](images/appearance-template-card.webp)
 
 Koleksi dan taksonomi memiliki pilihan yang sama untuk semua halamannya (**Entry template**, **Archive/listing template**, dan **Term page template** di **Manage → Collections** dan **Manage → Taxonomies**), yang biasanya diatur oleh developer.
 
@@ -62,6 +64,8 @@ Sebelum menerbitkan, periksa bagaimana halaman akan terlihat:
 1. Buka entrinya dan simpan perubahan Anda.
 2. Klik **View draft** di bagian atas editor. Halaman terbuka di tab baru dengan spanduk "Draft". Hanya orang yang sedang login dan berizin melihat entri yang belum terbit yang dapat membukanya.
 3. Jika sudah puas, klik **Publish**.
+
+![Bagian atas editor entri dengan tombol View draft dan Publish](images/appearance-view-draft.webp)
 
 Setelah entri terbit, tombol tersebut bertuliskan **View page** dan membuka halaman publiknya.
 

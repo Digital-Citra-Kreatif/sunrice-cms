@@ -14,6 +14,8 @@ To save your changes:
 2. Click **Save settings** (at the top or bottom of the page), or press Ctrl S (⌘ S on a Mac).
 3. A "Settings saved." message confirms it.
 
+![The Settings page with the General and SEO tabs and the Save settings button](images/settings-overview.webp)
+
 > [!TIP]
 > If you try to leave with unsaved changes, the admin warns you first.
 
@@ -38,6 +40,8 @@ To add a language:
 3. Type the language's display name next to its code, for example "English". Visitors see this name in the language switcher.
 4. Click **Save settings**.
 
+![The Languages card with a new language code typed in and the Add language button](images/settings-languages.webp)
+
 To remove a language, click the **×** next to it. The main language is marked **Main language** and can't be removed. While the site has no content yet, **Make main** turns another language into the main one.
 
 > [!WARNING]
@@ -55,9 +59,11 @@ Branding changes how the **admin** looks, not your public website.
 - **Panel name** and **Tagline**: shown in the sidebar, on the login page and in browser tabs. Changing the name also hides the "Powered by Sunrice CMS" note.
 - **Logo**: click **Choose logo** to pick an image from your media library. A square SVG or PNG works best; it is also used as the browser tab icon.
 - **Font**: the typeface used in the admin.
-- **Accent color**: the colour of primary buttons, the active menu item and focus outlines. Use the colour picker or type a code such as `#1e66f5`; **Reset** returns to the neutral default.
+- **Accent color**: the colour of primary buttons, the active menu item and focus outlines. Use the colour picker or type a code such as `#1e66f5`; once a colour is set, **Reset** returns to the neutral default.
 
 After saving, the page reloads so the new look takes effect.
+
+![The Branding card with the default panel name, logo, font and accent color](images/settings-branding.webp)
 
 > [!TIP]
 > Each person can switch the admin between **Light**, **Dark** and **System** in their user menu at the bottom of the sidebar.
@@ -81,6 +87,8 @@ To check that email works:
 1. Under **Send a test email**, type your own email address.
 2. Click **Send test**.
 3. Check your inbox (and the spam folder). If sending failed, the error from the mail server appears under the box.
+
+![The Email card with an address typed under Send a test email and the Send test button](images/settings-email.webp)
 
 > [!TECHNICAL]
 > Email is configured in `.env` with the `MAIL_*` keys (for example `MAIL_MAILER=smtp`, `MAIL_HOST`, `MAIL_FROM_ADDRESS`). Form and comment notifications are queued, so a queue worker must run unless `QUEUE_CONNECTION=sync`. See [SMTP settings](docs:mail.md#smtp-settings) and [Queue worker](docs:mail.md#queue-worker).
@@ -106,8 +114,10 @@ The **SEO** tab holds the site-wide search-engine and sharing options. Save it w
 In the **Search engines & sharing** card:
 
 - **Hide the whole site from search engines**: asks search engines not to list any page and empties the sitemap. Meant for test copies; keep it off on your live site.
-- **Add the site name to page titles**: shows titles like "About us | My Site" in browser tabs and search results. The **Separator** box sets the character between them.
+- **Add the site name to page titles**: shows titles like "About us | My Site" in browser tabs and search results. When this is on, a **Separator** box appears to set the character between them.
 - **X/Twitter handle**: your account, such as `@acme`, added to share previews.
 - **Default share image**: click **Choose image** to pick the picture shown when a page without its own image is shared on social media.
+
+![The SEO tab with the Search engines & sharing card and the Save SEO settings button](images/settings-seo.webp)
 
 Below, **Fields used for SEO** lets you choose, per collection and taxonomy, which field fills the **Meta title**, **Meta description** and **Share image** when an entry leaves its own SEO fields empty. **Automatic** picks a fitting field; **None** uses nothing. See [SEO](seo.md).
