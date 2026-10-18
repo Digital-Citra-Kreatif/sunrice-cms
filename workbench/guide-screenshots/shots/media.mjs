@@ -2,7 +2,7 @@
 // Nothing here saves or uploads: folders and files are only opened, ticked or hovered.
 
 const card = (title) => `main [data-slot="card"]:has([data-slot="card-title"]:text-is("${title}"))`;
-const folder = (name) => `main button:text-is("${name}")`;
+const folder = (name) => `main button:has(span:text-is("${name}"))`;
 const dialog = '[role="dialog"]';
 // "Brand colours" (colours.jpg), used by an article in both languages.
 const colours = '/cms/assets/9/edit';
@@ -78,7 +78,7 @@ export default [
             await h.waitIdle();
         },
         mark: ['main button:has-text("Trash")'],
-        clip: ['main input[aria-label="Search assets…"]', 'main button:text-is("Upload")', 'main input[aria-label="Select sprint.jpg"]'],
+        clip: ['main input[placeholder^="Search assets"]', 'main button:text-is("Upload")', 'main input[aria-label="Select sprint.jpg"]'],
     },
     {
         // "Picking assets in fields", steps 2-4, in a new article's Featured image field.
@@ -91,8 +91,9 @@ export default [
         },
         mark: [
             { selector: `${dialog} input[placeholder^="Search"]`, label: '2' },
+            `${dialog} div:has(> button:text-is("All"))`,
             { selector: `${dialog} button:has-text("colours.jpg")`, label: '3' },
-            { selector: `${dialog} button:text-is("Select")`, label: '4' },
+            { selector: `${dialog} button[data-slot="button"]:has-text("Select")`, label: '4' },
         ],
         clip: dialog,
     },

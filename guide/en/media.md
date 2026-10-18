@@ -12,6 +12,8 @@ In the sidebar, under **Manage**, click **Assets**. On the left is the **Folders
 - The grid/list button switches between thumbnails and a list with **Name**, **Type** and **Size**.
 - **Per page**: how many files one page shows.
 
+![The asset library with the Folders list on the left and the files on the right](images/media-library.webp)
+
 The bottom of the page shows how many files there are and the largest file size allowed per upload.
 
 ## Uploading files
@@ -19,6 +21,8 @@ The bottom of the page shows how many files there are and the largest file size 
 1. Open the folder you want the files in (or **All assets** for the top level).
 2. Click **Upload** and choose one or more files, or drag files from your computer onto the file area.
 3. Wait for the *Uploaded* message. Large batches are uploaded one file at a time.
+
+![The Blog folder opened in the Folders list and the Upload button](images/media-upload.webp)
 
 A file that is too large or of a type the site doesn't accept is skipped with a message; the other files still upload.
 
@@ -28,24 +32,32 @@ A file that is too large or of a type the site doesn't accept is skipped with a 
 ## Folders
 
 - **Create a folder**: click **+** (**New folder**) next to **Folders**. Type a **Name**, choose where it goes under **Inside** (**Top level** or another folder), and click **Create folder**. When a folder is open, the new folder goes inside it.
+
+  ![The New folder screen with Name, Inside and Create folder](images/media-new-folder.webp)
+
 - **Rename a folder**: hover the folder and click the pencil (**Rename folder**), change the **Name**, and click **Save**.
 - **Delete a folder**: hover the folder and click the bin (**Delete folder**). Only empty folders can be deleted.
+
+![The + button next to Folders, and the pencil and bin shown when hovering a folder](images/media-folders.webp)
 
 > [!NOTE]
 > The admin has no button to move a file to another folder after uploading. Upload files into the folder they belong in. Folders only help you find files; they don't change a file's web address.
 
 ## Editing an asset
 
-Click a file to open it. The page has three parts:
+Click a file to open it. The page has four parts:
 
 - **Preview**: the image (or a file icon), with **Copy link** (copies the file's web address), **Open file** and **Replace file**.
 - **Details**: **Title**, **Alt text** and **Caption**.
-- **File**: type, size, dimensions and upload date, and **Used by**, the list of entries, terms and globals that use this file.
+- **File**: type, size, dimensions and upload date.
+- **Used by**: the list of entries, terms and globals that use this file.
 
 To change the details:
 
 1. Fill in **Title** (a readable name shown in the library), **Alt text** and, if you like, **Caption**.
 2. Click **Save**.
+
+![An image asset with the Details card and the Save button numbered](images/media-edit.webp)
 
 > [!TIP]
 > Always fill in **Alt text** for images. It describes the image to people who use screen readers and to search engines. Describe what the image shows, such as *Two volunteers planting a tree*, rather than *image1*.
@@ -56,6 +68,8 @@ To change the details:
 
 1. Open the asset and click **Replace file**.
 2. Choose the new file and confirm.
+
+![The Preview card of an asset with the Replace file button](images/media-replace.webp)
 
 ### Image sizes
 
@@ -68,6 +82,9 @@ When you upload an image, the site automatically makes smaller copies of it (for
 
 - **Trash one file**: open it and click the bin (**Move to trash**).
 - **Trash several**: tick the boxes on the thumbnails and click **Trash** followed by the number of files.
+
+  ![Two files ticked in the library and the Trash 2 button](images/media-trash.webp)
+
 - **Restore**: set the filter to **Trashed only**, open the file and click **Restore**.
 - **Delete for good**: open a trashed file and click **Delete forever**.
 
@@ -82,5 +99,7 @@ Fields that take an image or file show a **Choose image** or **Choose asset** bu
 2. Pick a folder at the top, or use **Search…**.
 3. Click a file to select it. In fields that allow several files, click more of them.
 4. Click **Select**.
+
+![The Asset library window with search, folders, a selected file and Select numbered](images/media-picker.webp)
 
 You can also click **Upload** in the window to add a new file: it is selected for you, so you only need to click **Select**. Once chosen, use **Change** to pick another file, **Add more** to add files to a multi-file field, or the **×** (**Remove**) button to take a file out of the field. Removing a file from a field doesn't delete it from the library.

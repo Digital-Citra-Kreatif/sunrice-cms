@@ -13,10 +13,15 @@ Forms live in the sidebar under **Structure → Forms**. The list shows each for
 ## Create a form
 
 1. Go to **Structure → Forms** and click **New form**.
+
+   ![The Forms page, with Forms in the sidebar and the New form button marked](images/forms-list.webp)
+
 2. In the **Details** card, type a **Title** and a **Handle** (lowercase, for example `contact`).
 3. Add fields in the **Fields** card (see below).
 4. Fill in the **Settings** card (see below).
 5. Click **Save form**.
+
+![The New form page with the Details, Fields and Settings cards and the Save form button marked](images/forms-new-form.webp)
 
 > [!NOTE]
 > The handle can't be changed after the form is created, because the site's design refers to it.
@@ -37,6 +42,8 @@ Forms live in the sidebar under **Structure → Forms**. The list shows each for
 3. Drag a field by its handle (the dotted grip) to change the order.
 4. Click the bin icon to remove a field.
 
+![The Fields card with the Add field types open, an opened field, a drag grip and a bin icon marked](images/forms-fields.webp)
+
 > [!TIP]
 > Removing a field doesn't delete what visitors already sent in it: old submissions still show the value, marked "(removed field)".
 
@@ -51,7 +58,13 @@ Forms live in the sidebar under **Structure → Forms**. The list shows each for
 
 1. Go to **Structure → Forms** and click the form's title (or its **Submissions** button).
 2. The table shows each submission's number, when it was **Submitted**, and a column per field. Long values are shortened.
+
+   ![The submissions table of the Contact form, with the search box, Filter, Export CSV, a row and its bin icon marked](images/forms-submissions.webp)
+
 3. Click a submission to see everything that was sent, plus its language, IP address and browser.
+
+   ![The window of one submission, with its values, language, IP address, browser and the Delete submission button](images/forms-submission.webp)
+
 4. For a file field, click **Download** to get the uploaded file. Uploaded files are private: they can only be downloaded from the admin.
 
 ### Search submissions

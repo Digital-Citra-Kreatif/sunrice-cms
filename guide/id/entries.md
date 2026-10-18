@@ -12,15 +12,21 @@ Di sidebar, pada kelompok **Content**, klik sebuah koleksi (misalnya *Articles*)
 - **Columns**: pilih kolom yang ditampilkan, termasuk field milik koleksi itu sendiri. Pilihan Anda diingat.
 - **Export**: unduh entri yang sedang ditampilkan sebagai file spreadsheet (CSV).
 
-Klik sebuah entri untuk membukanya. Tombol **Go to…** di samping **New entry** membawa Anda ke layar terkait, misalnya taksonomi koleksi tersebut. Koleksi yang memiliki halaman daftar (seperti halaman ikhtisar blog) juga memiliki tombol **Archive/listing page** untuk menyunting teks halaman itu.
+![Daftar Articles dengan pencarian, filter, Export, Columns, dan entri-entrinya](images/entries-list.webp)
+
+Klik sebuah entri untuk membukanya. Tombol **⋮** (**Go to related pages**) di samping **New entry** membawa Anda ke layar terkait, misalnya taksonomi koleksi tersebut. Koleksi yang memiliki halaman daftar (seperti halaman ikhtisar blog) juga memiliki tombol **Archive/listing page** untuk menyunting teks halaman itu.
 
 ### Tindakan massal
 
 Centang kotak di depan entri (atau kotak di header untuk memilih semuanya), lalu pilih tindakan: **Trash**, **Restore**, **Publish**, atau **Delete forever**. **Restore** dan **Delete forever** hanya berlaku untuk entri yang ada di tempat sampah.
 
+![Dua entri dicentang, dengan tombol Trash, Restore, Publish, dan Delete forever di atas daftar](images/entries-bulk-actions.webp)
+
 ### Urutan manual
 
 Sebagian koleksi diurutkan secara manual. Daftarnya menampilkan keterangan *Drag entries to set the order they appear in on the site*: seret entri melalui pegangannya untuk memindahkannya. Selama pencarian, filter, atau pengurutan kolom aktif, fitur seret dijeda; hapus semuanya untuk menyeret lagi.
+
+![Daftar Team members dengan pegangan seret di depan setiap entri](images/entries-manual-order.webp)
 
 ## Membuat entri
 
@@ -30,11 +36,15 @@ Sebagian koleksi diurutkan secara manual. Daftarnya menampilkan keterangan *Drag
 4. Isi field-fieldnya. Konten berulang memiliki tombol **Add row** atau **Add block**; setiap baris atau blok memiliki sakelar **Show** untuk menyembunyikannya di situs tanpa menghapusnya.
 5. Klik **Create draft**. Entri tersimpan, tetapi belum tampil di situs.
 
+![Artikel baru dengan Title, Blueprint, sebuah field, dan Create draft yang diberi nomor](images/entries-create.webp)
+
 ## Draf dan konten yang tayang
 
 Setiap penyimpanan masuk ke **draf**; pengunjung hanya melihat apa yang Anda **terbitkan**. Pada entri yang sudah terbit, Anda dapat terus menyimpan draf dengan **Save draft** sementara halaman yang tayang tetap seperti semula; header kemudian menampilkan lencana **Unpublished changes**. Mengeklik **Publish** menayangkan draf tersebut.
 
 Kartu **Status** di sebelah kanan menampilkan keadaan entri (**Draft**, **Scheduled**, atau **Published**) dan tombol simpan: **Save draft** bila ada perubahan yang belum disimpan, **Saved** bila semuanya sudah tersimpan.
+
+![Artikel yang sudah terbit dengan lencana Unpublished changes, tombol Publish, dan kartu Status berisi Publish date dan Unpublish](images/entries-status.webp)
 
 > [!WARNING]
 > Meninggalkan halaman sebelum menyimpan akan menghilangkan perubahan Anda. Admin memang memperingatkan, tetapi biasakan menekan **Ctrl S** / **⌘ S**.
@@ -62,9 +72,13 @@ Tombol **⋯** (**More actions**) di bagian atas berisi:
 - **Mark ready** / **Unmark ready** dan **Return to draft**: untuk terjemahan, lihat [Terjemahan](translations.md).
 - **Move to trash**: memindahkan entri ke tempat sampah, sehingga hilang dari situs dan dari daftar.
 
+![Menu More actions yang dibuka dari tombol ⋯](images/entries-more-actions.webp)
+
 ## Tempat sampah, memulihkan, dan menghapus
 
 Entri di tempat sampah tidak dapat dibuka. Untuk mengembalikannya, buka daftar, atur filter **Trash** ke **Trashed**, centang entrinya, lalu pilih **Restore**. Untuk menghapusnya selamanya, pilih **Delete forever**.
+
+![Filter Trash yang terbuka, dengan pilihan Trashed](images/entries-trash-filter.webp)
 
 > [!WARNING]
 > **Delete forever** tidak dapat dibatalkan. Halaman anak dari halaman yang dihapus akan pindah ke tingkat teratas.
@@ -74,6 +88,9 @@ Entri di tempat sampah tidak dapat dibuka. Untuk mengembalikannya, buka daftar, 
 Setiap kali diterbitkan, sebuah revisi disimpan. Kartu **Revisions** mencantumkan revisi terbaru berdasarkan tanggal.
 
 1. Klik **Restore** di samping sebuah revisi.
+
+   ![Kartu Revisions dengan tombol Restore di samping sebuah revisi](images/entries-revisions.webp)
+
 2. Konfirmasi. Konten lama disalin ke draf; halaman yang tayang belum berubah.
 3. Periksa, lalu klik **Publish**. Berubah pikiran? Klik **Undo** di kartu tersebut.
 
@@ -83,6 +100,8 @@ Setiap kali diterbitkan, sebuah revisi disimpan. Kartu **Revisions** mencantumka
 ## Saat dua orang menyunting entri yang sama
 
 Hanya satu orang yang dapat menyunting sebuah entri (dalam satu bahasa) pada satu waktu. Jika rekan Anda sedang membukanya, Anda akan melihat siapa dan sejak kapan, lalu dapat memilih **Go back** (kembali), **View only** (hanya melihat), atau **Take over** (mengambil alih). Jika Anda mengambil alih, perubahan rekan Anda yang belum disimpan tetap disimpan terpisah dan muncul di halaman dengan tombol **Load into the form** dan **Discard**.
+
+![Pesan yang tampil saat rekan sedang menyunting entri, dengan Go back, View only, dan Take over](images/entries-edit-lock.webp)
 
 Jika seseorang menyimpan entri setelah Anda membukanya, penyimpanan Anda ditolak: pilih **Reload** untuk melihat versi mereka, atau **Overwrite with mine** untuk menimpanya dengan versi Anda.
 

@@ -14,8 +14,13 @@ Global sets live in the sidebar under **Structure → Globals**. The page is tit
 ## Edit global values
 
 1. Go to **Structure → Globals** and click the set's title.
+
+   ![The Globals & template parts page, with Globals in the sidebar and the Company set marked](images/globals-list.webp)
+
 2. Fill in or change the fields in the **Content** card.
 3. Click **Save** (or press Ctrl/Cmd + S). When there is nothing left to save, the button reads **Saved**, and the note under the side panel says **All changes saved**.
+
+![The Company global set with a changed Tagline, the Save button and the "Unsaved changes" note marked](images/globals-edit.webp)
 
 The change shows on the site straight away, on every page that uses it.
 
@@ -29,6 +34,8 @@ On a multilingual site the editor has a tab for each language, with the main lan
 1. Open the global set and click a language tab.
 2. Change the text fields that should differ in this language.
 3. Click **Save**. Each language is saved separately.
+
+![The ID tab of the Company set: a translated Tagline and fields marked "Shared with EN"](images/globals-translate.webp)
 
 Some things to know:
 
@@ -49,11 +56,15 @@ Usually the site manager or developer creates global sets, because the site's de
 4. Choose a **Blueprint**. If you need new fields, create a blueprint first (see [Structure](structure.md#blueprints)).
 5. Click **Create**. The set opens so you can fill in its values.
 
+![The New global set form with Title, Group, Blueprint and the Create button marked](images/globals-new.webp)
+
 If the set's **Content** card says "This blueprint has no fields yet", add fields to its blueprint and come back.
 
 ## Change a set's title or blueprint
 
 Open the set and use the **Settings** card on the right: change the **Title** or choose another **Blueprint**, then click **Save**. The card also shows the set's handle.
+
+![The Settings card of a global set with its Title and Blueprint](images/globals-settings.webp)
 
 > [!WARNING]
 > Switching to another blueprint changes which fields the set has. Values of fields the new blueprint doesn't have are no longer shown in the editor or on the site, so check with your site manager before you switch.

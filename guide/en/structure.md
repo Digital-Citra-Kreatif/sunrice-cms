@@ -16,6 +16,8 @@ Create blueprints first, then the collections that use them.
 
 Go to **Manage → Collections**. The list shows each collection's **Title**, **Handle**, **Blueprint**, **Taxonomies** and number of **Entries**. Click **New collection** to create one, or a title to edit it; click **Save** when done.
 
+![The Collections page, with Collections in the Manage group of the sidebar and the New collection button marked](images/structure-collections.webp)
+
 ### Basics
 
 - **Title**: the name in the sidebar. On multilingual sites you can give a title per language.
@@ -23,6 +25,8 @@ Go to **Manage → Collections**. The list shows each collection's **Title**, **
 - **Sidebar icon**: the icon shown next to it in the sidebar.
 - **Blueprint**: the fields its entries have.
 - **Taxonomies**: tick the taxonomies its entries can use, and choose **Many terms** or **One term** per entry.
+
+![The Basics card of the Articles collection, with its taxonomies and Many terms / One term choices marked](images/structure-collection-basics.webp)
 
 ### Order
 
@@ -46,6 +50,8 @@ The **SEO defaults** card fills in search-result details that entries leave empt
 
 With **Has an archive/listing page** on, the collection's entries list has an **Archive/listing page** button. There you edit, per language, the **Heading & intro** (**Heading**, **Intro**), any extra fields in **Content**, and **SEO**, then click **Save archive/listing page**. **View** opens the page on the site.
 
+![The Archive/listing page button on the Articles entries list](images/structure-listing-button.webp)
+
 ## Blueprints
 
 Go to **Manage → Blueprints**. The list shows how many **Fields** each has and what it is **Used by**. Click **New blueprint**, type a **Title**, add fields, and click **Save blueprint**.
@@ -58,6 +64,8 @@ Go to **Manage → Blueprints**. The list shows how many **Fields** each has and
 4. Use the **Translatable** switch: on means the value differs per language ("differs per language"); off means one value for all languages ("shared by all languages"). Text fields are translatable by default; images, numbers and toggles are shared. The setting applies wherever the blueprint is used.
 5. Fill in the type's **Settings**, if any.
 6. Drag fields by their grip to reorder them; the bin icon removes one.
+
+![The Article blueprint with an opened field: Add field, Handle and Label, Required, Translatable, a drag grip and a bin icon marked](images/structure-blueprint-fields.webp)
 
 ### Field types
 
@@ -75,6 +83,8 @@ Go to **Manage → Fieldsets**, click **New fieldset**, add fields the same way 
 ## Taxonomies
 
 Go to **Manage → Taxonomies** and click **New taxonomy**. Set the **Title**, an optional **Blueprint** for extra term fields, **Hierarchical (terms have parents)**, and tick the **Collections** that use it. Under **Term pages**, tick **Term archive/listing pages** to give each term a page, with its **Term page URL** and **Entries per page**. Click **Save**.
+
+![The Categories taxonomy settings with Hierarchical, Collections and Term archive/listing pages marked](images/structure-taxonomy.webp)
 
 ## Changing structure safely
 

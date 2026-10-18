@@ -19,15 +19,17 @@ Pengunjung yang membuka halaman dalam bahasa yang belum diterjemahkan (atau belu
 
 ## Menerjemahkan entri
 
-Jika situs memiliki lebih dari satu bahasa, editor entri menampilkan **tab bahasa** (misalnya **ID** dan **EN**) di atas field. Setiap bahasa disimpan terpisah.
+Jika situs memiliki lebih dari satu bahasa, editor entri menampilkan **tab bahasa** (misalnya **EN** dan **ID**) di atas field. Setiap bahasa disimpan terpisah.
 
 1. Buka entri lalu klik tab bahasa yang ingin Anda terjemahkan.
-2. Field berisi teks bahasa utama sebagai titik awal. Ganti dengan terjemahan Anda. Sebuah catatan di bagian atas mengingatkan bahwa di sini hanya teks yang diterjemahkan.
+2. Field berisi teks bahasa utama sebagai titik awal. Ganti dengan terjemahan Anda. Sebuah catatan di bawah judul mengingatkan bahwa di sini hanya teks yang diterjemahkan.
 3. Terjemahkan **Title**. Biarkan **Slug** kosong agar dibuat dari judul terjemahan, atau ketik slug sendiri.
 4. Klik **Save draft**.
 5. Setelah terjemahan selesai, klik **Publish** selagi tab bahasa tersebut terbuka. Terjemahan akan tayang dan ditandai **Ready**.
 
-Kartu **Status** menampilkan **Translation: Draft** atau **Translation: Ready** untuk bahasa yang sedang Anda lihat. Titik kecil pada tab membantu Anda melihat keadaannya sekilas: titik kuning berarti bahasa tersebut memiliki draf yang belum diterbitkan, titik hijau berarti terjemahannya sudah siap.
+![Tab bahasa Indonesia sebuah artikel, dengan tab ID, catatan, Title, Save draft, dan Publish yang diberi nomor](images/translations-translate.webp)
+
+Kartu **Status** memiliki baris **Translation** yang berisi **Draft** atau **Ready** untuk bahasa yang sedang Anda lihat. Titik kecil pada tab membantu Anda melihat keadaannya sekilas: titik kuning berarti bahasa tersebut memiliki draf yang belum diterbitkan, titik hijau berarti terjemahannya sudah siap.
 
 > [!NOTE]
 > Berpindah tab saat ada perubahan yang belum disimpan akan meminta konfirmasi, karena perubahan pada bahasa saat ini akan hilang. Simpan terlebih dahulu.
@@ -35,6 +37,8 @@ Kartu **Status** menampilkan **Translation: Draft** atau **Translation: Ready** 
 ### Field bersama
 
 Tidak semua hal diterjemahkan. Gambar, sakelar, angka, tanggal, dan susunan baris serta blok adalah milik bahasa utama dan sama di semua bahasa. Di bahasa lain, field tersebut hanya dapat dibaca dan diberi tanda **Shared with** diikuti kode bahasa utama. Di sana Anda tidak dapat menambah, menghapus, mengubah urutan, atau menyembunyikan baris dan blok; hanya teksnya yang dapat diubah.
+
+![Field Featured image bertanda Shared with EN di tab bahasa Indonesia](images/translations-shared-field.webp)
 
 Artinya:
 
@@ -51,6 +55,8 @@ Sebuah terjemahan berstatus **Draft** (tidak tampil di situs) atau **Ready** (ta
 - **Mark ready** / **Unmark ready**: mengaktifkan atau menonaktifkan status Ready.
 - **Return to draft**: menurunkan kembali terjemahan yang sudah siap dari situs. Pengunjung lalu melihat bahasa utama untuk halaman itu sampai terjemahannya siap lagi.
 
+![Menu More actions pada terjemahan berstatus draf, dengan Mark ready](images/translations-more-actions.webp)
+
 Untuk menurunkan entri dari situs di semua bahasa, gunakan **Unpublish** (lihat [Entri](entries.md#menerbitkan-dan-menjadwalkan)).
 
 ### Lencana Outdated
@@ -64,6 +70,8 @@ Setiap bahasa memiliki slugnya sendiri, sehingga halaman bahasa Inggris dapat be
 ## Siapa yang dapat menerjemahkan
 
 Sebagian peran hanya boleh menerjemahkan. Orang dengan peran seperti itu dapat menyunting bahasa lain tetapi tidak bahasa utama; pada tab bahasa utama mereka melihat pesan *You can translate this entry. Switch to another language to edit it.*
+
+![Penerjemah di tab bahasa utama, dengan pesan You can translate this entry](images/translations-translator.webp)
 
 Dua orang dapat bekerja pada bahasa yang berbeda dari entri yang sama secara bersamaan: setiap bahasa dikunci terpisah (lihat [Entri](entries.md#saat-dua-orang-menyunting-entri-yang-sama)).
 

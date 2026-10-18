@@ -20,8 +20,10 @@ Setiap entri memiliki kartu **SEO** di bawah field lainnya: *How this entry appe
 - **Meta title**: judul yang tampil di tab peramban dan sebagai judul di hasil pencarian. Jika kosong, judul entri yang dipakai.
 - **Meta description**: teks singkat di bawah judul pada hasil pencarian. Cukup satu atau dua kalimat (sekitar 160 karakter).
 - **Canonical URL**: hanya untuk halaman yang isinya juga ada di alamat lain; ketik alamat halaman aslinya. Hampir selalu biarkan kosong.
-- **Open Graph image**: gambar yang tampil saat halaman dibagikan di media sosial atau aplikasi chat. Klik **Choose image** untuk memilihnya (lihat [Media](media.md#memilih-aset-di-field)).
+- **Open Graph image**: gambar yang tampil saat halaman dibagikan di media sosial atau aplikasi chat. Klik **Choose asset** untuk memilihnya (lihat [Media](media.md#memilih-aset-di-field)).
 - **Hide from search engines (noindex)**: meminta mesin pencari untuk tidak mencantumkan halaman ini, dan mengeluarkannya dari sitemap. Gunakan untuk halaman terima kasih, halaman internal, dan sejenisnya.
+
+![Kartu SEO sebuah artikel dengan Meta title, Meta description, Canonical URL, Open Graph image, dan sakelar noindex](images/seo-entry-fields.webp)
 
 Field SEO disimpan bersama draf dan tayang saat Anda menerbitkan, sama seperti bagian entri lainnya. Di situs multibahasa, setiap bahasa memiliki field SEO sendiri (lihat [Terjemahan](translations.md)).
 
@@ -31,6 +33,8 @@ Field SEO disimpan bersama draf dan tayang saat Anda menerbitkan, sama seperti b
 ## Settings → SEO
 
 Pengelola situs membuka **Manage → Settings** lalu mengeklik tab **SEO**.
+
+![Tab SEO di Settings dengan kartu Search engines & sharing](images/seo-settings.webp)
 
 ### Search engines & sharing
 
@@ -49,6 +53,8 @@ Untuk setiap koleksi dan taksonomi, pilih field mana yang mengisi **Meta title**
 
 Deskripsi yang diambil dari field dipotong menjadi 160 karakter. Klik **Save SEO settings** setelah selesai.
 
+![Fields used for SEO: untuk setiap koleksi, menu untuk Meta title, Meta description, dan Share image](images/seo-fields-used.webp)
+
 ## SEO defaults per koleksi dan taksonomi
 
 Setiap koleksi dan taksonomi juga memiliki kartu **SEO defaults** di pengaturannya, pada **Manage → Collections** atau **Manage → Taxonomies** (lihat [Struktur](structure.md)):
@@ -56,6 +62,8 @@ Setiap koleksi dan taksonomi juga memiliki kartu **SEO defaults** di pengaturann
 - **Default meta description**: untuk halaman yang mengosongkan deskripsinya sendiri.
 - **Default share image**: untuk halaman tanpa Open Graph image sendiri.
 - **Hide all of these pages from search engines (noindex)**: menyembunyikan semua entri koleksi tersebut (atau semua halaman term taksonomi tersebut) dan mengeluarkannya dari sitemap.
+
+![Kartu SEO defaults di pengaturan sebuah koleksi](images/seo-collection-defaults.webp)
 
 ## Sitemap dan robots
 

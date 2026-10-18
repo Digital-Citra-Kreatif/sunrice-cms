@@ -11,6 +11,8 @@ Comments are switched on per collection, for example for *Articles* but not for 
 3. Tick **Allow comments**.
 4. Click **Save**.
 
+![The Pages & URLs card of a collection with "Each entry has its own page" and "Allow comments" ticked](images/comments-allow.webp)
+
 Once at least one collection allows comments, **Comments** appears in the sidebar under **Content**.
 
 > [!TECHNICAL]
@@ -34,6 +36,8 @@ Site-wide comment rules are in **Manage → Settings**, on the **General** tab, 
 - **Email moderators about new comments**: sends an email for every new comment, with a link to approve it. Choose the **Roles** that get it (none ticked means everyone who can moderate comments) and add extra addresses under **Also send to**. Moderators' own comments don't send it.
 - **Let commenters get an email when someone replies**: adds an "Email me when someone replies" box to the comment form. Each email has a link to stop them.
 
+![The Comments card in Settings with its options and the Save settings button](images/comments-settings.webp)
+
 > [!TECHNICAL]
 > Emails are queued, so a queue worker must run ([Mail](docs:mail.md#queue-worker)). The captcha keys go in `.env` ([Forms](docs:forms.md#captcha)). Spam is deleted automatically after 30 days by the scheduler (`sunrice.comments.prune_spam_after_days` in `config/sunrice.php`).
 
@@ -51,6 +55,8 @@ Each tab shows how many comments it holds. Use **Search text, name or email…**
 
 Each comment shows the author (with a **User** badge if they were signed in), the date, a status badge, the entry it's on, the comment it answers and its language. A link icon (**View on the site**) opens it on the page.
 
+![The Comments page with the status tabs, the search box and a View on the site icon marked](images/comments-moderate.webp)
+
 ### Actions on one comment
 
 - **Approve**: publish a pending or spam comment.
@@ -62,10 +68,14 @@ Each comment shows the author (with a **User** badge if they were signed in), th
 - **Restore** (in **Trash**): bring it back.
 - **Delete forever** (in **Trash**): delete it permanently. Its replies stay, without it.
 
+![A pending comment with its Approve, Spam, Reply, Edit and Trash buttons](images/comments-actions.webp)
+
 ### Bulk actions
 
 1. Tick the comments you want, or tick **Select all**.
 2. Click **Approve**, **Unapprove**, **Spam** or **Trash** (in the **Trash** tab: **Restore** or **Delete forever**).
+
+![Two comments ticked, with the bulk Approve, Unapprove, Spam and Trash buttons next to "2 selected"](images/comments-bulk.webp)
 
 > [!WARNING]
 > **Delete forever** can't be undone. Trashing and deleting need the permission to delete comments; see [Users and roles](users-roles.md).
@@ -77,6 +87,8 @@ When you edit an entry in a collection with comments, the editor has a **Comment
 ### Close comments on one entry
 
 Turn off **Accept new comments on this entry** in the **Comments** card. It takes effect at once, without saving the entry. Visitors still see the approved comments, but the form is replaced by "Comments are closed." Turn it back on to reopen.
+
+![The Comments card in the entry editor, with the "Accept new comments on this entry" switch marked](images/comments-entry-card.webp)
 
 ## What visitors see
 

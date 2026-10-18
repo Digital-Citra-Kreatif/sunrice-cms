@@ -12,6 +12,8 @@ Panduan ini ditujukan bagi orang-orang yang mengelola situs web sehari-hari: edi
 3. Centang **Remember me** jika Anda memakai komputer sendiri dan ingin tetap masuk.
 4. Klik **Log in**.
 
+![Layar login dengan kolom email, kata sandi, Remember me, dan Log in yang diberi nomor](images/welcome-login.webp)
+
 Untuk keluar, buka menu pengguna di bagian bawah sidebar lalu pilih **Log out**.
 
 ### Kode login dua langkah
@@ -35,6 +37,8 @@ Jika email tidak kunjung datang, periksa folder spam, lalu klik **send a new cod
 4. Ketik kata sandi baru di **New password**, ulangi di **Confirm password**, lalu klik **Reset password**.
 5. Masuk dengan kata sandi baru.
 
+![Layar Forgot password dengan alamat email yang sudah diisi](images/welcome-forgot-password.webp)
+
 ## Dashboard
 
 Setelah masuk, Anda tiba di **Dashboard**. Halaman ini menampilkan:
@@ -46,6 +50,8 @@ Setelah masuk, Anda tiba di **Dashboard**. Halaman ini menampilkan:
 
 Setiap kartu dapat dilipat dengan mengeklik judulnya; admin mengingat pilihan ini di peramban Anda.
 
+![Dashboard dengan sidebar di sebelah kiri](images/welcome-dashboard.webp)
+
 ## Berkeliling di admin
 
 ### Sidebar
@@ -55,7 +61,9 @@ Sidebar di sebelah kiri memuat semua bagian yang boleh Anda gunakan. Isinya berg
 - **Content**: satu menu untuk setiap koleksi (misalnya *Pages* atau *Articles*), ditambah **Comments** jika situs memiliki komentar.
 - **Taxonomies**: satu menu untuk setiap taksonomi, seperti *Categories* atau *Tags*.
 - **Structure**: **Menus**, **Globals**, dan **Forms**.
-- **Manage**: **Assets** (pustaka media), serta layar administrasi seperti **Collections**, **Blueprints**, **Fieldsets**, **Taxonomies**, **Users**, **Roles**, **Activity log**, **Settings**, **AI access**, dan **Docs**.
+- **Manage**: **Assets** (pustaka media), serta layar administrasi seperti **Collections**, **Blueprints**, **Fieldsets**, **Taxonomies**, **Users**, **Roles**, **Activity log**, **Settings**, **AI access**, **Guide** (panduan ini), dan **Docs**.
+
+![Sidebar dengan empat kelompok bernomor: Content, Taxonomies, Structure, dan Manage](images/welcome-sidebar.webp)
 
 Sebagian situs juga menampilkan kelompok tambahan, seperti **Resources**, yang ditambahkan oleh pengembangnya.
 
@@ -65,12 +73,16 @@ Klik nama kelompok untuk melipat atau membukanya. Admin mengingat kelompok yang 
 
 Header di bagian atas setiap halaman menampilkan jejak navigasi (breadcrumb), misalnya **Content › Articles › Tulisan pertama saya**. Klik bagian sebelumnya untuk naik satu tingkat. Sebagian besar layar penyuntingan juga memiliki tombol panah kembali di samping judul halaman.
 
+![Jejak breadcrumb di header dan tombol panah kembali di samping judul halaman](images/welcome-breadcrumbs.webp)
+
 ### Menu pengguna
 
 Bagian bawah sidebar menampilkan nama dan alamat email Anda. Klik untuk membuka menu pengguna:
 
 - **Appearance**: pilih **Light** (terang), **Dark** (gelap), atau **System** (mengikuti pengaturan komputer Anda).
 - **Log out**: keluar dari admin.
+
+![Menu pengguna yang dibuka dari bagian bawah sidebar](images/welcome-user-menu.webp)
 
 Tidak ada halaman profil tersendiri. Untuk mengubah nama, email, atau kata sandi, hubungi pengelola situs, atau gunakan **Manage → Users** jika peran Anda mengizinkan (lihat [Pengguna dan peran](users-roles.md)).
 
