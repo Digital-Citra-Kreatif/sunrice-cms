@@ -99,7 +99,7 @@ async function login(context, who) {
         page.waitForURL((url) => !url.pathname.endsWith('/login'), { timeout: 15000 }),
         page.click('button[type=submit]'),
     ]);
-    await page.close();
+    await page.close({ runBeforeUnload: true });
 }
 
 /** Bounding box of a selector (or several: their union) in page (document) coordinates. */
@@ -108,7 +108,9 @@ async function boxOf(page, target) {
     const boxes = [];
     for (const selector of selectors) {
         const locator = page.locator(selector).first();
-        await locator.waitFor({ state: 'visible', timeout: 10000 });
+        await locator.waitFor({ state: 'visible', timeout: 10000 }).catch((e) => {
+            throw new Error(`Not found on the page: ${selector}`, { cause: e });
+        });
         const box = await locator.evaluate((el) => {
             const r = el.getBoundingClientRect();
             return { x: r.left + window.scrollX, y: r.top + window.scrollY, width: r.width, height: r.height };
@@ -288,7 +290,7 @@ async function main() {
                 failed++;
                 console.error(`x ${file.name}/${shot.name}: ${error.message.split('\n')[0]}`);
             } finally {
-                await page.close();
+                await page.close({ runBeforeUnload: true });
             }
         }
     }

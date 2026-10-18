@@ -53,6 +53,7 @@ export default [{
     viewport: { width: 1280, height: 800 },
     before: async (page, h) => { await h.click('text=New entry'); },
     mark: ['#title', { selector: 'text=Publish', label: '1' }],
+    // One box around several elements: { selector: ['#a', '#b'] }
     clip: 'main',                           // selector, [selectors] (their union), {x, y, width, height} or 'viewport'
     padding: 16,
 }];
