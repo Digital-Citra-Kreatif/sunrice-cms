@@ -19,15 +19,17 @@ A visitor who opens a page in a language that isn't translated yet (or not marke
 
 ## Translating an entry
 
-When the site has more than one language, the entry editor shows **language tabs** (for example **ID** and **EN**) above the fields. Each language is saved separately.
+When the site has more than one language, the entry editor shows **language tabs** (for example **EN** and **ID**) above the fields. Each language is saved separately.
 
 1. Open the entry and click the tab of the language you want to translate.
-2. The fields start with the main-language text. Replace it with your translation. A note at the top reminds you that only text is translated here.
+2. The fields start with the main-language text. Replace it with your translation. A note below the title reminds you that only text is translated here.
 3. Translate the **Title**. Leave **Slug** empty to have it made from the translated title, or type your own.
 4. Click **Save draft**.
 5. When the translation is finished, click **Publish** while that language's tab is open. This makes the translation live and marks it **Ready**.
 
-The **Status** card shows **Translation: Draft** or **Translation: Ready** for the language you are viewing. Small dots on the tabs help you see the state at a glance: an amber dot means the language has a draft that isn't published yet, a green dot means the translation is ready.
+![The Indonesian tab of an article, with the ID tab, the note, Title, Save draft and Publish numbered](images/translations-translate.webp)
+
+The **Status** card has a **Translation** line that reads **Draft** or **Ready** for the language you are viewing. Small dots on the tabs help you see the state at a glance: an amber dot means the language has a draft that isn't published yet, a green dot means the translation is ready.
 
 > [!NOTE]
 > Switching tabs with unsaved changes asks you to confirm, because the changes in the current language would be lost. Save first.
@@ -35,6 +37,8 @@ The **Status** card shows **Translation: Draft** or **Translation: Ready** for t
 ### Shared fields
 
 Not everything is translated. Images, switches, numbers, dates and the arrangement of rows and blocks belong to the main language and are the same in every language. In another language these fields are read-only and marked **Shared with** followed by the main language's code. You can't add, remove, reorder or hide rows and blocks there; only their text.
+
+![A Featured image field marked Shared with EN on the Indonesian tab](images/translations-shared-field.webp)
 
 This means:
 
@@ -51,6 +55,8 @@ A translation is either **Draft** (not shown on the site) or **Ready** (shown, o
 - **Mark ready** / **Unmark ready**: toggles the Ready state.
 - **Return to draft**: takes a ready translation off the site again. Visitors then see the main language for that page until it is ready again.
 
+![The More actions menu of a draft translation, with Mark ready](images/translations-more-actions.webp)
+
 To take the entry off the site in every language, use **Unpublish** (see [Entries](entries.md#publishing-and-scheduling)).
 
 ### The Outdated badge
@@ -64,6 +70,8 @@ Each language has its own slug, so an English page can live at `/en/about-us` wh
 ## Who can translate
 
 Some roles may only translate. People with such a role can edit the other languages but not the main one; on the main-language tab they see *You can translate this entry. Switch to another language to edit it.*
+
+![A translator on the main-language tab, with the message You can translate this entry](images/translations-translator.webp)
 
 Two people can work on different languages of the same entry at the same time: each language is locked separately (see [Entries](entries.md#when-two-people-edit-the-same-entry)).
 

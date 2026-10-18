@@ -11,6 +11,8 @@ Komentar diaktifkan per koleksi, misalnya untuk *Articles* tetapi tidak untuk *P
 3. Centang **Allow comments**.
 4. Klik **Save**.
 
+![Kartu Pages & URLs pada koleksi dengan "Each entry has its own page" dan "Allow comments" dicentang](images/comments-allow.webp)
+
 Setelah setidaknya satu koleksi mengizinkan komentar, menu **Comments** muncul di sidebar pada grup **Content**.
 
 > [!TECHNICAL]
@@ -34,6 +36,8 @@ Aturan komentar untuk seluruh situs ada di **Manage â†’ Settings**, pada tab **G
 - **Email moderators about new comments**: mengirim email untuk setiap komentar baru, dengan tautan untuk menyetujuinya. Pilih **Roles** (peran) penerimanya (tanpa centang berarti semua orang yang berhak memoderasi komentar) dan tambahkan alamat lain di **Also send to**. Komentar dari moderator sendiri tidak memicu email ini.
 - **Let commenters get an email when someone replies**: menambahkan kotak "Email me when someone replies" pada formulir komentar. Setiap email berisi tautan untuk berhenti berlangganan.
 
+![Kartu Comments di Settings dengan pilihan-pilihannya dan tombol Save settings](images/comments-settings.webp)
+
 > [!TECHNICAL]
 > Email dikirim melalui antrean, jadi queue worker harus berjalan ([Mail](docs:mail.md#queue-worker)). Kunci captcha diisi di `.env` ([Forms](docs:forms.md#captcha)). Spam dihapus otomatis setelah 30 hari oleh scheduler (`sunrice.comments.prune_spam_after_days` di `config/sunrice.php`).
 
@@ -51,6 +55,8 @@ Setiap tab menampilkan jumlah komentarnya. Gunakan **Search text, name or emailâ
 
 Setiap komentar menampilkan penulis (dengan lencana **User** jika ia login), tanggal, lencana status, entri tempatnya berada, komentar yang dibalasnya, dan bahasanya. Ikon tautan (**View on the site**) membukanya di halaman situs.
 
+![Halaman Comments dengan tab status, kotak pencarian, dan ikon View on the site ditandai](images/comments-moderate.webp)
+
 ### Tindakan pada satu komentar
 
 - **Approve**: menerbitkan komentar yang menunggu atau yang ditandai spam.
@@ -62,10 +68,14 @@ Setiap komentar menampilkan penulis (dengan lencana **User** jika ia login), tan
 - **Restore** (di **Trash**): mengembalikannya.
 - **Delete forever** (di **Trash**): menghapusnya secara permanen. Balasannya tetap ada, tanpa komentar tersebut.
 
+![Komentar yang menunggu dengan tombol Approve, Spam, Reply, Edit, dan Trash](images/comments-actions.webp)
+
 ### Tindakan massal
 
 1. Centang komentar yang diinginkan, atau centang **Select all**.
 2. Klik **Approve**, **Unapprove**, **Spam**, atau **Trash** (di tab **Trash**: **Restore** atau **Delete forever**).
+
+![Dua komentar dicentang, dengan tombol massal Approve, Unapprove, Spam, dan Trash di samping "2 selected"](images/comments-bulk.webp)
 
 > [!WARNING]
 > **Delete forever** tidak dapat dibatalkan. Membuang dan menghapus komentar memerlukan izin menghapus komentar; lihat [Pengguna dan peran](users-roles.md).
@@ -77,6 +87,8 @@ Saat Anda mengedit entri dalam koleksi yang memiliki komentar, editor menampilka
 ### Menutup komentar pada satu entri
 
 Nonaktifkan **Accept new comments on this entry** di kartu **Comments**. Perubahan langsung berlaku tanpa perlu menyimpan entri. Pengunjung tetap melihat komentar yang sudah disetujui, tetapi formulirnya diganti dengan tulisan "Comments are closed." (dalam bahasa pengunjung). Aktifkan lagi untuk membukanya kembali.
+
+![Kartu Comments di editor entri, dengan sakelar "Accept new comments on this entry" ditandai](images/comments-entry-card.webp)
 
 ## Yang dilihat pengunjung
 

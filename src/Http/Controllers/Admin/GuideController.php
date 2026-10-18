@@ -10,7 +10,9 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Sunrice\Support\Branding;
 use Sunrice\Support\MarkdownPages;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * The user guide inside the admin (Manage → Guide): how to work with the
@@ -48,18 +50,39 @@ class GuideController extends Controller
 
         return Inertia::render('Guide/Show', [
             'page' => $page,
-            'title' => MarkdownPages::title($markdown) ?? Str::headline($page),
-            'html' => MarkdownPages::render(
+            'title' => static::panelName(MarkdownPages::title($markdown) ?? Str::headline($page)),
+            'html' => static::panelName(MarkdownPages::render(
                 $markdown,
                 fn (string $slug) => route('sunrice.admin.guide.show', $slug, false),
                 fn (string $slug) => $canDocs && is_file(DocsController::path($slug)) ? route('sunrice.admin.docs.show', $slug, false) : null,
                 $locale,
-            ),
-            'headings' => MarkdownPages::headings($markdown),
+                fn (string $file) => route('sunrice.admin.guide.image', $file, false),
+            ), html: true),
+            'headings' => array_map(fn (array $h) => ['text' => static::panelName($h['text'])] + $h, MarkdownPages::headings($markdown)),
             'sections' => static::sections($locale),
             'locale' => $locale,
             'locales' => array_map(fn (string $code, string $label) => ['code' => $code, 'label' => $label], array_keys(static::LOCALES), static::LOCALES),
         ]);
+    }
+
+    /** A screenshot from guide/images, shared by every language. */
+    public function image(string $file): BinaryFileResponse
+    {
+        Gate::authorize('sunrice.guide.view');
+
+        $path = dirname(__DIR__, 4).'/guide/images/'.$file;
+        abort_unless(is_file($path), 404);
+
+        return response()->file($path, ['Cache-Control' => 'private, max-age=86400']);
+    }
+
+    /**
+     * "{panel}" in the guide reads as the admin's name (Settings → Branding),
+     * so a white-labelled panel's guide doesn't mention Sunrice.
+     */
+    protected static function panelName(string $text, bool $html = false): string
+    {
+        return str_replace('{panel}', $html ? e(Branding::name()) : Branding::name(), $text);
     }
 
     /** The guide file for a page, in the language or else in English. */
@@ -108,7 +131,7 @@ class GuideController extends Controller
             foreach ($section[1] as $slug) {
                 $file = static::path($slug, $locale);
                 if ($file !== null) {
-                    $pages[] = ['slug' => $slug, 'title' => MarkdownPages::title((string) file_get_contents($file)) ?? Str::headline($slug)];
+                    $pages[] = ['slug' => $slug, 'title' => static::panelName(MarkdownPages::title((string) file_get_contents($file)) ?? Str::headline($slug))];
                 }
             }
 

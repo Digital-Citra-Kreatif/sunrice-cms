@@ -16,6 +16,8 @@ Buat blueprint terlebih dahulu, lalu koleksi yang memakainya.
 
 Buka **Manage → Collections**. Daftar menampilkan **Title**, **Handle**, **Blueprint**, **Taxonomies**, dan jumlah **Entries** setiap koleksi. Klik **New collection** untuk membuat koleksi, atau klik judul untuk mengubahnya; klik **Save** setelah selesai.
 
+![Halaman Collections, dengan Collections di grup Manage pada sidebar dan tombol New collection ditandai](images/structure-collections.webp)
+
 ### Basics (dasar)
 
 - **Title**: nama di sidebar. Pada situs multibahasa, Anda dapat memberi judul untuk setiap bahasa.
@@ -23,6 +25,8 @@ Buka **Manage → Collections**. Daftar menampilkan **Title**, **Handle**, **Blu
 - **Sidebar icon**: ikon di samping nama koleksi di sidebar.
 - **Blueprint**: kolom yang dimiliki entri-entrinya.
 - **Taxonomies**: centang taksonomi yang dapat dipakai entrinya, lalu pilih **Many terms** (banyak term) atau **One term** (satu term) per entri.
+
+![Kartu Basics pada koleksi Articles, dengan taksonomi serta pilihan Many terms / One term ditandai](images/structure-collection-basics.webp)
 
 ### Order (urutan)
 
@@ -46,6 +50,8 @@ Kartu **SEO defaults** mengisi detail hasil pencarian yang dibiarkan kosong oleh
 
 Jika **Has an archive/listing page** aktif, daftar entri koleksi memiliki tombol **Archive/listing page**. Di sana Anda mengubah, per bahasa, **Heading & intro** (**Heading** dan **Intro**), kolom tambahan di **Content**, dan **SEO**, lalu klik **Save archive/listing page**. Tombol **View** membuka halamannya di situs.
 
+![Tombol Archive/listing page pada daftar entri Articles](images/structure-listing-button.webp)
+
 ## Blueprint
 
 Buka **Manage → Blueprints**. Daftar menampilkan jumlah **Fields** (kolom) setiap blueprint dan **Used by** (dipakai oleh). Klik **New blueprint**, isi **Title**, tambahkan kolom, lalu klik **Save blueprint**.
@@ -58,6 +64,8 @@ Buka **Manage → Blueprints**. Daftar menampilkan jumlah **Fields** (kolom) set
 4. Gunakan sakelar **Translatable**: aktif berarti nilainya berbeda per bahasa ("differs per language"); nonaktif berarti satu nilai untuk semua bahasa ("shared by all languages"). Kolom teks dapat diterjemahkan secara bawaan; gambar, angka, dan toggle dipakai bersama. Pengaturan ini berlaku di mana pun blueprint dipakai.
 5. Isi **Settings** untuk jenis kolom tersebut, jika ada.
 6. Seret kolom melalui pegangannya untuk mengubah urutan; ikon tempat sampah menghapus kolom.
+
+![Blueprint Article dengan kolom yang dibuka: Add field, Handle dan Label, Required, Translatable, pegangan seret, dan ikon tempat sampah ditandai](images/structure-blueprint-fields.webp)
 
 ### Jenis kolom
 
@@ -75,6 +83,8 @@ Buka **Manage → Fieldsets**, klik **New fieldset**, tambahkan kolom dengan car
 ## Taksonomi
 
 Buka **Manage → Taxonomies**, lalu klik **New taxonomy**. Isi **Title**, **Blueprint** opsional untuk kolom tambahan pada term, **Hierarchical (terms have parents)** jika term dapat memiliki induk, dan centang **Collections** yang memakainya. Di kartu **Term pages**, centang **Term archive/listing pages** agar setiap term memiliki halaman, lengkap dengan **Term page URL** dan **Entries per page**. Klik **Save**.
+
+![Pengaturan taksonomi Categories dengan Hierarchical, Collections, dan Term archive/listing pages ditandai](images/structure-taxonomy.webp)
 
 ## Mengubah struktur dengan aman
 

@@ -17,6 +17,9 @@ Everything the agent changes goes through the same checks as working in the admi
 1. Go to **Manage → AI access**.
 2. In the **Your tokens** card, type a **Name** for the token, such as "Claude on my laptop".
 3. Click **Create token**.
+
+   ![The Your tokens card with a token name typed in and the Create token button](images/ai-access-create-token.webp)
+
 4. A window, **Your new token**, shows the token. Click **Copy** and keep it somewhere safe for the next step.
 5. Click **I've copied it**.
 
@@ -30,6 +33,8 @@ The **Connect an agent** card shows ready-made settings to copy:
 - **Server URL**: the address the agent connects to.
 - **Claude Code**: one command to paste in a terminal.
 - **Claude Desktop, Cursor, VS Code… (JSON config)**: settings to paste into the agent's configuration.
+
+![The Connect an agent card with the Server URL, the Claude Code command and the JSON config, each with a Copy button](images/ai-access-connect.webp)
 
 Right after you create a token, these snippets already include it, until you leave the page. Otherwise, replace `YOUR_TOKEN` with your token.
 

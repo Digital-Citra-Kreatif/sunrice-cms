@@ -50,6 +50,58 @@ it('links only to guide pages and developer docs that exist', function () {
     }
 });
 
+it('shows only screenshots that exist, with a description', function () {
+    $dir = dirname(__DIR__, 2).'/guide';
+    $used = [];
+    foreach (glob($dir.'/*/*.md') as $file) {
+        preg_match_all('/!\[([^\]]*)\]\(([^)]+)\)/', (string) file_get_contents($file), $images, PREG_SET_ORDER);
+        foreach ($images as [, $alt, $src]) {
+            expect($src)->toMatch('#^images/[a-z0-9-]+\.webp$#')
+                ->and("{$dir}/{$src}")->toBeFile()
+                ->and(trim($alt))->not->toBe('', "{$file}: {$src} needs a description");
+            $used[] = basename($src);
+        }
+    }
+
+    // No leftover screenshots that no page shows.
+    $files = array_map('basename', glob($dir.'/images/*') ?: []);
+    expect(array_values(array_diff($files, $used)))->toBe([]);
+});
+
+it('renders screenshots as links to the full-size image', function () {
+    $html = MarkdownPages::render("# T\n\n![The entries list](images/entries-list.webp)\n", fn (string $slug) => "/cms/guide/{$slug}", null, 'en', fn (string $file) => "/cms/guide/images/{$file}");
+
+    expect($html)->toContain('<a href="/cms/guide/images/entries-list.webp" target="_blank" rel="noopener" class="sunrice-shot"><img src="/cms/guide/images/entries-list.webp" alt="The entries list" loading="lazy" /></a>');
+});
+
+it('serves guide screenshots to readers of the guide', function () {
+    $file = basename((string) collect(glob(dirname(__DIR__, 2).'/guide/images/*.webp'))->first());
+    expect($file)->not->toBe('');
+
+    guideUser();
+    get("/cms/guide/images/{$file}")->assertForbidden();
+
+    guideUser(['sunrice.guide.view']);
+    get("/cms/guide/images/{$file}")->assertOk()->assertHeader('Content-Type', 'image/webp');
+    get('/cms/guide/images/nope.webp')->assertNotFound();
+    get('/cms/guide/images/..%2F..%2Fcomposer.json')->assertNotFound();
+});
+
+it('calls the panel by its branded name', function () {
+    guideUser(['sunrice.guide.view']);
+
+    get('/cms/guide/welcome?lang=en')->assertInertia(fn (Assert $page) => $page
+        ->where('title', 'Welcome to Sunrice')
+        ->where('sections.0.pages.0.title', 'Welcome to Sunrice'));
+
+    config(['sunrice.branding.name' => 'Acme <Studio>']);
+    get('/cms/guide/welcome')->assertInertia(fn (Assert $page) => $page
+        ->where('title', 'Welcome to Acme <Studio>')
+        ->where('sections.0.pages.0.title', 'Welcome to Acme <Studio>')
+        ->where('html', fn (string $html) => str_contains($html, 'Welcome to Acme &lt;Studio&gt;') && ! str_contains($html, '{panel}')));
+    get('/cms/guide/seo')->assertInertia(fn (Assert $page) => $page->where('html', fn (string $html) => str_contains($html, 'Acme &lt;Studio&gt; fills in')));
+});
+
 it('shows a guide page with its sections and headings', function () {
     guideUser(['sunrice.guide.view']);
 

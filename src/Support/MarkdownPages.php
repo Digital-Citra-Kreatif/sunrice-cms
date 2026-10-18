@@ -59,8 +59,9 @@ class MarkdownPages
     /**
      * @param  Closure(string): string  $pageUrl  a page of this set by slug
      * @param  (Closure(string): ?string)|null  $docsUrl  a developer docs page, or null to show only its text
+     * @param  (Closure(string): string)|null  $imageUrl  an image of this set ("images/x.webp"), by file name
      */
-    public static function render(string $markdown, Closure $pageUrl, ?Closure $docsUrl = null, string $locale = 'en'): string
+    public static function render(string $markdown, Closure $pageUrl, ?Closure $docsUrl = null, string $locale = 'en', ?Closure $imageUrl = null): string
     {
         $html = Str::markdown($markdown, [
             'html_input' => 'strip',
@@ -88,6 +89,20 @@ class MarkdownPages
             },
             $html,
         );
+
+        // Screenshots ("![Alt](images/x.webp)"), opening full size in a new tab.
+        if ($imageUrl !== null) {
+            $html = (string) preg_replace_callback(
+                '#<img src="images/([a-z0-9-]+\.(?:webp|png|jpg))" alt="([^"]*)" />#',
+                function (array $m) use ($imageUrl) {
+                    $url = e($imageUrl($m[1]));
+
+                    return '<a href="'.$url.'" target="_blank" rel="noopener" class="sunrice-shot">'
+                        .'<img src="'.$url.'" alt="'.$m[2].'" loading="lazy" /></a>';
+                },
+                $html,
+            );
+        }
 
         // Links between pages of the same set ("forms.md#x").
         return (string) preg_replace_callback(

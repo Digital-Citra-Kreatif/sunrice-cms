@@ -14,8 +14,13 @@ Menus live in the sidebar under **Structure → Menus**.
 ## Create a menu
 
 1. Go to **Structure → Menus** and click **New menu**.
+
+   ![The Menus page, with Menus in the sidebar and the New menu button marked](images/menus-list.webp)
+
 2. Type a **Title**, for example *Main navigation*. The **Handle** fills in by itself; change it only if your developer asked for a specific name.
 3. Click **Create menu**. The menu opens, empty, ready for items.
+
+![The New menu form with a title typed, the handle filled in and the Create menu button marked](images/menus-new-menu.webp)
 
 > [!TIP]
 > The starter site design shows the menu with the handle `main` in the header. Create a menu with that handle and it appears straight away.
@@ -32,11 +37,15 @@ Menus live in the sidebar under **Structure → Menus**.
 4. In the **Label** card, type the text visitors see. Leave it empty to use the linked page's title.
 5. Click **Add item**.
 
+![The Add menu item form with the Links to choices open, Open in a new tab, the Label card and Add item marked](images/menus-add-item.webp)
+
 ## Add a sub-item
 
 1. In the menu, find the top-level item the sub-item belongs under.
 2. Click its **+** button (**Add sub-item**).
 3. Fill in the link and label as above, then click **Add item**. The page heading shows "under" the parent item's name.
+
+![The items of a menu, with the About item and its + (Add sub-item) button marked](images/menus-add-sub-item.webp)
 
 Sub-items can't have sub-items of their own. To move an item under a different parent, remove it and add it again in the right place.
 
@@ -45,6 +54,8 @@ Sub-items can't have sub-items of their own. To move an item under a different p
 - **Edit:** click the item's label or its pencil icon, change it, and click **Save**.
 - **Reorder:** use the up and down arrows (**Move up**, **Move down**) to move an item among its neighbours. Sub-items move within their parent.
 - **Remove:** click the bin icon on the item (or **Remove item** in the item editor) and confirm.
+
+![A menu item row with its Move up, Move down, Edit and Remove buttons marked](images/menus-edit-items.webp)
 
 Each row in the menu shows the label, a badge with the item type, and what it points to. If an entry or term it linked to was deleted, the row reads **Missing target**: edit the item or remove it.
 

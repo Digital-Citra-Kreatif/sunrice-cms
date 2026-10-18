@@ -17,6 +17,9 @@ Setiap perubahan oleh agen melewati pemeriksaan yang sama seperti bekerja di adm
 1. Buka **Manage → AI access**.
 2. Di kartu **Your tokens**, ketik **Name** untuk token, misalnya "Claude di laptop saya".
 3. Klik **Create token**.
+
+   ![Kartu Your tokens dengan nama token yang diketik dan tombol Create token](images/ai-access-create-token.webp)
+
 4. Jendela **Your new token** menampilkan token tersebut. Klik **Copy** dan simpan di tempat aman untuk langkah berikutnya.
 5. Klik **I've copied it**.
 
@@ -30,6 +33,8 @@ Kartu **Connect an agent** menampilkan pengaturan siap salin:
 - **Server URL**: alamat yang dihubungi agen.
 - **Claude Code**: satu perintah untuk ditempelkan di terminal.
 - **Claude Desktop, Cursor, VS Code… (JSON config)**: pengaturan untuk ditempelkan ke konfigurasi agen.
+
+![Kartu Connect an agent dengan Server URL, perintah Claude Code, dan konfigurasi JSON, masing-masing dengan tombol Copy](images/ai-access-connect.webp)
 
 Tepat setelah Anda membuat token, cuplikan ini sudah memuat token tersebut, sampai Anda meninggalkan halaman. Jika tidak, ganti `YOUR_TOKEN` dengan token Anda.
 

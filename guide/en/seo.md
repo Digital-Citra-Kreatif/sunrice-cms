@@ -1,6 +1,6 @@
 # SEO
 
-SEO (search engine optimisation) is about how your pages appear in search results and when they are shared on social media. Sunrice fills in sensible values automatically; this page explains where you can fine-tune them, per entry and for the whole site.
+SEO (search engine optimisation) is about how your pages appear in search results and when they are shared on social media. {panel} fills in sensible values automatically; this page explains where you can fine-tune them, per entry and for the whole site.
 
 ## How the site picks a title, description and image
 
@@ -20,8 +20,10 @@ Every entry has an **SEO** card, below its other fields: *How this entry appears
 - **Meta title**: the title shown in the browser tab and as the headline in search results. Empty: the entry's title is used.
 - **Meta description**: the short text under the headline in search results. Keep it to one or two sentences (about 160 characters).
 - **Canonical URL**: only for pages whose content also lives at another address; type the address of the original. Leave it empty in almost every case.
-- **Open Graph image**: the image shown when the page is shared on social media or in chat apps. Click **Choose image** to pick one (see [Media](media.md#picking-assets-in-fields)).
+- **Open Graph image**: the image shown when the page is shared on social media or in chat apps. Click **Choose asset** to pick one (see [Media](media.md#picking-assets-in-fields)).
 - **Hide from search engines (noindex)**: asks search engines not to list this page, and leaves it out of the sitemap. Use it for thank-you pages, internal pages and the like.
+
+![The SEO card of an article with Meta title, Meta description, Canonical URL, Open Graph image and the noindex switch](images/seo-entry-fields.webp)
 
 SEO fields are saved with the draft and go live when you publish, like the rest of the entry. On a multilingual site, each language has its own SEO fields (see [Translations](translations.md)).
 
@@ -31,6 +33,8 @@ SEO fields are saved with the draft and go live when you publish, like the rest 
 ## Settings → SEO
 
 Site managers open **Manage → Settings** and click the **SEO** tab.
+
+![The SEO tab of Settings with the Search engines & sharing card](images/seo-settings.webp)
 
 ### Search engines & sharing
 
@@ -49,6 +53,8 @@ For each collection and taxonomy, choose which of its fields fills an empty **Me
 
 Descriptions taken from a field are cut to 160 characters. Click **Save SEO settings** when you are done.
 
+![Fields used for SEO: for each collection, a menu for Meta title, Meta description and Share image](images/seo-fields-used.webp)
+
 ## SEO defaults per collection and taxonomy
 
 Each collection and taxonomy also has an **SEO defaults** card in its settings under **Manage → Collections** or **Manage → Taxonomies** (see [Structure](structure.md)):
@@ -56,6 +62,8 @@ Each collection and taxonomy also has an **SEO defaults** card in its settings u
 - **Default meta description**: for pages that leave their own empty.
 - **Default share image**: for pages without their own Open Graph image.
 - **Hide all of these pages from search engines (noindex)**: hides every entry of that collection (or every term page of that taxonomy) and leaves them out of the sitemap.
+
+![The SEO defaults card in a collection's settings](images/seo-collection-defaults.webp)
 
 ## Sitemap and robots
 

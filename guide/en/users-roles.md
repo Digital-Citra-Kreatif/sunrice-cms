@@ -8,15 +8,19 @@ You find both screens under **Manage**: **Users** and **Roles**. Each needs its 
 
 The **Users** list shows each person's name, email and roles. Use the search box to find someone by name or email, and the **Role** filter to show only people with a certain role (or **No role**).
 
+![The Users list with the search box, the Role filter and the New user button](images/users-roles-users-list.webp)
+
 ### Adding a user
 
-Sunrice doesn't send invitations: you create the account and pass on the login details yourself.
+{panel} doesn't send invitations: you create the account and pass on the login details yourself.
 
 1. Go to **Manage → Users** and click **New user**.
 2. In the **Account** card, enter the person's **Name** and **Email**.
 3. In the **Password** card, enter a **Password** and repeat it in **Confirm password**.
 4. In the **Roles** card, tick one or more roles.
 5. Click **Create user**.
+
+![The New user page with the Account, Password and Roles cards and the Create user button](images/users-roles-new-user.webp)
 
 Tell the person the admin address (usually your site address followed by `/cms`), their email and their password, preferably through a different channel than email. Ask them to choose a new password with **Forgot password?** on the login page.
 
@@ -30,16 +34,20 @@ Tell the person the admin address (usually your site address followed by `/cms`)
 3. To set a new password, fill in **New password** and **Confirm password**. Leave both empty to keep the current password.
 4. Click **Save**.
 
+![A user's edit page with the Account, Password and Roles cards and the Save button](images/users-roles-edit-user.webp)
+
 There is no separate profile page. If you forget your own password, use **Forgot password?** on the login page; a reset link is emailed to you.
 
 ### Deleting a user
 
-1. Click the bin icon on the person's row, or the bin button on their edit page.
+1. In the **Users** list, click the person's row, then click the bin button next to **Save** at the top of their page.
 2. If they created entries or uploaded files, choose what happens to them:
    - **Move it to another user**: pick who takes over their content.
    - **Keep it without an author**: everything stays; "Created by" shows no one.
    - **Delete their entries**: their entries go to the trash and off the site. Uploaded files are kept.
 3. Click **Delete user** (or **Delete user and entries**).
+
+![The Delete user dialog with the choices for the person's content and the Delete user button](images/users-roles-delete-user.webp)
 
 > [!WARNING]
 > Deleting a user can't be undone. If someone only needs a break, remove their roles instead: they can no longer use the admin, and you can give the roles back later.
@@ -49,6 +57,8 @@ You can't delete your own account.
 ## Roles
 
 The **Roles** list shows each role with its number of permissions. Click a role's name to see or change it.
+
+![The Roles list with the New role button and a Delete button on each row](images/users-roles-roles-list.webp)
 
 ### The default roles
 
@@ -73,7 +83,9 @@ Editor, Author and Translator can also see unpublished entries on the site while
 3. Tick the permissions the role should have. They are grouped in cards such as **Admin**, **Structure**, **Navigation**, **Globals**, **Users & roles**, **Forms**, **Assets** and **Comments**. Each card's **toggle all** ticks or clears the whole group.
 4. Click **Create role** (or **Save role**).
 
-To delete a role, click **Delete** next to it in the list. A role that is still given to users can't be deleted: remove it from those users first.
+![The Editor role's page with its name, the Admin permissions card and the Save role button](images/users-roles-edit-role.webp)
+
+To delete a role, click **Delete** next to it in the list and confirm. A role that is still given to users can't be deleted: remove it from those users first.
 
 ### Permissions per collection
 
@@ -82,6 +94,8 @@ Content permissions are set separately for each collection, in cards named **Ent
 - **view**, **create**, **edit**, **delete**, **publish**
 - **edit-own** and **delete-own**: only entries the person created
 - **translate**: edit other-language versions only; the main language stays read-only
+
+![The Entries — Articles card of a role, with a checkbox per action](images/users-roles-collection-permissions.webp)
 
 Taxonomies (**Terms — …**), forms (**Forms — …**) and some extra sections work the same way.
 

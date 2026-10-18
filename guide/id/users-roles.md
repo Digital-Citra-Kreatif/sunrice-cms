@@ -8,15 +8,19 @@ Kedua layar ada di bawah **Manage**: **Users** dan **Roles**. Masing-masing meme
 
 Daftar **Users** menampilkan nama, email, dan peran setiap orang. Gunakan kotak pencarian untuk mencari berdasarkan nama atau email, dan filter **Role** untuk menampilkan hanya orang dengan peran tertentu (atau **No role**).
 
+![Daftar Users dengan kotak pencarian, filter Role, dan tombol New user](images/users-roles-users-list.webp)
+
 ### Menambahkan pengguna
 
-Sunrice tidak mengirim undangan: Anda membuat akunnya dan menyampaikan detail login sendiri.
+{panel} tidak mengirim undangan: Anda membuat akunnya dan menyampaikan detail login sendiri.
 
 1. Buka **Manage → Users** dan klik **New user**.
 2. Di kartu **Account**, isi **Name** dan **Email** orang tersebut.
 3. Di kartu **Password**, isi **Password** dan ulangi di **Confirm password**.
 4. Di kartu **Roles**, centang satu peran atau lebih.
 5. Klik **Create user**.
+
+![Halaman New user dengan kartu Account, Password, dan Roles serta tombol Create user](images/users-roles-new-user.webp)
 
 Sampaikan alamat admin (biasanya alamat situs Anda diikuti `/cms`), email, dan kata sandinya, sebaiknya melalui saluran selain email. Minta orang tersebut membuat kata sandi baru melalui **Forgot password?** di halaman login.
 
@@ -30,16 +34,20 @@ Sampaikan alamat admin (biasanya alamat situs Anda diikuti `/cms`), email, dan k
 3. Untuk mengganti kata sandi, isi **New password** dan **Confirm password**. Biarkan keduanya kosong untuk mempertahankan kata sandi lama.
 4. Klik **Save**.
 
+![Halaman edit pengguna dengan kartu Account, Password, dan Roles serta tombol Save](images/users-roles-edit-user.webp)
+
 Tidak ada halaman profil terpisah. Jika Anda lupa kata sandi sendiri, gunakan **Forgot password?** di halaman login; tautan reset akan dikirim ke email Anda.
 
 ### Menghapus pengguna
 
-1. Klik ikon tempat sampah pada baris orang tersebut, atau tombol tempat sampah di halaman edit-nya.
+1. Di daftar **Users**, klik baris orang tersebut, lalu klik tombol tempat sampah di sebelah **Save** di bagian atas halamannya.
 2. Jika orang tersebut pernah membuat entri atau mengunggah file, pilih apa yang terjadi dengan konten itu:
    - **Move it to another user**: pilih siapa yang mengambil alih kontennya.
    - **Keep it without an author**: semuanya tetap ada; "Created by" tidak menampilkan siapa pun.
    - **Delete their entries**: entri mereka dipindahkan ke tempat sampah dan hilang dari situs. File yang diunggah tetap disimpan.
 3. Klik **Delete user** (atau **Delete user and entries**).
+
+![Dialog hapus pengguna dengan pilihan untuk konten orang tersebut dan tombol Delete user](images/users-roles-delete-user.webp)
 
 > [!WARNING]
 > Menghapus pengguna tidak dapat dibatalkan. Jika seseorang hanya perlu rehat sementara, cabut perannya saja: ia tidak dapat lagi memakai admin, dan Anda dapat mengembalikan perannya nanti.
@@ -49,6 +57,8 @@ Anda tidak dapat menghapus akun Anda sendiri.
 ## Peran
 
 Daftar **Roles** menampilkan setiap peran beserta jumlah izinnya. Klik nama peran untuk melihat atau mengubahnya.
+
+![Daftar Roles dengan tombol New role dan tombol Delete di setiap baris](images/users-roles-roles-list.webp)
 
 ### Peran bawaan
 
@@ -73,7 +83,9 @@ Editor, Author, dan Translator juga dapat melihat entri yang belum terbit di sit
 3. Centang izin yang harus dimiliki peran ini. Izin dikelompokkan dalam kartu seperti **Admin**, **Structure**, **Navigation**, **Globals**, **Users & roles**, **Forms**, **Assets**, dan **Comments**. Tautan **toggle all** di setiap kartu mencentang atau mengosongkan seluruh kelompok.
 4. Klik **Create role** (atau **Save role**).
 
-Untuk menghapus peran, klik **Delete** di sebelahnya pada daftar. Peran yang masih diberikan kepada pengguna tidak dapat dihapus: cabut dulu peran itu dari pengguna tersebut.
+![Halaman peran Editor dengan namanya, kartu izin Admin, dan tombol Save role](images/users-roles-edit-role.webp)
+
+Untuk menghapus peran, klik **Delete** di sebelahnya pada daftar lalu konfirmasi. Peran yang masih diberikan kepada pengguna tidak dapat dihapus: cabut dulu peran itu dari pengguna tersebut.
 
 ### Izin per koleksi
 
@@ -82,6 +94,8 @@ Izin konten diatur terpisah untuk setiap koleksi, di kartu bernama **Entries —
 - **view**, **create**, **edit**, **delete**, **publish**
 - **edit-own** dan **delete-own**: hanya entri yang dibuat orang itu sendiri
 - **translate**: hanya mengubah versi bahasa lain; bahasa utama tetap hanya-baca
+
+![Kartu Entries — Articles pada sebuah peran, dengan kotak centang untuk setiap tindakan](images/users-roles-collection-permissions.webp)
 
 Taksonomi (**Terms — …**), formulir (**Forms — …**), dan beberapa bagian tambahan bekerja dengan cara yang sama.
 

@@ -14,8 +14,13 @@ Menu ada di sidebar pada **Structure → Menus**.
 ## Membuat menu
 
 1. Buka **Structure → Menus**, lalu klik **New menu**.
+
+   ![Halaman Menus, dengan Menus di sidebar dan tombol New menu ditandai](images/menus-list.webp)
+
 2. Isi **Title**, misalnya *Navigasi utama*. **Handle** terisi otomatis; ubah hanya jika pengembang Anda meminta nama tertentu.
 3. Klik **Create menu**. Menu terbuka dalam keadaan kosong, siap diisi item.
+
+![Formulir New menu dengan judul terisi, handle terisi otomatis, dan tombol Create menu ditandai](images/menus-new-menu.webp)
 
 > [!TIP]
 > Desain situs bawaan menampilkan menu dengan handle `main` di header. Buat menu dengan handle tersebut dan menu langsung muncul.
@@ -32,11 +37,15 @@ Menu ada di sidebar pada **Structure → Menus**.
 4. Di kartu **Label**, ketik teks yang dilihat pengunjung. Biarkan kosong untuk memakai judul halaman yang ditautkan.
 5. Klik **Add item**.
 
+![Formulir Add menu item dengan pilihan Links to terbuka, Open in a new tab, kartu Label, dan Add item ditandai](images/menus-add-item.webp)
+
 ## Menambahkan sub-item
 
 1. Di menu, cari item tingkat atas yang akan menjadi induk sub-item.
 2. Klik tombol **+** pada item tersebut (**Add sub-item**).
 3. Isi tautan dan label seperti di atas, lalu klik **Add item**. Judul halaman menunjukkan "under" (di bawah) nama item induknya.
+
+![Item-item sebuah menu, dengan item About dan tombol + (Add sub-item) ditandai](images/menus-add-sub-item.webp)
 
 Sub-item tidak dapat memiliki sub-item lagi. Untuk memindahkan item ke induk lain, hapus item tersebut lalu tambahkan lagi di tempat yang benar.
 
@@ -45,6 +54,8 @@ Sub-item tidak dapat memiliki sub-item lagi. Untuk memindahkan item ke induk lai
 - **Mengubah:** klik label item atau ikon pensilnya, ubah, lalu klik **Save**.
 - **Mengurutkan:** gunakan panah atas dan bawah (**Move up**, **Move down**) untuk memindahkan item di antara item di sekitarnya. Sub-item berpindah di dalam induknya.
 - **Menghapus:** klik ikon tempat sampah pada item (atau **Remove item** di editor item), lalu konfirmasi.
+
+![Baris item menu dengan tombol Move up, Move down, Edit, dan Remove ditandai](images/menus-edit-items.webp)
 
 Setiap baris di menu menampilkan label, lencana jenis item, dan tujuannya. Jika entri atau term yang ditautkan sudah dihapus, baris tersebut bertuliskan **Missing target**: ubah atau hapus item itu.
 

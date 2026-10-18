@@ -48,7 +48,9 @@ Ask a developer, or someone comfortable editing code, to:
 
 ### Choosing a template for one page
 
-Some entries need a special design, such as a landing page. If the developer has made an extra template for it, open the entry and type its name in the **Template** card in the side panel. Leave it empty to use the collection's normal template. The card shows which files are used when it's empty.
+Some entries need a special design, such as a landing page. If the developer has made an extra template for it, open the entry, click the **Template** card in the side panel to open it, and type the name there. Leave it empty to use the collection's normal template. The card shows which files are used when it's empty.
+
+![The Template card opened in the entry editor's side panel](images/appearance-template-card.webp)
 
 Collections and taxonomies have the same option for all their pages (**Entry template**, **Archive/listing template** and **Term page template** under **Manage → Collections** and **Manage → Taxonomies**), usually set up by a developer.
 
@@ -63,6 +65,8 @@ Before you publish, check how a page will look:
 2. Click **View draft** at the top of the editor. The page opens in a new tab with a "Draft" banner. Only signed-in people with permission to see unpublished entries can open it.
 3. When you're happy, click **Publish**.
 
+![The top of the entry editor with the View draft and Publish buttons](images/appearance-view-draft.webp)
+
 Once an entry is published, the button says **View page** and opens the public page.
 
 > [!TIP]
@@ -70,7 +74,7 @@ Once an entry is published, the button says **View page** and opens the public p
 
 ## The starter templates
 
-New sites usually begin with Sunrice's **starter templates**: a simple, ready-made design that works out of the box. They include a header with the main menu, a search box and a language switcher; a footer; pages for single entries, lists of entries and categories; a search page; and "page not found" and error pages.
+New sites usually begin with the {panel} **starter templates**: a simple, ready-made design that works out of the box. They include a header with the main menu, a search box and a language switcher; a footer; pages for single entries, lists of entries and categories; a search page; and "page not found" and error pages.
 
 They are meant as a starting point. A developer typically adjusts them, or replaces them with your own design. As long as an expected menu, global or field is missing, that part simply shows nothing, so a fresh site never breaks.
 

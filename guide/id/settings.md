@@ -14,6 +14,8 @@ Untuk menyimpan perubahan:
 2. Klik **Save settings** (di bagian atas atau bawah halaman), atau tekan Ctrl S (⌘ S di Mac).
 3. Pesan "Settings saved." menandakan perubahan telah tersimpan.
 
+![Halaman Settings dengan tab General dan SEO serta tombol Save settings](images/settings-overview.webp)
+
 > [!TIP]
 > Jika Anda hendak meninggalkan halaman sementara masih ada perubahan yang belum disimpan, admin akan memperingatkan Anda terlebih dahulu.
 
@@ -38,6 +40,8 @@ Untuk menambahkan bahasa:
 3. Ketik nama tampilan bahasa di sebelah kodenya, misalnya "English". Pengunjung melihat nama ini pada pemilih bahasa.
 4. Klik **Save settings**.
 
+![Kartu Languages dengan kode bahasa baru yang diketik dan tombol Add language](images/settings-languages.webp)
+
 Untuk menghapus bahasa, klik **×** di sebelahnya. Bahasa utama ditandai **Main language** dan tidak dapat dihapus. Selama situs belum memiliki konten, tombol **Make main** menjadikan bahasa lain sebagai bahasa utama.
 
 > [!WARNING]
@@ -55,9 +59,11 @@ Kartu **Branding** mengubah tampilan **admin**, bukan situs publik Anda.
 - **Panel name** dan **Tagline**: ditampilkan di sidebar, di halaman login, dan di tab browser. Mengganti nama juga menyembunyikan catatan "Powered by Sunrice CMS".
 - **Logo**: klik **Choose logo** untuk memilih gambar dari pustaka media. Gambar persegi berformat SVG atau PNG paling cocok; gambar ini juga dipakai sebagai ikon tab browser.
 - **Font**: jenis huruf yang dipakai di admin.
-- **Accent color**: warna tombol utama, item menu yang aktif, dan garis fokus. Gunakan pemilih warna atau ketik kode seperti `#1e66f5`; **Reset** mengembalikan ke warna netral bawaan.
+- **Accent color**: warna tombol utama, item menu yang aktif, dan garis fokus. Gunakan pemilih warna atau ketik kode seperti `#1e66f5`; setelah warna diisi, **Reset** mengembalikan ke warna netral bawaan.
 
 Setelah disimpan, halaman dimuat ulang agar tampilan baru berlaku.
+
+![Kartu Branding dengan nama panel, logo, font, dan warna aksen bawaan](images/settings-branding.webp)
 
 > [!TIP]
 > Setiap orang dapat mengganti tampilan admin menjadi **Light**, **Dark**, atau **System** melalui menu pengguna di bagian bawah sidebar.
@@ -81,6 +87,8 @@ Untuk memeriksa apakah email berfungsi:
 1. Di bawah **Send a test email**, ketik alamat email Anda sendiri.
 2. Klik **Send test**.
 3. Periksa kotak masuk (dan folder spam). Jika pengiriman gagal, pesan galat dari server email muncul di bawah kotak tersebut.
+
+![Kartu Email dengan alamat yang diketik di Send a test email dan tombol Send test](images/settings-email.webp)
 
 > [!TECHNICAL]
 > Email dikonfigurasi di `.env` dengan kunci `MAIL_*` (misalnya `MAIL_MAILER=smtp`, `MAIL_HOST`, `MAIL_FROM_ADDRESS`). Notifikasi formulir dan komentar dikirim lewat antrean, jadi queue worker harus berjalan kecuali `QUEUE_CONNECTION=sync`. Lihat [SMTP settings](docs:mail.md#smtp-settings) dan [Queue worker](docs:mail.md#queue-worker).
@@ -106,8 +114,10 @@ Tab **SEO** berisi pilihan mesin pencari dan berbagi untuk seluruh situs. Simpan
 Di kartu **Search engines & sharing**:
 
 - **Hide the whole site from search engines**: meminta mesin pencari untuk tidak menampilkan halaman mana pun dan mengosongkan sitemap. Ditujukan untuk salinan uji; pastikan nonaktif di situs live Anda.
-- **Add the site name to page titles**: menampilkan judul seperti "Tentang kami | Situs Saya" di tab browser dan hasil pencarian. Kotak **Separator** menentukan karakter pemisahnya.
+- **Add the site name to page titles**: menampilkan judul seperti "Tentang kami | Situs Saya" di tab browser dan hasil pencarian. Saat pilihan ini aktif, muncul kotak **Separator** untuk menentukan karakter pemisahnya.
 - **X/Twitter handle**: akun Anda, misalnya `@acme`, yang ditambahkan ke pratinjau saat dibagikan.
 - **Default share image**: klik **Choose image** untuk memilih gambar yang tampil saat halaman tanpa gambar sendiri dibagikan di media sosial.
+
+![Tab SEO dengan kartu Search engines & sharing dan tombol Save SEO settings](images/settings-seo.webp)
 
 Di bawahnya, **Fields used for SEO** memungkinkan Anda memilih, per koleksi dan taksonomi, field mana yang mengisi **Meta title**, **Meta description**, dan **Share image** ketika sebuah entri mengosongkan field SEO-nya sendiri. **Automatic** memilih field yang sesuai; **None** tidak memakai apa pun. Lihat [SEO](seo.md).

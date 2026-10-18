@@ -12,15 +12,21 @@ In the sidebar, under **Content**, click a collection (for example *Articles*). 
 - **Columns**: choose which columns to show, including the collection's own fields. Your choice is remembered.
 - **Export**: download the entries you are looking at as a spreadsheet (CSV) file.
 
-Click an entry to open it. The **Go to…** button next to **New entry** jumps to related screens, such as the collection's taxonomies. Collections with a listing page (such as a blog overview) also have an **Archive/listing page** button to edit that page's text.
+![The Articles list with search, filters, Export, Columns and the entries](images/entries-list.webp)
+
+Click an entry to open it. The **⋮** button (**Go to related pages**) next to **New entry** jumps to related screens, such as the collection's taxonomies. Collections with a listing page (such as a blog overview) also have an **Archive/listing page** button to edit that page's text.
 
 ### Bulk actions
 
 Tick the boxes in front of entries (or the box in the header for all of them) and choose an action: **Trash**, **Restore**, **Publish** or **Delete forever**. **Restore** and **Delete forever** only work on entries in the trash.
 
+![Two entries ticked, with the Trash, Restore, Publish and Delete forever buttons above the list](images/entries-bulk-actions.webp)
+
 ### Manual order
 
 Some collections are ordered by hand. Their list says *Drag entries to set the order they appear in on the site*: drag an entry by its handle to move it. While a search, filter or column sort is active, dragging is paused; clear them to drag again.
+
+![The Team members list with a drag handle in front of each entry](images/entries-manual-order.webp)
 
 ## Creating an entry
 
@@ -30,11 +36,15 @@ Some collections are ordered by hand. Their list says *Drag entries to set the o
 4. Fill in the fields. Repeating content has **Add row** or **Add block** buttons; each row or block has a **Show** switch to hide it on the site without deleting it.
 5. Click **Create draft**. The entry is saved, but not yet visible on the site.
 
+![A new article with the Title, Blueprint, a field and Create draft numbered](images/entries-create.webp)
+
 ## Drafts and live content
 
 Every save goes into a **draft**; visitors only see what you **publish**. On a published entry you can keep saving drafts with **Save draft** while the live page stays as it was; the header then shows an **Unpublished changes** badge. Clicking **Publish** makes the draft live.
 
 The **Status** card on the right shows the entry's state (**Draft**, **Scheduled** or **Published**) and the save button: **Save draft** when you have unsaved changes, **Saved** when everything is saved.
+
+![A published article with the Unpublished changes badge, the Publish button and the Status card with Publish date and Unpublish](images/entries-status.webp)
 
 > [!WARNING]
 > Leaving the page before saving loses your changes. The admin warns you, but get into the habit of pressing **Ctrl S** / **⌘ S**.
@@ -62,9 +72,13 @@ The **⋯** (**More actions**) button at the top holds:
 - **Mark ready** / **Unmark ready** and **Return to draft**: for translations, see [Translations](translations.md).
 - **Move to trash**: removes the entry from the site and the list.
 
+![The More actions menu opened from the ⋯ button](images/entries-more-actions.webp)
+
 ## Trash, restore and delete
 
 Trashed entries can't be opened. To get one back, open the list, set the **Trash** filter to **Trashed**, tick the entry and choose **Restore**. To remove it for good, choose **Delete forever** instead.
+
+![The Trash filter opened, with the Trashed option](images/entries-trash-filter.webp)
 
 > [!WARNING]
 > **Delete forever** cannot be undone. Children of a deleted page move to the top level.
@@ -74,6 +88,9 @@ Trashed entries can't be opened. To get one back, open the list, set the **Trash
 Every publish stores a revision. The **Revisions** card lists the latest ones by date.
 
 1. Click **Restore** next to a revision.
+
+   ![The Revisions card with the Restore button next to a revision](images/entries-revisions.webp)
+
 2. Confirm. The old content is copied into the draft; the live page doesn't change yet.
 3. Check it, then click **Publish**. Changed your mind? Click **Undo** in the card.
 
@@ -83,6 +100,8 @@ Every publish stores a revision. The **Revisions** card lists the latest ones by
 ## When two people edit the same entry
 
 Only one person can edit an entry (in a given language) at a time. If a colleague already has it open, you see who and since when, and can choose **Go back**, **View only** (read-only), or **Take over**. If you take over, their unsaved changes are kept, and they appear on the page with **Load into the form** and **Discard**.
+
+![The message shown when a colleague is editing the entry, with Go back, View only and Take over](images/entries-edit-lock.webp)
 
 If someone saved the entry after you opened it, your save is refused: choose **Reload** to see their version, or **Overwrite with mine**.
 

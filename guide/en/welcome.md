@@ -1,4 +1,4 @@
-# Welcome to Sunrice CMS
+# Welcome to {panel}
 
 This guide is for the people who run the website day to day: editors who write and publish content, and site managers who look after its structure, users and settings. It explains how the admin is organised and walks you through each task step by step. Everything happens in the admin, which you open in your browser at your site's address followed by **/cms** (for example `https://example.com/cms`).
 
@@ -11,6 +11,8 @@ This guide is for the people who run the website day to day: editors who write a
 2. Enter your **Email address** and **Password**.
 3. Tick **Remember me** if you are on your own computer and want to stay signed in.
 4. Click **Log in**.
+
+![The login screen, with the email address, password, Remember me and Log in numbered](images/welcome-login.webp)
 
 To sign out, open the user menu at the bottom of the sidebar and choose **Log out**.
 
@@ -35,6 +37,8 @@ If the email doesn't arrive, check your spam folder, then click **send a new cod
 4. Type a **New password**, repeat it in **Confirm password**, and click **Reset password**.
 5. Log in with the new password.
 
+![The Forgot password screen with the email address filled in](images/welcome-forgot-password.webp)
+
 ## The dashboard
 
 After signing in you land on the **Dashboard**. It shows:
@@ -46,6 +50,8 @@ After signing in you land on the **Dashboard**. It shows:
 
 Every card can be folded away by clicking its title; the admin remembers this in your browser.
 
+![The dashboard with the sidebar on the left](images/welcome-dashboard.webp)
+
 ## Finding your way around
 
 ### The sidebar
@@ -55,7 +61,9 @@ The sidebar on the left lists everything you are allowed to use. What you see de
 - **Content**: one item per collection (for example *Pages* or *Articles*), plus **Comments** if the site has them.
 - **Taxonomies**: one item per taxonomy, such as *Categories* or *Tags*.
 - **Structure**: **Menus**, **Globals** and **Forms**.
-- **Manage**: **Assets** (the media library), plus administration screens such as **Collections**, **Blueprints**, **Fieldsets**, **Taxonomies**, **Users**, **Roles**, **Activity log**, **Settings**, **AI access** and **Docs**.
+- **Manage**: **Assets** (the media library), plus administration screens such as **Collections**, **Blueprints**, **Fieldsets**, **Taxonomies**, **Users**, **Roles**, **Activity log**, **Settings**, **AI access**, **Guide** (this guide) and **Docs**.
+
+![The sidebar with its four groups numbered: Content, Taxonomies, Structure and Manage](images/welcome-sidebar.webp)
 
 Some sites also show extra groups, such as **Resources**, added by their developers.
 
@@ -65,12 +73,16 @@ Click a group's name to fold or unfold it. The admin remembers folded groups, an
 
 The header at the top of each page shows a breadcrumb trail, such as **Content › Articles › My first post**. Click an earlier part of the trail to go back up. Most editing screens also have a back arrow next to the page title.
 
+![The breadcrumb trail in the header and the back arrow next to the page title](images/welcome-breadcrumbs.webp)
+
 ### The user menu
 
 The bottom of the sidebar shows your name and email address. Click it to open the user menu:
 
 - **Appearance**: choose **Light**, **Dark** or **System** (follows your computer's setting).
 - **Log out**.
+
+![The user menu opened from the bottom of the sidebar](images/welcome-user-menu.webp)
 
 There is no separate profile page. To change your name, email or password, ask a site manager, or use **Manage → Users** if your role allows it (see [Users and roles](users-roles.md)).
 

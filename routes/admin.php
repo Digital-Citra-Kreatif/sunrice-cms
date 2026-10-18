@@ -161,6 +161,7 @@ Route::middleware([Middleware\Authenticate::class, Middleware\EnsureCanAccessAdm
     Route::delete('ai-access/{token}', [Admin\AiAccessController::class, 'destroy'])->name('ai-access.destroy');
 
     // User guide (the package's guide/{locale}/*.md)
+    Route::get('guide/images/{file}', [Admin\GuideController::class, 'image'])->where('file', '[a-z0-9-]+\.(webp|png|jpg)')->name('guide.image');
     Route::get('guide/{page?}', [Admin\GuideController::class, 'show'])->where('page', '[a-z0-9-]+')->name('guide.show');
     // Developer docs (the package's docs/*.md)
     Route::get('docs/{page?}', [Admin\DocsController::class, 'show'])->where('page', '[a-z0-9-]+')->name('docs.show');

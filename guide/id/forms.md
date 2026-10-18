@@ -5,7 +5,7 @@ Formulir memungkinkan pengunjung mengirimkan informasi kepada Anda: pesan kontak
 ## Cara kerja formulir
 
 - Setiap formulir memiliki **Title** (judul), **Handle** (nama yang dipakai situs untuk menemukannya, misalnya `contact`), dan daftar **kolom**.
-- Saat pengunjung mengirim formulir, Sunrice memeriksanya (kolom wajib, format email, jenis file), menyimpannya sebagai **submission** (kiriman), dan dapat mengirimkannya ke email Anda.
+- Saat pengunjung mengirim formulir, {panel} memeriksanya (kolom wajib, format email, jenis file), menyimpannya sebagai **submission** (kiriman), dan dapat mengirimkannya ke email Anda.
 - Letak dan tampilan formulir di situs ditentukan oleh desain situs.
 
 Formulir ada di sidebar pada **Structure → Forms**. Daftarnya menampilkan **Title**, **Handle**, dan jumlah **Submissions** setiap formulir, dengan tombol **Submissions**, **Edit**, dan **Delete**.
@@ -13,10 +13,15 @@ Formulir ada di sidebar pada **Structure → Forms**. Daftarnya menampilkan **Ti
 ## Membuat formulir
 
 1. Buka **Structure → Forms**, lalu klik **New form**.
+
+   ![Halaman Forms, dengan Forms di sidebar dan tombol New form ditandai](images/forms-list.webp)
+
 2. Di kartu **Details**, isi **Title** dan **Handle** (huruf kecil, misalnya `contact`).
 3. Tambahkan kolom di kartu **Fields** (lihat di bawah).
 4. Isi kartu **Settings** (lihat di bawah).
 5. Klik **Save form**.
+
+![Halaman New form dengan kartu Details, Fields, dan Settings serta tombol Save form ditandai](images/forms-new-form.webp)
 
 > [!NOTE]
 > Handle tidak dapat diubah setelah formulir dibuat, karena desain situs merujuk kepadanya.
@@ -37,6 +42,8 @@ Formulir ada di sidebar pada **Structure → Forms**. Daftarnya menampilkan **Ti
 3. Seret kolom melalui pegangannya (ikon titik-titik) untuk mengubah urutan.
 4. Klik ikon tempat sampah untuk menghapus kolom.
 
+![Kartu Fields dengan jenis Add field terbuka, kolom yang dibuka, pegangan seret, dan ikon tempat sampah ditandai](images/forms-fields.webp)
+
 > [!TIP]
 > Menghapus kolom tidak menghapus isi yang sudah dikirim pengunjung: kiriman lama tetap menampilkan nilainya, dengan tanda "(removed field)".
 
@@ -51,7 +58,13 @@ Formulir ada di sidebar pada **Structure → Forms**. Daftarnya menampilkan **Ti
 
 1. Buka **Structure → Forms**, lalu klik judul formulir (atau tombol **Submissions**).
 2. Tabel menampilkan nomor setiap kiriman, waktu **Submitted** (dikirim), dan satu kolom untuk setiap kolom formulir. Nilai yang panjang dipersingkat.
+
+   ![Tabel kiriman formulir Contact, dengan kotak pencarian, Filter, Export CSV, sebuah baris, dan ikon tempat sampahnya ditandai](images/forms-submissions.webp)
+
 3. Klik sebuah kiriman untuk melihat seluruh isinya, beserta bahasa, alamat IP, dan browser pengirim.
+
+   ![Jendela satu kiriman, dengan isinya, bahasa, alamat IP, browser, dan tombol Delete submission](images/forms-submission.webp)
+
 4. Untuk kolom file, klik **Download** untuk mengunduh file yang diunggah. File unggahan bersifat privat: hanya dapat diunduh dari admin.
 
 ### Mencari kiriman

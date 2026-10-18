@@ -14,8 +14,13 @@ Global set ada di sidebar pada **Structure → Globals**. Halamannya berjudul **
 ## Mengubah nilai global
 
 1. Buka **Structure → Globals**, lalu klik judul set.
+
+   ![Halaman Globals & template parts, dengan Globals di sidebar dan set Company ditandai](images/globals-list.webp)
+
 2. Isi atau ubah kolom di kartu **Content**.
 3. Klik **Save** (atau tekan Ctrl/Cmd + S). Jika tidak ada lagi yang perlu disimpan, tombol bertuliskan **Saved**, dan catatan di bawah panel samping menunjukkan **All changes saved**.
+
+![Global set Company dengan Tagline yang diubah, tombol Save, dan catatan "Unsaved changes" ditandai](images/globals-edit.webp)
 
 Perubahan langsung tampil di situs, di setiap halaman yang memakainya.
 
@@ -29,6 +34,8 @@ Pada situs multibahasa, editor memiliki tab untuk setiap bahasa, dengan bahasa u
 1. Buka global set, lalu klik tab bahasa.
 2. Ubah kolom teks yang perlu berbeda dalam bahasa ini.
 3. Klik **Save**. Setiap bahasa disimpan terpisah.
+
+![Tab ID pada set Company: Tagline yang diterjemahkan dan kolom bertanda "Shared with EN"](images/globals-translate.webp)
 
 Beberapa hal yang perlu diketahui:
 
@@ -49,11 +56,15 @@ Biasanya pengelola situs atau pengembang yang membuat global set, karena desain 
 4. Pilih **Blueprint**. Jika Anda memerlukan kolom baru, buat blueprint terlebih dahulu (lihat [Struktur](structure.md#blueprint)).
 5. Klik **Create**. Set terbuka sehingga Anda dapat mengisi nilainya.
 
+![Formulir New global set dengan Title, Group, Blueprint, dan tombol Create ditandai](images/globals-new.webp)
+
 Jika kartu **Content** bertuliskan "This blueprint has no fields yet", tambahkan kolom ke blueprint-nya lalu kembali lagi.
 
 ## Mengubah judul atau blueprint set
 
 Buka set dan gunakan kartu **Settings** di sebelah kanan: ubah **Title** atau pilih **Blueprint** lain, lalu klik **Save**. Kartu ini juga menampilkan handle set.
+
+![Kartu Settings pada global set dengan Title dan Blueprint](images/globals-settings.webp)
 
 > [!WARNING]
 > Mengganti blueprint mengubah kolom yang dimiliki set. Nilai dari kolom yang tidak ada di blueprint baru tidak lagi ditampilkan di editor maupun di situs, jadi tanyakan dulu kepada pengelola situs sebelum menggantinya.

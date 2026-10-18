@@ -12,6 +12,8 @@ Di sidebar, pada kelompok **Manage**, klik **Assets**. Di sebelah kiri terdapat 
 - Tombol grid/daftar beralih antara tampilan gambar mini dan daftar dengan kolom **Name**, **Type**, dan **Size**.
 - **Per page**: jumlah file yang ditampilkan per halaman.
 
+![Pustaka aset dengan daftar Folders di kiri dan file di kanan](images/media-library.webp)
+
 Bagian bawah halaman menampilkan jumlah file dan ukuran file terbesar yang diizinkan per unggahan.
 
 ## Mengunggah file
@@ -19,6 +21,8 @@ Bagian bawah halaman menampilkan jumlah file dan ukuran file terbesar yang diizi
 1. Buka folder tujuan (atau **All assets** untuk tingkat teratas).
 2. Klik **Upload** lalu pilih satu atau beberapa file, atau seret file dari komputer Anda ke area file.
 3. Tunggu pesan *Uploaded*. Unggahan dalam jumlah banyak dikirim satu per satu.
+
+![Folder Blog yang terbuka di daftar Folders dan tombol Upload](images/media-upload.webp)
 
 File yang terlalu besar atau jenisnya tidak diterima situs akan dilewati dengan sebuah pesan; file lainnya tetap terunggah.
 
@@ -28,24 +32,32 @@ File yang terlalu besar atau jenisnya tidak diterima situs akan dilewati dengan 
 ## Folder
 
 - **Membuat folder**: klik **+** (**New folder**) di samping **Folders**. Ketik **Name**, pilih letaknya di **Inside** (**Top level** atau folder lain), lalu klik **Create folder**. Jika sebuah folder sedang terbuka, folder baru dibuat di dalamnya.
+
+  ![Layar New folder dengan Name, Inside, dan Create folder](images/media-new-folder.webp)
+
 - **Mengganti nama folder**: arahkan kursor ke folder lalu klik ikon pensil (**Rename folder**), ubah **Name**, lalu klik **Save**.
 - **Menghapus folder**: arahkan kursor ke folder lalu klik ikon tempat sampah (**Delete folder**). Hanya folder kosong yang dapat dihapus.
+
+![Tombol + di samping Folders, serta ikon pensil dan tempat sampah yang muncul saat kursor berada di atas folder](images/media-folders.webp)
 
 > [!NOTE]
 > Admin tidak menyediakan tombol untuk memindahkan file ke folder lain setelah diunggah. Unggahlah file langsung ke folder yang tepat. Folder hanya membantu Anda menemukan file; folder tidak mengubah alamat web file.
 
 ## Menyunting aset
 
-Klik sebuah file untuk membukanya. Halamannya terdiri dari tiga bagian:
+Klik sebuah file untuk membukanya. Halamannya terdiri dari empat bagian:
 
 - **Preview**: gambar (atau ikon file), dengan tombol **Copy link** (menyalin alamat web file), **Open file**, dan **Replace file**.
 - **Details**: **Title**, **Alt text**, dan **Caption**.
-- **File**: jenis, ukuran, dimensi, dan tanggal unggah, serta **Used by**, yaitu daftar entri, term, dan globals yang memakai file ini.
+- **File**: jenis, ukuran, dimensi, dan tanggal unggah.
+- **Used by**: daftar entri, term, dan globals yang memakai file ini.
 
 Untuk mengubah keterangan:
 
 1. Isi **Title** (nama yang mudah dibaca di pustaka), **Alt text**, dan jika perlu **Caption** (keterangan gambar).
 2. Klik **Save**.
+
+![Aset gambar dengan kartu Details dan tombol Save yang diberi nomor](images/media-edit.webp)
 
 > [!TIP]
 > Selalu isi **Alt text** untuk gambar. Teks ini menjelaskan gambar kepada pengguna pembaca layar dan kepada mesin pencari. Jelaskan apa yang tampak di gambar, misalnya *Dua relawan menanam pohon*, bukan *gambar1*.
@@ -56,6 +68,8 @@ Untuk mengubah keterangan:
 
 1. Buka aset lalu klik **Replace file**.
 2. Pilih file baru lalu konfirmasi.
+
+![Kartu Preview sebuah aset dengan tombol Replace file](images/media-replace.webp)
 
 ### Ukuran gambar
 
@@ -68,6 +82,9 @@ Saat Anda mengunggah gambar, situs otomatis membuat salinan yang lebih kecil (mi
 
 - **Membuang satu file**: buka file lalu klik ikon tempat sampah (**Move to trash**).
 - **Membuang beberapa file**: centang kotak pada gambar mini lalu klik **Trash** diikuti jumlah file.
+
+  ![Dua file dicentang di pustaka dan tombol Trash 2](images/media-trash.webp)
+
 - **Memulihkan**: atur filter ke **Trashed only**, buka file, lalu klik **Restore**.
 - **Menghapus selamanya**: buka file yang ada di tempat sampah lalu klik **Delete forever**.
 
@@ -82,5 +99,7 @@ Field yang menerima gambar atau file menampilkan tombol **Choose image** atau **
 2. Pilih folder di bagian atas, atau gunakan **Search…**.
 3. Klik sebuah file untuk memilihnya. Pada field yang mengizinkan beberapa file, klik file lain juga.
 4. Klik **Select**.
+
+![Jendela Asset library dengan pencarian, folder, file terpilih, dan Select yang diberi nomor](images/media-picker.webp)
 
 Anda juga dapat mengeklik **Upload** di jendela tersebut untuk menambahkan file baru: file itu langsung terpilih, jadi Anda cukup mengeklik **Select**. Setelah dipilih, gunakan **Change** untuk memilih file lain, **Add more** untuk menambah file pada field multi-file, atau tombol **×** (**Remove**) untuk melepas file dari field. Melepas file dari field tidak menghapusnya dari pustaka.

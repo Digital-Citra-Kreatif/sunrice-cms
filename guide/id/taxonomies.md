@@ -21,16 +21,23 @@ Gunakan kotak **Search terms…** untuk mencari term berdasarkan judul atau slug
 
 1. Di sidebar, pada grup **Taxonomies**, klik taksonominya.
 2. Klik **New term**.
+
+   ![Daftar term Categories, dengan Categories di sidebar dan tombol New term ditandai](images/taxonomies-terms-list.webp)
+
 3. Isi **Title**. Biarkan **Slug** kosong agar dibuat otomatis dari judul.
 4. Isi kolom tambahan yang dimiliki taksonomi tersebut (misalnya deskripsi atau gambar).
 5. Pada taksonomi hierarkis, pilih induk di kartu **Parent**, atau biarkan **None (top level)**.
 6. Klik **Create term**.
+
+![Formulir term baru dengan Title, Description, dan tombol Create term ditandai](images/taxonomies-new-term.webp)
 
 ### Mengubah term
 
 1. Klik term di daftar.
 2. Ubah yang diperlukan.
 3. Klik **Save** (atau tekan Ctrl/Cmd + S). Catatan di kanan bawah menunjukkan **Unsaved changes** (belum disimpan) atau **All changes saved** (semua tersimpan).
+
+![Editor term dengan kartu Content, tombol Save, dan catatan "All changes saved" ditandai](images/taxonomies-edit-term.webp)
 
 Jika taksonomi memiliki halaman term, editor juga menampilkan kartu **SEO** (tampilan halaman term di hasil pencarian dan saat dibagikan di media sosial) serta tombol **View page** untuk membuka halamannya di situs.
 
@@ -54,12 +61,16 @@ Pada situs multibahasa, editor term memiliki tab untuk setiap bahasa (bahasa uta
 3. Aktifkan **Ready** jika terjemahan sudah boleh tampil di situs. Selama nonaktif, pengunjung melihat versi bahasa utama.
 4. Klik **Save**.
 
+![Tab ID pada term dengan Title, sakelar Ready, dan Save ditandai](images/taxonomies-translate.webp)
+
 Titik hijau pada tab berarti bahasa tersebut sudah diterjemahkan dan siap; titik kuning berarti terjemahan ada tetapi belum siap. Lihat [Terjemahan](translations.md) untuk informasi lebih lanjut tentang bahasa.
 
 ### Menghapus term
 
 - Satu term: buka term, klik ikon tempat sampah (**Delete term**), lalu konfirmasi.
 - Beberapa term: centang kotaknya di daftar, lalu klik **Delete** di samping tulisan "*n* selected" dan konfirmasi.
+
+![Dua term dicentang di daftar, dengan tombol Delete di samping "2 selected"](images/taxonomies-delete-terms.webp)
 
 > [!WARNING]
 > Menghapus term akan melepasnya dari semua entri yang memakainya, dan pada taksonomi hierarkis term anaknya ikut terhapus. Tidak ada Trash (tempat sampah) untuk term di admin, jadi Anda tidak dapat memulihkannya sendiri. Periksa jumlah **Entries** sebelum menghapus.
@@ -70,6 +81,8 @@ Titik hijau pada tab berarti bahasa tersebut sudah diterjemahkan dan siap; titik
 2. Di kartu **Taxonomies** di sebelah kanan, cari taksonominya (misalnya **Categories**).
 3. Klik **Add term…**, cari, lalu pilih term. Ulangi untuk term lainnya.
 4. Simpan atau terbitkan entri seperti biasa.
+
+![Kartu Taxonomies di editor entri dengan daftar Add term terbuka](images/taxonomies-entry-terms.webp)
 
 Jika sebuah taksonomi bertanda **(one)**, entri hanya boleh memiliki satu term dari taksonomi itu; tombolnya kemudian berbunyi **Change term…**. Term tidak dapat dibuat dari editor entri: buat dulu di taksonominya. Term yang dimiliki entri sama untuk semua bahasa.
 

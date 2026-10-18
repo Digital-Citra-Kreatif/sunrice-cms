@@ -21,16 +21,23 @@ Use **Search terms…** to find a term by title or slug. On hierarchical taxonom
 
 1. In the sidebar, under **Taxonomies**, click the taxonomy.
 2. Click **New term**.
+
+   ![The Categories terms list, with Categories in the sidebar and the New term button marked](images/taxonomies-terms-list.webp)
+
 3. Type a **Title**. Leave **Slug** empty to have it generated from the title.
 4. Fill in any extra fields the taxonomy has (such as a description or image).
 5. On a hierarchical taxonomy, choose a parent in the **Parent** card, or keep **None (top level)**.
 6. Click **Create term**.
+
+![The new term form with Title, Description and the Create term button marked](images/taxonomies-new-term.webp)
 
 ### Edit a term
 
 1. Click the term in the list.
 2. Change what you need.
 3. Click **Save** (or press Ctrl/Cmd + S). The note at the bottom right says **Unsaved changes** or **All changes saved**.
+
+![The term editor with the Content card, the Save button and the "All changes saved" note marked](images/taxonomies-edit-term.webp)
 
 If the taxonomy has term pages, the editor also shows an **SEO** card (how the term's page looks in search results and social shares) and a **View page** button that opens the page on the site.
 
@@ -54,12 +61,16 @@ On a multilingual site, the term editor has a tab for each language (the main la
 3. Turn **Ready** on when the translation should appear on the site. While it is off, visitors see the main-language version.
 4. Click **Save**.
 
+![The ID tab of a term with its Title, the Ready switch and Save marked](images/taxonomies-translate.webp)
+
 A green dot on a tab means that language is translated and ready; an amber dot means it exists but isn't ready yet. See [Translations](translations.md) for more about languages.
 
 ### Delete terms
 
 - One term: open it and click the bin icon (**Delete term**), then confirm.
 - Several terms: tick their checkboxes in the list, then click **Delete** next to "*n* selected" and confirm.
+
+![Two terms ticked in the list, with the Delete button next to "2 selected"](images/taxonomies-delete-terms.webp)
 
 > [!WARNING]
 > Deleting a term removes it from every entry that used it, and on hierarchical taxonomies its child terms are deleted too. There is no Trash for terms in the admin, so you can't restore them yourself. Check the **Entries** count before you delete.
@@ -70,6 +81,8 @@ A green dot on a tab means that language is translated and ready; an amber dot m
 2. In the **Taxonomies** card on the right, find the taxonomy (for example **Categories**).
 3. Click **Add term…**, search, and pick a term. Repeat for more terms.
 4. Save or publish the entry as usual.
+
+![The Taxonomies card in the entry editor with the Add term list open](images/taxonomies-entry-terms.webp)
 
 If a taxonomy is marked **(one)**, an entry can have only one of its terms; the button then reads **Change term…**. Terms can't be created from the entry editor: create them in the taxonomy first. The terms an entry has are the same in every language.
 
