@@ -54,19 +54,19 @@ export default [
         clip: [card('Fields'), '[role=listbox]'],
     },
     {
-        // "View submissions" (and search, export): the submissions table.
+        // "View submissions" (and search, export, delete): the submissions table,
+        // wide enough for the bin icons (at 1280 the table scrolls sideways).
         name: 'forms-submissions',
         url: submissions,
         viewport: { width: 1600, height: 800 },
         mark: [
-            { selector: 'main thead', label: '2' },
             { selector: 'main tbody tr >> nth=0', label: '3' },
             'main input[placeholder^="Search"]',
             'main button:text-is("Filter")',
             'main a:text-is("Export CSV")',
             'main [aria-label="Delete submission #6"]',
         ],
-        clip: 'main',
+        clip: ['main h1', 'main table'],
     },
     {
         // "View submissions", step 3: one submission's window.
