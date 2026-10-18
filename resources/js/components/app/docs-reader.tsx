@@ -59,7 +59,7 @@ export function DocsReader({ base, page, html, headings, sections, labels = { pa
                 </SelectContent>
             </Select>
 
-            <nav aria-label={labels.pages} className="hidden flex-col gap-5 lg:sticky lg:top-6 lg:flex">
+            <nav aria-label={labels.pages} className="hidden flex-col gap-5 lg:sticky lg:top-6 lg:flex lg:max-h-[calc(100svh-3rem)] lg:overflow-y-auto">
                 {sections.map((section) => (
                     <div key={section.label} className="flex flex-col gap-1">
                         <p className="px-2 text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">{section.label}</p>
@@ -87,7 +87,7 @@ export function DocsReader({ base, page, html, headings, sections, labels = { pa
             />
 
             {headings.length > 0 && (
-                <nav aria-label={labels.onThisPage} className="hidden flex-col gap-1 xl:sticky xl:top-6 xl:flex">
+                <nav aria-label={labels.onThisPage} className="hidden flex-col gap-1 xl:sticky xl:top-6 xl:flex xl:max-h-[calc(100svh-3rem)] xl:overflow-y-auto">
                     <p className="px-2 text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">{labels.onThisPage}</p>
                     {headings.map((h) => (
                         <a
