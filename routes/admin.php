@@ -160,6 +160,8 @@ Route::middleware([Middleware\Authenticate::class, Middleware\EnsureCanAccessAdm
     Route::post('ai-access', [Admin\AiAccessController::class, 'store'])->name('ai-access.store');
     Route::delete('ai-access/{token}', [Admin\AiAccessController::class, 'destroy'])->name('ai-access.destroy');
 
+    // User guide (the package's guide/{locale}/*.md)
+    Route::get('guide/{page?}', [Admin\GuideController::class, 'show'])->where('page', '[a-z0-9-]+')->name('guide.show');
     // Developer docs (the package's docs/*.md)
     Route::get('docs/{page?}', [Admin\DocsController::class, 'show'])->where('page', '[a-z0-9-]+')->name('docs.show');
 

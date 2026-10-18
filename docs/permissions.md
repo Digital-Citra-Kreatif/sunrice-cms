@@ -29,6 +29,7 @@ so nobody loses access.
 | `sunrice.roles.{view,create,edit,delete}` | Roles. |
 | `sunrice.settings.edit` | Settings. |
 | `sunrice.view-drafts` | While signed in, open unpublished and scheduled entries (and translations not yet Ready) on the site, under a "Draft" banner. Given to Editor, Author and Translator. |
+| `sunrice.guide.view` | Read the user guide in the admin (Manage → Guide): how to work with the CMS, in English and Indonesian. Every default role has it; sites upgrading get it on their default roles with `sunrice:sync-permissions`. |
 | `sunrice.docs.view` | Read these developer docs in the admin (Manage → Docs). Only Administrator has it by default. |
 | `sunrice.ai-access` | Connect AI agents through MCP with an access token (Manage → AI access). The agent can do what the user can. See [AI agents](ai-agents.md). |
 | `sunrice.run-commands` | Let AI agents run the maintenance commands listed in `sunrice.mcp.commands`. |
