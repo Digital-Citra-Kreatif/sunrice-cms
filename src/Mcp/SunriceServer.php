@@ -11,6 +11,7 @@ use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Instructions;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Attributes\Version;
+use Laravel\Mcp\Server\ServerContext;
 use Sunrice\Activity\ActivityLogger;
 use Sunrice\Sunrice;
 
@@ -93,6 +94,21 @@ class SunriceServer extends Server
         Tools\RenderPage::class,
         Tools\RunCommand::class,
     ];
+
+    /**
+     * The #[Instructions] above, then each package's text
+     * (Sunrice::addMcpInstructions()) as a section of its own.
+     */
+    public function createContext(): ServerContext
+    {
+        $context = parent::createContext();
+        $extra = app(Sunrice::class)->mcpInstructions();
+        if ($extra !== []) {
+            $context->instructions = implode("\n\n", [rtrim($context->instructions), ...$extra]);
+        }
+
+        return $context;
+    }
 
     /**
      * Adds the tools packages registered. Over stdio (`php artisan

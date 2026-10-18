@@ -376,6 +376,7 @@ class SunriceServiceProvider extends PackageServiceProvider
             $middleware = (array) config('sunrice.frontend.middleware', ['web']);
             if (config('sunrice.cache.full_page') && class_exists(CacheResponse::class)) {
                 $middleware[] = CacheResponse::class;
+                Cache\FullPageCacheProfile::useUnlessConfigured();
             }
 
             Route::middleware($middleware)

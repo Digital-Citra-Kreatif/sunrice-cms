@@ -11,6 +11,7 @@ use Sunrice\Models\Collection;
 use Sunrice\Models\Entry;
 use Sunrice\Models\Form;
 use Sunrice\Models\FormSubmission;
+use Sunrice\Sunrice;
 
 class DashboardController extends Controller
 {
@@ -53,7 +54,15 @@ class DashboardController extends Controller
             ])
             ->all();
 
+        // Packages' cards (Sunrice::addDashboardCard()), loaded after the page (deferred).
+        $cards = app(Sunrice::class)->dashboardCards($user);
+
         return Inertia::render('Dashboard', [
+            'cards' => $cards === [] ? [] : Inertia::defer(fn () => array_map(fn (array $card) => [
+                'name' => $card['name'],
+                'position' => $card['position'],
+                'props' => ($card['props'])(),
+            ], $cards)),
             'collections' => $collections,
             'recentEdits' => $recentEdits,
             // Only forms whose submissions this user may read.

@@ -7,6 +7,11 @@ parameters:
         - src/
         - config/
         - database/
+    excludePaths:
+        analyse:
+            # Extends spatie/laravel-responsecache's profile, an optional
+            # package (composer suggest): only loaded when it is installed.
+            - src/Cache/FullPageCacheProfile.php
     ignoreErrors:
         - identifier: larastan.noEnvCallsOutsideOfConfig
           path: config/sunrice.php

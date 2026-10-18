@@ -7,6 +7,7 @@ namespace Sunrice;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
 use InvalidArgumentException;
@@ -15,6 +16,7 @@ use Sunrice\Fields\FieldRegistry;
 use Sunrice\Frontend\GlobalsRepository;
 use Sunrice\Frontend\MenuBuilder;
 use Sunrice\Frontend\MenuNode;
+use Sunrice\Frontend\TemplateContext;
 use Sunrice\Http\Middleware\Authenticate;
 use Sunrice\Http\Middleware\EnsureCanAccessAdmin;
 use Sunrice\Http\Middleware\HandleSunriceInertiaRequests;
@@ -59,6 +61,15 @@ class Sunrice
 
     /** @var array<int, callable> */
     protected array $userScopes = [];
+
+    /** @var array<string, array{name: string, props: Closure, can: string|callable|null, position: int}> */
+    protected array $dashboardCards = [];
+
+    /** @var array<int, string> */
+    protected array $mcpInstructions = [];
+
+    /** @var array<int, callable> */
+    protected array $pageCacheHooks = [];
 
     public function version(): string
     {
@@ -225,6 +236,101 @@ class Sunrice
     }
 
     /**
+     * Add text to the MCP server's instructions, which agents read when
+     * they connect: how to use a package's tools, what to ask first.
+     * Each text is added as its own section, after Sunrice's own.
+     */
+    public function addMcpInstructions(string $markdown): void
+    {
+        $markdown = trim($markdown);
+        if ($markdown !== '' && ! in_array($markdown, $this->mcpInstructions, true)) {
+            $this->mcpInstructions[] = $markdown;
+        }
+    }
+
+    /**
+     * Texts added with addMcpInstructions().
+     *
+     * @return array<int, string>
+     */
+    public function mcpInstructions(): array
+    {
+        return $this->mcpInstructions;
+    }
+
+    /**
+     * Add a card to the admin dashboard, below Sunrice's own. The admin
+     * script registers its component with
+     * `window.Sunrice.registerDashboardCard($name, Component)`.
+     *
+     * - $props: returns the card's props; it runs after the page has
+     *   loaded (a deferred prop), so slow queries don't hold the dashboard.
+     * - $can: who sees it, like addNavigationItem(). Null shows it to
+     *   everyone who can open the admin.
+     * - $position: cards are ordered by it, lowest first.
+     */
+    public function addDashboardCard(string $name, Closure $props, string|callable|null $can = null, int $position = 100): void
+    {
+        $this->dashboardCards[$name] = ['name' => $name, 'props' => $props, 'can' => $can, 'position' => $position];
+    }
+
+    /**
+     * The dashboard cards this user may see, ordered by position.
+     *
+     * @return array<int, array{name: string, props: Closure, can: string|callable|null, position: int}>
+     */
+    public function dashboardCards(mixed $user): array
+    {
+        if ($user === null) {
+            return [];
+        }
+
+        $cards = array_values(array_filter($this->dashboardCards, fn (array $card) => static::allows($card['can'], $user)));
+        // Stable: equal positions keep registration order.
+        usort($cards, fn (array $a, array $b) => $a['position'] <=> $b['position']);
+
+        return $cards;
+    }
+
+    /**
+     * Decide which pages the full-page cache (`sunrice.cache.full_page`)
+     * keeps. The callback receives (Request $request, ?TemplateContext $page),
+     * after the page has been rendered, and returns false to leave it out
+     * of the cache (a cart, a page showing prices for the visitor). A page
+     * is cached only when every callback returns true.
+     */
+    public function cachePageUsing(callable $decide): void
+    {
+        $this->pageCacheHooks[] = $decide;
+    }
+
+    /**
+     * Whether every cachePageUsing() callback lets this request's page be cached.
+     */
+    public function shouldCachePage(Request $request): bool
+    {
+        $page = $request->attributes->get('sunrice.page');
+        $page = $page instanceof TemplateContext ? $page : null;
+        foreach ($this->pageCacheHooks as $decide) {
+            if (! $decide($request, $page)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /** A $can of addNavigationItem() and friends: null, a permission name or a callable. */
+    protected static function allows(string|callable|null $can, mixed $user): bool
+    {
+        return match (true) {
+            $can === null => true,
+            is_string($can) => (bool) $user->can($can),
+            default => (bool) $can($user),
+        };
+    }
+
+    /**
      * Register an existing Eloquent model for CMS management.
      *
      * @param  class-string<Resources\Resource>  $class
@@ -331,13 +437,7 @@ class Sunrice
             $tabs[] = ['key' => 'seo', 'label' => 'SEO', 'href' => 'settings/seo'];
         }
         foreach ($this->settingsTabs as $tab) {
-            $can = $tab['can'];
-            $allowed = match (true) {
-                $can === null => true,
-                is_string($can) => $user->can($can),
-                default => (bool) $can($user),
-            };
-            if ($allowed) {
+            if (static::allows($tab['can'], $user)) {
                 $tabs[] = ['key' => $tab['key'], 'label' => $tab['label'], 'href' => $tab['href']];
             }
         }

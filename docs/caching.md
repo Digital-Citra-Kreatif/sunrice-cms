@@ -28,6 +28,32 @@ ids and load those entries by key.
   `CacheResponse` middleware wraps frontend routes and the whole page
   cache is cleared on every bump.
 
+### Pages the full-page cache leaves out
+
+The full-page cache keeps every successful GET page. Pages that differ per
+visitor (a cart, prices for a signed-in customer) shouldn't be kept: say
+which with `Sunrice::cachePageUsing()`, from a service provider's `boot()`:
+
+```php
+use Illuminate\Http\Request;
+use Sunrice\Frontend\TemplateContext;
+
+Sunrice::cachePageUsing(function (Request $request, ?TemplateContext $page): bool {
+    // false: don't cache this page.
+    return $page?->collection?->handle !== 'products' || ! $request->user();
+});
+```
+
+- The callback runs after the page has rendered. `$page` is the page Sunrice
+  rendered (entry, listing or term), or null for other routes.
+- A page is cached only when the cache's own rules allow it and every
+  callback returns true.
+- The callbacks are consulted through Sunrice's cache profile
+  (`Sunrice\Cache\FullPageCacheProfile`, which extends the package's
+  default `CacheAllSuccessfulGetRequests`). It is used unless you set your
+  own `responsecache.cache_profile`; then extend Sunrice's profile, or call
+  `Sunrice::shouldCachePage($request)` from yours.
+
 ## Testing with lots of content
 
 Fill a staging site with fake articles, try the pages, then remove them:

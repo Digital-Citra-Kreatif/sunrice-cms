@@ -1,12 +1,24 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Deferred, Link, usePage } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 import { ArrowUpRight, FileText, Inbox, PenLine, Layers } from 'lucide-react';
 import { CollapsibleCard } from '@/components/app/collapsible-card';
 import { Badge } from '@/components/ui/badge';
 import { AtmosphereArt } from '@/components/app/atmosphere-art';
+import { registeredDashboardCard } from '@/lib/dashboard-cards';
+import { pluginScriptsLoaded } from '@/lib/page-registry';
 import { adminUrl } from '@/lib/route';
 import type { SharedProps } from '@/types';
 
+/** A package's card (Sunrice::addDashboardCard()), in position order. */
+interface DashboardCard {
+    name: string;
+    position: number;
+    props: Record<string, unknown>;
+}
+
 interface Props {
+    /** Deferred: undefined until it has loaded. */
+    cards?: DashboardCard[];
     collections: { handle: string; title: string; entries: number }[];
     recentEdits: { id: number; title: string; collection: string | null; collection_handle: string | null; status: string; updated_at: string | null }[];
     recentSubmissions: { id: number; form_id: number; form: string | null; summary: string | null; created_at: string | null }[];
@@ -23,7 +35,42 @@ function EmptyState({ icon: Icon, children }: { icon: typeof FileText; children:
     );
 }
 
-export default function Dashboard({ collections, recentEdits, recentSubmissions }: Props) {
+function PackageCards({ cards }: { cards?: DashboardCard[] }) {
+    // Admin scripts register their cards after the admin's bundle: render again once they have run.
+    const [, setScriptsLoaded] = useState(false);
+    useEffect(() => {
+        let active = true;
+        void pluginScriptsLoaded().then(() => active && setScriptsLoaded(true));
+
+        return () => {
+            active = false;
+        };
+    }, []);
+
+    if (!cards || cards.length === 0) {
+        return null;
+    }
+
+    return (
+        <div className="grid gap-5 lg:grid-cols-2">
+            {cards.map((card) => {
+                const Card = registeredDashboardCard(card.name);
+
+                return Card ? <Card key={card.name} {...(card.props ?? {})} /> : null;
+            })}
+        </div>
+    );
+}
+
+function PackageCardsLoading() {
+    return (
+        <div className="grid gap-5 lg:grid-cols-2" aria-busy="true" aria-label="Loading cards">
+            <div className="h-40 animate-pulse rounded-xl border border-border/60 bg-muted/50" />
+        </div>
+    );
+}
+
+export default function Dashboard({ cards, collections, recentEdits, recentSubmissions }: Props) {
     const { adminPath, auth } = usePage<SharedProps>().props;
     const firstName = auth.user?.name?.split(' ')[0];
     const entryCount = collections.reduce((total, collection) => total + collection.entries, 0);
@@ -114,6 +161,12 @@ export default function Dashboard({ collections, recentEdits, recentSubmissions 
                     )}
                 </CollapsibleCard>
             </div>
+
+            {cards === undefined || cards.length > 0 ? (
+                <Deferred data="cards" fallback={<PackageCardsLoading />}>
+                    <PackageCards cards={cards} />
+                </Deferred>
+            ) : null}
         </div>
     );
 }

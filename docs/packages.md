@@ -66,6 +66,13 @@ class CommerceServiceProvider extends ServiceProvider
 
         // A tool for AI agents, beside Sunrice's own (see Tools for AI agents).
         Sunrice::registerMcpTool(RefundOrder::class);
+        Sunrice::addMcpInstructions('Orders: call get_order before refund_order, and ask the user first.');
+
+        // A card on the dashboard (see Extending the admin → Dashboard cards).
+        Sunrice::addDashboardCard('commerce-sales', fn () => ['total' => Order::todaysTotal()], 'commerce.orders.view');
+
+        // Leave per-visitor pages out of the full-page cache.
+        Sunrice::cachePageUsing(fn ($request, $page) => ! $request->is('cart', 'checkout*'));
 
         // A list + editor for a table, with actions (see Model resources).
         Sunrice::registerResource(OrderResource::class);
@@ -142,6 +149,19 @@ is in the activity log with source "ai" like any other tool's. It checks
 what that user may do itself: `$this->authorize()` throws when they may
 not. The description is what the agent reads to decide when to call it,
 so say what the tool does and when not to use it.
+
+`Sunrice::addMcpInstructions($markdown)` adds text to the server's
+instructions, which agents read when they connect (the `initialize`
+response): how your tools fit together, what to check first. Each text is
+added as a section of its own, after Sunrice's instructions. Keep it short;
+the tool descriptions carry the details.
+
+```php
+Sunrice::addMcpInstructions(<<<'MD'
+## Shop
+Orders: list_orders, then get_order. Ask the user before refund_order.
+MD);
+```
 
 ## Lists and editors: resources and actions
 
@@ -242,6 +262,7 @@ waits for its scripts before showing a package's page.
 | --- | --- |
 | `React`, `ReactDOM` | The admin's own copies. Always use these: a second React breaks hooks. |
 | `registerPage(name, Component)` | A page for `Inertia::render(name)`. |
+| `registerDashboardCard(name, Component)` | A card for `Sunrice::addDashboardCard(name, …)`, given the card's props. |
 | `registerField(type, Component)` | An editor control for a [custom field type](custom-fields.md). |
 | `inertia` | `router`, `Link`, `Head`, `usePage`, `useForm` from the admin's Inertia. |
 | `adminUrl(path)` | `'commerce/orders'` → `'/cms/commerce/orders'`, with the site's admin path. |
