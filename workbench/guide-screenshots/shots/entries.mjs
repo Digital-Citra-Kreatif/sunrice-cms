@@ -76,10 +76,12 @@ export default [
         name: 'entries-trash-filter',
         url: articles,
         before: async (page, h) => {
+            // The Export button peeks out under the menu.
+            await h.hide('main a:has-text("Export")');
             await h.click('main [data-slot="select-trigger"]:has-text("Trash")');
         },
         mark: ['[data-slot="select-content"] [role="option"]:has-text("Trashed")'],
-        clip: ['main [data-slot="select-trigger"]:has-text("Created by")', '[data-slot="select-content"]'],
+        clip: ['main [data-slot="select-trigger"]:has-text("Status")', '[data-slot="select-content"]'],
     },
     {
         // "Revisions": step 1.
