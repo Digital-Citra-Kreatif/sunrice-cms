@@ -13,6 +13,7 @@ use Laravel\Mcp\Server\Testing\TestListResponse;
 use Spatie\Permission\Models\Permission;
 use Sunrice\Mcp\SunriceServer;
 use Sunrice\Mcp\Tools\SunriceTool;
+use Sunrice\Models\ApiToken;
 use Sunrice\Permissions\PermissionRegistry;
 use Sunrice\Permissions\SyncPermissions;
 use Sunrice\Resources\Action;
@@ -24,6 +25,7 @@ use Workbench\App\Sunrice\ProductResource;
 
 use function Pest\Laravel\get;
 use function Pest\Laravel\post;
+use function Pest\Laravel\postJson;
 
 #[Description('Refund an order.')]
 class RefundOrderTool extends SunriceTool
@@ -244,6 +246,21 @@ it('adds a package\'s tool to the MCP server, run as the token\'s user', functio
     SunriceServer::actingAs($admin)->tool(RefundOrderTool::class, ['order' => 7])
         ->assertOk()
         ->assertSee(['refunded', $admin->email]);
+});
+
+it('adds package instructions to the MCP server\'s', function () {
+    app(Sunrice::class)->addMcpInstructions("## Shop\n\nCall list_orders before refund_order.");
+    app(Sunrice::class)->addMcpInstructions('Prices are in IDR.');
+    $admin = actingAsSuperAdmin();
+    [, $plain] = ApiToken::issue($admin->id, 'Test');
+
+    $instructions = postJson('/mcp', [
+        'jsonrpc' => '2.0', 'id' => 1, 'method' => 'initialize',
+        'params' => ['protocolVersion' => '2025-06-18', 'capabilities' => (object) [], 'clientInfo' => ['name' => 'test', 'version' => '1']],
+    ], ['Authorization' => "Bearer {$plain}"])->assertOk()->json('result.instructions');
+
+    expect($instructions)->toStartWith('Manage a website built with Sunrice CMS')
+        ->and($instructions)->toEndWith("Read the developer docs\" permission).\n\n## Shop\n\nCall list_orders before refund_order.\n\nPrices are in IDR.");
 });
 
 it('takes only MCP tools for MCP tools', function () {

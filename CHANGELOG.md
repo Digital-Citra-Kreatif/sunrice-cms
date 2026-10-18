@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- **Dashboard cards**: packages add cards to the dashboard with
+  `Sunrice::addDashboardCard($name, $props, $can, $position)` and
+  `window.Sunrice.registerDashboardCard($name, Component)`. Only cards the
+  user may see are sent, and their props load after the page (deferred).
+- **MCP instructions**: `Sunrice::addMcpInstructions($markdown)` adds a
+  package's text to what agents read when they connect.
+- **Full-page cache control**: `Sunrice::cachePageUsing(fn ($request, $page) => bool)`
+  leaves pages out of the full-page cache (`sunrice.cache.full_page`),
+  through Sunrice's cache profile `Sunrice\Cache\FullPageCacheProfile`
+  (used unless `responsecache.cache_profile` is set to one of your own).
 - **Structure import**: `Sunrice::importStructure()` and
   `php artisan sunrice:import-structure {file}` create fieldsets,
   blueprints, taxonomies, collections, globals, forms, draft entries and

@@ -21,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import FieldRenderer from '@/fields/FieldRenderer';
 import { registerField } from '@/fields/registry';
+import { registerDashboardCard } from '@/lib/dashboard-cards';
 import { fetchJson } from '@/lib/fetch-json';
 import { registerPage } from '@/lib/page-registry';
 import { adminUrl as joinAdminUrl } from '@/lib/route';
@@ -55,9 +56,13 @@ function adminUrl(path = ''): string {
  *
  *     Sunrice.registerField('rating', ({ field, value, onChange, error }) => …);
  *
- * and pages for a package's admin routes (Sunrice::adminRoutes()):
+ * pages for a package's admin routes (Sunrice::adminRoutes()):
  *
  *     Sunrice.registerPage('Commerce/Orders/Show', ({ order }) => …);
+ *
+ * and dashboard cards (Sunrice::addDashboardCard()):
+ *
+ *     Sunrice.registerDashboardCard('commerce-sales', ({ total }) => …);
  *
  * Keep this surface small and stable: it is a public API.
  */
@@ -73,6 +78,11 @@ const api = {
      * for a bare page.
      */
     registerPage,
+    /**
+     * A dashboard card for Sunrice::addDashboardCard('name', …): receives
+     * the props its callback returned. Cards without a component show nothing.
+     */
+    registerDashboardCard,
     /** Inertia, from the admin's own copy (a second copy wouldn't see its pages). */
     inertia: { router, Link, Head, usePage, useForm },
     /** Admin address of a path: Sunrice.adminUrl('commerce/orders') → '/cms/commerce/orders'. */

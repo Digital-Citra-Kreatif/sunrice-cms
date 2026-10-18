@@ -118,6 +118,39 @@ Sunrice::addSettingsTab(
   It reads the tabs from the page's shared `settingsTabs` prop, and hides
   itself when the user can see only one tab.
 
+## Dashboard cards
+
+A package or app can add cards to the dashboard, below Sunrice's own:
+
+```php
+Sunrice::addDashboardCard(
+    name: 'commerce-sales',              // unique; the admin script uses the same name
+    props: fn () => ['total' => Order::query()->whereToday()->sum('total')],
+    can: 'commerce.orders.view',         // who sees it (optional): ability name or callable
+    position: 20,                        // order among the cards, lowest first (default 100)
+);
+```
+
+In an admin script, register the card's component under that name. It
+receives the props the callback returned:
+
+```jsx
+window.Sunrice.registerDashboardCard('commerce-sales', ({ total }) => (
+    <window.Sunrice.components.CollapsibleCard title="Sales today" storageKey="dashboard:commerce-sales">
+        {total}
+    </window.Sunrice.components.CollapsibleCard>
+));
+```
+
+- The props are a deferred Inertia prop: the dashboard shows first, with a
+  placeholder, and the callbacks run in a second request. Slow queries
+  don't hold up the page, and callbacks of cards a user may not see never
+  run.
+- `can` works like `addNavigationItem()`'s: a permission name, or a
+  callable receiving the user and returning a bool. Null shows the card to
+  everyone who can open the admin.
+- A card with no registered component shows nothing.
+
 ## Accounts that aren't staff
 
 Users (Manage → Users) lists every account of the user model, paged, with
