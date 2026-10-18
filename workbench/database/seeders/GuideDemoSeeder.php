@@ -393,16 +393,16 @@ class GuideDemoSeeder extends Seeder
     {
         $this->act($this->sari, 163, '10:00', fn () => Sunrice::importStructure(['menus' => [
             ['handle' => 'main', 'title' => 'Main menu', 'items' => [
-                ['type' => 'entry', 'target' => 'pages/home', 'labels' => ['id' => 'Beranda']],
-                ['type' => 'entry', 'target' => 'pages/about', 'labels' => ['id' => 'Tentang kami'], 'children' => [
+                ['type' => 'entry', 'target' => 'pages/home', 'labels' => ['en' => 'Home', 'id' => 'Beranda']],
+                ['type' => 'entry', 'target' => 'pages/about', 'labels' => ['en' => 'About', 'id' => 'Tentang kami'], 'children' => [
                     ['type' => 'entry', 'target' => 'pages/team', 'labels' => ['en' => 'Our team', 'id' => 'Tim kami']],
                 ]],
-                ['type' => 'entry', 'target' => 'pages/services', 'labels' => ['id' => 'Layanan']],
+                ['type' => 'entry', 'target' => 'pages/services', 'labels' => ['en' => 'Services', 'id' => 'Layanan']],
                 ['type' => 'collection', 'target' => 'articles', 'labels' => ['en' => 'Blog', 'id' => 'Blog']],
-                ['type' => 'entry', 'target' => 'pages/contact', 'labels' => ['id' => 'Kontak']],
+                ['type' => 'entry', 'target' => 'pages/contact', 'labels' => ['en' => 'Contact', 'id' => 'Kontak']],
             ]],
             ['handle' => 'footer', 'title' => 'Footer links', 'items' => [
-                ['type' => 'entry', 'target' => 'pages/privacy-policy', 'labels' => ['id' => 'Kebijakan privasi']],
+                ['type' => 'entry', 'target' => 'pages/privacy-policy', 'labels' => ['en' => 'Privacy policy', 'id' => 'Kebijakan privasi']],
                 ['type' => 'url', 'url' => 'https://www.instagram.com/', 'labels' => ['en' => 'Instagram'], 'new_tab' => true],
                 ['type' => 'url', 'url' => 'https://www.linkedin.com/', 'labels' => ['en' => 'LinkedIn'], 'new_tab' => true],
                 ['type' => 'entry', 'target' => 'pages/contact', 'labels' => ['en' => 'Get in touch', 'id' => 'Hubungi kami']],

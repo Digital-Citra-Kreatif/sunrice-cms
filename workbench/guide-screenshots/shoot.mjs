@@ -203,7 +203,7 @@ async function clipFor(page, shot, marks) {
         scrollX: window.scrollX, scrollY: window.scrollY,
     }));
     if (!shot.clip || shot.clip === 'viewport') {
-        return { clip: { x: doc.scrollX, y: doc.scrollY, ...viewport }, fullPage: false };
+        return { clip: { x: 0, y: 0, ...viewport }, fullPage: false };
     }
     const padding = shot.padding ?? PADDING;
     const target = typeof shot.clip === 'object' && !Array.isArray(shot.clip) && 'width' in shot.clip
@@ -222,7 +222,9 @@ async function clipFor(page, shot, marks) {
     const y = Math.max(minY, Math.floor(box.y - padding));
     const right = Math.min(maxX, Math.ceil(box.x + box.width + padding));
     const bottom = Math.min(maxY, Math.ceil(box.y + box.height + padding));
-    return { clip: { x, y, width: right - x, height: bottom - y }, fullPage: !visible };
+    // Playwright takes a viewport-relative clip unless it shoots the full page.
+    const [dx, dy] = visible ? [doc.scrollX, doc.scrollY] : [0, 0];
+    return { clip: { x: x - dx, y: y - dy, width: right - x, height: bottom - y }, fullPage: !visible };
 }
 
 async function main() {
