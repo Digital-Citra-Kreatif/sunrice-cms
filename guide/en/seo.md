@@ -1,6 +1,6 @@
 # SEO
 
-SEO (search engine optimisation) is about how your pages appear in search results and when they are shared on social media. Sunrice fills in sensible values automatically; this page explains where you can fine-tune them, per entry and for the whole site.
+SEO (search engine optimisation) is about how your pages appear in search results and when they are shared on social media. {panel} fills in sensible values automatically; this page explains where you can fine-tune them, per entry and for the whole site.
 
 ## How the site picks a title, description and image
 

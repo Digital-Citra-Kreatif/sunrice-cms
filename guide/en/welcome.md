@@ -1,4 +1,4 @@
-# Welcome to Sunrice CMS
+# Welcome to {panel}
 
 This guide is for the people who run the website day to day: editors who write and publish content, and site managers who look after its structure, users and settings. It explains how the admin is organised and walks you through each task step by step. Everything happens in the admin, which you open in your browser at your site's address followed by **/cms** (for example `https://example.com/cms`).
 

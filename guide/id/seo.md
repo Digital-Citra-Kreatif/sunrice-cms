@@ -1,6 +1,6 @@
 # SEO
 
-SEO (search engine optimisation) berkaitan dengan cara halaman Anda tampil di hasil pencarian dan saat dibagikan di media sosial. Sunrice mengisi nilai yang wajar secara otomatis; halaman ini menjelaskan di mana Anda dapat menyempurnakannya, baik per entri maupun untuk seluruh situs.
+SEO (search engine optimisation) berkaitan dengan cara halaman Anda tampil di hasil pencarian dan saat dibagikan di media sosial. {panel} mengisi nilai yang wajar secara otomatis; halaman ini menjelaskan di mana Anda dapat menyempurnakannya, baik per entri maupun untuk seluruh situs.
 
 ## Cara situs memilih judul, deskripsi, dan gambar
 

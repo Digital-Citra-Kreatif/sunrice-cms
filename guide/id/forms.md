@@ -5,7 +5,7 @@ Formulir memungkinkan pengunjung mengirimkan informasi kepada Anda: pesan kontak
 ## Cara kerja formulir
 
 - Setiap formulir memiliki **Title** (judul), **Handle** (nama yang dipakai situs untuk menemukannya, misalnya `contact`), dan daftar **kolom**.
-- Saat pengunjung mengirim formulir, Sunrice memeriksanya (kolom wajib, format email, jenis file), menyimpannya sebagai **submission** (kiriman), dan dapat mengirimkannya ke email Anda.
+- Saat pengunjung mengirim formulir, {panel} memeriksanya (kolom wajib, format email, jenis file), menyimpannya sebagai **submission** (kiriman), dan dapat mengirimkannya ke email Anda.
 - Letak dan tampilan formulir di situs ditentukan oleh desain situs.
 
 Formulir ada di sidebar pada **Structure → Forms**. Daftarnya menampilkan **Title**, **Handle**, dan jumlah **Submissions** setiap formulir, dengan tombol **Submissions**, **Edit**, dan **Delete**.

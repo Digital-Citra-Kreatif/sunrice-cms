@@ -1,4 +1,4 @@
-# Selamat datang di Sunrice CMS
+# Selamat datang di {panel}
 
 Panduan ini ditujukan bagi orang-orang yang mengelola situs web sehari-hari: editor yang menulis dan menerbitkan konten, serta pengelola situs yang mengurus struktur, pengguna, dan pengaturannya. Panduan ini menjelaskan cara admin disusun dan memandu Anda menyelesaikan setiap tugas langkah demi langkah. Semua pekerjaan dilakukan di admin, yang Anda buka di peramban dengan alamat situs Anda ditambah **/cms** (misalnya `https://example.com/cms`). Tampilan admin berbahasa Inggris, sehingga nama tombol dan menu dalam panduan ini ditulis persis seperti yang tampil di layar.
 

@@ -5,7 +5,7 @@ Forms let visitors send you information: a contact message, a quote request, an 
 ## How forms work
 
 - Each form has a **Title**, a **Handle** (the name the site uses to find it, such as `contact`) and a list of **fields**.
-- When a visitor sends the form, Sunrice checks it (required fields, valid email, file types), stores it as a **submission**, and can email it to you.
+- When a visitor sends the form, {panel} checks it (required fields, valid email, file types), stores it as a **submission**, and can email it to you.
 - Where a form appears on the site, and how it looks, is decided by the site's design.
 
 Forms live in the sidebar under **Structure → Forms**. The list shows each form's **Title**, **Handle** and number of **Submissions**, with **Submissions**, **Edit** and **Delete** buttons.

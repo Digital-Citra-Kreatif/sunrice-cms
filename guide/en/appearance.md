@@ -70,7 +70,7 @@ Once an entry is published, the button says **View page** and opens the public p
 
 ## The starter templates
 
-New sites usually begin with Sunrice's **starter templates**: a simple, ready-made design that works out of the box. They include a header with the main menu, a search box and a language switcher; a footer; pages for single entries, lists of entries and categories; a search page; and "page not found" and error pages.
+New sites usually begin with the {panel} **starter templates**: a simple, ready-made design that works out of the box. They include a header with the main menu, a search box and a language switcher; a footer; pages for single entries, lists of entries and categories; a search page; and "page not found" and error pages.
 
 They are meant as a starting point. A developer typically adjusts them, or replaces them with your own design. As long as an expected menu, global or field is missing, that part simply shows nothing, so a fresh site never breaks.
 

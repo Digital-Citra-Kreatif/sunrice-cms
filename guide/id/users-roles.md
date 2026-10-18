@@ -10,7 +10,7 @@ Daftar **Users** menampilkan nama, email, dan peran setiap orang. Gunakan kotak 
 
 ### Menambahkan pengguna
 
-Sunrice tidak mengirim undangan: Anda membuat akunnya dan menyampaikan detail login sendiri.
+{panel} tidak mengirim undangan: Anda membuat akunnya dan menyampaikan detail login sendiri.
 
 1. Buka **Manage → Users** dan klik **New user**.
 2. Di kartu **Account**, isi **Name** dan **Email** orang tersebut.

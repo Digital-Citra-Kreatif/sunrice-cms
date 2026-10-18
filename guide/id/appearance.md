@@ -70,7 +70,7 @@ Setelah entri terbit, tombol tersebut bertuliskan **View page** dan membuka hala
 
 ## Template awal
 
-Situs baru biasanya dimulai dengan **template awal** (starter templates) dari Sunrice: desain sederhana siap pakai yang langsung berfungsi. Isinya mencakup header dengan menu utama, kotak pencarian, dan pemilih bahasa; footer; halaman untuk entri tunggal, daftar entri, dan kategori; halaman pencarian; serta halaman "tidak ditemukan" dan halaman galat.
+Situs baru biasanya dimulai dengan **template awal** (starter templates) dari {panel}: desain sederhana siap pakai yang langsung berfungsi. Isinya mencakup header dengan menu utama, kotak pencarian, dan pemilih bahasa; footer; halaman untuk entri tunggal, daftar entri, dan kategori; halaman pencarian; serta halaman "tidak ditemukan" dan halaman galat.
 
 Template ini dimaksudkan sebagai titik awal. Developer biasanya menyesuaikannya, atau menggantinya dengan desain Anda sendiri. Selama menu, global, atau field yang diharapkan belum ada, bagian itu cukup tidak menampilkan apa-apa, sehingga situs baru tidak pernah rusak.
 

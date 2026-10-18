@@ -10,7 +10,7 @@ The **Users** list shows each person's name, email and roles. Use the search box
 
 ### Adding a user
 
-Sunrice doesn't send invitations: you create the account and pass on the login details yourself.
+{panel} doesn't send invitations: you create the account and pass on the login details yourself.
 
 1. Go to **Manage → Users** and click **New user**.
 2. In the **Account** card, enter the person's **Name** and **Email**.

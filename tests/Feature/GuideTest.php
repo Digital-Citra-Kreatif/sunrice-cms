@@ -87,6 +87,21 @@ it('serves guide screenshots to readers of the guide', function () {
     get('/cms/guide/images/..%2F..%2Fcomposer.json')->assertNotFound();
 });
 
+it('calls the panel by its branded name', function () {
+    guideUser(['sunrice.guide.view']);
+
+    get('/cms/guide/welcome?lang=en')->assertInertia(fn (Assert $page) => $page
+        ->where('title', 'Welcome to Sunrice')
+        ->where('sections.0.pages.0.title', 'Welcome to Sunrice'));
+
+    config(['sunrice.branding.name' => 'Acme <Studio>']);
+    get('/cms/guide/welcome')->assertInertia(fn (Assert $page) => $page
+        ->where('title', 'Welcome to Acme <Studio>')
+        ->where('sections.0.pages.0.title', 'Welcome to Acme <Studio>')
+        ->where('html', fn (string $html) => str_contains($html, 'Welcome to Acme &lt;Studio&gt;') && ! str_contains($html, '{panel}')));
+    get('/cms/guide/seo')->assertInertia(fn (Assert $page) => $page->where('html', fn (string $html) => str_contains($html, 'Acme &lt;Studio&gt; fills in')));
+});
+
 it('shows a guide page with its sections and headings', function () {
     guideUser(['sunrice.guide.view']);
 
