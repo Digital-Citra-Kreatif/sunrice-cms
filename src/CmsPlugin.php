@@ -103,6 +103,7 @@ final class CmsPlugin extends BasePlugin
             Permission::make('cms.submissions.delete', 'Delete form submissions', 'Content'),
             Permission::make('cms.blueprints.manage', 'Manage blueprints and fieldsets', 'Content structure'),
         );
+        $panel->dashboardCards(...Admin\DashboardCards::all());
         $panel->navigation(
             NavigationItem::make('cms-entries')->label('Entries')->url('cms/entries')->icon('file-text')
                 ->group('Content')->sort(10)->visible(fn (Authorizable $user): bool => Access::entries($user, 'view')),
