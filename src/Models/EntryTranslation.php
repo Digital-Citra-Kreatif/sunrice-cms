@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Fields\Schema;
+use Sunrice\Cms\Site\Site;
 
 /**
  * An entry in one language. Editors change the draft (draft_title,
@@ -99,6 +100,12 @@ class EntryTranslation extends Model
             || $this->draft_title !== $this->title
             || $this->draft_slug !== $this->slug
             || $this->draft_data != $this->data;
+    }
+
+    /** The live page's URL, or null when the collection has no route (or it was never published). */
+    public function url(): ?string
+    {
+        return app(Site::class)->url($this);
     }
 
     /** Whether this is the entry's main translation, which holds the shared fields. */

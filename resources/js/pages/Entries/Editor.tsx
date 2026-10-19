@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { ArrowLeft, CalendarClock, ChevronDown, LoaderCircle, Plus, RotateCcw, Trash2 } from 'lucide-react';
+import { ArrowLeft, CalendarClock, ChevronDown, ExternalLink, Eye, LoaderCircle, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
     Badge, Button, Card, CardContent, CardHeader, CardTitle, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -29,6 +29,10 @@ interface Props {
         hasUnpublishedChanges: boolean;
         trashed: boolean;
         version: number;
+        /** The live page, when published and the collection has a URL. */
+        url: string | null;
+        /** A signed link showing the saved draft, for a while. */
+        previewUrl: string;
     } | null;
     values: { title: string; slug: string; data: FieldValues };
     revisions: { id: number; title: string; createdAt: string | null }[];
@@ -103,6 +107,19 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                     {form.isDirty && <span className="cms:text-sm cms:text-muted-foreground">Unsaved changes</span>}
                 </div>
                 <div className="cms:flex cms:items-center cms:gap-2">
+                    {entry && !entry.trashed && (
+                        <Button type="button" variant="ghost" asChild>
+                            <a href={entry.previewUrl} target="_blank" rel="noopener noreferrer"
+                                title={form.isDirty ? 'Shows the saved draft: save first to see your changes.' : 'Shows the saved draft.'}>
+                                <Eye /> Preview
+                            </a>
+                        </Button>
+                    )}
+                    {entry?.url && (
+                        <Button type="button" variant="ghost" asChild>
+                            <a href={entry.url} target="_blank" rel="noopener noreferrer"><ExternalLink /> View</a>
+                        </Button>
+                    )}
                     {entry?.trashed && can.delete && (
                         <Button type="button" variant="outline" onClick={() => router.post(`${url}/restore`, {}, { preserveScroll: true })}>
                             <RotateCcw /> Restore

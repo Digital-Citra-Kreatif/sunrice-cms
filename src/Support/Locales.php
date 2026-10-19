@@ -25,6 +25,14 @@ final class Locales
         return self::all()[0];
     }
 
+    /** The language of the page being shown: the app's locale when it is a content language, else the main one. */
+    public static function current(): string
+    {
+        $locale = app()->getLocale();
+
+        return self::has($locale) ? $locale : self::default();
+    }
+
     public static function has(string $locale): bool
     {
         return in_array($locale, self::all(), true);

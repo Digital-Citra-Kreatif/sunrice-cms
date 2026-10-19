@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -163,6 +164,9 @@ final class EntryController
                 'hasUnpublishedChanges' => $translation->hasUnpublishedChanges(),
                 'trashed' => $entry->trashed(),
                 'version' => $translation->version,
+                // The live page, and a signed link to preview the draft (30 minutes).
+                'url' => $translation->isLive() && ! $entry->trashed() ? $translation->url() : null,
+                'previewUrl' => URL::temporarySignedRoute('sunrice.cms.preview', now()->addMinutes(30), ['translation' => $translation->id]),
             ],
             'values' => ['title' => $translation->draft_title, 'slug' => $translation->draft_slug, 'data' => $translation->draft_data],
             'revisions' => $translation->revisions()->limit(20)->get()->map(fn (Revision $revision): array => [

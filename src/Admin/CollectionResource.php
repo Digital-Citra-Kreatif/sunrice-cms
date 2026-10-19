@@ -13,6 +13,7 @@ use Sunrice\Admin\Resources\Tables\Column;
 use Sunrice\Admin\Resources\Tables\Table;
 use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Collection;
+use Sunrice\Cms\Site\RoutePattern;
 
 /**
  * The Collections screens (Structure → Collections), guarded by the
@@ -50,6 +51,16 @@ final class CollectionResource extends Resource
                 ->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
                 ->help('The fields its entries have. Changing it keeps what entries already hold.'),
             Toggle::make('dated')->label('Dated entries')->help('Entries show a date and list newest first, like articles.'),
+            TextInput::make('route')->label('URL')->placeholder('/blog/{slug}')->unique()
+                ->rules([function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (is_string($value) && $value !== '' && ! RoutePattern::isValid($value)) {
+                        $fail('Use a path with {slug} once, like /blog/{slug} or /{slug} for pages: lowercase letters, digits, dashes.');
+                    }
+                }])
+                ->help('Where entries are on the site. Empty: they have no page of their own.'),
+            TextInput::make('template')->placeholder('cms.article')
+                ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
+                ->help('The Blade view for its entries. Empty: cms.{handle}, else cms.entry.'),
         ]);
     }
 
@@ -60,6 +71,7 @@ final class CollectionResource extends Resource
                 Column::make('title')->searchable()->sortable(),
                 Column::make('handle')->searchable(),
                 Column::make('blueprint'),
+                Column::make('route')->label('URL'),
                 Column::make('dated')->boolean(),
             ])
             ->defaultSort('title');

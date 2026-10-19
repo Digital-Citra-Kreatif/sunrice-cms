@@ -21,6 +21,8 @@ use Sunrice\Cms\Fields\Schema;
  * @property string $title
  * @property string|null $blueprint the blueprint's handle
  * @property bool $dated entries show a date, and list newest first
+ * @property string|null $route the entries' public URL pattern ("/blog/{slug}"); none: no pages
+ * @property string|null $template the Blade view entries render with
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at

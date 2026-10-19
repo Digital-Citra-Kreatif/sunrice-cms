@@ -10,6 +10,14 @@ return [
      */
     'locales' => array_values(array_filter(explode(',', (string) env('SUNRICE_LOCALES', (string) env('APP_LOCALE', 'en'))))),
 
+    'site' => [
+        // Serve entries at their collections' routes. The CMS's route is
+        // the app's fallback: the app's own routes always come first.
+        'enabled' => true,
+        // Middleware for the site's pages.
+        'middleware' => ['web'],
+    ],
+
     'revisions' => [
         // Published versions kept per entry and language; older ones are deleted on publish.
         'keep' => 50,
