@@ -84,6 +84,12 @@ final class CmsServiceProvider extends ServiceProvider
         EntryTranslation::deleted(fn (EntryTranslation $translation) => app(MediaUsages::class)->forget('cms.entry', (string) $translation->entry_id, $translation->locale));
         GlobalValue::saved(fn (GlobalValue $value) => Support\MediaUsage::global($value));
         $this->pageCache();
+        // A collection, taxonomy or form came or went: so do its permissions.
+        foreach ([Models\Collection::class, Models\Taxonomy::class, Models\Form::class] as $class) {
+            foreach (['created', 'forceDeleted', 'deleted'] as $event) {
+                Event::listen("eloquent.{$event}: {$class}", fn () => Support\ScopedPermissions::sync());
+            }
+        }
         // Changes to what the site shows clear its caches.
         Support\ContentWatch::register();
         // A new homepage: forget the one read.

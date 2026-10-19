@@ -17,6 +17,7 @@ use Sunrice\Cms\Actions\Terms\TrashTerm;
 use Sunrice\Cms\Fields\Types\TermsField;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
+use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\Seo;
 
@@ -28,9 +29,9 @@ use Sunrice\Cms\Support\Seo;
  */
 final class TermController
 {
-    public function home(): RedirectResponse|Response
+    public function home(Request $request): RedirectResponse|Response
     {
-        $first = Taxonomy::query()->orderBy('title')->first();
+        $first = Taxonomy::query()->orderBy('title')->get()->first(fn (Taxonomy $t): bool => Access::terms($request->user(), $t));
 
         return $first === null
             ? Inertia::render('Cms/Terms/Index', ['taxonomy' => null, 'taxonomies' => [], 'terms' => [], 'locales' => Locales::all(), 'locale' => Locales::default()])
@@ -49,7 +50,7 @@ final class TermController
                 // Terms have pages, or fields of their own: edit them on their page.
                 'pages' => $taxonomy->route !== null || $taxonomy->blueprint !== null],
             'trashed' => $trashed,
-            'taxonomies' => Taxonomy::query()->orderBy('title')->get()->map(fn (Taxonomy $t): array => ['handle' => $t->handle, 'title' => $t->title])->all(),
+            'taxonomies' => Taxonomy::query()->orderBy('title')->get()->filter(fn (Taxonomy $t): bool => Access::terms($request->user(), $t))->values()->map(fn (Taxonomy $t): array => ['handle' => $t->handle, 'title' => $t->title])->all(),
             'locales' => Locales::all(),
             'locale' => $locale,
             'terms' => array_map(function (array $item) use ($locale): array {

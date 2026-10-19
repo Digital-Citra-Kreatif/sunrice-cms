@@ -12,6 +12,7 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 use Sunrice\Cms\Mail\SubmissionRows;
 use Sunrice\Cms\Models\Form;
 use Sunrice\Cms\Models\Submission;
+use Sunrice\Cms\Support\Access;
 
 #[IsReadOnly]
 #[Description('Without "form": the forms and how many submissions each has. With one: what visitors sent, newest first, 25 a page. Submissions hold personal data: use them only for what the user asked.')]
@@ -21,16 +22,17 @@ final class ListSubmissions extends CmsTool
 
     public function handle(Request $request): Response
     {
-        if (! $this->can('cms.submissions.view')) {
+        if (! Access::submissions($this->user(), 'view')) {
             return $this->denied('view form submissions');
         }
         $handle = $request->get('form');
         if (! is_string($handle) || $handle === '') {
             return $this->json(['forms' => Form::query()->withCount('submissions')->orderBy('title')->get()
+                ->filter(fn (Form $f): bool => Access::submissions($this->user(), 'view', $f))->values()
                 ->map(fn (Form $f): array => ['handle' => $f->handle, 'title' => $f->title, 'submissions' => $f->submissions_count])->all()]);
         }
         $form = Form::query()->where('handle', $handle)->first();
-        if ($form === null) {
+        if ($form === null || ! Access::submissions($this->user(), 'view', $form)) {
             return Response::error('No such form. Leave out "form" to list them.');
         }
         $page = $request->get('page');

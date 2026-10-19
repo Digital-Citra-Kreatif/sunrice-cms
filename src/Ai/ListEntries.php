@@ -22,17 +22,17 @@ final class ListEntries extends CmsTool
 
     public function handle(Request $request): Response
     {
-        if (! $this->can('cms.entries.view')) {
+        if (! $this->may('view')) {
             return $this->denied('view entries');
         }
         $handle = $request->get('collection');
         if (! is_string($handle) || $handle === '') {
-            return $this->json(['collections' => Collection::query()->withCount('entries')->orderBy('title')->get()->map(fn (Collection $c): array => [
+            return $this->json(['collections' => Collection::query()->withCount('entries')->orderBy('title')->get()->filter(fn (Collection $c): bool => $this->may('view', $c))->values()->map(fn (Collection $c): array => [
                 'handle' => $c->handle, 'title' => $c->title, 'route' => $c->route, 'dated' => $c->dated, 'blueprint' => $c->blueprint, 'entries' => $c->entries_count,
             ])->all(), 'languages' => Locales::all()]);
         }
         $collection = Collection::query()->where('handle', $handle)->first();
-        if ($collection === null) {
+        if ($collection === null || ! $this->may('view', $collection)) {
             return Response::error('No such collection. Leave out "collection" to list them.');
         }
         $search = $request->get('search');

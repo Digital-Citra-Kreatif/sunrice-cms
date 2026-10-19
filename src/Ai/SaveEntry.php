@@ -27,25 +27,22 @@ final class SaveEntry extends CmsTool
             return Response::error('Send "data" as an object of field handle => value.');
         }
         $publishing = $request->get('publish') === true;
-        if ($publishing && ! $this->can('cms.entries.publish')) {
-            return $this->denied('publish entries');
-        }
 
         try {
             if ($request->get('id') === null) {
-                if (! $this->can('cms.entries.create')) {
-                    return $this->denied('create entries');
-                }
                 $handle = $request->get('collection');
                 $collection = is_string($handle) ? Collection::query()->where('handle', $handle)->first() : null;
                 if ($collection === null) {
                     return Response::error('Give the "collection" to create the entry in (cms_list_entries lists them), or an "id" to change one.');
                 }
+                if (! $this->may('create', $collection)) {
+                    return $this->denied('create entries in '.$collection->title);
+                }
+                if ($publishing && ! $this->may('publish', $collection)) {
+                    return $this->denied('publish entries of '.$collection->title);
+                }
                 $translation = app(CreateEntry::class)->handle($collection, $input);
             } else {
-                if (! $this->can('cms.entries.update')) {
-                    return $this->denied('edit entries');
-                }
                 $entry = $this->findEntry($request);
                 if ($entry instanceof Response) {
                     return $entry;
@@ -53,6 +50,12 @@ final class SaveEntry extends CmsTool
                 $translation = $this->findTranslation($request, $entry);
                 if ($translation instanceof Response) {
                     return $translation;
+                }
+                if (! $this->may('update', $entry->collection, $entry, $translation->locale)) {
+                    return $this->denied('edit this entry'.($translation->isMain() ? '' : ' in this language'));
+                }
+                if ($publishing && ! $this->may('publish', $entry->collection)) {
+                    return $this->denied('publish entries of '.$entry->collection->title);
                 }
                 $translation = app(SaveDraft::class)->handle($translation, $input);
             }

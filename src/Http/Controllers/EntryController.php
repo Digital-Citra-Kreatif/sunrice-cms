@@ -7,7 +7,6 @@ namespace Sunrice\Cms\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
@@ -25,6 +24,7 @@ use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Revision;
+use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\Seo;
 
@@ -39,9 +39,9 @@ final class EntryController
     public const PER_PAGE = 25;
 
     /** The sidebar's Entries item: the first collection's list. */
-    public function home(): RedirectResponse|Response
+    public function home(Request $request): RedirectResponse|Response
     {
-        $first = Collection::query()->orderBy('title')->first();
+        $first = Access::collections($request->user())->first();
 
         return $first === null
             ? Inertia::render('Cms/Entries/Index', ['collection' => null, 'collections' => [], 'entries' => null, 'query' => ['search' => '', 'trashed' => false]])
@@ -80,10 +80,10 @@ final class EntryController
 
         return Inertia::render('Cms/Entries/Index', [
             'collection' => self::collection($collection),
-            'collections' => Collection::query()->orderBy('title')->get()->map(fn (Collection $c): array => ['handle' => $c->handle, 'title' => $c->title])->all(),
+            'collections' => Access::collections($request->user())->map(fn (Collection $c): array => ['handle' => $c->handle, 'title' => $c->title])->all(),
             'entries' => $entries,
             'query' => ['search' => $search, 'trashed' => $trashed],
-            'can' => self::can($request),
+            'can' => self::can($request, $collection),
         ]);
     }
 
@@ -104,6 +104,7 @@ final class EntryController
         $query = EntryTranslation::query()
             ->with('entry.collection')
             ->where('locale', Locales::default())
+            ->whereIn('collection_id', Access::collections($request->user())->pluck('id'))
             ->whereHas('entry', fn ($entry) => $entry->withoutTrashed()->whereHas('collection', fn ($collection) => $collection->withoutTrashed()
                 ->when(($input['collections'] ?? []) !== [], fn ($c) => $c->whereIn('handle', $input['collections'] ?? []))));
 
@@ -134,7 +135,7 @@ final class EntryController
             'entry' => null,
             'values' => ['title' => '', 'slug' => '', 'data' => $schema->defaults(), 'seo' => null],
             'revisions' => [],
-            'can' => self::can($request),
+            'can' => self::can($request, $collection),
         ]);
     }
 
@@ -182,7 +183,7 @@ final class EntryController
             ])->all(),
             // A revision restore this session can be undone.
             'undoRestore' => $request->session()->has(EntryManageController::undoKey($translation)) ? $translation->id : null,
-            'can' => self::can($request),
+            'can' => self::can($request, $collection, $entry, $translation->locale),
         ]);
     }
 
@@ -192,7 +193,7 @@ final class EntryController
         $publishing = $request->boolean('publish');
         if ($publishing) {
             // Before saving, so a refused publish doesn't leave a half-done request.
-            Gate::authorize('cms.entries.publish');
+            abort_unless(Access::entries($request->user(), 'publish', $entry->collection), 403);
         }
         $publishAt = $publishing ? self::publishAt($request) : null;
         $translation = $save->handle(self::translation($entry, $request->input('locale')), $request->only(['title', 'slug', 'data', 'seo', 'version']));
@@ -312,13 +313,12 @@ final class EntryController
             'ordered' => $collection->ordered, 'listing' => $collection->listing_route !== null];
     }
 
-    /** @return array<string, bool> */
-    private static function can(Request $request): array
+    /** @return array<string, bool> what the user may do here: in the collection, with the entry in this language */
+    private static function can(Request $request, Collection $collection, ?Entry $entry = null, ?string $locale = null): array
     {
-        $user = $request->user();
         $can = [];
         foreach (['create', 'update', 'publish', 'delete'] as $ability) {
-            $can[$ability] = $user !== null && $user->can("cms.entries.{$ability}");
+            $can[$ability] = Access::entries($request->user(), $ability, $collection, $entry, $locale);
         }
 
         return $can;

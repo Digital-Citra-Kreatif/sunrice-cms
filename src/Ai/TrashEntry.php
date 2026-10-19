@@ -18,12 +18,15 @@ final class TrashEntry extends CmsTool
 
     public function handle(Request $request): Response
     {
-        if (! $this->can('cms.entries.delete')) {
+        if (! $this->may('delete') && ! $this->can('cms.entries.delete-own')) {
             return $this->denied('trash entries');
         }
         $entry = $this->findEntry($request, withTrashed: true);
         if ($entry instanceof Response) {
             return $entry;
+        }
+        if (! $this->may('delete', $entry->collection, $entry)) {
+            return $this->denied('trash this entry');
         }
         $restore = $request->get('restore') === true;
         if ($restore !== $entry->trashed()) {

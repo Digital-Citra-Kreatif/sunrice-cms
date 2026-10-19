@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Ai;
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Validation\ValidationException;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Sunrice\Admin\Ai\Tool;
+use Sunrice\Admin\Panel;
+use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
+use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\Locales;
 
 /**
@@ -20,6 +24,20 @@ use Sunrice\Cms\Support\Locales;
  */
 abstract class CmsTool extends Tool
 {
+    /** The token's user. */
+    protected function user(): ?Authorizable
+    {
+        $user = auth(app(Panel::class)->getGuard())->user();
+
+        return $user instanceof Authorizable ? $user : null;
+    }
+
+    /** Whether the token's user may do this with entries (see Access): in a collection, of an entry, in a language. */
+    protected function may(string $action, Collection|string|null $collection = null, ?Entry $entry = null, ?string $locale = null): bool
+    {
+        return Access::entries($this->user(), $action, $collection, $entry, $locale);
+    }
+
     /** The entry asked for ("id"), with its translations, or an error. */
     protected function findEntry(Request $request, bool $withTrashed = false): Entry|Response
     {

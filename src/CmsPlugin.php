@@ -29,11 +29,13 @@ use Sunrice\Cms\Http\Controllers\ListingController;
 use Sunrice\Cms\Http\Controllers\MenuController;
 use Sunrice\Cms\Http\Controllers\SubmissionController;
 use Sunrice\Cms\Http\Controllers\TermController;
+use Sunrice\Cms\Http\Middleware\AuthorizeContent;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\GlobalSet;
 use Sunrice\Cms\Settings\CodeSettings;
 use Sunrice\Cms\Settings\CommentSettings;
 use Sunrice\Cms\Settings\SiteSettings;
+use Sunrice\Cms\Support\Access;
 
 /**
  * The CMS, added to the panel in the app's panel provider:
@@ -73,8 +75,14 @@ final class CmsPlugin extends BasePlugin
     public function register(Panel $panel): void
     {
         $panel->settings(SiteSettings::class, CodeSettings::class, CommentSettings::class);
+        // Each permission for one collection, taxonomy or form too (see Support\Access).
+        $panel->permissionsUsing(fn (): array => Support\ScopedPermissions::all());
         // sunrice:roles: people who write and look after the content, not the structure or the people.
         $panel->defaultRole('editor', [Panel::ACCESS, 'sunrice.media.*', 'cms.entries.*', 'cms.terms.*', 'cms.globals.*', 'cms.menus.*', 'cms.comments.*', 'cms.submissions.view']);
+        // Writes entries, publishes nothing, and edits only their own.
+        $panel->defaultRole('author', [Panel::ACCESS, 'sunrice.media.view', 'sunrice.media.upload', 'cms.entries.view', 'cms.entries.create', 'cms.entries.update-own', 'cms.entries.delete-own']);
+        // Writes the other languages of every entry.
+        $panel->defaultRole('translator', [Panel::ACCESS, 'sunrice.media.view', 'cms.entries.view', 'cms.entries.translate']);
         $panel->resources(CollectionResource::class, TaxonomyResource::class, GlobalSetResource::class, MenuResource::class, RedirectResource::class, FormResource::class);
         $panel->permissions(
             Permission::make('cms.entries.view', 'View entries', 'Content'),
@@ -82,6 +90,9 @@ final class CmsPlugin extends BasePlugin
             Permission::make('cms.entries.update', 'Edit drafts', 'Content'),
             Permission::make('cms.entries.publish', 'Publish and unpublish entries', 'Content'),
             Permission::make('cms.entries.delete', 'Trash and restore entries', 'Content'),
+            Permission::make('cms.entries.update-own', 'Edit drafts of their own entries', 'Content'),
+            Permission::make('cms.entries.delete-own', 'Trash their own entries', 'Content'),
+            Permission::make('cms.entries.translate', 'Edit entries\' other languages (not the main one)', 'Content'),
             Permission::make('cms.terms.manage', 'Manage terms', 'Content'),
             Permission::make('cms.globals.view', 'View globals', 'Content'),
             Permission::make('cms.globals.update', 'Edit globals', 'Content'),
@@ -94,9 +105,9 @@ final class CmsPlugin extends BasePlugin
         );
         $panel->navigation(
             NavigationItem::make('cms-entries')->label('Entries')->url('cms/entries')->icon('file-text')
-                ->group('Content')->sort(10)->permission('cms.entries.view'),
+                ->group('Content')->sort(10)->visible(fn (Authorizable $user): bool => Access::entries($user, 'view')),
             NavigationItem::make('cms-terms')->label('Terms')->url('cms/terms')->icon('tags')
-                ->group('Content')->sort(20)->permission('cms.terms.manage'),
+                ->group('Content')->sort(20)->visible(fn (Authorizable $user): bool => Access::terms($user)),
             NavigationItem::make('cms-globals')->label('Globals')->url('cms/globals')->icon('globe')
                 ->group('Content')->sort(30)->permission('cms.globals.view'),
             NavigationItem::make('cms-menus')->label('Menus')->url('cms/menus')->icon('list-tree')
@@ -104,7 +115,7 @@ final class CmsPlugin extends BasePlugin
             NavigationItem::make('cms-comments')->label('Comments')->url('cms/comments')->icon('message-square')
                 ->group('Content')->sort(45)->permission('cms.comments.view'),
             NavigationItem::make('cms-submissions')->label('Submissions')->url('cms/submissions')->icon('inbox')
-                ->group('Content')->sort(50)->permission('cms.submissions.view'),
+                ->group('Content')->sort(50)->visible(fn (Authorizable $user): bool => Access::submissions($user, 'view')),
             NavigationItem::make('cms-blueprints')->label('Blueprints')->url('cms/blueprints')->icon('layout-template')
                 ->group('Structure')->sort(91)->permission('cms.blueprints.manage'),
             NavigationItem::make('cms-fieldsets')->label('Fieldsets')->url('cms/fieldsets')->icon('blocks')
@@ -131,18 +142,18 @@ final class CmsPlugin extends BasePlugin
                 Route::delete('comments/{comment}/force', 'forceDelete')->name('force')->middleware('can:cms.comments.delete')->withTrashed();
             });
             Route::prefix('cms')->name('cms.submissions.')->controller(SubmissionController::class)->group(function (): void {
-                Route::get('submissions', 'home')->name('home')->middleware('can:cms.submissions.view');
-                Route::get('forms/{form:handle}/submissions', 'index')->name('index')->middleware('can:cms.submissions.view');
-                Route::get('forms/{form:handle}/submissions/export', 'export')->name('export')->middleware('can:cms.submissions.view');
-                Route::delete('submissions/{submission}', 'destroy')->name('destroy')->middleware('can:cms.submissions.delete');
-                Route::get('submissions/{submission}/files/{field}', 'file')->name('file')->middleware('can:cms.submissions.view');
+                Route::get('submissions', 'home')->name('home')->middleware(AuthorizeContent::class.':submissions,view');
+                Route::get('forms/{form:handle}/submissions', 'index')->name('index')->middleware(AuthorizeContent::class.':submissions,view');
+                Route::get('forms/{form:handle}/submissions/export', 'export')->name('export')->middleware(AuthorizeContent::class.':submissions,view');
+                Route::delete('submissions/{submission}', 'destroy')->name('destroy')->middleware(AuthorizeContent::class.':submissions,delete');
+                Route::get('submissions/{submission}/files/{field}', 'file')->name('file')->middleware(AuthorizeContent::class.':submissions,view');
             });
             Route::prefix('cms')->name('cms.globals.')->controller(GlobalsController::class)->group(function (): void {
                 Route::get('globals', 'index')->name('index')->middleware('can:cms.globals.view');
                 Route::get('globals/{set:handle}', 'edit')->name('edit')->middleware('can:cms.globals.view');
                 Route::put('globals/{set:handle}', 'update')->name('update')->middleware('can:cms.globals.update');
             });
-            Route::prefix('cms')->name('cms.terms.')->controller(TermController::class)->middleware('can:cms.terms.manage')->group(function (): void {
+            Route::prefix('cms')->name('cms.terms.')->controller(TermController::class)->middleware(AuthorizeContent::class.':terms')->group(function (): void {
                 Route::get('terms', 'home')->name('home');
                 Route::get('taxonomies/{taxonomy:handle}/terms', 'index')->name('index');
                 Route::post('taxonomies/{taxonomy:handle}/terms', 'store')->name('store');
@@ -155,33 +166,33 @@ final class CmsPlugin extends BasePlugin
                 Route::put('terms/{term}/content', 'content')->name('content');
             });
             Route::prefix('cms')->name('cms.entries.')->controller(EntryController::class)->group(function (): void {
-                Route::get('entries', 'home')->name('home')->middleware('can:cms.entries.view');
-                Route::get('entry-picker', 'picker')->name('picker')->middleware('can:cms.entries.view');
-                Route::get('collections/{collection:handle}/entries', 'index')->name('index')->middleware('can:cms.entries.view');
-                Route::get('collections/{collection:handle}/entries/create', 'create')->name('create')->middleware('can:cms.entries.create');
-                Route::post('collections/{collection:handle}/entries', 'store')->name('store')->middleware('can:cms.entries.create');
-                Route::get('entries/{entry}/edit', 'edit')->name('edit')->middleware('can:cms.entries.view')->withTrashed();
-                Route::put('entries/{entry}', 'update')->name('update')->middleware('can:cms.entries.update');
-                Route::post('entries/{entry}/publish', 'publish')->name('publish')->middleware('can:cms.entries.publish');
-                Route::post('entries/{entry}/unpublish', 'unpublish')->name('unpublish')->middleware('can:cms.entries.publish');
-                Route::delete('entries/{entry}', 'destroy')->name('destroy')->middleware('can:cms.entries.delete');
-                Route::post('entries/{entry}/translations', 'addTranslation')->name('translations.store')->middleware('can:cms.entries.create');
-                Route::delete('entries/{entry}/translations/{locale}', 'removeTranslation')->name('translations.destroy')->middleware('can:cms.entries.delete');
-                Route::post('entries/{entry}/restore', 'restore')->name('restore')->middleware('can:cms.entries.delete')->withTrashed();
-                Route::post('revisions/{revision}/restore', 'restoreRevision')->name('revisions.restore')->middleware('can:cms.entries.update');
+                Route::get('entries', 'home')->name('home')->middleware(AuthorizeContent::class.':entries,view');
+                Route::get('entry-picker', 'picker')->name('picker')->middleware(AuthorizeContent::class.':entries,view');
+                Route::get('collections/{collection:handle}/entries', 'index')->name('index')->middleware(AuthorizeContent::class.':entries,view');
+                Route::get('collections/{collection:handle}/entries/create', 'create')->name('create')->middleware(AuthorizeContent::class.':entries,create');
+                Route::post('collections/{collection:handle}/entries', 'store')->name('store')->middleware(AuthorizeContent::class.':entries,create');
+                Route::get('entries/{entry}/edit', 'edit')->name('edit')->middleware(AuthorizeContent::class.':entries,view')->withTrashed();
+                Route::put('entries/{entry}', 'update')->name('update')->middleware(AuthorizeContent::class.':entries,update');
+                Route::post('entries/{entry}/publish', 'publish')->name('publish')->middleware(AuthorizeContent::class.':entries,publish');
+                Route::post('entries/{entry}/unpublish', 'unpublish')->name('unpublish')->middleware(AuthorizeContent::class.':entries,publish');
+                Route::delete('entries/{entry}', 'destroy')->name('destroy')->middleware(AuthorizeContent::class.':entries,delete');
+                Route::post('entries/{entry}/translations', 'addTranslation')->name('translations.store')->middleware(AuthorizeContent::class.':entries,create');
+                Route::delete('entries/{entry}/translations/{locale}', 'removeTranslation')->name('translations.destroy')->middleware(AuthorizeContent::class.':entries,delete');
+                Route::post('entries/{entry}/restore', 'restore')->name('restore')->middleware(AuthorizeContent::class.':entries,delete')->withTrashed();
+                Route::post('revisions/{revision}/restore', 'restoreRevision')->name('revisions.restore')->middleware(AuthorizeContent::class.':entries,update');
             });
             Route::prefix('cms')->name('cms.listings.')->controller(ListingController::class)->group(function (): void {
-                Route::get('collections/{collection:handle}/listing', 'edit')->name('edit')->middleware('can:cms.entries.view');
-                Route::put('collections/{collection:handle}/listing', 'update')->name('update')->middleware('can:cms.entries.update');
+                Route::get('collections/{collection:handle}/listing', 'edit')->name('edit')->middleware(AuthorizeContent::class.':entries,view');
+                Route::put('collections/{collection:handle}/listing', 'update')->name('update')->middleware(AuthorizeContent::class.':entries,update');
             });
             Route::prefix('cms')->name('cms.entries.')->controller(EntryManageController::class)->group(function (): void {
-                Route::post('collections/{collection:handle}/entries/bulk', 'bulk')->name('bulk')->middleware('can:cms.entries.view');
-                Route::get('collections/{collection:handle}/entries/export', 'export')->name('export')->middleware('can:cms.entries.view');
-                Route::post('entries/{entry}/duplicate', 'duplicate')->name('duplicate')->middleware('can:cms.entries.create');
-                Route::put('entries/{entry}/settings', 'settings')->name('settings')->middleware('can:cms.entries.update');
-                Route::post('entries/{entry}/move', 'move')->name('move')->middleware('can:cms.entries.update');
-                Route::delete('entries/{entry}/force', 'forceDelete')->name('force-delete')->middleware('can:cms.entries.delete')->withTrashed();
-                Route::post('entry-translations/{translation}/undo-restore', 'undoRestore')->name('undo-restore')->middleware('can:cms.entries.update');
+                Route::post('collections/{collection:handle}/entries/bulk', 'bulk')->name('bulk')->middleware(AuthorizeContent::class.':entries,view');
+                Route::get('collections/{collection:handle}/entries/export', 'export')->name('export')->middleware(AuthorizeContent::class.':entries,view');
+                Route::post('entries/{entry}/duplicate', 'duplicate')->name('duplicate')->middleware(AuthorizeContent::class.':entries,create');
+                Route::put('entries/{entry}/settings', 'settings')->name('settings')->middleware(AuthorizeContent::class.':entries,update');
+                Route::post('entries/{entry}/move', 'move')->name('move')->middleware(AuthorizeContent::class.':entries,update');
+                Route::delete('entries/{entry}/force', 'forceDelete')->name('force-delete')->middleware(AuthorizeContent::class.':entries,delete')->withTrashed();
+                Route::post('entry-translations/{translation}/undo-restore', 'undoRestore')->name('undo-restore')->middleware(AuthorizeContent::class.':entries,update');
             });
         });
         $panel->tools(
@@ -198,8 +209,8 @@ final class CmsPlugin extends BasePlugin
             - Collections, taxonomies, global sets, menus, redirects and forms themselves are resources (list_records, save_record).
             MD);
         // One editor at a time per entry or global set, per language (useEditLock).
-        $panel->lockable('cms.entry', fn (string $id, string $locale, Authorizable $user): bool => $user->can('cms.entries.update')
-            && Entry::query()->whereKey($id)->whereHas('collection')->exists());
+        $panel->lockable('cms.entry', fn (string $id, string $locale, Authorizable $user): bool => ($entry = Entry::query()->whereHas('collection')->find($id)) !== null
+            && Access::entries($user, 'update', $entry->collection, $entry, $locale));
         $panel->lockable('cms.global', fn (string $id, string $locale, Authorizable $user): bool => $user->can('cms.globals.update')
             && GlobalSet::query()->whereKey($id)->exists());
         $panel->bundle(PluginBundle::make('cms')->module(self::asset('admin.js'))->style(self::asset('admin.css'))->pages('Cms/'));

@@ -12,6 +12,7 @@ use Laravel\Mcp\Server\Attributes\Description;
 use Sunrice\Cms\Actions\Terms\SaveTerm as Save;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
+use Sunrice\Cms\Support\Access;
 
 #[Description('Add a term to a taxonomy (no "id"), or rename one or give it another language (with "id" and "locale"). The slug is made from the title when left out.')]
 final class SaveTerm extends CmsTool
@@ -20,13 +21,16 @@ final class SaveTerm extends CmsTool
 
     public function handle(Request $request): Response
     {
-        if (! $this->can('cms.terms.manage')) {
+        if (! Access::terms($this->user())) {
             return $this->denied('manage terms');
         }
         $handle = $request->get('taxonomy');
         $taxonomy = is_string($handle) ? Taxonomy::query()->where('handle', $handle)->first() : null;
         if ($taxonomy === null) {
             return Response::error('Give the "taxonomy" handle (cms_list_terms lists them).');
+        }
+        if (! Access::terms($this->user(), $taxonomy)) {
+            return $this->denied('manage the terms of '.$taxonomy->title);
         }
         $id = $request->get('id');
         $term = is_int($id) ? Term::query()->where('taxonomy_id', $taxonomy->id)->find($id) : null;

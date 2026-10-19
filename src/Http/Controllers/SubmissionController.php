@@ -17,6 +17,7 @@ use Sunrice\Cms\Actions\Forms\SubmitForm;
 use Sunrice\Cms\Mail\SubmissionRows;
 use Sunrice\Cms\Models\Form;
 use Sunrice\Cms\Models\Submission;
+use Sunrice\Cms\Support\Access;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -29,9 +30,9 @@ final class SubmissionController
 {
     public const PER_PAGE = 25;
 
-    public function home(): RedirectResponse|Response
+    public function home(Request $request): RedirectResponse|Response
     {
-        $first = Form::query()->orderBy('title')->first();
+        $first = Form::query()->orderBy('title')->get()->first(fn (Form $form): bool => Access::submissions($request->user(), 'view', $form));
 
         return $first === null
             ? Inertia::render('Cms/Submissions/Index', ['form' => null, 'forms' => [], 'submissions' => null, 'can' => ['delete' => false]])
@@ -55,9 +56,10 @@ final class SubmissionController
         return Inertia::render('Cms/Submissions/Index', [
             'form' => ['handle' => $form->handle, 'title' => $form->title],
             'forms' => Form::query()->withCount('submissions')->orderBy('title')->get()
+                ->filter(fn (Form $f): bool => Access::submissions($request->user(), 'view', $f))->values()
                 ->map(fn (Form $f): array => ['handle' => $f->handle, 'title' => $f->title, 'count' => $f->submissions_count])->all(),
             'submissions' => $submissions,
-            'can' => ['delete' => $request->user()?->can('cms.submissions.delete') ?? false],
+            'can' => ['delete' => Access::submissions($request->user(), 'delete', $form)],
         ]);
     }
 

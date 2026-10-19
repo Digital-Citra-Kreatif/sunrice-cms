@@ -18,12 +18,15 @@ final class TranslateEntry extends CmsTool
 
     public function handle(Request $request): Response
     {
-        if (! $this->can('cms.entries.create')) {
+        if (! $this->may('create')) {
             return $this->denied('add translations');
         }
         $entry = $this->findEntry($request);
         if ($entry instanceof Response) {
             return $entry;
+        }
+        if (! $this->may('create', $entry->collection)) {
+            return $this->denied('add translations to entries of '.$entry->collection->title);
         }
         $locale = $request->get('locale');
         try {

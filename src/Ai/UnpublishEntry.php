@@ -17,7 +17,7 @@ final class UnpublishEntry extends CmsTool
 
     public function handle(Request $request): Response
     {
-        if (! $this->can('cms.entries.publish')) {
+        if (! $this->may('publish')) {
             return $this->denied('unpublish entries');
         }
         $entry = $this->findEntry($request);
@@ -27,6 +27,9 @@ final class UnpublishEntry extends CmsTool
         $translation = $this->findTranslation($request, $entry);
         if ($translation instanceof Response) {
             return $translation;
+        }
+        if (! $this->may('publish', $entry->collection)) {
+            return $this->denied('unpublish entries of '.$entry->collection->title);
         }
 
         return $this->json(['unpublished' => true, ...self::describe(app(Unpublish::class)->handle($translation))]);

@@ -20,7 +20,7 @@ final class PublishEntry extends CmsTool
 
     public function handle(Request $request): Response
     {
-        if (! $this->can('cms.entries.publish')) {
+        if (! $this->may('publish')) {
             return $this->denied('publish entries');
         }
         $entry = $this->findEntry($request);
@@ -30,6 +30,9 @@ final class PublishEntry extends CmsTool
         $translation = $this->findTranslation($request, $entry);
         if ($translation instanceof Response) {
             return $translation;
+        }
+        if (! $this->may('publish', $entry->collection)) {
+            return $this->denied('publish entries of '.$entry->collection->title);
         }
         $at = $request->get('published_at');
         try {

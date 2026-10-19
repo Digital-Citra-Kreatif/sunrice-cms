@@ -10,6 +10,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Sunrice\Cms\Actions\Collections\SaveListing;
 use Sunrice\Cms\Models\Collection;
+use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\Locales;
 
 /**
@@ -35,7 +36,7 @@ final class ListingController
             'locales' => Locales::all(),
             'shared' => $locale === Locales::default() ? [] : $schema->shared(),
             'values' => $collection->listingData($locale, $schema),
-            'can' => ['update' => $request->user()?->can('cms.entries.update') ?? false],
+            'can' => ['update' => Access::entries($request->user(), 'update', $collection)],
         ]);
     }
 

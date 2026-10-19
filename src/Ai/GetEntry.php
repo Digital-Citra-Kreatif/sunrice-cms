@@ -20,13 +20,13 @@ final class GetEntry extends CmsTool
 
     public function handle(Request $request): Response
     {
-        if (! $this->can('cms.entries.view')) {
+        if (! $this->may('view')) {
             return $this->denied('view entries');
         }
         if ($request->get('id') === null) {
             $handle = $request->get('collection');
             $collection = is_string($handle) ? Collection::query()->where('handle', $handle)->first() : null;
-            if ($collection === null) {
+            if ($collection === null || ! $this->may('view', $collection)) {
                 return Response::error('Give an entry "id", or a "collection" handle for a new entry\'s fields.');
             }
 
@@ -35,6 +35,9 @@ final class GetEntry extends CmsTool
         $entry = $this->findEntry($request, withTrashed: true);
         if ($entry instanceof Response) {
             return $entry;
+        }
+        if (! $this->may('view', $entry->collection)) {
+            return $this->denied('view entries of '.$entry->collection->title);
         }
         $translation = $this->findTranslation($request, $entry);
         if ($translation instanceof Response) {

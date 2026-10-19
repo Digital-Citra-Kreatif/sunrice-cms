@@ -11,6 +11,7 @@ use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
+use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\Locales;
 
 #[IsReadOnly]
@@ -21,7 +22,7 @@ final class ListTerms extends CmsTool
 
     public function handle(Request $request): Response
     {
-        if (! $this->can('cms.terms.manage') && ! $this->can('cms.entries.view')) {
+        if (! Access::terms($this->user()) && ! $this->may('view')) {
             return $this->denied('view terms');
         }
         $handle = $request->get('taxonomy');

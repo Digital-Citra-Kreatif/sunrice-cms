@@ -8,6 +8,7 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
+use Sunrice\Cms\Support\Access;
 
 /**
  * One action on many entries of a collection, in their main language:
@@ -46,14 +47,18 @@ final class BulkEntries
         if (count($ids) > self::MAX) {
             throw ValidationException::withMessages(['ids' => 'Choose at most '.self::MAX.' entries at once.']);
         }
-        $ability = in_array($action, ['publish', 'unpublish'], true) ? 'cms.entries.publish' : 'cms.entries.delete';
-        if ($user === null || ! $user->can($ability)) {
+        $ability = in_array($action, ['publish', 'unpublish'], true) ? 'publish' : 'delete';
+        if ($user === null) {
             return 0;
         }
 
         $done = 0;
         $entries = Entry::query()->withTrashed()->where('collection_id', $collection->id)->whereKey($ids)->with('translations')->get();
         foreach ($entries as $entry) {
+            // For the collection, or (trashing) their own entries.
+            if (! Access::entries($user, $ability, $collection, $entry)) {
+                continue;
+            }
             $main = $entry->mainTranslation();
             $did = match ($action) {
                 'publish' => ! $entry->trashed() && $main !== null && $this->ran(fn () => $this->publish->handle($main)),
