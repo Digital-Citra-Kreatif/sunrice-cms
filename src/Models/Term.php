@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Sunrice\Cms\Support\Locales;
 
@@ -20,7 +21,9 @@ use Sunrice\Cms\Support\Locales;
  * @property int $taxonomy_id
  * @property int|null $parent_id
  * @property int $sort_order
+ * @property string|null $template the Blade view its page renders with
  * @property Carbon|null $created_at
+ * @property Carbon|null $deleted_at in the trash
  * @property Carbon|null $updated_at
  * @property-read Taxonomy $taxonomy
  * @property-read Term|null $parent
@@ -31,6 +34,8 @@ use Sunrice\Cms\Support\Locales;
  */
 class Term extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'sunrice_terms';
 
     protected $guarded = [];
@@ -79,6 +84,34 @@ class Term extends Model
         return $this->translations->firstWhere('locale', $locale ?? Locales::default())
             ?? $this->translations->firstWhere('locale', Locales::default())
             ?? $this->translations->sortBy('id')->first();
+    }
+
+    /**
+     * The ids of the terms below this one, at any depth (trashed too).
+     *
+     * @return list<int>
+     */
+    public function descendantIds(): array
+    {
+        $ids = [];
+        $level = [$this->id];
+        for ($depth = 0; $level !== [] && $depth < 50; $depth++) {
+            $level = [];
+            foreach (self::query()->withTrashed()->whereIn('parent_id', $ids === [] ? [$this->id] : $ids)->whereNotIn('id', $ids)->pluck('id') as $id) {
+                $level[] = is_numeric($id) ? (int) $id : 0;
+            }
+            array_push($ids, ...$level);
+        }
+
+        return $ids;
+    }
+
+    /** The term's page in a language (null: its taxonomy has no pages, or it isn't translated). */
+    public function url(?string $locale = null): ?string
+    {
+        $translation = $this->translations->firstWhere('locale', $locale ?? Locales::current());
+
+        return $translation?->url();
     }
 
     /** The title in a language (falling back to the main one). */

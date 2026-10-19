@@ -1,6 +1,6 @@
-{{-- The page head's SEO tags for an entry: <x-sunrice-cms::seo :entry="$entry" :preview="$preview" /> --}}
-@props(['entry', 'preview' => false])
-@php($seo = \Sunrice\Cms\Support\Seo::for($entry, $preview))
+{{-- The page head's SEO tags: <x-sunrice-cms::seo :entry="$entry" :preview="$preview" /> or <x-sunrice-cms::seo :term="$term" /> --}}
+@props(['entry' => null, 'term' => null, 'preview' => false])
+@php($seo = $term !== null ? \Sunrice\Cms\Support\Seo::forTerm($term) : \Sunrice\Cms\Support\Seo::for($entry, $preview))
 <title>{{ $seo['title'] }}</title>
 @if ($seo['description'])
 <meta name="description" content="{{ $seo['description'] }}">

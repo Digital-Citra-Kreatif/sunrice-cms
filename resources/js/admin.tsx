@@ -11,6 +11,7 @@ import GlobalsIndex from '@/pages/Globals/Index.tsx';
 import MenuEdit from '@/pages/Menus/Edit.tsx';
 import MenusIndex from '@/pages/Menus/Index.tsx';
 import SubmissionsIndex from '@/pages/Submissions/Index.tsx';
+import TermEdit from '@/pages/Terms/Edit.tsx';
 import TermsIndex from '@/pages/Terms/Index.tsx';
 
 definePlugin({
@@ -22,6 +23,7 @@ definePlugin({
         'Cms/Entries/Editor': EntryEditor,
         'Cms/Entries/Listing': ListingPage,
         'Cms/Terms/Index': TermsIndex,
+        'Cms/Terms/Edit': TermEdit,
         'Cms/Globals/Index': GlobalsIndex,
         'Cms/Globals/Edit': GlobalsEdit,
         'Cms/Menus/Index': MenusIndex,

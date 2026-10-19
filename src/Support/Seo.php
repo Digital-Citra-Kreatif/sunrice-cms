@@ -11,6 +11,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Media\Media;
 use Sunrice\Cms\Models\EntryTranslation;
+use Sunrice\Cms\Models\TermTranslation;
 
 /**
  * An entry translation's SEO: a title and description for search results,
@@ -77,6 +78,34 @@ final class Seo
             'noindex' => $preview || ($seo['noindex'] ?? false) === true,
             'canonical' => $preview ? null : $translation->url(),
             'alternates' => self::alternates($translation),
+        ];
+    }
+
+    /**
+     * The same for a term's page: its SEO (under "seo" in the term's data)
+     * or its title, and its other languages' pages.
+     *
+     * @return array{title: string, description: string|null, image: string|null, noindex: bool, canonical: string|null, alternates: array<string, string>}
+     */
+    public static function forTerm(TermTranslation $translation): array
+    {
+        $seo = is_array($translation->data[self::KEY] ?? null) ? $translation->data[self::KEY] : [];
+        $image = is_int($seo['image'] ?? null) ? Media::query()->find($seo['image']) : null;
+        $alternates = [];
+        foreach ($translation->term->translations as $other) {
+            $other->setRelation('term', $translation->term);
+            if (($url = $other->url()) !== null) {
+                $alternates[$other->locale] = $url;
+            }
+        }
+
+        return [
+            'title' => is_string($seo['title'] ?? null) ? $seo['title'] : $translation->title,
+            'description' => is_string($seo['description'] ?? null) ? $seo['description'] : null,
+            'image' => $image?->url(),
+            'noindex' => ($seo['noindex'] ?? false) === true,
+            'canonical' => $translation->url(),
+            'alternates' => count($alternates) > 1 ? $alternates : [],
         ];
     }
 

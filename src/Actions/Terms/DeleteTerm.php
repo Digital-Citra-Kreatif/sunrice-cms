@@ -22,8 +22,11 @@ final class DeleteTerm
     {
         $title = $term->title();
         DB::transaction(function () use ($term): void {
-            Term::query()->where('parent_id', $term->id)->update(['parent_id' => $term->parent_id]);
-            $term->delete();
+            Term::query()->withTrashed()->where('parent_id', $term->id)->update(['parent_id' => $term->parent_id]);
+            // Explicitly, not by the foreign keys' cascade: not every connection enforces them.
+            $term->translations()->delete();
+            $term->entries()->detach();
+            $term->forceDelete();
         });
         $this->activity->record('deleted', 'term', $term, $title);
     }

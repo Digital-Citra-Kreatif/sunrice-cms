@@ -7,6 +7,9 @@ namespace Sunrice\Cms\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Sunrice\Cms\Fields\HydrationContext;
+use Sunrice\Cms\Site\Site;
+use Sunrice\Cms\Support\Locales;
 
 /**
  * A term in one language: its title and slug.
@@ -19,6 +22,7 @@ use Illuminate\Support\Carbon;
  * @property string $slug
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property array<string, mixed>|null $data its fields and SEO
  * @property-read Term $term
  *
  * @api
@@ -29,9 +33,38 @@ class TermTranslation extends Model
 
     protected $guarded = [];
 
+    /** @return array<string, string> */
+    protected function casts(): array
+    {
+        return ['data' => 'array'];
+    }
+
     /** @return BelongsTo<Term, $this> */
     public function term(): BelongsTo
     {
-        return $this->belongsTo(Term::class);
+        return $this->belongsTo(Term::class)->withTrashed();
+    }
+
+    /** Its page, or null when the taxonomy has no pages. */
+    public function url(): ?string
+    {
+        return app(Site::class)->termUrl($this);
+    }
+
+    /**
+     * The fields as templates get them, with the main language's for fields not translated.
+     *
+     * @return array<mixed>
+     */
+    public function values(?HydrationContext $context = null): array
+    {
+        $schema = $this->term->taxonomy->schema();
+        $data = array_replace($schema->defaults(), $this->data ?? []);
+        if ($this->locale !== Locales::default()) {
+            $main = $this->term->translations->firstWhere('locale', Locales::default());
+            $data = array_replace($data, array_intersect_key(array_replace($schema->defaults(), $main->data ?? []), array_flip($schema->shared())));
+        }
+
+        return $schema->hydrate($data, $context ?? new HydrationContext($this->locale));
     }
 }

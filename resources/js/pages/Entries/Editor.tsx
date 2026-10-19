@@ -8,6 +8,7 @@ import {
 } from '@sunrice/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
+import { SEO_FIELDS } from '@/lib/seo.ts';
 import { FieldError, FieldInput, Fields } from '@/components/FieldInput.tsx';
 import { errorsAt } from '@/lib/builder.ts';
 import { type EntryLocale, type EntryStatus, formatDate, localeName, localInputValue, statusLabel } from '@/lib/entries.ts';
@@ -52,13 +53,6 @@ interface Props {
 type FieldValues = Record<string, any>;
 type FormData = { locale: string | null; title: string; slug: string; data: FieldValues; seo: FieldValues; version: number | null; publish: boolean; published_at: string | null };
 
-/** The SEO card's fields (see Sunrice\\Cms\\Support\\Seo), edited with the field inputs. */
-const SEO_FIELDS: FieldDefinition[] = [
-    { handle: 'title', type: 'text', label: 'SEO title', instructions: 'For search results and tabs. Empty: the title.', config: { max: 255 } },
-    { handle: 'description', type: 'textarea', label: 'Description', instructions: 'A sentence or two for search results and shared links.', config: { max: 500 } },
-    { handle: 'image', type: 'media', label: 'Share image', instructions: 'Shown when the page is shared.', config: { types: ['image'] } },
-    { handle: 'noindex', type: 'toggle', label: 'Hide from search engines' },
-];
 
 /**
  * A fresh form for each version the server sends (after creating, saving,

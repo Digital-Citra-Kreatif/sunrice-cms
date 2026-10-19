@@ -12,6 +12,7 @@ use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
+use Sunrice\Cms\Models\TermTranslation;
 
 /**
  * Renders entries on the site: the fallback route (paths no app route
@@ -28,7 +29,11 @@ final class SiteController
         if ($listing !== null) {
             return $this->renderListing($listing, $request);
         }
-        $translation = $site->find($request->path());
+        $page = $site->match($request->path());
+        if ($page instanceof TermTranslation) {
+            return $this->renderTerm($page);
+        }
+        $translation = $page;
         // The homepage is at /: its own address goes there.
         if ($translation !== null && ($own = $site->ownPath($translation)) !== null && ($served = $site->path($translation, $translation->slug)) !== $own
             && '/'.trim($request->path(), '/') === $own) {
@@ -66,6 +71,37 @@ final class SiteController
             'collection' => $collection,
             'locale' => $translation->locale,
             'preview' => $preview,
+        ]);
+    }
+
+    /** A term's page: its fields and the live entries with it, newest first. */
+    private function renderTerm(TermTranslation $translation): Response
+    {
+        app()->setLocale($translation->locale);
+        $term = $translation->term;
+        $taxonomy = $term->taxonomy;
+        $entries = EntryTranslation::query()->live()->with('entry.collection')->where('locale', $translation->locale)
+            ->whereHas('entry.terms', fn ($q) => $q->where('sunrice_terms.id', $term->id))
+            ->orderByDesc('published_at')->orderByDesc('id')->paginate(10)->withQueryString();
+        abort_if($entries->currentPage() > 1 && $entries->isEmpty(), 404);
+        $view = 'sunrice-cms::term';
+        foreach (array_filter([$term->template, $taxonomy->template, "cms.taxonomy-{$taxonomy->handle}", 'cms.term']) as $candidate) {
+            if (View::exists($candidate)) {
+                $view = $candidate;
+
+                break;
+            }
+        }
+        $schema = $taxonomy->schema();
+
+        return response()->view($view, [
+            'term' => $translation,
+            'taxonomy' => $taxonomy,
+            'title' => $translation->title,
+            'entries' => $entries,
+            'values' => $translation->values(),
+            'richText' => array_values(array_map(fn (Field $field): string => $field->handle, array_filter($schema->fields(), fn (Field $field): bool => $field->type === 'rich_text'))),
+            'locale' => $translation->locale,
         ]);
     }
 

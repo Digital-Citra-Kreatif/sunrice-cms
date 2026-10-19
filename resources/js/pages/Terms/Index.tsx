@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { Head, router, useForm } from '@inertiajs/react';
-import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import { ArrowDown, ArrowUp, FileText, Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
     Button, Card, CardContent, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs,
@@ -21,7 +21,9 @@ interface TermRow {
 }
 
 interface Props {
-    taxonomy: { handle: string; title: string; hierarchical: boolean } | null;
+    taxonomy: { handle: string; title: string; hierarchical: boolean; pages?: boolean } | null;
+    /** Showing the trash. */
+    trashed?: boolean;
     taxonomies: { handle: string; title: string }[];
     terms: TermRow[];
     locales: string[];
@@ -30,7 +32,7 @@ interface Props {
 
 const TOP = '__top';
 
-export default function TermsIndex({ taxonomy, taxonomies, terms, locales, locale }: Props) {
+export default function TermsIndex({ taxonomy, taxonomies, terms, locales, locale, trashed = false }: Props) {
     useBreadcrumbs([{ label: 'Terms', href: adminUrl('cms/terms') }, ...(taxonomy ? [{ label: taxonomy.title }] : [])]);
     const [confirm, confirmDialog] = useConfirm();
     const [editing, setEditing] = React.useState<number | null>(null);
@@ -58,30 +60,43 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
                         <SelectContent>{taxonomies.map((t) => <SelectItem key={t.handle} value={t.handle}>{t.title}</SelectItem>)}</SelectContent>
                     </Select>
                 )}
+                <Button variant={trashed ? 'secondary' : 'ghost'} size="sm" className="cms:ml-auto" onClick={() => router.get(base, { locale, ...(trashed ? {} : { trashed: 1 }) })}>
+                    {trashed ? 'Back to terms' : 'Trash'}
+                </Button>
                 {locales.length > 1 && (
-                    <Select value={locale} onValueChange={(next: string) => router.get(base, { locale: next })}>
-                        <SelectTrigger className="cms:ml-auto cms:w-48" aria-label="Language"><SelectValue /></SelectTrigger>
+                    <Select value={locale} onValueChange={(next: string) => router.get(base, { locale: next, ...(trashed ? { trashed: 1 } : {}) })}>
+                        <SelectTrigger className="cms:w-48" aria-label="Language"><SelectValue /></SelectTrigger>
                         <SelectContent>{locales.map((code) => <SelectItem key={code} value={code}>{localeName(code)}</SelectItem>)}</SelectContent>
                     </Select>
                 )}
             </div>
 
-            <Card>
+            {!trashed && <Card>
                 <CardContent>
                     <TermForm key={`new-${terms.length}`} action={base} method="post" locale={locale} terms={terms} hierarchical={taxonomy.hierarchical}
                         submitLabel="Add term" />
                 </CardContent>
-            </Card>
+            </Card>}
 
             <Card className="cms:py-0">
                 <ul className="cms:divide-y">
-                    {terms.length === 0 && <li className="cms:p-6 cms:text-center cms:text-muted-foreground">No terms yet.</li>}
+                    {terms.length === 0 && <li className="cms:p-6 cms:text-center cms:text-muted-foreground">{trashed ? 'The trash is empty.' : 'No terms yet.'}</li>}
                     {terms.map((term) => {
                         const siblings = terms.filter((t) => t.parentId === term.parentId);
                         const position = siblings.findIndex((t) => t.id === term.id);
                         return (
                             <li key={term.id} className="cms:p-3" style={{ paddingLeft: `${0.75 + term.depth * 1.5}rem` }}>
-                                {editing === term.id ? (
+                                {trashed ? (
+                                    <div className="cms:flex cms:items-center cms:gap-3">
+                                        <span className="cms:flex-1 cms:font-medium">{term.title ?? term.fallback}</span>
+                                        <Button variant="outline" size="sm" onClick={() => router.post(adminUrl(`cms/terms/${term.id}/restore`), {}, { preserveScroll: true })}><RotateCcw /> Restore</Button>
+                                        <Button variant="ghost" size="sm" className="cms:text-destructive"
+                                            onClick={() => confirm(`Delete "${term.fallback}" for good, in every language? Entries lose it.`,
+                                                () => router.delete(adminUrl(`cms/terms/${term.id}/force`), { preserveScroll: true }))}>
+                                            <Trash2 /> Delete for good
+                                        </Button>
+                                    </div>
+                                ) : editing === term.id ? (
                                     <TermForm action={adminUrl(`cms/terms/${term.id}`)} method="put" locale={locale} terms={terms} hierarchical={taxonomy.hierarchical}
                                         term={term} submitLabel="Save" onDone={() => setEditing(null)} />
                                 ) : (
@@ -96,9 +111,14 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
                                             onClick={() => router.post(adminUrl(`cms/terms/${term.id}/move`), { direction: 'up' }, { preserveScroll: true })}><ArrowUp /></Button>
                                         <Button variant="ghost" size="icon" className="cms:size-8" aria-label={`Move ${term.fallback} down`} disabled={position === siblings.length - 1}
                                             onClick={() => router.post(adminUrl(`cms/terms/${term.id}/move`), { direction: 'down' }, { preserveScroll: true })}><ArrowDown /></Button>
-                                        <Button variant="ghost" size="icon" className="cms:size-8" aria-label={`Edit ${term.fallback}`} onClick={() => setEditing(term.id)}><Pencil /></Button>
-                                        <Button variant="ghost" size="icon" className="cms:size-8 cms:text-destructive" aria-label={`Delete ${term.fallback}`}
-                                            onClick={() => confirm(`Delete "${term.fallback}" in every language? Terms under it move up a level.`,
+                                        <Button variant="ghost" size="icon" className="cms:size-8" aria-label={`Rename ${term.fallback}`} onClick={() => setEditing(term.id)}><Pencil /></Button>
+                                        {taxonomy.pages && term.title !== null && (
+                                            <Button variant="ghost" size="icon" className="cms:size-8" aria-label={`Edit ${term.fallback}'s page`} asChild>
+                                                <Link href={adminUrl(`cms/terms/${term.id}/edit`) + `?locale=${locale}`}><FileText /></Link>
+                                            </Button>
+                                        )}
+                                        <Button variant="ghost" size="icon" className="cms:size-8 cms:text-destructive" aria-label={`Move ${term.fallback} to the trash`}
+                                            onClick={() => confirm(`Move "${term.fallback}" to the trash, with the terms under it? It comes off the site; you can restore it.`,
                                                 () => router.delete(adminUrl(`cms/terms/${term.id}`), { preserveScroll: true }))}>
                                             <Trash2 />
                                         </Button>

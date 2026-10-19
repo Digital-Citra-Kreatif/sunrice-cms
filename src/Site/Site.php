@@ -7,6 +7,8 @@ namespace Sunrice\Cms\Site;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Redirect;
+use Sunrice\Cms\Models\Taxonomy;
+use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Support\Locales;
 
@@ -18,8 +20,8 @@ use Sunrice\Cms\Support\Locales;
  */
 final class Site
 {
-    /** @var list<Collection>|null collections with a route, most specific first */
-    private ?array $routed = null;
+    /** @var list<array{0: Collection|Taxonomy, 1: RoutePattern}>|null */
+    private ?array $patterns = null;
 
     /** The homepage entry's id, once read (false: not read yet). */
     private int|false|null $homepage = false;
@@ -27,22 +29,49 @@ final class Site
     /** The live entry translation at a path, or null. */
     public function find(string $path): ?EntryTranslation
     {
+        $page = $this->match($path);
+
+        return $page instanceof EntryTranslation ? $page : null;
+    }
+
+    /**
+     * What's at a path: a live entry, a term's page, or nothing. The most
+     * specific pattern that matches decides (collections before taxonomies
+     * on a tie); there's no falling through to the next.
+     */
+    public function match(string $path): EntryTranslation|TermTranslation|null
+    {
         [$locale, $rest] = $this->splitLocale('/'.trim($path, '/'));
         if ($rest === '/') {
             return $this->homepage($locale);
         }
-        foreach ($this->routed() as $collection) {
-            $slug = (new RoutePattern((string) $collection->route))->match($rest);
+        foreach ($this->patterns() as [$model, $pattern]) {
+            $slug = $pattern->match($rest);
             if ($slug === null) {
                 continue;
             }
+            if ($model instanceof Collection) {
+                return EntryTranslation::query()->live()->with('entry.collection')
+                    ->where('collection_id', $model->id)->where('locale', $locale)->where('slug', $slug)->first();
+            }
 
-            // The first pattern that matches decides; no falling through to the next.
-            return EntryTranslation::query()->live()->with('entry.collection')
-                ->where('collection_id', $collection->id)->where('locale', $locale)->where('slug', $slug)->first();
+            return TermTranslation::query()->with('term.taxonomy', 'term.translations')
+                ->where('taxonomy_id', $model->id)->where('locale', $locale)->where('slug', $slug)
+                ->whereHas('term', fn ($q) => $q->withoutTrashed())->first();
         }
 
         return null;
+    }
+
+    /** The URL of a term's page in its language, or null when its taxonomy has no pages. */
+    public function termUrl(TermTranslation $translation): ?string
+    {
+        $route = $translation->term->taxonomy->route;
+        if ($route === null || $translation->term->trashed()) {
+            return null;
+        }
+
+        return url(($translation->locale === Locales::default() ? '' : '/'.$translation->locale).(new RoutePattern($route))->path($translation->slug));
     }
 
     /** The homepage (Settings → Site) in a language, when it's live there. */
@@ -122,7 +151,7 @@ final class Site
     /** Forget the collections loaded, after one changed. */
     public function flush(): void
     {
-        $this->routed = null;
+        $this->patterns = null;
         $this->homepage = false;
     }
 
@@ -147,15 +176,22 @@ final class Site
         return [Locales::default(), $path];
     }
 
-    /** @return list<Collection> */
-    private function routed(): array
+    /** @return list<array{0: Collection|Taxonomy, 1: RoutePattern}> collections' and taxonomies' patterns, most specific first */
+    private function patterns(): array
     {
-        if ($this->routed === null) {
-            $collections = Collection::query()->whereNotNull('route')->orderBy('id')->get()->all();
-            usort($collections, fn (Collection $a, Collection $b): int => (new RoutePattern((string) $b->route))->specificity() <=> (new RoutePattern((string) $a->route))->specificity());
-            $this->routed = $collections;
+        if ($this->patterns === null) {
+            $patterns = [];
+            foreach (Collection::query()->whereNotNull('route')->orderBy('id')->get() as $collection) {
+                $patterns[] = [$collection, new RoutePattern((string) $collection->route)];
+            }
+            foreach (Taxonomy::query()->whereNotNull('route')->orderBy('id')->get() as $taxonomy) {
+                $patterns[] = [$taxonomy, new RoutePattern((string) $taxonomy->route)];
+            }
+            // usort keeps the order of equals: collections before taxonomies, then oldest first.
+            usort($patterns, fn (array $a, array $b): int => $b[1]->specificity() <=> $a[1]->specificity());
+            $this->patterns = $patterns;
         }
 
-        return $this->routed;
+        return $this->patterns;
     }
 }

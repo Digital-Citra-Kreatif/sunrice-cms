@@ -128,6 +128,10 @@ final class CmsPlugin extends BasePlugin
                 Route::put('terms/{term}', 'update')->name('update');
                 Route::post('terms/{term}/move', 'move')->name('move');
                 Route::delete('terms/{term}', 'destroy')->name('destroy');
+                Route::post('terms/{term}/restore', 'restore')->name('restore')->withTrashed();
+                Route::delete('terms/{term}/force', 'forceDelete')->name('force-delete')->withTrashed();
+                Route::get('terms/{term}/edit', 'edit')->name('edit');
+                Route::put('terms/{term}/content', 'content')->name('content');
             });
             Route::prefix('cms')->name('cms.entries.')->controller(EntryController::class)->group(function (): void {
                 Route::get('entries', 'home')->name('home')->middleware('can:cms.entries.view');

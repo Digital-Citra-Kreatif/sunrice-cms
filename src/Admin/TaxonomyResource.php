@@ -7,13 +7,16 @@ namespace Sunrice\Cms\Admin;
 use Illuminate\Database\Eloquent\Model;
 use Sunrice\Admin\Resources\Forms\CheckboxList;
 use Sunrice\Admin\Resources\Forms\Form;
+use Sunrice\Admin\Resources\Forms\Select;
 use Sunrice\Admin\Resources\Forms\TextInput;
 use Sunrice\Admin\Resources\Forms\Toggle;
 use Sunrice\Admin\Resources\Resource;
 use Sunrice\Admin\Resources\Tables\Column;
 use Sunrice\Admin\Resources\Tables\Table;
+use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Taxonomy;
+use Sunrice\Cms\Site\RoutePattern;
 
 /**
  * Structure → Taxonomies, guarded by the cms.taxonomies.* permissions.
@@ -60,6 +63,19 @@ final class TaxonomyResource extends Resource
                         $taxonomy->collections()->sync(array_map(intval(...), array_filter(is_array($ids) ? $ids : [], is_numeric(...))));
                     }
                 }),
+            TextInput::make('route')->label('Term pages URL')->placeholder('/topics/{slug}')->unique()->maxLength(255)
+                ->rules([function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (is_string($value) && $value !== '' && ! RoutePattern::isValid($value)) {
+                        $fail('Use a path with {slug} once, like /topics/{slug}: lowercase letters, digits, dashes.');
+                    }
+                }])
+                ->help('Each term gets a page listing its entries. Empty: terms have no pages.'),
+            Select::make('blueprint')->label('Term fields')
+                ->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
+                ->help('Fields of terms\' own, like a description or an image, edited on each term\'s page.'),
+            TextInput::make('template')->placeholder('cms.topic')
+                ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
+                ->help('The Blade view term pages render with. Empty: cms.taxonomy-{handle}, else cms.term.'),
         ]);
     }
 

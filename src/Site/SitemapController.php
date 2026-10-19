@@ -7,6 +7,8 @@ namespace Sunrice\Cms\Site;
 use Illuminate\Http\Response;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\EntryTranslation;
+use Sunrice\Cms\Models\Taxonomy;
+use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\Seo;
 
@@ -42,6 +44,17 @@ final class SitemapController
                 $xml[] = '<xhtml:link rel="alternate" hreflang="'.e(str_replace('_', '-', $locale)).'" href="'.e($alternate).'"/>';
             }
             $xml[] = '</url>';
+        }
+        // Term pages, but those that ask not to be indexed.
+        $taxonomies = Taxonomy::query()->whereNotNull('route')->pluck('id');
+        $terms = TermTranslation::query()->whereIn('taxonomy_id', $taxonomies)->whereHas('term', fn ($q) => $q->withoutTrashed())
+            ->with('term.taxonomy', 'term.translations')->orderBy('id')->limit(self::LIMIT)->get();
+        foreach ($terms as $term) {
+            $seo = $term->data[Seo::KEY] ?? null;
+            if ((is_array($seo) && ($seo['noindex'] ?? false) === true) || ($url = $term->url()) === null) {
+                continue;
+            }
+            $xml[] = '<url><loc>'.e($url).'</loc></url>';
         }
         // Listing pages, in every language.
         foreach (Collection::query()->whereNotNull('listing_route')->orderBy('id')->get() as $collection) {

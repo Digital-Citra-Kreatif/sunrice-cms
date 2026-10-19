@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Sunrice\Cms\Fields\Schema;
 
 /**
  * A way to group entries (categories, tags), with terms, optionally
@@ -19,6 +20,9 @@ use Illuminate\Support\Carbon;
  * @property string $handle
  * @property string $title
  * @property bool $hierarchical terms can have a parent
+ * @property string|null $route term pages' URL pattern ("/topics/{slug}"); none: no pages
+ * @property string|null $blueprint terms' own fields
+ * @property string|null $template the Blade view term pages render with
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
@@ -37,6 +41,8 @@ class Taxonomy extends Model
 
     protected $attributes = ['hierarchical' => false];
 
+    private ?Schema $schema = null;
+
     /** @return array<string, string> */
     protected function casts(): array
     {
@@ -53,5 +59,11 @@ class Taxonomy extends Model
     public function terms(): HasMany
     {
         return $this->hasMany(Term::class);
+    }
+
+    /** Terms' own fields (none without a blueprint), loaded once. */
+    public function schema(): Schema
+    {
+        return $this->schema ??= ($this->blueprint === null ? null : Blueprint::query()->where('handle', $this->blueprint)->first()?->schema()) ?? Schema::make([]);
     }
 }
