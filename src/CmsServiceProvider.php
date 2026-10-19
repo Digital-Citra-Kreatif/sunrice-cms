@@ -13,7 +13,11 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\View\Compilers\BladeCompiler;
+use RuntimeException;
 use Spatie\Honeypot\ProtectAgainstSpam;
+use Spatie\ResponseCache\CacheProfiles\CacheAllSuccessfulGetRequests;
+use Spatie\ResponseCache\Middlewares\CacheResponse;
+use Spatie\ResponseCache\Serializers\JsonSerializer;
 use Sunrice\Admin\Events\SettingsSaved;
 use Sunrice\Admin\Media\MediaUsages;
 use Sunrice\Cms\Fields\Fieldsets;
@@ -77,6 +81,7 @@ final class CmsServiceProvider extends ServiceProvider
         EntryTranslation::saved(fn (EntryTranslation $translation) => Support\MediaUsage::entry($translation));
         EntryTranslation::deleted(fn (EntryTranslation $translation) => app(MediaUsages::class)->forget('cms.entry', (string) $translation->entry_id, $translation->locale));
         GlobalValue::saved(fn (GlobalValue $value) => Support\MediaUsage::global($value));
+        $this->pageCache();
         // Changes to what the site shows clear its caches.
         Support\ContentWatch::register();
         // A new homepage: forget the one read.
@@ -110,6 +115,24 @@ final class CmsServiceProvider extends ServiceProvider
         }
     }
 
+    /** The whole-page cache's settings for responsecache, unless the app chose its own. */
+    private function pageCache(): void
+    {
+        if (! class_exists(CacheResponse::class)) {
+            if (Site\PageCache::enabled()) {
+                throw new RuntimeException('sunrice-cms.cache.pages needs spatie/laravel-responsecache: composer require spatie/laravel-responsecache');
+            }
+
+            return;
+        }
+        if (config('responsecache.cache_profile', CacheAllSuccessfulGetRequests::class) === CacheAllSuccessfulGetRequests::class) {
+            config(['responsecache.cache_profile' => Site\PageCacheProfile::class]);
+        }
+        if (config('responsecache.serializer', JsonSerializer::class) === JsonSerializer::class) {
+            config(['responsecache.serializer' => Site\PageCacheSerializer::class]);
+        }
+    }
+
     private function siteRoutes(): void
     {
         $middleware = config('sunrice-cms.site.middleware', ['web']);
@@ -120,9 +143,11 @@ final class CmsServiceProvider extends ServiceProvider
         if (config('sunrice-cms.site.enabled', true) === true) {
             Route::middleware($middleware)->get('sitemap.xml', Site\SitemapController::class)->name('sunrice.cms.sitemap');
             // The homepage: the fallback doesn't match /. An app's own / route, loaded later, replaces it.
-            Route::get('/', [Site\SiteController::class, 'show'])->middleware([...$middleware, Site\PageCache::class])->name('sunrice.cms.home');
+            // The whole-page cache, when spatie/laravel-responsecache is installed (on with cache.pages).
+            $pages = class_exists(CacheResponse::class) ? [CacheResponse::class] : [];
+            Route::get('/', [Site\SiteController::class, 'show'])->middleware([...$middleware, ...$pages])->name('sunrice.cms.home');
             // The fallback: matched after every other route, so the app's own come first.
-            Route::fallback([Site\SiteController::class, 'show'])->middleware([...$middleware, Site\PageCache::class])->name('sunrice.cms.page');
+            Route::fallback([Site\SiteController::class, 'show'])->middleware([...$middleware, ...$pages])->name('sunrice.cms.page');
         }
     }
 }

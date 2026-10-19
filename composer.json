@@ -5,12 +5,15 @@
     "license": "MIT",
     "keywords": ["laravel", "cms", "content-management"],
     "require": {
-        "php": "^8.3",
+        "php": "^8.4",
         "illuminate/contracts": "^13.0",
         "illuminate/support": "^13.0",
         "symfony/html-sanitizer": "^7.3 || ^8.0",
         "spatie/laravel-honeypot": "^4.5",
         "sunrice/admin": "self.version"
+    },
+    "suggest": {
+        "spatie/laravel-responsecache": "Whole-page cache for visitors (sunrice-cms.cache.pages)"
     },
     "autoload": {
         "psr-4": {
