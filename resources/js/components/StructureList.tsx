@@ -18,17 +18,17 @@ export function StructureList({ noun, base, rows, intro }: { noun: string; base:
     const [confirm, confirmDialog] = useConfirm();
 
     return (
-        <div className="flex flex-col gap-6">
+        <div className="cms:flex cms:flex-col cms:gap-6">
             <Head title={plural} />
             {confirmDialog}
-            <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="cms:flex cms:flex-wrap cms:items-center cms:justify-between cms:gap-4">
                 <div>
-                    <h1 className="text-2xl font-medium tracking-tight">{plural}</h1>
-                    <p className="text-sm text-muted-foreground">{intro}</p>
+                    <h1 className="cms:text-2xl cms:font-medium cms:tracking-tight">{plural}</h1>
+                    <p className="cms:text-sm cms:text-muted-foreground">{intro}</p>
                 </div>
                 <Button asChild><Link href={`${base}/create`}><Plus /> New {noun.toLowerCase()}</Link></Button>
             </div>
-            <Card className="py-0">
+            <Card className="cms:py-0">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -36,21 +36,21 @@ export function StructureList({ noun, base, rows, intro }: { noun: string; base:
                             <TableHead>Handle</TableHead>
                             <TableHead>Fields</TableHead>
                             {rows.some((row) => row.usedBy) && <TableHead>Used by</TableHead>}
-                            <TableHead className="w-12"><span className="sr-only">Actions</span></TableHead>
+                            <TableHead className="cms:w-12"><span className="cms:sr-only">Actions</span></TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {rows.length === 0 && (
-                            <TableRow><TableCell colSpan={5} className="py-8 text-center text-muted-foreground">No {plural.toLowerCase()} yet.</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={5} className="cms:py-8 cms:text-center cms:text-muted-foreground">No {plural.toLowerCase()} yet.</TableCell></TableRow>
                         )}
                         {rows.map((row) => (
                             <TableRow key={row.id}>
-                                <TableCell><Link href={`${base}/${row.id}/edit`} className="font-medium hover:underline">{row.title}</Link></TableCell>
-                                <TableCell><code className="text-xs">{row.handle}</code></TableCell>
+                                <TableCell><Link href={`${base}/${row.id}/edit`} className="cms:font-medium cms:hover:underline">{row.title}</Link></TableCell>
+                                <TableCell><code className="cms:text-xs">{row.handle}</code></TableCell>
                                 <TableCell>{row.fields}</TableCell>
-                                {row.usedBy && <TableCell className="text-muted-foreground">{row.usedBy.join(', ') || '—'}</TableCell>}
+                                {row.usedBy && <TableCell className="cms:text-muted-foreground">{row.usedBy.join(', ') || '—'}</TableCell>}
                                 <TableCell>
-                                    <Button variant="ghost" size="icon" className="size-8 text-destructive" aria-label={`Delete ${row.title}`}
+                                    <Button variant="ghost" size="icon" className="cms:size-8 cms:text-destructive" aria-label={`Delete ${row.title}`}
                                         onClick={() => confirm(`Delete the ${noun.toLowerCase()} "${row.title}"? Content keeps its values.`,
                                             () => router.delete(`${base}/${row.id}`, { preserveScroll: true }))}>
                                         <Trash2 />

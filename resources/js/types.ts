@@ -9,6 +9,8 @@ export interface FieldDefinition {
     validation?: string[];
     config?: Record<string, unknown>;
     fields?: FieldDefinition[];
+    /** A flexible field's kinds of block, as the editor gets them. */
+    blocks?: BlockType[];
 }
 
 /** A field type the builder offers, with its settings as fields. */
@@ -26,3 +28,10 @@ export interface Option {
 
 /** Validation errors by dot path ("fields.0.handle"). */
 export type Errors = Record<string, string | undefined>;
+
+/** A kind of flexible block: a fieldset, with its fields. */
+export interface BlockType {
+    type: string;
+    label: string;
+    fields: FieldDefinition[];
+}

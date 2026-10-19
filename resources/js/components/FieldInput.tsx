@@ -1,13 +1,17 @@
-import { Plus, Trash2 } from 'lucide-react';
-import { Button, Checkbox, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Switch, Textarea } from '@sunrice/admin-sdk/ui';
-import { errorsUnder } from '@/lib/builder.ts';
+import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react';
+import {
+    Badge, Button, Checkbox, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input, Label, MediaPickerInput,
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Switch, Textarea,
+} from '@sunrice/admin-sdk/ui';
+import { errorsAt, move } from '@/lib/builder.ts';
+import { asRecord, dateInputValue, dateValueFromInput, newBlock, newRow } from '@/lib/values.ts';
 import type { Errors, FieldDefinition, Option } from '@/types.ts';
 
 /** Radix's Select can't hold an empty value, so "none" is this. */
 const NONE = '__none';
 
 export function FieldError({ message }: { message?: string }) {
-    return message ? <p className="text-sm text-destructive">{message}</p> : null;
+    return message ? <p className="cms:text-sm cms:text-destructive">{message}</p> : null;
 }
 
 /** Options as {value, label}, from either that or a list of values. */
@@ -29,61 +33,97 @@ interface Props {
     field: FieldDefinition;
     value: unknown;
     onChange: (value: unknown) => void;
+    /** Errors by path relative to the value ("" for the value itself, "0.label" in a repeater). */
     errors: Errors;
     /** The input's id, for its label. */
     id: string;
+    /** Content (an entry), not settings: rows and blocks get their key and Show switch. */
+    content?: boolean;
 }
 
-/**
- * One input for a field definition: text, textarea, number, toggle, select
- * (one or several) and repeater (rows of its fields). Errors come by path
- * relative to the value ("" for the value itself, "0.label" in a repeater).
- */
-export function FieldInput({ field, value, onChange, errors, id }: Props) {
-    const label = field.label || field.handle;
-    // Lists of inputs are a labelled group, not one labelled input.
-    const group = field.type === 'repeater' || (field.type === 'select' && field.config?.multiple === true);
+/** Types whose inputs are a list or a set of inputs: labelled as a group. */
+const GROUPS = ['repeater', 'group', 'flexible', 'link', 'media'];
+
+/** One input for a field definition, any built-in type. */
+/** A field's label, or its handle made readable ("event_day" → "Event day"). */
+export function labelOf(field: FieldDefinition): string {
+    if (field.label) return field.label;
+    const words = field.handle.replace(/_/g, ' ');
+
+    return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+export function FieldInput({ field, value, onChange, errors, id, content = false }: Props) {
+    const label = labelOf(field);
+    const group = GROUPS.includes(field.type) || (field.type === 'select' && field.config?.multiple === true);
 
     return (
-        <div className="flex flex-col gap-2" {...(group ? { role: 'group', 'aria-labelledby': `${id}-label` } : {})}>
+        <div className="cms:flex cms:flex-col cms:gap-2" {...(group ? { role: 'group', 'aria-labelledby': `${id}-label` } : {})}>
             {field.type === 'toggle' ? (
-                <div className="flex items-center gap-3">
+                <div className="cms:flex cms:items-center cms:gap-3">
                     <Switch id={id} checked={value === true} onCheckedChange={(checked: boolean) => onChange(checked)} />
                     <Label htmlFor={id}>{label}</Label>
                 </div>
             ) : (
-                <Label id={`${id}-label`} htmlFor={group ? undefined : id}>{label}{field.required && <span className="text-destructive"> *</span>}</Label>
+                <Label id={`${id}-label`} htmlFor={group ? undefined : id}>{label}{field.required && <span className="cms:text-destructive"> *</span>}</Label>
             )}
-            <Control field={field} value={value} onChange={onChange} errors={errors} id={id} />
-            {field.instructions && <p className="text-sm text-muted-foreground">{field.instructions}</p>}
+            <Control field={field} value={value} onChange={onChange} errors={errors} id={id} content={content} />
+            {field.instructions && <p className="cms:text-sm cms:text-muted-foreground">{field.instructions}</p>}
             <FieldError message={errors['']} />
         </div>
     );
 }
 
-function Control({ field, value, onChange, errors, id }: Props) {
+function Control({ field, value, onChange, errors, id, content }: Props) {
+    const invalid = errors[''] !== undefined;
     switch (field.type) {
         case 'toggle':
             return null;
         case 'textarea':
-            return <Textarea id={id} value={typeof value === 'string' ? value : ''} rows={4} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)} />;
+            return <Textarea id={id} aria-invalid={invalid} value={typeof value === 'string' ? value : ''} rows={numberConfig(field, 'rows') ?? 4}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)} />;
+        case 'rich_text':
+            return (
+                <>
+                    <Textarea id={id} aria-invalid={invalid} className="cms:font-mono" rows={8} value={typeof value === 'string' ? value : ''}
+                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)} />
+                    <p className="cms:text-sm cms:text-muted-foreground">HTML. Scripts and styles are removed when saved.</p>
+                </>
+            );
         case 'number':
             return (
                 <Input
-                    id={id} type="number" className="max-w-48"
+                    id={id} type="number" className="cms:max-w-48" aria-invalid={invalid}
                     value={typeof value === 'number' ? String(value) : typeof value === 'string' ? value : ''}
                     min={numberConfig(field, 'min')} max={numberConfig(field, 'max')} step={numberConfig(field, 'step') ?? 'any'}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value === '' ? null : Number(e.target.value))}
                 />
             );
+        case 'date': {
+            const time = field.config?.time === true;
+            return <Input id={id} type={time ? 'datetime-local' : 'date'} className="cms:max-w-64" aria-invalid={invalid} value={dateInputValue(value, time)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(dateValueFromInput(e.target.value))} />;
+        }
         case 'select':
             return field.config?.multiple === true
                 ? <MultiSelect options={optionsOf(field)} value={Array.isArray(value) ? value.map(String) : []} onChange={onChange} />
                 : <SingleSelect options={optionsOf(field)} value={typeof value === 'string' ? value : null} onChange={onChange} id={id} required={field.required === true} />;
+        case 'link':
+            return <LinkInput value={asRecord(value)} onChange={onChange} errors={errors} id={id} />;
+        case 'media':
+            return <MediaPickerInput id={id} invalid={invalid} disabled={false} multiple={field.config?.multiple === true}
+                max={numberConfig(field, 'max') ?? null} types={Array.isArray(field.config?.types) ? field.config.types as string[] : []}
+                value={typeof value === 'number' || (Array.isArray(value) && value.every((v) => typeof v === 'number')) ? value as number | number[] : null}
+                onChange={onChange} />;
+        case 'group':
+            return <Fields fields={field.fields ?? []} value={asRecord(value)} onChange={onChange} errors={errors} id={id} content={content} />;
         case 'repeater':
-            return <Rows field={field} value={Array.isArray(value) ? value : []} onChange={onChange} errors={errors} />;
+            return <Rows field={field} value={Array.isArray(value) ? value : []} onChange={onChange} errors={errors} id={id} content={content} />;
+        case 'flexible':
+            return <Blocks field={field} value={Array.isArray(value) ? value : []} onChange={onChange} errors={errors} id={id} />;
         default:
-            return <Input id={id} value={typeof value === 'string' ? value : ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)} />;
+            return <Input id={id} aria-invalid={invalid} value={typeof value === 'string' ? value : ''} placeholder={stringConfig(field, 'placeholder')}
+                maxLength={numberConfig(field, 'max')} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)} />;
     }
 }
 
@@ -92,10 +132,30 @@ function numberConfig(field: FieldDefinition, key: string): number | undefined {
     return typeof value === 'number' ? value : undefined;
 }
 
+function stringConfig(field: FieldDefinition, key: string): string | undefined {
+    const value = field.config?.[key];
+    return typeof value === 'string' ? value : undefined;
+}
+
+/** A set of fields editing one object (a group, a row, a block). */
+export function Fields({ fields, value, onChange, errors, id, content }: {
+    fields: FieldDefinition[]; value: Record<string, unknown>; onChange: (value: Record<string, unknown>) => void; errors: Errors; id: string; content?: boolean;
+}) {
+    return (
+        <div className="cms:flex cms:flex-col cms:gap-4 cms:rounded-lg cms:border cms:p-4">
+            {fields.map((child) => (
+                <FieldInput key={child.handle} id={`${id}-${child.handle}`} field={child} value={value[child.handle]} content={content}
+                    errors={errorsAt(errors, child.handle)}
+                    onChange={(next) => onChange({ ...value, [child.handle]: next })} />
+            ))}
+        </div>
+    );
+}
+
 function SingleSelect({ options, value, onChange, id, required }: { options: Option[]; value: string | null; onChange: (value: unknown) => void; id: string; required: boolean }) {
     return (
         <Select value={value ?? NONE} onValueChange={(next: string) => onChange(next === NONE ? null : next)}>
-            <SelectTrigger id={id} className="w-full max-w-sm"><SelectValue /></SelectTrigger>
+            <SelectTrigger id={id} className="cms:w-full cms:max-w-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
                 {!required && <SelectItem value={NONE}>None</SelectItem>}
                 {options.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
@@ -105,12 +165,12 @@ function SingleSelect({ options, value, onChange, id, required }: { options: Opt
 }
 
 function MultiSelect({ options, value, onChange }: { options: Option[]; value: string[]; onChange: (value: unknown) => void }) {
-    if (options.length === 0) return <p className="text-sm text-muted-foreground">Nothing to choose from yet.</p>;
+    if (options.length === 0) return <p className="cms:text-sm cms:text-muted-foreground">Nothing to choose from yet.</p>;
 
     return (
-        <div className="flex flex-col gap-2">
+        <div className="cms:flex cms:flex-col cms:gap-2">
             {options.map((option) => (
-                <label key={option.value} className="flex items-center gap-2 text-sm">
+                <label key={option.value} className="cms:flex cms:items-center cms:gap-2 cms:text-sm">
                     <Checkbox
                         checked={value.includes(option.value)}
                         onCheckedChange={(checked: boolean) => onChange(checked
@@ -124,37 +184,130 @@ function MultiSelect({ options, value, onChange }: { options: Option[]; value: s
     );
 }
 
-function Rows({ field, value, onChange, errors }: Omit<Props, 'value' | 'id'> & { value: unknown[] }) {
-    const columns = field.fields ?? [];
-    const rows = value.map((row) => (row && typeof row === 'object' && !Array.isArray(row) ? row as Record<string, unknown> : {}));
-    const set = (index: number, handle: string, cell: unknown) => onChange(rows.map((row, i) => (i === index ? { ...row, [handle]: cell } : row)));
+function LinkInput({ value, onChange, errors, id }: { value: Record<string, unknown>; onChange: (value: unknown) => void; errors: Errors; id: string }) {
+    const set = (key: string, next: unknown) => {
+        const link = { ...value, [key]: next };
+        onChange(link.url === '' || link.url === undefined ? null : link);
+    };
 
     return (
-        <div className="flex flex-col gap-2">
-            {rows.map((row, index) => (
-                <div key={index} className="flex items-start gap-2">
-                    {columns.map((column) => {
-                        const cellErrors = errorsUnder(errors, `${index}.${column.handle}`);
-                        return (
-                            <div key={column.handle} className="flex flex-1 flex-col gap-1">
-                                <Input
-                                    aria-label={column.label || column.handle} placeholder={column.label || column.handle}
-                                    value={typeof row[column.handle] === 'string' ? row[column.handle] as string : ''}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => set(index, column.handle, e.target.value)}
-                                />
-                                <FieldError message={errors[`${index}.${column.handle}`] ?? cellErrors['']} />
-                            </div>
-                        );
-                    })}
-                    <Button type="button" variant="ghost" size="icon" aria-label="Remove row" onClick={() => onChange(rows.filter((_, i) => i !== index))}>
+        <div className="cms:grid cms:gap-2 cms:md:grid-cols-[2fr_1fr_auto] cms:md:items-center">
+            <Input id={id} aria-label="Address" placeholder="https://… or /about" value={typeof value.url === 'string' ? value.url : ''}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => set('url', e.target.value)} aria-invalid={errors.url !== undefined} />
+            <Input aria-label="Link text" placeholder="Link text" value={typeof value.label === 'string' ? value.label : ''}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => set('label', e.target.value)} />
+            <label className="cms:flex cms:items-center cms:gap-2 cms:text-sm">
+                <Checkbox checked={value.new_tab === true} onCheckedChange={(checked: boolean) => set('new_tab', checked)} />
+                New tab
+            </label>
+            <div className="cms:md:col-span-3"><FieldError message={errors.url ?? errors.label} /></div>
+        </div>
+    );
+}
+
+/** Settings rows (a select's options) are a line of plain inputs; content rows are cards of full fields. */
+function isCompact(field: FieldDefinition, content: boolean): boolean {
+    return !content && (field.fields ?? []).every((child) => child.type === 'text');
+}
+
+function Rows({ field, value, onChange, errors, id, content = false }: Omit<Props, 'value'> & { value: unknown[] }) {
+    const columns = field.fields ?? [];
+    const rows = value.map(asRecord);
+    const set = (index: number, row: Record<string, unknown>) => onChange(rows.map((r, i) => (i === index ? row : r)));
+    const noun = (field.label || 'row').toLowerCase().replace(/s$/, '');
+    const Noun = noun.charAt(0).toUpperCase() + noun.slice(1);
+
+    return (
+        <div className="cms:flex cms:flex-col cms:gap-2">
+            {rows.map((row, index) => isCompact(field, content) ? (
+                <div key={index} className="cms:flex cms:items-start cms:gap-2">
+                    {columns.map((column) => (
+                        <div key={column.handle} className="cms:flex cms:flex-1 cms:flex-col cms:gap-1">
+                            <Input aria-label={column.label || column.handle} placeholder={column.label || column.handle}
+                                value={typeof row[column.handle] === 'string' ? row[column.handle] as string : ''}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => set(index, { ...row, [column.handle]: e.target.value })} />
+                            <FieldError message={errors[`${index}.${column.handle}`]} />
+                        </div>
+                    ))}
+                    <Button type="button" variant="ghost" size="icon" aria-label={`Remove ${noun} ${index + 1}`} onClick={() => onChange(rows.filter((_, i) => i !== index))}>
                         <Trash2 />
                     </Button>
                 </div>
+            ) : (
+                <div key={typeof row._id === 'string' ? row._id : index} className="cms:flex cms:flex-col cms:gap-2">
+                    <ItemBar label={`${Noun} ${index + 1}`} index={index} count={rows.length}
+                        onMove={(by) => onChange(move(rows, index, by))} onRemove={() => onChange(rows.filter((_, i) => i !== index))}
+                        hidden={content ? row._hidden === true : undefined} onHidden={(hidden) => set(index, { ...row, _hidden: hidden })} />
+                    <Fields fields={columns} value={row} onChange={(next) => set(index, next)} errors={errorsAt(errors, String(index))} id={`${id}-${index}`} content={content} />
+                </div>
             ))}
             <div>
-                <Button type="button" variant="outline" size="sm" onClick={() => onChange([...rows, {}])}>
-                    <Plus /> Add {(field.label || 'row').toLowerCase().replace(/s$/, '')}
+                <Button type="button" variant="outline" size="sm" onClick={() => onChange([...rows, content ? newRow() : {}])}>
+                    <Plus /> Add {noun}
                 </Button>
+            </div>
+        </div>
+    );
+}
+
+function Blocks({ field, value, onChange, errors, id }: Omit<Props, 'value'> & { value: unknown[] }) {
+    const types = field.blocks ?? [];
+    const blocks = value.map(asRecord);
+    const set = (index: number, block: Record<string, unknown>) => onChange(blocks.map((b, i) => (i === index ? block : b)));
+
+    return (
+        <div className="cms:flex cms:flex-col cms:gap-3">
+            {blocks.map((block, index) => {
+                const type = types.find((t) => t.type === block.type);
+                return (
+                    <div key={typeof block.id === 'string' ? block.id : index} className="cms:flex cms:flex-col cms:gap-2">
+                        <ItemBar label={type?.label ?? String(block.type)} badge index={index} count={blocks.length}
+                            onMove={(by) => onChange(move(blocks, index, by))} onRemove={() => onChange(blocks.filter((_, i) => i !== index))}
+                            hidden={block.hidden === true} onHidden={(hidden) => set(index, { ...block, hidden })} />
+                        {type ? (
+                            <Fields fields={type.fields} value={asRecord(block.values)} onChange={(values) => set(index, { ...block, values })}
+                                errors={errorsAt(errors, `${index}.values`)} id={`${id}-${index}`} content />
+                        ) : (
+                            <p className="cms:rounded-lg cms:border cms:p-4 cms:text-sm cms:text-muted-foreground">This kind of block no longer exists. Its values are kept.</p>
+                        )}
+                        <FieldError message={errors[`${index}.type`]} />
+                    </div>
+                );
+            })}
+            <div>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button type="button" variant="outline" size="sm" disabled={types.length === 0}><Plus /> Add block</Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                        {types.map((type) => (
+                            <DropdownMenuItem key={type.type} onSelect={() => onChange([...blocks, newBlock(type.type)])}>{type.label}</DropdownMenuItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
+        </div>
+    );
+}
+
+/** The bar above a row or block: its name, move, show/hide and remove. */
+function ItemBar({ label, badge = false, index, count, onMove, onRemove, hidden, onHidden }: {
+    label: string; badge?: boolean; index: number; count: number; onMove: (by: -1 | 1) => void; onRemove: () => void;
+    hidden?: boolean; onHidden: (hidden: boolean) => void;
+}) {
+    return (
+        <div className="cms:flex cms:items-center cms:gap-2">
+            {badge ? <Badge variant="secondary">{label}</Badge> : <span className="cms:text-sm cms:font-medium">{label}</span>}
+            {hidden !== undefined && (
+                <label className="cms:ml-auto cms:flex cms:items-center cms:gap-2 cms:text-sm cms:text-muted-foreground">
+                    <Switch checked={!hidden} onCheckedChange={(shown: boolean) => onHidden(!shown)} aria-label={`Show ${label}`} />
+                    Show
+                </label>
+            )}
+            <div className={hidden === undefined ? 'cms:ml-auto cms:flex' : 'cms:flex'}>
+                <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-label={`Move ${label} up`} disabled={index === 0} onClick={() => onMove(-1)}><ArrowUp /></Button>
+                <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-label={`Move ${label} down`} disabled={index === count - 1} onClick={() => onMove(1)}><ArrowDown /></Button>
+                <Button type="button" variant="ghost" size="icon" className="cms:size-8 cms:text-destructive" aria-label={`Remove ${label}`} onClick={onRemove}><Trash2 /></Button>
             </div>
         </div>
     );

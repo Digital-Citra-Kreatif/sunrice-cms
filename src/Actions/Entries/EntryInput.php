@@ -30,10 +30,12 @@ final class EntryInput
      */
     public static function validate(Schema $schema, mixed $title, mixed $slug, array $data, int $collectionId, string $locale, ?int $except): array
     {
+        $rules = ['title' => ['required', 'string', 'max:255'], 'slug' => ['nullable', 'string', 'max:200', 'regex:'.self::SLUG], 'data' => ['array']] + $schema->rules($data);
         $validator = Validator::make(
             ['title' => $title, 'slug' => $slug, 'data' => $data],
-            ['title' => ['required', 'string', 'max:255'], 'slug' => ['nullable', 'string', 'max:200', 'regex:'.self::SLUG], 'data' => ['array']] + $schema->rules($data),
+            $rules,
             ['slug.regex' => 'Use lowercase letters, digits and dashes (about-us).'],
+            self::attributes($schema, array_keys($rules)),
         );
         $validator->after(function (ValidatorInstance $validator) use ($slug, $collectionId, $locale, $except): void {
             if (is_string($slug) && $slug !== '' && self::taken($slug, $collectionId, $locale, $except)) {
@@ -49,6 +51,26 @@ final class EntryInput
         $normalized = $schema->normalize($data);
 
         return ['title' => $title, 'slug' => $slug, 'data' => $normalized];
+    }
+
+    /**
+     * Names for messages: "The Intro field is required", not "The data.intro field".
+     *
+     * @param  list<string>  $keys
+     * @return array<string, string>
+     */
+    private static function attributes(Schema $schema, array $keys): array
+    {
+        $names = [];
+        foreach ($keys as $key) {
+            if (str_starts_with($key, 'data.')) {
+                $path = substr($key, 5);
+                $field = $schema->field($path);
+                $names[$key] = $field?->label ?: Str::headline((string) Str::afterLast($path, '.'));
+            }
+        }
+
+        return $names;
     }
 
     /**

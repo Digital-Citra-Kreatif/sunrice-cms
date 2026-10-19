@@ -50,25 +50,25 @@ export default function BlueprintForm({ kind = 'blueprint', blueprint, fieldType
         () => router.delete(`${base}/${blueprint.id}`, { preserveScroll: true }));
 
     return (
-        <form onSubmit={submit} className="flex max-w-4xl flex-col gap-6">
+        <form onSubmit={submit} className="cms:flex cms:max-w-4xl cms:flex-col cms:gap-6">
             <Head title={title} />
             {confirmDialog}
 
-            <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="flex min-w-0 items-center gap-3">
-                    <Button variant="outline" size="icon" className="size-8 shrink-0" asChild>
+            <div className="cms:flex cms:flex-wrap cms:items-center cms:justify-between cms:gap-4">
+                <div className="cms:flex cms:min-w-0 cms:items-center cms:gap-3">
+                    <Button variant="outline" size="icon" className="cms:size-8 cms:shrink-0" asChild>
                         <Link href={base} aria-label={`Back to ${noun.toLowerCase()}s`}><ArrowLeft /></Link>
                     </Button>
-                    <h1 className="truncate text-2xl font-medium tracking-tight">{title}</h1>
+                    <h1 className="cms:truncate cms:text-2xl cms:font-medium cms:tracking-tight">{title}</h1>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="cms:flex cms:items-center cms:gap-2">
                     {blueprint && (
-                        <Button type="button" variant="outline" size="icon" className="text-destructive" aria-label={`Delete ${title}`} onClick={remove}>
+                        <Button type="button" variant="outline" size="icon" className="cms:text-destructive" aria-label={`Delete ${title}`} onClick={remove}>
                             <Trash2 />
                         </Button>
                     )}
                     <Button type="submit" disabled={form.processing}>
-                        {form.processing && <LoaderCircle className="animate-spin" />}
+                        {form.processing && <LoaderCircle className="cms:animate-spin" />}
                         {blueprint ? 'Save' : `Create ${noun.toLowerCase()}`}
                     </Button>
                 </div>
@@ -77,28 +77,28 @@ export default function BlueprintForm({ kind = 'blueprint', blueprint, fieldType
             <FieldError message={errors.blueprint ?? errors.fieldset} />
 
             <Card>
-                <CardContent className="grid gap-4 md:grid-cols-2">
-                    <div className="flex flex-col gap-2">
+                <CardContent className="cms:grid cms:gap-4 cms:md:grid-cols-2">
+                    <div className="cms:flex cms:flex-col cms:gap-2">
                         <Label htmlFor="title">Title</Label>
                         <Input id="title" value={form.data.title} required onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                             form.setData((data) => ({ ...data, title: e.target.value, handle: handleTouched ? data.handle : handleFromLabel(e.target.value) }));
                         }} />
                         <FieldError message={errors.title} />
                     </div>
-                    <div className="flex flex-col gap-2">
+                    <div className="cms:flex cms:flex-col cms:gap-2">
                         <Label htmlFor="handle">Handle</Label>
-                        <Input id="handle" className="font-mono" value={form.data.handle} disabled={blueprint !== null} required
+                        <Input id="handle" className="cms:font-mono" value={form.data.handle} disabled={blueprint !== null} required
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setHandleTouched(true); form.setData('handle', e.target.value); }} />
-                        <p className="text-sm text-muted-foreground">{blueprint ? 'Set when it was created.' : 'Lowercase letters, digits and underscores. It can\'t change later.'}</p>
+                        <p className="cms:text-sm cms:text-muted-foreground">{blueprint ? 'Set when it was created.' : 'Lowercase letters, digits and underscores. It can\'t change later.'}</p>
                         <FieldError message={errors.handle} />
                     </div>
                 </CardContent>
             </Card>
 
-            {usedBy.length > 0 && <p className="text-sm text-muted-foreground">Used by {usedBy.join(', ')}. Changes show there at once.</p>}
+            {usedBy.length > 0 && <p className="cms:text-sm cms:text-muted-foreground">Used by {usedBy.join(', ')}. Changes show there at once.</p>}
 
-            <section className="flex flex-col gap-3" aria-labelledby="fields-heading">
-                <h2 id="fields-heading" className="text-lg font-medium">Fields</h2>
+            <section className="cms:flex cms:flex-col cms:gap-3" aria-labelledby="fields-heading">
+                <h2 id="fields-heading" className="cms:text-lg cms:font-medium">Fields</h2>
                 <FieldBuilder fields={fields} onChange={setFields} types={fieldTypes} errors={errorsUnder(errors, 'fields')} />
                 <FieldError message={errors.fields} />
             </section>

@@ -3,9 +3,12 @@
  * and theme. Theme values are written into the utilities (inline) and the
  * panel's colours are its own CSS variables, so the CMS pages match the
  * panel, dark mode and branding included, without a second copy of either.
+ *
+ * Prefixed (cms:flex), so nothing here can override the panel's utilities:
+ * this sheet loads after the panel's.
  */
 @layer theme, base, components, utilities;
-@import 'tailwindcss/theme.css' layer(theme) theme(reference inline);
+@import 'tailwindcss/theme.css' layer(theme) theme(reference inline) prefix(cms);
 @import 'tailwindcss/utilities.css' layer(utilities) source('../js');
 
 @custom-variant dark (&:is(.dark *));
