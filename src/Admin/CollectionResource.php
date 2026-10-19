@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sunrice\Cms\Admin;
 
 use Sunrice\Admin\Resources\Forms\Form;
+use Sunrice\Admin\Resources\Forms\NumberInput;
 use Sunrice\Admin\Resources\Forms\Select;
 use Sunrice\Admin\Resources\Forms\TextInput;
 use Sunrice\Admin\Resources\Forms\Toggle;
@@ -51,6 +52,8 @@ final class CollectionResource extends Resource
                 ->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
                 ->help('The fields its entries have. Changing it keeps what entries already hold.'),
             Toggle::make('dated')->label('Dated entries')->help('Entries show a date and list newest first, like articles.'),
+            Toggle::make('ordered')->label('Manual order')->help('Editors put entries in order (Move up, Move down), instead of by date or title.'),
+            Toggle::make('hierarchical')->label('Hierarchical')->help('Entries may have a parent entry, like pages under pages (for breadcrumbs and sub-menus; their URLs stay the same).'),
             TextInput::make('route')->label('URL')->placeholder('/blog/{slug}')->unique()
                 ->rules([function (string $attribute, mixed $value, \Closure $fail): void {
                     if (is_string($value) && $value !== '' && ! RoutePattern::isValid($value)) {
@@ -58,6 +61,13 @@ final class CollectionResource extends Resource
                     }
                 }])
                 ->help('Where entries are on the site. Empty: they have no page of their own.'),
+            TextInput::make('listing_route')->label('Listing page URL')->placeholder('/blog')->unique()->maxLength(255)
+                ->rules(['regex:#^(/[a-z0-9\-_]+)+$#'])
+                ->help('A page listing the entries, like /blog (template cms.{handle}-listing, else cms.listing). Empty: none.'),
+            Select::make('listing_blueprint')->label('Listing page fields')
+                ->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
+                ->help('Fields of the listing page itself, like an intro, edited from the entries list.'),
+            NumberInput::make('per_page')->label('Entries per listing page')->integer()->min(1)->max(100)->default(10),
             TextInput::make('template')->placeholder('cms.article')
                 ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
                 ->help('The Blade view for its entries. Empty: cms.{handle}, else cms.entry.'),

@@ -7,10 +7,12 @@ namespace Sunrice\Cms;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Honeypot\ProtectAgainstSpam;
+use Sunrice\Admin\Events\SettingsSaved;
 use Sunrice\Admin\Media\MediaUsages;
 use Sunrice\Cms\Fields\Fieldsets;
 use Sunrice\Cms\Fields\FieldTypes;
@@ -65,6 +67,12 @@ final class CmsServiceProvider extends ServiceProvider
         EntryTranslation::saved(fn (EntryTranslation $translation) => Support\MediaUsage::entry($translation));
         EntryTranslation::deleted(fn (EntryTranslation $translation) => app(MediaUsages::class)->forget('cms.entry', (string) $translation->entry_id, $translation->locale));
         GlobalValue::saved(fn (GlobalValue $value) => Support\MediaUsage::global($value));
+        // A new homepage: forget the one read.
+        Event::listen(SettingsSaved::class, function (SettingsSaved $event): void {
+            if ($event->section === Settings\SiteSettings::key() && app()->resolved(Site\Site::class)) {
+                app(Site\Site::class)->flush();
+            }
+        });
         RateLimiter::for('sunrice-forms', function (Request $request): Limit {
             $perMinute = config('sunrice-cms.forms.per_minute', 5);
 
@@ -89,6 +97,8 @@ final class CmsServiceProvider extends ServiceProvider
         Route::middleware([...$middleware, 'signed'])->get('cms-preview/{translation}', [Site\SiteController::class, 'preview'])->name('sunrice.cms.preview');
         if (config('sunrice-cms.site.enabled', true) === true) {
             Route::middleware($middleware)->get('sitemap.xml', Site\SitemapController::class)->name('sunrice.cms.sitemap');
+            // The homepage: the fallback doesn't match /. An app's own / route, loaded later, replaces it.
+            Route::get('/', [Site\SiteController::class, 'show'])->middleware($middleware)->name('sunrice.cms.home');
             // The fallback: matched after every other route, so the app's own come first.
             Route::fallback([Site\SiteController::class, 'show'])->middleware($middleware)->name('sunrice.cms.page');
         }

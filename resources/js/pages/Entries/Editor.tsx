@@ -7,13 +7,16 @@ import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, Input, Label, useBreadcrumbs, useEditLock, useUnsavedChanges, KeptEditsNotice, ViewingNotice,
 } from '@sunrice/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
+import { EntriesPicker } from '@/components/EntriesPicker.tsx';
 import { FieldError, FieldInput, Fields } from '@/components/FieldInput.tsx';
 import { errorsAt } from '@/lib/builder.ts';
 import { type EntryLocale, type EntryStatus, formatDate, localeName, localInputValue, statusLabel } from '@/lib/entries.ts';
 import type { FieldDefinition } from '@/types.ts';
 
 interface Props {
-    collection: { handle: string; title: string; dated: boolean };
+    collection: { handle: string; title: string; dated: boolean; hierarchical?: boolean; ordered?: boolean };
+    /** Every language's: the parent entry and the entry's own Blade view. */
+    settings?: { parentId: number | null; template: string | null };
     fields: FieldDefinition[];
     /** The site's languages and the entry's status in each (none for a new entry). */
     locales?: EntryLocale[];
@@ -68,7 +71,7 @@ export default function EntryEditorPage(props: Props) {
     return <EntryEditor key={entry ? `${entry.id}:${entry.locale}:${entry.version}:${entry.status}:${entry.trashed}:${entry.publishedAt}` : 'new'} {...props} />;
 }
 
-function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, undoRestore = null, can }: Props) {
+function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, undoRestore = null, settings, can }: Props) {
     const list = adminUrl(`cms/collections/${collection.handle}/entries`);
     const url = entry ? adminUrl(`cms/entries/${entry.id}`) : list;
     const heading = entry ? values.title : 'New entry';
@@ -277,6 +280,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                                 {entry.status !== 'draft' && entry.hasUnpublishedChanges && <p className="cms:text-muted-foreground">The draft has changes the site doesn't show yet.</p>}
                             </CardContent>
                         </Card>
+                        {settings && <PageSettings entryUrl={url} collection={collection} settings={settings} disabled={!writable} />}
                         <Card>
                             <CardHeader><CardTitle className="cms:text-base">Revisions</CardTitle></CardHeader>
                             <CardContent className="cms:flex cms:flex-col cms:gap-2 cms:text-sm">
@@ -368,5 +372,44 @@ function ScheduleDialog({ open, onClose, onSchedule, current, processing }: {
                 </DialogFooter>
             </DialogContent>
         </Dialog>
+    );
+}
+
+/** The parent entry and the entry's own template, saved apart from the fields (every language's). */
+function PageSettings({ entryUrl, collection, settings, disabled }: {
+    entryUrl: string;
+    collection: Props['collection'];
+    settings: { parentId: number | null; template: string | null };
+    disabled: boolean;
+}) {
+    const form = useForm({ parent_id: settings.parentId, template: settings.template ?? '' });
+    const errors = form.errors as Record<string, string | undefined>;
+
+    return (
+        <Card>
+            <CardHeader><CardTitle className="cms:text-base">Page settings</CardTitle></CardHeader>
+            <CardContent>
+                <fieldset disabled={disabled} className="cms:flex cms:flex-col cms:gap-4 cms:text-sm">
+                    {collection.hierarchical && (
+                        <div className="cms:flex cms:flex-col cms:gap-2">
+                            <Label htmlFor="parent">Parent</Label>
+                            <EntriesPicker id="parent" multiple={false} max={1} collections={[collection.handle]} invalid={errors.parent_id !== undefined}
+                                value={form.data.parent_id} onChange={(value) => form.setData('parent_id', typeof value === 'number' ? value : null)} />
+                            <FieldError message={errors.parent_id} />
+                        </div>
+                    )}
+                    <div className="cms:flex cms:flex-col cms:gap-2">
+                        <Label htmlFor="template">Template</Label>
+                        <Input id="template" className="cms:font-mono" placeholder="The collection's" value={form.data.template}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => form.setData('template', e.target.value)} aria-invalid={errors.template !== undefined} />
+                        <FieldError message={errors.template} />
+                    </div>
+                    {form.isDirty && (
+                        <Button type="button" size="sm" disabled={form.processing}
+                            onClick={() => form.put(`${entryUrl}/settings`, { preserveScroll: true, onSuccess: () => form.setDefaults() })}>Save settings</Button>
+                    )}
+                </fieldset>
+            </CardContent>
+        </Card>
     );
 }

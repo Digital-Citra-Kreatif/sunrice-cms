@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight, Download, Plus, Search } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Download, LayoutList, Plus, Search } from 'lucide-react';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
@@ -17,14 +17,16 @@ interface Row {
     publishedAt: string | null;
     updatedAt: string | null;
     locales: EntryLocale[];
+    /** The parent's title, in hierarchical collections. */
+    parent?: string | null;
 }
 
 interface Props {
-    collection: { handle: string; title: string; dated: boolean } | null;
+    collection: { handle: string; title: string; dated: boolean; ordered?: boolean; listing?: boolean } | null;
     collections: { handle: string; title: string }[];
     entries: { data: Row[]; total: number; from: number | null; to: number | null; prev_page_url: string | null; next_page_url: string | null } | null;
     query: { search: string; trashed: boolean };
-    can?: { create: boolean; publish?: boolean; delete?: boolean };
+    can?: { create: boolean; update?: boolean; publish?: boolean; delete?: boolean };
 }
 
 export default function EntriesIndex({ collection, collections, entries, query, can }: Props) {
@@ -88,6 +90,9 @@ export default function EntriesIndex({ collection, collections, entries, query, 
                     )}
                 </div>
                 <div className="cms:flex cms:items-center cms:gap-2">
+                    {collection.listing && !query.trashed && (
+                        <Button variant="outline" asChild><Link href={adminUrl(`cms/collections/${collection.handle}/listing`)}><LayoutList /> Listing page</Link></Button>
+                    )}
                     {entries.total > 0 && !query.trashed && (
                         <Button variant="outline" asChild><a href={`${base}/export`}><Download /> Export CSV</a></Button>
                     )}
@@ -150,7 +155,7 @@ export default function EntriesIndex({ collection, collections, entries, query, 
                                 )}
                                 <TableCell>
                                     <Link href={adminUrl(`cms/entries/${row.id}/edit`)} className="cms:font-medium cms:hover:underline">{row.title}</Link>
-                                    <div className="cms:text-xs cms:text-muted-foreground">/{row.slug}</div>
+                                    <div className="cms:text-xs cms:text-muted-foreground">/{row.slug}{row.parent ? ` · under ${row.parent}` : ''}</div>
                                 </TableCell>
                                 <TableCell>
                                     <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-1">
@@ -164,7 +169,17 @@ export default function EntriesIndex({ collection, collections, entries, query, 
                                         ))}
                                     </div>
                                 </TableCell>
-                                <TableCell className="cms:text-muted-foreground">{formatDate(collection.dated ? row.publishedAt : row.updatedAt)}</TableCell>
+                                <TableCell className="cms:text-muted-foreground">
+                                    <div className="cms:flex cms:items-center cms:justify-between cms:gap-2">
+                                        {formatDate(collection.dated ? row.publishedAt : row.updatedAt)}
+                                        {collection.ordered && can?.update && !query.trashed && !query.search && (
+                                            <span className="cms:flex">
+                                                <Button variant="ghost" size="icon" aria-label={`Move ${row.title} up`} onClick={() => router.post(adminUrl(`cms/entries/${row.id}/move`), { direction: 'up' }, { preserveScroll: true })}><ArrowUp /></Button>
+                                                <Button variant="ghost" size="icon" aria-label={`Move ${row.title} down`} onClick={() => router.post(adminUrl(`cms/entries/${row.id}/move`), { direction: 'down' }, { preserveScroll: true })}><ArrowDown /></Button>
+                                            </span>
+                                        )}
+                                    </div>
+                                </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>

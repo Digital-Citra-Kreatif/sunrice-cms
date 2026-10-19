@@ -55,14 +55,16 @@ final class EntryController
         $locale = Locales::default();
 
         $entries = EntryTranslation::query()
-            ->with('entry.translations')
+            ->with(['entry.translations', 'entry.parent.translations'])
             ->where('collection_id', $collection->id)
             ->where('locale', $locale)
             ->whereHas('entry', fn ($query) => $trashed ? $query->onlyTrashed() : $query->withoutTrashed())
             // whereLike: case-insensitive on every database (ILIKE on PostgreSQL).
             ->when($search !== '', fn ($query) => $query->whereLike('draft_title', '%'.addcslashes($search, '%_\\').'%'))
-            ->orderBy($collection->dated ? 'published_at' : 'draft_title', $collection->dated ? 'desc' : 'asc')
-            ->orderByDesc('id')
+            ->when($collection->ordered,
+                fn ($query) => $query->orderBy(Entry::query()->withTrashed()->select('sort_order')->whereColumn('sunrice_entries.id', 'sunrice_entry_translations.entry_id')),
+                fn ($query) => $query->orderBy($collection->dated ? 'published_at' : 'draft_title', $collection->dated ? 'desc' : 'asc'))
+            ->orderBy('id', $collection->ordered ? 'asc' : 'desc')
             ->paginate(self::PER_PAGE)
             ->withQueryString()
             ->through(fn (EntryTranslation $translation): array => [
@@ -73,6 +75,7 @@ final class EntryController
                 'publishedAt' => $translation->published_at?->toIso8601String(),
                 'updatedAt' => $translation->updated_at?->toIso8601String(),
                 'locales' => self::locales($translation->entry),
+                'parent' => $translation->entry->parent?->mainTranslation()?->draft_title,
             ]);
 
         return Inertia::render('Cms/Entries/Index', [
@@ -170,6 +173,8 @@ final class EntryController
                 'previewUrl' => URL::temporarySignedRoute('sunrice.cms.preview', now()->addMinutes(30), ['translation' => $translation->id]),
             ],
             'values' => ['title' => $translation->draft_title, 'slug' => $translation->draft_slug, 'data' => $translation->draft_data, 'seo' => $translation->draft_data[Seo::KEY] ?? null],
+            // Every language's: the parent and its own Blade view.
+            'settings' => ['parentId' => $entry->parent_id, 'template' => $entry->template],
             'revisions' => $translation->revisions()->limit(20)->get()->map(fn (Revision $revision): array => [
                 'id' => $revision->id,
                 'title' => $revision->title,
@@ -300,10 +305,11 @@ final class EntryController
         return $translation->isLive() ? 'Published.' : 'Scheduled for '.$translation->published_at?->toDayDateTimeString().'.';
     }
 
-    /** @return array{handle: string, title: string, dated: bool} */
+    /** @return array{handle: string, title: string, dated: bool, hierarchical: bool, ordered: bool, listing: bool} */
     private static function collection(Collection $collection): array
     {
-        return ['handle' => $collection->handle, 'title' => $collection->title, 'dated' => $collection->dated];
+        return ['handle' => $collection->handle, 'title' => $collection->title, 'dated' => $collection->dated, 'hierarchical' => $collection->hierarchical,
+            'ordered' => $collection->ordered, 'listing' => $collection->listing_route !== null];
     }
 
     /** @return array<string, bool> */

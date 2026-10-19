@@ -24,11 +24,13 @@ use Sunrice\Cms\Http\Controllers\EntryController;
 use Sunrice\Cms\Http\Controllers\EntryManageController;
 use Sunrice\Cms\Http\Controllers\FieldsetController;
 use Sunrice\Cms\Http\Controllers\GlobalsController;
+use Sunrice\Cms\Http\Controllers\ListingController;
 use Sunrice\Cms\Http\Controllers\MenuController;
 use Sunrice\Cms\Http\Controllers\SubmissionController;
 use Sunrice\Cms\Http\Controllers\TermController;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\GlobalSet;
+use Sunrice\Cms\Settings\SiteSettings;
 
 /**
  * The CMS, added to the panel in the app's panel provider:
@@ -67,6 +69,7 @@ final class CmsPlugin extends BasePlugin
 
     public function register(Panel $panel): void
     {
+        $panel->settings(SiteSettings::class);
         $panel->resources(CollectionResource::class, TaxonomyResource::class, GlobalSetResource::class, MenuResource::class, RedirectResource::class, FormResource::class);
         $panel->permissions(
             Permission::make('cms.entries.view', 'View entries', 'Content'),
@@ -142,10 +145,16 @@ final class CmsPlugin extends BasePlugin
                 Route::post('entries/{entry}/restore', 'restore')->name('restore')->middleware('can:cms.entries.delete')->withTrashed();
                 Route::post('revisions/{revision}/restore', 'restoreRevision')->name('revisions.restore')->middleware('can:cms.entries.update');
             });
+            Route::prefix('cms')->name('cms.listings.')->controller(ListingController::class)->group(function (): void {
+                Route::get('collections/{collection:handle}/listing', 'edit')->name('edit')->middleware('can:cms.entries.view');
+                Route::put('collections/{collection:handle}/listing', 'update')->name('update')->middleware('can:cms.entries.update');
+            });
             Route::prefix('cms')->name('cms.entries.')->controller(EntryManageController::class)->group(function (): void {
                 Route::post('collections/{collection:handle}/entries/bulk', 'bulk')->name('bulk')->middleware('can:cms.entries.view');
                 Route::get('collections/{collection:handle}/entries/export', 'export')->name('export')->middleware('can:cms.entries.view');
                 Route::post('entries/{entry}/duplicate', 'duplicate')->name('duplicate')->middleware('can:cms.entries.create');
+                Route::put('entries/{entry}/settings', 'settings')->name('settings')->middleware('can:cms.entries.update');
+                Route::post('entries/{entry}/move', 'move')->name('move')->middleware('can:cms.entries.update');
                 Route::delete('entries/{entry}/force', 'forceDelete')->name('force-delete')->middleware('can:cms.entries.delete')->withTrashed();
                 Route::post('entry-translations/{translation}/undo-restore', 'undoRestore')->name('undo-restore')->middleware('can:cms.entries.update');
             });

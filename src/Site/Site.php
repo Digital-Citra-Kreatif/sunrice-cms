@@ -7,6 +7,7 @@ namespace Sunrice\Cms\Site;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Redirect;
+use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Support\Locales;
 
 /**
@@ -20,10 +21,16 @@ final class Site
     /** @var list<Collection>|null collections with a route, most specific first */
     private ?array $routed = null;
 
+    /** The homepage entry's id, once read (false: not read yet). */
+    private int|false|null $homepage = false;
+
     /** The live entry translation at a path, or null. */
     public function find(string $path): ?EntryTranslation
     {
         [$locale, $rest] = $this->splitLocale('/'.trim($path, '/'));
+        if ($rest === '/') {
+            return $this->homepage($locale);
+        }
         foreach ($this->routed() as $collection) {
             $slug = (new RoutePattern((string) $collection->route))->match($rest);
             if ($slug === null) {
@@ -36,6 +43,24 @@ final class Site
         }
 
         return null;
+    }
+
+    /** The homepage (Settings → Site) in a language, when it's live there. */
+    public function homepage(?string $locale = null): ?EntryTranslation
+    {
+        $id = $this->homepageId();
+
+        return $id === null ? null : EntryTranslation::query()->live()->with('entry.collection')
+            ->where('entry_id', $id)->where('locale', $locale ?? Locales::default())->first();
+    }
+
+    /** The collection whose listing page is at a path, and the language. */
+    public function listing(string $path): ?Listing
+    {
+        [$locale, $rest] = $this->splitLocale('/'.trim($path, '/'));
+        $collection = $rest === '/' ? null : Collection::query()->where('listing_route', $rest)->first();
+
+        return $collection === null ? null : new Listing($collection, $locale);
     }
 
     /** The URL of an entry translation's live page, or null when its collection has no route. */
@@ -54,6 +79,9 @@ final class Site
             return null;
         }
         $prefix = $translation->locale === Locales::default() ? '' : '/'.$translation->locale;
+        if ($translation->entry_id === $this->homepageId()) {
+            return $prefix === '' ? '/' : $prefix;
+        }
 
         return $prefix.(new RoutePattern($route))->path($slug);
     }
@@ -80,10 +108,31 @@ final class Site
         Redirect::query()->updateOrCreate(['from_path' => $from], ['to_url' => $to, 'status' => 301]);
     }
 
+    /** The path a page has besides the one it's served at (the homepage's own address), to redirect from. */
+    public function ownPath(EntryTranslation $translation): ?string
+    {
+        $route = $translation->entry->collection->route;
+        if ($route === null || $translation->slug === null) {
+            return null;
+        }
+
+        return ($translation->locale === Locales::default() ? '' : '/'.$translation->locale).(new RoutePattern($route))->path($translation->slug);
+    }
+
     /** Forget the collections loaded, after one changed. */
     public function flush(): void
     {
         $this->routed = null;
+        $this->homepage = false;
+    }
+
+    private function homepageId(): ?int
+    {
+        if ($this->homepage === false) {
+            $this->homepage = app(SiteSettings::class)->homepage;
+        }
+
+        return $this->homepage;
     }
 
     /** @return array{0: string, 1: string} the language and the path without its prefix */

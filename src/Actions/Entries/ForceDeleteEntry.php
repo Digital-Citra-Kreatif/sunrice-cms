@@ -33,6 +33,8 @@ final class ForceDeleteEntry
             $translations = $entry->translations()->pluck('id');
             Revision::query()->whereIn('entry_translation_id', $translations)->delete();
             $entry->terms()->detach();
+            // Its children move up to its parent.
+            Entry::query()->withTrashed()->where('parent_id', $entry->id)->update(['parent_id' => $entry->parent_id]);
             $entry->translations()->delete();
             $entry->forceDelete();
             app(MediaUsages::class)->forget('cms.entry', (string) $entry->id);

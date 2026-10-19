@@ -7,6 +7,7 @@ namespace Sunrice\Cms\Site;
 use Illuminate\Http\Response;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\EntryTranslation;
+use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\Seo;
 
 /**
@@ -41,6 +42,12 @@ final class SitemapController
                 $xml[] = '<xhtml:link rel="alternate" hreflang="'.e(str_replace('_', '-', $locale)).'" href="'.e($alternate).'"/>';
             }
             $xml[] = '</url>';
+        }
+        // Listing pages, in every language.
+        foreach (Collection::query()->whereNotNull('listing_route')->orderBy('id')->get() as $collection) {
+            foreach (Locales::all() as $locale) {
+                $xml[] = '<url><loc>'.e((string) $collection->listingUrl($locale)).'</loc></url>';
+            }
         }
         $xml[] = '</urlset>';
 

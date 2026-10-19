@@ -25,7 +25,10 @@ final class DuplicateEntry
         $entry->loadMissing('translations');
 
         $copy = DB::transaction(function () use ($entry): Entry {
-            $copy = Entry::query()->create(['collection_id' => $entry->collection_id, 'author_id' => auth()->id()]);
+            $copy = Entry::query()->create([
+                'collection_id' => $entry->collection_id, 'author_id' => auth()->id(), 'parent_id' => $entry->parent_id,
+                'template' => $entry->template, 'sort_order' => MoveEntry::last($entry->collection_id),
+            ]);
             foreach ($entry->translations as $translation) {
                 $copy->translations()->create([
                     'collection_id' => $translation->collection_id,

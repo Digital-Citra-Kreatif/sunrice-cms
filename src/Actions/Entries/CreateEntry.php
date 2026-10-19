@@ -48,7 +48,7 @@ final class CreateEntry
 
         $translation = DB::transaction(function () use ($collection, $locale, $values): EntryTranslation {
             $id = Auth::id();
-            $entry = Entry::query()->create(['collection_id' => $collection->id, 'author_id' => is_int($id) ? $id : null]);
+            $entry = Entry::query()->create(['collection_id' => $collection->id, 'author_id' => is_int($id) ? $id : null, 'sort_order' => MoveEntry::last($collection->id)]);
 
             return $entry->translations()->create([
                 'collection_id' => $collection->id,

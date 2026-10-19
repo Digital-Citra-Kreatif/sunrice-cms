@@ -13,7 +13,9 @@ use Sunrice\Admin\Support\Csv;
 use Sunrice\Cms\Actions\Entries\BulkEntries;
 use Sunrice\Cms\Actions\Entries\DuplicateEntry;
 use Sunrice\Cms\Actions\Entries\ForceDeleteEntry;
+use Sunrice\Cms\Actions\Entries\MoveEntry;
 use Sunrice\Cms\Actions\Entries\PutBackDraft;
+use Sunrice\Cms\Actions\Entries\SaveEntrySettings;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
@@ -82,6 +84,22 @@ final class EntryManageController
         $copy = $duplicate->handle($entry);
 
         return redirect()->route('sunrice.admin.cms.entries.edit', $copy->id)->with('success', 'Copied as a new draft.');
+    }
+
+    /** The parent and the template, in every language. */
+    public function settings(Request $request, Entry $entry, SaveEntrySettings $save): RedirectResponse
+    {
+        abort_if($entry->collection->trashed(), 404);
+        $save->handle($entry, $request->only(['parent_id', 'template']));
+
+        return back()->with('success', 'Saved.');
+    }
+
+    public function move(Request $request, Entry $entry, MoveEntry $move): RedirectResponse
+    {
+        $move->handle($entry, $request->string('direction')->toString());
+
+        return back();
     }
 
     public function forceDelete(Entry $entry, ForceDeleteEntry $delete): RedirectResponse

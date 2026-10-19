@@ -8,6 +8,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection as Items;
 use Sunrice\Cms\Models\Collection;
+use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Support\Locales;
@@ -39,6 +40,23 @@ final class EntryQuery
     {
         $ids = array_map(fn (Term|int $term): int => $term instanceof Term ? $term->id : $term, $terms);
         $this->query->whereHas('entry.terms', fn (Builder $q) => $q->whereIn('sunrice_terms.id', $ids));
+
+        return $this;
+    }
+
+    /** Entries directly under this one (null: the top-level ones), in a hierarchical collection. */
+    public function childrenOf(Entry|int|null $parent): self
+    {
+        $id = $parent instanceof Entry ? $parent->id : $parent;
+        $this->query->whereHas('entry', fn (Builder $q) => $id === null ? $q->whereNull('parent_id') : $q->where('parent_id', $id));
+
+        return $this;
+    }
+
+    /** In the order editors put them in (collections with Manual order). */
+    public function ordered(): self
+    {
+        $this->query->orderBy(Entry::query()->select('sort_order')->whereColumn('sunrice_entries.id', 'sunrice_entry_translations.entry_id'))->orderBy('id');
 
         return $this;
     }

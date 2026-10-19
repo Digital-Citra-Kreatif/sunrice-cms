@@ -4,6 +4,7 @@ import BlueprintForm from '@/pages/Blueprints/Form.tsx';
 import BlueprintsIndex from '@/pages/Blueprints/Index.tsx';
 import EntryEditor from '@/pages/Entries/Editor.tsx';
 import EntriesIndex from '@/pages/Entries/Index.tsx';
+import ListingPage from '@/pages/Entries/Listing.tsx';
 import FieldsetsIndex from '@/pages/Fieldsets/Index.tsx';
 import GlobalsEdit from '@/pages/Globals/Edit.tsx';
 import GlobalsIndex from '@/pages/Globals/Index.tsx';
@@ -19,6 +20,7 @@ definePlugin({
         'Cms/Fieldsets/Index': FieldsetsIndex,
         'Cms/Entries/Index': EntriesIndex,
         'Cms/Entries/Editor': EntryEditor,
+        'Cms/Entries/Listing': ListingPage,
         'Cms/Terms/Index': TermsIndex,
         'Cms/Globals/Index': GlobalsIndex,
         'Cms/Globals/Edit': GlobalsEdit,

@@ -20,10 +20,15 @@ use Sunrice\Cms\Support\Locales;
  * @property int $id
  * @property int $collection_id
  * @property int|null $author_id
+ * @property int|null $parent_id
+ * @property int $sort_order
+ * @property string|null $template a Blade view for this entry alone
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
  * @property-read Collection $collection
+ * @property-read Entry|null $parent
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Entry> $children
  * @property-read \Illuminate\Database\Eloquent\Collection<int, EntryTranslation> $translations
  *
  * @api
@@ -33,6 +38,9 @@ class Entry extends Model
     use SoftDeletes;
 
     protected $table = 'sunrice_entries';
+
+    /** How deep entries may nest under parents. */
+    public const MAX_DEPTH = 10;
 
     protected $guarded = [];
 
@@ -57,6 +65,39 @@ class Entry extends Model
     public function terms(): BelongsToMany
     {
         return $this->belongsToMany(Term::class, 'sunrice_entry_term');
+    }
+
+    /**
+     * The parent entry, in a hierarchical collection.
+     *
+     * @return BelongsTo<Entry, $this>
+     */
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_id');
+    }
+
+    /** @return HasMany<Entry, $this> */
+    public function children(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_id');
+    }
+
+    /**
+     * The entries above this one, top-down (for breadcrumbs).
+     *
+     * @return list<Entry>
+     */
+    public function ancestors(): array
+    {
+        $ancestors = [];
+        $seen = [$this->id => true];
+        for ($parent = $this->parent; $parent !== null && ! isset($seen[$parent->id]) && count($ancestors) < self::MAX_DEPTH; $parent = $parent->parent) {
+            $seen[$parent->id] = true;
+            array_unshift($ancestors, $parent);
+        }
+
+        return $ancestors;
     }
 
     public function translation(string $locale): ?EntryTranslation

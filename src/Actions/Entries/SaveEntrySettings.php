@@ -1,0 +1,84 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Sunrice\Cms\Actions\Entries;
+
+use Illuminate\Validation\ValidationException;
+use Sunrice\Admin\Activity\ActivityLog;
+use Sunrice\Cms\Models\Entry;
+
+/**
+ * An entry's settings beyond its fields, in every language: its parent
+ * entry (in a hierarchical collection; never itself or one below it, at
+ * most Entry::MAX_DEPTH deep) and its own Blade view.
+ *
+ * @api
+ */
+final class SaveEntrySettings
+{
+    public const TEMPLATE = '/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/';
+
+    public function __construct(private readonly ActivityLog $activity) {}
+
+    /**
+     * @param  array{parent_id?: mixed, template?: mixed}  $input  only what's given changes
+     *
+     * @throws ValidationException
+     */
+    public function handle(Entry $entry, array $input): Entry
+    {
+        $changed = [];
+        if (array_key_exists('parent_id', $input)) {
+            $parent = self::parent($entry, $input['parent_id']);
+            if ($entry->parent_id !== $parent?->id) {
+                $entry->parent_id = $parent?->id;
+                $changed[] = 'parent';
+            }
+        }
+        if (array_key_exists('template', $input)) {
+            $template = is_string($input['template']) ? trim($input['template']) : null;
+            if ($template !== null && $template !== '' && (strlen($template) > 100 || preg_match(self::TEMPLATE, $template) !== 1)) {
+                throw ValidationException::withMessages(['template' => 'Use a view name like cms.landing: lowercase letters, digits, dashes, dots.']);
+            }
+            $template = $template === '' ? null : $template;
+            if ($entry->template !== $template) {
+                $entry->template = $template;
+                $changed[] = 'template';
+            }
+        }
+        if ($changed !== []) {
+            $entry->save();
+            $this->activity->updated('entry', $entry, TrashEntry::label($entry), $changed);
+        }
+
+        return $entry;
+    }
+
+    /** @throws ValidationException */
+    private static function parent(Entry $entry, mixed $id): ?Entry
+    {
+        if ($id === null || $id === '' || $id === 0) {
+            return null;
+        }
+        if (! $entry->collection->hierarchical) {
+            throw ValidationException::withMessages(['parent_id' => 'Entries of this collection have no parents: turn on Hierarchical for it first.']);
+        }
+        $parent = is_numeric($id) ? Entry::query()->where('collection_id', $entry->collection_id)->find((int) $id) : null;
+        if ($parent === null) {
+            throw ValidationException::withMessages(['parent_id' => 'Choose an entry of the same collection.']);
+        }
+        // Never under itself or one of its own children, which would make a loop.
+        $depth = 1;
+        for ($above = $parent; $above !== null; $above = $above->parent) {
+            if ($above->id === $entry->id) {
+                throw ValidationException::withMessages(['parent_id' => 'An entry can\'t be under itself or one of its own children.']);
+            }
+            if (++$depth > Entry::MAX_DEPTH) {
+                throw ValidationException::withMessages(['parent_id' => 'Entries nest at most '.Entry::MAX_DEPTH.' deep.']);
+            }
+        }
+
+        return $parent;
+    }
+}
