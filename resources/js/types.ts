@@ -11,6 +11,8 @@ export interface FieldDefinition {
     fields?: FieldDefinition[];
     /** A flexible field's kinds of block, as the editor gets them. */
     blocks?: BlockType[];
+    /** A terms field's terms to choose from (nested ones indented). */
+    terms?: Option[];
 }
 
 /** A field type the builder offers, with its settings as fields. */

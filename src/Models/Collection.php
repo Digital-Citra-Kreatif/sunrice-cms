@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sunrice\Cms\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
@@ -48,6 +49,12 @@ class Collection extends Model
     public function entries(): HasMany
     {
         return $this->hasMany(Entry::class);
+    }
+
+    /** @return BelongsToMany<Taxonomy, $this> */
+    public function taxonomies(): BelongsToMany
+    {
+        return $this->belongsToMany(Taxonomy::class, 'sunrice_collection_taxonomy');
     }
 
     /** The blueprint, or null when it has none or it was deleted. */

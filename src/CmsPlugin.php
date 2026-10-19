@@ -11,11 +11,13 @@ use Sunrice\Admin\Navigation\NavigationItem;
 use Sunrice\Admin\Panel;
 use Sunrice\Admin\Permissions\Permission;
 use Sunrice\Cms\Admin\CollectionResource;
+use Sunrice\Cms\Admin\TaxonomyResource;
 use Sunrice\Cms\Fields\FieldType;
 use Sunrice\Cms\Fields\FieldTypes;
 use Sunrice\Cms\Http\Controllers\BlueprintController;
 use Sunrice\Cms\Http\Controllers\EntryController;
 use Sunrice\Cms\Http\Controllers\FieldsetController;
+use Sunrice\Cms\Http\Controllers\TermController;
 
 /**
  * The CMS, added to the panel in the app's panel provider:
@@ -54,18 +56,21 @@ final class CmsPlugin extends BasePlugin
 
     public function register(Panel $panel): void
     {
-        $panel->resources(CollectionResource::class);
+        $panel->resources(CollectionResource::class, TaxonomyResource::class);
         $panel->permissions(
             Permission::make('cms.entries.view', 'View entries', 'Content'),
             Permission::make('cms.entries.create', 'Create entries', 'Content'),
             Permission::make('cms.entries.update', 'Edit drafts', 'Content'),
             Permission::make('cms.entries.publish', 'Publish and unpublish entries', 'Content'),
             Permission::make('cms.entries.delete', 'Trash and restore entries', 'Content'),
+            Permission::make('cms.terms.manage', 'Manage terms', 'Content'),
             Permission::make('cms.blueprints.manage', 'Manage blueprints and fieldsets', 'Content structure'),
         );
         $panel->navigation(
             NavigationItem::make('cms-entries')->label('Entries')->url('cms/entries')->icon('file-text')
                 ->group('Content')->sort(10)->permission('cms.entries.view'),
+            NavigationItem::make('cms-terms')->label('Terms')->url('cms/terms')->icon('tags')
+                ->group('Content')->sort(20)->permission('cms.terms.manage'),
             NavigationItem::make('cms-blueprints')->label('Blueprints')->url('cms/blueprints')->icon('layout-template')
                 ->group('Structure')->sort(91)->permission('cms.blueprints.manage'),
             NavigationItem::make('cms-fieldsets')->label('Fieldsets')->url('cms/fieldsets')->icon('blocks')
@@ -75,6 +80,14 @@ final class CmsPlugin extends BasePlugin
             Route::middleware('can:cms.blueprints.manage')->prefix('cms')->name('cms.')->group(function (): void {
                 Route::resource('blueprints', BlueprintController::class)->except('show');
                 Route::resource('fieldsets', FieldsetController::class)->except('show');
+            });
+            Route::prefix('cms')->name('cms.terms.')->controller(TermController::class)->middleware('can:cms.terms.manage')->group(function (): void {
+                Route::get('terms', 'home')->name('home');
+                Route::get('taxonomies/{taxonomy:handle}/terms', 'index')->name('index');
+                Route::post('taxonomies/{taxonomy:handle}/terms', 'store')->name('store');
+                Route::put('terms/{term}', 'update')->name('update');
+                Route::post('terms/{term}/move', 'move')->name('move');
+                Route::delete('terms/{term}', 'destroy')->name('destroy');
             });
             Route::prefix('cms')->name('cms.entries.')->controller(EntryController::class)->group(function (): void {
                 Route::get('entries', 'home')->name('home')->middleware('can:cms.entries.view');

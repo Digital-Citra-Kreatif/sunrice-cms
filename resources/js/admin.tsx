@@ -5,6 +5,7 @@ import BlueprintsIndex from '@/pages/Blueprints/Index.tsx';
 import EntryEditor from '@/pages/Entries/Editor.tsx';
 import EntriesIndex from '@/pages/Entries/Index.tsx';
 import FieldsetsIndex from '@/pages/Fieldsets/Index.tsx';
+import TermsIndex from '@/pages/Terms/Index.tsx';
 
 definePlugin({
     pages: {
@@ -13,5 +14,6 @@ definePlugin({
         'Cms/Fieldsets/Index': FieldsetsIndex,
         'Cms/Entries/Index': EntriesIndex,
         'Cms/Entries/Editor': EntryEditor,
+        'Cms/Terms/Index': TermsIndex,
     },
 });

@@ -23,7 +23,10 @@ use Sunrice\Cms\Models\Revision;
  */
 final class PublishEntry
 {
-    public function __construct(private readonly ActivityLog $activity) {}
+    public function __construct(
+        private readonly ActivityLog $activity,
+        private readonly SyncEntryTerms $terms,
+    ) {}
 
     /** @throws ValidationException */
     public function handle(EntryTranslation $translation, ?DateTimeInterface $publishAt = null): EntryTranslation
@@ -62,6 +65,7 @@ final class PublishEntry
                 'data' => $values['data'],
             ]);
             $this->prune($translation);
+            $this->terms->handle($translation->entry);
         });
         $this->activity->record('published', 'entry', $entry, $values['title'], ['locale' => $translation->locale]);
 

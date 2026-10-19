@@ -59,7 +59,7 @@ export function labelOf(field: FieldDefinition): string {
 
 export function FieldInput({ field, value, onChange, errors, id, content = false }: Props) {
     const label = labelOf(field);
-    const group = GROUPS.includes(field.type) || (field.type === 'select' && field.config?.multiple === true);
+    const group = GROUPS.includes(field.type) || (['select', 'terms'].includes(field.type) && field.config?.multiple === true);
 
     return (
         <div className="cms:flex cms:flex-col cms:gap-2" {...(group ? { role: 'group', 'aria-labelledby': `${id}-label` } : {})}>
@@ -110,6 +110,15 @@ function Control({ field, value, onChange, errors, id, content }: Props) {
             return field.config?.multiple === true
                 ? <MultiSelect options={optionsOf(field)} value={Array.isArray(value) ? value.map(String) : []} onChange={onChange} />
                 : <SingleSelect options={optionsOf(field)} value={typeof value === 'string' ? value : null} onChange={onChange} id={id} required={field.required === true} />;
+        case 'terms': {
+            const options = field.terms ?? [];
+            if (field.config?.multiple === true) {
+                const ids = Array.isArray(value) ? value.map(String) : [];
+                return <MultiSelect options={options} value={ids} onChange={(next) => onChange((next as string[]).map(Number))} />;
+            }
+            return <SingleSelect options={options} id={id} required={field.required === true} value={value === null || value === undefined ? null : String(value)}
+                onChange={(next) => onChange(next === null ? null : Number(next))} />;
+        }
         case 'link':
             return <LinkInput value={asRecord(value)} onChange={onChange} errors={errors} id={id} />;
         case 'media':

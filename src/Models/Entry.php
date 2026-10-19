@@ -6,6 +6,7 @@ namespace Sunrice\Cms\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
@@ -46,6 +47,16 @@ class Entry extends Model
     public function translations(): HasMany
     {
         return $this->hasMany(EntryTranslation::class);
+    }
+
+    /**
+     * The terms of its published terms fields (synced on publish).
+     *
+     * @return BelongsToMany<Term, $this>
+     */
+    public function terms(): BelongsToMany
+    {
+        return $this->belongsToMany(Term::class, 'sunrice_entry_term');
     }
 
     public function translation(string $locale): ?EntryTranslation

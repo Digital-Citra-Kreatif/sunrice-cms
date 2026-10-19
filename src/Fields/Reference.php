@@ -14,6 +14,8 @@ final readonly class Reference
 {
     public const MEDIA = 'media';
 
+    public const TERM = 'term';
+
     /** @param string $path where in the data, e.g. "gallery" or "sections.2.image" */
     public function __construct(
         public string $type,
