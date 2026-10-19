@@ -3,7 +3,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowDown, ArrowLeft, ArrowUp, IndentDecrease, IndentIncrease, Link2, LoaderCircle, Plus, Trash2 } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
-    Badge, Button, Card, Checkbox, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input, Label, useBreadcrumbs,
+    Badge, Button, Card, Checkbox, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input, Label, useBreadcrumbs, useUnsavedChanges,
 } from '@sunrice/admin-sdk/ui';
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
 import { FieldError } from '@/components/FieldInput.tsx';
@@ -33,11 +33,16 @@ export default function MenuEdit({ menu, items: initial, locales, limits, can }:
     const change = (next: FlatItem[]) => { setItems(next); setDirty(true); };
     const update = (index: number, patch: Partial<FlatItem>) => change(items.map((item, i) => (i === index ? { ...item, ...patch } : item)));
 
-    const save = (e: React.FormEvent) => {
-        e.preventDefault();
+    const persist = () => {
+        if (form.processing) return;
         form.transform(() => ({ items: toTree(items).map(strip) }));
         form.put(url, { preserveScroll: true, onSuccess: () => setDirty(false) });
     };
+    const save = (e: React.FormEvent) => {
+        e.preventDefault();
+        persist();
+    };
+    useUnsavedChanges(dirty, can.update ? persist : undefined);
 
     return (
         <form onSubmit={save} className="cms:flex cms:max-w-4xl cms:flex-col cms:gap-6">

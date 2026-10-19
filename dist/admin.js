@@ -1,1 +1,1 @@
-import "./admin-Ds2veyro.js";
+import "./admin-CVmUVRsM.js";

@@ -20,6 +20,7 @@ use Sunrice\Cms\Fields\FieldType;
 use Sunrice\Cms\Fields\FieldTypes;
 use Sunrice\Cms\Http\Controllers\BlueprintController;
 use Sunrice\Cms\Http\Controllers\EntryController;
+use Sunrice\Cms\Http\Controllers\EntryManageController;
 use Sunrice\Cms\Http\Controllers\FieldsetController;
 use Sunrice\Cms\Http\Controllers\GlobalsController;
 use Sunrice\Cms\Http\Controllers\MenuController;
@@ -137,6 +138,13 @@ final class CmsPlugin extends BasePlugin
                 Route::delete('entries/{entry}/translations/{locale}', 'removeTranslation')->name('translations.destroy')->middleware('can:cms.entries.delete');
                 Route::post('entries/{entry}/restore', 'restore')->name('restore')->middleware('can:cms.entries.delete')->withTrashed();
                 Route::post('revisions/{revision}/restore', 'restoreRevision')->name('revisions.restore')->middleware('can:cms.entries.update');
+            });
+            Route::prefix('cms')->name('cms.entries.')->controller(EntryManageController::class)->group(function (): void {
+                Route::post('collections/{collection:handle}/entries/bulk', 'bulk')->name('bulk')->middleware('can:cms.entries.view');
+                Route::get('collections/{collection:handle}/entries/export', 'export')->name('export')->middleware('can:cms.entries.view');
+                Route::post('entries/{entry}/duplicate', 'duplicate')->name('duplicate')->middleware('can:cms.entries.create');
+                Route::delete('entries/{entry}/force', 'forceDelete')->name('force-delete')->middleware('can:cms.entries.delete')->withTrashed();
+                Route::post('entry-translations/{translation}/undo-restore', 'undoRestore')->name('undo-restore')->middleware('can:cms.entries.update');
             });
         });
         $panel->tools(

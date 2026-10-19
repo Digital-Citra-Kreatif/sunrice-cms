@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { ArrowLeft, LoaderCircle, Trash2 } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
-import { Button, Card, CardContent, Input, Label, useBreadcrumbs } from '@sunrice/admin-sdk/ui';
+import { Button, Card, CardContent, Input, Label, useBreadcrumbs, useUnsavedChanges } from '@sunrice/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { FieldBuilder } from '@/components/FieldBuilder.tsx';
 import { FieldError } from '@/components/FieldInput.tsx';
@@ -33,18 +33,31 @@ export default function BlueprintForm({ kind = 'blueprint', blueprint, fieldType
     const hasChildren = (type: string) => fieldTypes.find((t) => t.type === type)?.hasChildren === true;
     const errors = form.errors as Record<string, string | undefined>;
 
-    const submit = (event: React.FormEvent) => {
-        event.preventDefault();
+    // The builder's fields as last saved, to tell unsaved changes.
+    const [savedFields, setSavedFields] = React.useState(() => JSON.stringify(fields));
+    const dirty = form.isDirty || JSON.stringify(fields) !== savedFields;
+    const saved = () => {
+        form.setDefaults();
+        setSavedFields(JSON.stringify(fields));
+    };
+
+    const save = () => {
+        if (form.processing) return;
         form.transform((data) => ({
             ...(blueprint ? { title: data.title } : data),
             fields: toDefinitions(fields, hasChildren),
         }));
         if (blueprint) {
-            form.put(`${base}/${blueprint.id}`, { preserveScroll: true });
+            form.put(`${base}/${blueprint.id}`, { preserveScroll: true, onSuccess: saved });
         } else {
-            form.post(base);
+            form.post(base, { onSuccess: saved });
         }
     };
+    const submit = (event: React.FormEvent) => {
+        event.preventDefault();
+        save();
+    };
+    useUnsavedChanges(dirty, save);
 
     const remove = () => blueprint && confirm(`Delete the ${noun.toLowerCase()} "${blueprint.title}"? Content keeps its values.`,
         () => router.delete(`${base}/${blueprint.id}`, { preserveScroll: true }));

@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { ArrowLeft, LoaderCircle } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
-import { Button, Card, CardContent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs } from '@sunrice/admin-sdk/ui';
+import { Button, Card, CardContent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs, useUnsavedChanges } from '@sunrice/admin-sdk/ui';
 import { FieldInput } from '@/components/FieldInput.tsx';
 import { errorsAt } from '@/lib/builder.ts';
 import { localeName } from '@/lib/entries.ts';
@@ -34,9 +34,11 @@ function GlobalsEdit({ set, fields, locale, locales, shared, values, can }: Prop
     const form = useForm<{ locale: string; data: FieldValues }>({ locale, data: values });
     const errors = form.errors as Record<string, string | undefined>;
     const mainLocale = locales[0];
+    const save = () => form.processing || form.put(url, { preserveScroll: true });
+    useUnsavedChanges(form.isDirty, can.update ? save : undefined);
 
     return (
-        <form onSubmit={(e) => { e.preventDefault(); form.put(url, { preserveScroll: true }); }} className="cms:flex cms:max-w-3xl cms:flex-col cms:gap-6">
+        <form onSubmit={(e) => { e.preventDefault(); save(); }} className="cms:flex cms:max-w-3xl cms:flex-col cms:gap-6">
             <Head title={set.title} />
             <div className="cms:flex cms:flex-wrap cms:items-center cms:justify-between cms:gap-4">
                 <div className="cms:flex cms:min-w-0 cms:items-center cms:gap-3">

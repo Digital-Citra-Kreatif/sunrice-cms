@@ -175,6 +175,8 @@ final class EntryController
                 'title' => $revision->title,
                 'createdAt' => $revision->created_at?->toIso8601String(),
             ])->all(),
+            // A revision restore this session can be undone.
+            'undoRestore' => $request->session()->has(EntryManageController::undoKey($translation)) ? $translation->id : null,
             'can' => self::can($request),
         ]);
     }
@@ -243,9 +245,14 @@ final class EntryController
         return redirect()->route('sunrice.admin.cms.entries.edit', $entry->id)->with('success', 'The translation was removed.');
     }
 
-    public function restoreRevision(Revision $revision, RestoreRevision $restore): RedirectResponse
+    public function restoreRevision(Request $request, Revision $revision, RestoreRevision $restore): RedirectResponse
     {
-        abort_if($revision->translation->entry->collection->trashed(), 404);
+        $translation = $revision->translation;
+        abort_if($translation->entry->collection->trashed(), 404);
+        // The draft it replaces, so the restore can be undone (this session).
+        $request->session()->put(EntryManageController::undoKey($translation), [
+            'title' => $translation->draft_title, 'slug' => $translation->draft_slug, 'data' => $translation->draft_data,
+        ]);
         $restore->handle($revision);
 
         return back()->with('success', 'The revision is in the draft now. Publish it to put it on the site.');

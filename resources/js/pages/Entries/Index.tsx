@@ -1,9 +1,10 @@
 import * as React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, Plus, Search } from 'lucide-react';
+import { useConfirm } from '@/components/Confirm.tsx';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
-    Badge, Button, Card, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+    Badge, Button, Card, Checkbox, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow, useBreadcrumbs,
 } from '@sunrice/admin-sdk/ui';
 import { type EntryLocale, type EntryStatus, formatDate, statusLabel } from '@/lib/entries.ts';
@@ -23,13 +24,30 @@ interface Props {
     collections: { handle: string; title: string }[];
     entries: { data: Row[]; total: number; from: number | null; to: number | null; prev_page_url: string | null; next_page_url: string | null } | null;
     query: { search: string; trashed: boolean };
-    can?: { create: boolean };
+    can?: { create: boolean; publish?: boolean; delete?: boolean };
 }
 
 export default function EntriesIndex({ collection, collections, entries, query, can }: Props) {
     useBreadcrumbs([{ label: 'Entries', href: adminUrl('cms/entries') }, ...(collection ? [{ label: collection.title }] : [])]);
     const [search, setSearch] = React.useState(query.search);
     const base = collection ? adminUrl(`cms/collections/${collection.handle}/entries`) : '';
+    const [selected, setSelected] = React.useState<number[]>([]);
+    const [confirm, confirmDialog] = useConfirm();
+    React.useEffect(() => setSelected([]), [entries]);
+    const bulkActions = query.trashed
+        ? (can?.delete ? [{ action: 'restore', label: 'Restore' }, { action: 'delete', label: 'Delete for good', danger: true }] : [])
+        : [
+            ...(can?.publish ? [{ action: 'publish', label: 'Publish' }, { action: 'unpublish', label: 'Unpublish' }] : []),
+            ...(can?.delete ? [{ action: 'trash', label: 'Move to the trash', danger: true }] : []),
+        ];
+    const runBulk = (action: string, label: string, danger = false) => {
+        const go = () => router.post(`${base}/bulk`, { action, ids: selected }, { preserveScroll: true });
+        if (danger) {
+            confirm(`${label}: ${selected.length} ${selected.length === 1 ? 'entry' : 'entries'}?${action === 'delete' ? ' This can\'t be undone.' : ''}`, go);
+        } else {
+            go();
+        }
+    };
 
     const visit = (changes: Partial<{ search: string; trashed: boolean }>) => {
         const params = { ...query, ...changes };
@@ -69,9 +87,14 @@ export default function EntriesIndex({ collection, collections, entries, query, 
                         </Select>
                     )}
                 </div>
-                {can?.create && !query.trashed && (
-                    <Button asChild><Link href={`${base}/create`}><Plus /> New entry</Link></Button>
-                )}
+                <div className="cms:flex cms:items-center cms:gap-2">
+                    {entries.total > 0 && !query.trashed && (
+                        <Button variant="outline" asChild><a href={`${base}/export`}><Download /> Export CSV</a></Button>
+                    )}
+                    {can?.create && !query.trashed && (
+                        <Button asChild><Link href={`${base}/create`}><Plus /> New entry</Link></Button>
+                    )}
+                </div>
             </div>
 
             <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-3">
@@ -83,12 +106,27 @@ export default function EntriesIndex({ collection, collections, entries, query, 
                 <Button variant={query.trashed ? 'secondary' : 'ghost'} size="sm" onClick={() => visit({ trashed: !query.trashed })}>
                     {query.trashed ? 'Back to entries' : 'Trash'}
                 </Button>
+                {selected.length > 0 && bulkActions.length > 0 && (
+                    <div role="toolbar" aria-label="Selected entries" className="cms:ml-auto cms:flex cms:flex-wrap cms:items-center cms:gap-2">
+                        <span className="cms:text-sm cms:text-muted-foreground">{selected.length} selected</span>
+                        {bulkActions.map((b) => (
+                            <Button key={b.action} size="sm" variant={b.danger ? 'destructive' : 'outline'} onClick={() => runBulk(b.action, b.label, b.danger)}>{b.label}</Button>
+                        ))}
+                    </div>
+                )}
             </div>
+            {confirmDialog}
 
             <Card className="cms:py-0">
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            {bulkActions.length > 0 && (
+                                <TableHead className="cms:w-10">
+                                    <Checkbox aria-label="Select all on this page" checked={entries.data.length > 0 && selected.length === entries.data.length}
+                                        onCheckedChange={(on: boolean) => setSelected(on ? entries.data.map((r) => r.id) : [])} />
+                                </TableHead>
+                            )}
                             <TableHead>Title</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead>{collection.dated ? 'Date' : 'Updated'}</TableHead>
@@ -97,13 +135,19 @@ export default function EntriesIndex({ collection, collections, entries, query, 
                     <TableBody>
                         {entries.data.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={3} className="cms:py-8 cms:text-center cms:text-muted-foreground">
+                                <TableCell colSpan={bulkActions.length > 0 ? 4 : 3} className="cms:py-8 cms:text-center cms:text-muted-foreground">
                                     {query.trashed ? 'The trash is empty.' : query.search ? 'Nothing matches.' : 'No entries yet.'}
                                 </TableCell>
                             </TableRow>
                         )}
                         {entries.data.map((row) => (
-                            <TableRow key={row.id}>
+                            <TableRow key={row.id} data-state={selected.includes(row.id) ? 'selected' : undefined}>
+                                {bulkActions.length > 0 && (
+                                    <TableCell>
+                                        <Checkbox aria-label={`Select ${row.title}`} checked={selected.includes(row.id)}
+                                            onCheckedChange={(on: boolean) => setSelected(on ? [...selected, row.id] : selected.filter((id) => id !== row.id))} />
+                                    </TableCell>
+                                )}
                                 <TableCell>
                                     <Link href={adminUrl(`cms/entries/${row.id}/edit`)} className="cms:font-medium cms:hover:underline">{row.title}</Link>
                                     <div className="cms:text-xs cms:text-muted-foreground">/{row.slug}</div>

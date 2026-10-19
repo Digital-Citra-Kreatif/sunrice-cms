@@ -45,7 +45,7 @@ final class Seo
                 Media::whereTypes($query, ['image']);
             })],
             'seo.noindex' => ['nullable', 'boolean'],
-        ], [], ['seo.title' => 'SEO title', 'seo.description' => 'description', 'seo.image' => 'share image'])->validate()['seo'];
+        ], [], ['seo.title' => 'SEO title', 'seo.description' => 'description', 'seo.image' => 'share image'])->validate()['seo'] ?? [];
         $seo = [
             'title' => self::text($valid['title'] ?? null),
             'description' => self::text($valid['description'] ?? null),

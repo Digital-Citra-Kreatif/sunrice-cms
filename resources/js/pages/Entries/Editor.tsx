@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { ArrowLeft, CalendarClock, ChevronDown, ExternalLink, Eye, LoaderCircle, Plus, RotateCcw, Trash2 } from 'lucide-react';
+import { ArrowLeft, CalendarClock, ChevronDown, Copy, ExternalLink, Eye, LoaderCircle, Plus, RotateCcw, Trash2, Undo2 } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
     Badge, Button, Card, CardContent, CardHeader, CardTitle, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, Input, Label, useBreadcrumbs,
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, Input, Label, useBreadcrumbs, useUnsavedChanges,
 } from '@sunrice/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { FieldError, FieldInput, Fields } from '@/components/FieldInput.tsx';
@@ -36,6 +36,8 @@ interface Props {
     } | null;
     values: { title: string; slug: string; data: FieldValues; seo: FieldValues | null };
     revisions: { id: number; title: string; createdAt: string | null }[];
+    /** This translation's id when a revision restore this session can be undone. */
+    undoRestore?: number | null;
     can: { create: boolean; update: boolean; publish: boolean; delete: boolean };
 }
 
@@ -66,7 +68,7 @@ export default function EntryEditorPage(props: Props) {
     return <EntryEditor key={entry ? `${entry.id}:${entry.locale}:${entry.version}:${entry.status}:${entry.trashed}:${entry.publishedAt}` : 'new'} {...props} />;
 }
 
-function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, can }: Props) {
+function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, undoRestore = null, can }: Props) {
     const list = adminUrl(`cms/collections/${collection.handle}/entries`);
     const url = entry ? adminUrl(`cms/entries/${entry.id}`) : list;
     const heading = entry ? values.title : 'New entry';
@@ -91,6 +93,13 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
             form.post(url);
         }
     };
+    // After "someone else saved": save over their version anyway.
+    const saveMine = () => {
+        form.transform((data) => ({ ...data, version: null, publish: false, published_at: null }));
+        form.put(url, { preserveScroll: true });
+    };
+    useUnsavedChanges(form.isDirty, editable ? () => form.processing || save() : undefined);
+
     // Publishing what's in the form: saved first when one may edit, else the saved draft.
     const publish = (publishedAt: string | null = null) => {
         if (can.update) {
@@ -131,6 +140,17 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                     {entry?.trashed && can.delete && (
                         <Button type="button" variant="outline" onClick={() => router.post(`${url}/restore`, {}, { preserveScroll: true })}>
                             <RotateCcw /> Restore
+                        </Button>
+                    )}
+                    {entry?.trashed && can.delete && (
+                        <Button type="button" variant="outline" className="cms:text-destructive"
+                            onClick={() => confirm(`Delete "${values.title}" for good, in every language, with its revisions? This can't be undone.`, () => router.delete(`${url}/force`))}>
+                            <Trash2 /> Delete for good
+                        </Button>
+                    )}
+                    {entry && !entry.trashed && can.create && (
+                        <Button type="button" variant="ghost" title="Copy every language as a new draft" onClick={() => router.post(`${url}/duplicate`)}>
+                            <Copy /> Duplicate
                         </Button>
                     )}
                     {entry && !entry.trashed && can.delete && (
@@ -176,7 +196,18 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                         () => router.delete(`${url}/translations/${entry.locale}`))} />
             )}
 
-            {errors.version && <p role="alert" className="cms:rounded-lg cms:border cms:border-destructive cms:p-3 cms:text-sm cms:text-destructive">{errors.version}</p>}
+            {errors.version && (
+                <div role="alert" className="cms:flex cms:flex-wrap cms:items-center cms:justify-between cms:gap-3 cms:rounded-lg cms:border cms:border-destructive cms:p-3 cms:text-sm cms:text-destructive">
+                    <span>{errors.version}</span>
+                    <span className="cms:flex cms:gap-2">
+                        <Button type="button" variant="outline" size="sm" onClick={() => router.reload()}>Load theirs</Button>
+                        <Button type="button" variant="destructive" size="sm" disabled={form.processing}
+                            onClick={() => confirm('Save your version over theirs? Their changes are replaced (their earlier published versions stay in the revisions).', saveMine)}>
+                            Save mine anyway
+                        </Button>
+                    </span>
+                </div>
+            )}
             {(errors.entry || errors.published_at) && <p role="alert" className="cms:text-sm cms:text-destructive">{errors.entry ?? errors.published_at}</p>}
 
             <div className="cms:grid cms:gap-6 cms:lg:grid-cols-[minmax(0,1fr)_18rem]">
@@ -236,6 +267,11 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                         <Card>
                             <CardHeader><CardTitle className="cms:text-base">Revisions</CardTitle></CardHeader>
                             <CardContent className="cms:flex cms:flex-col cms:gap-2 cms:text-sm">
+                                {undoRestore !== null && can.update && (
+                                    <Button type="button" variant="outline" size="sm" onClick={() => router.post(adminUrl(`cms/entry-translations/${undoRestore}/undo-restore`), {}, { preserveScroll: true })}>
+                                        <Undo2 /> Undo the restore
+                                    </Button>
+                                )}
                                 {revisions.length === 0 && <p className="cms:text-muted-foreground">Each publish keeps one.</p>}
                                 {revisions.map((revision) => (
                                     <div key={revision.id} className="cms:flex cms:items-center cms:justify-between cms:gap-2">
