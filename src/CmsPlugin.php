@@ -116,6 +116,7 @@ final class CmsPlugin extends BasePlugin
                 Route::get('forms/{form:handle}/submissions', 'index')->name('index')->middleware('can:cms.submissions.view');
                 Route::get('forms/{form:handle}/submissions/export', 'export')->name('export')->middleware('can:cms.submissions.view');
                 Route::delete('submissions/{submission}', 'destroy')->name('destroy')->middleware('can:cms.submissions.delete');
+                Route::get('submissions/{submission}/files/{field}', 'file')->name('file')->middleware('can:cms.submissions.view');
             });
             Route::prefix('cms')->name('cms.globals.')->controller(GlobalsController::class)->group(function (): void {
                 Route::get('globals', 'index')->name('index')->middleware('can:cms.globals.view');

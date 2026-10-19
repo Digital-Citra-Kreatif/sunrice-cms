@@ -10,7 +10,7 @@
     $sent = $form ? session(\Sunrice\Cms\Site\FormController::flashKey($form)) : null;
 @endphp
 @if ($form)
-<form method="POST" action="{{ route('sunrice.cms.forms.submit', $form->handle) }}" id="form-{{ $form->handle }}" {{ $attributes }}>
+<form method="POST" action="{{ route('sunrice.cms.forms.submit', $form->handle) }}" id="form-{{ $form->handle }}" @if ($form->takesFiles()) enctype="multipart/form-data" @endif {{ $attributes }}>
     @csrf
     <x-honeypot />
     <input type="hidden" name="locale" value="{{ app()->getLocale() }}">
@@ -36,6 +36,8 @@
                 <label for="{{ $id }}">{{ $label }}@if ($field->required) <span aria-hidden="true">*</span>@endif</label>
                 @if ($field->type === 'textarea')
                     <textarea id="{{ $id }}" name="{{ $field->handle }}" rows="5" @required($field->required) @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif @if ($error) aria-invalid="true" @endif>{{ is_scalar($value) ? $value : '' }}</textarea>
+                @elseif ($field->type === 'file')
+                    <input type="file" id="{{ $id }}" name="{{ $field->handle }}" @if (\Sunrice\Cms\Fields\Types\FileField::types($field) !== []) accept=".{{ implode(',.', \Sunrice\Cms\Fields\Types\FileField::types($field)) }}" @endif @required($field->required) @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif @if ($error) aria-invalid="true" @endif>
                 @elseif ($field->type === 'select')
                     <select id="{{ $id }}" name="{{ $field->handle }}{{ $multiple ? '[]' : '' }}" @if ($multiple) multiple @endif @required($field->required) @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif @if ($error) aria-invalid="true" @endif>
                         @unless ($multiple)<option value=""></option>@endunless
@@ -67,6 +69,14 @@
             @endif
         </div>
     @endforeach
+    @if ($form->captcha && app(\Sunrice\Admin\Security\Captcha::class)->enabled())
+        <div>
+            {{ app(\Sunrice\Admin\Security\Captcha::class)->widget() }}
+            @if ($captchaError = $bag?->first(\Sunrice\Cms\Site\FormController::CAPTCHA))
+                <p id="form-{{ $form->handle }}-captcha-error" role="alert">{{ $captchaError }}</p>
+            @endif
+        </div>
+    @endif
     <button type="submit">{{ $submit }}</button>
 </form>
 @endif

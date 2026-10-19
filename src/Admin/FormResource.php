@@ -7,14 +7,18 @@ namespace Sunrice\Cms\Admin;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Sunrice\Admin\Resources\Forms\Form;
+use Sunrice\Admin\Resources\Forms\NumberInput;
 use Sunrice\Admin\Resources\Forms\Select;
 use Sunrice\Admin\Resources\Forms\Textarea;
 use Sunrice\Admin\Resources\Forms\TextInput;
+use Sunrice\Admin\Resources\Forms\Toggle;
 use Sunrice\Admin\Resources\Resource;
 use Sunrice\Admin\Resources\Tables\Column;
 use Sunrice\Admin\Resources\Tables\Table;
+use Sunrice\Admin\Security\Captcha;
 use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Form as FormModel;
+use Sunrice\Cms\Support\SafeUrl;
 
 /**
  * Structure → Forms, guarded by the cms.forms.* permissions. What visitors
@@ -53,7 +57,7 @@ final class FormResource extends Resource
                 ->help('How templates show it: <x-sunrice-cms::form handle="contact" />. It can\'t change later.'),
             Select::make('blueprint')->required()
                 ->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
-                ->help('Its fields. Visitors get the text, textarea, number, toggle, select and date ones.'),
+                ->help('Its fields. Visitors get the text, textarea, number, toggle, select, date and file ones.'),
             Textarea::make('notify')->label('Email to')->rows(3)->maxLength(2000)->placeholder('team@example.com')
                 ->help('One address per line, at most '.self::MAX_NOTIFY.'. Empty: submissions are only kept here.')
                 ->rules([function (string $attribute, mixed $value, Closure $fail): void {
@@ -75,6 +79,17 @@ final class FormResource extends Resource
                 }),
             Textarea::make('message')->label('Thank-you message')->rows(2)->maxLength(1000)
                 ->placeholder('Thank you, we got your message.'),
+            TextInput::make('redirect_url')->label('After sending, go to')->maxLength(2000)->placeholder('/thank-you')
+                ->rules([SafeUrl::rule()])
+                ->help('A page or address visitors go to once it\'s sent (with the thank-you message). Empty: back to the page they were on.'),
+            NumberInput::make('per_minute')->label('Sends per visitor a minute')->integer()->min(1)->max(1000)
+                ->placeholder((string) (new FormModel)->perMinute())
+                ->help('How often one visitor (IP address) may send it. Empty: the site\'s default.'),
+            Toggle::make('captcha')->label('Require a captcha')
+                ->disabled(! app(Captcha::class)->enabled())
+                ->help(app(Captcha::class)->enabled()
+                    ? 'Visitors confirm they\'re not a robot before it\'s sent.'
+                    : 'Set SUNRICE_CAPTCHA_SITE_KEY and SUNRICE_CAPTCHA_SECRET_KEY (Cloudflare Turnstile, or reCAPTCHA or hCaptcha with SUNRICE_CAPTCHA_PROVIDER) to use it.'),
         ]);
     }
 

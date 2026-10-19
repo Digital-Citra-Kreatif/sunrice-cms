@@ -17,7 +17,11 @@ use Sunrice\Cms\Support\FieldText;
  */
 final class SubmissionRows
 {
-    /** @return list<array{handle: string, label: string, value: string}> */
+    /**
+     * With `file`, the admin's download link of a file sent.
+     *
+     * @return list<array{handle: string, label: string, value: string, file: string|null}>
+     */
     public static function of(Submission $submission): array
     {
         $rows = [];
@@ -25,16 +29,26 @@ final class SubmissionRows
         $known = [];
         foreach ($fields as $field) {
             $known[] = $field->handle;
-            $rows[] = ['handle' => $field->handle, 'label' => self::label($field), 'value' => self::text($submission->data[$field->handle] ?? null, $field)];
+            $rows[] = self::row($submission, $field->handle, self::label($field), $field);
         }
         // Fields removed from the blueprint since: still shown.
         foreach ($submission->data as $handle => $value) {
             if (! in_array((string) $handle, $known, true)) {
-                $rows[] = ['handle' => (string) $handle, 'label' => Str::headline((string) $handle), 'value' => self::text($value)];
+                $rows[] = self::row($submission, (string) $handle, Str::headline((string) $handle), null);
             }
         }
 
         return $rows;
+    }
+
+    /** @return array{handle: string, label: string, value: string, file: string|null} */
+    private static function row(Submission $submission, string $handle, string $label, ?Field $field): array
+    {
+        $value = $submission->data[$handle] ?? null;
+        $file = is_array($value) && is_string($value['path'] ?? null)
+            ? route('sunrice.admin.cms.submissions.file', ['submission' => $submission->id, 'field' => $handle]) : null;
+
+        return ['handle' => $handle, 'label' => $label, 'value' => self::text($value, $field), 'file' => $file];
     }
 
     public static function label(Field $field): string

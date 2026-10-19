@@ -54,6 +54,7 @@ final class CmsServiceProvider extends ServiceProvider
             Types\FieldsetInclude::class,
             Types\TermsField::class,
             Types\EntriesField::class,
+            Types\FileField::class,
         ));
         // Loaded once per request (or job).
         $this->app->scoped(Fieldsets::class);
@@ -96,10 +97,13 @@ final class CmsServiceProvider extends ServiceProvider
                 Support\SiteCode::changed($event->changed);
             }
         });
+        // Per visitor (IP address) and form, at the form's own limit.
         RateLimiter::for('sunrice-forms', function (Request $request): Limit {
-            $perMinute = config('sunrice-cms.forms.per_minute', 5);
+            $form = $request->route('form');
+            $form = is_string($form) ? Models\Form::query()->where('handle', $form)->first() : ($form instanceof Models\Form ? $form : null);
+            $perMinute = $form?->perMinute() ?? (new Models\Form)->perMinute();
 
-            return Limit::perMinute(is_int($perMinute) ? $perMinute : 5)->by('sunrice-forms|'.$request->ip());
+            return Limit::perMinute($perMinute)->by('sunrice-forms|'.($form->handle ?? '').'|'.$request->ip());
         });
         if (! $this->app->routesAreCached()) {
             $this->siteRoutes();
@@ -108,6 +112,8 @@ final class CmsServiceProvider extends ServiceProvider
             $this->commands([Console\PublishScheduledCommand::class]);
             $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
                 $schedule->command('sunrice:publish-scheduled')->everyMinute()->withoutOverlapping();
+                // Old form submissions and their files (sunrice-cms.forms.prune_after_days).
+                $schedule->command('model:prune', ['--model' => [Models\Submission::class]])->daily();
             });
             $this->publishes([dirname(__DIR__).'/config/sunrice-cms.php' => config_path('sunrice-cms.php')], 'sunrice-cms-config');
             // Also "laravel-assets", which Laravel apps publish on every composer update.

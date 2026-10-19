@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\Schema;
+use Sunrice\Cms\Fields\Types;
 
 /**
  * A form visitors fill in on the site: its fields come from a blueprint,
@@ -21,6 +22,9 @@ use Sunrice\Cms\Fields\Schema;
  * @property string|null $blueprint
  * @property list<string>|null $notify
  * @property string|null $message
+ * @property bool $captcha visitors pass the captcha to send it
+ * @property string|null $redirect_url where visitors go once it's sent
+ * @property int|null $per_minute sends one visitor may make per minute (null: sunrice-cms.forms.per_minute)
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  *
@@ -29,7 +33,7 @@ use Sunrice\Cms\Fields\Schema;
 class Form extends Model
 {
     /** The field types a form shows visitors; fields of other types are left out. */
-    public const PUBLIC_TYPES = ['text', 'textarea', 'number', 'toggle', 'select', 'date'];
+    public const PUBLIC_TYPES = ['text', 'textarea', 'number', 'toggle', 'select', 'date', 'file'];
 
     protected $table = 'sunrice_forms';
 
@@ -39,7 +43,7 @@ class Form extends Model
 
     protected function casts(): array
     {
-        return ['notify' => 'array'];
+        return ['notify' => 'array', 'captcha' => 'boolean', 'per_minute' => 'integer'];
     }
 
     /** @return HasMany<Submission, $this> */
@@ -59,6 +63,26 @@ class Form extends Model
             array_filter($schema->fields(), fn (Field $field): bool => ! in_array($field->type, self::PUBLIC_TYPES, true))));
 
         return $this->schema = $schema->except($hidden);
+    }
+
+    /** Sends one visitor may make per minute. */
+    public function perMinute(): int
+    {
+        $default = config('sunrice-cms.forms.per_minute', 5);
+
+        return max(1, $this->per_minute ?? (is_numeric($default) ? (int) $default : 5));
+    }
+
+    /** Whether it has a file field (the form then sends multipart). */
+    public function takesFiles(): bool
+    {
+        foreach ($this->schema()->fields() as $field) {
+            if ($field->type === Types\FileField::TYPE) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** What visitors see once they've sent it. */

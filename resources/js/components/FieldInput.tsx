@@ -84,6 +84,9 @@ function Control({ field, value, onChange, errors, id, content }: Props) {
     switch (field.type) {
         case 'toggle':
             return null;
+        case 'file':
+            // Visitors send files with forms; entries use a media field.
+            return <p className="cms:text-sm cms:text-muted-foreground">Visitors attach a file here when they send a form.</p>;
         case 'textarea':
             return <Textarea id={id} aria-invalid={invalid} value={typeof value === 'string' ? value : ''} rows={numberConfig(field, 'rows') ?? 4}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)} />;

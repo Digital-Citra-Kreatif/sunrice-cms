@@ -7,11 +7,13 @@ namespace Sunrice\Cms\Http\Controllers;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use Sunrice\Admin\Security\SecurityLog;
 use Sunrice\Admin\Support\Csv;
 use Sunrice\Cms\Actions\Forms\DeleteSubmission;
+use Sunrice\Cms\Actions\Forms\SubmitForm;
 use Sunrice\Cms\Mail\SubmissionRows;
 use Sunrice\Cms\Models\Form;
 use Sunrice\Cms\Models\Submission;
@@ -57,6 +59,16 @@ final class SubmissionController
             'submissions' => $submissions,
             'can' => ['delete' => $request->user()?->can('cms.submissions.delete') ?? false],
         ]);
+    }
+
+    /** A file sent with a form, as a download (never shown in the browser). */
+    public function file(Submission $submission, string $field): StreamedResponse
+    {
+        $file = $submission->data[$field] ?? null;
+        abort_unless(is_array($file) && is_string($file['path'] ?? null) && Storage::disk(SubmitForm::disk())->exists($file['path']), 404);
+        $name = is_string($file['name'] ?? null) ? $file['name'] : basename($file['path']);
+
+        return Storage::disk(SubmitForm::disk())->download($file['path'], $name, ['X-Content-Type-Options' => 'nosniff', 'Content-Type' => 'application/octet-stream']);
     }
 
     public function destroy(Submission $submission, DeleteSubmission $delete): RedirectResponse

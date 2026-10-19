@@ -51,8 +51,15 @@ return [
     ],
 
     'forms' => [
-        // Submissions one visitor (IP address) may send per minute, to all forms.
+        // Submissions one visitor (IP address) may send per minute to a form,
+        // unless the form says otherwise.
         'per_minute' => 5,
+        // Files sent with forms: a private disk (never served to the public)
+        // and the largest file a file field takes, in KB, unless it says.
+        'upload_disk' => env('SUNRICE_FORMS_DISK', 'local'),
+        'upload_max_kb' => 10240,
+        // Days submissions (and their files) are kept; null: forever.
+        'prune_after_days' => env('SUNRICE_FORMS_PRUNE_DAYS'),
     ],
 
     'revisions' => [

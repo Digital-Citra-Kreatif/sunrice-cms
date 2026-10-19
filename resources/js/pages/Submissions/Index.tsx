@@ -13,7 +13,7 @@ interface Row {
     id: number;
     locale: string;
     createdAt: string | null;
-    rows: { handle: string; label: string; value: string }[];
+    rows: { handle: string; label: string; value: string; file: string | null }[];
 }
 
 interface Props {
@@ -117,7 +117,9 @@ export default function SubmissionsIndex({ form, forms, submissions, can }: Prop
                         {open?.rows.map((r) => (
                             <div key={r.handle}>
                                 <dt className="cms:font-medium">{r.label}</dt>
-                                <dd className="cms:whitespace-pre-wrap cms:break-words cms:text-muted-foreground">{r.value || '—'}</dd>
+                                <dd className="cms:whitespace-pre-wrap cms:break-words cms:text-muted-foreground">
+                                    {r.file ? <a href={r.file} className="cms:underline cms:underline-offset-4 hover:cms:text-foreground" download>{r.value}</a> : (r.value || '—')}
+                                </dd>
                             </div>
                         ))}
                     </dl>
