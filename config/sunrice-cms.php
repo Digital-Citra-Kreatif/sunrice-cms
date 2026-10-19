@@ -18,6 +18,21 @@ return [
         'middleware' => ['web'],
     ],
 
+    'cache' => [
+        // Cache what the site reads often (which page is at an address,
+        // menus, the sitemap) until the content changes.
+        'enabled' => env('SUNRICE_CACHE', true),
+        // The cache store (null: the app's default). Use a shared one
+        // (redis, database, memcached) with several servers.
+        'store' => env('SUNRICE_CACHE_STORE'),
+        // Seconds anything is kept at most.
+        'ttl' => 3600,
+        // Keep whole pages for visitors who aren't signed in. Turn it on
+        // when templates show nothing personal (or skip those pages with
+        // PageCache::skipWhen()).
+        'pages' => env('SUNRICE_PAGE_CACHE', false),
+    ],
+
     'seo' => [
         // Ask search engines to stay away from the whole site, e.g. on a
         // staging copy (also in Settings → Site).

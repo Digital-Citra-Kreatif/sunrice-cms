@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sunrice\Cms;
 
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -55,6 +56,8 @@ final class CmsServiceProvider extends ServiceProvider
         $this->app->scoped(Globals::class);
         $this->app->scoped(Menus::class);
         $this->app->scoped(Site\Site::class);
+        $this->app->scoped(Support\SiteCache::class);
+        $this->app->singleton(Site\PageCache::class);
     }
 
     public function boot(): void
@@ -73,6 +76,8 @@ final class CmsServiceProvider extends ServiceProvider
         EntryTranslation::saved(fn (EntryTranslation $translation) => Support\MediaUsage::entry($translation));
         EntryTranslation::deleted(fn (EntryTranslation $translation) => app(MediaUsages::class)->forget('cms.entry', (string) $translation->entry_id, $translation->locale));
         GlobalValue::saved(fn (GlobalValue $value) => Support\MediaUsage::global($value));
+        // Changes to what the site shows clear its caches.
+        Support\ContentWatch::register();
         // A new homepage: forget the one read.
         Event::listen(SettingsSaved::class, function (SettingsSaved $event): void {
             if ($event->section === Settings\SiteSettings::key() && app()->resolved(Site\Site::class)) {
@@ -94,6 +99,10 @@ final class CmsServiceProvider extends ServiceProvider
             $this->siteRoutes();
         }
         if ($this->app->runningInConsole()) {
+            $this->commands([Console\PublishScheduledCommand::class]);
+            $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
+                $schedule->command('sunrice:publish-scheduled')->everyMinute()->withoutOverlapping();
+            });
             $this->publishes([dirname(__DIR__).'/config/sunrice-cms.php' => config_path('sunrice-cms.php')], 'sunrice-cms-config');
             // Also "laravel-assets", which Laravel apps publish on every composer update.
             $this->publishes([dirname(__DIR__).'/dist' => public_path(CmsPlugin::ASSETS)], ['sunrice-cms-assets', 'laravel-assets']);
@@ -110,9 +119,9 @@ final class CmsServiceProvider extends ServiceProvider
         if (config('sunrice-cms.site.enabled', true) === true) {
             Route::middleware($middleware)->get('sitemap.xml', Site\SitemapController::class)->name('sunrice.cms.sitemap');
             // The homepage: the fallback doesn't match /. An app's own / route, loaded later, replaces it.
-            Route::get('/', [Site\SiteController::class, 'show'])->middleware($middleware)->name('sunrice.cms.home');
+            Route::get('/', [Site\SiteController::class, 'show'])->middleware([...$middleware, Site\PageCache::class])->name('sunrice.cms.home');
             // The fallback: matched after every other route, so the app's own come first.
-            Route::fallback([Site\SiteController::class, 'show'])->middleware($middleware)->name('sunrice.cms.page');
+            Route::fallback([Site\SiteController::class, 'show'])->middleware([...$middleware, Site\PageCache::class])->name('sunrice.cms.page');
         }
     }
 }

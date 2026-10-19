@@ -8,6 +8,7 @@ use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\Menu;
 use Sunrice\Cms\Models\MenuItem;
 use Sunrice\Cms\Support\Locales;
+use Sunrice\Cms\Support\SiteCache;
 
 /**
  * Menus for templates: items with their label and URL in a language.
@@ -32,8 +33,12 @@ final class Menus
         $locale ??= Locales::current();
         $key = "{$handle}:{$locale}";
         if (! array_key_exists($key, $this->resolved)) {
-            $menu = Menu::query()->where('handle', $handle)->with('items.entry.translations', 'items.entry.collection')->first();
-            $this->resolved[$key] = $menu === null ? [] : $this->tree($menu->items->all(), null, $locale);
+            // Its links are full URLs: per host.
+            $this->resolved[$key] = app(SiteCache::class)->remember('menu:'.sha1(url('/').'|'.$key), function () use ($handle, $locale): array {
+                $menu = Menu::query()->where('handle', $handle)->with('items.entry.translations', 'items.entry.collection')->first();
+
+                return $menu === null ? [] : $this->tree($menu->items->all(), null, $locale);
+            });
         }
 
         return $this->resolved[$key];

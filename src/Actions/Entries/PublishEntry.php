@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
+use Sunrice\Cms\Events\EntryPublished;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Revision;
 use Sunrice\Cms\Site\Site;
@@ -77,6 +78,7 @@ final class PublishEntry
             $this->terms->handle($translation->entry);
         });
         $this->activity->record('published', 'entry', $entry, $values['title'], ['locale' => $translation->locale]);
+        EntryPublished::dispatch($translation);
 
         return $translation;
     }

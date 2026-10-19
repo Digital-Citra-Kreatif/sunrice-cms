@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sunrice\Cms\Actions\Entries;
 
 use Sunrice\Admin\Activity\ActivityLog;
+use Sunrice\Cms\Events\EntryTrashed;
 use Sunrice\Cms\Models\Entry;
 
 /**
@@ -24,6 +25,7 @@ final class TrashEntry
         }
         $entry->delete();
         $this->activity->record('trashed', 'entry', $entry, self::label($entry));
+        EntryTrashed::dispatch($entry);
     }
 
     /** @internal the main language's title, or the first */

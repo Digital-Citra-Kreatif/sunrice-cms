@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sunrice\Cms\Actions\Entries;
 
 use Sunrice\Admin\Activity\ActivityLog;
+use Sunrice\Cms\Events\EntryRestored;
 use Sunrice\Cms\Models\Entry;
 
 /**
@@ -24,5 +25,6 @@ final class RestoreEntry
         }
         $entry->restore();
         $this->activity->record('restored', 'entry', $entry, TrashEntry::label($entry));
+        EntryRestored::dispatch($entry);
     }
 }

@@ -12,6 +12,7 @@ use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\Seo;
+use Sunrice\Cms\Support\SiteCache;
 
 /**
  * /sitemap.xml: every live entry page, with its other languages, but
@@ -32,6 +33,12 @@ final class SitemapController
         if (app(SiteSettings::class)->hidden()) {
             return response(implode("\n", self::OPEN).'</urlset>', 200, ['Content-Type' => 'application/xml; charset=UTF-8', 'X-Robots-Tag' => 'noindex']);
         }
+
+        return response(app(SiteCache::class)->remember('sitemap:'.sha1(url('/')), fn (): string => $this->xml()), 200, ['Content-Type' => 'application/xml; charset=UTF-8']);
+    }
+
+    private function xml(): string
+    {
         $routed = Collection::query()->whereNotNull('route')->pluck('id');
         $translations = EntryTranslation::query()->live()->with('entry.collection', 'entry.translations')
             ->whereIn('collection_id', $routed)->orderBy('id')->limit(self::LIMIT)->get()
@@ -71,6 +78,6 @@ final class SitemapController
         }
         $xml[] = '</urlset>';
 
-        return response(implode("\n", $xml), 200, ['Content-Type' => 'application/xml; charset=UTF-8']);
+        return implode("\n", $xml);
     }
 }

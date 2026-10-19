@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Site;
 
+use Illuminate\Database\Eloquent\Builder;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Redirect;
@@ -11,6 +12,7 @@ use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Support\Locales;
+use Sunrice\Cms\Support\SiteCache;
 
 /**
  * The public site: which entry a path shows, and entries' URLs. The main
@@ -20,7 +22,7 @@ use Sunrice\Cms\Support\Locales;
  */
 final class Site
 {
-    /** @var list<array{0: Collection|Taxonomy, 1: RoutePattern}>|null */
+    /** @var list<array{0: 'collection'|'taxonomy', 1: int, 2: RoutePattern}>|null */
     private ?array $patterns = null;
 
     /** The homepage entry's id, once read (false: not read yet). */
@@ -45,22 +47,50 @@ final class Site
         if ($rest === '/') {
             return $this->homepage($locale);
         }
-        foreach ($this->patterns() as [$model, $pattern]) {
+        // What was found at the path before, by id (only pages found: any path may be asked for).
+        $cache = app(SiteCache::class);
+        $key = 'page:'.sha1($locale.'|'.$rest);
+        $found = SiteCache::enabled() ? $cache->store()->get($cache->key($key)) : null;
+        if (is_array($found) && is_int($found[1] ?? null)) {
+            $page = $found[0] === 'entry' ? $this->entryQuery()->whereKey($found[1])->first() : $this->termQuery()->whereKey($found[1])->first();
+            if ($page !== null) {
+                return $page;
+            }
+        }
+        $page = $this->resolve($locale, $rest);
+        if ($page !== null && SiteCache::enabled()) {
+            $cache->store()->put($cache->key($key), [$page instanceof EntryTranslation ? 'entry' : 'term', $page->id], SiteCache::ttl());
+        }
+
+        return $page;
+    }
+
+    private function resolve(string $locale, string $rest): EntryTranslation|TermTranslation|null
+    {
+        foreach ($this->patterns() as [$type, $id, $pattern]) {
             $slug = $pattern->match($rest);
             if ($slug === null) {
                 continue;
             }
-            if ($model instanceof Collection) {
-                return EntryTranslation::query()->live()->with('entry.collection')
-                    ->where('collection_id', $model->id)->where('locale', $locale)->where('slug', $slug)->first();
-            }
 
-            return TermTranslation::query()->with('term.taxonomy', 'term.translations')
-                ->where('taxonomy_id', $model->id)->where('locale', $locale)->where('slug', $slug)
-                ->whereHas('term', fn ($q) => $q->withoutTrashed())->first();
+            return $type === 'collection'
+                ? $this->entryQuery()->where('collection_id', $id)->where('locale', $locale)->where('slug', $slug)->first()
+                : $this->termQuery()->where('taxonomy_id', $id)->where('locale', $locale)->where('slug', $slug)->first();
         }
 
         return null;
+    }
+
+    /** @return Builder<EntryTranslation> */
+    private function entryQuery(): Builder
+    {
+        return EntryTranslation::query()->live()->with('entry.collection');
+    }
+
+    /** @return Builder<TermTranslation> */
+    private function termQuery(): Builder
+    {
+        return TermTranslation::query()->with('term.taxonomy', 'term.translations')->whereHas('term', fn ($q) => $q->withoutTrashed());
     }
 
     /** The URL of a term's page in its language, or null when its taxonomy has no pages. */
@@ -93,7 +123,13 @@ final class Site
     public function listing(string $path): ?Listing
     {
         [$locale, $rest] = $this->splitLocale('/'.trim($path, '/'));
-        $collection = $rest === '/' ? null : Collection::query()->where('listing_route', $rest)->first();
+        if ($rest === '/') {
+            return null;
+        }
+        /** @var array<string, int> $routes listing routes and their collections */
+        $routes = app(SiteCache::class)->remember('listings', fn (): array => Collection::query()->whereNotNull('listing_route')->pluck('id', 'listing_route')
+            ->map(fn (mixed $id): int => is_numeric($id) ? (int) $id : 0)->all());
+        $collection = isset($routes[$rest]) ? Collection::query()->find($routes[$rest]) : null;
 
         return $collection === null ? null : new Listing($collection, $locale);
     }
@@ -182,19 +218,28 @@ final class Site
         return [Locales::default(), $path];
     }
 
-    /** @return list<array{0: Collection|Taxonomy, 1: RoutePattern}> collections' and taxonomies' patterns, most specific first */
+    /** @return list<array{0: 'collection'|'taxonomy', 1: int, 2: RoutePattern}> collections' and taxonomies' patterns, most specific first */
     private function patterns(): array
     {
         if ($this->patterns === null) {
+            /** @var list<array{0: 'collection'|'taxonomy', 1: int, 2: string}> $routes */
+            $routes = app(SiteCache::class)->remember('patterns', function (): array {
+                $routes = [];
+                foreach (Collection::query()->whereNotNull('route')->orderBy('id')->get(['id', 'route']) as $collection) {
+                    $routes[] = ['collection', $collection->id, (string) $collection->route];
+                }
+                foreach (Taxonomy::query()->whereNotNull('route')->orderBy('id')->get(['id', 'route']) as $taxonomy) {
+                    $routes[] = ['taxonomy', $taxonomy->id, (string) $taxonomy->route];
+                }
+
+                return $routes;
+            });
             $patterns = [];
-            foreach (Collection::query()->whereNotNull('route')->orderBy('id')->get() as $collection) {
-                $patterns[] = [$collection, new RoutePattern((string) $collection->route)];
-            }
-            foreach (Taxonomy::query()->whereNotNull('route')->orderBy('id')->get() as $taxonomy) {
-                $patterns[] = [$taxonomy, new RoutePattern((string) $taxonomy->route)];
+            foreach ($routes as [$type, $id, $route]) {
+                $patterns[] = [$type, $id, new RoutePattern($route)];
             }
             // usort keeps the order of equals: collections before taxonomies, then oldest first.
-            usort($patterns, fn (array $a, array $b): int => $b[1]->specificity() <=> $a[1]->specificity());
+            usort($patterns, fn (array $a, array $b): int => $b[2]->specificity() <=> $a[2]->specificity());
             $this->patterns = $patterns;
         }
 

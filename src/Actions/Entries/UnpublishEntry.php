@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sunrice\Cms\Actions\Entries;
 
 use Sunrice\Admin\Activity\ActivityLog;
+use Sunrice\Cms\Events\EntryUnpublished;
 use Sunrice\Cms\Models\EntryTranslation;
 
 /**
@@ -25,6 +26,7 @@ final class UnpublishEntry
         $translation->status = EntryTranslation::DRAFT;
         $translation->save();
         $this->activity->record('unpublished', 'entry', $translation->entry, $translation->draft_title, ['locale' => $translation->locale]);
+        EntryUnpublished::dispatch($translation);
 
         return $translation;
     }

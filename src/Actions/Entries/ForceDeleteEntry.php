@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
 use Sunrice\Admin\Media\MediaUsages;
+use Sunrice\Cms\Events\EntryDeleted;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\Revision;
 
@@ -40,5 +41,6 @@ final class ForceDeleteEntry
             app(MediaUsages::class)->forget('cms.entry', (string) $entry->id);
         });
         $this->activity->record('deleted', 'entry', $entry, $label);
+        EntryDeleted::dispatch($entry);
     }
 }
