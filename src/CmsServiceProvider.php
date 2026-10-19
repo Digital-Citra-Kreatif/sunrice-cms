@@ -117,7 +117,7 @@ final class CmsServiceProvider extends ServiceProvider
             $this->siteRoutes();
         }
         if ($this->app->runningInConsole()) {
-            $this->commands([Console\PublishScheduledCommand::class]);
+            $this->commands([Console\PublishScheduledCommand::class, Console\TranslateCommand::class]);
             $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
                 $schedule->command('sunrice:publish-scheduled')->everyMinute()->withoutOverlapping();
                 // Old form submissions and their files (sunrice-cms.forms.prune_after_days).

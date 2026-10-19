@@ -55,6 +55,25 @@ return [
         'noindex' => env('SUNRICE_NOINDEX', false),
     ],
 
+    'translation' => [
+        // Machine translation (sunrice:translate): gemini (a Google AI
+        // Studio key) or openrouter (any model it hosts).
+        'driver' => env('SUNRICE_TRANSLATE_DRIVER', 'gemini'),
+        // Overrides the driver's model below.
+        'model' => env('SUNRICE_TRANSLATE_MODEL'),
+        'gemini' => [
+            'key' => env('GEMINI_API_KEY'),
+            'model' => 'gemini-3.5-flash-lite',
+        ],
+        'openrouter' => [
+            'key' => env('OPENROUTER_API_KEY'),
+            'model' => 'google/gemini-3.5-flash-lite',
+        ],
+        // Strings sent in one request, and seconds to wait for its answer.
+        'batch_size' => 40,
+        'timeout' => 120,
+    ],
+
     'forms' => [
         // Submissions one visitor (IP address) may send per minute to a form,
         // unless the form says otherwise.
