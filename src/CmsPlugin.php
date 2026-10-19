@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms;
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Support\Facades\Route;
 use Sunrice\Admin\Assets\PluginBundle;
 use Sunrice\Admin\BasePlugin;
@@ -26,6 +27,8 @@ use Sunrice\Cms\Http\Controllers\GlobalsController;
 use Sunrice\Cms\Http\Controllers\MenuController;
 use Sunrice\Cms\Http\Controllers\SubmissionController;
 use Sunrice\Cms\Http\Controllers\TermController;
+use Sunrice\Cms\Models\Entry;
+use Sunrice\Cms\Models\GlobalSet;
 
 /**
  * The CMS, added to the panel in the app's panel provider:
@@ -160,6 +163,11 @@ final class CmsPlugin extends BasePlugin
             - Site-wide values: cms_get_globals and cms_save_globals. Form submissions: cms_list_submissions.
             - Collections, taxonomies, global sets, menus, redirects and forms themselves are resources (list_records, save_record).
             MD);
+        // One editor at a time per entry or global set, per language (useEditLock).
+        $panel->lockable('cms.entry', fn (string $id, string $locale, Authorizable $user): bool => $user->can('cms.entries.update')
+            && Entry::query()->whereKey($id)->whereHas('collection')->exists());
+        $panel->lockable('cms.global', fn (string $id, string $locale, Authorizable $user): bool => $user->can('cms.globals.update')
+            && GlobalSet::query()->whereKey($id)->exists());
         $panel->bundle(PluginBundle::make('cms')->module(self::asset('admin.js'))->style(self::asset('admin.css'))->pages('Cms/'));
         if ($this->fieldTypes !== []) {
             $types = $this->fieldTypes;

@@ -4,7 +4,7 @@ import { ArrowLeft, CalendarClock, ChevronDown, Copy, ExternalLink, Eye, LoaderC
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
     Badge, Button, Card, CardContent, CardHeader, CardTitle, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, Input, Label, useBreadcrumbs, useUnsavedChanges,
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, Input, Label, useBreadcrumbs, useEditLock, useUnsavedChanges, KeptEditsNotice, ViewingNotice,
 } from '@sunrice/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { FieldError, FieldInput, Fields } from '@/components/FieldInput.tsx';
@@ -98,7 +98,17 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
         form.transform((data) => ({ ...data, version: null, publish: false, published_at: null }));
         form.put(url, { preserveScroll: true });
     };
-    useUnsavedChanges(form.isDirty, editable ? () => form.processing || save() : undefined);
+    const lock = useEditLock({
+        type: 'cms.entry', id: entry?.id, locale: entry?.locale, enabled: entry !== null && editable, noun: 'entry', leaveTo: list,
+        getUnsaved: () => (form.isDirty ? { title: form.data.title, slug: form.data.slug, data: form.data.data, seo: form.data.seo } : null),
+    });
+    const writable = editable && !lock.readOnly;
+    const loadKept = async (id: number) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const kept = await lock.loadKept(id) as any;
+        form.setData((data) => ({ ...data, title: kept.title ?? data.title, slug: kept.slug ?? data.slug, data: kept.data ?? data.data, seo: kept.seo ?? data.seo }));
+    };
+    useUnsavedChanges(form.isDirty && !lock.takenOver, writable ? () => form.processing || save() : undefined);
 
     // Publishing what's in the form: saved first when one may edit, else the saved draft.
     const publish = (publishedAt: string | null = null) => {
@@ -113,6 +123,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
         <form onSubmit={(e) => { e.preventDefault(); save(); }} className="cms:flex cms:flex-col cms:gap-6">
             <Head title={heading} />
             {confirmDialog}
+            {lock.dialogs}
 
             <div className="cms:flex cms:flex-wrap cms:items-center cms:justify-between cms:gap-4">
                 <div className="cms:flex cms:min-w-0 cms:items-center cms:gap-3">
@@ -153,19 +164,19 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                             <Copy /> Duplicate
                         </Button>
                     )}
-                    {entry && !entry.trashed && can.delete && (
+                    {entry && !entry.trashed && can.delete && !lock.readOnly && (
                         <Button type="button" variant="outline" size="icon" className="cms:text-destructive" aria-label="Move to the trash"
                             onClick={() => confirm(`Move "${values.title}" to the trash? It comes off the site; you can restore it.`, () => router.delete(url))}>
                             <Trash2 />
                         </Button>
                     )}
-                    {editable && (
+                    {writable && (
                         <Button type="submit" variant={entry && can.publish ? 'outline' : 'default'} disabled={form.processing}>
                             {form.processing && <LoaderCircle className="cms:animate-spin" />}
                             {entry ? 'Save draft' : 'Create draft'}
                         </Button>
                     )}
-                    {entry && !entry.trashed && can.publish && (
+                    {entry && !entry.trashed && can.publish && !lock.readOnly && (
                         <div className="cms:flex">
                             <Button type="button" className="cms:rounded-r-none" disabled={form.processing || upToDate} onClick={() => publish()}>
                                 {entry.status === 'draft' ? 'Publish' : upToDate ? 'Published' : 'Publish changes'}
@@ -196,6 +207,8 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                         () => router.delete(`${url}/translations/${entry.locale}`))} />
             )}
 
+            <ViewingNotice by={lock.viewingBy} />
+            <KeptEditsNotice kept={lock.kept} disabled={!writable} onLoad={(id: number) => void loadKept(id)} onDiscard={(id: number) => void lock.discardKept(id)} />
             {errors.version && (
                 <div role="alert" className="cms:flex cms:flex-wrap cms:items-center cms:justify-between cms:gap-3 cms:rounded-lg cms:border cms:border-destructive cms:p-3 cms:text-sm cms:text-destructive">
                     <span>{errors.version}</span>
@@ -211,7 +224,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
             {(errors.entry || errors.published_at) && <p role="alert" className="cms:text-sm cms:text-destructive">{errors.entry ?? errors.published_at}</p>}
 
             <div className="cms:grid cms:gap-6 cms:lg:grid-cols-[minmax(0,1fr)_18rem]">
-                <fieldset disabled={!editable} className="cms:flex cms:min-w-0 cms:flex-col cms:gap-6">
+                <fieldset disabled={!writable} className="cms:flex cms:min-w-0 cms:flex-col cms:gap-6">
                     <Card>
                         <CardContent className="cms:grid cms:gap-4 cms:md:grid-cols-[2fr_1fr]">
                             <div className="cms:flex cms:flex-col cms:gap-2">

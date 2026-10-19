@@ -37,7 +37,7 @@ final class GlobalsController
         $set->load('values');
 
         return Inertia::render('Cms/Globals/Edit', [
-            'set' => ['handle' => $set->handle, 'title' => $set->title],
+            'set' => ['id' => $set->id, 'handle' => $set->handle, 'title' => $set->title],
             'fields' => $set->schema()->toAdmin(),
             'locale' => $locale,
             'locales' => Locales::all(),

@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { ArrowLeft, LoaderCircle } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
-import { Button, Card, CardContent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs, useUnsavedChanges } from '@sunrice/admin-sdk/ui';
+import { Button, Card, CardContent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs, useEditLock, useUnsavedChanges, KeptEditsNotice, ViewingNotice } from '@sunrice/admin-sdk/ui';
 import { FieldInput } from '@/components/FieldInput.tsx';
 import { errorsAt } from '@/lib/builder.ts';
 import { localeName } from '@/lib/entries.ts';
@@ -13,7 +13,7 @@ import type { FieldDefinition } from '@/types.ts';
 type FieldValues = Record<string, any>;
 
 interface Props {
-    set: { handle: string; title: string };
+    set: { id: number; handle: string; title: string };
     fields: FieldDefinition[];
     locale: string;
     locales: string[];
@@ -34,12 +34,22 @@ function GlobalsEdit({ set, fields, locale, locales, shared, values, can }: Prop
     const form = useForm<{ locale: string; data: FieldValues }>({ locale, data: values });
     const errors = form.errors as Record<string, string | undefined>;
     const mainLocale = locales[0];
+    const lock = useEditLock({
+        type: 'cms.global', id: set.id, locale, enabled: can.update, noun: 'global set', leaveTo: adminUrl('cms/globals'),
+        getUnsaved: () => (form.isDirty ? { data: form.data.data } : null),
+    });
+    const writable = can.update && !lock.readOnly;
     const save = () => form.processing || form.put(url, { preserveScroll: true });
-    useUnsavedChanges(form.isDirty, can.update ? save : undefined);
+    const loadKept = async (id: number) => {
+        const kept = await lock.loadKept(id);
+        if (kept.data && typeof kept.data === 'object') form.setData('data', kept.data as FieldValues);
+    };
+    useUnsavedChanges(form.isDirty && !lock.takenOver, writable ? save : undefined);
 
     return (
         <form onSubmit={(e) => { e.preventDefault(); save(); }} className="cms:flex cms:max-w-3xl cms:flex-col cms:gap-6">
             <Head title={set.title} />
+            {lock.dialogs}
             <div className="cms:flex cms:flex-wrap cms:items-center cms:justify-between cms:gap-4">
                 <div className="cms:flex cms:min-w-0 cms:items-center cms:gap-3">
                     <Button variant="outline" size="icon" className="cms:size-8 cms:shrink-0" asChild>
@@ -57,7 +67,7 @@ function GlobalsEdit({ set, fields, locale, locales, shared, values, can }: Prop
                             </SelectContent>
                         </Select>
                     )}
-                    {can.update && (
+                    {writable && (
                         <Button type="submit" disabled={form.processing}>
                             {form.processing && <LoaderCircle className="cms:animate-spin" />} Save
                         </Button>
@@ -68,7 +78,9 @@ function GlobalsEdit({ set, fields, locale, locales, shared, values, can }: Prop
             {fields.length === 0 ? (
                 <p className="cms:text-muted-foreground">This global set has no fields: choose a blueprint for it under Structure → Global sets.</p>
             ) : (
-                <fieldset disabled={!can.update}>
+                <fieldset disabled={!writable} className="cms:flex cms:flex-col cms:gap-4">
+                    <ViewingNotice by={lock.viewingBy} />
+                    <KeptEditsNotice kept={lock.kept} disabled={!writable} onLoad={(id: number) => void loadKept(id)} onDiscard={(id: number) => void lock.discardKept(id)} />
                     <Card>
                         <CardContent className="cms:flex cms:flex-col cms:gap-6">
                             {fields.map((field) => shared.includes(field.handle) ? (
