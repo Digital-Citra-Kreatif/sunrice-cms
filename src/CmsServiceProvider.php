@@ -20,6 +20,7 @@ final class CmsServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->mergeConfigFrom(dirname(__DIR__).'/config/sunrice-cms.php', 'sunrice-cms');
         $this->app->singleton(FieldTypes::class, fn (): FieldTypes => (new FieldTypes)->register(
             Types\Text::class,
             Types\Textarea::class,
@@ -42,5 +43,8 @@ final class CmsServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->loadMigrationsFrom(dirname(__DIR__).'/database/migrations');
+        if ($this->app->runningInConsole()) {
+            $this->publishes([dirname(__DIR__).'/config/sunrice-cms.php' => config_path('sunrice-cms.php')], 'sunrice-cms-config');
+        }
     }
 }

@@ -1,0 +1,92 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Sunrice\Cms\Actions\Entries;
+
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Validator as ValidatorInstance;
+use Sunrice\Cms\Fields\Schema;
+use Sunrice\Cms\Models\EntryTranslation;
+
+/**
+ * Checks an entry's title, slug and fields and returns them as stored.
+ * Shared by CreateEntry, SaveDraft and PublishEntry.
+ *
+ * @internal
+ */
+final class EntryInput
+{
+    public const SLUG = '/^[a-z0-9]+(?:-[a-z0-9]+)*$/';
+
+    /**
+     * @param  array<mixed>  $data  the fields, complete (stored values merged with the input)
+     * @param  int|null  $except  the translation being saved, whose own slug doesn't count as taken
+     * @return array{title: string, slug: string, data: array<string, mixed>}
+     *
+     * @throws ValidationException
+     */
+    public static function validate(Schema $schema, mixed $title, mixed $slug, array $data, int $collectionId, string $locale, ?int $except): array
+    {
+        $validator = Validator::make(
+            ['title' => $title, 'slug' => $slug, 'data' => $data],
+            ['title' => ['required', 'string', 'max:255'], 'slug' => ['nullable', 'string', 'max:200', 'regex:'.self::SLUG], 'data' => ['array']] + $schema->rules($data),
+            ['slug.regex' => 'Use lowercase letters, digits and dashes (about-us).'],
+        );
+        $validator->after(function (ValidatorInstance $validator) use ($slug, $collectionId, $locale, $except): void {
+            if (is_string($slug) && $slug !== '' && self::taken($slug, $collectionId, $locale, $except)) {
+                $validator->errors()->add('slug', "Another entry in this collection already uses \"{$slug}\".");
+            }
+        });
+        $validator->validate();
+
+        // Validated as a string above.
+        $title = is_string($title) ? trim($title) : '';
+        $slug = is_string($slug) && $slug !== '' ? $slug : self::uniqueSlug($title, $collectionId, $locale, $except);
+        /** @var array<string, mixed> $normalized */
+        $normalized = $schema->normalize($data);
+
+        return ['title' => $title, 'slug' => $slug, 'data' => $normalized];
+    }
+
+    /**
+     * Only the fields the schema has: unknown handles in input aren't stored.
+     *
+     * @param  array<string, mixed>  $stored
+     * @return array<mixed>
+     */
+    public static function merge(Schema $schema, array $stored, mixed $input): array
+    {
+        if (! is_array($input)) {
+            return $stored;
+        }
+        $handles = array_flip(array_map(fn ($field): string => $field->handle, $schema->fields()));
+
+        return array_replace($stored, array_intersect_key($input, $handles));
+    }
+
+    /** Whether another translation in the collection and language has the slug, live or in its draft (trashed entries count). */
+    public static function taken(string $slug, int $collectionId, string $locale, ?int $except): bool
+    {
+        return EntryTranslation::query()
+            ->where('collection_id', $collectionId)
+            ->where('locale', $locale)
+            ->when($except !== null, fn ($query) => $query->whereKeyNot($except))
+            ->where(fn ($query) => $query->where('slug', $slug)->orWhere('draft_slug', $slug))
+            ->exists();
+    }
+
+    private static function uniqueSlug(string $title, int $collectionId, string $locale, ?int $except): string
+    {
+        $base = Str::limit(Str::slug($title), 190, '') ?: 'entry';
+        $base = trim($base, '-') ?: 'entry';
+        $slug = $base;
+        for ($i = 2; self::taken($slug, $collectionId, $locale, $except); $i++) {
+            $slug = "{$base}-{$i}";
+        }
+
+        return $slug;
+    }
+}

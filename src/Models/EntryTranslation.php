@@ -1,0 +1,115 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Sunrice\Cms\Models;
+
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
+use Sunrice\Cms\Fields\HydrationContext;
+
+/**
+ * An entry in one language. Editors change the draft (draft_title,
+ * draft_slug, draft_data, saved with SaveDraft); publishing copies it to
+ * the live version (title, slug, data) that the site shows, and keeps a
+ * revision. A published entry dated in the future goes live on that date.
+ *
+ * @property int $id
+ * @property int $entry_id
+ * @property int $collection_id
+ * @property string $locale
+ * @property string $status "draft" or "published"
+ * @property string|null $title
+ * @property string|null $slug
+ * @property array<string, mixed>|null $data
+ * @property string $draft_title
+ * @property string $draft_slug
+ * @property array<string, mixed> $draft_data
+ * @property Carbon|null $published_at
+ * @property int $version
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Entry $entry
+ * @property-read Collection<int, Revision> $revisions
+ *
+ * @api
+ */
+class EntryTranslation extends Model
+{
+    public const DRAFT = 'draft';
+
+    public const PUBLISHED = 'published';
+
+    protected $table = 'sunrice_entry_translations';
+
+    protected $guarded = [];
+
+    protected $attributes = ['status' => self::DRAFT, 'draft_data' => '{}', 'version' => 1];
+
+    /** @return array<string, string> */
+    protected function casts(): array
+    {
+        return ['data' => 'array', 'draft_data' => 'array', 'published_at' => 'datetime', 'version' => 'integer'];
+    }
+
+    /** @return BelongsTo<Entry, $this> */
+    public function entry(): BelongsTo
+    {
+        return $this->belongsTo(Entry::class)->withTrashed();
+    }
+
+    /** @return HasMany<Revision, $this> */
+    public function revisions(): HasMany
+    {
+        return $this->hasMany(Revision::class)->latest('id');
+    }
+
+    /**
+     * Published, its date reached, and its entry and collection not deleted.
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeLive(Builder $query): void
+    {
+        $query->where('status', self::PUBLISHED)
+            ->where('published_at', '<=', now())
+            ->whereHas('entry', fn (Builder $entry) => $entry->withoutTrashed()->whereHas('collection', fn (Builder $collection) => $collection->withoutTrashed()));
+    }
+
+    public function isPublished(): bool
+    {
+        return $this->status === self::PUBLISHED;
+    }
+
+    /** Published with its date reached. Doesn't look at the entry or collection being deleted. */
+    public function isLive(): bool
+    {
+        return $this->isPublished() && $this->published_at !== null && $this->published_at->lte(now());
+    }
+
+    /** Whether the draft differs from what was last published. */
+    public function hasUnpublishedChanges(): bool
+    {
+        return $this->title === null
+            || $this->draft_title !== $this->title
+            || $this->draft_slug !== $this->slug
+            || $this->draft_data != $this->data;
+    }
+
+    /**
+     * The fields as templates get them: the live version, or the draft for a preview.
+     *
+     * @return array<mixed>
+     */
+    public function values(?HydrationContext $context = null): array
+    {
+        $context ??= new HydrationContext($this->locale);
+        $data = $context->preview ? $this->draft_data : ($this->data ?? []);
+
+        return $this->entry->collection->schema()->hydrate($data, $context);
+    }
+}
