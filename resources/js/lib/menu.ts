@@ -6,7 +6,10 @@
 
 export interface MenuNode {
     entry_id: number | null;
-    entry?: { title: string; collection: string; live: boolean } | null;
+    term_id: number | null;
+    collection_id: number | null;
+    /** For the editor: what it links to (an entry, a term's page, a listing page) and whether the site shows it. */
+    target?: { title: string; kind: string; live: boolean } | null;
     url: string | null;
     labels: Record<string, string>;
     new_tab: boolean;
@@ -92,5 +95,5 @@ export function removeItem(items: FlatItem[], index: number): FlatItem[] {
 }
 
 export function newItem(item: Partial<FlatItem>): FlatItem {
-    return { key: `m${++next}`, depth: 0, entry_id: null, entry: null, url: null, labels: {}, new_tab: false, ...item };
+    return { key: `m${++next}`, depth: 0, entry_id: null, term_id: null, collection_id: null, target: null, url: null, labels: {}, new_tab: false, ...item };
 }

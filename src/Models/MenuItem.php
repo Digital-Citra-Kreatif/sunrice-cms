@@ -9,19 +9,24 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
- * A link in a menu: to an entry (entry_id), or to an address (url).
+ * A link in a menu: to an entry (entry_id), a term's page (term_id), a
+ * collection's listing page (collection_id), or an address (url).
  *
  * @property int $id
  * @property int $menu_id
  * @property int|null $parent_id
  * @property int $sort_order
  * @property int|null $entry_id
+ * @property int|null $term_id
+ * @property int|null $collection_id
  * @property string|null $url
  * @property array<string, string> $labels by language; empty: the entry's title
  * @property bool $new_tab
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Entry|null $entry
+ * @property-read Term|null $term
+ * @property-read Collection|null $collection
  *
  * @api
  */
@@ -43,5 +48,17 @@ class MenuItem extends Model
     public function entry(): BelongsTo
     {
         return $this->belongsTo(Entry::class);
+    }
+
+    /** @return BelongsTo<Term, $this> */
+    public function term(): BelongsTo
+    {
+        return $this->belongsTo(Term::class);
+    }
+
+    /** @return BelongsTo<Collection, $this> */
+    public function collection(): BelongsTo
+    {
+        return $this->belongsTo(Collection::class);
     }
 }
