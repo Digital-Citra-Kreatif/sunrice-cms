@@ -4,11 +4,12 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $title }}</title>
-    @if ($url)<link rel="canonical" href="{{ $url }}">@endif
+    <x-sunrice-cms::seo />
     <style>body{font:16px/1.6 system-ui,sans-serif;max-width:42rem;margin:3rem auto;padding:0 1rem;color:#1a1a1a}h1{line-height:1.2}nav a{margin-right:1rem}</style>
+    <x-sunrice-cms::code place="head" />
 </head>
-<body>
+<body class="{{ \Sunrice\Cms\Content::bodyClass() }}">
+    <x-sunrice-cms::code place="body-start" />
     <h1>{{ $title }}</h1>
     @foreach ($values as $handle => $value)
         @if (is_string($value) && $value !== '')
@@ -28,5 +29,6 @@
         @if ($entries->previousPageUrl())<a href="{{ $entries->previousPageUrl() }}" rel="prev">Newer</a>@endif
         @if ($entries->nextPageUrl())<a href="{{ $entries->nextPageUrl() }}" rel="next">Older</a>@endif
     </nav>
+    <x-sunrice-cms::code place="body-end" />
 </body>
 </html>

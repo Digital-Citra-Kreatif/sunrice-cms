@@ -691,7 +691,7 @@ function oe({ id: s, value: a, multiple: l, max: r, collections: c, invalid: n, 
     j && /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-destructive", children: "Entries could not be loaded. Try again." })
   ] });
 }
-const Js = S.lazy(() => import("./RichTextEditor-mL1kwl2L.js").then((s) => ({ default: s.RichTextEditor }))), le = "__none";
+const Js = S.lazy(() => import("./RichTextEditor-kRp6HmqE.js").then((s) => ({ default: s.RichTextEditor }))), le = "__none";
 function $({ message: s }) {
   return s ? /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-destructive", children: s }) : null;
 }
@@ -1353,7 +1353,8 @@ const os = [
   { handle: "title", type: "text", label: "SEO title", instructions: "For search results and tabs. Empty: the title.", config: { max: 255 } },
   { handle: "description", type: "textarea", label: "Description", instructions: "A sentence or two for search results and shared links.", config: { max: 500 } },
   { handle: "image", type: "media", label: "Share image", instructions: "Shown when the page is shared.", config: { types: ["image"] } },
-  { handle: "noindex", type: "toggle", label: "Hide from search engines" }
+  { handle: "noindex", type: "toggle", label: "Hide from search engines" },
+  { handle: "canonical", type: "text", label: "Canonical address", instructions: "Only when this page copies one elsewhere: that page's full address. Empty: this page.", config: { max: 2e3 } }
 ];
 function rt(s) {
   const { entry: a } = s;

@@ -13,6 +13,7 @@ use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\TermTranslation;
+use Sunrice\Cms\Settings\SiteSettings;
 
 /**
  * Renders entries on the site: the fallback route (paths no app route
@@ -61,8 +62,11 @@ final class SiteController
     {
         app()->setLocale($translation->locale);
         $collection = $translation->entry->collection;
+        $view = self::view($collection->handle, $collection->template, $translation->entry->template);
+        (new Page(Page::ENTRY, $translation->locale, $view, entry: $translation, collection: $collection, preview: $preview,
+            home: app(Site::class)->isHomepage($translation)))->share();
 
-        return response()->view(self::view($collection->handle, $collection->template, $translation->entry->template), [
+        return $this->hidden(response()->view($view, [
             'entry' => $translation,
             'title' => $preview ? $translation->draft_title : $translation->title,
             'values' => $translation->values(new HydrationContext($translation->locale, $preview)),
@@ -71,7 +75,7 @@ final class SiteController
             'collection' => $collection,
             'locale' => $translation->locale,
             'preview' => $preview,
-        ]);
+        ]));
     }
 
     /** A term's page: its fields and the live entries with it, newest first. */
@@ -93,8 +97,9 @@ final class SiteController
             }
         }
         $schema = $taxonomy->schema();
+        (new Page(Page::TERM, $translation->locale, $view, term: $translation, pageNumber: $entries->currentPage()))->share();
 
-        return response()->view($view, [
+        return $this->hidden(response()->view($view, [
             'term' => $translation,
             'taxonomy' => $taxonomy,
             'title' => $translation->title,
@@ -102,7 +107,7 @@ final class SiteController
             'values' => $translation->values(),
             'richText' => array_values(array_map(fn (Field $field): string => $field->handle, array_filter($schema->fields(), fn (Field $field): bool => $field->type === 'rich_text'))),
             'locale' => $translation->locale,
-        ]);
+        ]));
     }
 
     private function renderListing(Listing $listing, Request $request): Response
@@ -128,7 +133,9 @@ final class SiteController
             }
         }
 
-        return response()->view($view, [
+        (new Page(Page::LISTING, $listing->locale, $view, collection: $collection, pageNumber: $entries->currentPage()))->share();
+
+        return $this->hidden(response()->view($view, [
             'collection' => $collection,
             'title' => $collection->title,
             'entries' => $entries,
@@ -136,7 +143,13 @@ final class SiteController
             'richText' => array_values(array_map(fn (Field $field): string => $field->handle, array_filter($schema->fields(), fn (Field $field): bool => $field->type === 'rich_text'))),
             'locale' => $listing->locale,
             'url' => $collection->listingUrl($listing->locale),
-        ]);
+        ]));
+    }
+
+    /** The whole site hidden from search engines (Settings → Site): say so on every page too. */
+    private function hidden(Response $response): Response
+    {
+        return app(SiteSettings::class)->hidden() ? $response->header('X-Robots-Tag', 'noindex, nofollow') : $response;
     }
 
     /** The collection's template, else cms.{handle}, else cms.entry, else the CMS's plain one. */

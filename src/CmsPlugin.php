@@ -30,6 +30,7 @@ use Sunrice\Cms\Http\Controllers\SubmissionController;
 use Sunrice\Cms\Http\Controllers\TermController;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\GlobalSet;
+use Sunrice\Cms\Settings\CodeSettings;
 use Sunrice\Cms\Settings\SiteSettings;
 
 /**
@@ -69,7 +70,7 @@ final class CmsPlugin extends BasePlugin
 
     public function register(Panel $panel): void
     {
-        $panel->settings(SiteSettings::class);
+        $panel->settings(SiteSettings::class, CodeSettings::class);
         $panel->resources(CollectionResource::class, TaxonomyResource::class, GlobalSetResource::class, MenuResource::class, RedirectResource::class, FormResource::class);
         $panel->permissions(
             Permission::make('cms.entries.view', 'View entries', 'Content'),

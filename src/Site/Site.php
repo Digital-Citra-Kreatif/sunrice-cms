@@ -83,6 +83,12 @@ final class Site
             ->where('entry_id', $id)->where('locale', $locale ?? Locales::default())->first();
     }
 
+    /** Whether an entry is the homepage. */
+    public function isHomepage(EntryTranslation $translation): bool
+    {
+        return $translation->entry_id === $this->homepageId();
+    }
+
     /** The collection whose listing page is at a path, and the language. */
     public function listing(string $path): ?Listing
     {

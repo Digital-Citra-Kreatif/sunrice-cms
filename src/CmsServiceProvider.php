@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\View\Compilers\BladeCompiler;
 use Spatie\Honeypot\ProtectAgainstSpam;
 use Sunrice\Admin\Events\SettingsSaved;
 use Sunrice\Admin\Media\MediaUsages;
@@ -60,6 +61,11 @@ final class CmsServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(dirname(__DIR__).'/database/migrations');
         $this->loadViewsFrom(dirname(__DIR__).'/resources/views', 'sunrice-cms');
+        // <x-sunrice-cms::entries> and <x-sunrice-cms::terms> (the others are anonymous views).
+        $this->callAfterResolving('blade.compiler', function (BladeCompiler $blade): void {
+            $blade->component(View\Components\Entries::class, 'sunrice-cms::entries');
+            $blade->component(View\Components\Terms::class, 'sunrice-cms::terms');
+        });
         if (! class_exists('Cms')) {
             AliasLoader::getInstance()->alias('Cms', Content::class);
         }
@@ -71,6 +77,12 @@ final class CmsServiceProvider extends ServiceProvider
         Event::listen(SettingsSaved::class, function (SettingsSaved $event): void {
             if ($event->section === Settings\SiteSettings::key() && app()->resolved(Site\Site::class)) {
                 app(Site\Site::class)->flush();
+            }
+        });
+        // Code on every page is a way in: changing it is a security event, and alerts.
+        Event::listen(SettingsSaved::class, function (SettingsSaved $event): void {
+            if ($event->section === Settings\CodeSettings::key() && $event->changed !== []) {
+                Support\SiteCode::changed($event->changed);
             }
         });
         RateLimiter::for('sunrice-forms', function (Request $request): Limit {

@@ -4,10 +4,12 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <x-sunrice-cms::seo :entry="$entry" :preview="$preview" />
+    <x-sunrice-cms::seo />
     <style>body{font:16px/1.6 system-ui,sans-serif;max-width:42rem;margin:3rem auto;padding:0 1rem;color:#1a1a1a}h1{line-height:1.2}img{max-width:100%;height:auto}</style>
+    <x-sunrice-cms::code place="head" />
 </head>
-<body>
+<body class="{{ \Sunrice\Cms\Content::bodyClass() }}">
+    <x-sunrice-cms::code place="body-start" />
     @if ($preview)<p style="background:#fff3cd;padding:.5rem 1rem;border-radius:.375rem">Preview of the draft</p>@endif
     <h1>{{ $title }}</h1>
     @foreach ($values as $handle => $value)
@@ -20,5 +22,6 @@
             @endif
         @endif
     @endforeach
+    <x-sunrice-cms::code place="body-end" />
 </body>
 </html>

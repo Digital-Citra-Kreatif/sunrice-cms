@@ -18,6 +18,12 @@ return [
         'middleware' => ['web'],
     ],
 
+    'seo' => [
+        // Ask search engines to stay away from the whole site, e.g. on a
+        // staging copy (also in Settings → Site).
+        'noindex' => env('SUNRICE_NOINDEX', false),
+    ],
+
     'forms' => [
         // Submissions one visitor (IP address) may send per minute, to all forms.
         'per_minute' => 5,

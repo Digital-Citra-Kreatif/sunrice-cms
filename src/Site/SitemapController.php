@@ -9,6 +9,7 @@ use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\TermTranslation;
+use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\Seo;
 
@@ -23,14 +24,20 @@ final class SitemapController
     /** Search engines read at most this many addresses from one sitemap. */
     public const LIMIT = 50000;
 
+    private const OPEN = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">'];
+
     public function __invoke(): Response
     {
+        // The whole site hidden from search engines: nothing to list.
+        if (app(SiteSettings::class)->hidden()) {
+            return response(implode("\n", self::OPEN).'</urlset>', 200, ['Content-Type' => 'application/xml; charset=UTF-8', 'X-Robots-Tag' => 'noindex']);
+        }
         $routed = Collection::query()->whereNotNull('route')->pluck('id');
         $translations = EntryTranslation::query()->live()->with('entry.collection', 'entry.translations')
             ->whereIn('collection_id', $routed)->orderBy('id')->limit(self::LIMIT)->get()
             ->reject(fn (EntryTranslation $translation): bool => Seo::noindex($translation));
 
-        $xml = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">'];
+        $xml = self::OPEN;
         foreach ($translations as $translation) {
             $url = $translation->url();
             if ($url === null) {
