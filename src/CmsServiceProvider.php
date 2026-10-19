@@ -74,6 +74,7 @@ final class CmsServiceProvider extends ServiceProvider
             $blade->component(View\Components\Entries::class, 'sunrice-cms::entries');
             $blade->component(View\Components\Terms::class, 'sunrice-cms::terms');
             $blade->component(View\Components\Search::class, 'sunrice-cms::search');
+            $blade->component(View\Components\Comments::class, 'sunrice-cms::comments');
         });
         if (! class_exists('Cms')) {
             AliasLoader::getInstance()->alias('Cms', Content::class);
@@ -97,6 +98,7 @@ final class CmsServiceProvider extends ServiceProvider
                 Support\SiteCode::changed($event->changed);
             }
         });
+        RateLimiter::for('sunrice-comments', fn (Request $request): Limit => Limit::perMinute(max(1, app(Settings\CommentSettings::class)->perMinute))->by('sunrice-comments|'.$request->ip()));
         // Per visitor (IP address) and form, at the form's own limit.
         RateLimiter::for('sunrice-forms', function (Request $request): Limit {
             $form = $request->route('form');
@@ -113,7 +115,7 @@ final class CmsServiceProvider extends ServiceProvider
             $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
                 $schedule->command('sunrice:publish-scheduled')->everyMinute()->withoutOverlapping();
                 // Old form submissions and their files (sunrice-cms.forms.prune_after_days).
-                $schedule->command('model:prune', ['--model' => [Models\Submission::class]])->daily();
+                $schedule->command('model:prune', ['--model' => [Models\Submission::class, Models\Comment::class]])->daily();
             });
             $this->publishes([dirname(__DIR__).'/config/sunrice-cms.php' => config_path('sunrice-cms.php')], 'sunrice-cms-config');
             // Also "laravel-assets", which Laravel apps publish on every composer update.
@@ -145,6 +147,9 @@ final class CmsServiceProvider extends ServiceProvider
         $middleware = is_array($middleware) ? array_values(array_filter($middleware, is_string(...))) : ['web'];
         Route::middleware([...$middleware, 'throttle:sunrice-forms', ProtectAgainstSpam::class, Site\RequireHoneypot::class])
             ->post('forms/{form:handle}', Site\FormController::class)->name('sunrice.cms.forms.submit');
+        Route::middleware([...$middleware, 'throttle:sunrice-comments', ProtectAgainstSpam::class, Site\RequireHoneypot::class])
+            ->post('comments/{entry}', [Site\CommentController::class, 'store'])->name('sunrice.cms.comments.store');
+        Route::middleware([...$middleware, 'signed'])->get('comments/{comment}/unsubscribe', [Site\CommentController::class, 'unsubscribe'])->name('sunrice.cms.comments.unsubscribe');
         Route::middleware([...$middleware, 'signed'])->get('cms-preview/{translation}', [Site\SiteController::class, 'preview'])->name('sunrice.cms.preview');
         if (config('sunrice-cms.site.enabled', true) === true) {
             Route::middleware($middleware)->get('sitemap.xml', Site\SitemapController::class)->name('sunrice.cms.sitemap');

@@ -26,7 +26,7 @@ final class ContentWatch
         Models\Collection::class, Models\CollectionListing::class, Models\Taxonomy::class, Models\Term::class,
         Models\TermTranslation::class, Models\Menu::class, Models\MenuItem::class, Models\GlobalSet::class,
         Models\GlobalValue::class, Models\Blueprint::class, Models\Fieldset::class, Models\Redirect::class,
-        Models\Form::class, Media::class,
+        Models\Form::class, Models\Comment::class, Media::class,
     ];
 
     /** What of an entry translation the site shows (the rest is its draft). */

@@ -44,6 +44,11 @@ return [
         'per_minute' => 30,
     ],
 
+    'comments' => [
+        // Days spam is kept before the daily prune deletes it; null: kept.
+        'prune_spam_after_days' => 30,
+    ],
+
     'seo' => [
         // Ask search engines to stay away from the whole site, e.g. on a
         // staging copy (also in Settings → Site).

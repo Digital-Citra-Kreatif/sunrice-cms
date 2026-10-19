@@ -22,6 +22,9 @@
             @endif
         @endif
     @endforeach
+    @unless ($preview)
+        <x-sunrice-cms::comments :entry="$entry" />
+    @endunless
     <x-sunrice-cms::code place="body-end" />
 </body>
 </html>

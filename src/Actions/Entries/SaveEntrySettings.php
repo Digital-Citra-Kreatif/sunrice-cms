@@ -22,7 +22,7 @@ final class SaveEntrySettings
     public function __construct(private readonly ActivityLog $activity) {}
 
     /**
-     * @param  array{parent_id?: mixed, template?: mixed}  $input  only what's given changes
+     * @param  array{parent_id?: mixed, template?: mixed, comments_closed?: mixed}  $input  only what's given changes
      *
      * @throws ValidationException
      */
@@ -45,6 +45,13 @@ final class SaveEntrySettings
             if ($entry->template !== $template) {
                 $entry->template = $template;
                 $changed[] = 'template';
+            }
+        }
+        if (array_key_exists('comments_closed', $input)) {
+            $closed = filter_var($input['comments_closed'], FILTER_VALIDATE_BOOL);
+            if ($entry->comments_closed !== $closed) {
+                $entry->comments_closed = $closed;
+                $changed[] = 'comments';
             }
         }
         if ($changed !== []) {

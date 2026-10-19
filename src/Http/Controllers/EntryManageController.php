@@ -90,7 +90,7 @@ final class EntryManageController
     public function settings(Request $request, Entry $entry, SaveEntrySettings $save): RedirectResponse
     {
         abort_if($entry->collection->trashed(), 404);
-        $save->handle($entry, $request->only(['parent_id', 'template']));
+        $save->handle($entry, $request->only(['parent_id', 'template', 'comments_closed']));
 
         return back()->with('success', 'Saved.');
     }

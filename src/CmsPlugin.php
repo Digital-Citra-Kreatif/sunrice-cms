@@ -20,6 +20,7 @@ use Sunrice\Cms\Admin\TaxonomyResource;
 use Sunrice\Cms\Fields\FieldType;
 use Sunrice\Cms\Fields\FieldTypes;
 use Sunrice\Cms\Http\Controllers\BlueprintController;
+use Sunrice\Cms\Http\Controllers\CommentController;
 use Sunrice\Cms\Http\Controllers\EntryController;
 use Sunrice\Cms\Http\Controllers\EntryManageController;
 use Sunrice\Cms\Http\Controllers\FieldsetController;
@@ -31,6 +32,7 @@ use Sunrice\Cms\Http\Controllers\TermController;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\GlobalSet;
 use Sunrice\Cms\Settings\CodeSettings;
+use Sunrice\Cms\Settings\CommentSettings;
 use Sunrice\Cms\Settings\SiteSettings;
 
 /**
@@ -70,7 +72,7 @@ final class CmsPlugin extends BasePlugin
 
     public function register(Panel $panel): void
     {
-        $panel->settings(SiteSettings::class, CodeSettings::class);
+        $panel->settings(SiteSettings::class, CodeSettings::class, CommentSettings::class);
         $panel->resources(CollectionResource::class, TaxonomyResource::class, GlobalSetResource::class, MenuResource::class, RedirectResource::class, FormResource::class);
         $panel->permissions(
             Permission::make('cms.entries.view', 'View entries', 'Content'),
@@ -81,6 +83,9 @@ final class CmsPlugin extends BasePlugin
             Permission::make('cms.terms.manage', 'Manage terms', 'Content'),
             Permission::make('cms.globals.view', 'View globals', 'Content'),
             Permission::make('cms.globals.update', 'Edit globals', 'Content'),
+            Permission::make('cms.comments.view', 'View comments', 'Content'),
+            Permission::make('cms.comments.moderate', 'Approve, answer and edit comments, mark spam', 'Content'),
+            Permission::make('cms.comments.delete', 'Trash and delete comments', 'Content'),
             Permission::make('cms.submissions.view', 'View and export form submissions', 'Content'),
             Permission::make('cms.submissions.delete', 'Delete form submissions', 'Content'),
             Permission::make('cms.blueprints.manage', 'Manage blueprints and fieldsets', 'Content structure'),
@@ -94,6 +99,8 @@ final class CmsPlugin extends BasePlugin
                 ->group('Content')->sort(30)->permission('cms.globals.view'),
             NavigationItem::make('cms-menus')->label('Menus')->url('cms/menus')->icon('list-tree')
                 ->group('Content')->sort(40)->permission('cms.menus.view'),
+            NavigationItem::make('cms-comments')->label('Comments')->url('cms/comments')->icon('message-square')
+                ->group('Content')->sort(45)->permission('cms.comments.view'),
             NavigationItem::make('cms-submissions')->label('Submissions')->url('cms/submissions')->icon('inbox')
                 ->group('Content')->sort(50)->permission('cms.submissions.view'),
             NavigationItem::make('cms-blueprints')->label('Blueprints')->url('cms/blueprints')->icon('layout-template')
@@ -110,6 +117,16 @@ final class CmsPlugin extends BasePlugin
                 Route::get('menus', 'index')->name('index')->middleware('can:cms.menus.view');
                 Route::get('menus/{menu:handle}', 'edit')->name('edit')->middleware('can:cms.menus.view');
                 Route::put('menus/{menu:handle}', 'update')->name('update')->middleware('can:cms.menus.update');
+            });
+            Route::prefix('cms')->name('cms.comments.')->controller(CommentController::class)->group(function (): void {
+                Route::get('comments', 'index')->name('index')->middleware('can:cms.comments.view');
+                Route::post('comments/bulk', 'bulk')->name('bulk')->middleware('can:cms.comments.view');
+                Route::post('comments/{comment}/status', 'status')->name('status')->middleware('can:cms.comments.moderate');
+                Route::post('comments/{comment}/reply', 'reply')->name('reply')->middleware('can:cms.comments.moderate');
+                Route::put('comments/{comment}', 'update')->name('update')->middleware('can:cms.comments.moderate');
+                Route::delete('comments/{comment}', 'destroy')->name('destroy')->middleware('can:cms.comments.delete');
+                Route::post('comments/{comment}/restore', 'restore')->name('restore')->middleware('can:cms.comments.delete')->withTrashed();
+                Route::delete('comments/{comment}/force', 'forceDelete')->name('force')->middleware('can:cms.comments.delete')->withTrashed();
             });
             Route::prefix('cms')->name('cms.submissions.')->controller(SubmissionController::class)->group(function (): void {
                 Route::get('submissions', 'home')->name('home')->middleware('can:cms.submissions.view');

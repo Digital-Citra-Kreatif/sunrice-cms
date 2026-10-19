@@ -29,6 +29,7 @@ use Sunrice\Cms\Support\Locales;
  * @property string|null $listing_route the listing page's URL ("/blog"); none: no listing page
  * @property string|null $listing_blueprint the listing page's own fields
  * @property int $per_page entries per listing page
+ * @property bool $comments visitors may comment on its entries
  * @property string|null $schema_type its entries' schema.org type (StructuredData::ENTRY_TYPES); null: Article when dated, else WebPage
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -51,7 +52,7 @@ class Collection extends Model
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['dated' => 'boolean', 'hierarchical' => 'boolean', 'ordered' => 'boolean', 'per_page' => 'integer'];
+        return ['dated' => 'boolean', 'comments' => 'boolean', 'hierarchical' => 'boolean', 'ordered' => 'boolean', 'per_page' => 'integer'];
     }
 
     /** @return HasMany<CollectionListing, $this> */

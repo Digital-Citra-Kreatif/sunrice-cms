@@ -69,6 +69,7 @@ final class CollectionResource extends Resource
                 ->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
                 ->help('Fields of the listing page itself, like an intro, edited from the entries list.'),
             NumberInput::make('per_page')->label('Entries per listing page')->integer()->min(1)->max(100)->default(10),
+            Toggle::make('comments')->label('Allow comments')->help('Visitors may comment on its entries (it needs a URL). Settings → Comments says how they\'re moderated.'),
             Select::make('schema_type')->label('Structured data type')->options(StructuredData::ENTRY_TYPES)
                 ->help('What search engines are told its entries are. Empty: Article when entries are dated, else Web page.'),
             TextInput::make('template')->placeholder('cms.article')

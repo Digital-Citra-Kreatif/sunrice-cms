@@ -9,6 +9,7 @@ use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
 use Sunrice\Admin\Media\MediaUsages;
 use Sunrice\Cms\Events\EntryDeleted;
+use Sunrice\Cms\Models\Comment;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\Revision;
 
@@ -34,6 +35,8 @@ final class ForceDeleteEntry
             $translations = $entry->translations()->pluck('id');
             Revision::query()->whereIn('entry_translation_id', $translations)->delete();
             $entry->terms()->detach();
+            Comment::query()->withTrashed()->where('entry_id', $entry->id)->update(['parent_id' => null]);
+            Comment::query()->withTrashed()->where('entry_id', $entry->id)->forceDelete();
             // Its children move up to its parent.
             Entry::query()->withTrashed()->where('parent_id', $entry->id)->update(['parent_id' => $entry->parent_id]);
             $entry->translations()->delete();

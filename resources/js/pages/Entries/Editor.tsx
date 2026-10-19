@@ -4,7 +4,7 @@ import { ArrowLeft, CalendarClock, ChevronDown, Copy, ExternalLink, Eye, LoaderC
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
     Badge, Button, Card, CardContent, CardHeader, CardTitle, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, Input, Label, useBreadcrumbs, useEditLock, useUnsavedChanges, KeptEditsNotice, ViewingNotice,
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, Input, Label, Switch, useBreadcrumbs, useEditLock, useUnsavedChanges, KeptEditsNotice, ViewingNotice,
 } from '@sunrice/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
@@ -15,7 +15,7 @@ import { type EntryLocale, type EntryStatus, formatDate, localeName, localInputV
 import type { FieldDefinition } from '@/types.ts';
 
 interface Props {
-    collection: { handle: string; title: string; dated: boolean; hierarchical?: boolean; ordered?: boolean };
+    collection: { handle: string; title: string; dated: boolean; hierarchical?: boolean; ordered?: boolean; comments?: boolean };
     /** Every language's: the parent entry and the entry's own Blade view. */
     settings?: { parentId: number | null; template: string | null };
     fields: FieldDefinition[];
@@ -369,14 +369,14 @@ function ScheduleDialog({ open, onClose, onSchedule, current, processing }: {
     );
 }
 
-/** The parent entry and the entry's own template, saved apart from the fields (every language's). */
+/** The parent entry, the entry's own template and its comments, saved apart from the fields (every language's). */
 function PageSettings({ entryUrl, collection, settings, disabled }: {
     entryUrl: string;
     collection: Props['collection'];
-    settings: { parentId: number | null; template: string | null };
+    settings: { parentId: number | null; template: string | null; commentsClosed?: boolean };
     disabled: boolean;
 }) {
-    const form = useForm({ parent_id: settings.parentId, template: settings.template ?? '' });
+    const form = useForm({ parent_id: settings.parentId, template: settings.template ?? '', comments_closed: settings.commentsClosed === true });
     const errors = form.errors as Record<string, string | undefined>;
 
     return (
@@ -398,6 +398,13 @@ function PageSettings({ entryUrl, collection, settings, disabled }: {
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => form.setData('template', e.target.value)} aria-invalid={errors.template !== undefined} />
                         <FieldError message={errors.template} />
                     </div>
+                    {collection.comments && (
+                        <div className="cms:flex cms:items-center cms:gap-3">
+                            <Switch id="comments-open" checked={!form.data.comments_closed} onCheckedChange={(open: boolean) => form.setData('comments_closed', !open)} />
+                            <Label htmlFor="comments-open">Accept new comments</Label>
+                            <a href={adminUrl(`cms/comments?entry=${entryUrl.split('/').slice(-1)[0]}`)} className="cms:ml-auto cms:text-muted-foreground cms:underline-offset-4 hover:cms:underline">Comments</a>
+                        </div>
+                    )}
                     {form.isDirty && (
                         <Button type="button" size="sm" disabled={form.processing}
                             onClick={() => form.put(`${entryUrl}/settings`, { preserveScroll: true, onSuccess: () => form.setDefaults() })}>Save settings</Button>

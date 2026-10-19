@@ -10,6 +10,7 @@ import GlobalsEdit from '@/pages/Globals/Edit.tsx';
 import GlobalsIndex from '@/pages/Globals/Index.tsx';
 import MenuEdit from '@/pages/Menus/Edit.tsx';
 import MenusIndex from '@/pages/Menus/Index.tsx';
+import CommentsIndex from '@/pages/Comments/Index.tsx';
 import SubmissionsIndex from '@/pages/Submissions/Index.tsx';
 import TermEdit from '@/pages/Terms/Edit.tsx';
 import TermsIndex from '@/pages/Terms/Index.tsx';
@@ -28,6 +29,7 @@ definePlugin({
         'Cms/Globals/Edit': GlobalsEdit,
         'Cms/Menus/Index': MenusIndex,
         'Cms/Menus/Edit': MenuEdit,
+        'Cms/Comments/Index': CommentsIndex,
         'Cms/Submissions/Index': SubmissionsIndex,
     },
 });
