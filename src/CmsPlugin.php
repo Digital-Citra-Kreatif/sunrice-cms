@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Route;
 use Sunrice\Admin\Assets\PluginBundle;
 use Sunrice\Admin\BasePlugin;
+use Sunrice\Admin\Help\HelpSection;
 use Sunrice\Admin\Navigation\NavigationItem;
 use Sunrice\Admin\Panel;
 use Sunrice\Admin\Permissions\Permission;
@@ -106,6 +107,7 @@ final class CmsPlugin extends BasePlugin
             Permission::make('cms.blueprints.manage', 'Manage blueprints and fieldsets', 'Content structure'),
         );
         $panel->dashboardCards(...Admin\DashboardCards::all());
+        $panel->help(HelpSection::make('content', 'Content', dirname(__DIR__).'/guide', 20));
         // Entries people wrote go to whoever deletes their account.
         $panel->ownedContent(OwnedContent::make('cms.entries')->label('entries', 'entry')
             ->count(fn (Model $user): int => Entry::withTrashed()->where('author_id', $user->getKey())->count())
