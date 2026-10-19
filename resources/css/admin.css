@@ -35,3 +35,29 @@
     --radius-lg: var(--radius);
     --radius-xl: calc(var(--radius) + 4px);
 }
+
+/* The rich text editor's editing area. Plain CSS, scoped to its class. */
+@layer components {
+    .cms-prose {
+        min-height: 10rem;
+        padding: 0.75rem 1rem;
+        outline: none;
+        line-height: 1.6;
+    }
+    .cms-prose > * + * { margin-top: 0.75em; }
+    .cms-prose h2 { font-size: 1.375rem; font-weight: 600; line-height: 1.3; margin-top: 1.25em; }
+    .cms-prose h3 { font-size: 1.125rem; font-weight: 600; margin-top: 1em; }
+    .cms-prose h4 { font-weight: 600; }
+    .cms-prose ul { list-style: disc; padding-left: 1.5rem; }
+    .cms-prose ol { list-style: decimal; padding-left: 1.5rem; }
+    .cms-prose li > p { margin: 0; }
+    .cms-prose blockquote { border-left: 3px solid var(--border); padding-left: 1rem; color: var(--muted-foreground); }
+    .cms-prose a { color: var(--primary); text-decoration: underline; }
+    .cms-prose code { font-family: ui-monospace, monospace; font-size: 0.9em; background: var(--muted); padding: 0.1em 0.3em; border-radius: 0.25rem; }
+    .cms-prose pre { background: var(--muted); padding: 0.75rem 1rem; border-radius: var(--radius); overflow-x: auto; }
+    .cms-prose pre code { background: none; padding: 0; }
+    .cms-prose hr { border: 0; border-top: 1px solid var(--border); }
+    .cms-prose img { max-width: 100%; height: auto; border-radius: calc(var(--radius) - 2px); }
+    .cms-prose img.ProseMirror-selectednode { outline: 2px solid var(--ring); }
+    .cms-prose p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: var(--muted-foreground); float: left; height: 0; pointer-events: none; }
+}

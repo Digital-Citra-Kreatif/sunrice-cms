@@ -27,3 +27,16 @@ export function newRow(): Record<string, unknown> {
 export function newBlock(type: string): Record<string, unknown> {
     return { type, hidden: false, values: {} };
 }
+
+/**
+ * Whether a link address is safe (the server's SafeUrl rule): paths,
+ * #anchors, and http, https, mailto and tel; not javascript: or data:.
+ */
+export function isSafeUrl(url: string): boolean {
+    // Browsers ignore whitespace and control characters inside a scheme.
+    const clean = url.replace(/[\u0000- \u007f]+/g, '');
+    const scheme = /^([a-zA-Z][a-zA-Z0-9+.-]*):/.exec(clean);
+    if (scheme) return ['http', 'https', 'mailto', 'tel'].includes(scheme[1]!.toLowerCase());
+
+    return !clean.includes('\\');
+}

@@ -1,11 +1,15 @@
+import * as React from 'react';
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react';
 import {
     Badge, Button, Checkbox, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input, Label, MediaPickerInput,
-    Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Switch, Textarea,
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Skeleton, Switch, Textarea,
 } from '@sunrice/admin-sdk/ui';
 import { errorsAt, move } from '@/lib/builder.ts';
 import { asRecord, dateInputValue, dateValueFromInput, newBlock, newRow } from '@/lib/values.ts';
 import type { Errors, FieldDefinition, Option } from '@/types.ts';
+
+/** The rich text editor (ProseMirror) is large: loaded when a rich text field shows. */
+const RichTextEditor = React.lazy(() => import('@/components/RichTextEditor.tsx').then((m) => ({ default: m.RichTextEditor })));
 
 /** Radix's Select can't hold an empty value, so "none" is this. */
 const NONE = '__none';
@@ -42,7 +46,7 @@ interface Props {
 }
 
 /** Types whose inputs are a list or a set of inputs: labelled as a group. */
-const GROUPS = ['repeater', 'group', 'flexible', 'link', 'media'];
+const GROUPS = ['repeater', 'group', 'flexible', 'link', 'media', 'rich_text'];
 
 /** One input for a field definition, any built-in type. */
 /** A field's label, or its handle made readable ("event_day" → "Event day"). */
@@ -84,11 +88,9 @@ function Control({ field, value, onChange, errors, id, content }: Props) {
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)} />;
         case 'rich_text':
             return (
-                <>
-                    <Textarea id={id} aria-invalid={invalid} className="cms:font-mono" rows={8} value={typeof value === 'string' ? value : ''}
-                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)} />
-                    <p className="cms:text-sm cms:text-muted-foreground">HTML. Scripts and styles are removed when saved.</p>
-                </>
+                <React.Suspense fallback={<Skeleton className="cms:h-48 cms:w-full" />}>
+                    <RichTextEditor id={id} labelledBy={`${id}-label`} invalid={invalid} value={typeof value === 'string' ? value : ''} onChange={onChange} />
+                </React.Suspense>
             );
         case 'number':
             return (
