@@ -1,0 +1,27 @@
+{
+    "name": "sunrice/cms",
+    "description": "A CMS for Laravel, built as a plugin for sunrice/admin: collections, entries, taxonomies, globals, menus, forms, multilingual content and the site side.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["laravel", "cms", "content-management"],
+    "require": {
+        "php": "^8.3",
+        "illuminate/contracts": "^13.0",
+        "illuminate/support": "^13.0",
+        "sunrice/admin": "self.version"
+    },
+    "autoload": {
+        "psr-4": {
+            "Sunrice\\Cms\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Sunrice\\Cms\\CmsServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
