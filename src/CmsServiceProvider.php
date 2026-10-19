@@ -86,7 +86,7 @@ final class CmsServiceProvider extends ServiceProvider
         $this->pageCache();
         // A collection, taxonomy or form came or went: so do its permissions.
         foreach ([Models\Collection::class, Models\Taxonomy::class, Models\Form::class] as $class) {
-            foreach (['created', 'forceDeleted', 'deleted'] as $event) {
+            foreach (['created', 'forceDeleted', 'deleted', 'restored'] as $event) {
                 Event::listen("eloquent.{$event}: {$class}", fn () => Support\ScopedPermissions::sync());
             }
         }
@@ -117,7 +117,7 @@ final class CmsServiceProvider extends ServiceProvider
             $this->siteRoutes();
         }
         if ($this->app->runningInConsole()) {
-            $this->commands([Console\PublishScheduledCommand::class, Console\TranslateCommand::class, Console\SwitchMainLanguageCommand::class]);
+            $this->commands([Console\PublishScheduledCommand::class, Console\TranslateCommand::class, Console\SwitchMainLanguageCommand::class, Console\OrphansCommand::class, Console\RenameFieldCommand::class, Console\DemoContentCommand::class]);
             $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
                 $schedule->command('sunrice:publish-scheduled')->everyMinute()->withoutOverlapping();
                 // Old form submissions and their files (sunrice-cms.forms.prune_after_days).
