@@ -15,6 +15,7 @@ use Sunrice\Admin\Resources\Tables\Table;
 use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Site\RoutePattern;
+use Sunrice\Cms\Support\StructuredData;
 
 /**
  * The Collections screens (Structure → Collections), guarded by the
@@ -68,6 +69,8 @@ final class CollectionResource extends Resource
                 ->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
                 ->help('Fields of the listing page itself, like an intro, edited from the entries list.'),
             NumberInput::make('per_page')->label('Entries per listing page')->integer()->min(1)->max(100)->default(10),
+            Select::make('schema_type')->label('Structured data type')->options(StructuredData::ENTRY_TYPES)
+                ->help('What search engines are told its entries are. Empty: Article when entries are dated, else Web page.'),
             TextInput::make('template')->placeholder('cms.article')
                 ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
                 ->help('The Blade view for its entries. Empty: cms.{handle}, else cms.entry.'),

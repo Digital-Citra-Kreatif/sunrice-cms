@@ -49,6 +49,15 @@ final class SiteSettings extends Settings
     /** Ask search engines to stay away from the whole site (also config sunrice-cms.seo.noindex). */
     public bool $noindex = false;
 
+    /** Tell search engines what pages are, in schema.org structured data (JSON-LD). */
+    public bool $structuredData = true;
+
+    /** Who publishes the site: Organization or Person. */
+    public string $publisher = 'Organization';
+
+    /** The organization's logo (media id), for structured data. */
+    public ?int $logo = null;
+
     public static function key(): string
     {
         return 'site';
@@ -73,6 +82,11 @@ final class SiteSettings extends Settings
                 MediaPicker::make('image')->label('Share image')->images()->span(2),
                 Toggle::make('noindex')->label('Hide the whole site from search engines')->span(2)
                     ->help('For a site still being built. Every page asks not to be indexed and the sitemap is empty.'),
+            ]),
+            Section::make('Structured data')->description('What search engines are told pages are (schema.org), for richer results: articles, breadcrumbs, the site\'s search box.')->columns(2)->schema([
+                Toggle::make('structuredData')->label('Add structured data to pages')->span(2),
+                Select::make('publisher')->label('Published by')->options(['Organization' => 'An organization', 'Person' => 'A person']),
+                MediaPicker::make('logo')->label('Logo')->images()->help('The organization\'s logo: square or wide, at least 112 pixels.'),
             ]),
         ]);
     }
