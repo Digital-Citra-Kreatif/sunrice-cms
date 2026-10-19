@@ -24,6 +24,7 @@ final readonly class Field
      * @param  list<string>  $validation  extra Laravel rules, from DefinitionValidator::RULES
      * @param  array<string, mixed>  $config  the type's settings
      * @param  list<Field>  $fields  children (groups and repeaters)
+     * @param  array{field: string, operator: string, value: string|int|float|bool|null}|null  $condition  shown only when another field on its level is so
      */
     public function __construct(
         public string $handle,
@@ -35,6 +36,7 @@ final readonly class Field
         public array $validation = [],
         public array $config = [],
         public array $fields = [],
+        public ?array $condition = null,
     ) {}
 
     /** @param array<string, mixed> $config */
@@ -65,7 +67,56 @@ final readonly class Field
             validation: is_array($data['validation'] ?? null) ? array_values(array_filter($data['validation'], 'is_string')) : [],
             config: array_filter($config, 'is_string', ARRAY_FILTER_USE_KEY),
             fields: self::listFromArray($children),
+            condition: self::conditionFrom($data['condition'] ?? null),
         );
+    }
+
+    /** What a field may be shown on: another field's value, or that it's filled in. */
+    public const OPERATORS = ['equals', 'not_equals', 'filled', 'empty'];
+
+    /** @return array{field: string, operator: string, value: string|int|float|bool|null}|null */
+    private static function conditionFrom(mixed $condition): ?array
+    {
+        if (! is_array($condition) || ! is_string($condition['field'] ?? null) || ! in_array($condition['operator'] ?? null, self::OPERATORS, true)) {
+            return null;
+        }
+        $value = $condition['value'] ?? null;
+
+        return ['field' => $condition['field'], 'operator' => (string) $condition['operator'], 'value' => is_scalar($value) ? $value : null];
+    }
+
+    /**
+     * Whether the field shows, given the values on its level (the editor
+     * decides the same way): "equals" another field's value (or one of its
+     * values), "not_equals", "filled" or "empty".
+     *
+     * @param  array<mixed>  $siblings
+     */
+    public function isShownWith(array $siblings): bool
+    {
+        if ($this->condition === null) {
+            return true;
+        }
+        $other = $siblings[$this->condition['field']] ?? null;
+        $filled = $other !== null && $other !== '' && $other !== false && $other !== [];
+        $equal = in_array(self::comparable($this->condition['value']), array_map(self::comparable(...), is_array($other) ? $other : [$other]), true);
+
+        return match ($this->condition['operator']) {
+            'equals' => $equal,
+            'not_equals' => ! $equal,
+            'filled' => $filled,
+            default => ! $filled,
+        };
+    }
+
+    private static function comparable(mixed $value): string
+    {
+        return match (true) {
+            $value === true => 'true',
+            $value === false => 'false',
+            is_scalar($value) => (string) $value,
+            default => '',
+        };
     }
 
     /**
@@ -99,7 +150,7 @@ final readonly class Field
             'validation' => $this->validation,
             'config' => $this->config,
             'fields' => self::listToArray($this->fields),
-        ];
+        ] + ($this->condition !== null ? ['condition' => $this->condition] : []);
     }
 
     /** The label, or the handle as words when there is none. */

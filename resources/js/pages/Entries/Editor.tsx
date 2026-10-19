@@ -13,6 +13,7 @@ import { FieldError, FieldInput, Fields } from '@/components/FieldInput.tsx';
 import { errorsAt } from '@/lib/builder.ts';
 import { type EntryLocale, type EntryStatus, formatDate, localeName, localInputValue, statusLabel } from '@/lib/entries.ts';
 import type { FieldDefinition } from '@/types.ts';
+import { isShown } from '@/lib/conditions.ts';
 
 interface Props {
     collection: { handle: string; title: string; dated: boolean; hierarchical?: boolean; ordered?: boolean; comments?: boolean };
@@ -242,7 +243,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                     {fields.length > 0 && (
                         <Card>
                             <CardContent className="cms:flex cms:flex-col cms:gap-6">
-                                {fields.map((field) => shared.includes(field.handle) ? (
+                                {fields.filter((field) => isShown(field, { ...sharedValues, ...form.data.data })).map((field) => shared.includes(field.handle) ? (
                                     <fieldset key={field.handle} disabled className="cms:flex cms:flex-col cms:gap-1">
                                         <FieldInput id={`data-${field.handle}`} field={field} content value={sharedValues[field.handle]} errors={{}} onChange={() => {}} />
                                         <p className="cms:text-sm cms:text-muted-foreground">Shared by all languages: edit it in {mainLocale ? localeName(mainLocale) : 'the main language'}.</p>

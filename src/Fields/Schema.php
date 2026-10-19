@@ -134,6 +134,12 @@ final class Schema
         $rules = [];
         foreach ($this->fields as $field) {
             $key = $prefix === '' ? $field->handle : $prefix.'.'.$field->handle;
+            // Hidden by its condition: nothing is asked of it.
+            if (! $field->isShownWith($data)) {
+                $rules[$key] = ['exclude'];
+
+                continue;
+            }
             $type = $this->type($field);
             // Required or nullable first, so an empty required field says "is required".
             $rules[$key] = [$field->required ? 'required' : 'nullable', ...$type->rules($field), ...$field->validation];

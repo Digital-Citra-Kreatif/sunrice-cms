@@ -10,6 +10,7 @@ import { errorsAt } from '@/lib/builder.ts';
 import { localeName } from '@/lib/entries.ts';
 import { SEO_FIELDS } from '@/lib/seo.ts';
 import type { FieldDefinition } from '@/types.ts';
+import { isShown } from '@/lib/conditions.ts';
 
 // Field values are any JSON; see the entry editor for why `any`.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -73,7 +74,7 @@ function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared,
                     {fields.length > 0 && (
                         <Card>
                             <CardContent className="cms:flex cms:flex-col cms:gap-6">
-                                {fields.map((field) => shared.includes(field.handle) ? (
+                                {fields.filter((field) => isShown(field, { ...sharedValues, ...form.data.data })).map((field) => shared.includes(field.handle) ? (
                                     <fieldset key={field.handle} disabled className="cms:flex cms:flex-col cms:gap-1">
                                         <FieldInput id={`data-${field.handle}`} field={field} content value={sharedValues[field.handle]} errors={{}} onChange={() => {}} />
                                         <p className="cms:text-sm cms:text-muted-foreground">Shared by all languages: edit it in {localeName(locales[0] ?? 'en')}.</p>

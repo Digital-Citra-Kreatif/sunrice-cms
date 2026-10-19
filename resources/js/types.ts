@@ -1,4 +1,11 @@
 /** A field definition as stored (see Sunrice\Cms\Fields\Field). */
+/** Shown only when another field on its level is so. */
+export interface FieldCondition {
+    field: string;
+    operator: 'equals' | 'not_equals' | 'filled' | 'empty';
+    value?: string | number | boolean | null;
+}
+
 export interface FieldDefinition {
     handle: string;
     type: string;
@@ -9,6 +16,7 @@ export interface FieldDefinition {
     validation?: string[];
     config?: Record<string, unknown>;
     fields?: FieldDefinition[];
+    condition?: FieldCondition | null;
     /** A flexible field's kinds of block, as the editor gets them. */
     blocks?: BlockType[];
     /** A terms field's terms to choose from (nested ones indented). */

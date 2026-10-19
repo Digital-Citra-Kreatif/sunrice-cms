@@ -8,6 +8,7 @@ import { EntriesPicker } from '@/components/EntriesPicker.tsx';
 import { errorsAt, move } from '@/lib/builder.ts';
 import { asRecord, dateInputValue, dateValueFromInput, newBlock, newRow } from '@/lib/values.ts';
 import type { Errors, FieldDefinition, Option } from '@/types.ts';
+import { isShown } from '@/lib/conditions.ts';
 
 /** The rich text editor (ProseMirror) is large: loaded when a rich text field shows. */
 const RichTextEditor = React.lazy(() => import('@/components/RichTextEditor.tsx').then((m) => ({ default: m.RichTextEditor })));
@@ -162,7 +163,7 @@ export function Fields({ fields, value, onChange, errors, id, content }: {
 }) {
     return (
         <div className="cms:flex cms:flex-col cms:gap-4 cms:rounded-lg cms:border cms:p-4">
-            {fields.map((child) => (
+            {fields.filter((child) => isShown(child, value)).map((child) => (
                 <FieldInput key={child.handle} id={`${id}-${child.handle}`} field={child} value={value[child.handle]} content={content}
                     errors={errorsAt(errors, child.handle)}
                     onChange={(next) => onChange({ ...value, [child.handle]: next })} />
