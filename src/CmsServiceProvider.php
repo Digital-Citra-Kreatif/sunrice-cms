@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms;
 
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\AliasLoader;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Spatie\Honeypot\ProtectAgainstSpam;
 use Sunrice\Cms\Fields\Fieldsets;
 use Sunrice\Cms\Fields\FieldTypes;
 use Sunrice\Cms\Fields\Types;
@@ -54,6 +58,11 @@ final class CmsServiceProvider extends ServiceProvider
         if (! class_exists('Cms')) {
             AliasLoader::getInstance()->alias('Cms', Content::class);
         }
+        RateLimiter::for('sunrice-forms', function (Request $request): Limit {
+            $perMinute = config('sunrice-cms.forms.per_minute', 5);
+
+            return Limit::perMinute(is_int($perMinute) ? $perMinute : 5)->by('sunrice-forms|'.$request->ip());
+        });
         if (! $this->app->routesAreCached()) {
             $this->siteRoutes();
         }
@@ -68,6 +77,8 @@ final class CmsServiceProvider extends ServiceProvider
     {
         $middleware = config('sunrice-cms.site.middleware', ['web']);
         $middleware = is_array($middleware) ? array_values(array_filter($middleware, is_string(...))) : ['web'];
+        Route::middleware([...$middleware, 'throttle:sunrice-forms', ProtectAgainstSpam::class, Site\RequireHoneypot::class])
+            ->post('forms/{form:handle}', Site\FormController::class)->name('sunrice.cms.forms.submit');
         Route::middleware([...$middleware, 'signed'])->get('cms-preview/{translation}', [Site\SiteController::class, 'preview'])->name('sunrice.cms.preview');
         if (config('sunrice-cms.site.enabled', true) === true) {
             Route::middleware($middleware)->get('sitemap.xml', Site\SitemapController::class)->name('sunrice.cms.sitemap');

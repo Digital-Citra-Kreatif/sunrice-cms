@@ -18,6 +18,11 @@ return [
         'middleware' => ['web'],
     ],
 
+    'forms' => [
+        // Submissions one visitor (IP address) may send per minute, to all forms.
+        'per_minute' => 5,
+    ],
+
     'revisions' => [
         // Published versions kept per entry and language; older ones are deleted on publish.
         'keep' => 50,

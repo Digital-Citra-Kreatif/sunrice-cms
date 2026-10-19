@@ -1,4 +1,4 @@
-import { c as be, _ as zd, R as z, j as v, L as Bd, i as jd, u as _, a as Fd } from "./admin-KIDUn3zi.js";
+import { c as be, _ as zd, R as z, j as v, L as Bd, i as jd, u as _, a as Fd } from "./admin-Ds2veyro.js";
 const fa = {
   name: "bold",
   size: 24,

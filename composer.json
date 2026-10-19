@@ -9,6 +9,7 @@
         "illuminate/contracts": "^13.0",
         "illuminate/support": "^13.0",
         "symfony/html-sanitizer": "^7.3 || ^8.0",
+        "spatie/laravel-honeypot": "^4.5",
         "sunrice/admin": "self.version"
     },
     "autoload": {

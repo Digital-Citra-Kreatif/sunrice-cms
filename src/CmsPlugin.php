@@ -11,6 +11,7 @@ use Sunrice\Admin\Navigation\NavigationItem;
 use Sunrice\Admin\Panel;
 use Sunrice\Admin\Permissions\Permission;
 use Sunrice\Cms\Admin\CollectionResource;
+use Sunrice\Cms\Admin\FormResource;
 use Sunrice\Cms\Admin\GlobalSetResource;
 use Sunrice\Cms\Admin\MenuResource;
 use Sunrice\Cms\Admin\RedirectResource;
@@ -22,6 +23,7 @@ use Sunrice\Cms\Http\Controllers\EntryController;
 use Sunrice\Cms\Http\Controllers\FieldsetController;
 use Sunrice\Cms\Http\Controllers\GlobalsController;
 use Sunrice\Cms\Http\Controllers\MenuController;
+use Sunrice\Cms\Http\Controllers\SubmissionController;
 use Sunrice\Cms\Http\Controllers\TermController;
 
 /**
@@ -61,7 +63,7 @@ final class CmsPlugin extends BasePlugin
 
     public function register(Panel $panel): void
     {
-        $panel->resources(CollectionResource::class, TaxonomyResource::class, GlobalSetResource::class, MenuResource::class, RedirectResource::class);
+        $panel->resources(CollectionResource::class, TaxonomyResource::class, GlobalSetResource::class, MenuResource::class, RedirectResource::class, FormResource::class);
         $panel->permissions(
             Permission::make('cms.entries.view', 'View entries', 'Content'),
             Permission::make('cms.entries.create', 'Create entries', 'Content'),
@@ -71,6 +73,8 @@ final class CmsPlugin extends BasePlugin
             Permission::make('cms.terms.manage', 'Manage terms', 'Content'),
             Permission::make('cms.globals.view', 'View globals', 'Content'),
             Permission::make('cms.globals.update', 'Edit globals', 'Content'),
+            Permission::make('cms.submissions.view', 'View and export form submissions', 'Content'),
+            Permission::make('cms.submissions.delete', 'Delete form submissions', 'Content'),
             Permission::make('cms.blueprints.manage', 'Manage blueprints and fieldsets', 'Content structure'),
         );
         $panel->navigation(
@@ -82,6 +86,8 @@ final class CmsPlugin extends BasePlugin
                 ->group('Content')->sort(30)->permission('cms.globals.view'),
             NavigationItem::make('cms-menus')->label('Menus')->url('cms/menus')->icon('list-tree')
                 ->group('Content')->sort(40)->permission('cms.menus.view'),
+            NavigationItem::make('cms-submissions')->label('Submissions')->url('cms/submissions')->icon('inbox')
+                ->group('Content')->sort(50)->permission('cms.submissions.view'),
             NavigationItem::make('cms-blueprints')->label('Blueprints')->url('cms/blueprints')->icon('layout-template')
                 ->group('Structure')->sort(91)->permission('cms.blueprints.manage'),
             NavigationItem::make('cms-fieldsets')->label('Fieldsets')->url('cms/fieldsets')->icon('blocks')
@@ -96,6 +102,12 @@ final class CmsPlugin extends BasePlugin
                 Route::get('menus', 'index')->name('index')->middleware('can:cms.menus.view');
                 Route::get('menus/{menu:handle}', 'edit')->name('edit')->middleware('can:cms.menus.view');
                 Route::put('menus/{menu:handle}', 'update')->name('update')->middleware('can:cms.menus.update');
+            });
+            Route::prefix('cms')->name('cms.submissions.')->controller(SubmissionController::class)->group(function (): void {
+                Route::get('submissions', 'home')->name('home')->middleware('can:cms.submissions.view');
+                Route::get('forms/{form:handle}/submissions', 'index')->name('index')->middleware('can:cms.submissions.view');
+                Route::get('forms/{form:handle}/submissions/export', 'export')->name('export')->middleware('can:cms.submissions.view');
+                Route::delete('submissions/{submission}', 'destroy')->name('destroy')->middleware('can:cms.submissions.delete');
             });
             Route::prefix('cms')->name('cms.globals.')->controller(GlobalsController::class)->group(function (): void {
                 Route::get('globals', 'index')->name('index')->middleware('can:cms.globals.view');
