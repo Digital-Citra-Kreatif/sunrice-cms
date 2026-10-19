@@ -8,6 +8,7 @@
         "php": "^8.3",
         "illuminate/contracts": "^13.0",
         "illuminate/support": "^13.0",
+        "symfony/html-sanitizer": "^7.3 || ^8.0",
         "sunrice/admin": "self.version"
     },
     "autoload": {

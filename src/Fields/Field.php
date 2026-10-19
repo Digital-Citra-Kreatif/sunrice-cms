@@ -1,0 +1,163 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Sunrice\Cms\Fields;
+
+/**
+ * One field in a blueprint or fieldset, as editors define it in the
+ * blueprint builder. Stored as JSON:
+ *
+ *     {"handle": "hero", "type": "group", "label": "Hero", "required": false,
+ *      "instructions": "", "translatable": null, "validation": [], "config": {},
+ *      "fields": [ …children of groups and repeaters… ]}
+ *
+ * `translatable` null means "the type decides" (text yes, numbers no).
+ * Build one with Field::make() or Field::fromArray(); DefinitionValidator
+ * checks a whole list before it is saved.
+ *
+ * @api
+ */
+final readonly class Field
+{
+    /**
+     * @param  list<string>  $validation  extra Laravel rules, from DefinitionValidator::RULES
+     * @param  array<string, mixed>  $config  the type's settings
+     * @param  list<Field>  $fields  children (groups and repeaters)
+     */
+    public function __construct(
+        public string $handle,
+        public string $type,
+        public string $label = '',
+        public bool $required = false,
+        public string $instructions = '',
+        public ?bool $translatable = null,
+        public array $validation = [],
+        public array $config = [],
+        public array $fields = [],
+    ) {}
+
+    /** @param array<string, mixed> $config */
+    public static function make(string $handle, string $type, array $config = []): self
+    {
+        return new self($handle, $type, config: $config);
+    }
+
+    /**
+     * A field from its stored JSON. Values of the wrong type fall back to
+     * their defaults; DefinitionValidator refuses them before they are saved.
+     *
+     * @param  array<mixed>  $data
+     */
+    public static function fromArray(array $data): self
+    {
+        $string = fn (string $key): string => is_string($data[$key] ?? null) ? $data[$key] : '';
+        $config = is_array($data['config'] ?? null) ? $data['config'] : [];
+        $children = is_array($data['fields'] ?? null) ? $data['fields'] : [];
+
+        return new self(
+            handle: $string('handle'),
+            type: $string('type'),
+            label: $string('label'),
+            required: ($data['required'] ?? false) === true,
+            instructions: $string('instructions'),
+            translatable: is_bool($data['translatable'] ?? null) ? $data['translatable'] : null,
+            validation: is_array($data['validation'] ?? null) ? array_values(array_filter($data['validation'], 'is_string')) : [],
+            config: array_filter($config, 'is_string', ARRAY_FILTER_USE_KEY),
+            fields: self::listFromArray($children),
+        );
+    }
+
+    /**
+     * @param  array<mixed>  $fields
+     * @return list<Field>
+     */
+    public static function listFromArray(array $fields): array
+    {
+        return array_values(array_map(self::fromArray(...), array_filter($fields, 'is_array')));
+    }
+
+    /**
+     * @param  list<Field>  $fields
+     * @return list<array<string, mixed>>
+     */
+    public static function listToArray(array $fields): array
+    {
+        return array_map(fn (Field $field): array => $field->toArray(), $fields);
+    }
+
+    /** @return array<string, mixed> */
+    public function toArray(): array
+    {
+        return [
+            'handle' => $this->handle,
+            'type' => $this->type,
+            'label' => $this->label,
+            'required' => $this->required,
+            'instructions' => $this->instructions,
+            'translatable' => $this->translatable,
+            'validation' => $this->validation,
+            'config' => $this->config,
+            'fields' => self::listToArray($this->fields),
+        ];
+    }
+
+    /** The label, or the handle as words when there is none. */
+    public function displayLabel(): string
+    {
+        return $this->label !== '' ? $this->label : ucfirst(str_replace('_', ' ', $this->handle));
+    }
+
+    public function config(string $key, mixed $default = null): mixed
+    {
+        return $this->config[$key] ?? $default;
+    }
+
+    public function configBool(string $key, bool $default = false): bool
+    {
+        $value = $this->config[$key] ?? $default;
+
+        return is_bool($value) ? $value : filter_var($value, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    public function configInt(string $key): ?int
+    {
+        $value = $this->config[$key] ?? null;
+
+        return is_numeric($value) ? (int) $value : null;
+    }
+
+    public function configNumber(string $key): int|float|null
+    {
+        $value = $this->config[$key] ?? null;
+
+        return is_numeric($value) ? $value + 0 : null;
+    }
+
+    public function configString(string $key): ?string
+    {
+        $value = $this->config[$key] ?? null;
+
+        return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    /** @return list<string> */
+    public function configStrings(string $key): array
+    {
+        $value = $this->config[$key] ?? [];
+
+        return is_array($value) ? array_values(array_filter($value, fn (mixed $item): bool => is_string($item) && $item !== '')) : [];
+    }
+
+    /** @param array<string, mixed> $config */
+    public function withConfig(array $config): self
+    {
+        return new self($this->handle, $this->type, $this->label, $this->required, $this->instructions, $this->translatable, $this->validation, $config, $this->fields);
+    }
+
+    /** @param list<Field> $fields */
+    public function withFields(array $fields): self
+    {
+        return new self($this->handle, $this->type, $this->label, $this->required, $this->instructions, $this->translatable, $this->validation, $this->config, $fields);
+    }
+}
