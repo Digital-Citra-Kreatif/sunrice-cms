@@ -36,7 +36,7 @@ final class SearchController
         return response()->view($view, [
             'query' => $query,
             'results' => $results,
-            'title' => $query === '' ? 'Search' : "Search: {$query}",
+            'title' => $query === '' ? __('Search', [], $locale) : __('Search: :query', ['query' => $query], $locale),
             'locale' => $locale,
         ])->header('X-Robots-Tag', 'noindex, follow');
     }

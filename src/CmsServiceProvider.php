@@ -35,6 +35,9 @@ use Sunrice\Cms\Models\GlobalValue;
  */
 final class CmsServiceProvider extends ServiceProvider
 {
+    /** The plain page templates, published as resources/views/cms/*. */
+    private const TEMPLATES = ['entry', 'listing', 'term', 'search'];
+
     public function register(): void
     {
         $this->mergeConfigFrom(dirname(__DIR__).'/config/sunrice-cms.php', 'sunrice-cms');
@@ -69,6 +72,8 @@ final class CmsServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(dirname(__DIR__).'/database/migrations');
         $this->loadViewsFrom(dirname(__DIR__).'/resources/views', 'sunrice-cms');
+        // The site's words in other languages; the app's lang/{locale}.json wins.
+        $this->loadJsonTranslationsFrom(dirname(__DIR__).'/lang');
         // <x-sunrice-cms::entries> and <x-sunrice-cms::terms> (the others are anonymous views).
         $this->callAfterResolving('blade.compiler', function (BladeCompiler $blade): void {
             $blade->component(View\Components\Entries::class, 'sunrice-cms::entries');
@@ -124,6 +129,12 @@ final class CmsServiceProvider extends ServiceProvider
                 $schedule->command('model:prune', ['--model' => [Models\Submission::class, Models\Comment::class]])->daily();
             });
             $this->publishes([dirname(__DIR__).'/config/sunrice-cms.php' => config_path('sunrice-cms.php')], 'sunrice-cms-config');
+            // Starter templates: the plain pages, to make the site's own.
+            $views = dirname(__DIR__).'/resources/views';
+            $this->publishes(array_combine(
+                array_map(fn (string $page): string => "{$views}/{$page}.blade.php", self::TEMPLATES),
+                array_map(fn (string $page): string => resource_path("views/cms/{$page}.blade.php"), self::TEMPLATES),
+            ), 'sunrice-cms-templates');
             // Also "laravel-assets", which Laravel apps publish on every composer update.
             $this->publishes([dirname(__DIR__).'/dist' => public_path(CmsPlugin::ASSETS)], ['sunrice-cms-assets', 'laravel-assets']);
         }

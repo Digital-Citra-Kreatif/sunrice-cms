@@ -3,7 +3,7 @@
     the form's fields, the honeypot, its errors and the thank-you message.
     Publish the views to change the markup; extra attributes go on <form>.
 --}}
-@props(['handle', 'submit' => 'Send'])
+@props(['handle', 'submit' => null])
 @php
     $form = \Sunrice\Cms\Models\Form::query()->where('handle', $handle)->first();
     $bag = $form ? ($errors ?? new \Illuminate\Support\ViewErrorBag)->getBag($form->handle) : null;
@@ -77,6 +77,6 @@
             @endif
         </div>
     @endif
-    <button type="submit">{{ $submit }}</button>
+    <button type="submit">{{ $submit ?? __('Send') }}</button>
 </form>
 @endif

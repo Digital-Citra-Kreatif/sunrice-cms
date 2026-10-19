@@ -10,23 +10,23 @@
 </head>
 <body class="{{ \Sunrice\Cms\Content::bodyClass() }}">
     <x-sunrice-cms::code place="body-start" />
-    <h1>Search</h1>
+    <h1>{{ __('Search') }}</h1>
     <x-sunrice-cms::search>
         <form method="get" action="{{ $component->action }}" role="search">
-            <input type="search" name="{{ $component->name }}" value="{{ $component->query }}" aria-label="Search" required>
-            <button>Search</button>
+            <input type="search" name="{{ $component->name }}" value="{{ $component->query }}" aria-label="{{ __('Search') }}" required>
+            <button>{{ __('Search') }}</button>
         </form>
     </x-sunrice-cms::search>
     @if ($query !== '')
-        <p>{{ $results->total() === 1 ? '1 result' : $results->total().' results' }} for “{{ $query }}”</p>
+        <p>{{ trans_choice(':count result for “:query”|:count results for “:query”', $results->total(), ['query' => $query]) }}</p>
         <ul>
             @foreach ($results as $result)
                 <li><a href="{{ $result->url() }}">{{ $result->title }}</a></li>
             @endforeach
         </ul>
         <nav>
-            @if ($results->previousPageUrl())<a href="{{ $results->previousPageUrl() }}" rel="prev">Previous</a>@endif
-            @if ($results->nextPageUrl())<a href="{{ $results->nextPageUrl() }}" rel="next">Next</a>@endif
+            @if ($results->previousPageUrl())<a href="{{ $results->previousPageUrl() }}" rel="prev">{{ __('Previous') }}</a>@endif
+            @if ($results->nextPageUrl())<a href="{{ $results->nextPageUrl() }}" rel="next">{{ __('Next') }}</a>@endif
         </nav>
     @endif
     <x-sunrice-cms::code place="body-end" />

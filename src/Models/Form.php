@@ -88,6 +88,6 @@ class Form extends Model
     /** What visitors see once they've sent it. */
     public function successMessage(): string
     {
-        return $this->message !== null && trim($this->message) !== '' ? $this->message : 'Thank you, we got your message.';
+        return $this->message !== null && trim($this->message) !== '' ? $this->message : __('Thank you, we got your message.');
     }
 }
