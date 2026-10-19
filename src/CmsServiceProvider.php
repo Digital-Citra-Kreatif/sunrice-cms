@@ -11,9 +11,12 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Honeypot\ProtectAgainstSpam;
+use Sunrice\Admin\Media\MediaUsages;
 use Sunrice\Cms\Fields\Fieldsets;
 use Sunrice\Cms\Fields\FieldTypes;
 use Sunrice\Cms\Fields\Types;
+use Sunrice\Cms\Models\EntryTranslation;
+use Sunrice\Cms\Models\GlobalValue;
 
 /**
  * Boots the CMS. The CMS is added to a panel as a plugin (CmsPlugin);
@@ -58,6 +61,10 @@ final class CmsServiceProvider extends ServiceProvider
         if (! class_exists('Cms')) {
             AliasLoader::getInstance()->alias('Cms', Content::class);
         }
+        // The media library's "Used by" (MediaUsages), kept on every save.
+        EntryTranslation::saved(fn (EntryTranslation $translation) => Support\MediaUsage::entry($translation));
+        EntryTranslation::deleted(fn (EntryTranslation $translation) => app(MediaUsages::class)->forget('cms.entry', (string) $translation->entry_id, $translation->locale));
+        GlobalValue::saved(fn (GlobalValue $value) => Support\MediaUsage::global($value));
         RateLimiter::for('sunrice-forms', function (Request $request): Limit {
             $perMinute = config('sunrice-cms.forms.per_minute', 5);
 

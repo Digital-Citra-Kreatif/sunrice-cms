@@ -7,6 +7,7 @@ namespace Sunrice\Cms\Actions\Entries;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
 use Sunrice\Cms\Models\EntryTranslation;
+use Sunrice\Cms\Support\MediaUsage;
 use Sunrice\Cms\Support\Seo;
 
 /**
@@ -73,6 +74,8 @@ final class SaveDraft
             throw ValidationException::withMessages(['version' => 'Someone else saved this entry after you opened it. Reload to see their changes.']);
         }
         $translation->refresh();
+        // A query update fires no model events: keep the media library's "Used by" here.
+        MediaUsage::entry($translation);
         $this->activity->updated('entry', $translation->entry, $values['title'], $changed);
 
         return $translation;
