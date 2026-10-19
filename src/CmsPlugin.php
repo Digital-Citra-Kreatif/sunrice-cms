@@ -11,12 +11,14 @@ use Sunrice\Admin\Navigation\NavigationItem;
 use Sunrice\Admin\Panel;
 use Sunrice\Admin\Permissions\Permission;
 use Sunrice\Cms\Admin\CollectionResource;
+use Sunrice\Cms\Admin\GlobalSetResource;
 use Sunrice\Cms\Admin\TaxonomyResource;
 use Sunrice\Cms\Fields\FieldType;
 use Sunrice\Cms\Fields\FieldTypes;
 use Sunrice\Cms\Http\Controllers\BlueprintController;
 use Sunrice\Cms\Http\Controllers\EntryController;
 use Sunrice\Cms\Http\Controllers\FieldsetController;
+use Sunrice\Cms\Http\Controllers\GlobalsController;
 use Sunrice\Cms\Http\Controllers\TermController;
 
 /**
@@ -56,7 +58,7 @@ final class CmsPlugin extends BasePlugin
 
     public function register(Panel $panel): void
     {
-        $panel->resources(CollectionResource::class, TaxonomyResource::class);
+        $panel->resources(CollectionResource::class, TaxonomyResource::class, GlobalSetResource::class);
         $panel->permissions(
             Permission::make('cms.entries.view', 'View entries', 'Content'),
             Permission::make('cms.entries.create', 'Create entries', 'Content'),
@@ -64,6 +66,8 @@ final class CmsPlugin extends BasePlugin
             Permission::make('cms.entries.publish', 'Publish and unpublish entries', 'Content'),
             Permission::make('cms.entries.delete', 'Trash and restore entries', 'Content'),
             Permission::make('cms.terms.manage', 'Manage terms', 'Content'),
+            Permission::make('cms.globals.view', 'View globals', 'Content'),
+            Permission::make('cms.globals.update', 'Edit globals', 'Content'),
             Permission::make('cms.blueprints.manage', 'Manage blueprints and fieldsets', 'Content structure'),
         );
         $panel->navigation(
@@ -71,6 +75,8 @@ final class CmsPlugin extends BasePlugin
                 ->group('Content')->sort(10)->permission('cms.entries.view'),
             NavigationItem::make('cms-terms')->label('Terms')->url('cms/terms')->icon('tags')
                 ->group('Content')->sort(20)->permission('cms.terms.manage'),
+            NavigationItem::make('cms-globals')->label('Globals')->url('cms/globals')->icon('globe')
+                ->group('Content')->sort(30)->permission('cms.globals.view'),
             NavigationItem::make('cms-blueprints')->label('Blueprints')->url('cms/blueprints')->icon('layout-template')
                 ->group('Structure')->sort(91)->permission('cms.blueprints.manage'),
             NavigationItem::make('cms-fieldsets')->label('Fieldsets')->url('cms/fieldsets')->icon('blocks')
@@ -80,6 +86,11 @@ final class CmsPlugin extends BasePlugin
             Route::middleware('can:cms.blueprints.manage')->prefix('cms')->name('cms.')->group(function (): void {
                 Route::resource('blueprints', BlueprintController::class)->except('show');
                 Route::resource('fieldsets', FieldsetController::class)->except('show');
+            });
+            Route::prefix('cms')->name('cms.globals.')->controller(GlobalsController::class)->group(function (): void {
+                Route::get('globals', 'index')->name('index')->middleware('can:cms.globals.view');
+                Route::get('globals/{set:handle}', 'edit')->name('edit')->middleware('can:cms.globals.view');
+                Route::put('globals/{set:handle}', 'update')->name('update')->middleware('can:cms.globals.update');
             });
             Route::prefix('cms')->name('cms.terms.')->controller(TermController::class)->middleware('can:cms.terms.manage')->group(function (): void {
                 Route::get('terms', 'home')->name('home');

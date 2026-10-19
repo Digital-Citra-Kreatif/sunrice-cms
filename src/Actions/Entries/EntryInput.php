@@ -59,7 +59,7 @@ final class EntryInput
      * @param  list<string>  $keys
      * @return array<string, string>
      */
-    private static function attributes(Schema $schema, array $keys): array
+    public static function attributes(Schema $schema, array $keys): array
     {
         $names = [];
         foreach ($keys as $key) {

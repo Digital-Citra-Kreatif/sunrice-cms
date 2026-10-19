@@ -40,6 +40,7 @@ final class CmsServiceProvider extends ServiceProvider
         ));
         // Loaded once per request (or job).
         $this->app->scoped(Fieldsets::class);
+        $this->app->scoped(Globals::class);
     }
 
     public function boot(): void
