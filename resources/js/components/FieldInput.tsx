@@ -4,6 +4,7 @@ import {
     Badge, Button, Checkbox, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input, Label, MediaPickerInput,
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Skeleton, Switch, Textarea,
 } from '@sunrice/admin-sdk/ui';
+import { EntriesPicker } from '@/components/EntriesPicker.tsx';
 import { errorsAt, move } from '@/lib/builder.ts';
 import { asRecord, dateInputValue, dateValueFromInput, newBlock, newRow } from '@/lib/values.ts';
 import type { Errors, FieldDefinition, Option } from '@/types.ts';
@@ -46,7 +47,7 @@ interface Props {
 }
 
 /** Types whose inputs are a list or a set of inputs: labelled as a group. */
-const GROUPS = ['repeater', 'group', 'flexible', 'link', 'media', 'rich_text'];
+const GROUPS = ['repeater', 'group', 'flexible', 'link', 'media', 'rich_text', 'entries'];
 
 /** One input for a field definition, any built-in type. */
 /** A field's label, or its handle made readable ("event_day" → "Event day"). */
@@ -119,6 +120,10 @@ function Control({ field, value, onChange, errors, id, content }: Props) {
             return <SingleSelect options={options} id={id} required={field.required === true} value={value === null || value === undefined ? null : String(value)}
                 onChange={(next) => onChange(next === null ? null : Number(next))} />;
         }
+        case 'entries':
+            return <EntriesPicker id={id} invalid={invalid} multiple={field.config?.multiple === true} max={numberConfig(field, 'max') ?? null}
+                collections={field.collections ?? []} onChange={onChange}
+                value={typeof value === 'number' || (Array.isArray(value) && value.every((v) => typeof v === 'number')) ? value as number | number[] : null} />;
         case 'link':
             return <LinkInput value={asRecord(value)} onChange={onChange} errors={errors} id={id} />;
         case 'media':

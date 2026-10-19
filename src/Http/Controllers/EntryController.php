@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -79,6 +80,43 @@ final class EntryController
             'query' => ['search' => $search, 'trashed' => $trashed],
             'can' => self::can($request),
         ]);
+    }
+
+    /**
+     * For the entries field's picker: entries by id (in that order), or a
+     * search of titles, within some collections. Main-language titles.
+     */
+    public function picker(Request $request): JsonResponse
+    {
+        /** @var array{ids?: list<int>, search?: string|null, collections?: list<string>} $input */
+        $input = $request->validate([
+            'ids' => ['nullable', 'array', 'max:100'],
+            'ids.*' => ['integer'],
+            'search' => ['nullable', 'string', 'max:200'],
+            'collections' => ['nullable', 'array', 'max:50'],
+            'collections.*' => ['string'],
+        ]);
+        $query = EntryTranslation::query()
+            ->with('entry.collection')
+            ->where('locale', Locales::default())
+            ->whereHas('entry', fn ($entry) => $entry->withoutTrashed()->whereHas('collection', fn ($collection) => $collection->withoutTrashed()
+                ->when(($input['collections'] ?? []) !== [], fn ($c) => $c->whereIn('handle', $input['collections'] ?? []))));
+
+        if (isset($input['ids'])) {
+            $found = $query->whereIn('entry_id', $input['ids'])->get()->keyBy('entry_id');
+            $items = array_values(array_filter(array_map(fn (int $id): ?EntryTranslation => $found->get($id), $input['ids'])));
+        } else {
+            $search = trim($input['search'] ?? '');
+            $items = $query->when($search !== '', fn ($q) => $q->whereLike('draft_title', '%'.addcslashes($search, '%_\\').'%'))
+                ->orderByDesc('updated_at')->limit(20)->get()->all();
+        }
+
+        return response()->json(['items' => array_map(fn (EntryTranslation $translation): array => [
+            'id' => $translation->entry_id,
+            'title' => $translation->draft_title,
+            'collection' => $translation->entry->collection->title,
+            'status' => self::status($translation),
+        ], $items)]);
     }
 
     public function create(Request $request, Collection $collection): Response

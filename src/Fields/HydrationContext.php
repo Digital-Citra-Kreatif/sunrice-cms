@@ -6,6 +6,8 @@ namespace Sunrice\Cms\Fields;
 
 use Illuminate\Support\Collection;
 use Sunrice\Admin\Media\Media;
+use Sunrice\Cms\Models\Entry;
+use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Term;
 
 /**
@@ -22,6 +24,9 @@ final class HydrationContext
 
     /** @var array<int, Term|null> */
     private array $terms = [];
+
+    /** @var array<int, EntryTranslation|null> */
+    private array $entries = [];
 
     public function __construct(
         public readonly string $locale,
@@ -83,5 +88,29 @@ final class HydrationContext
         }
 
         return collect($ids)->map(fn (int $id): ?Term => $this->terms[$id] ?? null)->filter()->values();
+    }
+
+    /**
+     * Linked entries as templates show them: each one's translation in this
+     * context's language (else its main one), live, or its draft in a
+     * preview; in the given order, skipping missing, trashed and unpublished
+     * ones. Loaded once per context.
+     *
+     * @param  list<int>  $ids  entry ids
+     * @return Collection<int, EntryTranslation>
+     */
+    public function entries(array $ids): Collection
+    {
+        $missing = array_values(array_diff(array_unique($ids), array_keys($this->entries)));
+        if ($missing !== []) {
+            $found = Entry::query()->with(['translations', 'collection'])->whereKey($missing)->get()->keyBy('id');
+            foreach ($missing as $id) {
+                $entry = $found->get($id);
+                $translation = $entry === null || $entry->collection->trashed() ? null : ($entry->translation($this->locale) ?? $entry->mainTranslation());
+                $this->entries[$id] = $translation !== null && ($this->preview || $translation->isLive()) ? $translation : null;
+            }
+        }
+
+        return collect($ids)->map(fn (int $id): ?EntryTranslation => $this->entries[$id] ?? null)->filter()->values();
     }
 }

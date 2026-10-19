@@ -40,3 +40,13 @@ export function isSafeUrl(url: string): boolean {
 
     return !clean.includes('\\');
 }
+
+/** The entry picker endpoint's query string. */
+export function pickerQuery({ ids, search, collections }: { ids?: number[]; search?: string; collections: string[] }): string {
+    const params = new URLSearchParams();
+    for (const id of ids ?? []) params.append('ids[]', String(id));
+    if (search) params.set('search', search);
+    for (const handle of collections) params.append('collections[]', handle);
+
+    return params.toString();
+}

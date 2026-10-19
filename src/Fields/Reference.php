@@ -16,6 +16,8 @@ final readonly class Reference
 
     public const TERM = 'term';
 
+    public const ENTRY = 'entry';
+
     /** @param string $path where in the data, e.g. "gallery" or "sections.2.image" */
     public function __construct(
         public string $type,

@@ -13,6 +13,8 @@ export interface FieldDefinition {
     blocks?: BlockType[];
     /** A terms field's terms to choose from (nested ones indented). */
     terms?: Option[];
+    /** An entries field's collections to choose from (handles). */
+    collections?: string[];
 }
 
 /** A field type the builder offers, with its settings as fields. */

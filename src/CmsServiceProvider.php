@@ -36,6 +36,7 @@ final class CmsServiceProvider extends ServiceProvider
             Types\Flexible::class,
             Types\FieldsetInclude::class,
             Types\TermsField::class,
+            Types\EntriesField::class,
         ));
         // Loaded once per request (or job).
         $this->app->scoped(Fieldsets::class);

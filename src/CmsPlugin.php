@@ -91,6 +91,7 @@ final class CmsPlugin extends BasePlugin
             });
             Route::prefix('cms')->name('cms.entries.')->controller(EntryController::class)->group(function (): void {
                 Route::get('entries', 'home')->name('home')->middleware('can:cms.entries.view');
+                Route::get('entry-picker', 'picker')->name('picker')->middleware('can:cms.entries.view');
                 Route::get('collections/{collection:handle}/entries', 'index')->name('index')->middleware('can:cms.entries.view');
                 Route::get('collections/{collection:handle}/entries/create', 'create')->name('create')->middleware('can:cms.entries.create');
                 Route::post('collections/{collection:handle}/entries', 'store')->name('store')->middleware('can:cms.entries.create');
