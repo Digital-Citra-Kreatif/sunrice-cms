@@ -12,6 +12,7 @@ use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Support\Locales;
+use Sunrice\Cms\Support\Seo;
 
 /**
  * Creates an entry as a draft. Input: title, slug (made from the title
@@ -41,6 +42,9 @@ final class CreateEntry
         $schema = $collection->schema();
         $data = EntryInput::merge($schema, $schema->defaults(), $input['data'] ?? null);
         $values = EntryInput::validate($schema, $input['title'] ?? null, $input['slug'] ?? null, $data, $collection->id, $locale, null);
+        if (($seo = Seo::validate($input[Seo::KEY] ?? null)) !== null) {
+            $values['data'][Seo::KEY] = $seo;
+        }
 
         $translation = DB::transaction(function () use ($collection, $locale, $values): EntryTranslation {
             $id = Auth::id();

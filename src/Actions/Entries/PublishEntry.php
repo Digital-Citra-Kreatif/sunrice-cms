@@ -12,6 +12,7 @@ use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Revision;
+use Sunrice\Cms\Site\Site;
 
 /**
  * Publishes the draft of an entry translation: the site shows it from its
@@ -48,7 +49,11 @@ final class PublishEntry
             $translation->id,
         );
 
-        DB::transaction(function () use ($translation, $values, $publishAt): void {
+        // Where the live page was, to redirect from if its address changes.
+        $site = app(Site::class);
+        $oldPath = $translation->isPublished() ? $site->path($translation, $translation->slug) : null;
+
+        DB::transaction(function () use ($translation, $values, $publishAt, $site, $oldPath): void {
             $translation->fill([
                 'status' => EntryTranslation::PUBLISHED,
                 'title' => $values['title'],
@@ -65,6 +70,10 @@ final class PublishEntry
                 'data' => $values['data'],
             ]);
             $this->prune($translation);
+            $newPath = $site->path($translation, $translation->slug);
+            if ($oldPath !== null && $newPath !== null) {
+                $site->moved($oldPath, $newPath);
+            }
             $this->terms->handle($translation->entry);
         });
         $this->activity->record('published', 'entry', $entry, $values['title'], ['locale' => $translation->locale]);

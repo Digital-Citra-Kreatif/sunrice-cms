@@ -7,7 +7,7 @@ import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, Input, Label, useBreadcrumbs,
 } from '@sunrice/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
-import { FieldError, FieldInput } from '@/components/FieldInput.tsx';
+import { FieldError, FieldInput, Fields } from '@/components/FieldInput.tsx';
 import { errorsAt } from '@/lib/builder.ts';
 import { type EntryLocale, type EntryStatus, formatDate, localeName, localInputValue, statusLabel } from '@/lib/entries.ts';
 import type { FieldDefinition } from '@/types.ts';
@@ -34,7 +34,7 @@ interface Props {
         /** A signed link showing the saved draft, for a while. */
         previewUrl: string;
     } | null;
-    values: { title: string; slug: string; data: FieldValues };
+    values: { title: string; slug: string; data: FieldValues; seo: FieldValues | null };
     revisions: { id: number; title: string; createdAt: string | null }[];
     can: { create: boolean; update: boolean; publish: boolean; delete: boolean };
 }
@@ -45,7 +45,15 @@ interface Props {
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FieldValues = Record<string, any>;
-type FormData = { locale: string | null; title: string; slug: string; data: FieldValues; version: number | null; publish: boolean; published_at: string | null };
+type FormData = { locale: string | null; title: string; slug: string; data: FieldValues; seo: FieldValues; version: number | null; publish: boolean; published_at: string | null };
+
+/** The SEO card's fields (see Sunrice\\Cms\\Support\\Seo), edited with the field inputs. */
+const SEO_FIELDS: FieldDefinition[] = [
+    { handle: 'title', type: 'text', label: 'SEO title', instructions: 'For search results and tabs. Empty: the title.', config: { max: 255 } },
+    { handle: 'description', type: 'textarea', label: 'Description', instructions: 'A sentence or two for search results and shared links.', config: { max: 500 } },
+    { handle: 'image', type: 'media', label: 'Share image', instructions: 'Shown when the page is shared.', config: { types: ['image'] } },
+    { handle: 'noindex', type: 'toggle', label: 'Hide from search engines' },
+];
 
 /**
  * A fresh form for each version the server sends (after creating, saving,
@@ -66,7 +74,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
     const [confirm, confirmDialog] = useConfirm();
     const [scheduling, setScheduling] = React.useState(false);
 
-    const form = useForm<FormData>({ ...values, locale: entry?.locale ?? null, version: entry?.version ?? null, publish: false, published_at: null });
+    const form = useForm<FormData>({ ...values, seo: values.seo ?? {}, locale: entry?.locale ?? null, version: entry?.version ?? null, publish: false, published_at: null });
     const locale = entry ? { locale: entry.locale } : {};
     const mainLocale = locales.find((l) => l.main)?.code;
 
@@ -206,6 +214,14 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                             </CardContent>
                         </Card>
                     )}
+
+                    <Card>
+                        <CardHeader><CardTitle className="cms:text-base">Search and sharing</CardTitle></CardHeader>
+                        <CardContent>
+                            <Fields id="seo" fields={SEO_FIELDS} value={form.data.seo} errors={errorsAt(errors, 'seo')}
+                                onChange={(seo) => form.setData('seo', seo)} />
+                        </CardContent>
+                    </Card>
                 </fieldset>
 
                 {entry && (

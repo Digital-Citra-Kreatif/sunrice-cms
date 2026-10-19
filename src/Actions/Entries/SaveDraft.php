@@ -7,6 +7,7 @@ namespace Sunrice\Cms\Actions\Entries;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
 use Sunrice\Cms\Models\EntryTranslation;
+use Sunrice\Cms\Support\Seo;
 
 /**
  * Saves the draft of an entry translation; the site keeps showing what
@@ -39,6 +40,9 @@ final class SaveDraft
             $translation->locale,
             $translation->id,
         );
+        if (array_key_exists(Seo::KEY, $input)) {
+            $values['data'][Seo::KEY] = Seo::validate($input[Seo::KEY]);
+        }
         $expected = $input['version'] ?? $translation->version;
         if (! is_int($expected) && ! (is_string($expected) && ctype_digit($expected))) {
             throw ValidationException::withMessages(['version' => 'The version must be a number.']);

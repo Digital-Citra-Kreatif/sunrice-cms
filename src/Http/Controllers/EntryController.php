@@ -26,6 +26,7 @@ use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Revision;
 use Sunrice\Cms\Support\Locales;
+use Sunrice\Cms\Support\Seo;
 
 /**
  * Content → Entries: the list per collection and the editor. Each route
@@ -128,7 +129,7 @@ final class EntryController
             'collection' => self::collection($collection),
             'fields' => $schema->toAdmin(),
             'entry' => null,
-            'values' => ['title' => '', 'slug' => '', 'data' => $schema->defaults()],
+            'values' => ['title' => '', 'slug' => '', 'data' => $schema->defaults(), 'seo' => null],
             'revisions' => [],
             'can' => self::can($request),
         ]);
@@ -136,7 +137,7 @@ final class EntryController
 
     public function store(Request $request, Collection $collection, CreateEntry $create): RedirectResponse
     {
-        $translation = $create->handle($collection, $request->only(['title', 'slug', 'data']));
+        $translation = $create->handle($collection, $request->only(['title', 'slug', 'data', 'seo']));
 
         return redirect()->route('sunrice.admin.cms.entries.edit', $translation->entry_id)->with('success', "\"{$translation->draft_title}\" created as a draft.");
     }
@@ -168,7 +169,7 @@ final class EntryController
                 'url' => $translation->isLive() && ! $entry->trashed() ? $translation->url() : null,
                 'previewUrl' => URL::temporarySignedRoute('sunrice.cms.preview', now()->addMinutes(30), ['translation' => $translation->id]),
             ],
-            'values' => ['title' => $translation->draft_title, 'slug' => $translation->draft_slug, 'data' => $translation->draft_data],
+            'values' => ['title' => $translation->draft_title, 'slug' => $translation->draft_slug, 'data' => $translation->draft_data, 'seo' => $translation->draft_data[Seo::KEY] ?? null],
             'revisions' => $translation->revisions()->limit(20)->get()->map(fn (Revision $revision): array => [
                 'id' => $revision->id,
                 'title' => $revision->title,
@@ -187,7 +188,7 @@ final class EntryController
             Gate::authorize('cms.entries.publish');
         }
         $publishAt = $publishing ? self::publishAt($request) : null;
-        $translation = $save->handle(self::translation($entry, $request->input('locale')), $request->only(['title', 'slug', 'data', 'version']));
+        $translation = $save->handle(self::translation($entry, $request->input('locale')), $request->only(['title', 'slug', 'data', 'seo', 'version']));
         if ($publishing) {
             $publish->handle($translation, $publishAt);
 

@@ -6,6 +6,7 @@ namespace Sunrice\Cms\Site;
 
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\EntryTranslation;
+use Sunrice\Cms\Models\Redirect;
 use Sunrice\Cms\Support\Locales;
 
 /**
@@ -38,16 +39,45 @@ final class Site
     }
 
     /** The URL of an entry translation's live page, or null when its collection has no route. */
-    public function url(EntryTranslation $translation, bool $draftSlug = false): ?string
+    public function url(EntryTranslation $translation): ?string
+    {
+        $path = $this->path($translation, $translation->slug);
+
+        return $path === null ? null : url($path);
+    }
+
+    /** The path of an entry translation with a slug (/id/blog/halo), or null without a route. */
+    public function path(EntryTranslation $translation, ?string $slug): ?string
     {
         $route = $translation->entry->collection->route;
-        $slug = $draftSlug ? $translation->draft_slug : $translation->slug;
         if ($route === null || $slug === null) {
             return null;
         }
         $prefix = $translation->locale === Locales::default() ? '' : '/'.$translation->locale;
 
-        return url($prefix.(new RoutePattern($route))->path($slug));
+        return $prefix.(new RoutePattern($route))->path($slug);
+    }
+
+    /** Where an old address moved, if it did. */
+    public function redirect(string $path): ?Redirect
+    {
+        return Redirect::query()->where('from_path', Redirect::normalizePath($path))->first();
+    }
+
+    /**
+     * Records that a page moved: the old path redirects to the new one, a
+     * redirect away from the new path goes, and chains are shortened.
+     */
+    public function moved(string $from, string $to): void
+    {
+        $from = Redirect::normalizePath($from);
+        $to = Redirect::normalizePath($to);
+        if ($from === $to) {
+            return;
+        }
+        Redirect::query()->where('from_path', $to)->delete();
+        Redirect::query()->where('to_url', $from)->update(['to_url' => $to]);
+        Redirect::query()->updateOrCreate(['from_path' => $from], ['to_url' => $to, 'status' => 301]);
     }
 
     /** Forget the collections loaded, after one changed. */

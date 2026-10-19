@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Site;
 
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\View;
@@ -19,10 +20,15 @@ use Sunrice\Cms\Models\EntryTranslation;
  */
 final class SiteController
 {
-    public function show(Request $request, Site $site): Response
+    public function show(Request $request, Site $site): Response|RedirectResponse
     {
         $translation = $site->find($request->path());
-        abort_if($translation === null, 404);
+        if ($translation === null) {
+            $redirect = $site->redirect($request->path());
+            abort_if($redirect === null, 404);
+
+            return redirect()->to($redirect->to_url, $redirect->status);
+        }
 
         return $this->render($translation, preview: false);
     }

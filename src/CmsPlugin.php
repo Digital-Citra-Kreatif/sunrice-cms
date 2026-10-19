@@ -13,6 +13,7 @@ use Sunrice\Admin\Permissions\Permission;
 use Sunrice\Cms\Admin\CollectionResource;
 use Sunrice\Cms\Admin\GlobalSetResource;
 use Sunrice\Cms\Admin\MenuResource;
+use Sunrice\Cms\Admin\RedirectResource;
 use Sunrice\Cms\Admin\TaxonomyResource;
 use Sunrice\Cms\Fields\FieldType;
 use Sunrice\Cms\Fields\FieldTypes;
@@ -60,7 +61,7 @@ final class CmsPlugin extends BasePlugin
 
     public function register(Panel $panel): void
     {
-        $panel->resources(CollectionResource::class, TaxonomyResource::class, GlobalSetResource::class, MenuResource::class);
+        $panel->resources(CollectionResource::class, TaxonomyResource::class, GlobalSetResource::class, MenuResource::class, RedirectResource::class);
         $panel->permissions(
             Permission::make('cms.entries.view', 'View entries', 'Content'),
             Permission::make('cms.entries.create', 'Create entries', 'Content'),

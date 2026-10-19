@@ -70,6 +70,7 @@ final class CmsServiceProvider extends ServiceProvider
         $middleware = is_array($middleware) ? array_values(array_filter($middleware, is_string(...))) : ['web'];
         Route::middleware([...$middleware, 'signed'])->get('cms-preview/{translation}', [Site\SiteController::class, 'preview'])->name('sunrice.cms.preview');
         if (config('sunrice-cms.site.enabled', true) === true) {
+            Route::middleware($middleware)->get('sitemap.xml', Site\SitemapController::class)->name('sunrice.cms.sitemap');
             // The fallback: matched after every other route, so the app's own come first.
             Route::fallback([Site\SiteController::class, 'show'])->middleware($middleware)->name('sunrice.cms.page');
         }
