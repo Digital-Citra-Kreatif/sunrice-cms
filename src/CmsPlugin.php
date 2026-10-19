@@ -6,6 +6,7 @@ namespace Sunrice\Cms;
 
 use Sunrice\Admin\BasePlugin;
 use Sunrice\Admin\Panel;
+use Sunrice\Cms\Admin\CollectionResource;
 use Sunrice\Cms\Fields\FieldType;
 use Sunrice\Cms\Fields\FieldTypes;
 
@@ -43,6 +44,7 @@ final class CmsPlugin extends BasePlugin
 
     public function register(Panel $panel): void
     {
+        $panel->resources(CollectionResource::class);
         if ($this->fieldTypes !== []) {
             $types = $this->fieldTypes;
             // Only when something needs field types.
