@@ -207,14 +207,20 @@ final class CmsPlugin extends BasePlugin
         $panel->tools(
             Ai\ListEntries::class, Ai\GetEntry::class, Ai\SaveEntry::class, Ai\PublishEntry::class, Ai\UnpublishEntry::class,
             Ai\TranslateEntry::class, Ai\TrashEntry::class, Ai\ListTerms::class, Ai\SaveTerm::class,
-            Ai\GetGlobals::class, Ai\SaveGlobals::class, Ai\ListSubmissions::class,
+            Ai\GetGlobals::class, Ai\SaveGlobals::class, Ai\ListSubmissions::class, Ai\DeleteSubmissions::class,
+            Ai\GetSiteInfo::class, Ai\SeoAudit::class, Ai\EntryRevisions::class, Ai\MoveEntry::class,
+            Ai\GetBlueprint::class, Ai\SaveBlueprint::class, Ai\GetMenu::class, Ai\SaveMenu::class, Ai\GetListing::class, Ai\SaveListing::class,
         )->aiInstructions(<<<'MD'
             Content (the CMS): collections hold entries, written per language as drafts and published to the site.
+            - Start with cms_get_site_info: the languages, collections, taxonomies, menus and forms.
             - Find entries with cms_list_entries (no arguments lists the collections), read one with cms_get_entry, which shows its fields.
             - Write with cms_save_entry: it saves the draft; the site changes only when it's published (cms_publish_entry, or "publish": true). Ask before publishing, unpublishing or trashing.
             - Other languages: cms_translate_entry copies the main language into a new draft; then save it with "locale".
             - Media fields take ids from list_media; terms fields ids from cms_list_terms; entries fields entry ids.
-            - Site-wide values: cms_get_globals and cms_save_globals. Form submissions: cms_list_submissions.
+            - Site-wide values: cms_get_globals and cms_save_globals. Form submissions: cms_list_submissions, cms_delete_submissions.
+            - Menu links: cms_get_menu and cms_save_menu. Listing pages: cms_get_listing and cms_save_listing.
+            - Published versions: cms_entry_revisions (and "restore"). Manual order: cms_move_entry. SEO problems: cms_seo_audit.
+            - Fields of collections and fieldsets: cms_get_blueprint and cms_save_blueprint.
             - Collections, taxonomies, global sets, menus, redirects and forms themselves are resources (list_records, save_record).
             MD);
         // One editor at a time per entry or global set, per language (useEditLock).
