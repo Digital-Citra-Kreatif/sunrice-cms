@@ -93,7 +93,8 @@ final class PageCache
 
     private function keepable(BaseResponse $response): bool
     {
-        if (! $response instanceof Response || $response->getStatusCode() !== 200) {
+        // Search results: as many pages as searches.
+        if (! $response instanceof Response || $response->getStatusCode() !== 200 || Page::current()?->type === Page::SEARCH) {
             return false;
         }
         // Cookies of its own (the session's and the CSRF cookie are set later, for everyone).

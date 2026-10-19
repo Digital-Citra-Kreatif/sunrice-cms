@@ -139,6 +139,8 @@ final class Seo
             $page?->entry !== null => self::for($page->entry, $page->preview),
             $page?->term !== null => self::forTerm($page->term),
             $page?->collection !== null => self::forListing($page->collection, $page->locale),
+            // Search results aren't pages to index.
+            $page?->type === Page::SEARCH => self::tags(['noindex' => true], $title ?? 'Search', false, null, [], $page->locale, 'website'),
             default => self::tags([], $title ?? '', false, url()->current(), [], app()->getLocale(), 'website'),
         };
     }

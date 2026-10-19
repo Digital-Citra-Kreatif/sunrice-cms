@@ -68,6 +68,7 @@ final class CmsServiceProvider extends ServiceProvider
         $this->callAfterResolving('blade.compiler', function (BladeCompiler $blade): void {
             $blade->component(View\Components\Entries::class, 'sunrice-cms::entries');
             $blade->component(View\Components\Terms::class, 'sunrice-cms::terms');
+            $blade->component(View\Components\Search::class, 'sunrice-cms::search');
         });
         if (! class_exists('Cms')) {
             AliasLoader::getInstance()->alias('Cms', Content::class);

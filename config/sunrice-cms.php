@@ -33,6 +33,17 @@ return [
         'pages' => env('SUNRICE_PAGE_CACHE', false),
     ],
 
+    'search' => [
+        // The search page at /search (and /{locale}/search).
+        'enabled' => env('SUNRICE_SEARCH', true),
+        'path' => 'search',
+        // Collection handles it covers; null: every collection with pages.
+        'collections' => null,
+        'per_page' => 10,
+        // Searches one visitor (IP address) may make per minute.
+        'per_minute' => 30,
+    ],
+
     'seo' => [
         // Ask search engines to stay away from the whole site, e.g. on a
         // staging copy (also in Settings → Site).

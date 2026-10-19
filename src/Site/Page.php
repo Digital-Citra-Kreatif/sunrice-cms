@@ -25,10 +25,12 @@ final readonly class Page
 
     public const TERM = 'term';
 
+    public const SEARCH = 'search';
+
     private const KEY = 'sunrice-cms.page';
 
     /**
-     * @param  self::ENTRY|self::LISTING|self::TERM  $type
+     * @param  self::ENTRY|self::LISTING|self::TERM|self::SEARCH  $type
      */
     public function __construct(
         public string $type,
@@ -61,6 +63,7 @@ final readonly class Page
      *   entry     page-entry collection-{handle} entry-{id} entry-{slug} [home] [has-parent parent-{id}] [is-preview]
      *   listing   page-listing collection-{handle} [paged paged-{n}]
      *   term      page-term taxonomy-{handle} term-{id} term-{slug} [paged paged-{n}]
+     *   search    page-search [paged paged-{n}]
      *   always    template-{view} lang-{locale} [logged-in]
      *
      * @param  list<string>  $classes
@@ -121,6 +124,10 @@ final readonly class Page
                 if (($url = $translation->url()) !== null) {
                     $urls[$translation->locale] = $url;
                 }
+            }
+        } elseif ($this->type === self::SEARCH) {
+            foreach (Locales::all() as $locale) {
+                $urls[$locale] = Search::url($locale).(($q = request()->query(Search::NAME)) !== null && is_string($q) ? '?'.http_build_query([Search::NAME => $q]) : '');
             }
         } elseif ($this->collection !== null) {
             foreach (Locales::all() as $locale) {

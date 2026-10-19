@@ -13,6 +13,7 @@ use Illuminate\Support\Carbon;
 use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Fields\Schema;
 use Sunrice\Cms\Site\Site;
+use Sunrice\Cms\Support\SearchText;
 
 /**
  * An entry in one language. Editors change the draft (draft_title,
@@ -27,6 +28,7 @@ use Sunrice\Cms\Site\Site;
  * @property string $status "draft" or "published"
  * @property string|null $title
  * @property string|null $slug
+ * @property string|null $search_text the live version's field text, for site search (kept by the model)
  * @property array<string, mixed>|null $data
  * @property string $draft_title
  * @property string $draft_slug
@@ -51,6 +53,16 @@ class EntryTranslation extends Model
     protected $guarded = [];
 
     protected $attributes = ['status' => self::DRAFT, 'draft_data' => '{}', 'version' => 1];
+
+    protected static function booted(): void
+    {
+        // The live version's words for site search, whenever it changes.
+        static::saving(function (self $translation): void {
+            if ($translation->isDirty('data')) {
+                $translation->search_text = SearchText::of($translation->data ?? []);
+            }
+        });
+    }
 
     /** @return array<string, string> */
     protected function casts(): array

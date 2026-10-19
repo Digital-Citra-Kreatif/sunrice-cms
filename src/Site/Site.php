@@ -113,6 +113,14 @@ final class Site
             ->where('entry_id', $id)->where('locale', $locale ?? Locales::default())->first();
     }
 
+    /** The language of the search page at a path (/search, /id/search), or null when it isn't one. */
+    public function searchLocale(string $path): ?string
+    {
+        [$locale, $rest] = $this->splitLocale('/'.trim($path, '/'));
+
+        return $rest === '/'.Search::path() ? $locale : null;
+    }
+
     /** Whether an entry is the homepage. */
     public function isHomepage(EntryTranslation $translation): bool
     {

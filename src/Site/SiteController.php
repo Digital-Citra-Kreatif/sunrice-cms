@@ -25,6 +25,10 @@ final class SiteController
 {
     public function show(Request $request, Site $site): Response|RedirectResponse
     {
+        // The search page (/search, /id/search) before any page at that address.
+        if (Search::enabled() && ($locale = $site->searchLocale($request->path())) !== null) {
+            return app(SearchController::class)($request, app(Search::class), $locale);
+        }
         // Listing pages first: their URLs are fixed, more specific than any {slug}.
         $listing = $site->listing($request->path());
         if ($listing !== null) {
