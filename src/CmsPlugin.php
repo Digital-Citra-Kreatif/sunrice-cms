@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Sunrice\Cms;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Route;
 use Sunrice\Admin\Assets\PluginBundle;
 use Sunrice\Admin\BasePlugin;
 use Sunrice\Admin\Navigation\NavigationItem;
 use Sunrice\Admin\Panel;
 use Sunrice\Admin\Permissions\Permission;
+use Sunrice\Admin\Users\OwnedContent;
 use Sunrice\Cms\Admin\CollectionResource;
 use Sunrice\Cms\Admin\FormResource;
 use Sunrice\Cms\Admin\GlobalSetResource;
@@ -104,6 +106,12 @@ final class CmsPlugin extends BasePlugin
             Permission::make('cms.blueprints.manage', 'Manage blueprints and fieldsets', 'Content structure'),
         );
         $panel->dashboardCards(...Admin\DashboardCards::all());
+        // Entries people wrote go to whoever deletes their account.
+        $panel->ownedContent(OwnedContent::make('cms.entries')->label('entries', 'entry')
+            ->count(fn (Model $user): int => Entry::withTrashed()->where('author_id', $user->getKey())->count())
+            ->handOver(function (Model $from, Model $to): void {
+                Entry::withTrashed()->where('author_id', $from->getKey())->update(['author_id' => $to->getKey()]);
+            }));
         $panel->navigation(
             NavigationItem::make('cms-entries')->label('Entries')->url('cms/entries')->icon('file-text')
                 ->group('Content')->sort(10)->visible(fn (Authorizable $user): bool => Access::entries($user, 'view')),
