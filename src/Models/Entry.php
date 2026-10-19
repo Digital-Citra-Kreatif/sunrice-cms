@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Sunrice\Cms\Support\Locales;
 
 /**
  * A piece of content in a collection. Its title, slug and fields live in
@@ -50,5 +51,14 @@ class Entry extends Model
     public function translation(string $locale): ?EntryTranslation
     {
         return $this->translations->firstWhere('locale', $locale);
+    }
+
+    /**
+     * The translation in the main language, which holds the fields shared
+     * by all languages; the oldest one if there's none in it.
+     */
+    public function mainTranslation(): ?EntryTranslation
+    {
+        return $this->translation(Locales::default()) ?? $this->translations->sortBy('id')->first();
     }
 }

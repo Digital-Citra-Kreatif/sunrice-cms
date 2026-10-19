@@ -6,8 +6,7 @@ import {
     Badge, Button, Card, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow, useBreadcrumbs,
 } from '@sunrice/admin-sdk/ui';
-import { formatDate, statusLabel } from '@/lib/entries.ts';
-import type { EntryStatus } from '@/lib/entries.ts';
+import { type EntryLocale, type EntryStatus, formatDate, statusLabel } from '@/lib/entries.ts';
 
 interface Row {
     id: number;
@@ -16,6 +15,7 @@ interface Row {
     status: EntryStatus;
     publishedAt: string | null;
     updatedAt: string | null;
+    locales: EntryLocale[];
 }
 
 interface Props {
@@ -108,7 +108,18 @@ export default function EntriesIndex({ collection, collections, entries, query, 
                                     <Link href={adminUrl(`cms/entries/${row.id}/edit`)} className="cms:font-medium cms:hover:underline">{row.title}</Link>
                                     <div className="cms:text-xs cms:text-muted-foreground">/{row.slug}</div>
                                 </TableCell>
-                                <TableCell><Badge variant={row.status === 'published' ? 'default' : 'secondary'}>{statusLabel(row.status)}</Badge></TableCell>
+                                <TableCell>
+                                    <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-1">
+                                        <Badge variant={row.status === 'published' ? 'default' : 'secondary'}>{statusLabel(row.status)}</Badge>
+                                        {row.locales.length > 1 && row.locales.filter((l) => !l.main).map((l) => (
+                                            <Badge key={l.code} variant={l.status === 'published' ? 'default' : 'outline'}
+                                                className={l.status === null ? 'cms:opacity-50' : ''}
+                                                title={`${l.code}: ${l.status === null ? 'not translated' : statusLabel(l.status)}`}>
+                                                {l.code.toUpperCase()}
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                </TableCell>
                                 <TableCell className="cms:text-muted-foreground">{formatDate(collection.dated ? row.publishedAt : row.updatedAt)}</TableCell>
                             </TableRow>
                         ))}

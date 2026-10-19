@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 use Inertia\Response;
 use Sunrice\Cms\Actions\Entries\CreateEntry;
+use Sunrice\Cms\Actions\Entries\CreateTranslation;
+use Sunrice\Cms\Actions\Entries\DeleteTranslation;
 use Sunrice\Cms\Actions\Entries\PublishEntry;
 use Sunrice\Cms\Actions\Entries\RestoreEntry;
 use Sunrice\Cms\Actions\Entries\RestoreRevision;
@@ -50,6 +52,7 @@ final class EntryController
         $locale = Locales::default();
 
         $entries = EntryTranslation::query()
+            ->with('entry.translations')
             ->where('collection_id', $collection->id)
             ->where('locale', $locale)
             ->whereHas('entry', fn ($query) => $trashed ? $query->onlyTrashed() : $query->withoutTrashed())
@@ -66,6 +69,7 @@ final class EntryController
                 'status' => self::status($translation),
                 'publishedAt' => $translation->published_at?->toIso8601String(),
                 'updatedAt' => $translation->updated_at?->toIso8601String(),
+                'locales' => self::locales($translation->entry),
             ]);
 
         return Inertia::render('Cms/Entries/Index', [
@@ -100,15 +104,22 @@ final class EntryController
 
     public function edit(Request $request, Entry $entry): Response
     {
-        $translation = self::translation($entry);
+        $translation = self::translation($entry, $request->query('locale'));
         $collection = $entry->collection;
+        $main = $entry->mainTranslation();
+        $shared = $translation->isMain() ? [] : $collection->schema()->shared();
 
         return Inertia::render('Cms/Entries/Editor', [
             'collection' => self::collection($collection),
             'fields' => $collection->schema()->toAdmin(),
+            'locales' => self::locales($entry),
+            // Shared fields are edited in the main language; the others show its values.
+            'shared' => $shared,
+            'sharedValues' => $main === null ? [] : array_intersect_key($main->draft_data, array_flip($shared)),
             'entry' => [
                 'id' => $entry->id,
                 'locale' => $translation->locale,
+                'isMain' => $translation->isMain(),
                 'status' => self::status($translation),
                 'publishedAt' => $translation->published_at?->toIso8601String(),
                 'hasUnpublishedChanges' => $translation->hasUnpublishedChanges(),
@@ -134,7 +145,7 @@ final class EntryController
             Gate::authorize('cms.entries.publish');
         }
         $publishAt = $publishing ? self::publishAt($request) : null;
-        $translation = $save->handle(self::translation($entry), $request->only(['title', 'slug', 'data', 'version']));
+        $translation = $save->handle(self::translation($entry, $request->input('locale')), $request->only(['title', 'slug', 'data', 'version']));
         if ($publishing) {
             $publish->handle($translation, $publishAt);
 
@@ -146,14 +157,14 @@ final class EntryController
 
     public function publish(Request $request, Entry $entry, PublishEntry $publish): RedirectResponse
     {
-        $translation = $publish->handle(self::translation($entry), self::publishAt($request));
+        $translation = $publish->handle(self::translation($entry, $request->input('locale')), self::publishAt($request));
 
         return back()->with('success', self::published($translation));
     }
 
-    public function unpublish(Entry $entry, UnpublishEntry $unpublish): RedirectResponse
+    public function unpublish(Request $request, Entry $entry, UnpublishEntry $unpublish): RedirectResponse
     {
-        $unpublish->handle(self::translation($entry));
+        $unpublish->handle(self::translation($entry, $request->input('locale')));
 
         return back()->with('success', 'Taken off the site. The draft is kept.');
     }
@@ -172,6 +183,23 @@ final class EntryController
         return back()->with('success', 'Restored.');
     }
 
+    public function addTranslation(Request $request, Entry $entry, CreateTranslation $create): RedirectResponse
+    {
+        $locale = $request->input('locale');
+        $translation = $create->handle($entry, is_string($locale) ? $locale : '');
+
+        return redirect()->route('sunrice.admin.cms.entries.edit', [$entry->id, 'locale' => $translation->locale])
+            ->with('success', 'Added as a draft, copied from the main language. Translate it, then publish.');
+    }
+
+    public function removeTranslation(Entry $entry, string $locale, DeleteTranslation $delete): RedirectResponse
+    {
+        $entry->loadMissing('translations');
+        $delete->handle($entry->translation($locale) ?? abort(404));
+
+        return redirect()->route('sunrice.admin.cms.entries.edit', $entry->id)->with('success', 'The translation was removed.');
+    }
+
     public function restoreRevision(Revision $revision, RestoreRevision $restore): RedirectResponse
     {
         abort_if($revision->translation->entry->collection->trashed(), 404);
@@ -180,13 +208,33 @@ final class EntryController
         return back()->with('success', 'The revision is in the draft now. Publish it to put it on the site.');
     }
 
-    /** The translation edited here: the main language's (other languages come with the multilingual editor). */
-    private static function translation(Entry $entry): EntryTranslation
+    /** The translation in a language, or the main one when none is asked for. */
+    private static function translation(Entry $entry, mixed $locale = null): EntryTranslation
     {
         abort_if($entry->collection->trashed(), 404);
         $entry->loadMissing('translations');
+        if (is_string($locale) && $locale !== '') {
+            return $entry->translation($locale) ?? abort(404);
+        }
 
-        return $entry->translation(Locales::default()) ?? $entry->translations->sortBy('id')->first() ?? abort(404);
+        return $entry->mainTranslation() ?? abort(404);
+    }
+
+    /**
+     * The site's languages with the entry's state in each: its status, or
+     * null where it has no translation yet.
+     *
+     * @return list<array{code: string, main: bool, status: string|null}>
+     */
+    private static function locales(Entry $entry): array
+    {
+        $main = $entry->mainTranslation();
+
+        return array_map(fn (string $code): array => [
+            'code' => $code,
+            'main' => $main?->locale === $code,
+            'status' => ($translation = $entry->translation($code)) === null ? null : self::status($translation),
+        ], Locales::all());
     }
 
     private static function publishAt(Request $request): ?\DateTimeInterface

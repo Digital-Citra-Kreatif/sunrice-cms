@@ -27,7 +27,8 @@ final class SaveDraft
      */
     public function handle(EntryTranslation $translation, array $input): EntryTranslation
     {
-        $schema = $translation->entry->collection->schema();
+        // Another language than the main one leaves the shared fields alone.
+        $schema = $translation->editableSchema();
         $data = EntryInput::merge($schema, $translation->draft_data, $input['data'] ?? null);
         $values = EntryInput::validate(
             $schema,

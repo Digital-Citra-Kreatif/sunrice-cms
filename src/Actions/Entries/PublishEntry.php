@@ -36,7 +36,7 @@ final class PublishEntry
             throw ValidationException::withMessages(['entry' => "The collection \"{$entry->collection->title}\" was deleted."]);
         }
         $values = EntryInput::validate(
-            $entry->collection->schema(),
+            $translation->editableSchema(),
             $translation->draft_title,
             $translation->draft_slug,
             $translation->draft_data,

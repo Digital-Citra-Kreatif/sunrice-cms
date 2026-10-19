@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Sunrice\Cms\Fields\HydrationContext;
+use Sunrice\Cms\Fields\Schema;
 
 /**
  * An entry in one language. Editors change the draft (draft_title,
@@ -100,16 +101,38 @@ class EntryTranslation extends Model
             || $this->draft_data != $this->data;
     }
 
+    /** Whether this is the entry's main translation, which holds the shared fields. */
+    public function isMain(): bool
+    {
+        return $this->entry->mainTranslation()?->is($this) ?? true;
+    }
+
     /**
-     * The fields as templates get them: the live version, or the draft for a preview.
+     * The fields as templates get them: the live version, or the draft for
+     * a preview. Fields shared by all languages come from the main
+     * translation.
      *
      * @return array<mixed>
      */
     public function values(?HydrationContext $context = null): array
     {
         $context ??= new HydrationContext($this->locale);
+        $schema = $this->entry->collection->schema();
         $data = $context->preview ? $this->draft_data : ($this->data ?? []);
+        $main = $this->entry->mainTranslation();
+        if ($main !== null && ! $main->is($this)) {
+            $shared = array_flip($schema->shared());
+            $data = array_replace($data, array_intersect_key($context->preview ? $main->draft_data : ($main->data ?? []), $shared));
+        }
 
-        return $this->entry->collection->schema()->hydrate($data, $context);
+        return $schema->hydrate($data, $context);
+    }
+
+    /** The fields this translation edits: all of them for the main one, the translated ones for the others. */
+    public function editableSchema(): Schema
+    {
+        $schema = $this->entry->collection->schema();
+
+        return $this->isMain() ? $schema : $schema->except($schema->shared());
     }
 }

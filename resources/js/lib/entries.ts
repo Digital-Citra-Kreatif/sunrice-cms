@@ -19,3 +19,18 @@ export function localInputValue(date: Date): string {
 
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
+
+/** A language's name in the reader's language ("id" → "Indonesian"), or its code. */
+export function localeName(code: string, inLocale?: string): string {
+    try {
+        return new Intl.DisplayNames(inLocale ? [inLocale] : undefined, { type: 'language' }).of(code.replace('_', '-')) ?? code;
+    } catch {
+        return code;
+    }
+}
+
+export interface EntryLocale {
+    code: string;
+    main: boolean;
+    status: EntryStatus | null;
+}

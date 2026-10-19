@@ -104,6 +104,26 @@ final class Schema
     }
 
     /**
+     * The handles of the fields shared by all languages (not translatable).
+     *
+     * @return list<string>
+     */
+    public function shared(): array
+    {
+        return array_values(array_map(fn (Field $field): string => $field->handle, array_filter($this->fields, fn (Field $field): bool => ! $this->isTranslatable($field))));
+    }
+
+    /**
+     * These fields without the given handles.
+     *
+     * @param  list<string>  $handles
+     */
+    public function except(array $handles): self
+    {
+        return new self(array_values(array_filter($this->fields, fn (Field $field): bool => ! in_array($field->handle, $handles, true))), $this->types);
+    }
+
+    /**
      * Laravel rules for data under `$prefix`, keyed by dot path.
      *
      * @param  array<mixed>  $data  the input, so rules can follow what was sent (flexible blocks)

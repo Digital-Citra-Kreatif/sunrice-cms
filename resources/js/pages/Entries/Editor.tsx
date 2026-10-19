@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { ArrowLeft, CalendarClock, ChevronDown, LoaderCircle, RotateCcw, Trash2 } from 'lucide-react';
+import { ArrowLeft, CalendarClock, ChevronDown, LoaderCircle, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
     Badge, Button, Card, CardContent, CardHeader, CardTitle, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -9,15 +9,21 @@ import {
 import { useConfirm } from '@/components/Confirm.tsx';
 import { FieldError, FieldInput } from '@/components/FieldInput.tsx';
 import { errorsAt } from '@/lib/builder.ts';
-import { type EntryStatus, formatDate, localInputValue, statusLabel } from '@/lib/entries.ts';
+import { type EntryLocale, type EntryStatus, formatDate, localeName, localInputValue, statusLabel } from '@/lib/entries.ts';
 import type { FieldDefinition } from '@/types.ts';
 
 interface Props {
     collection: { handle: string; title: string; dated: boolean };
     fields: FieldDefinition[];
+    /** The site's languages and the entry's status in each (none for a new entry). */
+    locales?: EntryLocale[];
+    /** Fields shared by all languages, edited in the main one: read-only here with its values. */
+    shared?: string[];
+    sharedValues?: FieldValues;
     entry: {
         id: number;
         locale: string;
+        isMain: boolean;
         status: EntryStatus;
         publishedAt: string | null;
         hasUnpublishedChanges: boolean;
@@ -35,7 +41,7 @@ interface Props {
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FieldValues = Record<string, any>;
-type FormData = { title: string; slug: string; data: FieldValues; version: number | null; publish: boolean; published_at: string | null };
+type FormData = { locale: string | null; title: string; slug: string; data: FieldValues; version: number | null; publish: boolean; published_at: string | null };
 
 /**
  * A fresh form for each version the server sends (after creating, saving,
@@ -45,10 +51,10 @@ type FormData = { title: string; slug: string; data: FieldValues; version: numbe
 export default function EntryEditorPage(props: Props) {
     const { entry } = props;
 
-    return <EntryEditor key={entry ? `${entry.id}:${entry.version}:${entry.status}:${entry.trashed}:${entry.publishedAt}` : 'new'} {...props} />;
+    return <EntryEditor key={entry ? `${entry.id}:${entry.locale}:${entry.version}:${entry.status}:${entry.trashed}:${entry.publishedAt}` : 'new'} {...props} />;
 }
 
-function EntryEditor({ collection, fields, entry, values, revisions, can }: Props) {
+function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, can }: Props) {
     const list = adminUrl(`cms/collections/${collection.handle}/entries`);
     const url = entry ? adminUrl(`cms/entries/${entry.id}`) : list;
     const heading = entry ? values.title : 'New entry';
@@ -56,9 +62,13 @@ function EntryEditor({ collection, fields, entry, values, revisions, can }: Prop
     const [confirm, confirmDialog] = useConfirm();
     const [scheduling, setScheduling] = React.useState(false);
 
-    const form = useForm<FormData>({ ...values, version: entry?.version ?? null, publish: false, published_at: null });
+    const form = useForm<FormData>({ ...values, locale: entry?.locale ?? null, version: entry?.version ?? null, publish: false, published_at: null });
+    const locale = entry ? { locale: entry.locale } : {};
+    const mainLocale = locales.find((l) => l.main)?.code;
 
     const errors = form.errors as Record<string, string | undefined>;
+    // Nothing new to publish: the live version is the draft, and the form has no changes.
+    const upToDate = entry !== null && entry.status !== 'draft' && !entry.hasUnpublishedChanges && !form.isDirty;
     const editable = entry === null ? can.create : can.update && !entry.trashed;
 
     const save = (publish = false, publishedAt: string | null = null) => {
@@ -74,7 +84,7 @@ function EntryEditor({ collection, fields, entry, values, revisions, can }: Prop
         if (can.update) {
             save(true, publishedAt);
         } else if (entry) {
-            router.post(`${url}/publish`, { published_at: publishedAt }, { preserveScroll: true, onSuccess: () => setScheduling(false) });
+            router.post(`${url}/publish`, { ...locale, published_at: publishedAt }, { preserveScroll: true, onSuccess: () => setScheduling(false) });
         }
     };
 
@@ -112,8 +122,8 @@ function EntryEditor({ collection, fields, entry, values, revisions, can }: Prop
                     )}
                     {entry && !entry.trashed && can.publish && (
                         <div className="cms:flex">
-                            <Button type="button" className="cms:rounded-r-none" disabled={form.processing} onClick={() => publish()}>
-                                {entry.status === 'draft' ? 'Publish' : 'Publish changes'}
+                            <Button type="button" className="cms:rounded-r-none" disabled={form.processing || upToDate} onClick={() => publish()}>
+                                {entry.status === 'draft' ? 'Publish' : upToDate ? 'Published' : 'Publish changes'}
                             </Button>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -124,7 +134,7 @@ function EntryEditor({ collection, fields, entry, values, revisions, can }: Prop
                                     {entry.status !== 'draft' && (
                                         <>
                                             <DropdownMenuSeparator />
-                                            <DropdownMenuItem onSelect={() => router.post(`${url}/unpublish`, {}, { preserveScroll: true })}>Unpublish</DropdownMenuItem>
+                                            <DropdownMenuItem onSelect={() => router.post(`${url}/unpublish`, locale, { preserveScroll: true })}>Unpublish</DropdownMenuItem>
                                         </>
                                     )}
                                 </DropdownMenuContent>
@@ -133,6 +143,13 @@ function EntryEditor({ collection, fields, entry, values, revisions, can }: Prop
                     )}
                 </div>
             </div>
+
+            {entry && locales.length > 1 && (
+                <LanguageBar entryUrl={url} current={entry.locale} locales={locales} canAdd={can.create && !entry.trashed}
+                    canRemove={can.delete && !entry.isMain && !entry.trashed}
+                    onRemove={() => confirm(`Remove the ${localeName(entry.locale)} translation of "${values.title}"? Its revisions go with it.`,
+                        () => router.delete(`${url}/translations/${entry.locale}`))} />
+            )}
 
             {errors.version && <p role="alert" className="cms:rounded-lg cms:border cms:border-destructive cms:p-3 cms:text-sm cms:text-destructive">{errors.version}</p>}
             {(errors.entry || errors.published_at) && <p role="alert" className="cms:text-sm cms:text-destructive">{errors.entry ?? errors.published_at}</p>}
@@ -159,7 +176,12 @@ function EntryEditor({ collection, fields, entry, values, revisions, can }: Prop
                     {fields.length > 0 && (
                         <Card>
                             <CardContent className="cms:flex cms:flex-col cms:gap-6">
-                                {fields.map((field) => (
+                                {fields.map((field) => shared.includes(field.handle) ? (
+                                    <fieldset key={field.handle} disabled className="cms:flex cms:flex-col cms:gap-1">
+                                        <FieldInput id={`data-${field.handle}`} field={field} content value={sharedValues[field.handle]} errors={{}} onChange={() => {}} />
+                                        <p className="cms:text-sm cms:text-muted-foreground">Shared by all languages: edit it in {mainLocale ? localeName(mainLocale) : 'the main language'}.</p>
+                                    </fieldset>
+                                ) : (
                                     <FieldInput key={field.handle} id={`data-${field.handle}`} field={field} content
                                         value={form.data.data[field.handle]} errors={errorsAt(errors, `data.${field.handle}`)}
                                         onChange={(value) => form.setData('data', { ...form.data.data, [field.handle]: value })} />
@@ -205,6 +227,36 @@ function EntryEditor({ collection, fields, entry, values, revisions, can }: Prop
             <ScheduleDialog open={scheduling} onClose={() => setScheduling(false)} processing={form.processing}
                 current={entry?.publishedAt ?? null} onSchedule={(iso) => publish(iso)} />
         </form>
+    );
+}
+
+function LanguageBar({ entryUrl, current, locales, canAdd, canRemove, onRemove }: {
+    entryUrl: string; current: string; locales: EntryLocale[]; canAdd: boolean; canRemove: boolean; onRemove: () => void;
+}) {
+    return (
+        <nav aria-label="Languages" className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
+            {locales.map((l) => {
+                const name = `${localeName(l.code)}${l.main ? ' (main)' : ''}`;
+                if (l.status === null) {
+                    return canAdd ? (
+                        <Button key={l.code} type="button" variant="outline" size="sm" className="cms:border-dashed"
+                            onClick={() => router.post(`${entryUrl}/translations`, { locale: l.code })}>
+                            <Plus /> {name}
+                        </Button>
+                    ) : null;
+                }
+                return (
+                    <Button key={l.code} type="button" size="sm" variant={l.code === current ? 'secondary' : 'ghost'} aria-current={l.code === current ? 'page' : undefined}
+                        onClick={() => l.code !== current && router.get(`${entryUrl}/edit`, { locale: l.code })}>
+                        {name}
+                        <Badge variant={l.status === 'published' ? 'default' : 'outline'} className="cms:ml-1">{statusLabel(l.status)}</Badge>
+                    </Button>
+                );
+            })}
+            {canRemove && (
+                <Button type="button" variant="ghost" size="sm" className="cms:ml-auto cms:text-destructive" onClick={onRemove}>Remove this language</Button>
+            )}
+        </nav>
     );
 }
 
