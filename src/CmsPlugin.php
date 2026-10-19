@@ -139,6 +139,19 @@ final class CmsPlugin extends BasePlugin
                 Route::post('revisions/{revision}/restore', 'restoreRevision')->name('revisions.restore')->middleware('can:cms.entries.update');
             });
         });
+        $panel->tools(
+            Ai\ListEntries::class, Ai\GetEntry::class, Ai\SaveEntry::class, Ai\PublishEntry::class, Ai\UnpublishEntry::class,
+            Ai\TranslateEntry::class, Ai\TrashEntry::class, Ai\ListTerms::class, Ai\SaveTerm::class,
+            Ai\GetGlobals::class, Ai\SaveGlobals::class, Ai\ListSubmissions::class,
+        )->aiInstructions(<<<'MD'
+            Content (the CMS): collections hold entries, written per language as drafts and published to the site.
+            - Find entries with cms_list_entries (no arguments lists the collections), read one with cms_get_entry, which shows its fields.
+            - Write with cms_save_entry: it saves the draft; the site changes only when it's published (cms_publish_entry, or "publish": true). Ask before publishing, unpublishing or trashing.
+            - Other languages: cms_translate_entry copies the main language into a new draft; then save it with "locale".
+            - Media fields take ids from list_media; terms fields ids from cms_list_terms; entries fields entry ids.
+            - Site-wide values: cms_get_globals and cms_save_globals. Form submissions: cms_list_submissions.
+            - Collections, taxonomies, global sets, menus, redirects and forms themselves are resources (list_records, save_record).
+            MD);
         $panel->bundle(PluginBundle::make('cms')->module(self::asset('admin.js'))->style(self::asset('admin.css'))->pages('Cms/'));
         if ($this->fieldTypes !== []) {
             $types = $this->fieldTypes;

@@ -93,6 +93,12 @@ class EntryTranslation extends Model
         return $this->isPublished() && $this->published_at !== null && $this->published_at->lte(now());
     }
 
+    /** "draft", "scheduled" (published with a date to come) or "published". */
+    public function status(): string
+    {
+        return ! $this->isPublished() ? 'draft' : ($this->isLive() ? 'published' : 'scheduled');
+    }
+
     /** Whether the draft differs from what was last published. */
     public function hasUnpublishedChanges(): bool
     {

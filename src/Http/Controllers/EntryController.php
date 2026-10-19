@@ -69,7 +69,7 @@ final class EntryController
                 'id' => $translation->entry_id,
                 'title' => $translation->draft_title,
                 'slug' => $translation->draft_slug,
-                'status' => self::status($translation),
+                'status' => $translation->status(),
                 'publishedAt' => $translation->published_at?->toIso8601String(),
                 'updatedAt' => $translation->updated_at?->toIso8601String(),
                 'locales' => self::locales($translation->entry),
@@ -117,7 +117,7 @@ final class EntryController
             'id' => $translation->entry_id,
             'title' => $translation->draft_title,
             'collection' => $translation->entry->collection->title,
-            'status' => self::status($translation),
+            'status' => $translation->status(),
         ], $items)]);
     }
 
@@ -160,7 +160,7 @@ final class EntryController
                 'id' => $entry->id,
                 'locale' => $translation->locale,
                 'isMain' => $translation->isMain(),
-                'status' => self::status($translation),
+                'status' => $translation->status(),
                 'publishedAt' => $translation->published_at?->toIso8601String(),
                 'hasUnpublishedChanges' => $translation->hasUnpublishedChanges(),
                 'trashed' => $entry->trashed(),
@@ -276,7 +276,7 @@ final class EntryController
         return array_map(fn (string $code): array => [
             'code' => $code,
             'main' => $main?->locale === $code,
-            'status' => ($translation = $entry->translation($code)) === null ? null : self::status($translation),
+            'status' => ($translation = $entry->translation($code)) === null ? null : $translation->status(),
         ], Locales::all());
     }
 
@@ -291,12 +291,6 @@ final class EntryController
     private static function published(EntryTranslation $translation): string
     {
         return $translation->isLive() ? 'Published.' : 'Scheduled for '.$translation->published_at?->toDayDateTimeString().'.';
-    }
-
-    /** "draft", "scheduled" or "published". */
-    private static function status(EntryTranslation $translation): string
-    {
-        return ! $translation->isPublished() ? 'draft' : ($translation->isLive() ? 'published' : 'scheduled');
     }
 
     /** @return array{handle: string, title: string, dated: bool} */
