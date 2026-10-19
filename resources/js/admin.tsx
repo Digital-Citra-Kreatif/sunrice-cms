@@ -7,6 +7,8 @@ import EntriesIndex from '@/pages/Entries/Index.tsx';
 import FieldsetsIndex from '@/pages/Fieldsets/Index.tsx';
 import GlobalsEdit from '@/pages/Globals/Edit.tsx';
 import GlobalsIndex from '@/pages/Globals/Index.tsx';
+import MenuEdit from '@/pages/Menus/Edit.tsx';
+import MenusIndex from '@/pages/Menus/Index.tsx';
 import TermsIndex from '@/pages/Terms/Index.tsx';
 
 definePlugin({
@@ -19,5 +21,7 @@ definePlugin({
         'Cms/Terms/Index': TermsIndex,
         'Cms/Globals/Index': GlobalsIndex,
         'Cms/Globals/Edit': GlobalsEdit,
+        'Cms/Menus/Index': MenusIndex,
+        'Cms/Menus/Edit': MenuEdit,
     },
 });
