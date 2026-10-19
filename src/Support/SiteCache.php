@@ -57,7 +57,16 @@ final class SiteCache
     /** The full cache key of `$key` in this content version. */
     public function key(string $key): string
     {
-        return 'sunrice-cms:'.$this->version().':'.$key;
+        return 'sunrice-cms:'.$this->stamp().':'.$key;
+    }
+
+    /**
+     * The content version and the site's languages: what was kept before
+     * either changed (another main language moves addresses) isn't used.
+     */
+    public function stamp(): string
+    {
+        return $this->version().'.'.substr(md5(implode(',', Locales::all())), 0, 8);
     }
 
     public function version(): int
