@@ -207,6 +207,29 @@ final class DefinitionValidator
     }
 
     /**
+     * Rows of a repeater setting (a select's options) without what the
+     * repeater stores for content rows (_id, _key, _hidden) or empty cells.
+     *
+     * @param  array<mixed>  $rows
+     * @return list<array<string, mixed>>
+     */
+    private static function settingRows(array $rows): array
+    {
+        $clean = [];
+        foreach ($rows as $row) {
+            if (is_array($row)) {
+                $clean[] = array_filter(
+                    array_diff_key($row, array_flip(['_id', '_key', '_hidden'])),
+                    fn (mixed $cell, int|string $key): bool => is_string($key) && $cell !== null && $cell !== '',
+                    ARRAY_FILTER_USE_BOTH,
+                );
+            }
+        }
+
+        return $clean;
+    }
+
+    /**
      * The definitions as stored: settings normalised, children only on
      * types that have them.
      *
@@ -221,7 +244,7 @@ final class DefinitionValidator
             $config = [];
             foreach ($settings->normalize(array_intersect_key($field->config, array_flip(array_map(fn (Field $setting): string => $setting->handle, $settings->fields())))) as $key => $value) {
                 if (is_string($key) && $value !== null && $value !== [] && $value !== false) {
-                    $config[$key] = $value;
+                    $config[$key] = $settings->field($key)?->type === Types\Repeater::TYPE && is_array($value) ? self::settingRows($value) : $value;
                 }
             }
 

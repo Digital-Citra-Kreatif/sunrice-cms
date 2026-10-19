@@ -1,0 +1,25 @@
+{
+    "private": true,
+    "name": "@sunrice/cms-app",
+    "description": "The CMS's admin pages, a bundle built with @sunrice/admin-sdk into dist/ and shipped with the sunrice/cms Composer package.",
+    "type": "module",
+    "scripts": {
+        "dev": "vite build --watch",
+        "build": "tsc --noEmit && vite build",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@inertiajs/react": "^3.0.0",
+        "@sunrice/admin-sdk": "*",
+        "lucide-react": "^1.52.0",
+        "react": "^19.0.0"
+    },
+    "devDependencies": {
+        "@tailwindcss/vite": "^4.0.0",
+        "@types/react": "^19.0.0",
+        "@vitejs/plugin-react": "^4.3.3",
+        "tailwindcss": "^4.0.0",
+        "typescript": "^5.6.3",
+        "vite": "^7.0.0"
+    }
+}

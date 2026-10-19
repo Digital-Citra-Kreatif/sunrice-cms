@@ -20,9 +20,11 @@ use Sunrice\Cms\Fields\Schema;
  */
 final class Repeater extends FieldType
 {
+    public const TYPE = 'repeater';
+
     public function type(): string
     {
-        return 'repeater';
+        return self::TYPE;
     }
 
     public function rules(Field $field): array

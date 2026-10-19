@@ -45,6 +45,8 @@ final class CmsServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(dirname(__DIR__).'/database/migrations');
         if ($this->app->runningInConsole()) {
             $this->publishes([dirname(__DIR__).'/config/sunrice-cms.php' => config_path('sunrice-cms.php')], 'sunrice-cms-config');
+            // Also "laravel-assets", which Laravel apps publish on every composer update.
+            $this->publishes([dirname(__DIR__).'/dist' => public_path(CmsPlugin::ASSETS)], ['sunrice-cms-assets', 'laravel-assets']);
         }
     }
 }

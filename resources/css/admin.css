@@ -1,0 +1,34 @@
+/*
+ * Utilities only: the panel's stylesheet already has Tailwind's base styles
+ * and theme. Theme values are written into the utilities (inline) and the
+ * panel's colours are its own CSS variables, so the CMS pages match the
+ * panel, dark mode and branding included, without a second copy of either.
+ */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme) theme(reference inline);
+@import 'tailwindcss/utilities.css' layer(utilities) source('../js');
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline reference {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+}

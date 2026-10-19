@@ -4,11 +4,17 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms;
 
+use Illuminate\Support\Facades\Route;
+use Sunrice\Admin\Assets\PluginBundle;
 use Sunrice\Admin\BasePlugin;
+use Sunrice\Admin\Navigation\NavigationItem;
 use Sunrice\Admin\Panel;
+use Sunrice\Admin\Permissions\Permission;
 use Sunrice\Cms\Admin\CollectionResource;
 use Sunrice\Cms\Fields\FieldType;
 use Sunrice\Cms\Fields\FieldTypes;
+use Sunrice\Cms\Http\Controllers\BlueprintController;
+use Sunrice\Cms\Http\Controllers\FieldsetController;
 
 /**
  * The CMS, added to the panel in the app's panel provider:
@@ -20,6 +26,9 @@ use Sunrice\Cms\Fields\FieldTypes;
 final class CmsPlugin extends BasePlugin
 {
     public const ID = 'cms';
+
+    /** Where the CMS's admin JavaScript and CSS are published (vendor:publish --tag=sunrice-cms-assets). */
+    public const ASSETS = 'vendor/sunrice-cms';
 
     /** @var list<class-string<FieldType>> */
     private array $fieldTypes = [];
@@ -45,6 +54,20 @@ final class CmsPlugin extends BasePlugin
     public function register(Panel $panel): void
     {
         $panel->resources(CollectionResource::class);
+        $panel->permissions(Permission::make('cms.blueprints.manage', 'Manage blueprints and fieldsets', 'Content structure'));
+        $panel->navigation(
+            NavigationItem::make('cms-blueprints')->label('Blueprints')->url('cms/blueprints')->icon('layout-template')
+                ->group('Structure')->sort(91)->permission('cms.blueprints.manage'),
+            NavigationItem::make('cms-fieldsets')->label('Fieldsets')->url('cms/fieldsets')->icon('blocks')
+                ->group('Structure')->sort(92)->permission('cms.blueprints.manage'),
+        );
+        $panel->routes(function (): void {
+            Route::middleware('can:cms.blueprints.manage')->prefix('cms')->name('cms.')->group(function (): void {
+                Route::resource('blueprints', BlueprintController::class)->except('show');
+                Route::resource('fieldsets', FieldsetController::class)->except('show');
+            });
+        });
+        $panel->bundle(PluginBundle::make('cms')->module(self::asset('admin.js'))->style(self::asset('admin.css'))->pages('Cms/'));
         if ($this->fieldTypes !== []) {
             $types = $this->fieldTypes;
             // Only when something needs field types.
@@ -52,5 +75,14 @@ final class CmsPlugin extends BasePlugin
                 ? app(FieldTypes::class)->register(...$types)
                 : app()->afterResolving(FieldTypes::class, fn (FieldTypes $registry) => $registry->register(...$types));
         }
+    }
+
+    /** A published asset's URL, versioned by the built file so browsers fetch a new one after an update. */
+    private static function asset(string $file): string
+    {
+        $built = dirname(__DIR__)."/dist/{$file}";
+        $version = is_file($built) ? substr(md5((string) filemtime($built).filesize($built)), 0, 12) : null;
+
+        return asset(self::ASSETS."/{$file}").($version === null ? '' : "?v={$version}");
     }
 }

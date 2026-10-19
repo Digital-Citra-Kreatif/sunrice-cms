@@ -15,7 +15,7 @@ use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Collection;
 
 /**
- * The Collections screens (Content → Collections), guarded by the
+ * The Collections screens (Structure → Collections), guarded by the
  * cms.collections.* permissions. Deleting a collection keeps its entries.
  *
  * @internal
@@ -26,7 +26,7 @@ final class CollectionResource extends Resource
 
     public static function navigationGroup(): string
     {
-        return 'Content';
+        return 'Structure';
     }
 
     public static function navigationIcon(): string
