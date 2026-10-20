@@ -128,6 +128,105 @@ final class Schema
     }
 
     /**
+     * Another language's data with what all languages share taken from the
+     * main language's: the shared (not translated) fields, and shared fields
+     * inside translated groups (by handle), repeater rows (by `_id`) and
+     * flexible blocks (by `id`) that the main language has too. What the
+     * main language doesn't have is kept as stored.
+     *
+     * @param  array<mixed>  $data
+     * @param  array<mixed>  $main
+     * @return array<mixed>
+     */
+    public function withShared(array $data, array $main): array
+    {
+        return $this->share($data, $main, false);
+    }
+
+    /**
+     * What another language stores of its data: without what withShared()
+     * would take from the main language's.
+     *
+     * @param  array<mixed>  $data
+     * @param  array<mixed>  $main
+     * @return array<mixed>
+     */
+    public function withoutShared(array $data, array $main): array
+    {
+        return $this->share($data, $main, true);
+    }
+
+    /**
+     * @param  array<mixed>  $data
+     * @param  array<mixed>  $main
+     * @return array<mixed>
+     */
+    private function share(array $data, array $main, bool $strip): array
+    {
+        foreach ($this->fields as $field) {
+            $handle = $field->handle;
+            if (! array_key_exists($handle, $main)) {
+                continue;
+            }
+            if (! $this->isTranslatable($field)) {
+                if ($strip) {
+                    unset($data[$handle]);
+                } else {
+                    $data[$handle] = $main[$handle];
+                }
+
+                continue;
+            }
+            $value = $data[$handle] ?? null;
+            $base = $main[$handle];
+            if (! is_array($value) || ! is_array($base)) {
+                continue;
+            }
+            $data[$handle] = match ($field->type) {
+                Types\Group::TYPE => self::children($field, $this->depth)->share($value, $base, $strip),
+                Types\Repeater::TYPE => $this->shareItems($value, $base, '_id', fn (array $row, array $mainRow): array => self::children($field, $this->depth)->share($row, $mainRow, $strip)),
+                Types\Flexible::TYPE => $this->depth >= self::MAX_DEPTH ? $value : $this->shareItems($value, $base, 'id', function (array $block, array $mainBlock) use ($strip): array {
+                    $fields = is_string($block['type'] ?? null) && ($block['type'] === ($mainBlock['type'] ?? null)) ? app(Fieldsets::class)->fields($block['type']) : null;
+                    if ($fields !== null && is_array($block['values'] ?? null) && is_array($mainBlock['values'] ?? null)) {
+                        $block['values'] = self::make($fields, $this->depth + 1)->share($block['values'], $mainBlock['values'], $strip);
+                    }
+
+                    return $block;
+                }),
+                default => $value,
+            };
+        }
+
+        return $data;
+    }
+
+    /**
+     * Rows or blocks, each paired with the main language's of the same id.
+     *
+     * @param  array<mixed>  $items
+     * @param  array<mixed>  $main
+     * @param  \Closure(array<mixed>, array<mixed>): array<mixed>  $share
+     * @return array<mixed>
+     */
+    private function shareItems(array $items, array $main, string $id, \Closure $share): array
+    {
+        $byId = [];
+        foreach ($main as $item) {
+            if (is_array($item) && is_string($item[$id] ?? null) && $item[$id] !== '') {
+                $byId[$item[$id]] = $item;
+            }
+        }
+        foreach ($items as $index => $item) {
+            $key = is_array($item) && is_string($item[$id] ?? null) ? $item[$id] : null;
+            if ($key !== null && isset($byId[$key])) {
+                $items[$index] = $share($item, $byId[$key]);
+            }
+        }
+
+        return $items;
+    }
+
+    /**
      * These fields without the given handles.
      *
      * @param  list<string>  $handles

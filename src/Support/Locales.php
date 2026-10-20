@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Support;
 
+use Sunrice\Cms\Settings\LocaleSettings;
+
 /**
- * The languages content is written in (config sunrice-cms.locales), the
- * first being the main one.
+ * The languages content is written in, the first being the main one:
+ * Settings → Languages (LocaleSettings) once saved there, else config
+ * sunrice-cms.locales (names from sunrice-cms.locale_names).
  *
  * @api
  */
@@ -15,9 +18,7 @@ final class Locales
     /** @return non-empty-list<string> */
     public static function all(): array
     {
-        $locales = array_values(array_filter((array) config('sunrice-cms.locales', []), is_string(...)));
-
-        return $locales === [] ? [self::fallback()] : $locales;
+        return array_keys(self::names());
     }
 
     public static function default(): string
@@ -35,7 +36,53 @@ final class Locales
 
     public static function has(string $locale): bool
     {
-        return in_array($locale, self::all(), true);
+        return array_key_exists($locale, self::names());
+    }
+
+    /**
+     * The content languages by code, with their names, the main one first.
+     *
+     * @return non-empty-array<string, string>
+     */
+    public static function names(): array
+    {
+        $set = app(LocaleSettings::class)->locales();
+        if ($set !== []) {
+            return $set;
+        }
+
+        $names = config('sunrice-cms.locale_names', []);
+        $locales = [];
+        foreach ((array) config('sunrice-cms.locales', []) as $code) {
+            if (is_string($code) && $code !== '') {
+                $name = is_array($names) ? ($names[$code] ?? null) : null;
+                $locales[$code] = is_string($name) && $name !== '' ? $name : self::displayName($code);
+            }
+        }
+
+        return $locales === [] ? [self::fallback() => self::displayName(self::fallback())] : $locales;
+    }
+
+    /** A content language's name ("id" → "Indonesian", or as set); any other code as it is. */
+    public static function name(string $locale): string
+    {
+        return self::names()[$locale] ?? $locale;
+    }
+
+    /** What the language's addresses start with: "" for the main one, "/id" for the others. */
+    public static function prefix(string $locale): string
+    {
+        return $locale === self::default() ? '' : '/'.$locale;
+    }
+
+    /** A language's English name from its code, when PHP's intl extension knows it; else the code. */
+    public static function displayName(string $code): string
+    {
+        if (! class_exists(\Locale::class)) {
+            return $code;
+        }
+
+        return \Locale::getDisplayName(str_replace('-', '_', $code), 'en') ?: $code;
     }
 
     private static function fallback(): string

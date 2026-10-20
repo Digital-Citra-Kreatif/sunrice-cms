@@ -40,6 +40,11 @@ final class SaveDraft
             // Another language than the main one leaves the shared fields alone.
             $schema = $translation->editableSchema();
             $data = EntryInput::merge($schema, $translation->draft_data, $input['data'] ?? null);
+            // Validated with the main language's shared values in rows and blocks; ownData() drops them again.
+            $main = $translation->entry->mainTranslation();
+            if ($main !== null && ! $main->is($translation)) {
+                $data = $translation->entry->collection->schema()->withShared($data, $main->draft_data);
+            }
             $values = EntryInput::validate(
                 $schema,
                 array_key_exists('title', $input) ? $input['title'] : $translation->draft_title,

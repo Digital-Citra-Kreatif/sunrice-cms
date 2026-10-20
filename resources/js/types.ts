@@ -15,6 +15,8 @@ export interface FieldDefinition {
     terms?: Option[];
     /** An entries field's collections to choose from (handles). */
     collections?: string[];
+    /** Inside a translated group, row or block of another language: the main language's value, read-only. */
+    shared?: boolean;
 }
 
 /** A field type the builder offers, with its settings as fields. */

@@ -39,7 +39,7 @@ final class FormController
         try {
             // The captcha first: nothing else is looked at until it's passed.
             if ($form->captcha && ! $captcha->passes($request)) {
-                throw ValidationException::withMessages([self::CAPTCHA => Lang::get('Please confirm you\'re not a robot, then send the form again.', [], $locale)]);
+                throw ValidationException::withMessages([self::CAPTCHA => Lang::get('sunrice-cms::site.captcha', [], $locale)]);
             }
             // The fields as data[handle] (what the component prints), or by handle.
             $input = $request->all();

@@ -78,7 +78,7 @@
                 @endif
             </div>
         @endif
-        <button type="submit">{{ $submit }}</button>
+        <button type="submit">{{ $submit ?? __('sunrice-cms::site.forms.send') }}</button>
     @endif
 </form>
 @endif

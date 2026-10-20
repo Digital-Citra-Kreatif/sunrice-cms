@@ -151,9 +151,11 @@ class EntryTranslation extends Model
 
     /**
      * The stored fields, complete: the live version (or the draft) with,
-     * for a language other than the main one, the shared fields from the
-     * main translation. Other languages store only their translated
-     * fields (see ownData()), so the shared ones are never stale copies.
+     * for a language other than the main one, what all languages share from
+     * the main translation: the shared fields, and the shared fields inside
+     * translated groups, repeater rows and flexible blocks the main one has
+     * too (rows and blocks matched by id). Other languages store only the
+     * rest (see ownData()), so the shared values are never stale copies.
      *
      * @return array<string, mixed>
      */
@@ -162,8 +164,8 @@ class EntryTranslation extends Model
         $data = $draft ? $this->draft_data : ($this->data ?? []);
         $main = $this->entry->mainTranslation();
         if ($main !== null && ! $main->is($this)) {
-            $shared = array_flip($this->entry->collection->schema()->shared());
-            $data = array_replace($data, array_intersect_key($draft ? $main->draft_data : ($main->data ?? []), $shared));
+            // Fields are keyed by handle.
+            $data = array_filter($this->entry->collection->schema()->withShared($data, $draft ? $main->draft_data : ($main->data ?? [])), is_string(...), ARRAY_FILTER_USE_KEY);
         }
 
         return $data;
@@ -171,14 +173,21 @@ class EntryTranslation extends Model
 
     /**
      * What this translation stores of the given fields: all of them for the
-     * main one, without the shared fields (top-level handles) for the others.
+     * main one; for the others, without what completeData() takes from the
+     * main translation's draft (or the given main data).
      *
      * @param  array<mixed>  $data
+     * @param  array<mixed>|null  $main  the main translation's data to compare with (null: its draft)
      * @return array<mixed>
      */
-    public function ownData(array $data): array
+    public function ownData(array $data, ?array $main = null): array
     {
-        return $this->isMain() ? $data : array_diff_key($data, array_flip($this->entry->collection->schema()->shared()));
+        $mainTranslation = $this->entry->mainTranslation();
+        if ($mainTranslation === null || $mainTranslation->is($this)) {
+            return $data;
+        }
+
+        return $this->entry->collection->schema()->withoutShared($data, $main ?? $mainTranslation->draft_data);
     }
 
     /** Hydrate with this context when values() is given none: a query shares one with its whole result. */

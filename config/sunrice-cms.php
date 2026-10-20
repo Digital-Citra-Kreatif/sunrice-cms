@@ -10,6 +10,11 @@ return [
      */
     'locales' => array_values(array_filter(explode(',', (string) env('SUNRICE_LOCALES', (string) env('APP_LOCALE', 'en'))))),
 
+    // Their names, by code (['id' => 'Bahasa Indonesia']); others are
+    // named in English ("Indonesian"). Settings → Languages, once saved,
+    // replaces both.
+    'locale_names' => [],
+
     'site' => [
         // Serve entries at their collections' routes. The CMS's route is
         // the app's fallback: the app's own routes always come first.
@@ -85,6 +90,19 @@ return [
         // Blade runs PHP, so a leaked super admin token could run code on
         // the server.
         'templates' => env('SUNRICE_AI_TEMPLATES', false),
+    ],
+
+    'translation' => [
+        // Machine translation (sunrice:translate, the editor's "Translate
+        // from …" button): gemini, openrouter, or null for none.
+        'driver' => env('SUNRICE_TRANSLATE_DRIVER'),
+        // null: the driver's default (gemini-2.5-flash, google/gemini-2.5-flash).
+        'model' => env('SUNRICE_TRANSLATE_MODEL'),
+        'gemini_key' => env('SUNRICE_GEMINI_KEY'),
+        'openrouter_key' => env('SUNRICE_OPENROUTER_KEY'),
+        // Strings per request, and seconds a request may take.
+        'batch_size' => 40,
+        'timeout' => 120,
     ],
 
     'revisions' => [

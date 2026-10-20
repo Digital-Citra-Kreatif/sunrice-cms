@@ -39,7 +39,7 @@ final class SearchController
         return response()->view($view, [
             'query' => $query,
             'results' => $results,
-            'title' => $query === '' ? 'Search' : "Search: {$query}",
+            'title' => $query === '' ? __('sunrice-cms::site.search.title') : __('sunrice-cms::site.search.title_query', ['query' => $query]),
             'locale' => $locale,
         ])->header('X-Robots-Tag', 'noindex, follow');
     }

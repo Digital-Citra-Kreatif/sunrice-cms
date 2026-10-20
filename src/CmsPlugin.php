@@ -37,6 +37,7 @@ use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\GlobalSet;
 use Sunrice\Cms\Settings\CodeSettings;
 use Sunrice\Cms\Settings\CommentSettings;
+use Sunrice\Cms\Settings\LocaleSettings;
 use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Support\Access;
 
@@ -77,7 +78,7 @@ final class CmsPlugin extends BasePlugin
 
     public function register(Panel $panel): void
     {
-        $panel->settings(SiteSettings::class, CodeSettings::class, CommentSettings::class);
+        $panel->settings(SiteSettings::class, LocaleSettings::class, CodeSettings::class, CommentSettings::class);
         // Each permission for one collection, taxonomy or form too (see Support\Access).
         $panel->permissionsUsing(fn (): array => Support\ScopedPermissions::all());
         // sunrice:roles: people who write and look after the content, not the structure or the people.
@@ -179,6 +180,7 @@ final class CmsPlugin extends BasePlugin
                 Route::post('entries/{entry}/publish', 'publish')->name('publish')->middleware(AuthorizeContent::class.':entries,publish');
                 Route::post('entries/{entry}/unpublish', 'unpublish')->name('unpublish')->middleware(AuthorizeContent::class.':entries,publish');
                 Route::delete('entries/{entry}', 'destroy')->name('destroy')->middleware(AuthorizeContent::class.':entries,delete');
+                Route::post('entries/{translation}/translate', 'translate')->name('translate')->middleware(AuthorizeContent::class.':entries,update');
                 Route::post('entries/{entry}/translations', 'addTranslation')->name('translations.store')->middleware(AuthorizeContent::class.':entries,create');
                 Route::delete('entries/{entry}/translations/{locale}', 'removeTranslation')->name('translations.destroy')->middleware(AuthorizeContent::class.':entries,delete');
                 Route::post('entries/{entry}/restore', 'restore')->name('restore')->middleware(AuthorizeContent::class.':entries,delete')->withTrashed();

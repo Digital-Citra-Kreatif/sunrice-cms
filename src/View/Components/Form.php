@@ -50,7 +50,7 @@ final class Form extends Component
 
     public string $locale;
 
-    public function __construct(string $handle, public string $submit = 'Send', public bool $replace = false)
+    public function __construct(string $handle, public ?string $submit = null, public bool $replace = false)
     {
         $this->form = FormModel::query()->where('handle', $handle)->first();
         $this->id = 'form-'.$handle;

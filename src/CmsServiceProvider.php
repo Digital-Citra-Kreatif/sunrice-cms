@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Translation\Translator;
 use Illuminate\View\Compilers\BladeCompiler;
 use RuntimeException;
 use Spatie\Honeypot\ProtectAgainstSpam;
@@ -66,6 +67,8 @@ final class CmsServiceProvider extends ServiceProvider
         $this->app->scoped(Menus::class);
         $this->app->scoped(Site\Site::class);
         $this->app->scoped(Support\SiteCache::class);
+        // Read by Locales all the time: once per request.
+        $this->app->scoped(Settings\LocaleSettings::class);
         $this->app->singleton(Site\PageCache::class);
     }
 
@@ -73,6 +76,13 @@ final class CmsServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(dirname(__DIR__).'/database/migrations');
         $this->loadViewsFrom(dirname(__DIR__).'/resources/views', 'sunrice-cms');
+        // What visitors read (sunrice-cms::site.*), and Indonesian for Laravel's own lines the app hasn't got.
+        $this->loadTranslationsFrom(dirname(__DIR__).'/resources/lang', 'sunrice-cms');
+        $this->callAfterResolving('translator', function (mixed $translator): void {
+            if ($translator instanceof Translator) {
+                Support\CoreTranslations::register($translator);
+            }
+        });
         // The class components (seo and code are anonymous views).
         $this->callAfterResolving('blade.compiler', function (BladeCompiler $blade): void {
             $blade->component(View\Components\Entries::class, 'sunrice-cms::entries');
@@ -113,6 +123,14 @@ final class CmsServiceProvider extends ServiceProvider
                 app(Site\Site::class)->flush();
             }
         });
+        // Other languages: every address may have changed.
+        Event::listen(SettingsSaved::class, function (SettingsSaved $event): void {
+            if ($event->section === Settings\LocaleSettings::key()) {
+                app()->forgetInstance(Settings\LocaleSettings::class);
+                app()->forgetInstance(Site\Site::class);
+                app(Support\SiteCache::class)->changed('languages');
+            }
+        });
         // Code on every page is a way in: changing it is a security event, and alerts.
         Event::listen(SettingsSaved::class, function (SettingsSaved $event): void {
             if ($event->section === Settings\CodeSettings::key() && $event->changed !== []) {
@@ -134,7 +152,7 @@ final class CmsServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 Console\PublishScheduledCommand::class, Console\RenameFieldCommand::class, Console\ExportStructureCommand::class, Console\ImportStructureCommand::class,
-                Console\OrphansCommand::class, Console\DemoContentCommand::class,
+                Console\OrphansCommand::class, Console\DemoContentCommand::class, Console\SwitchMainLanguageCommand::class, Console\TranslateCommand::class,
             ]);
             $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
                 $schedule->command('sunrice:publish-scheduled')->everyMinute()->withoutOverlapping();

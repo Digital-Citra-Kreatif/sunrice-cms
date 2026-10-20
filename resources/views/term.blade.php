@@ -27,8 +27,8 @@
         @endforeach
     </ul>
     <nav>
-        @if ($entries->previousPageUrl())<a href="{{ $entries->previousPageUrl() }}" rel="prev">Newer</a>@endif
-        @if ($entries->nextPageUrl())<a href="{{ $entries->nextPageUrl() }}" rel="next">Older</a>@endif
+        @if ($entries->previousPageUrl())<a href="{{ $entries->previousPageUrl() }}" rel="prev">{{ __('sunrice-cms::site.newer') }}</a>@endif
+        @if ($entries->nextPageUrl())<a href="{{ $entries->nextPageUrl() }}" rel="next">{{ __('sunrice-cms::site.older') }}</a>@endif
     </nav>
     <x-sunrice-cms::code place="body-end" />
 </body>
