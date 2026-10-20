@@ -13,6 +13,7 @@ use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Media\Media;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\EntryTranslation;
+use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Site\Page;
@@ -23,7 +24,7 @@ use Sunrice\Cms\Site\Site;
  * a share image and noindex. Stored with its fields under the reserved
  * "seo" key, so it has drafts and revisions like the rest.
  *
- * @phpstan-type SeoTags array{title: string, description: string|null, image: string|null, noindex: bool, canonical: string|null, alternates: array<string, string>, type: string, site_name: string, locale: string, twitter: string|null}
+ * @phpstan-type SeoTags array{title: string, page_title: string, own_title: bool, description: string|null, image: string|null, noindex: bool, canonical: string|null, alternates: array<string, string>, type: string, site_name: string, locale: string, twitter: string|null, published_time: string|null, modified_time: string|null}
  *
  * @api
  */
@@ -73,38 +74,54 @@ final class Seo
      * What a page's head needs: title ("About | Acme", see SiteSettings),
      * description, image URL, noindex, canonical URL, the URLs of its other
      * languages (and "x-default", the main one's), and for share cards the
-     * og:type, site name, language and X account. What the entry's SEO card
-     * leaves empty comes from Settings → Site.
+     * og:type, site name, language and X account (and for dated entries
+     * when they were published and changed). What the entry's SEO card
+     * leaves empty comes from the fields its collection names (SEO from
+     * fields), then from Settings → Site.
      *
      * @return SeoTags
      */
     public static function for(EntryTranslation $translation, bool $preview = false): array
     {
         $data = ($preview ? $translation->draft_data : $translation->data) ?? [];
-        $seo = is_array($data[self::KEY] ?? null) ? $data[self::KEY] : [];
+        $collection = $translation->entry->collection;
+        $seo = self::withFields(is_array($data[self::KEY] ?? null) ? $data[self::KEY] : [], $collection, fn (): array => $translation->completeData($preview));
         $title = is_string($seo['title'] ?? null) ? $seo['title'] : (string) ($preview ? $translation->draft_title : $translation->title);
         $home = app(Site::class)->isHomepage($translation);
-        $collection = $translation->entry->collection;
+        $article = ! $home && $collection->dated;
 
-        return self::tags($seo, $home && ! is_string($seo['title'] ?? null) ? '' : $title, $preview, $preview ? null : $translation->url(),
-            self::alternates($translation), $translation->locale, ! $home && $collection->dated ? 'article' : 'website');
+        $tags = self::tags($seo, $home && ! is_string($seo['title'] ?? null) ? '' : $title, $preview, $preview ? null : $translation->url(),
+            self::alternates($translation), $translation->locale, $article ? 'article' : 'website', is_string($seo['title'] ?? null));
+        if ($article && ! $preview) {
+            $tags['published_time'] = $translation->published_at?->toIso8601String();
+            $tags['modified_time'] = $translation->updated_at?->toIso8601String();
+        }
+
+        return $tags;
     }
 
     /**
-     * The same for a term's page: its SEO (under "seo" in the term's data)
-     * or its title, and its other languages' pages. Past the first page of
-     * its entries, the canonical and alternate URLs carry the page number
-     * (null: the page shown, when it's this term's).
+     * The same for a term's page: its SEO (under "seo" in the term's data),
+     * the fields its taxonomy names, or its title, and its other languages'
+     * pages. Past the first page of its entries, the canonical and
+     * alternate URLs carry the page number (null: the page shown, when
+     * it's this term's).
      *
      * @return SeoTags
      */
     public static function forTerm(TermTranslation $translation, ?int $page = null): array
     {
         $page ??= self::shownPage(fn (Page $shown): bool => $shown->term?->is($translation) === true);
-        $seo = is_array($translation->data[self::KEY] ?? null) ? $translation->data[self::KEY] : [];
+        $term = $translation->term;
+        $seo = self::withFields(is_array($translation->data[self::KEY] ?? null) ? $translation->data[self::KEY] : [], $term->taxonomy, function () use ($translation, $term): array {
+            // Shared fields live in the main language's translation.
+            $main = $term->translations->firstWhere('locale', Locales::default());
+
+            return array_replace($main->data ?? [], $translation->data ?? []);
+        });
         $alternates = [];
-        foreach ($translation->term->translations as $other) {
-            $other->setRelation('term', $translation->term);
+        foreach ($term->translations as $other) {
+            $other->setRelation('term', $term);
             if (($url = $other->url()) !== null) {
                 $alternates[$other->locale] = self::paged($url, $page);
             }
@@ -113,13 +130,14 @@ final class Seo
         $url = $translation->url();
 
         return self::tags($seo, is_string($seo['title'] ?? null) ? $seo['title'] : $translation->title, false, $url === null ? null : self::paged($url, $page),
-            self::withDefault($alternates), $translation->locale, 'website');
+            self::withDefault($alternates), $translation->locale, 'website', is_string($seo['title'] ?? null));
     }
 
     /**
-     * The same for a collection's listing page: its title, in each
-     * language, with the page number past the first page (null: the page
-     * shown, when it's this listing).
+     * The same for a collection's listing page: its SEO (the listing page's
+     * own, per language: CollectionListing data under "seo") or the
+     * collection's title, in each language, with the page number past the
+     * first page (null: the page shown, when it's this listing).
      *
      * @return SeoTags
      */
@@ -132,10 +150,52 @@ final class Seo
                 $alternates[$other] = self::paged($url, $page);
             }
         }
+        $own = $collection->listings->firstWhere('locale', $locale)?->data[self::KEY] ?? null;
+        $seo = is_array($own) ? $own : [];
 
         $url = $collection->listingUrl($locale);
 
-        return self::tags([], $collection->title, false, $url === null ? null : self::paged($url, $page), self::withDefault($alternates), $locale, 'website');
+        return self::tags($seo, is_string($seo['title'] ?? null) ? $seo['title'] : $collection->title, false, $url === null ? null : self::paged($url, $page),
+            self::withDefault($alternates), $locale, 'website', is_string($seo['title'] ?? null));
+    }
+
+    /**
+     * The SEO card's values, with what it leaves empty taken from the
+     * fields the collection or taxonomy names: a text field's text as the
+     * title, a text or textarea field's as the description (plain, at most
+     * 300 characters), a media field's first file as the share image.
+     *
+     * @param  array<mixed>  $seo
+     * @param  Closure(): array<mixed>  $data  the page's field values, read only when a field is named
+     * @return array<mixed>
+     */
+    private static function withFields(array $seo, Collection|Taxonomy $owner, Closure $data): array
+    {
+        $mapped = ['title' => $owner->seo_title_field, 'description' => $owner->seo_description_field, 'image' => $owner->seo_image_field];
+        $values = null;
+        foreach ($mapped as $key => $field) {
+            $empty = $key === 'image' ? ! is_int($seo[$key] ?? null) : ! is_string($seo[$key] ?? null);
+            if ($field === null || $field === '' || ! $empty) {
+                continue;
+            }
+            $values ??= $data();
+            $value = $values[$field] ?? null;
+            if ($key === 'image') {
+                $first = is_array($value) ? ($value[0] ?? null) : $value;
+                if (is_int($first) || (is_string($first) && ctype_digit($first))) {
+                    $seo['image'] = (int) $first;
+                    $seo['image_from_field'] = true;
+                }
+
+                continue;
+            }
+            $text = self::plain(is_string($value) ? $value : null);
+            if ($text !== null) {
+                $seo[$key] = $key === 'description' ? Str::limit($text, 300) : Str::limit($text, 255);
+            }
+        }
+
+        return $seo;
     }
 
     /** The number of the page shown, when it's the one asked about (else 1). */
@@ -165,8 +225,8 @@ final class Seo
             $page?->term !== null => self::forTerm($page->term, $page->pageNumber),
             $page?->collection !== null => self::forListing($page->collection, $page->locale, $page->pageNumber),
             // Search results aren't pages to index.
-            $page?->type === Page::SEARCH => self::tags(['noindex' => true], $title ?? 'Search', false, null, [], $page->locale, 'website'),
-            default => self::tags([], $title ?? '', false, url()->current(), [], app()->getLocale(), 'website'),
+            $page?->type === Page::SEARCH => self::tags(['noindex' => true], $title ?? 'Search', false, null, [], $page->locale, 'website', $title !== null),
+            default => self::tags([], $title ?? '', false, url()->current(), [], app()->getLocale(), 'website', $title !== null),
         };
     }
 
@@ -175,7 +235,7 @@ final class Seo
      * @param  array<string, string>  $alternates
      * @return SeoTags
      */
-    private static function tags(array $seo, string $title, bool $preview, ?string $canonical, array $alternates, string $locale, string $type): array
+    private static function tags(array $seo, string $title, bool $preview, ?string $canonical, array $alternates, string $locale, string $type, bool $ownTitle = false): array
     {
         $site = app(SiteSettings::class);
         $imageId = is_int($seo['image'] ?? null) ? $seo['image'] : $site->image;
@@ -184,8 +244,10 @@ final class Seo
 
         return [
             'title' => $site->title($title),
+            'page_title' => $title,
+            'own_title' => $ownTitle,
             'description' => $description,
-            'image' => $imageId !== null ? self::imageUrl($imageId) : null,
+            'image' => $imageId !== null ? self::imageUrl($imageId, ($seo['image_from_field'] ?? false) === true) : null,
             'noindex' => $preview || ($seo['noindex'] ?? false) === true || $site->hidden(),
             'canonical' => $preview ? null : ($own ?? $canonical),
             'alternates' => $alternates,
@@ -193,7 +255,41 @@ final class Seo
             'site_name' => $site->name(),
             'locale' => $locale,
             'twitter' => $site->twitterHandle(),
+            'published_time' => null,
+            'modified_time' => null,
         ];
+    }
+
+    /**
+     * A template's say over the tags (<x-sunrice-cms::seo>'s attributes):
+     * `title` instead of the page's, `defaultTitle` when the page has no
+     * SEO title of its own, `description` instead of the page's, and
+     * `noindex` to keep this page out of search results. Titles and
+     * descriptions are taken as plain text.
+     *
+     * @param  SeoTags  $tags
+     * @return SeoTags
+     */
+    public static function adjust(array $tags, ?string $title = null, ?string $description = null, ?string $defaultTitle = null, bool $noindex = false): array
+    {
+        $title = self::plain($title) ?? ($tags['own_title'] ? null : self::plain($defaultTitle));
+        if ($title !== null) {
+            $tags['title'] = app(SiteSettings::class)->title($title);
+            $tags['page_title'] = $title;
+            $tags['own_title'] = true;
+        }
+        if (($description = self::plain($description)) !== null) {
+            $tags['description'] = Str::limit($description, 300);
+        }
+        $tags['noindex'] = $tags['noindex'] || $noindex;
+
+        return $tags;
+    }
+
+    /** Text without tags or runs of spaces; null when nothing is left. */
+    private static function plain(?string $text): ?string
+    {
+        return self::text($text === null ? null : html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5));
     }
 
     /**
@@ -230,10 +326,21 @@ final class Seo
         return self::withDefault($alternates);
     }
 
-    /** A share image's URL, read once per content version (a change to the file starts a new one). */
-    private static function imageUrl(int $id): ?string
+    /**
+     * A share image's URL, read once per content version (a change to the
+     * file starts a new one). `$imagesOnly`: null for a file that isn't an
+     * image (a media field may hold any kind).
+     */
+    private static function imageUrl(int $id, bool $imagesOnly = false): ?string
     {
-        $url = app(SiteCache::class)->remember("media-url:{$id}", fn (): string => Media::query()->find($id)?->url() ?? '');
+        $url = app(SiteCache::class)->remember("media-url:{$id}", function () use ($id): string {
+            $media = Media::query()->find($id);
+
+            return $media === null ? '' : ($media->isImage() ? '' : '!').$media->url();
+        });
+        if (str_starts_with($url, '!')) {
+            return $imagesOnly ? null : substr($url, 1);
+        }
 
         return $url === '' ? null : $url;
     }

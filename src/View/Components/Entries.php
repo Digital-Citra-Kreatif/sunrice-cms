@@ -20,8 +20,12 @@ use Sunrice\Cms\Models\Term;
  *     </x-sunrice-cms::entries>
  *
  * `order`: latest (default), oldest, alphabetical, ordered (as editors
- * put them), or a field ("event_date", "-event_date" for newest first).
- * `:paginate="12"` gives a paginator (`$component->entries->links()`);
+ * put them), or fields ("event_date", "-event_date" for newest first,
+ * several comma-separated). `:paginate="12"` gives a paginator
+ * (`$component->entries->links()`), on `page-name` (page) in the query
+ * string; `:terms="['topics' => ['news']]"` (or terms="topics:news,tips")
+ * takes entries with those terms by slug, or the terms under them;
+ * `:where` takes field => value or [field, operator, value] rows;
  * `search` finds words; `remember` keeps the matched ids in the site's
  * cache. Everything else is Cms::entries(): see EntryQuery.
  *
@@ -36,7 +40,8 @@ final class Entries extends Component
      * @param  string|list<string>  $collection  handles, or "articles,news"; empty for all
      * @param  Term|int|list<Term|int>|null  $term  with this term (or any of these)
      * @param  Entry|int|'top'|null  $parent  directly under this entry ('top': top-level ones)
-     * @param  array<string, mixed>  $where  field => value, like where()
+     * @param  array<mixed>  $where  field => value, or [field, value] and [field, operator, value] rows, like where()
+     * @param  string|array<string, string|list<string>>  $terms  taxonomy handle => slug(s), with the terms under them
      * @param  Entry|EntryTranslation|int|list<Entry|EntryTranslation|int>|null  $except
      */
     public function __construct(
@@ -50,9 +55,10 @@ final class Entries extends Component
         Entry|EntryTranslation|int|array|null $except = null,
         ?string $search = null,
         bool $remember = false,
+        ?string $pageName = null,
+        string|array $terms = [],
     ) {
-        $handles = is_string($collection) ? array_values(array_filter(array_map('trim', explode(',', $collection)))) : $collection;
-        $query = Content::entries(...$handles)->remember($remember);
+        $query = Content::entries(...Attributes::handles($collection))->remember($remember);
         if ($search !== null) {
             $query->search($search);
         }
@@ -62,21 +68,14 @@ final class Entries extends Component
         if ($parent !== null) {
             $query->childrenOf($parent === 'top' ? null : $parent);
         }
-        foreach ($where as $field => $value) {
-            $query->where($field, $value);
-        }
+        Attributes::terms($query, $terms);
+        Attributes::where($query, $where);
         if ($except !== null) {
             $query->except(...(is_array($except) ? $except : [$except]));
         }
-        match ($order) {
-            'latest' => $query->latest(),
-            'oldest' => $query->oldest(),
-            'alphabetical' => $query->alphabetical(),
-            'ordered' => $query->ordered(),
-            default => str_starts_with($order, '-') ? $query->orderBy(substr($order, 1), 'desc') : $query->orderBy($order),
-        };
+        Attributes::order($query, $order);
         if ($paginate !== null) {
-            $this->entries = $query->paginate(max(1, min(100, $paginate)));
+            $this->entries = $query->paginate(max(1, min(100, $paginate)), $pageName ?? 'page')->appends(request()->query());
 
             return;
         }

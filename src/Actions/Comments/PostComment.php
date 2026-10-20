@@ -18,6 +18,7 @@ use Sunrice\Cms\Models\Comment;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Settings\CommentSettings;
 use Sunrice\Cms\Support\Locales;
+use Sunrice\Cms\Support\RoleMembers;
 use Throwable;
 
 /**
@@ -130,7 +131,7 @@ final class PostComment
 
     private function tellModerators(Comment $comment): void
     {
-        $addresses = $this->settings->extraEmails();
+        $addresses = [...$this->settings->extraEmails(), ...RoleMembers::emails($this->settings->notifyRoles)];
         try {
             // Users with the permission, directly or through a role (spatie/laravel-permission's scope).
             $moderators = app(Panel::class)->getUserModel()::query()->__call('permission', ['cms.comments.moderate']);

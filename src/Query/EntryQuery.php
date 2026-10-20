@@ -228,6 +228,20 @@ final class EntryQuery
         return $this;
     }
 
+    /**
+     * Entries whose list field (a select with several choices, say) holds
+     * any of these values: whereContains('features', ['wifi', 'parking']).
+     *
+     * @param  list<int|string>  $values
+     */
+    public function whereContains(string $field, array $values): self
+    {
+        $field = self::handle($field);
+        $this->add(['whereContains', $field, $values], fn (Builder $q) => $this->whereFieldHolds($q, $field, $values));
+
+        return $this;
+    }
+
     /** Leave out these entries (the one shown, in a "related" list). */
     public function except(Entry|EntryTranslation|int ...$entries): self
     {
@@ -355,24 +369,29 @@ final class EntryQuery
         return is_int($count) ? $count : 0;
     }
 
-    /** @return LengthAwarePaginator<int, EntryTranslation> */
-    public function paginate(int $perPage = 10): LengthAwarePaginator
+    /**
+     * A page of entries; `$pageName` is the query string's page number
+     * (two lists on one page each take their own).
+     *
+     * @return LengthAwarePaginator<int, EntryTranslation>
+     */
+    public function paginate(int $perPage = 10, string $pageName = 'page'): LengthAwarePaginator
     {
         if (! $this->cached()) {
-            $paginator = $this->builder()->paginate($perPage);
+            $paginator = $this->builder()->paginate($perPage, ['*'], $pageName);
             $this->hydrate($paginator->getCollection());
 
             return $paginator;
         }
-        $page = Paginator::resolveCurrentPage();
+        $page = Paginator::resolveCurrentPage($pageName);
         /** @var array{ids: list<int>, total: int} $cached */
-        $cached = $this->remembered("page:{$perPage}:{$page}", function () use ($perPage, $page): array {
-            $paginator = $this->builder()->paginate($perPage, ['*'], 'page', $page);
+        $cached = $this->remembered("page:{$perPage}:{$page}", function () use ($perPage, $page, $pageName): array {
+            $paginator = $this->builder()->paginate($perPage, ['*'], $pageName, $page);
 
             return ['ids' => $paginator->getCollection()->pluck('id')->all(), 'total' => $paginator->total()];
         });
 
-        return new Paginated($this->hydrate($this->byIds($cached['ids'])), $cached['total'], $perPage, $page, ['path' => Paginator::resolveCurrentPath()]);
+        return new Paginated($this->hydrate($this->byIds($cached['ids'])), $cached['total'], $perPage, $page, ['path' => Paginator::resolveCurrentPath(), 'pageName' => $pageName]);
     }
 
     /**
@@ -505,11 +524,11 @@ final class EntryQuery
     }
 
     /**
-     * Entries whose list field (entries, terms) holds any of these ids, in
-     * the main language.
+     * Entries whose list field (entries, terms, a select's choices) holds
+     * any of these ids or values, in the main language.
      *
      * @param  Builder<EntryTranslation>  $query
-     * @param  list<int>  $ids
+     * @param  list<int|string>  $ids
      */
     private function whereFieldHolds(Builder $query, string $field, array $ids): void
     {

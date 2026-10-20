@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Settings;
 
+use Sunrice\Admin\Resources\Forms\CheckboxList;
 use Sunrice\Admin\Resources\Forms\Form;
 use Sunrice\Admin\Resources\Forms\NumberInput;
 use Sunrice\Admin\Resources\Forms\Select;
 use Sunrice\Admin\Resources\Forms\Textarea;
 use Sunrice\Admin\Resources\Forms\Toggle;
 use Sunrice\Admin\Settings\Settings;
+use Sunrice\Cms\Support\RoleMembers;
 
 /**
  * Settings → Comments, guarded by cms.settings.comments: how comments are
@@ -46,6 +48,9 @@ final class CommentSettings extends Settings
 
     /** More addresses to tell about new comments, one per line. */
     public string $notifyEmails = '';
+
+    /** @var list<string> roles whose members are told about new comments too */
+    public array $notifyRoles = [];
 
     /** Commenters may ask for an email when someone replies. */
     public bool $replyNotifications = true;
@@ -87,6 +92,8 @@ final class CommentSettings extends Settings
                         }
                     }
                 }]),
+            CheckboxList::make('notifyRoles')->label('Also email roles')->options(fn (): array => RoleMembers::options())
+                ->help('Everyone with these roles, besides the moderators and addresses above.'),
             Toggle::make('replyNotifications')->label('Let commenters get an email when someone replies')
                 ->help('With comments published at once, only signed-in users get them (a guest could type anyone\'s address).'),
         ]);
