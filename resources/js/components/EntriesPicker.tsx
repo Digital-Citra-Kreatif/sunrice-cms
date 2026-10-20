@@ -71,7 +71,7 @@ export function EntriesPicker({ id, value, multiple, max, collections, invalid, 
                                 {multiple && <SortableHandle {...handle} label={`Move ${item?.title ?? entryId}`} />}
                                 <span className={`cms:min-w-0 cms:flex-1 cms:truncate ${multiple ? '' : 'cms:pl-1'}`}>{item ? item.title : `Entry #${entryId}`}</span>
                                 {item && <span className="cms:text-xs cms:text-muted-foreground">{item.collection}</span>}
-                                {item && <Badge variant={item.status === 'published' ? 'default' : 'secondary'}>{statusLabel(item.status)}</Badge>}
+                                {item && <Badge variant={item.status === 'published' ? 'success' : 'secondary'}>{statusLabel(item.status)}</Badge>}
                                 <Button type="button" variant="ghost" size="icon" className="cms:size-7" aria-label={`Remove ${item?.title ?? entryId}`}
                                     onClick={() => set(ids.filter((other) => other !== entryId))}><X /></Button>
                             </div>

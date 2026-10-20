@@ -2,10 +2,10 @@ import * as React from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import { ExternalLink, LoaderCircle } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
-import { Button, Card, CardContent, CardHeader, CardTitle, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs, useUnsavedChanges } from '@sunrice/admin-sdk/ui';
+import { Button, Card, CardContent, CollapsibleCard, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs, useUnsavedChanges } from '@sunrice/admin-sdk/ui';
 import { FieldInput, Fields } from '@/components/FieldInput.tsx';
 import { VersionConflict } from '@/components/VersionConflict.tsx';
-import { errorsAt } from '@/lib/builder.ts';
+import { errorsAt, hasErrors } from '@/lib/builder.ts';
 import { localeName } from '@/lib/entries.ts';
 import { SEO_FIELDS } from '@/lib/seo.ts';
 import type { FieldDefinition } from '@/types.ts';
@@ -80,7 +80,7 @@ function ListingEdit({ collection, fields, locale, locales, shared, values, seo,
                 {form.isDirty && <span className="cms:text-sm cms:text-muted-foreground">Unsaved changes</span>}
             </PageHeader>
 
-            <fieldset disabled={!writable} className="cms:flex cms:flex-col cms:gap-4">
+            <fieldset disabled={!writable} className="cms:flex cms:flex-col cms:gap-6">
                 <VersionConflict message={errors.version} processing={form.processing} onSaveMine={saveMine} />
                 {fields.length === 0 ? (
                     <p className="cms:text-muted-foreground">The listing page has no fields of its own: choose a listing blueprint for the collection under Structure → Collections.</p>
@@ -99,13 +99,12 @@ function ListingEdit({ collection, fields, locale, locales, shared, values, seo,
                         </CardContent>
                     </Card>
                 )}
-                <Card>
-                    <CardHeader><CardTitle className="cms:text-base">Search and sharing</CardTitle></CardHeader>
-                    <CardContent>
-                        <Fields id="seo" fields={SEO_FIELDS} value={form.data.seo} errors={errorsAt(errors, 'seo')} onChange={(next) => form.setData('seo', next)} />
-                    </CardContent>
-                </Card>
             </fieldset>
+            <CollapsibleCard title="Search and sharing" titleClassName="cms:text-base" storageKey="cms:listing:seo" hasErrors={hasErrors(errors, 'seo')}>
+                <fieldset disabled={!writable} className="cms:min-w-0">
+                    <Fields bare id="seo" fields={SEO_FIELDS} value={form.data.seo} errors={errorsAt(errors, 'seo')} onChange={(next) => form.setData('seo', next)} />
+                </fieldset>
+            </CollapsibleCard>
         </form>
     );
 }

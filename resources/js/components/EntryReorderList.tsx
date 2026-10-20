@@ -34,7 +34,7 @@ export function EntryReorderList({ collection, rows }: { collection: string; row
                         <SortableHandle {...handle} label={`Move ${row.title}`} />
                         <span className="cms:min-w-0 cms:flex-1 cms:truncate cms:font-medium">{row.title}</span>
                         {row.parent && <span className="cms:truncate cms:text-xs cms:text-muted-foreground">under {row.parent}</span>}
-                        <Badge variant={row.status === 'published' ? 'default' : 'secondary'}>{statusLabel(row.status)}</Badge>
+                        <Badge variant={row.status === 'published' ? 'success' : 'secondary'}>{statusLabel(row.status)}</Badge>
                     </div>
                 )}
             </SortableList>

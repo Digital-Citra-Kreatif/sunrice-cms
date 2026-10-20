@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { Deferred, Head, router, useForm } from '@inertiajs/react';
-import { CalendarClock, ChevronDown, Copy, ExternalLink, Eye, Languages, LoaderCircle, Plus, RotateCcw, Trash2, Undo2 } from 'lucide-react';
+import { CalendarClock, Check, ChevronDown, Copy, ExternalLink, Eye, Languages, LoaderCircle, Plus, RotateCcw, Trash2, Undo2 } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
-    Badge, Button, Card, CardContent, CollapsibleCard, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+    Badge, Button, Card, CardContent, CollapsibleCard, DatePicker, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, Input, KeptEditsNotice, Label, PageHeader,
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Skeleton, Switch, useBreadcrumbs, useEditLock, useUnsavedChanges, ViewingNotice,
 } from '@sunrice/admin-sdk/ui';
@@ -200,12 +200,13 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                         )}
                         {entry && !entry.trashed && can.publish && !lock.readOnly && (
                             <div className="cms:flex">
-                                <Button type="button" className="cms:rounded-r-none" disabled={form.processing || upToDate} onClick={() => publish()}>
+                                <Button type="button" variant={upToDate ? 'outline' : 'default'} className="cms:rounded-r-none cms:disabled:opacity-100" disabled={form.processing || upToDate} onClick={() => publish()}>
+                                    {upToDate && <Check className="cms:text-emerald-600 cms:dark:text-emerald-400" />}
                                     {entry.status === 'draft' ? 'Publish' : upToDate ? 'Published' : 'Publish changes'}
                                 </Button>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button type="button" size="icon" className="cms:rounded-l-none cms:border-l cms:border-primary-foreground/20" aria-label="More publishing options"><ChevronDown /></Button>
+                                        <Button type="button" size="icon" variant={upToDate ? 'outline' : 'default'} className={upToDate ? 'cms:-ml-px cms:rounded-l-none' : 'cms:rounded-l-none cms:border-l cms:border-primary-foreground/20'} aria-label="More publishing options"><ChevronDown /></Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuItem onSelect={() => setScheduling(true)}><CalendarClock /> Publish on a date…</DropdownMenuItem>
@@ -222,7 +223,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                     </>
                 }
             >
-                {entry && <Badge variant={entry.status === 'published' ? 'default' : 'secondary'}>{entry.trashed ? 'In the trash' : statusLabel(entry.status)}</Badge>}
+                {entry && <Badge variant={entry.status === 'published' ? 'success' : 'secondary'}>{entry.trashed ? 'In the trash' : statusLabel(entry.status)}</Badge>}
                 {form.isDirty && <span className="cms:text-sm cms:text-muted-foreground">Unsaved changes</span>}
             </PageHeader>
 
@@ -360,7 +361,7 @@ function LanguageBar({ entryUrl, current, locales, canAdd, canRemove, onRemove }
                     <Button key={l.code} type="button" size="sm" variant={l.code === current ? 'secondary' : 'ghost'} aria-current={l.code === current ? 'page' : undefined}
                         onClick={() => l.code !== current && router.get(`${entryUrl}/edit`, { locale: l.code })}>
                         {name}
-                        <Badge variant={l.status === 'published' ? 'default' : 'outline'} className="cms:ml-1">{statusLabel(l.status)}</Badge>
+                        <Badge variant={l.status === 'published' ? 'success' : 'outline'} className="cms:ml-1">{statusLabel(l.status)}</Badge>
                         {l.outdated && (
                             <Badge variant="outline" className="cms:border-amber-500/60 cms:text-amber-700 cms:dark:text-amber-400"
                                 title="The main language changed since this translation was last saved.">Outdated</Badge>
@@ -392,7 +393,7 @@ function ScheduleDialog({ open, onClose, onSchedule, current, processing }: {
                 </DialogHeader>
                 <div className="cms:flex cms:flex-col cms:gap-2">
                     <Label htmlFor="published-at">Date and time</Label>
-                    <Input id="published-at" type="datetime-local" value={value} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setValue(e.target.value)} />
+                    <DatePicker id="published-at" withTime required className="cms:max-w-none" value={value || null} onChange={(next) => setValue(next ?? '')} />
                     <p className="cms:text-sm cms:text-muted-foreground">In your time zone.</p>
                 </div>
                 <DialogFooter>

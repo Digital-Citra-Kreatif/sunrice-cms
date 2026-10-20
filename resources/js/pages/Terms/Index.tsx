@@ -210,7 +210,7 @@ function TermForm({ action, method, locale, terms, hierarchical, term, submitLab
                     <FieldError message={errors.parent_id} />
                 </div>
             ) : <div />}
-            <div className={`cms:flex cms:gap-2 ${term ? '' : 'cms:md:mt-6'}`}>
+            <div className={`cms:flex cms:gap-2 ${term ? '' : 'cms:md:mt-[17px]'}`}>
                 <Button type="submit" disabled={form.processing}>{!term && <Plus />} {submitLabel}</Button>
                 {onDone && <Button type="button" variant="ghost" onClick={onDone}>Cancel</Button>}
             </div>
