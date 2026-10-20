@@ -43,7 +43,8 @@ final class FormController
             }
             // The fields as data[handle] (what the component prints), or by handle.
             $input = $request->all();
-            $submit->handle($form, is_array($input['data'] ?? null) ? $input['data'] : $request->except(['_token', 'locale', '_form', $captcha->field()]), $locale);
+            $submit->handle($form, is_array($input['data'] ?? null) ? $input['data'] : $request->except(['_token', 'locale', '_form', $captcha->field()]), $locale,
+                $request->ip(), $request->userAgent(), $request->headers->get('referer'));
         } catch (ValidationException $e) {
             // Errors under the form's own bag, so two forms on a page don't mix them up.
             throw $e->errorBag($form->handle);

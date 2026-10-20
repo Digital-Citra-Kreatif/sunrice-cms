@@ -74,6 +74,9 @@ return [
         'upload_max_kb' => 10240,
         // Days submissions (and their files) are kept; null: forever.
         'prune_after_days' => env('SUNRICE_FORMS_PRUNE_DAYS'),
+        // Keep the sender's IP address, browser (user agent) and the page
+        // they came from with each submission (personal data: see the docs).
+        'visitor_details' => env('SUNRICE_FORMS_VISITOR_DETAILS', true),
     ],
 
     'revisions' => [
