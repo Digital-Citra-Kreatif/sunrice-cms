@@ -142,24 +142,29 @@ final class Flexible extends FieldType
         ];
     }
 
-    /** The block kinds, so the editor can show their fields. */
+    /**
+     * The block kinds, so the editor can show their fields. A fieldset may
+     * use itself (or one that uses it) as a kind of block, so the fields
+     * stop Schema::MAX_DEPTH blocks deep: deeper blocks come without any.
+     */
     public function toAdmin(Field $field, Schema $schema): array
     {
         $blocks = [];
+        $deepest = $schema->depth() >= Schema::MAX_DEPTH;
         foreach ($field->configStrings('blocks') as $handle) {
-            $fieldset = $this->schema($handle);
+            $fieldset = $this->schema($handle, $schema->depth() + 1);
             if ($fieldset !== null) {
-                $blocks[] = ['type' => $handle, 'label' => app(Fieldsets::class)->title($handle), 'fields' => $fieldset->toAdmin()];
+                $blocks[] = ['type' => $handle, 'label' => app(Fieldsets::class)->title($handle), 'fields' => $deepest ? [] : $fieldset->toAdmin()];
             }
         }
 
         return ['blocks' => $blocks] + parent::toAdmin($field, $schema);
     }
 
-    private function schema(string $fieldset): ?Schema
+    private function schema(string $fieldset, int $depth = 0): ?Schema
     {
         $fields = app(Fieldsets::class)->fields($fieldset);
 
-        return $fields === null ? null : Schema::make($fields);
+        return $fields === null ? null : Schema::make($fields, $depth);
     }
 }
