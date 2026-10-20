@@ -10,6 +10,7 @@ use Sunrice\Admin\Activity\ActivityLog;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Support\SiteCache;
+use Sunrice\Cms\Support\SortOrder;
 
 /**
  * Puts entries in the order given, in a collection whose entries are in
@@ -57,28 +58,10 @@ final class ReorderEntries
             foreach ([...$order, ...array_diff($level, $order)] as $index => $id) {
                 $positions[$id] = $index + 1;
             }
-            self::renumber($positions);
+            SortOrder::write((new Entry)->getTable(), $positions);
         });
         $this->activity->record('reordered', 'collection', $collection, $collection->title, ['note' => 'entries']);
         $this->cache->changed("collection {$collection->handle} order", SiteCache::PAGES);
-    }
-
-    /**
-     * Writes the positions: one statement per few hundred, not one per row.
-     *
-     * @param  array<int, int>  $positions  id => sort_order
-     */
-    private static function renumber(array $positions): void
-    {
-        $table = DB::getQueryGrammar()->wrapTable((new Entry)->getTable());
-        foreach (array_chunk($positions, 300, true) as $chunk) {
-            $bindings = [];
-            foreach ($chunk as $id => $position) {
-                array_push($bindings, $id, $position);
-            }
-            $marks = implode(',', array_fill(0, count($chunk), '?'));
-            DB::update("UPDATE {$table} SET sort_order = CASE id ".str_repeat('WHEN ? THEN ? ', count($chunk))."END WHERE id IN ({$marks})", [...$bindings, ...array_keys($chunk)]);
-        }
     }
 
     /**

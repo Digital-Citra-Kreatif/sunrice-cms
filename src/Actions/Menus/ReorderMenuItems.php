@@ -11,6 +11,7 @@ use Sunrice\Cms\Menus;
 use Sunrice\Cms\Models\Menu;
 use Sunrice\Cms\Models\MenuItem;
 use Sunrice\Cms\Support\SiteCache;
+use Sunrice\Cms\Support\SortOrder;
 
 /**
  * Puts a menu's items in the order given, keeping their ids: the items of
@@ -59,13 +60,7 @@ final class ReorderMenuItems
             foreach ([...$order, ...array_diff($level, $order)] as $index => $id) {
                 $positions[$id] = $index;
             }
-            // One statement (a menu has 200 items at most).
-            $bindings = [];
-            foreach ($positions as $id => $position) {
-                array_push($bindings, $id, $position);
-            }
-            $table = DB::getQueryGrammar()->wrapTable((new MenuItem)->getTable());
-            DB::update("UPDATE {$table} SET sort_order = CASE id ".str_repeat('WHEN ? THEN ? ', count($positions)).'END WHERE id IN ('.implode(',', array_fill(0, count($positions), '?')).')', [...$bindings, ...array_keys($positions)]);
+            SortOrder::write((new MenuItem)->getTable(), $positions);
         });
         $menu->unsetRelation('items');
         $this->menus->flush();
