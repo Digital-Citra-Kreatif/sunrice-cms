@@ -11,7 +11,7 @@ function lt(s) {
   for (const [l, n] of Object.entries(s.pages ?? {}))
     a.registerPage(l, n);
 }
-function D(s = "") {
+function T(s = "") {
   return Ye().adminUrl(s);
 }
 const Qe = globalThis.Sunrice;
@@ -202,7 +202,7 @@ const vt = (s) => {
       nonScalingStroke: S = !1,
       color: g = "currentColor",
       className: N = ""
-    } = Nt() ?? {}, w = !!h || vt(d), [x, $, T = []] = bt(b, {
+    } = Nt() ?? {}, w = !!h || vt(d), [x, $, D = []] = bt(b, {
       color: s ?? g,
       width: l ?? a ?? v,
       height: n ?? a ?? v,
@@ -220,7 +220,7 @@ const vt = (s) => {
         ...$
       },
       [
-        ...T.map(([C, H]) => _.createElement(C, H)),
+        ...D.map(([C, H]) => _.createElement(C, H)),
         ...Array.isArray(h) ? h : [h]
       ]
     );
@@ -689,14 +689,14 @@ function P(s, a) {
   }
 }
 async function Pe(s) {
-  const a = await fetch(`${D("cms/entry-picker")}?${ze(s)}`, { headers: { Accept: "application/json" }, credentials: "same-origin" });
+  const a = await fetch(`${T("cms/entry-picker")}?${ze(s)}`, { headers: { Accept: "application/json" }, credentials: "same-origin" });
   if (!a.ok) throw new Error(String(a.status));
   return (await a.json()).items;
 }
 function je({ id: s, value: a, multiple: l, max: n, collections: r, invalid: c, onChange: o }) {
   const i = a === null ? [] : Array.isArray(a) ? a : [a], [h, m] = _.useState({}), [b, d] = _.useState(""), [u, v] = _.useState(null), [j, p] = _.useState(!1), S = l && n !== null && i.length >= n, g = i.filter((x) => !h[x]).join(",");
   _.useEffect(() => {
-    g !== "" && Pe({ ids: g.split(",").map(Number), collections: r }).then((x) => m(($) => ({ ...$, ...Object.fromEntries(x.map((T) => [T.id, T])) }))).catch(() => p(!0));
+    g !== "" && Pe({ ids: g.split(",").map(Number), collections: r }).then((x) => m(($) => ({ ...$, ...Object.fromEntries(x.map((D) => [D.id, D])) }))).catch(() => p(!0));
   }, [g]), _.useEffect(() => {
     if (b.trim() === "") {
       v(null);
@@ -714,12 +714,12 @@ function je({ id: s, value: a, multiple: l, max: n, collections: r, invalid: c, 
   }, w = (x) => o(l ? x : x[0] ?? null);
   return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
     i.length > 0 && /* @__PURE__ */ e.jsx(t.SortableList, { items: i, getId: (x) => x, onReorder: (x) => w(x), disabled: !l, className: "cms:gap-1", children: (x, { handle: $ }) => {
-      const T = h[x];
+      const D = h[x];
       return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-center cms:gap-2 cms:rounded-md cms:border cms:bg-card cms:px-2 cms:py-1 cms:text-sm", children: [
-        l && /* @__PURE__ */ e.jsx(t.SortableHandle, { ...$, label: `Move ${T?.title ?? x}` }),
-        /* @__PURE__ */ e.jsx("span", { className: `cms:min-w-0 cms:flex-1 cms:truncate ${l ? "" : "cms:pl-1"}`, children: T ? T.title : `Entry #${x}` }),
-        T && /* @__PURE__ */ e.jsx("span", { className: "cms:text-xs cms:text-muted-foreground", children: T.collection }),
-        T && /* @__PURE__ */ e.jsx(t.Badge, { variant: T.status === "published" ? "success" : "secondary", children: X(T.status) }),
+        l && /* @__PURE__ */ e.jsx(t.SortableHandle, { ...$, label: `Move ${D?.title ?? x}` }),
+        /* @__PURE__ */ e.jsx("span", { className: `cms:min-w-0 cms:flex-1 cms:truncate ${l ? "" : "cms:pl-1"}`, children: D ? D.title : `Entry #${x}` }),
+        D && /* @__PURE__ */ e.jsx("span", { className: "cms:text-xs cms:text-muted-foreground", children: D.collection }),
+        D && /* @__PURE__ */ e.jsx(t.Badge, { variant: D.status === "published" ? "success" : "secondary", children: X(D.status) }),
         /* @__PURE__ */ e.jsx(
           t.Button,
           {
@@ -727,7 +727,7 @@ function je({ id: s, value: a, multiple: l, max: n, collections: r, invalid: c, 
             variant: "ghost",
             size: "icon",
             className: "cms:size-7",
-            "aria-label": `Remove ${T?.title ?? x}`,
+            "aria-label": `Remove ${D?.title ?? x}`,
             onClick: () => w(i.filter((C) => C !== x)),
             children: /* @__PURE__ */ e.jsx(fe, {})
           }
@@ -769,7 +769,7 @@ function je({ id: s, value: a, multiple: l, max: n, collections: r, invalid: c, 
 }
 const Rs = _.createContext({}), ve = "__none";
 async function Ve(s) {
-  const a = await fetch(`${D("cms/term-picker")}?${mt(s)}`, { headers: { Accept: "application/json" }, credentials: "same-origin" });
+  const a = await fetch(`${T("cms/term-picker")}?${mt(s)}`, { headers: { Accept: "application/json" }, credentials: "same-origin" });
   if (!a.ok) throw new Error(String(a.status));
   return await a.json();
 }
@@ -789,7 +789,7 @@ function Pt({ id: s, taxonomy: a, multiple: l, max: n, required: r, invalid: c, 
     !a || $ === "" || Ve({ taxonomy: a, ids: $.split(",").map(Number) }).then((k) => g((A) => ({ ...A, ...Object.fromEntries(k.items.map((E) => [E.id, E.label])) }))).catch(() => w(!0));
   }, [a, $]), !a) return /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: "Choose a taxonomy for this field in its blueprint." });
   if (b === null) return N ? /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-destructive", children: "Terms could not be loaded. Try again." }) : /* @__PURE__ */ e.jsx(t.Skeleton, { className: "cms:h-9 cms:w-full cms:max-w-sm" });
-  const T = (k) => `${"— ".repeat(k.depth)}${k.label}`, C = l && n !== null && m.length >= n, H = (k) => i(l ? k : k[0] ?? null), V = u && m.length > 0 && /* @__PURE__ */ e.jsx("div", { className: "cms:flex cms:flex-wrap cms:gap-1.5", children: m.map((k) => /* @__PURE__ */ e.jsxs(t.Badge, { variant: "secondary", className: "cms:gap-1 cms:pr-1", children: [
+  const D = (k) => `${"— ".repeat(k.depth)}${k.label}`, C = l && n !== null && m.length >= n, H = (k) => i(l ? k : k[0] ?? null), V = u && m.length > 0 && /* @__PURE__ */ e.jsx("div", { className: "cms:flex cms:flex-wrap cms:gap-1.5", children: m.map((k) => /* @__PURE__ */ e.jsxs(t.Badge, { variant: "secondary", className: "cms:gap-1 cms:pr-1", children: [
     x(k) ?? `Term #${k}`,
     !(r && !l) && /* @__PURE__ */ e.jsx(
       "button",
@@ -823,7 +823,7 @@ function Pt({ id: s, taxonomy: a, multiple: l, max: n, required: r, invalid: c, 
       /* @__PURE__ */ e.jsxs(t.SelectContent, { children: [
         !r && /* @__PURE__ */ e.jsx(t.SelectItem, { value: ve, children: "None" }),
         !A && k !== void 0 && /* @__PURE__ */ e.jsx(t.SelectItem, { value: String(k), children: x(k) ?? `Term #${k}` }),
-        b.map((E) => /* @__PURE__ */ e.jsx(t.SelectItem, { value: String(E.id), children: T(E) }, E.id))
+        b.map((E) => /* @__PURE__ */ e.jsx(t.SelectItem, { value: String(E.id), children: D(E) }, E.id))
       ] })
     ] });
   }
@@ -841,7 +841,7 @@ function Pt({ id: s, taxonomy: a, multiple: l, max: n, required: r, invalid: c, 
             onCheckedChange: (E) => H(E ? [...m, k.id] : m.filter((te) => te !== k.id))
           }
         ),
-        T(k)
+        D(k)
       ] }, k.id);
     }) }) : /* @__PURE__ */ e.jsx("div", { role: "listbox", "aria-label": "Terms", className: "cms:flex cms:max-h-72 cms:flex-col cms:overflow-auto", children: b.map((k) => /* @__PURE__ */ e.jsx(
       t.Button,
@@ -853,7 +853,7 @@ function Pt({ id: s, taxonomy: a, multiple: l, max: n, required: r, invalid: c, 
         role: "option",
         "aria-selected": m[0] === k.id,
         onClick: () => i(k.id),
-        children: T(k)
+        children: D(k)
       },
       k.id
     )) })
@@ -1563,7 +1563,7 @@ function sa({ id: s, field: a, siblings: l, onChange: n, errors: r }) {
   ] });
 }
 function ta({ kind: s = "blueprint", blueprint: a, fieldTypes: l, usedBy: n = [] }) {
-  const r = s === "fieldset" ? "Fieldset" : "Blueprint", c = D(s === "fieldset" ? "cms/fieldsets" : "cms/blueprints"), o = a ? a.title : `New ${r.toLowerCase()}`;
+  const r = s === "fieldset" ? "Fieldset" : "Blueprint", c = T(s === "fieldset" ? "cms/fieldsets" : "cms/blueprints"), o = a ? a.title : `New ${r.toLowerCase()}`;
   t.useBreadcrumbs([{ label: `${r}s`, href: c }, { label: o }]);
   const [i, h] = Q(), m = y.useForm({ title: a?.title ?? "", handle: a?.handle ?? "" }), [b, d] = _.useState(a !== null), [u, v] = _.useState(() => qs(a?.fields)), j = (C) => l.find((H) => H.type === C)?.hasChildren === !0, p = m.errors, [S, g] = _.useState(() => JSON.stringify(u)), N = m.isDirty || JSON.stringify(u) !== S, w = () => {
     m.setDefaults(), g(JSON.stringify(u));
@@ -1576,7 +1576,7 @@ function ta({ kind: s = "blueprint", blueprint: a, fieldTypes: l, usedBy: n = []
     C.preventDefault(), x();
   };
   t.useUnsavedChanges(N, x);
-  const T = () => a && i(
+  const D = () => a && i(
     `Delete the ${r.toLowerCase()} "${a.title}"? Content keeps its values.`,
     () => y.router.delete(`${c}/${a.id}`, { preserveScroll: !0 })
   );
@@ -1589,7 +1589,7 @@ function ta({ kind: s = "blueprint", blueprint: a, fieldTypes: l, usedBy: n = []
         title: o,
         back: { href: c, label: `Back to ${r.toLowerCase()}s` },
         actions: /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
-          a && /* @__PURE__ */ e.jsx(t.Button, { type: "button", variant: "outline", size: "icon", className: "cms:text-destructive", "aria-label": `Delete ${o}`, onClick: T, children: /* @__PURE__ */ e.jsx(R, {}) }),
+          a && /* @__PURE__ */ e.jsx(t.Button, { type: "button", variant: "outline", size: "icon", className: "cms:text-destructive", "aria-label": `Delete ${o}`, onClick: D, children: /* @__PURE__ */ e.jsx(R, {}) }),
           /* @__PURE__ */ e.jsxs(t.Button, { type: "submit", disabled: m.processing, children: [
             m.processing && /* @__PURE__ */ e.jsx(le, { className: "cms:animate-spin" }),
             a ? "Save" : `Create ${r.toLowerCase()}`
@@ -1695,7 +1695,7 @@ function aa({ blueprints: s }) {
       Zs,
       {
         noun: "Blueprint",
-        base: D("cms/blueprints"),
+        base: T("cms/blueprints"),
         rows: s,
         intro: "The fields editors fill in, for each kind of content."
       }
@@ -1704,7 +1704,7 @@ function aa({ blueprints: s }) {
 }
 const Ue = { preserveScroll: !0, preserveState: !0 };
 function la({ entryId: s, comments: a }) {
-  const [l, n] = _.useState(null), [r, c] = _.useState(""), [o, i] = _.useState(!1), h = (b, d) => y.router.post(D(`cms/comments/${b}/status`), { status: d }, Ue), m = (b) => y.router.post(D(`cms/comments/${b}/reply`), { body: r }, {
+  const [l, n] = _.useState(null), [r, c] = _.useState(""), [o, i] = _.useState(!1), h = (b, d) => y.router.post(T(`cms/comments/${b}/status`), { status: d }, Ue), m = (b) => y.router.post(T(`cms/comments/${b}/reply`), { body: r }, {
     ...Ue,
     onStart: () => i(!0),
     onFinish: () => i(!1),
@@ -1785,7 +1785,7 @@ function la({ entryId: s, comments: a }) {
             ] })
           ] })
         ] }, b.id)),
-        /* @__PURE__ */ e.jsx("a", { href: D(`cms/comments?entry=${s}`), className: "cms:text-sm cms:font-medium cms:underline-offset-4 cms:hover:underline", children: "All comments on this entry" })
+        /* @__PURE__ */ e.jsx("a", { href: T(`cms/comments?entry=${s}`), className: "cms:text-sm cms:font-medium cms:underline-offset-4 cms:hover:underline", children: "All comments on this entry" })
       ] }) : /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
         /* @__PURE__ */ e.jsx(t.Skeleton, { className: "cms:h-10" }),
         /* @__PURE__ */ e.jsx(t.Skeleton, { className: "cms:h-10" })
@@ -1863,10 +1863,10 @@ function na(s) {
   return /* @__PURE__ */ e.jsx(ca, { ...s }, a ? `${a.id}:${a.locale}:${a.version}:${a.status}:${a.trashed}:${a.publishedAt}` : "new");
 }
 function ca({ collection: s, fields: a, locales: l = [], shared: n = [], sharedValues: r = {}, entry: c, values: o, revisions: i, comments: h, termLabels: m, usedBy: b = [], undoRestore: d = null, machineTranslate: u = null, settings: v, blueprints: j = [], can: p }) {
-  const S = D(`cms/collections/${s.handle}/entries`), g = c ? D(`cms/entries/${c.id}`) : S, N = c ? o.title : "New entry";
+  const S = T(`cms/collections/${s.handle}/entries`), g = c ? T(`cms/entries/${c.id}`) : S, N = c ? o.title : "New entry";
   t.useBreadcrumbs([{ label: s.title, href: S }, { label: N }]);
-  const [w, x] = Q(), [$, T] = _.useState(!1), C = y.useForm({ ...o, seo: o.seo ?? {}, locale: c?.locale ?? null, version: c?.version ?? null, publish: !1, published_at: null }), H = c ? { locale: c.locale } : {}, V = l.find((B) => B.main)?.code, z = C.errors, k = c !== null && c.status !== "draft" && !c.hasUnpublishedChanges && !C.isDirty, A = c === null ? p.create : p.update && !c.trashed, E = (B = !1, K = null) => {
-    C.transform((f) => ({ ...f, publish: B, published_at: K })), c ? C.put(g, { preserveScroll: !0, onSuccess: () => T(!1) }) : C.post(g);
+  const [w, x] = Q(), [$, D] = _.useState(!1), C = y.useForm({ ...o, seo: o.seo ?? {}, locale: c?.locale ?? null, version: c?.version ?? null, publish: !1, published_at: null }), H = c ? { locale: c.locale } : {}, V = l.find((B) => B.main)?.code, z = C.errors, k = c !== null && c.status !== "draft" && !c.hasUnpublishedChanges && !C.isDirty, A = c === null ? p.create : p.update && !c.trashed, E = (B = !1, K = null) => {
+    C.transform((f) => ({ ...f, publish: B, published_at: K })), c ? C.put(g, { preserveScroll: !0, onSuccess: () => D(!1) }) : C.post(g);
   }, te = () => {
     C.transform((B) => ({ ...B, version: null, publish: !1, published_at: null })), C.put(g, { preserveScroll: !0 });
   }, U = t.useEditLock({
@@ -1883,7 +1883,7 @@ function ca({ collection: s, fields: a, locales: l = [], shared: n = [], sharedV
   };
   t.useUnsavedChanges(C.isDirty && !U.takenOver, O ? () => C.processing || E() : void 0);
   const de = (B = null) => {
-    p.update ? E(!0, B) : c && y.router.post(`${g}/publish`, { ...H, published_at: B }, { preserveScroll: !0, onSuccess: () => T(!1) });
+    p.update ? E(!0, B) : c && y.router.post(`${g}/publish`, { ...H, published_at: B }, { preserveScroll: !0, onSuccess: () => D(!1) });
   };
   return /* @__PURE__ */ e.jsxs("form", { onSubmit: (B) => {
     B.preventDefault(), E();
@@ -1957,7 +1957,7 @@ function ca({ collection: s, fields: a, locales: l = [], shared: n = [], sharedV
               variant: "outline",
               disabled: C.processing || C.isDirty,
               title: C.isDirty ? "Save your changes first" : "Fill in what isn't translated yet, into the draft",
-              onClick: () => y.router.post(D(`cms/entries/${u}/translate`), { version: c.version }, { preserveScroll: !0 }),
+              onClick: () => y.router.post(T(`cms/entries/${u}/translate`), { version: c.version }, { preserveScroll: !0 }),
               children: [
                 /* @__PURE__ */ e.jsx(Bt, {}),
                 " Translate from ",
@@ -1977,7 +1977,7 @@ function ca({ collection: s, fields: a, locales: l = [], shared: n = [], sharedV
             /* @__PURE__ */ e.jsxs(t.DropdownMenu, { children: [
               /* @__PURE__ */ e.jsx(t.DropdownMenuTrigger, { asChild: !0, children: /* @__PURE__ */ e.jsx(t.Button, { type: "button", size: "icon", variant: k ? "outline" : "default", className: k ? "cms:-ml-px cms:rounded-l-none" : "cms:rounded-l-none cms:border-l cms:border-primary-foreground/20", "aria-label": "More publishing options", children: /* @__PURE__ */ e.jsx(ds, {}) }) }),
               /* @__PURE__ */ e.jsxs(t.DropdownMenuContent, { align: "end", children: [
-                /* @__PURE__ */ e.jsxs(t.DropdownMenuItem, { onSelect: () => T(!0), children: [
+                /* @__PURE__ */ e.jsxs(t.DropdownMenuItem, { onSelect: () => D(!0), children: [
                   /* @__PURE__ */ e.jsx(Ct, {}),
                   " Publish on a date…"
                 ] }),
@@ -2115,7 +2115,7 @@ function ca({ collection: s, fields: a, locales: l = [], shared: n = [], sharedV
         v && /* @__PURE__ */ e.jsx(oa, { entryUrl: g, collection: s, settings: v, blueprints: j, disabled: !O }),
         h !== null && s.comments && /* @__PURE__ */ e.jsx(la, { entryId: c.id, comments: h }),
         /* @__PURE__ */ e.jsxs(t.CollapsibleCard, { title: "Revisions", titleClassName: "cms:text-base", storageKey: "cms:entry:revisions", contentClassName: "cms:flex cms:flex-col cms:gap-2 cms:text-sm", children: [
-          d !== null && p.update && /* @__PURE__ */ e.jsxs(t.Button, { type: "button", variant: "outline", size: "sm", onClick: () => y.router.post(D(`cms/entry-translations/${d}/undo-restore`), {}, { preserveScroll: !0 }), children: [
+          d !== null && p.update && /* @__PURE__ */ e.jsxs(t.Button, { type: "button", variant: "outline", size: "sm", onClick: () => y.router.post(T(`cms/entry-translations/${d}/undo-restore`), {}, { preserveScroll: !0 }), children: [
             /* @__PURE__ */ e.jsx(De, {}),
             " Undo the restore"
           ] }),
@@ -2135,7 +2135,7 @@ function ca({ collection: s, fields: a, locales: l = [], shared: n = [], sharedV
                   type: "button",
                   variant: "ghost",
                   size: "sm",
-                  onClick: () => y.router.post(D(`cms/revisions/${B.id}/restore`), {}, { preserveScroll: !0 }),
+                  onClick: () => y.router.post(T(`cms/revisions/${B.id}/restore`), {}, { preserveScroll: !0 }),
                   children: "Restore"
                 }
               )
@@ -2148,7 +2148,7 @@ function ca({ collection: s, fields: a, locales: l = [], shared: n = [], sharedV
       ia,
       {
         open: $,
-        onClose: () => T(!1),
+        onClose: () => D(!1),
         processing: C.processing,
         current: c?.publishedAt ?? null,
         onSchedule: (B) => de(B)
@@ -2274,7 +2274,7 @@ function oa({ entryUrl: s, collection: a, settings: l, blueprints: n, disabled: 
     a.comments && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-center cms:gap-3", children: [
       /* @__PURE__ */ e.jsx(t.Switch, { id: "comments-open", checked: !o.data.comments_closed, onCheckedChange: (h) => o.setData("comments_closed", !h) }),
       /* @__PURE__ */ e.jsx(t.Label, { htmlFor: "comments-open", children: "Accept new comments" }),
-      /* @__PURE__ */ e.jsx("a", { href: D(`cms/comments?entry=${s.split("/").slice(-1)[0]}`), className: "cms:ml-auto cms:text-muted-foreground cms:underline-offset-4 hover:cms:underline", children: "Comments" })
+      /* @__PURE__ */ e.jsx("a", { href: T(`cms/comments?entry=${s.split("/").slice(-1)[0]}`), className: "cms:ml-auto cms:text-muted-foreground cms:underline-offset-4 hover:cms:underline", children: "Comments" })
     ] }),
     o.isDirty && /* @__PURE__ */ e.jsx(
       t.Button,
@@ -2320,7 +2320,7 @@ function ma({ collection: s, rows: a }) {
     if (!i) return;
     const h = i.parentId ?? null, m = da(c, i.id, (b) => b.parentId ?? null);
     n(c), y.router.post(
-      D("cms/entries/reorder"),
+      T("cms/entries/reorder"),
       { collection: s, ids: m, parent_id: h },
       { preserveScroll: !0, preserveState: !0, onError: () => n(a) }
     );
@@ -2383,7 +2383,7 @@ function ja({
   preferencesKey: m,
   can: b
 }) {
-  const d = D(`cms/collections/${s.handle}/entries`), u = c.locales[0] ?? n.locale, [v, j] = _.useState(n.search), [p, S] = _.useState([]), [g, N] = _.useState(!1), [w, x] = Q(), { setColumns: $, setPerPage: T } = t.useTablePreferences(m ?? `table.cms.entries.${s.handle}`, { columns: n.columns, perPage: n.perPage });
+  const d = T(`cms/collections/${s.handle}/entries`), u = c.locales[0] ?? n.locale, [v, j] = _.useState(n.search), [p, S] = _.useState([]), [g, N] = _.useState(!1), [w, x] = Q(), { setColumns: $, setPerPage: D } = t.useTablePreferences(m ?? `table.cms.entries.${s.handle}`, { columns: n.columns, perPage: n.perPage });
   _.useEffect(() => S([]), [l]);
   const C = n.status === "trashed", H = We(n) > 0, V = r.filter((f) => n.columns.includes(f.key)), z = (f = {}) => ua(n, f, u), k = (f) => y.router.get(d, z(f), { preserveState: !0, preserveScroll: !0, replace: !0 });
   _.useEffect(() => {
@@ -2426,7 +2426,7 @@ function ja({
               ] }) : /* @__PURE__ */ e.jsx(y.Link, { href: F.href, children: F.label }) }, F.href))
             ] }, f)) })
           ] }),
-          s.listing && !C && /* @__PURE__ */ e.jsx(t.Button, { variant: "outline", asChild: !0, children: /* @__PURE__ */ e.jsxs(y.Link, { href: D(`cms/collections/${s.handle}/listing`), children: [
+          s.listing && !C && /* @__PURE__ */ e.jsx(t.Button, { variant: "outline", asChild: !0, children: /* @__PURE__ */ e.jsxs(y.Link, { href: T(`cms/collections/${s.handle}/listing`), children: [
             /* @__PURE__ */ e.jsx(zt, {}),
             " Listing page"
           ] }) }),
@@ -2439,7 +2439,7 @@ function ja({
             " New entry"
           ] }) })
         ] }),
-        children: a.length > 1 && /* @__PURE__ */ e.jsxs(t.Select, { value: s.handle, onValueChange: (f) => y.router.get(D(`cms/collections/${f}/entries`)), children: [
+        children: a.length > 1 && /* @__PURE__ */ e.jsxs(t.Select, { value: s.handle, onValueChange: (f) => y.router.get(T(`cms/collections/${f}/entries`)), children: [
           /* @__PURE__ */ e.jsx(t.SelectTrigger, { className: "cms:w-48", "aria-label": "Collection", children: /* @__PURE__ */ e.jsx(t.SelectValue, {}) }),
           /* @__PURE__ */ e.jsx(t.SelectContent, { children: a.map((f) => /* @__PURE__ */ e.jsx(t.SelectItem, { value: f.handle, children: f.title }, f.handle)) })
         ] })
@@ -2564,7 +2564,7 @@ function ja({
               /* @__PURE__ */ e.jsx(
                 y.Link,
                 {
-                  href: D(`cms/collections/${s.handle}/entries/${f.id}/edit${n.locale !== u ? `?locale=${encodeURIComponent(n.locale)}` : ""}`),
+                  href: T(`cms/collections/${s.handle}/entries/${f.id}/edit${n.locale !== u ? `?locale=${encodeURIComponent(n.locale)}` : ""}`),
                   className: "cms:font-medium cms:underline-offset-4 cms:hover:underline",
                   children: f.title
                 }
@@ -2576,8 +2576,8 @@ function ja({
             ] }),
             V.map((F) => /* @__PURE__ */ e.jsx(t.TableCell, { className: F.key === "status" ? "" : "cms:text-muted-foreground", children: /* @__PURE__ */ e.jsx("div", { className: "cms:max-w-72 cms:truncate", children: /* @__PURE__ */ e.jsx(ba, { row: f, column: F, mainLocale: u }) }) }, F.key)),
             O && /* @__PURE__ */ e.jsx(t.TableCell, { className: "cms:w-px", children: /* @__PURE__ */ e.jsxs("span", { className: "cms:flex", children: [
-              /* @__PURE__ */ e.jsx(t.Button, { variant: "ghost", size: "icon", "aria-label": `Move ${f.title} up`, onClick: () => y.router.post(D(`cms/entries/${f.id}/move`), { direction: "up" }, { preserveScroll: !0 }), children: /* @__PURE__ */ e.jsx(cs, {}) }),
-              /* @__PURE__ */ e.jsx(t.Button, { variant: "ghost", size: "icon", "aria-label": `Move ${f.title} down`, onClick: () => y.router.post(D(`cms/entries/${f.id}/move`), { direction: "down" }, { preserveScroll: !0 }), children: /* @__PURE__ */ e.jsx(ts, {}) })
+              /* @__PURE__ */ e.jsx(t.Button, { variant: "ghost", size: "icon", "aria-label": `Move ${f.title} up`, onClick: () => y.router.post(T(`cms/entries/${f.id}/move`), { direction: "up" }, { preserveScroll: !0 }), children: /* @__PURE__ */ e.jsx(cs, {}) }),
+              /* @__PURE__ */ e.jsx(t.Button, { variant: "ghost", size: "icon", "aria-label": `Move ${f.title} down`, onClick: () => y.router.post(T(`cms/entries/${f.id}/move`), { direction: "down" }, { preserveScroll: !0 }), children: /* @__PURE__ */ e.jsx(ts, {}) })
             ] }) })
           ] }, f.id))
         ] })
@@ -2586,7 +2586,7 @@ function ja({
         /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-center cms:gap-4", children: [
           /* @__PURE__ */ e.jsx("span", { children: l.total === 0 ? "No entries" : `${l.from}–${l.to} of ${l.total}` }),
           /* @__PURE__ */ e.jsxs(t.Select, { value: String(n.perPage), onValueChange: (f) => {
-            T(Number(f)), k({ perPage: Number(f) });
+            D(Number(f)), k({ perPage: Number(f) });
           }, children: [
             /* @__PURE__ */ e.jsx(t.SelectTrigger, { className: "cms:h-8 cms:w-auto", "aria-label": "Entries per page", children: /* @__PURE__ */ e.jsx(t.SelectValue, {}) }),
             /* @__PURE__ */ e.jsx(t.SelectContent, { children: h.map((f) => /* @__PURE__ */ e.jsxs(t.SelectItem, { value: String(f), children: [
@@ -2734,7 +2734,7 @@ function ya(s) {
   return /* @__PURE__ */ e.jsx(Na, { ...s }, `${s.locale}:${s.version}:${JSON.stringify([s.values, s.seo])}`);
 }
 function Na({ collection: s, fields: a, locale: l, locales: n, shared: r, values: c, seo: o, version: i, can: h }) {
-  const m = D(`cms/collections/${s.handle}/listing`), b = D(`cms/collections/${s.handle}/entries`);
+  const m = T(`cms/collections/${s.handle}/listing`), b = T(`cms/collections/${s.handle}/entries`);
   t.useBreadcrumbs([{ label: s.title, href: b }, { label: "Listing page" }]);
   const d = y.useForm({ locale: l, data: c, seo: o ?? {}, version: i }), u = d.errors, v = n[0], j = h.update, p = () => d.processing || d.put(m, { preserveScroll: !0 }), S = () => {
     d.transform((g) => ({ ...g, version: null })), d.put(m, { preserveScroll: !0 });
@@ -2802,7 +2802,7 @@ function Sa({ fieldsets: s }) {
       Zs,
       {
         noun: "Fieldset",
-        base: D("cms/fieldsets"),
+        base: T("cms/fieldsets"),
         rows: s,
         intro: "Fields shared between blueprints, and the kinds of block of flexible fields."
       }
@@ -2813,15 +2813,15 @@ function Ca(s) {
   return /* @__PURE__ */ e.jsx(ka, { ...s }, `${s.locale}:${s.version}:${JSON.stringify(s.values)}`);
 }
 function ka({ set: s, fields: a, locale: l, locales: n, shared: r, values: c, version: o, can: i }) {
-  const h = D(`cms/globals/${s.handle}`);
-  t.useBreadcrumbs([{ label: "Globals", href: D("cms/globals") }, { label: s.title }]);
+  const h = T(`cms/globals/${s.handle}`);
+  t.useBreadcrumbs([{ label: "Globals", href: T("cms/globals") }, { label: s.title }]);
   const m = y.useForm({ locale: l, data: c, version: o }), b = m.errors, d = n[0], u = t.useEditLock({
     type: "cms.global",
     id: s.id,
     locale: l,
     enabled: i.update,
     noun: "global set",
-    leaveTo: D("cms/globals"),
+    leaveTo: T("cms/globals"),
     getUnsaved: () => m.isDirty ? { data: m.data.data } : null
   }), v = i.update && !u.readOnly, j = () => m.processing || m.put(h, { preserveScroll: !0 }), p = () => {
     m.transform((g) => ({ ...g, version: null })), m.put(h, { preserveScroll: !0 });
@@ -2838,7 +2838,7 @@ function ka({ set: s, fields: a, locale: l, locales: n, shared: r, values: c, ve
       t.PageHeader,
       {
         title: s.title,
-        back: { href: D("cms/globals"), label: "Back to globals" },
+        back: { href: T("cms/globals"), label: "Back to globals" },
         actions: /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
           n.length > 1 && /* @__PURE__ */ e.jsxs(t.Select, { value: l, onValueChange: (g) => y.router.get(h, { locale: g }), children: [
             /* @__PURE__ */ e.jsx(t.SelectTrigger, { className: "cms:w-48", "aria-label": "Language", children: /* @__PURE__ */ e.jsx(t.SelectValue, {}) }),
@@ -2885,7 +2885,7 @@ function $a({ sets: s }) {
     /* @__PURE__ */ e.jsx(y.Head, { title: "Globals" }),
     /* @__PURE__ */ e.jsx(t.PageHeader, { title: "Globals", description: "Values the whole site uses, like contact details and footer text." }),
     s.length === 0 && /* @__PURE__ */ e.jsx("p", { className: "cms:text-muted-foreground", children: "There are no global sets yet. Create one under Structure → Global sets." }),
-    /* @__PURE__ */ e.jsx("div", { className: "cms:grid cms:gap-4 cms:sm:grid-cols-2 cms:lg:grid-cols-3", children: s.map((a) => /* @__PURE__ */ e.jsx(y.Link, { href: D(`cms/globals/${a.handle}`), className: "cms:rounded-xl cms:focus-visible:ring-2 cms:focus-visible:ring-ring cms:focus-visible:outline-none", children: /* @__PURE__ */ e.jsxs(t.Card, { className: "cms:h-full cms:transition-colors cms:hover:bg-accent", children: [
+    /* @__PURE__ */ e.jsx("div", { className: "cms:grid cms:gap-4 cms:sm:grid-cols-2 cms:lg:grid-cols-3", children: s.map((a) => /* @__PURE__ */ e.jsx(y.Link, { href: T(`cms/globals/${a.handle}`), className: "cms:rounded-xl cms:focus-visible:ring-2 cms:focus-visible:ring-ring cms:focus-visible:outline-none", children: /* @__PURE__ */ e.jsxs(t.Card, { className: "cms:h-full cms:transition-colors cms:hover:bg-accent", children: [
       /* @__PURE__ */ e.jsxs(t.CardHeader, { children: [
         /* @__PURE__ */ e.jsx(t.CardTitle, { className: "cms:text-base", children: a.title }),
         /* @__PURE__ */ e.jsx(t.CardDescription, { children: a.blueprint ? /* @__PURE__ */ e.jsx("code", { className: "cms:text-xs", children: a.handle }) : "No blueprint yet: choose one under Structure → Global sets." })
@@ -2931,24 +2931,24 @@ function ue(s) {
   return { key: `m${++et}`, depth: 0, entry_id: null, term_id: null, collection_id: null, target: null, url: null, labels: {}, new_tab: !1, ...s };
 }
 function Ba({ menu: s, items: a, locales: l, limits: n, terms: r, listings: c, can: o }) {
-  const i = D(`cms/menus/${s.handle}`);
-  t.useBreadcrumbs([{ label: "Menus", href: D("cms/menus") }, { label: s.title }]);
-  const [h, m] = _.useState(() => st(a)), [b, d] = _.useState(null), u = y.useForm({ items: a }), v = u.errors, [j, p] = _.useState(!1), S = l[0] ?? "en", g = (T) => {
-    m(T), p(!0);
-  }, N = (T, C) => g(h.map((H, V) => V === T ? { ...H, ...C } : H)), w = () => {
+  const i = T(`cms/menus/${s.handle}`);
+  t.useBreadcrumbs([{ label: "Menus", href: T("cms/menus") }, { label: s.title }]);
+  const [h, m] = _.useState(() => st(a)), [b, d] = _.useState(null), u = y.useForm({ items: a }), v = u.errors, [j, p] = _.useState(!1), S = l[0] ?? "en", g = (D) => {
+    m(D), p(!0);
+  }, N = (D, C) => g(h.map((H, V) => V === D ? { ...H, ...C } : H)), w = () => {
     u.processing || (u.transform(() => ({ items: wa(h).map(at) })), u.put(i, { preserveScroll: !0, onSuccess: () => p(!1) }));
-  }, x = (T) => {
-    T.preventDefault(), w();
+  }, x = (D) => {
+    D.preventDefault(), w();
   };
   t.useUnsavedChanges(j, o.update ? w : void 0);
-  const $ = (T) => /* @__PURE__ */ e.jsx(
+  const $ = (D) => /* @__PURE__ */ e.jsx(
     t.SortableList,
     {
-      items: re(h, T),
+      items: re(h, D),
       getId: (C) => h[C].key,
       disabled: !o.update,
-      onReorder: (C) => g(Xs(h, T, C)),
-      className: T < 0 ? "cms:gap-1" : "cms:mt-1 cms:gap-1 cms:pl-6",
+      onReorder: (C) => g(Xs(h, D, C)),
+      className: D < 0 ? "cms:gap-1" : "cms:mt-1 cms:gap-1 cms:pl-6",
       children: (C, { handle: H, isOverlay: V }) => {
         const z = h[C];
         return /* @__PURE__ */ e.jsxs("div", { className: `cms:rounded-lg cms:border cms:bg-card ${V ? "" : "cms:border-border/70"}`, children: [
@@ -3007,7 +3007,7 @@ function Ba({ menu: s, items: a, locales: l, limits: n, terms: r, listings: c, c
       t.PageHeader,
       {
         title: s.title,
-        back: { href: D("cms/menus"), label: "Back to menus" },
+        back: { href: T("cms/menus"), label: "Back to menus" },
         actions: o.update && /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
           /* @__PURE__ */ e.jsxs(t.Button, { type: "button", variant: "outline", disabled: h.length >= n.items, onClick: () => d("entry"), children: [
             /* @__PURE__ */ e.jsx(q, {}),
@@ -3034,13 +3034,13 @@ function Ba({ menu: s, items: a, locales: l, limits: n, terms: r, listings: c, c
       }
     ),
     /* @__PURE__ */ e.jsx(M, { message: v.items }),
-    Object.keys(v).some((T) => T.startsWith("items.")) && /* @__PURE__ */ e.jsxs("p", { role: "alert", className: "cms:text-sm cms:text-destructive", children: [
+    Object.keys(v).some((D) => D.startsWith("items.")) && /* @__PURE__ */ e.jsxs("p", { role: "alert", className: "cms:text-sm cms:text-destructive", children: [
       "Some links need fixing: ",
       Object.values(v).filter(Boolean)[0]
     ] }),
     /* @__PURE__ */ e.jsx(t.Card, { className: "cms:p-2", children: h.length === 0 ? /* @__PURE__ */ e.jsx("p", { className: "cms:p-4 cms:text-center cms:text-muted-foreground", children: "No links yet. Add an entry or a link." }) : $(-1) }),
-    /* @__PURE__ */ e.jsx(Ma, { kind: b, terms: r, listings: c, onClose: () => d(null), onAdd: (T) => {
-      g([...h, T]), d(null);
+    /* @__PURE__ */ e.jsx(Ma, { kind: b, terms: r, listings: c, onClose: () => d(null), onAdd: (D) => {
+      g([...h, D]), d(null);
     }, main: S })
   ] });
 }
@@ -3060,7 +3060,7 @@ function Ma({ kind: s, terms: a, listings: l, onClose: n, onAdd: r, main: c }) {
   }, [s]);
   const j = b.trim() === "" || it(b.trim()), p = u.trim() ? { [c]: u.trim() } : {}, S = async () => {
     if (s === "entry" && o !== null) {
-      const N = await fetch(`${D("cms/entry-picker")}?${ze({ ids: [o], collections: [] })}`, { headers: { Accept: "application/json" }, credentials: "same-origin" }), w = N.ok ? (await N.json()).items[0] : void 0;
+      const N = await fetch(`${T("cms/entry-picker")}?${ze({ ids: [o], collections: [] })}`, { headers: { Accept: "application/json" }, credentials: "same-origin" }), w = N.ok ? (await N.json()).items[0] : void 0;
       r(ue({ entry_id: o, target: w ? { title: w.title, kind: w.collection, live: w.status === "published" } : null, labels: p }));
     } else if (s === "term" && h !== "") {
       const N = a.find((w) => String(w.id) === h);
@@ -3134,7 +3134,7 @@ function Ia({ menus: s }) {
     /* @__PURE__ */ e.jsx(y.Head, { title: "Menus" }),
     /* @__PURE__ */ e.jsx(t.PageHeader, { title: "Menus", description: "Navigation for the site: the main menu, the footer…" }),
     s.length === 0 && /* @__PURE__ */ e.jsx("p", { className: "cms:text-muted-foreground", children: "There are no menus yet. Create one under Structure → Menu settings." }),
-    /* @__PURE__ */ e.jsx("div", { className: "cms:grid cms:gap-4 cms:sm:grid-cols-2 cms:lg:grid-cols-3", children: s.map((a) => /* @__PURE__ */ e.jsx(y.Link, { href: D(`cms/menus/${a.handle}`), className: "cms:rounded-xl cms:focus-visible:ring-2 cms:focus-visible:ring-ring cms:focus-visible:outline-none", children: /* @__PURE__ */ e.jsxs(t.Card, { className: "cms:h-full cms:transition-colors cms:hover:bg-accent", children: [
+    /* @__PURE__ */ e.jsx("div", { className: "cms:grid cms:gap-4 cms:sm:grid-cols-2 cms:lg:grid-cols-3", children: s.map((a) => /* @__PURE__ */ e.jsx(y.Link, { href: T(`cms/menus/${a.handle}`), className: "cms:rounded-xl cms:focus-visible:ring-2 cms:focus-visible:ring-ring cms:focus-visible:outline-none", children: /* @__PURE__ */ e.jsxs(t.Card, { className: "cms:h-full cms:transition-colors cms:hover:bg-accent", children: [
       /* @__PURE__ */ e.jsxs(t.CardHeader, { children: [
         /* @__PURE__ */ e.jsx(t.CardTitle, { className: "cms:text-base", children: a.title }),
         /* @__PURE__ */ e.jsx(t.CardDescription, { children: /* @__PURE__ */ e.jsx("code", { className: "cms:text-xs", children: a.handle }) })
@@ -3151,10 +3151,10 @@ const Aa = [
   { value: "trash", label: "Trash" }
 ], Ea = { pending: "Pending", approved: "Approved", spam: "Spam" };
 function Fa({ tab: s, counts: a, filters: l, collections: n, comments: r, can: c, errors: o = {} }) {
-  t.useBreadcrumbs([{ label: "Comments", href: D("cms/comments") }]);
+  t.useBreadcrumbs([{ label: "Comments", href: T("cms/comments") }]);
   const [i, h] = _.useState(l.search), [m, b] = _.useState([]), [d, u] = _.useState(null), [v, j] = Q(), p = (x) => {
     const $ = { status: s, search: l.search, collection: l.collection, ...x };
-    y.router.get(D("cms/comments"), {
+    y.router.get(T("cms/comments"), {
       ...$.status !== "all" ? { status: $.status } : {},
       ...$.search ? { search: $.search } : {},
       ...$.collection ? { collection: $.collection } : {},
@@ -3166,7 +3166,7 @@ function Fa({ tab: s, counts: a, filters: l, collections: n, comments: r, can: c
     const x = window.setTimeout(() => p({ search: i }), 300);
     return () => window.clearTimeout(x);
   }, [i]);
-  const S = (x, $ = {}) => y.router.post(D(x), $, { preserveScroll: !0, onSuccess: () => b([]) }), g = (x, $) => S(`cms/comments/${x.id}/status`, { status: $ }), N = (x) => {
+  const S = (x, $ = {}) => y.router.post(T(x), $, { preserveScroll: !0, onSuccess: () => b([]) }), g = (x, $) => S(`cms/comments/${x.id}/status`, { status: $ }), N = (x) => {
     const $ = () => S("cms/comments/bulk", { action: x, ids: m });
     x === "delete" ? v(`Delete ${m.length} comments for good? This can't be undone.`, $) : $();
   }, w = r.data.length > 0 && m.length === r.data.length;
@@ -3203,7 +3203,7 @@ function Fa({ tab: s, counts: a, filters: l, collections: n, comments: r, can: c
     ),
     l.entry !== null && /* @__PURE__ */ e.jsxs("p", { className: "cms:text-sm cms:text-muted-foreground", children: [
       "Comments on one entry. ",
-      /* @__PURE__ */ e.jsx("button", { type: "button", className: "cms:underline cms:underline-offset-4", onClick: () => y.router.get(D("cms/comments")), children: "Show all" })
+      /* @__PURE__ */ e.jsx("button", { type: "button", className: "cms:underline cms:underline-offset-4", onClick: () => y.router.get(T("cms/comments")), children: "Show all" })
     ] }),
     /* @__PURE__ */ e.jsx(t.Tabs, { value: s, onValueChange: (x) => p({ status: x }), children: /* @__PURE__ */ e.jsx(t.TabsList, { className: "cms:h-auto cms:flex-wrap cms:justify-start", children: Aa.map((x) => /* @__PURE__ */ e.jsxs(t.TabsTrigger, { value: x.value, children: [
       x.label,
@@ -3264,7 +3264,7 @@ function Fa({ tab: s, counts: a, filters: l, collections: n, comments: r, can: c
           {
             checked: m.includes(x.id),
             "aria-label": `Select ${x.author}'s comment`,
-            onCheckedChange: ($) => b($ ? [...m, x.id] : m.filter((T) => T !== x.id))
+            onCheckedChange: ($) => b($ ? [...m, x.id] : m.filter((D) => D !== x.id))
           }
         ),
         /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:min-w-0 cms:flex-1 cms:flex-col cms:gap-2", children: [
@@ -3318,7 +3318,7 @@ function Fa({ tab: s, counts: a, filters: l, collections: n, comments: r, can: c
                 " Edit"
               ] })
             ] }),
-            c.delete && !x.trashed && /* @__PURE__ */ e.jsxs(t.Button, { size: "sm", variant: "ghost", onClick: () => y.router.delete(D(`cms/comments/${x.id}`), { preserveScroll: !0 }), children: [
+            c.delete && !x.trashed && /* @__PURE__ */ e.jsxs(t.Button, { size: "sm", variant: "ghost", onClick: () => y.router.delete(T(`cms/comments/${x.id}`), { preserveScroll: !0 }), children: [
               /* @__PURE__ */ e.jsx(R, {}),
               " Trash"
             ] }),
@@ -3329,7 +3329,7 @@ function Fa({ tab: s, counts: a, filters: l, collections: n, comments: r, can: c
               ] }),
               /* @__PURE__ */ e.jsxs(t.Button, { size: "sm", variant: "ghost", onClick: () => v(
                 "Delete this comment for good? Replies to it stay.",
-                () => y.router.delete(D(`cms/comments/${x.id}/force`), { preserveScroll: !0 })
+                () => y.router.delete(T(`cms/comments/${x.id}/force`), { preserveScroll: !0 })
               ), children: [
                 /* @__PURE__ */ e.jsx(R, {}),
                 " Delete for good"
@@ -3357,7 +3357,7 @@ function Ha({ row: s, mode: a, error: l, onClose: n }) {
   const [r, c] = _.useState(a === "edit" ? s.body : ""), [o, i] = _.useState(!1), h = () => {
     i(!0);
     const m = { preserveScroll: !0, onSuccess: n, onFinish: () => i(!1) };
-    a === "reply" ? y.router.post(D(`cms/comments/${s.id}/reply`), { body: r }, m) : y.router.put(D(`cms/comments/${s.id}`), { body: r }, m);
+    a === "reply" ? y.router.post(T(`cms/comments/${s.id}/reply`), { body: r }, m) : y.router.put(T(`cms/comments/${s.id}`), { body: r }, m);
   };
   return /* @__PURE__ */ e.jsx(t.Dialog, { open: !0, onOpenChange: (m) => !m && n(), children: /* @__PURE__ */ e.jsxs(t.DialogContent, { children: [
     /* @__PURE__ */ e.jsxs(t.DialogHeader, { children: [
@@ -3384,7 +3384,7 @@ function Ha({ row: s, mode: a, error: l, onClose: n }) {
 }
 const Pa = 3;
 function Va({ form: s, forms: a, submissions: l, can: n, createForm: r = null }) {
-  t.useBreadcrumbs([{ label: "Submissions", href: D("cms/submissions") }, ...s ? [{ label: s.title }] : []]);
+  t.useBreadcrumbs([{ label: "Submissions", href: T("cms/submissions") }, ...s ? [{ label: s.title }] : []]);
   const [c, o] = _.useState(null), [i, h] = Q();
   if (!s || !l)
     return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-4", children: [
@@ -3396,7 +3396,7 @@ function Va({ form: s, forms: a, submissions: l, can: n, createForm: r = null })
           /* @__PURE__ */ e.jsx("p", { className: "cms:font-medium", children: "No forms yet" }),
           /* @__PURE__ */ e.jsx("p", { className: "cms:max-w-sm cms:text-sm cms:text-muted-foreground", children: r ? "Create a form, put it on a page, and what visitors send shows up here." : "Once someone creates a form and puts it on a page, what visitors send shows up here." })
         ] }),
-        r && /* @__PURE__ */ e.jsx(t.Button, { asChild: !0, children: /* @__PURE__ */ e.jsxs(y.Link, { href: D(r), children: [
+        r && /* @__PURE__ */ e.jsx(t.Button, { asChild: !0, children: /* @__PURE__ */ e.jsxs(y.Link, { href: r, children: [
           /* @__PURE__ */ e.jsx(q, {}),
           " Create a form"
         ] }) })
@@ -3404,7 +3404,7 @@ function Va({ form: s, forms: a, submissions: l, can: n, createForm: r = null })
     ] });
   const m = (l.data[0]?.rows ?? []).slice(0, Pa), b = (d) => i(
     "Delete this submission for good? It can't be restored.",
-    () => y.router.delete(D(`cms/submissions/${d.id}`), { preserveScroll: !0, onSuccess: () => o(null) })
+    () => y.router.delete(T(`cms/submissions/${d.id}`), { preserveScroll: !0, onSuccess: () => o(null) })
   );
   return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-6", children: [
     /* @__PURE__ */ e.jsx(y.Head, { title: `${s.title} submissions` }),
@@ -3412,11 +3412,11 @@ function Va({ form: s, forms: a, submissions: l, can: n, createForm: r = null })
       t.PageHeader,
       {
         title: s.title,
-        actions: l.total > 0 && n.export && /* @__PURE__ */ e.jsx(t.Button, { variant: "outline", asChild: !0, children: /* @__PURE__ */ e.jsxs("a", { href: D(`cms/forms/${s.handle}/submissions/export`), children: [
+        actions: l.total > 0 && n.export && /* @__PURE__ */ e.jsx(t.Button, { variant: "outline", asChild: !0, children: /* @__PURE__ */ e.jsxs("a", { href: T(`cms/forms/${s.handle}/submissions/export`), children: [
           /* @__PURE__ */ e.jsx(fs, {}),
           " Export CSV"
         ] }) }),
-        children: a.length > 1 && /* @__PURE__ */ e.jsxs(t.Select, { value: s.handle, onValueChange: (d) => y.router.get(D(`cms/forms/${d}/submissions`)), children: [
+        children: a.length > 1 && /* @__PURE__ */ e.jsxs(t.Select, { value: s.handle, onValueChange: (d) => y.router.get(T(`cms/forms/${d}/submissions`)), children: [
           /* @__PURE__ */ e.jsx(t.SelectTrigger, { className: "cms:w-56", "aria-label": "Form", children: /* @__PURE__ */ e.jsx(t.SelectValue, {}) }),
           /* @__PURE__ */ e.jsx(t.SelectContent, { children: a.map((d) => /* @__PURE__ */ e.jsxs(t.SelectItem, { value: d.handle, children: [
             d.title,
@@ -3503,7 +3503,7 @@ function Ra(s) {
   return /* @__PURE__ */ e.jsx(Oa, { ...s }, `${s.locale}:${s.version}:${JSON.stringify([s.values, s.seo, s.term.template])}`);
 }
 function Oa({ taxonomy: s, term: a, translated: l, fields: n, locale: r, locales: c, shared: o, sharedValues: i, values: h, seo: m, version: b, usedBy: d = [] }) {
-  const u = D(`cms/taxonomies/${s.handle}/terms`), v = D(`cms/terms/${a.id}/content`);
+  const u = T(`cms/taxonomies/${s.handle}/terms`), v = T(`cms/terms/${a.id}/content`);
   t.useBreadcrumbs([{ label: s.title, href: `${u}?locale=${r}` }, { label: a.title }]);
   const j = y.useForm({ locale: r, data: h, seo: m ?? {}, template: a.template ?? "", version: b }), p = j.errors, S = () => j.processing || j.put(v, { preserveScroll: !0 }), g = () => {
     j.transform(($) => ({ ...$, version: null })), j.put(v, { preserveScroll: !0 });
@@ -3516,12 +3516,12 @@ function Oa({ taxonomy: s, term: a, translated: l, fields: n, locale: r, locales
     leaveTo: `${u}?locale=${r}`,
     getUnsaved: () => j.isDirty ? { data: j.data.data, seo: j.data.seo, template: j.data.template } : null
   }), w = l && !N.readOnly, x = async ($) => {
-    const T = await N.loadKept($);
+    const D = await N.loadKept($);
     j.setData((C) => ({
       ...C,
-      data: T.data && typeof T.data == "object" ? T.data : C.data,
-      seo: T.seo && typeof T.seo == "object" ? T.seo : C.seo,
-      template: typeof T.template == "string" ? T.template : C.template
+      data: D.data && typeof D.data == "object" ? D.data : C.data,
+      seo: D.seo && typeof D.seo == "object" ? D.seo : C.seo,
+      template: typeof D.template == "string" ? D.template : C.template
     }));
   };
   return t.useUnsavedChanges(j.isDirty && !N.takenOver, w ? S : void 0), /* @__PURE__ */ e.jsxs("form", { onSubmit: ($) => {
@@ -3541,9 +3541,9 @@ function Oa({ taxonomy: s, term: a, translated: l, fields: n, locale: r, locales
           ] }) }),
           c.length > 1 && /* @__PURE__ */ e.jsxs(t.Select, { value: r, onValueChange: ($) => y.router.get(`${u}/${a.id}/edit`, { locale: $ }), children: [
             /* @__PURE__ */ e.jsx(t.SelectTrigger, { className: "cms:w-48", "aria-label": "Language", children: /* @__PURE__ */ e.jsx(t.SelectValue, {}) }),
-            /* @__PURE__ */ e.jsx(t.SelectContent, { children: c.map(($, T) => /* @__PURE__ */ e.jsxs(t.SelectItem, { value: $, children: [
+            /* @__PURE__ */ e.jsx(t.SelectContent, { children: c.map(($, D) => /* @__PURE__ */ e.jsxs(t.SelectItem, { value: $, children: [
               P($),
-              T === 0 ? " (main)" : ""
+              D === 0 ? " (main)" : ""
             ] }, $)) })
           ] }),
           w && /* @__PURE__ */ e.jsxs(t.Button, { type: "submit", disabled: j.processing, children: [
@@ -3573,7 +3573,7 @@ function Oa({ taxonomy: s, term: a, translated: l, fields: n, locale: r, locales
           shared: o,
           sharedValues: i,
           sharedNote: `Shared by all languages: edit it in ${P(c[0] ?? "en")}.`,
-          onChange: ($, T) => j.setData("data", { ...j.data.data, [$]: T })
+          onChange: ($, D) => j.setData("data", { ...j.data.data, [$]: D })
         }
       ),
       /* @__PURE__ */ e.jsx(t.CollapsibleCard, { title: "Search and sharing", titleClassName: "cms:text-base", storageKey: "cms:term:seo", hasErrors: ae(p, "seo"), children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !w, className: "cms:min-w-0", children: /* @__PURE__ */ e.jsx(se, { bare: !0, id: "seo", fields: Ae, value: j.data.seo, errors: W(p, "seo"), onChange: ($) => j.setData("seo", $) }) }) }),
@@ -3628,10 +3628,10 @@ function Ua({ taxonomy: s, taxonomies: a, terms: l, locales: n, locale: r, trash
       /* @__PURE__ */ e.jsx(y.Head, { title: "Terms" }),
       /* @__PURE__ */ e.jsx(t.PageHeader, { title: "Terms", description: "There are no taxonomies yet. Create one under Structure → Taxonomies (categories, tags…), then add its terms here." })
     ] });
-  const u = D(`cms/taxonomies/${s.handle}/terms`), v = (p, S) => {
+  const u = T(`cms/taxonomies/${s.handle}/terms`), v = (p, S) => {
     const g = S.map((N) => b[N].id);
     d(Xs(b, p, S)), y.router.post(
-      D("cms/terms/reorder"),
+      T("cms/terms/reorder"),
       { taxonomy: s.handle, ids: g, parent_id: p < 0 ? null : b[p].id },
       { preserveScroll: !0, preserveState: !0, onError: () => d(l) }
     );
@@ -3648,7 +3648,7 @@ function Ua({ taxonomy: s, taxonomies: a, terms: l, locales: n, locale: r, trash
         return /* @__PURE__ */ e.jsxs("div", { className: "cms:rounded-lg cms:border cms:border-border/70 cms:bg-card", children: [
           /* @__PURE__ */ e.jsx("div", { className: "cms:p-2", children: c ? /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-center cms:gap-3 cms:pl-1", children: [
             /* @__PURE__ */ e.jsx("span", { className: "cms:flex-1 cms:font-medium", children: w.title ?? w.fallback }),
-            /* @__PURE__ */ e.jsxs(t.Button, { variant: "outline", size: "sm", onClick: () => y.router.post(D(`cms/terms/${w.id}/restore`), {}, { preserveScroll: !0 }), children: [
+            /* @__PURE__ */ e.jsxs(t.Button, { variant: "outline", size: "sm", onClick: () => y.router.post(T(`cms/terms/${w.id}/restore`), {}, { preserveScroll: !0 }), children: [
               /* @__PURE__ */ e.jsx(xe, {}),
               " Restore"
             ] }),
@@ -3660,7 +3660,7 @@ function Ua({ taxonomy: s, taxonomies: a, terms: l, locales: n, locale: r, trash
                 className: "cms:text-destructive",
                 onClick: () => o(
                   `Delete "${w.fallback}" for good, in every language? Entries lose it.${Ge(w.usedBy)}`,
-                  () => y.router.delete(D(`cms/terms/${w.id}/force`), { preserveScroll: !0, data: (w.usedBy ?? []).length > 0 ? { force: 1 } : {} })
+                  () => y.router.delete(T(`cms/terms/${w.id}/force`), { preserveScroll: !0, data: (w.usedBy ?? []).length > 0 ? { force: 1 } : {} })
                 ),
                 children: [
                   /* @__PURE__ */ e.jsx(R, {}),
@@ -3671,7 +3671,7 @@ function Ua({ taxonomy: s, taxonomies: a, terms: l, locales: n, locale: r, trash
           ] }) : h === w.id && !N ? /* @__PURE__ */ e.jsx(
             Je,
             {
-              action: D(`cms/terms/${w.id}`),
+              action: T(`cms/terms/${w.id}`),
               method: "put",
               locale: r,
               terms: l,
@@ -3693,7 +3693,7 @@ function Ua({ taxonomy: s, taxonomies: a, terms: l, locales: n, locale: r, trash
               ] })
             ] }),
             /* @__PURE__ */ e.jsx(t.Button, { variant: "ghost", size: "icon", className: "cms:size-8", "aria-label": `Rename ${w.fallback}`, onClick: () => m(w.id), children: /* @__PURE__ */ e.jsx(Ls, {}) }),
-            s.pages && w.title !== null && /* @__PURE__ */ e.jsx(t.Button, { variant: "ghost", size: "icon", className: "cms:size-8", "aria-label": `Edit ${w.fallback}'s page`, asChild: !0, children: /* @__PURE__ */ e.jsx(y.Link, { href: D(`cms/taxonomies/${s.handle}/terms/${w.id}/edit`) + `?locale=${r}`, children: /* @__PURE__ */ e.jsx(Dt, {}) }) }),
+            s.pages && w.title !== null && /* @__PURE__ */ e.jsx(t.Button, { variant: "ghost", size: "icon", className: "cms:size-8", "aria-label": `Edit ${w.fallback}'s page`, asChild: !0, children: /* @__PURE__ */ e.jsx(y.Link, { href: T(`cms/taxonomies/${s.handle}/terms/${w.id}/edit`) + `?locale=${r}`, children: /* @__PURE__ */ e.jsx(Dt, {}) }) }),
             /* @__PURE__ */ e.jsx(
               t.Button,
               {
@@ -3703,7 +3703,7 @@ function Ua({ taxonomy: s, taxonomies: a, terms: l, locales: n, locale: r, trash
                 "aria-label": `Move ${w.fallback} to the trash`,
                 onClick: () => o(
                   `Move "${w.fallback}" to the trash, with the terms under it? It comes off the site; you can restore it.${Ge(w.usedBy)}`,
-                  () => y.router.delete(D(`cms/terms/${w.id}`), { preserveScroll: !0 })
+                  () => y.router.delete(T(`cms/terms/${w.id}`), { preserveScroll: !0 })
                 ),
                 children: /* @__PURE__ */ e.jsx(R, {})
               }
@@ -3728,7 +3728,7 @@ function Ua({ taxonomy: s, taxonomies: a, terms: l, locales: n, locale: r, trash
             /* @__PURE__ */ e.jsx(t.SelectContent, { children: n.map((p) => /* @__PURE__ */ e.jsx(t.SelectItem, { value: p, children: P(p) }, p)) })
           ] })
         ] }),
-        children: a.length > 1 && /* @__PURE__ */ e.jsxs(t.Select, { value: s.handle, onValueChange: (p) => y.router.get(D(`cms/taxonomies/${p}/terms`)), children: [
+        children: a.length > 1 && /* @__PURE__ */ e.jsxs(t.Select, { value: s.handle, onValueChange: (p) => y.router.get(T(`cms/taxonomies/${p}/terms`)), children: [
           /* @__PURE__ */ e.jsx(t.SelectTrigger, { className: "cms:w-48", "aria-label": "Taxonomy", children: /* @__PURE__ */ e.jsx(t.SelectValue, {}) }),
           /* @__PURE__ */ e.jsx(t.SelectContent, { children: a.map((p) => /* @__PURE__ */ e.jsx(t.SelectItem, { value: p.handle, children: p.title }, p.handle)) })
         ] })
@@ -3839,4 +3839,4 @@ lt({
     "Cms/Submissions/Index": Va
   }
 });
-t.registerCommandSource((s, a) => ht(s, a, D));
+t.registerCommandSource((s, a) => ht(s, a, T));

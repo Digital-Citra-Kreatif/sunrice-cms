@@ -25,6 +25,12 @@ final class MenuResource extends Resource
 {
     protected static string $model = Menu::class;
 
+    /** Content → Menus is at cms/menus. */
+    public static function path(): string
+    {
+        return 'menu-settings';
+    }
+
     public static function navigationLabel(): string
     {
         return 'Menu settings';

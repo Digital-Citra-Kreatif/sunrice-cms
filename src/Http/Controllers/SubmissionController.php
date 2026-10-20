@@ -14,7 +14,6 @@ use Sunrice\Admin\Security\SecurityLog;
 use Sunrice\Admin\Support\Csv;
 use Sunrice\Cms\Actions\Forms\DeleteSubmission;
 use Sunrice\Cms\Actions\Forms\SubmitForm;
-use Sunrice\Cms\Admin\FormResource;
 use Sunrice\Cms\Mail\SubmissionRows;
 use Sunrice\Cms\Models\Form;
 use Sunrice\Cms\Models\Submission;
@@ -38,7 +37,7 @@ final class SubmissionController
         return $first === null
             ? Inertia::render('Cms/Submissions/Index', ['form' => null, 'forms' => [], 'submissions' => null, 'can' => ['delete' => false, 'export' => false],
                 // No forms yet: where to make one, for those who may.
-                'createForm' => $request->user()?->can('cms.forms.create') === true ? FormResource::key().'/create' : null])
+                'createForm' => $request->user()?->can('cms.forms.create') === true ? route('sunrice.admin.resources.forms.create', [], false) : null])
             : redirect()->route('sunrice.admin.cms.submissions.index', $first->handle);
     }
 

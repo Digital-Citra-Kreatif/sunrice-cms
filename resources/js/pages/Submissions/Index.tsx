@@ -23,7 +23,7 @@ interface Props {
     forms: { handle: string; title: string; count: number }[];
     submissions: { data: Row[]; total: number; from: number | null; to: number | null; prev_page_url: string | null; next_page_url: string | null } | null;
     can: { delete: boolean; export: boolean };
-    /** No forms yet: where to create one (for those who may), relative to the panel. */
+    /** No forms yet: where to create one (for those who may). */
     createForm?: string | null;
 }
 
@@ -48,7 +48,7 @@ export default function SubmissionsIndex({ form, forms, submissions, can, create
                             {createForm ? 'Create a form, put it on a page, and what visitors send shows up here.' : 'Once someone creates a form and puts it on a page, what visitors send shows up here.'}
                         </p>
                     </div>
-                    {createForm && <Button asChild><Link href={adminUrl(createForm)}><Plus /> Create a form</Link></Button>}
+                    {createForm && <Button asChild><Link href={createForm}><Plus /> Create a form</Link></Button>}
                 </Card>
             </div>
         );
