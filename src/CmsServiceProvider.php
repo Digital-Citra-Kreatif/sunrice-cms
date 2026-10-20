@@ -77,6 +77,7 @@ final class CmsServiceProvider extends ServiceProvider
             $blade->component(View\Components\Entries::class, 'sunrice-cms::entries');
             $blade->component(View\Components\Terms::class, 'sunrice-cms::terms');
             $blade->component(View\Components\Search::class, 'sunrice-cms::search');
+            $blade->component(View\Components\EntryFilter::class, 'sunrice-cms::entry-filter');
             $blade->component(View\Components\Comments::class, 'sunrice-cms::comments');
         });
         if (! class_exists('Cms')) {

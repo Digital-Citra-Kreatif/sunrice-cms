@@ -228,6 +228,20 @@ final class EntryQuery
         return $this;
     }
 
+    /**
+     * Entries whose list field (a select with several choices, say) holds
+     * any of these values: whereContains('features', ['wifi', 'parking']).
+     *
+     * @param  list<int|string>  $values
+     */
+    public function whereContains(string $field, array $values): self
+    {
+        $field = self::handle($field);
+        $this->add(['whereContains', $field, $values], fn (Builder $q) => $this->whereFieldHolds($q, $field, $values));
+
+        return $this;
+    }
+
     /** Leave out these entries (the one shown, in a "related" list). */
     public function except(Entry|EntryTranslation|int ...$entries): self
     {
@@ -510,11 +524,11 @@ final class EntryQuery
     }
 
     /**
-     * Entries whose list field (entries, terms) holds any of these ids, in
-     * the main language.
+     * Entries whose list field (entries, terms, a select's choices) holds
+     * any of these ids or values, in the main language.
      *
      * @param  Builder<EntryTranslation>  $query
-     * @param  list<int>  $ids
+     * @param  list<int|string>  $ids
      */
     private function whereFieldHolds(Builder $query, string $field, array $ids): void
     {
