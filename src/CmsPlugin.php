@@ -224,6 +224,7 @@ final class CmsPlugin extends BasePlugin
             - Published versions: cms_entry_revisions (and "restore"). Manual order: cms_move_entry. SEO problems: cms_seo_audit.
             - Fields of collections and fieldsets: cms_get_blueprint and cms_save_blueprint.
             - Collections, taxonomies, global sets, menus, redirects and forms themselves are resources (list_records, save_record).
+            - Templates, if you have the view tools (list_views): an entry's page uses its own or its collection's template, else the view cms.{collection handle}, else cms.entry; listing pages cms.{handle}-listing or cms.listing; term pages cms.taxonomy-{handle} or cms.term; search cms.search. They get $entry, $title, $values (the fields), $collection, $locale and $preview; print rich text with {!! $values['body'] !!} and everything else with {{ }}. Put <x-sunrice-cms::seo /> in the layout's <head>. Fields' handles come from cms_get_blueprint.
             MD);
         // One editor at a time per entry or global set, per language (useEditLock).
         $panel->lockable('cms.entry', fn (string $id, string $locale, Authorizable $user): bool => ($entry = Entry::query()->whereHas('collection')->find($id)) !== null
