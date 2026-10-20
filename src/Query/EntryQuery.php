@@ -355,24 +355,29 @@ final class EntryQuery
         return is_int($count) ? $count : 0;
     }
 
-    /** @return LengthAwarePaginator<int, EntryTranslation> */
-    public function paginate(int $perPage = 10): LengthAwarePaginator
+    /**
+     * A page of entries; `$pageName` is the query string's page number
+     * (two lists on one page each take their own).
+     *
+     * @return LengthAwarePaginator<int, EntryTranslation>
+     */
+    public function paginate(int $perPage = 10, string $pageName = 'page'): LengthAwarePaginator
     {
         if (! $this->cached()) {
-            $paginator = $this->builder()->paginate($perPage);
+            $paginator = $this->builder()->paginate($perPage, ['*'], $pageName);
             $this->hydrate($paginator->getCollection());
 
             return $paginator;
         }
-        $page = Paginator::resolveCurrentPage();
+        $page = Paginator::resolveCurrentPage($pageName);
         /** @var array{ids: list<int>, total: int} $cached */
-        $cached = $this->remembered("page:{$perPage}:{$page}", function () use ($perPage, $page): array {
-            $paginator = $this->builder()->paginate($perPage, ['*'], 'page', $page);
+        $cached = $this->remembered("page:{$perPage}:{$page}", function () use ($perPage, $page, $pageName): array {
+            $paginator = $this->builder()->paginate($perPage, ['*'], $pageName, $page);
 
             return ['ids' => $paginator->getCollection()->pluck('id')->all(), 'total' => $paginator->total()];
         });
 
-        return new Paginated($this->hydrate($this->byIds($cached['ids'])), $cached['total'], $perPage, $page, ['path' => Paginator::resolveCurrentPath()]);
+        return new Paginated($this->hydrate($this->byIds($cached['ids'])), $cached['total'], $perPage, $page, ['path' => Paginator::resolveCurrentPath(), 'pageName' => $pageName]);
     }
 
     /**

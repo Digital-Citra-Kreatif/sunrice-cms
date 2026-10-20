@@ -23,7 +23,7 @@ use Sunrice\Cms\Site\Site;
  * a share image and noindex. Stored with its fields under the reserved
  * "seo" key, so it has drafts and revisions like the rest.
  *
- * @phpstan-type SeoTags array{title: string, description: string|null, image: string|null, noindex: bool, canonical: string|null, alternates: array<string, string>, type: string, site_name: string, locale: string, twitter: string|null}
+ * @phpstan-type SeoTags array{title: string, page_title: string, own_title: bool, description: string|null, image: string|null, noindex: bool, canonical: string|null, alternates: array<string, string>, type: string, site_name: string, locale: string, twitter: string|null}
  *
  * @api
  */
@@ -87,7 +87,7 @@ final class Seo
         $collection = $translation->entry->collection;
 
         return self::tags($seo, $home && ! is_string($seo['title'] ?? null) ? '' : $title, $preview, $preview ? null : $translation->url(),
-            self::alternates($translation), $translation->locale, ! $home && $collection->dated ? 'article' : 'website');
+            self::alternates($translation), $translation->locale, ! $home && $collection->dated ? 'article' : 'website', is_string($seo['title'] ?? null));
     }
 
     /**
@@ -113,7 +113,7 @@ final class Seo
         $url = $translation->url();
 
         return self::tags($seo, is_string($seo['title'] ?? null) ? $seo['title'] : $translation->title, false, $url === null ? null : self::paged($url, $page),
-            self::withDefault($alternates), $translation->locale, 'website');
+            self::withDefault($alternates), $translation->locale, 'website', is_string($seo['title'] ?? null));
     }
 
     /**
@@ -165,8 +165,8 @@ final class Seo
             $page?->term !== null => self::forTerm($page->term, $page->pageNumber),
             $page?->collection !== null => self::forListing($page->collection, $page->locale, $page->pageNumber),
             // Search results aren't pages to index.
-            $page?->type === Page::SEARCH => self::tags(['noindex' => true], $title ?? 'Search', false, null, [], $page->locale, 'website'),
-            default => self::tags([], $title ?? '', false, url()->current(), [], app()->getLocale(), 'website'),
+            $page?->type === Page::SEARCH => self::tags(['noindex' => true], $title ?? 'Search', false, null, [], $page->locale, 'website', $title !== null),
+            default => self::tags([], $title ?? '', false, url()->current(), [], app()->getLocale(), 'website', $title !== null),
         };
     }
 
@@ -175,7 +175,7 @@ final class Seo
      * @param  array<string, string>  $alternates
      * @return SeoTags
      */
-    private static function tags(array $seo, string $title, bool $preview, ?string $canonical, array $alternates, string $locale, string $type): array
+    private static function tags(array $seo, string $title, bool $preview, ?string $canonical, array $alternates, string $locale, string $type, bool $ownTitle = false): array
     {
         $site = app(SiteSettings::class);
         $imageId = is_int($seo['image'] ?? null) ? $seo['image'] : $site->image;
@@ -184,6 +184,8 @@ final class Seo
 
         return [
             'title' => $site->title($title),
+            'page_title' => $title,
+            'own_title' => $ownTitle,
             'description' => $description,
             'image' => $imageId !== null ? self::imageUrl($imageId) : null,
             'noindex' => $preview || ($seo['noindex'] ?? false) === true || $site->hidden(),
@@ -194,6 +196,38 @@ final class Seo
             'locale' => $locale,
             'twitter' => $site->twitterHandle(),
         ];
+    }
+
+    /**
+     * A template's say over the tags (<x-sunrice-cms::seo>'s attributes):
+     * `title` instead of the page's, `defaultTitle` when the page has no
+     * SEO title of its own, `description` instead of the page's, and
+     * `noindex` to keep this page out of search results. Titles and
+     * descriptions are taken as plain text.
+     *
+     * @param  SeoTags  $tags
+     * @return SeoTags
+     */
+    public static function adjust(array $tags, ?string $title = null, ?string $description = null, ?string $defaultTitle = null, bool $noindex = false): array
+    {
+        $title = self::plain($title) ?? ($tags['own_title'] ? null : self::plain($defaultTitle));
+        if ($title !== null) {
+            $tags['title'] = app(SiteSettings::class)->title($title);
+            $tags['page_title'] = $title;
+            $tags['own_title'] = true;
+        }
+        if (($description = self::plain($description)) !== null) {
+            $tags['description'] = Str::limit($description, 300);
+        }
+        $tags['noindex'] = $tags['noindex'] || $noindex;
+
+        return $tags;
+    }
+
+    /** Text without tags or runs of spaces; null when nothing is left. */
+    private static function plain(?string $text): ?string
+    {
+        return self::text($text === null ? null : html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5));
     }
 
     /**
