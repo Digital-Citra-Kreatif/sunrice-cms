@@ -12,8 +12,13 @@ return [
 
     // Their names, by code (['id' => 'Bahasa Indonesia']); others are
     // named in English ("Indonesian"). Settings → Languages, once saved,
-    // replaces both.
+    // replaces these.
     'locale_names' => [],
+
+    // What a language's addresses start with, by code (['en' => 'en',
+    // 'id' => 'indonesia']); unset: the main language at the plain
+    // addresses (/about), the others under their code (/id/tentang).
+    'locale_prefixes' => [],
 
     'site' => [
         // Serve entries at their collections' routes. The CMS's route is

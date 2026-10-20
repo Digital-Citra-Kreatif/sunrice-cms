@@ -100,7 +100,7 @@ class Collection extends Model
         }
         $locale ??= Locales::current();
 
-        return url(($locale === Locales::default() ? '' : '/'.$locale).$this->listing_route);
+        return url(Locales::prefix($locale).$this->listing_route);
     }
 
     /** @return HasMany<Entry, $this> */

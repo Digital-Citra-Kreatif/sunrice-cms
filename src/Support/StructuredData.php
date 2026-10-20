@@ -43,7 +43,7 @@ final class StructuredData
     {
         $site = app(SiteSettings::class);
         $locale = $page->locale ?? app()->getLocale();
-        $home = url($locale === Locales::default() ? '/' : '/'.$locale);
+        $home = url(Locales::prefix($locale) ?: '/');
         $publisher = ['@type' => $site->publisher === 'Person' ? 'Person' : 'Organization', '@id' => url('/').'#publisher', 'name' => $site->name(), 'url' => url('/')];
         if ($publisher['@type'] === 'Organization' && $site->logo !== null && ($logo = Media::query()->find($site->logo)?->url()) !== null) {
             $publisher['logo'] = ['@type' => 'ImageObject', 'url' => $logo];
@@ -121,7 +121,7 @@ final class StructuredData
 
         $nodes = [$node];
         if ($crumbs !== [] && ! $page->home) {
-            $items = [['Home', url($page->locale === Locales::default() ? '/' : '/'.$page->locale)], ...$crumbs];
+            $items = [['Home', url(Locales::prefix($page->locale) ?: '/')], ...$crumbs];
             $list = [];
             foreach ($items as $i => [$name, $item]) {
                 $list[] = ['@type' => 'ListItem', 'position' => $i + 1, 'name' => $name, 'item' => $item];

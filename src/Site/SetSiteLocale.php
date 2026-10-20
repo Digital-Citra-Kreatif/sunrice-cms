@@ -12,9 +12,9 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * On the site's routes, before anything is looked up: the app's locale is
  * the language of the address (/id/blog/kopi), so 404 pages, redirects
- * and the search page are in it too; and the main language's own prefix
- * (/en/about, from before the main language changed) goes to the plain
- * address, query string kept. The app's own routes come first and aren't
+ * and the search page are in it too; and while the main language is at
+ * the plain addresses, its code as a prefix (/en/about, from before the
+ * main language changed) goes to the plain address, query string kept. The app's own routes come first and aren't
  * touched.
  *
  * @internal
@@ -25,7 +25,9 @@ final class SetSiteLocale
     {
         $path = '/'.trim($request->path(), '/');
         $default = Locales::default();
-        if (in_array($request->method(), ['GET', 'HEAD'], true) && ($path === "/{$default}" || str_starts_with($path, "/{$default}/"))) {
+        // Only while the main language is at the plain addresses and no language uses its code as prefix.
+        $plain = Locales::prefix($default) === '' && ! in_array($default, Locales::segments(), true);
+        if ($plain && in_array($request->method(), ['GET', 'HEAD'], true) && ($path === "/{$default}" || str_starts_with($path, "/{$default}/"))) {
             $query = $request->getQueryString();
 
             return redirect()->to(url(substr($path, strlen($default) + 1) ?: '/').($query === null || $query === '' ? '' : "?{$query}"), 301);

@@ -113,8 +113,10 @@ The languages content is written in are set in **Settings → Languages** (`Sunr
 
 ```
 en: English
-id: Bahasa Indonesia
+id: Bahasa Indonesia | indonesia
 ```
+
+The part after `|` is the language's **address**, what its pages' addresses start with: left out, the main language is at the plain addresses (`/about`) and the others under their code (`/id/tentang`). Any of them can have its own, the main one too (`en: English | en` puts it at `/en/about`); each must be different. When every language has one, a plain address (`/about`) redirects to the main language's (`/en/about`). Without Settings, config `sunrice-cms.locale_prefixes` sets them. In code: `Locales::prefix('id')` (`/indonesia`), `Locales::segments()` and `Locales::split($path)`.
 
 Until they're saved there, `config/sunrice-cms.php` decides: `locales` (or `SUNRICE_LOCALES=id,en`), the first being the main one, and `locale_names` (`['id' => 'Bahasa Indonesia']`; others are named in English when PHP's intl extension is installed, else by their code). Without either, it's the app's locale. The main language's addresses are plain (`/about`), the others' start with their code (`/id/about`).
 

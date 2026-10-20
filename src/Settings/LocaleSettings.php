@@ -64,7 +64,8 @@ final class LocaleSettings extends Settings
             Pairs::make('languages')->label('Content languages')->labels('Code', 'Name')->maxLength(2000)->required()
                 ->suggest(self::KNOWN + Locales::names())->firstBadge('Main')->addLabel('Add a language')
                 ->rules([fn (string $attribute, mixed $value, Closure $fail) => self::check($value, $fail)])
-                ->help('The code is how addresses show the language (/id/…); its name is what editors see. The first is the main language, at the plain addresses. Once there is content, change the main one with php artisan sunrice:switch-main-language.'),
+                ->extra('Address', '/{key}', '/')
+                ->help('The code identifies the language, its name is what editors see, and the address is what the site\'s addresses start with: empty for the default, the plain addresses (/) for the main language and /code for the others. The first is the main language. Once there is content, change the main one with php artisan sunrice:switch-main-language.'),
         ]);
     }
 
@@ -73,7 +74,14 @@ final class LocaleSettings extends Settings
     {
         $values = parent::toArray();
         if (trim($this->languages) === '') {
-            $values['languages'] = self::lines(Locales::names());
+            $set = config('sunrice-cms.locale_prefixes', []);
+            $prefixes = [];
+            foreach (is_array($set) ? $set : [] as $code => $prefix) {
+                if (is_string($code) && is_string($prefix) && $prefix !== '') {
+                    $prefixes[$code] = $prefix;
+                }
+            }
+            $values['languages'] = self::lines(Locales::names(), $prefixes);
         }
 
         return $values;
@@ -101,6 +109,7 @@ final class LocaleSettings extends Settings
         $locales = [];
         foreach (preg_split('/\R/', $lines) ?: [] as $line) {
             [$code, $name] = array_pad(array_map(trim(...), explode(':', $line, 2)), 2, '');
+            $name = trim(explode('|', $name, 2)[0]);
             if (preg_match(self::CODE, $code) === 1 && ! array_key_exists($code, $locales)) {
                 $locales[$code] = $name !== '' ? $name : Locales::displayName($code);
             }
@@ -109,14 +118,45 @@ final class LocaleSettings extends Settings
         return $locales;
     }
 
+    /** An address prefix: lowercase letters, numbers and dashes, one segment ("en", "pt-br"). */
+    public const PREFIX = '/^[a-z0-9]+(?:-[a-z0-9]+)*$/';
+
+    /**
+     * The address prefixes set here, by code (without slashes); a language
+     * without one has the default (none for the main one, its code for the
+     * others: Locales::segmentsFor()).
+     *
+     * @return array<string, string>
+     */
+    public function prefixes(): array
+    {
+        return self::parsePrefixes($this->languages);
+    }
+
+    /** @return array<string, string> */
+    public static function parsePrefixes(string $lines): array
+    {
+        $prefixes = [];
+        foreach (preg_split('/\R/', $lines) ?: [] as $line) {
+            $code = trim(explode(':', $line, 2)[0]);
+            $prefix = str_contains($line, '|') ? trim(explode('|', $line, 2)[1], " /\t") : '';
+            if (preg_match(self::CODE, $code) === 1 && $prefix !== '' && ! array_key_exists($code, $prefixes)) {
+                $prefixes[$code] = $prefix;
+            }
+        }
+
+        return $prefixes;
+    }
+
     /**
      * Lines for a list of languages, to save: ['en' => 'English'] → "en: English".
      *
      * @param  array<string, string>  $locales
+     * @param  array<string, string>  $prefixes  address prefixes set, by code
      */
-    public static function lines(array $locales): string
+    public static function lines(array $locales, array $prefixes = []): string
     {
-        return implode("\n", array_map(fn (string $code, string $name): string => "{$code}: {$name}", array_keys($locales), $locales));
+        return implode("\n", array_map(fn (string $code, string $name): string => "{$code}: {$name}".(isset($prefixes[$code]) ? " | {$prefixes[$code]}" : ''), array_keys($locales), $locales));
     }
 
     /**
@@ -146,6 +186,21 @@ final class LocaleSettings extends Settings
         }
         if ($codes === []) {
             $fail('List at least one language.');
+
+            return;
+        }
+        $set = self::parsePrefixes(is_string($value) ? $value : '');
+        foreach (preg_split('/\R/', is_string($value) ? $value : '') ?: [] as $line) {
+            $prefix = str_contains($line, '|') ? trim(explode('|', $line, 2)[1], " /\t") : '';
+            if ($prefix !== '' && preg_match(self::PREFIX, $prefix) !== 1) {
+                $fail("\"{$prefix}\" can't be an address: use lowercase letters, numbers and dashes, like en or pt-br.");
+
+                return;
+            }
+        }
+        $segments = Locales::segmentsFor($codes, $set);
+        if (count(array_unique($segments)) !== count($segments)) {
+            $fail('Two languages have the same address. Give each its own.');
 
             return;
         }

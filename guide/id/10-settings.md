@@ -21,7 +21,7 @@ Pengaturan langsung berlaku begitu Anda mengeklik **Save**.
 
 ## Languages
 
-**Content languages** berisi bahasa tempat konten ditulis, satu baris untuk tiap bahasa: **kode** yang dipakai di alamat (`id`) dan **nama** yang dilihat editor (`Bahasa Indonesia`). **Add a language** menambah baris; mengetik kode akan menyarankan bahasa umum dan mengisi namanya. Tanda panah mengubah urutan, dan × menghapus baris.
+**Content languages** berisi bahasa tempat konten ditulis, satu baris untuk tiap bahasa: **kode** yang dipakai di alamat (`id`) dan **nama** yang dilihat editor (`Bahasa Indonesia`). **Add a language** menambah baris; mengetik kode akan menyarankan bahasa umum dan mengisi namanya. **Address** adalah awalan alamat halaman bahasa itu: kosongkan untuk yang biasa (bahasa utama di `/about`, yang lain di `/id/about`), atau isi sendiri, misalnya `en` agar bahasa utama juga di `/en/about`. Tanda panah mengubah urutan, dan × menghapus baris.
 
 Baris pertama adalah **bahasa utama** (bertanda *Main*), di alamat biasa (`/about`); bahasa lain diawali kodenya (`/id/about`). Panel menolak daftar kosong dan bahasa yang tercantum dua kali.
 

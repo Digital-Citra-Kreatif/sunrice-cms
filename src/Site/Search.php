@@ -58,7 +58,7 @@ final class Search
     {
         $locale ??= Locales::current();
 
-        return url(($locale === Locales::default() ? '' : '/'.$locale).'/'.self::path());
+        return url(Locales::prefix($locale).'/'.self::path());
     }
 
     /** @internal */
