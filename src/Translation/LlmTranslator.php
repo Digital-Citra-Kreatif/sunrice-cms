@@ -28,7 +28,7 @@ abstract class LlmTranslator implements Translator
         protected readonly int $timeout = 120,
     ) {
         if ($key === '') {
-            throw new RuntimeException(static::class.' needs an API key (see docs/cms/translation.md).');
+            throw new RuntimeException(static::class.' needs an API key (see docs/translation.md in sunrice/cms).');
         }
     }
 

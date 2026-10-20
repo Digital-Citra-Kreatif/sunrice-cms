@@ -229,8 +229,8 @@ final class CmsPlugin extends BasePlugin
             - SEO: cms_seo_audit, then fix with cms_save_entry ("seo") and update_media (alt text).
             - Templates: read cms_get_template_guide first, then cms_read_template / cms_write_template, and check pages with cms_render_page.
             MD);
-        // The CMS's developer docs (this repository's docs/cms) for Help → Docs and read_docs, and its user guide.
-        $panel->docs('CMS', dirname(__DIR__, 3).'/docs/cms');
+        // The CMS's developer docs (docs/) for Help → Docs and read_docs, and its user guide (guide/), shipped with the package.
+        $panel->docs('CMS', dirname(__DIR__).'/docs');
         $panel->guide('Website', dirname(__DIR__).'/guide');
         // One editor at a time per entry, global set or term page, per language (useEditLock).
         $panel->lockable('cms.entry', fn (string $id, string $locale, Authorizable $user): bool => ($entry = Entry::query()->whereHas('collection')->find($id)) !== null
