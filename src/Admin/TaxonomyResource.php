@@ -4,15 +4,22 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Admin;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Resources\Forms\CheckboxList;
 use Sunrice\Admin\Resources\Forms\Form;
 use Sunrice\Admin\Resources\Forms\Select;
 use Sunrice\Admin\Resources\Forms\TextInput;
 use Sunrice\Admin\Resources\Forms\Toggle;
 use Sunrice\Admin\Resources\Resource;
+use Sunrice\Admin\Resources\Tables\Action;
+use Sunrice\Admin\Resources\Tables\ActionFailed;
 use Sunrice\Admin\Resources\Tables\Column;
+use Sunrice\Admin\Resources\Tables\Filter;
 use Sunrice\Admin\Resources\Tables\Table;
+use Sunrice\Cms\Actions\Collections\RestoreDeleted;
 use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Taxonomy;
@@ -87,6 +94,21 @@ final class TaxonomyResource extends Resource
                 Column::make('handle')->searchable(),
                 Column::make('hierarchical')->label('Nested')->boolean(),
                 Column::make('collections.title')->label('Collections'),
+            ])
+            // Deleted ones keep their terms: list them, and bring them back.
+            ->filters([Filter::make('trashed')->label('Deleted')->options(['only' => 'Deleted'])->query(fn (Builder $query) => $query->withoutGlobalScope(SoftDeletingScope::class)->whereNotNull($query->qualifyColumn('deleted_at')))])
+            ->actions([
+                Action::make('restore')->trashed()->ability('delete')->handle(function (Model $taxonomy): string {
+                    if ($taxonomy instanceof Taxonomy) {
+                        try {
+                            app(RestoreDeleted::class)->taxonomy($taxonomy);
+                        } catch (ValidationException $e) {
+                            throw new ActionFailed(implode(' ', $e->validator->errors()->all()));
+                        }
+                    }
+
+                    return 'Restored.';
+                }),
             ])
             ->defaultSort('title');
     }
