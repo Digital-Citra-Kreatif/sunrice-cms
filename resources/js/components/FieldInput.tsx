@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react';
 import {
-    Badge, Button, Checkbox, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input, Label, MediaPickerInput,
+    Badge, Button, Checkbox, DatePicker, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input, Label, MediaPickerInput,
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Skeleton, Switch, Textarea,
 } from '@sunrice/admin-sdk/ui';
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
@@ -107,8 +107,8 @@ function Control({ field, value, onChange, errors, id, content }: Props) {
             );
         case 'date': {
             const time = field.config?.time === true;
-            return <Input id={id} type={time ? 'datetime-local' : 'date'} className="cms:max-w-64" aria-invalid={invalid} value={dateInputValue(value, time)}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(dateValueFromInput(e.target.value))} />;
+            return <DatePicker id={id} withTime={time} invalid={invalid} required={field.required === true} value={dateValueFromInput(dateInputValue(value, time))}
+                onChange={(picked: string | null) => onChange(dateValueFromInput(picked ?? ''))} />;
         }
         case 'select':
             return field.config?.multiple === true
