@@ -145,8 +145,8 @@ export default function EntriesIndex({ collection, collections, entries, query, 
                                 </TableCell>
                             </TableRow>
                         )}
-                        {entries.data.map((row) => (
-                            <TableRow key={row.id} data-state={selected.includes(row.id) ? 'selected' : undefined}>
+                        {entries.data.map((row, i) => (
+                            <TableRow key={row.id} className="sunrice-row-in" style={{ '--i': i } as React.CSSProperties} data-state={selected.includes(row.id) ? 'selected' : undefined}>
                                 {bulkActions.length > 0 && (
                                     <TableCell>
                                         <Checkbox aria-label={`Select ${row.title}`} checked={selected.includes(row.id)}
