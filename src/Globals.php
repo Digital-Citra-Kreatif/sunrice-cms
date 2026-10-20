@@ -24,14 +24,14 @@ final class Globals
     private array $hydrated = [];
 
     /**
-     * A global set's values in a language (the main one when left out),
-     * as templates get them; empty for an unknown set.
+     * A global set's values in a language (the current one when left out,
+     * as Cms::global()), as templates get them; empty for an unknown set.
      *
      * @return array<mixed>
      */
     public function get(string $handle, ?string $locale = null): array
     {
-        $locale ??= Locales::default();
+        $locale ??= Locales::current();
         $key = "{$handle}:{$locale}";
         if (! array_key_exists($key, $this->hydrated)) {
             $set = $this->sets()[$handle] ?? null;
