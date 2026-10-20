@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Sunrice\Cms\Http\Controllers;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Sunrice\Admin\Preferences\Preferences;
 use Sunrice\Admin\Security\SecurityLog;
 use Sunrice\Admin\Support\Csv;
 use Sunrice\Cms\Actions\Entries\BulkEntries;
@@ -16,12 +18,11 @@ use Sunrice\Cms\Actions\Entries\ForceDeleteEntry;
 use Sunrice\Cms\Actions\Entries\MoveEntry;
 use Sunrice\Cms\Actions\Entries\PutBackDraft;
 use Sunrice\Cms\Actions\Entries\SaveEntrySettings;
+use Sunrice\Cms\Admin\EntryList;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Support\Access;
-use Sunrice\Cms\Support\FieldText;
-use Sunrice\Cms\Support\Locales;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -50,31 +51,23 @@ final class EntryManageController
         });
     }
 
-    /** The collection's entries in the main language as CSV, a column per top-level field. Logged: it carries content out. */
-    public function export(Request $request, Collection $collection, SecurityLog $security): StreamedResponse
+    /**
+     * The entries list as CSV, with its filters, search, sort and language
+     * (not paged): the columns, and a column per top-level field. Logged:
+     * it carries content out.
+     */
+    public function export(Request $request, Collection $collection, SecurityLog $security, Preferences $preferences): StreamedResponse
     {
         $user = $request->user();
         $security->record('exported', $user instanceof Model ? $user : null, null, ['note' => $collection->title.' entries (CSV)']);
-        $fields = $collection->schema()->fields();
+        $list = new EntryList($collection, $request, $user instanceof Authenticatable ? $user : null, $preferences);
 
-        return response()->streamDownload(function () use ($collection, $fields): void {
+        return response()->streamDownload(function () use ($list): void {
             $out = fopen('php://output', 'w');
             if ($out === false) {
                 return;
             }
-            Csv::write($out, ['ID', 'Title', 'Slug', 'Status', 'Published', 'URL', 'Updated', ...array_map(FieldText::label(...), $fields)]);
-            EntryTranslation::query()->where('collection_id', $collection->id)->where('locale', Locales::default())
-                ->whereHas('entry', fn ($query) => $query->withoutTrashed())->with('entry.collection')
-                ->orderBy('id')->chunkById(500, function ($translations) use ($fields, $out): void {
-                    foreach ($translations as $translation) {
-                        $values = array_map(fn ($field): string => FieldText::text($translation->draft_data[$field->handle] ?? null, $field), $fields);
-                        Csv::write($out, [
-                            $translation->entry_id, $translation->draft_title, $translation->draft_slug, $translation->status(),
-                            $translation->published_at?->toDateTimeString(), $translation->isLive() ? $translation->url() : null,
-                            $translation->updated_at?->toDateTimeString(), ...$values,
-                        ]);
-                    }
-                });
+            $list->export(fn (array $row) => Csv::write($out, $row));
             fclose($out);
         }, $collection->handle.'-entries-'.now()->format('Y-m-d').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
@@ -115,7 +108,7 @@ final class EntryManageController
         $collection = $entry->collection->handle;
         $delete->handle($entry);
 
-        return redirect()->route('sunrice.admin.cms.entries.index', [$collection, 'trashed' => 1])->with('success', 'Deleted for good.');
+        return redirect()->route('sunrice.admin.cms.entries.index', [$collection, 'status' => 'trashed'])->with('success', 'Deleted for good.');
     }
 
     /** Puts back the draft a revision restore replaced, in this session. */
