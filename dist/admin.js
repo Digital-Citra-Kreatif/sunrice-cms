@@ -1849,11 +1849,11 @@ function Ae({ fields: t, values: a, onChange: l, errors: c, storageKey: r, share
   }) });
 }
 const Ee = [
-  { handle: "title", type: "text", label: "SEO title", instructions: "For search results and tabs. Empty: the title.", config: { max: 255 } },
-  { handle: "description", type: "textarea", label: "Description", instructions: "A sentence or two for search results and shared links.", config: { max: 500 } },
-  { handle: "image", type: "media", label: "Share image", instructions: "Shown when the page is shared.", config: { types: ["image"] } },
-  { handle: "noindex", type: "toggle", label: "Hide from search engines" },
-  { handle: "canonical", type: "text", label: "Canonical address", instructions: "Only when this page copies one elsewhere: that page's full address. Empty: this page.", config: { max: 2e3 } }
+  { handle: "title", type: "text", label: "Meta title", instructions: "For search results and the browser tab. Empty: the title.", config: { max: 255 } },
+  { handle: "description", type: "textarea", label: "Meta description", instructions: "A sentence or two for search results and shared links.", config: { max: 500 } },
+  { handle: "canonical", type: "text", label: "Canonical URL", instructions: "Only when this page copies one elsewhere: that page's full address. Empty: this page.", config: { max: 2e3 } },
+  { handle: "image", type: "media", label: "Open Graph image", instructions: "Shown when the page is shared.", config: { types: ["image"] } },
+  { handle: "noindex", type: "toggle", label: "Hide from search engines (noindex)" }
 ];
 function We(t) {
   return t.length === 0 ? "" : ` It's used by ${t.slice(0, 5).map((l) => l.label).join("; ")}${t.length > 5 ? ` and ${t.length - 5} more` : ""}: those links will show nothing.`;
@@ -2080,7 +2080,7 @@ function ra({ collection: t, fields: a, locales: l = [], shared: c = [], sharedV
             onChange: (B, K) => C.setData("data", { ...C.data.data, [B]: K })
           }
         ) }),
-        /* @__PURE__ */ e.jsx(s.CollapsibleCard, { title: "Search and sharing", titleClassName: "cms:text-base", storageKey: "cms:entry:seo", hasErrors: ae(z, "seo"), children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !U, className: "cms:min-w-0", children: /* @__PURE__ */ e.jsx(
+        /* @__PURE__ */ e.jsx(s.CollapsibleCard, { title: "SEO", description: "How this entry appears in search results and shared links.", titleClassName: "cms:text-base", storageKey: "cms:entry:seo", hasErrors: ae(z, "seo"), children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !U, className: "cms:min-w-0", children: /* @__PURE__ */ e.jsx(
           se,
           {
             bare: !0,
@@ -2819,7 +2819,7 @@ function Ca({ collection: t, fields: a, locale: l, locales: c, shared: r, values
         g.handle
       )) }) })
     ] }),
-    /* @__PURE__ */ e.jsx(s.CollapsibleCard, { title: "Search and sharing", titleClassName: "cms:text-base", storageKey: "cms:listing:seo", hasErrors: ae(u, "seo"), children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !b, className: "cms:min-w-0", children: /* @__PURE__ */ e.jsx(se, { bare: !0, id: "seo", fields: Ee, value: i.data.seo, errors: W(u, "seo"), onChange: (g) => i.setData("seo", g) }) }) })
+    /* @__PURE__ */ e.jsx(s.CollapsibleCard, { title: "SEO", description: "How the listing page appears in search results and shared links.", titleClassName: "cms:text-base", storageKey: "cms:listing:seo", hasErrors: ae(u, "seo"), children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !b, className: "cms:min-w-0", children: /* @__PURE__ */ e.jsx(se, { bare: !0, id: "seo", fields: Ee, value: i.data.seo, errors: W(u, "seo"), onChange: (g) => i.setData("seo", g) }) }) })
   ] });
 }
 function ka({ fieldsets: t }) {
@@ -3734,7 +3734,7 @@ function qa({ taxonomy: t, term: a, translated: l, fields: c, locale: r, locales
           onChange: (k, T) => b.setData("data", { ...b.data.data, [k]: T })
         }
       ),
-      /* @__PURE__ */ e.jsx(s.CollapsibleCard, { title: "Search and sharing", titleClassName: "cms:text-base", storageKey: "cms:term:seo", hasErrors: ae(x, "seo"), children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !$, className: "cms:min-w-0", children: /* @__PURE__ */ e.jsx(se, { bare: !0, id: "seo", fields: Ee, value: b.data.seo, errors: W(x, "seo"), onChange: (k) => b.setData("seo", k) }) }) }),
+      /* @__PURE__ */ e.jsx(s.CollapsibleCard, { title: "SEO", description: "How this term's page appears in search results and shared links.", titleClassName: "cms:text-base", storageKey: "cms:term:seo", hasErrors: ae(x, "seo"), children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !$, className: "cms:min-w-0", children: /* @__PURE__ */ e.jsx(se, { bare: !0, id: "seo", fields: Ee, value: b.data.seo, errors: W(x, "seo"), onChange: (k) => b.setData("seo", k) }) }) }),
       /* @__PURE__ */ e.jsxs(s.CollapsibleCard, { title: "Used by", titleClassName: "cms:text-base", storageKey: "cms:term:used-by", contentClassName: "cms:flex cms:flex-col cms:gap-1 cms:text-sm", children: [
         i.length === 0 && /* @__PURE__ */ e.jsx("p", { className: "cms:text-muted-foreground", children: "No content links here through its fields." }),
         i.map((k) => /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-baseline cms:gap-2", children: [

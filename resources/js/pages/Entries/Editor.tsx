@@ -278,7 +278,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                             onChange={(handle, value) => form.setData('data', { ...form.data.data, [handle]: value })} />
                     </TermLabels.Provider>
 
-                    <CollapsibleCard title="Search and sharing" titleClassName="cms:text-base" storageKey="cms:entry:seo" hasErrors={hasErrors(errors, 'seo')}>
+                    <CollapsibleCard title="SEO" description="How this entry appears in search results and shared links." titleClassName="cms:text-base" storageKey="cms:entry:seo" hasErrors={hasErrors(errors, 'seo')}>
                         <fieldset disabled={!writable} className="cms:min-w-0">
                             <Fields bare id="seo" fields={SEO_FIELDS} value={form.data.seo} errors={errorsAt(errors, 'seo')}
                                 onChange={(seo) => form.setData('seo', seo)} />

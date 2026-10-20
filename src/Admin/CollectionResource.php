@@ -11,6 +11,7 @@ use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Resources\Forms\CheckboxList;
 use Sunrice\Admin\Resources\Forms\Form;
 use Sunrice\Admin\Resources\Forms\NumberInput;
+use Sunrice\Admin\Resources\Forms\Section;
 use Sunrice\Admin\Resources\Forms\Select;
 use Sunrice\Admin\Resources\Forms\TextInput;
 use Sunrice\Admin\Resources\Forms\Toggle;
@@ -53,35 +54,44 @@ final class CollectionResource extends Resource
 
     public static function form(Form $form): Form
     {
+        $blueprints = fn (): array => Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all();
+
         return $form->schema([
-            TextInput::make('title')->required(),
-            ...HandleField::make('collection', 'Lowercase letters, digits and underscores, like "articles".',
-                'Careful: templates and code that name it (the cms.{handle} view, Cms::entries(\'…\'), entries fields limited to it) need the new handle too. Roles keep their permissions for it.'),
-            Select::make('blueprint')
-                ->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
-                ->help('The fields its entries have. Changing it keeps what entries already hold.'),
-            CheckboxList::make('blueprints')->label('Other blueprints')
-                ->options(fn (): array => Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
-                ->help('Blueprints an entry may switch to instead, in its Page settings (fields both have keep their values).'),
-            Toggle::make('dated')->label('Dated entries')->help('Entries show a date and list newest first, like articles.'),
-            Toggle::make('ordered')->label('Manual order')->help('Editors put entries in order (Move up, Move down), instead of by date or title.'),
-            Toggle::make('hierarchical')->label('Hierarchical')->help('Entries may have a parent entry, like pages under pages (for breadcrumbs and sub-menus; their URLs stay the same).'),
-            TextInput::make('route')->label('URL')->placeholder('/blog/{slug}')->unique()
-                ->rules([new RoutePatternRule])
-                ->help('Where entries are on the site. Empty: they have no page of their own. A related entry\'s slug goes in with its field: /projects/{project}/{slug}.'),
-            TextInput::make('listing_route')->label('Listing page URL')->placeholder('/blog')->unique()->maxLength(255)
-                ->rules(['regex:#^(/[a-z0-9\-_]+)+$#'])
-                ->help('A page listing the entries, like /blog (template cms.{handle}-listing, else cms.listing). Empty: none.'),
-            Select::make('listing_blueprint')->label('Listing page fields')
-                ->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
-                ->help('Fields of the listing page itself, like an intro, edited from the entries list.'),
-            NumberInput::make('per_page')->label('Entries per listing page')->integer()->min(1)->max(100)->default(10),
-            Toggle::make('comments')->label('Allow comments')->help('Visitors may comment on its entries (it needs a URL). Settings → Comments says how they\'re moderated.'),
-            Select::make('schema_type')->label('Structured data type')->options(StructuredData::ENTRY_TYPES)
-                ->help('What search engines are told its entries are. Empty: Article when entries are dated, else Web page.'),
-            TextInput::make('template')->placeholder('cms.article')
-                ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
-                ->help('The Blade view for its entries. Empty: cms.{handle}, else cms.entry.'),
+            Section::make('General')->columns(2)->schema([
+                TextInput::make('title')->required(),
+                ...HandleField::make('collection', 'How templates and code name it, like "articles". Filled in from the title.',
+                    'Careful: templates and code that name it (the cms.{handle} view, Cms::entries(\'…\'), entries fields limited to it) need the new handle too. Roles keep their permissions for it.'),
+                Select::make('blueprint')->options($blueprints())
+                    ->help('The fields its entries have. Changing it keeps what entries already hold.'),
+                CheckboxList::make('blueprints')->label('Other blueprints')->options($blueprints)->span(2)
+                    ->help('Blueprints an entry may switch to instead, in its Page settings (fields both have keep their values).'),
+            ]),
+            Section::make('Order')->description('How its entries are listed, on the site and in the admin.')->columns(2)->schema([
+                Toggle::make('dated')->label('Dated entries')->help('Entries show a date and list newest first, like articles.'),
+                Toggle::make('ordered')->label('Manual order')->help('Editors drag entries into order on its entries list, instead of by date or title.'),
+            ]),
+            Section::make('Pages and addresses')->description('Whether its entries are pages on the site, and how.')->columns(2)->schema([
+                TextInput::make('route')->label('Entry URL')->placeholder('/blog/{slug}')->unique()->span(2)
+                    ->rules([new RoutePatternRule])
+                    ->help('Empty: entries have no page of their own, like team members or FAQs that templates list. A related entry\'s slug goes in with its field: /projects/{project}/{slug}.'),
+                Toggle::make('hierarchical')->label('Hierarchical')->showWhen('route')
+                    ->help('Entries may have a parent entry, like pages under pages (for breadcrumbs and sub-menus).'),
+                Toggle::make('comments')->label('Allow comments')->showWhen('route')
+                    ->help('Visitors may comment on its entries. Settings → Comments says how they\'re moderated.'),
+                TextInput::make('template')->label('Entry template')->placeholder('cms.article')->showWhen('route')
+                    ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
+                    ->help('The Blade view for its entries. Empty: cms.{handle}, else cms.entry.'),
+                Select::make('schema_type')->label('Structured data type')->options(StructuredData::ENTRY_TYPES)->showWhen('route')
+                    ->help('What search engines are told its entries are. Empty: Article when entries are dated, else Web page.'),
+            ]),
+            Section::make('Listing page')->description('A page listing its entries, like /blog.')->columns(2)->schema([
+                TextInput::make('listing_route')->label('Listing page URL')->placeholder('/blog')->unique()->maxLength(255)->span(2)
+                    ->rules(['regex:#^(/[a-z0-9\-_]+)+$#'])
+                    ->help('Empty: none. Its template is cms.{handle}-listing, else cms.listing.'),
+                Select::make('listing_blueprint')->label('Listing page fields')->options($blueprints())->showWhen('listing_route')
+                    ->help('Fields of the listing page itself, like an intro, edited from the entries list.'),
+                NumberInput::make('per_page')->label('Entries per page')->integer()->min(1)->max(100)->default(10)->showWhen('listing_route'),
+            ]),
         ]);
     }
 

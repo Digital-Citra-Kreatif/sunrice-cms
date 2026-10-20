@@ -103,7 +103,7 @@ function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared,
                     <FieldSections disabled={!writable} fields={fields} values={form.data.data} errors={errors} storageKey={`cms:term:${taxonomy.handle}`}
                         shared={shared} sharedValues={sharedValues} sharedNote={`Shared by all languages: edit it in ${localeName(locales[0] ?? 'en')}.`}
                         onChange={(handle, value) => form.setData('data', { ...form.data.data, [handle]: value })} />
-                    <CollapsibleCard title="Search and sharing" titleClassName="cms:text-base" storageKey="cms:term:seo" hasErrors={hasErrors(errors, 'seo')}>
+                    <CollapsibleCard title="SEO" description="How this term's page appears in search results and shared links." titleClassName="cms:text-base" storageKey="cms:term:seo" hasErrors={hasErrors(errors, 'seo')}>
                         <fieldset disabled={!writable} className="cms:min-w-0">
                             <Fields bare id="seo" fields={SEO_FIELDS} value={form.data.seo} errors={errorsAt(errors, 'seo')} onChange={(next) => form.setData('seo', next)} />
                         </fieldset>

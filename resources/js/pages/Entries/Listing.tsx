@@ -101,7 +101,7 @@ function ListingEdit({ collection, fields, locale, locales, shared, values, seo,
                     </Card>
                 )}
             </fieldset>
-            <CollapsibleCard title="Search and sharing" titleClassName="cms:text-base" storageKey="cms:listing:seo" hasErrors={hasErrors(errors, 'seo')}>
+            <CollapsibleCard title="SEO" description="How the listing page appears in search results and shared links." titleClassName="cms:text-base" storageKey="cms:listing:seo" hasErrors={hasErrors(errors, 'seo')}>
                 <fieldset disabled={!writable} className="cms:min-w-0">
                     <Fields bare id="seo" fields={SEO_FIELDS} value={form.data.seo} errors={errorsAt(errors, 'seo')} onChange={(next) => form.setData('seo', next)} />
                 </fieldset>
