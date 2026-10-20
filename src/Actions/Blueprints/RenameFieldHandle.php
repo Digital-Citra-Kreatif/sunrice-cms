@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
+use Sunrice\Cms\Fields\DefinitionValidator;
+use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\Fieldsets;
 use Sunrice\Cms\Fields\FieldTypes;
 use Sunrice\Cms\Fields\Schema;
@@ -145,6 +147,95 @@ final class RenameFieldHandle
                 throw ValidationException::withMessages(['to' => "There already is a field \"{$handle}\" there."]);
             }
         }
+        if ($definition instanceof Fieldset) {
+            $this->validateIncluders($definition, $parent, $handle);
+        }
+    }
+
+    /**
+     * A fieldset's fields land in the levels that include it: the new
+     * handle must be free there too, in every blueprint and fieldset that
+     * includes it (through other includes too).
+     *
+     * @param  list<string>  $parent
+     *
+     * @throws ValidationException
+     */
+    private function validateIncluders(Fieldset $fieldset, array $parent, string $handle): void
+    {
+        $definitions = [
+            ...Blueprint::query()->orderBy('handle')->get()->all(),
+            ...Fieldset::query()->where('handle', '!=', $fieldset->handle)->orderBy('handle')->get()->all(),
+        ];
+        foreach ($definitions as $definition) {
+            $fields = $definition->fields();
+            if (! in_array($fieldset->handle, $this->includedThrough(DefinitionValidator::includedFieldsets($fields)), true)) {
+                continue;
+            }
+            $schema = $definition->schema();
+            foreach ($this->includedAt($fields, $fieldset->handle) as $level) {
+                $path = [...$level, ...$parent];
+                $siblings = $path === [] ? $schema->fields() : ($schema->field(implode('.', $path))->fields ?? []);
+                foreach ($siblings as $sibling) {
+                    if ($sibling->handle === $handle) {
+                        $kind = $definition instanceof Blueprint ? 'blueprint' : 'fieldset';
+                        $where = $path === [] ? '' : ' in "'.implode('.', $path).'"';
+                        throw ValidationException::withMessages(['to' => "The {$kind} \"{$definition->handle}\" includes the fieldset \"{$fieldset->handle}\" and already has a field \"{$handle}\"{$where}."]);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Fieldsets included, and those they include (at least as far as Schema expands them).
+     *
+     * @param  list<string>  $handles
+     * @return list<string>
+     */
+    private function includedThrough(array $handles, int $depth = 1): array
+    {
+        $all = $handles;
+        if ($depth < Schema::MAX_DEPTH) {
+            foreach ($handles as $handle) {
+                array_push($all, ...$this->includedThrough(DefinitionValidator::includedFieldsets(app(Fieldsets::class)->fields($handle) ?? []), $depth + 1));
+            }
+        }
+
+        return array_values(array_unique($all));
+    }
+
+    /**
+     * Where a fieldset's fields land in these fields once expanded: the
+     * path of each level that includes it, directly or through other
+     * includes (which expand into their own level).
+     *
+     * @param  list<Field>  $fields
+     * @param  list<string>  $path
+     * @param  list<string>  $including  fieldsets being gone through, as Schema expands them
+     * @return list<list<string>>
+     */
+    private function includedAt(array $fields, string $fieldset, array $path = [], array $including = []): array
+    {
+        $levels = [];
+        foreach ($fields as $field) {
+            if ($field->type === FieldsetInclude::TYPE) {
+                $included = $field->configString('fieldset');
+                if ($included === null || in_array($included, $including, true) || count($including) >= Schema::MAX_DEPTH) {
+                    continue; // left unexpanded
+                }
+                if ($included === $fieldset) {
+                    $levels[] = $path;
+                } else {
+                    array_push($levels, ...$this->includedAt(app(Fieldsets::class)->fields($included) ?? [], $fieldset, $path, [...$including, $included]));
+                }
+
+                continue;
+            }
+            array_push($levels, ...$this->includedAt($field->fields, $fieldset, [...$path, $field->handle], $including));
+        }
+
+        return $levels;
     }
 
     /**
