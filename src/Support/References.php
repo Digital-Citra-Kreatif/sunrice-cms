@@ -19,28 +19,31 @@ use Sunrice\Cms\Models\TermTranslation;
  * Keeps sunrice_references: which entries and terms an entry's draft and
  * live values, a term's values and a global set's values point at, per
  * language, read from the field definitions (Schema::references()) on
- * every save, one delete and one insert. And reads them back as "Used by".
+ * every save, one delete and one insert (Actions\References\RebuildReferences
+ * rebuilds them all). And reads them back as "Used by".
  *
  * @internal
  */
 final class References
 {
-    public static function entry(EntryTranslation $translation): void
+    /** Records what an entry's draft and live values point at; how many references (with $dryRun only counted). */
+    public static function entry(EntryTranslation $translation, bool $dryRun = false): int
     {
         $schema = $translation->entry->schema();
-        self::sync(ContentReference::ENTRY, $translation->entry_id, $translation->locale,
-            [...$schema->references($translation->draft_data), ...$schema->references($translation->data ?? [])]);
+
+        return self::sync(ContentReference::ENTRY, $translation->entry_id, $translation->locale,
+            [...$schema->references($translation->draft_data), ...$schema->references($translation->data ?? [])], $dryRun);
     }
 
-    public static function term(TermTranslation $translation): void
+    public static function term(TermTranslation $translation, bool $dryRun = false): int
     {
-        self::sync(ContentReference::TERM, $translation->term_id, $translation->locale,
-            $translation->term->taxonomy->schema()->references($translation->data ?? []));
+        return self::sync(ContentReference::TERM, $translation->term_id, $translation->locale,
+            $translation->term->taxonomy->schema()->references($translation->data ?? []), $dryRun);
     }
 
-    public static function global(GlobalValue $value): void
+    public static function global(GlobalValue $value, bool $dryRun = false): int
     {
-        self::sync(ContentReference::GLOBAL, $value->global_set_id, $value->locale, $value->globalSet->schema()->references($value->data));
+        return self::sync(ContentReference::GLOBAL, $value->global_set_id, $value->locale, $value->globalSet->schema()->references($value->data), $dryRun);
     }
 
     /** Forgets what a source points at: in one language, or in all (null). */
@@ -124,11 +127,11 @@ final class References
     }
 
     /**
-     * Replaces what a source in a language points at.
+     * Replaces what a source in a language points at; how many references.
      *
      * @param  list<Reference>  $references
      */
-    private static function sync(string $sourceType, int $sourceId, string $locale, array $references): void
+    private static function sync(string $sourceType, int $sourceId, string $locale, array $references, bool $dryRun): int
     {
         $rows = [];
         foreach ($references as $reference) {
@@ -140,11 +143,16 @@ final class References
                 ];
             }
         }
+        if ($dryRun) {
+            return count($rows);
+        }
         DB::transaction(function () use ($sourceType, $sourceId, $locale, $rows): void {
             self::forget($sourceType, $sourceId, $locale);
             if ($rows !== []) {
                 ContentReference::query()->insert(array_values($rows));
             }
         });
+
+        return count($rows);
     }
 }

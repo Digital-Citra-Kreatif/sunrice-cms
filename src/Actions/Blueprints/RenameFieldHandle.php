@@ -271,7 +271,7 @@ final class RenameFieldHandle
      * @param  Builder<TModel>  $query
      * @param  list<string>  $columns
      * @param  \Closure(mixed): mixed  $rename
-     * @param  (\Closure(TModel): void)|null  $after
+     * @param  (\Closure(TModel): mixed)|null  $after
      */
     private function each(Builder $query, array $columns, \Closure $rename, bool $dryRun, int &$count, ?\Closure $after = null): void
     {
