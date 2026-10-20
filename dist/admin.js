@@ -1577,7 +1577,7 @@ function sa({ kind: s = "blueprint", blueprint: a, fieldTypes: l, usedBy: n = []
     `Delete the ${r.toLowerCase()} "${a.title}"? Content keeps its values.`,
     () => y.router.delete(`${c}/${a.id}`, { preserveScroll: !0 })
   );
-  return /* @__PURE__ */ e.jsxs("form", { onSubmit: $, className: "cms:flex cms:max-w-4xl cms:flex-col cms:gap-6", children: [
+  return /* @__PURE__ */ e.jsxs("form", { onSubmit: $, className: "cms:flex cms:max-w-5xl cms:flex-col cms:gap-6", children: [
     /* @__PURE__ */ e.jsx(y.Head, { title: o }),
     h,
     /* @__PURE__ */ e.jsx(
@@ -2738,7 +2738,7 @@ function ya({ collection: s, fields: a, locale: l, locales: n, shared: r, values
   };
   return t.useUnsavedChanges(d.isDirty, j ? p : void 0), /* @__PURE__ */ e.jsxs("form", { onSubmit: (g) => {
     g.preventDefault(), p();
-  }, className: "cms:flex cms:max-w-3xl cms:flex-col cms:gap-6", children: [
+  }, className: "cms:flex cms:max-w-5xl cms:flex-col cms:gap-6", children: [
     /* @__PURE__ */ e.jsx(y.Head, { title: `${s.title}: listing page` }),
     /* @__PURE__ */ e.jsx(
       t.PageHeader,
@@ -2828,7 +2828,7 @@ function Ca({ set: s, fields: a, locale: l, locales: n, shared: r, values: c, ve
   };
   return t.useUnsavedChanges(m.isDirty && !u.takenOver, v ? j : void 0), /* @__PURE__ */ e.jsxs("form", { onSubmit: (g) => {
     g.preventDefault(), j();
-  }, className: "cms:flex cms:max-w-3xl cms:flex-col cms:gap-6", children: [
+  }, className: "cms:flex cms:max-w-5xl cms:flex-col cms:gap-6", children: [
     /* @__PURE__ */ e.jsx(y.Head, { title: s.title }),
     u.dialogs,
     /* @__PURE__ */ e.jsx(
@@ -2998,7 +2998,7 @@ function Ta({ menu: s, items: a, locales: l, limits: n, terms: r, listings: c, c
       }
     }
   );
-  return /* @__PURE__ */ e.jsxs("form", { onSubmit: x, className: "cms:flex cms:max-w-4xl cms:flex-col cms:gap-6", children: [
+  return /* @__PURE__ */ e.jsxs("form", { onSubmit: x, className: "cms:flex cms:max-w-5xl cms:flex-col cms:gap-6", children: [
     /* @__PURE__ */ e.jsx(y.Head, { title: s.title }),
     /* @__PURE__ */ e.jsx(
       t.PageHeader,
@@ -3523,7 +3523,7 @@ function Ra({ taxonomy: s, term: a, translated: l, fields: n, locale: r, locales
   };
   return t.useUnsavedChanges(j.isDirty && !N.takenOver, w ? S : void 0), /* @__PURE__ */ e.jsxs("form", { onSubmit: ($) => {
     $.preventDefault(), S();
-  }, className: "cms:flex cms:max-w-3xl cms:flex-col cms:gap-6", children: [
+  }, className: "cms:flex cms:max-w-5xl cms:flex-col cms:gap-6", children: [
     /* @__PURE__ */ e.jsx(y.Head, { title: a.title }),
     N.dialogs,
     /* @__PURE__ */ e.jsx(
@@ -3711,7 +3711,7 @@ function Oa({ taxonomy: s, taxonomies: a, terms: l, locales: n, locale: r, trash
       }
     }
   );
-  return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:max-w-4xl cms:flex-col cms:gap-6", children: [
+  return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-6", children: [
     /* @__PURE__ */ e.jsx(y.Head, { title: s.title }),
     i,
     /* @__PURE__ */ e.jsx(

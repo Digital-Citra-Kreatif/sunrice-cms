@@ -121,7 +121,7 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
     );
 
     return (
-        <div className="cms:flex cms:max-w-4xl cms:flex-col cms:gap-6">
+        <div className="cms:flex cms:flex-col cms:gap-6">
             <Head title={taxonomy.title} />
             {confirmDialog}
             <PageHeader

@@ -52,7 +52,7 @@ function ListingEdit({ collection, fields, locale, locales, shared, values, seo,
     useUnsavedChanges(form.isDirty, writable ? save : undefined);
 
     return (
-        <form onSubmit={(e) => { e.preventDefault(); save(); }} className="cms:flex cms:max-w-3xl cms:flex-col cms:gap-6">
+        <form onSubmit={(e) => { e.preventDefault(); save(); }} className="cms:flex cms:max-w-5xl cms:flex-col cms:gap-6">
             <Head title={`${collection.title}: listing page`} />
             <PageHeader
                 title={`${collection.title}: listing page`}

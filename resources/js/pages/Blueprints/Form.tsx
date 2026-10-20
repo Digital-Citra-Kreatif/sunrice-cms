@@ -63,7 +63,7 @@ export default function BlueprintForm({ kind = 'blueprint', blueprint, fieldType
         () => router.delete(`${base}/${blueprint.id}`, { preserveScroll: true }));
 
     return (
-        <form onSubmit={submit} className="cms:flex cms:max-w-4xl cms:flex-col cms:gap-6">
+        <form onSubmit={submit} className="cms:flex cms:max-w-5xl cms:flex-col cms:gap-6">
             <Head title={title} />
             {confirmDialog}
 

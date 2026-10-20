@@ -54,7 +54,7 @@ function GlobalsEdit({ set, fields, locale, locales, shared, values, version, ca
     useUnsavedChanges(form.isDirty && !lock.takenOver, writable ? save : undefined);
 
     return (
-        <form onSubmit={(e) => { e.preventDefault(); save(); }} className="cms:flex cms:max-w-3xl cms:flex-col cms:gap-6">
+        <form onSubmit={(e) => { e.preventDefault(); save(); }} className="cms:flex cms:max-w-5xl cms:flex-col cms:gap-6">
             <Head title={set.title} />
             {lock.dialogs}
             <PageHeader

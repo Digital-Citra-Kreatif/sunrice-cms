@@ -100,7 +100,7 @@ export default function MenuEdit({ menu, items: initial, locales, limits, terms,
     );
 
     return (
-        <form onSubmit={save} className="cms:flex cms:max-w-4xl cms:flex-col cms:gap-6">
+        <form onSubmit={save} className="cms:flex cms:max-w-5xl cms:flex-col cms:gap-6">
             <Head title={menu.title} />
             <PageHeader
                 title={menu.title}
