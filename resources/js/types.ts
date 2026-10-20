@@ -11,8 +11,8 @@ export interface FieldDefinition {
     fields?: FieldDefinition[];
     /** A flexible field's kinds of block, as the editor gets them. */
     blocks?: BlockType[];
-    /** A terms field's terms to choose from (nested ones indented). */
-    terms?: Option[];
+    /** A terms field's taxonomy (its terms load from cms/term-picker). */
+    taxonomy?: string | null;
     /** An entries field's collections to choose from (handles). */
     collections?: string[];
 }

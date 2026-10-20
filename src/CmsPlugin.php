@@ -34,6 +34,7 @@ use Sunrice\Cms\Http\Controllers\TermController;
 use Sunrice\Cms\Http\Middleware\AuthorizeContent;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\GlobalSet;
+use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Settings\CodeSettings;
 use Sunrice\Cms\Settings\CommentSettings;
 use Sunrice\Cms\Settings\SiteSettings;
@@ -161,6 +162,7 @@ final class CmsPlugin extends BasePlugin
                 Route::post('taxonomies/{taxonomy:handle}/terms', 'store')->name('store');
                 Route::put('terms/{term}', 'update')->name('update');
                 Route::post('terms/{term}/move', 'move')->name('move');
+                Route::post('terms/reorder', 'reorder')->name('reorder');
                 Route::delete('terms/{term}', 'destroy')->name('destroy');
                 Route::post('terms/{term}/restore', 'restore')->name('restore')->withTrashed();
                 Route::delete('terms/{term}/force', 'forceDelete')->name('force-delete')->withTrashed();
@@ -170,6 +172,7 @@ final class CmsPlugin extends BasePlugin
             Route::prefix('cms')->name('cms.entries.')->controller(EntryController::class)->group(function (): void {
                 Route::get('entries', 'home')->name('home')->middleware(AuthorizeContent::class.':entries,view');
                 Route::get('entry-picker', 'picker')->name('picker')->middleware(AuthorizeContent::class.':entries,view');
+                Route::get('term-picker', 'termPicker')->name('term-picker')->middleware(AuthorizeContent::class.':entries,view');
                 Route::get('collections/{collection:handle}/entries', 'index')->name('index')->middleware(AuthorizeContent::class.':entries,view');
                 Route::get('collections/{collection:handle}/entries/create', 'create')->name('create')->middleware(AuthorizeContent::class.':entries,create');
                 Route::post('collections/{collection:handle}/entries', 'store')->name('store')->middleware(AuthorizeContent::class.':entries,create');
@@ -193,6 +196,7 @@ final class CmsPlugin extends BasePlugin
                 Route::post('entries/{entry}/duplicate', 'duplicate')->name('duplicate')->middleware(AuthorizeContent::class.':entries,create');
                 Route::put('entries/{entry}/settings', 'settings')->name('settings')->middleware(AuthorizeContent::class.':entries,update');
                 Route::post('entries/{entry}/move', 'move')->name('move')->middleware(AuthorizeContent::class.':entries,update');
+                Route::post('entries/reorder', 'reorder')->name('reorder')->middleware(AuthorizeContent::class.':entries,update');
                 Route::delete('entries/{entry}/force', 'forceDelete')->name('force-delete')->middleware(AuthorizeContent::class.':entries,delete')->withTrashed();
                 Route::post('entry-translations/{translation}/undo-restore', 'undoRestore')->name('undo-restore')->middleware(AuthorizeContent::class.':entries,update');
             });
@@ -210,11 +214,13 @@ final class CmsPlugin extends BasePlugin
             - Site-wide values: cms_get_globals and cms_save_globals. Form submissions: cms_list_submissions.
             - Collections, taxonomies, global sets, menus, redirects and forms themselves are resources (list_records, save_record).
             MD);
-        // One editor at a time per entry or global set, per language (useEditLock).
+        // One editor at a time per entry, global set or term page, per language (useEditLock).
         $panel->lockable('cms.entry', fn (string $id, string $locale, Authorizable $user): bool => ($entry = Entry::query()->whereHas('collection')->find($id)) !== null
             && Access::entries($user, 'update', $entry->collection, $entry, $locale));
         $panel->lockable('cms.global', fn (string $id, string $locale, Authorizable $user): bool => $user->can('cms.globals.update')
             && GlobalSet::query()->whereKey($id)->exists());
+        $panel->lockable('cms.term', fn (string $id, string $locale, Authorizable $user): bool => ($term = Term::query()->whereHas('taxonomy')->find($id)) !== null
+            && Access::terms($user, $term->taxonomy));
         // Deleting a user: what happens to their entries and comments (DeleteUser).
         $panel->userContent('cms.entries', 'entries',
             fn (Model $user): int => ReleaseUserContent::entries($user),

@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Sunrice\Cms\Actions\Entries\CreateEntry;
@@ -20,10 +21,15 @@ use Sunrice\Cms\Actions\Entries\RestoreRevision;
 use Sunrice\Cms\Actions\Entries\SaveDraft;
 use Sunrice\Cms\Actions\Entries\TrashEntry;
 use Sunrice\Cms\Actions\Entries\UnpublishEntry;
+use Sunrice\Cms\Fields\Reference;
+use Sunrice\Cms\Fields\Types\TermsField;
 use Sunrice\Cms\Models\Collection;
+use Sunrice\Cms\Models\Comment;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Revision;
+use Sunrice\Cms\Models\Taxonomy;
+use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\Seo;
@@ -76,6 +82,7 @@ final class EntryController
                 'updatedAt' => $translation->updated_at?->toIso8601String(),
                 'locales' => self::locales($translation->entry),
                 'parent' => $translation->entry->parent?->mainTranslation()?->draft_title,
+                'parentId' => $translation->entry->parent_id,
             ]);
 
         return Inertia::render('Cms/Entries/Index', [
@@ -123,6 +130,31 @@ final class EntryController
             'collection' => $translation->entry->collection->title,
             'status' => $translation->status(),
         ], $items)]);
+    }
+
+    /**
+     * For terms fields: a taxonomy's terms in tree order (or those whose
+     * title matches "q"), or some by id ("ids"), main-language titles.
+     */
+    public function termPicker(Request $request): JsonResponse
+    {
+        /** @var array{taxonomy: string, q?: string|null, ids?: list<int>} $input */
+        $input = $request->validate([
+            'taxonomy' => ['required', 'string', 'max:64'],
+            'q' => ['nullable', 'string', 'max:200'],
+            'ids' => ['nullable', 'array', 'max:500'],
+            'ids.*' => ['integer'],
+        ]);
+        $taxonomy = Taxonomy::query()->where('handle', $input['taxonomy'])->first() ?? abort(404);
+        if (isset($input['ids'])) {
+            $ids = array_map(intval(...), $input['ids']);
+            $found = Term::query()->whereKey($ids)->where('taxonomy_id', $taxonomy->id)->pluck('id')->all();
+            $labels = TermsField::labels(array_values(array_filter($ids, fn (int $id): bool => in_array($id, $found, true))));
+
+            return response()->json(['items' => array_map(fn (int $id, string $label): array => ['id' => $id, 'label' => $label, 'depth' => 0], array_keys($labels), $labels), 'more' => false]);
+        }
+
+        return response()->json(TermsField::options($taxonomy, trim($input['q'] ?? '')));
     }
 
     public function create(Request $request, Collection $collection): Response
@@ -176,15 +208,57 @@ final class EntryController
             'values' => ['title' => $translation->draft_title, 'slug' => $translation->draft_slug, 'data' => $translation->draft_data, 'seo' => $translation->draft_data[Seo::KEY] ?? null],
             // Every language's: the parent and its own Blade view.
             'settings' => ['parentId' => $entry->parent_id, 'template' => $entry->template, 'commentsClosed' => $entry->comments_closed],
-            'revisions' => $translation->revisions()->limit(20)->get()->map(fn (Revision $revision): array => [
+            // Loaded after the page shows (Inertia's deferred props): the sidebar's lists.
+            'revisions' => Inertia::defer(fn (): array => $translation->revisions()->limit(20)->get()->map(fn (Revision $revision): array => [
                 'id' => $revision->id,
                 'title' => $revision->title,
                 'createdAt' => $revision->created_at?->toIso8601String(),
-            ])->all(),
+            ])->all()),
+            'comments' => $collection->comments && ($request->user()?->can('cms.comments.view') ?? false)
+                ? Inertia::defer(fn (): array => self::comments($entry, $request))
+                : null,
+            // The chosen terms' titles, so terms fields show them without asking (the options come from cms/term-picker).
+            'termLabels' => TermsField::labels(array_map(fn (Reference $reference): int => $reference->id, array_filter(
+                $collection->schema()->references([...$translation->draft_data, ...($main === null ? [] : array_intersect_key($main->draft_data, array_flip($shared)))]),
+                fn (Reference $reference): bool => $reference->type === Reference::TERM,
+            ))),
             // A revision restore this session can be undone.
             'undoRestore' => $request->session()->has(EntryManageController::undoKey($translation)) ? $translation->id : null,
             'can' => self::can($request, $collection, $entry, $translation->locale),
         ]);
+    }
+
+    /**
+     * The entry's comments for the editor's sidebar: counts by status and
+     * the latest five (not spam, not in the trash).
+     *
+     * @return array{counts: array{pending: int, approved: int, spam: int}, latest: list<array<string, mixed>>, canModerate: bool}
+     */
+    private static function comments(Entry $entry, Request $request): array
+    {
+        $counts = ['pending' => 0, 'approved' => 0, 'spam' => 0];
+        foreach (Comment::query()->where('entry_id', $entry->id)->toBase()->selectRaw('status, count(*) as total')->groupBy('status')->get() as $row) {
+            if (is_string($row->status) && isset($counts[$row->status])) {
+                $counts[$row->status] = is_numeric($row->total) ? (int) $row->total : 0;
+            }
+        }
+        $latest = Comment::query()->where('entry_id', $entry->id)->whereIn('status', [Comment::PENDING, Comment::APPROVED])
+            ->latest()->orderByDesc('id')->limit(5)->get();
+        Comment::withAuthors($latest);
+
+        return [
+            'counts' => $counts,
+            'latest' => array_values(array_map(fn (Comment $comment): array => [
+                'id' => $comment->id,
+                'author' => $comment->authorName(),
+                'excerpt' => Str::limit($comment->body, 160),
+                'status' => $comment->status,
+                'locale' => $comment->locale,
+                'reply' => $comment->parent_id !== null,
+                'createdAt' => $comment->created_at?->toIso8601String(),
+            ], $latest->all())),
+            'canModerate' => $request->user()?->can('cms.comments.moderate') ?? false,
+        ];
     }
 
     /** Saves the draft; with "publish", publishes it too (needs cms.entries.publish). */
@@ -278,9 +352,10 @@ final class EntryController
 
     /**
      * The site's languages with the entry's state in each: its status, or
-     * null where it has no translation yet.
+     * null where it has no translation yet, and whether the main language
+     * changed since it was translated.
      *
-     * @return list<array{code: string, main: bool, status: string|null}>
+     * @return list<array{code: string, main: bool, status: string|null, outdated: bool}>
      */
     private static function locales(Entry $entry): array
     {
@@ -290,6 +365,7 @@ final class EntryController
             'code' => $code,
             'main' => $main?->locale === $code,
             'status' => ($translation = $entry->translation($code)) === null ? null : $translation->status(),
+            'outdated' => $translation?->isOutdated() ?? false,
         ], Locales::all());
     }
 

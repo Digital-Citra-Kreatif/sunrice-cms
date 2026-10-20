@@ -2,10 +2,9 @@ import * as React from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
-import { Button, Card, CardContent, KeptEditsNotice, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs, useEditLock, useUnsavedChanges, ViewingNotice } from '@sunrice/admin-sdk/ui';
-import { FieldInput } from '@/components/FieldInput.tsx';
+import { Button, KeptEditsNotice, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs, useEditLock, useUnsavedChanges, ViewingNotice } from '@sunrice/admin-sdk/ui';
+import { FieldSections } from '@/components/FieldSections.tsx';
 import { VersionConflict } from '@/components/VersionConflict.tsx';
-import { errorsAt } from '@/lib/builder.ts';
 import { localeName } from '@/lib/entries.ts';
 import type { FieldDefinition } from '@/types.ts';
 
@@ -85,24 +84,15 @@ function GlobalsEdit({ set, fields, locale, locales, shared, values, version, ca
             {fields.length === 0 ? (
                 <p className="cms:text-muted-foreground">This global set has no fields: choose a blueprint for it under Structure → Global sets.</p>
             ) : (
-                <fieldset disabled={!writable} className="cms:flex cms:flex-col cms:gap-4">
+                <div className="cms:flex cms:flex-col cms:gap-4">
                     <ViewingNotice by={lock.viewingBy} />
                     <VersionConflict message={errors.version} processing={form.processing} onSaveMine={saveMine} />
                     <KeptEditsNotice kept={lock.kept} disabled={!writable} onLoad={(id: number) => void loadKept(id)} onDiscard={(id: number) => void lock.discardKept(id)} />
-                    <Card>
-                        <CardContent className="cms:flex cms:flex-col cms:gap-6">
-                            {fields.map((field) => shared.includes(field.handle) ? (
-                                <fieldset key={field.handle} disabled className="cms:flex cms:flex-col cms:gap-1">
-                                    <FieldInput id={`data-${field.handle}`} field={field} content value={values[field.handle]} errors={{}} onChange={() => {}} />
-                                    <p className="cms:text-sm cms:text-muted-foreground">Shared by all languages: edit it in {mainLocale ? localeName(mainLocale) : 'the main language'}.</p>
-                                </fieldset>
-                            ) : (
-                                <FieldInput key={field.handle} id={`data-${field.handle}`} field={field} content value={form.data.data[field.handle]}
-                                    errors={errorsAt(errors, `data.${field.handle}`)} onChange={(value) => form.setData('data', { ...form.data.data, [field.handle]: value })} />
-                            ))}
-                        </CardContent>
-                    </Card>
-                </fieldset>
+                    <FieldSections disabled={!writable} fields={fields} values={form.data.data} errors={errors} storageKey={`cms:global:${set.handle}`}
+                        shared={shared} sharedValues={values}
+                        sharedNote={`Shared by all languages: edit it in ${mainLocale ? localeName(mainLocale) : 'the main language'}.`}
+                        onChange={(handle, value) => form.setData('data', { ...form.data.data, [handle]: value })} />
+                </div>
             )}
         </form>
     );

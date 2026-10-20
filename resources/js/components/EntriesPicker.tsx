@@ -1,8 +1,7 @@
 import * as React from 'react';
-import { ArrowDown, ArrowUp, Search, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
-import { Badge, Button, Input } from '@sunrice/admin-sdk/ui';
-import { move } from '@/lib/builder.ts';
+import { Badge, Button, Input, SortableHandle, SortableList } from '@sunrice/admin-sdk/ui';
 import { pickerQuery } from '@/lib/values.ts';
 import { type EntryStatus, statusLabel } from '@/lib/entries.ts';
 
@@ -26,7 +25,7 @@ async function fetchItems(params: { ids?: number[]; search?: string; collections
     return ((await response.json()) as { items: Item[] }).items;
 }
 
-/** Choose entries by searching their titles; several are kept in order. */
+/** Choose entries by searching their titles; several are kept in the order they're dragged into. */
 export function EntriesPicker({ id, value, multiple, max, collections, invalid, onChange }: Props) {
     const ids = value === null ? [] : Array.isArray(value) ? value : [value];
     const [known, setKnown] = React.useState<Record<number, Item>>({});
@@ -64,28 +63,21 @@ export function EntriesPicker({ id, value, multiple, max, collections, invalid, 
     return (
         <div className="cms:flex cms:flex-col cms:gap-2">
             {ids.length > 0 && (
-                <ul className="cms:flex cms:flex-col cms:gap-1">
-                    {ids.map((entryId, index) => {
+                <SortableList items={ids} getId={(entryId) => entryId} onReorder={(next) => set(next)} disabled={!multiple} className="cms:gap-1">
+                    {(entryId, { handle }) => {
                         const item = known[entryId];
                         return (
-                            <li key={entryId} className="cms:flex cms:items-center cms:gap-2 cms:rounded-md cms:border cms:px-3 cms:py-1.5 cms:text-sm">
-                                <span className="cms:min-w-0 cms:flex-1 cms:truncate">{item ? item.title : `Entry #${entryId}`}</span>
+                            <div className="cms:flex cms:items-center cms:gap-2 cms:rounded-md cms:border cms:bg-card cms:px-2 cms:py-1 cms:text-sm">
+                                {multiple && <SortableHandle {...handle} label={`Move ${item?.title ?? entryId}`} />}
+                                <span className={`cms:min-w-0 cms:flex-1 cms:truncate ${multiple ? '' : 'cms:pl-1'}`}>{item ? item.title : `Entry #${entryId}`}</span>
                                 {item && <span className="cms:text-xs cms:text-muted-foreground">{item.collection}</span>}
                                 {item && <Badge variant={item.status === 'published' ? 'default' : 'secondary'}>{statusLabel(item.status)}</Badge>}
-                                {multiple && (
-                                    <>
-                                        <Button type="button" variant="ghost" size="icon" className="cms:size-7" aria-label={`Move ${item?.title ?? entryId} up`}
-                                            disabled={index === 0} onClick={() => set(move(ids, index, -1))}><ArrowUp /></Button>
-                                        <Button type="button" variant="ghost" size="icon" className="cms:size-7" aria-label={`Move ${item?.title ?? entryId} down`}
-                                            disabled={index === ids.length - 1} onClick={() => set(move(ids, index, 1))}><ArrowDown /></Button>
-                                    </>
-                                )}
                                 <Button type="button" variant="ghost" size="icon" className="cms:size-7" aria-label={`Remove ${item?.title ?? entryId}`}
                                     onClick={() => set(ids.filter((other) => other !== entryId))}><X /></Button>
-                            </li>
+                            </div>
                         );
-                    })}
-                </ul>
+                    }}
+                </SortableList>
             )}
             {!full && (multiple || ids.length === 0) && (
                 <div className="cms:relative cms:max-w-md">

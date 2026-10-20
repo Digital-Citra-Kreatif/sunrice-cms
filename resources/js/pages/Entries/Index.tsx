@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Download, LayoutList, Plus, Search } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Download, LayoutList, Plus, Search } from 'lucide-react';
 import { useConfirm } from '@/components/Confirm.tsx';
+import { EntryReorderList } from '@/components/EntryReorderList.tsx';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
     Badge, Button, Card, Checkbox, Input, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableBody, TableCell,
@@ -17,8 +18,9 @@ interface Row {
     publishedAt: string | null;
     updatedAt: string | null;
     locales: EntryLocale[];
-    /** The parent's title, in hierarchical collections. */
+    /** The parent's title and id, in hierarchical collections. */
     parent?: string | null;
+    parentId?: number | null;
 }
 
 interface Props {
@@ -35,6 +37,7 @@ export default function EntriesIndex({ collection, collections, entries, query, 
     const base = collection ? adminUrl(`cms/collections/${collection.handle}/entries`) : '';
     const [selected, setSelected] = React.useState<number[]>([]);
     const [confirm, confirmDialog] = useConfirm();
+    const [reordering, setReordering] = React.useState(false);
     React.useEffect(() => setSelected([]), [entries]);
     const bulkActions = query.trashed
         ? (can?.delete ? [{ action: 'restore', label: 'Restore' }, { action: 'delete', label: 'Delete for good', danger: true }] : [])
@@ -111,6 +114,11 @@ export default function EntriesIndex({ collection, collections, entries, query, 
                 <Button variant={query.trashed ? 'secondary' : 'ghost'} size="sm" onClick={() => visit({ trashed: !query.trashed })}>
                     {query.trashed ? 'Back to entries' : 'Trash'}
                 </Button>
+                {collection.ordered && can?.update && !query.trashed && !query.search && entries.data.length > 1 && (
+                    <Button variant={reordering ? 'secondary' : 'ghost'} size="sm" aria-pressed={reordering} onClick={() => setReordering(!reordering)}>
+                        <ArrowUpDown /> {reordering ? 'Done' : 'Reorder'}
+                    </Button>
+                )}
                 {selected.length > 0 && bulkActions.length > 0 && (
                     <div role="toolbar" aria-label="Selected entries" className="cms:ml-auto cms:flex cms:flex-wrap cms:items-center cms:gap-2">
                         <span className="cms:text-sm cms:text-muted-foreground">{selected.length} selected</span>
@@ -122,7 +130,7 @@ export default function EntriesIndex({ collection, collections, entries, query, 
             </div>
             {confirmDialog}
 
-            <Card className="cms:py-0">
+            {reordering && collection.ordered && !query.trashed && !query.search ? <EntryReorderList collection={collection.handle} rows={entries.data} /> : <Card className="cms:py-0">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -162,9 +170,9 @@ export default function EntriesIndex({ collection, collections, entries, query, 
                                         <Badge variant={row.status === 'published' ? 'default' : 'secondary'}>{statusLabel(row.status)}</Badge>
                                         {row.locales.length > 1 && row.locales.filter((l) => !l.main).map((l) => (
                                             <Badge key={l.code} variant={l.status === 'published' ? 'default' : 'outline'}
-                                                className={l.status === null ? 'cms:opacity-50' : ''}
-                                                title={`${l.code}: ${l.status === null ? 'not translated' : statusLabel(l.status)}`}>
-                                                {l.code.toUpperCase()}
+                                                className={l.status === null ? 'cms:opacity-50' : l.outdated ? 'cms:ring-2 cms:ring-amber-500/60' : ''}
+                                                title={`${l.code}: ${l.status === null ? 'not translated' : statusLabel(l.status)}${l.outdated ? ', outdated: the main language changed since' : ''}`}>
+                                                {l.code.toUpperCase()}{l.outdated && <span aria-hidden="true">·!</span>}
                                             </Badge>
                                         ))}
                                     </div>
@@ -184,7 +192,7 @@ export default function EntriesIndex({ collection, collections, entries, query, 
                         ))}
                     </TableBody>
                 </Table>
-            </Card>
+            </Card>}
 
             {entries.total > 0 && (
                 <div className="cms:flex cms:items-center cms:justify-between cms:text-sm cms:text-muted-foreground">
