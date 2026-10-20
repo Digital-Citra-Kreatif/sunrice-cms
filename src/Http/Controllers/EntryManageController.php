@@ -15,6 +15,7 @@ use Sunrice\Cms\Actions\Entries\DuplicateEntry;
 use Sunrice\Cms\Actions\Entries\ForceDeleteEntry;
 use Sunrice\Cms\Actions\Entries\MoveEntry;
 use Sunrice\Cms\Actions\Entries\PutBackDraft;
+use Sunrice\Cms\Actions\Entries\ReorderEntries;
 use Sunrice\Cms\Actions\Entries\SaveEntrySettings;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
@@ -108,6 +109,19 @@ final class EntryManageController
         $move->handle($entry, $request->string('direction')->toString());
 
         return back();
+    }
+
+    /** Entries of an ordered collection in the order dragged: "collection", "ids" and "parent_id". */
+    public function reorder(Request $request, ReorderEntries $reorder): RedirectResponse
+    {
+        $handle = $request->input('collection');
+        $collection = is_string($handle) ? Collection::query()->where('handle', $handle)->first() : null;
+        abort_if($collection === null, 404);
+        abort_unless(Access::entries($request->user(), 'update', $collection), 403);
+        $parent = $request->input('parent_id');
+        $reorder->handle($collection, (array) $request->input('ids', []), is_numeric($parent) ? (int) $parent : null);
+
+        return back()->with('success', 'Order saved.');
     }
 
     public function forceDelete(Entry $entry, ForceDeleteEntry $delete): RedirectResponse
