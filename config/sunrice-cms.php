@@ -81,6 +81,19 @@ return [
         'prune_after_days' => env('SUNRICE_FORMS_PRUNE_DAYS'),
     ],
 
+    'translation' => [
+        // Machine translation (sunrice:translate, the editor's "Translate
+        // from …" button): gemini, openrouter, or null for none.
+        'driver' => env('SUNRICE_TRANSLATE_DRIVER'),
+        // null: the driver's default (gemini-2.5-flash, google/gemini-2.5-flash).
+        'model' => env('SUNRICE_TRANSLATE_MODEL'),
+        'gemini_key' => env('SUNRICE_GEMINI_KEY'),
+        'openrouter_key' => env('SUNRICE_OPENROUTER_KEY'),
+        // Strings per request, and seconds a request may take.
+        'batch_size' => 40,
+        'timeout' => 120,
+    ],
+
     'revisions' => [
         // Published versions kept per entry and language; older ones are deleted on publish.
         'keep' => 50,

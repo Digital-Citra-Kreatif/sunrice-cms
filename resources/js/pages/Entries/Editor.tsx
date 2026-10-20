@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
-import { CalendarClock, ChevronDown, Copy, ExternalLink, Eye, LoaderCircle, Plus, RotateCcw, Trash2, Undo2 } from 'lucide-react';
+import { CalendarClock, ChevronDown, Copy, ExternalLink, Eye, Languages, LoaderCircle, Plus, RotateCcw, Trash2, Undo2 } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
     Badge, Button, Card, CardContent, CardHeader, CardTitle, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -43,6 +43,8 @@ interface Props {
     revisions: { id: number; title: string; createdAt: string | null }[];
     /** This translation's id when a revision restore this session can be undone. */
     undoRestore?: number | null;
+    /** This translation's id when it can be machine-translated from the main language ("Translate from …"). */
+    machineTranslate?: number | null;
     can: { create: boolean; update: boolean; publish: boolean; delete: boolean };
 }
 
@@ -66,7 +68,7 @@ export default function EntryEditorPage(props: Props) {
     return <EntryEditor key={entry ? `${entry.id}:${entry.locale}:${entry.version}:${entry.status}:${entry.trashed}:${entry.publishedAt}` : 'new'} {...props} />;
 }
 
-function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, undoRestore = null, settings, can }: Props) {
+function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, undoRestore = null, machineTranslate = null, settings, can }: Props) {
     const list = adminUrl(`cms/collections/${collection.handle}/entries`);
     const url = entry ? adminUrl(`cms/entries/${entry.id}`) : list;
     const heading = entry ? values.title : 'New entry';
@@ -161,6 +163,12 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                             <Button type="button" variant="outline" size="icon" className="cms:text-destructive" aria-label="Move to the trash"
                                 onClick={() => confirm(`Move "${values.title}" to the trash? It comes off the site; you can restore it.`, () => router.delete(url))}>
                                 <Trash2 />
+                            </Button>
+                        )}
+                        {entry && writable && machineTranslate !== null && (
+                            <Button type="button" variant="outline" disabled={form.processing || form.isDirty} title={form.isDirty ? 'Save your changes first' : 'Fill in what isn\'t translated yet, into the draft'}
+                                onClick={() => router.post(adminUrl(`cms/entries/${machineTranslate}/translate`), { version: entry.version }, { preserveScroll: true })}>
+                                <Languages /> Translate from {locales.find((l) => l.main)?.name ?? (mainLocale ? localeName(mainLocale) : 'the main language')}
                             </Button>
                         )}
                         {writable && (

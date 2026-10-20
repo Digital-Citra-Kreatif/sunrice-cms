@@ -179,6 +179,7 @@ final class CmsPlugin extends BasePlugin
                 Route::post('entries/{entry}/publish', 'publish')->name('publish')->middleware(AuthorizeContent::class.':entries,publish');
                 Route::post('entries/{entry}/unpublish', 'unpublish')->name('unpublish')->middleware(AuthorizeContent::class.':entries,publish');
                 Route::delete('entries/{entry}', 'destroy')->name('destroy')->middleware(AuthorizeContent::class.':entries,delete');
+                Route::post('entries/{translation}/translate', 'translate')->name('translate')->middleware(AuthorizeContent::class.':entries,update');
                 Route::post('entries/{entry}/translations', 'addTranslation')->name('translations.store')->middleware(AuthorizeContent::class.':entries,create');
                 Route::delete('entries/{entry}/translations/{locale}', 'removeTranslation')->name('translations.destroy')->middleware(AuthorizeContent::class.':entries,delete');
                 Route::post('entries/{entry}/restore', 'restore')->name('restore')->middleware(AuthorizeContent::class.':entries,delete')->withTrashed();

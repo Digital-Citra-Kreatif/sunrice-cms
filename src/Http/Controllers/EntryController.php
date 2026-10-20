@@ -14,6 +14,7 @@ use Inertia\Response;
 use Sunrice\Cms\Actions\Entries\CreateEntry;
 use Sunrice\Cms\Actions\Entries\CreateTranslation;
 use Sunrice\Cms\Actions\Entries\DeleteTranslation;
+use Sunrice\Cms\Actions\Entries\MachineTranslateEntry;
 use Sunrice\Cms\Actions\Entries\PublishEntry;
 use Sunrice\Cms\Actions\Entries\RestoreEntry;
 use Sunrice\Cms\Actions\Entries\RestoreRevision;
@@ -27,6 +28,7 @@ use Sunrice\Cms\Models\Revision;
 use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\Seo;
+use Sunrice\Cms\Translation\TranslatorFactory;
 
 /**
  * Content → Entries: the list per collection and the editor. Each route
@@ -184,6 +186,8 @@ final class EntryController
             ])->all(),
             // A revision restore this session can be undone.
             'undoRestore' => $request->session()->has(EntryManageController::undoKey($translation)) ? $translation->id : null,
+            // "Translate from …": another language, with machine translation set up.
+            'machineTranslate' => ! $translation->isMain() && app(TranslatorFactory::class)->configured() ? $translation->id : null,
             'can' => self::can($request, $collection, $entry, $translation->locale),
         ]);
     }
@@ -242,6 +246,25 @@ final class EntryController
 
         return redirect()->route('sunrice.admin.cms.entries.edit', [$entry->id, 'locale' => $translation->locale])
             ->with('success', 'Added as a draft, copied from the main language. Translate it, then publish.');
+    }
+
+    /** Machine-translates what this language hasn't translated yet from the main one, into its draft. */
+    public function translate(Request $request, EntryTranslation $translation, TranslatorFactory $translators, MachineTranslateEntry $machine): RedirectResponse
+    {
+        abort_unless($translators->configured() && ! $translation->entry->trashed(), 404);
+        $version = $request->input('version');
+        try {
+            $stats = $machine->handle($translation, is_int($version) || is_string($version) ? $version : null);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', 'The translation service failed: '.$e->getMessage());
+        }
+        if ($stats->errors !== []) {
+            return back()->with('error', 'Not translated: '.implode(' ', $stats->errors));
+        }
+
+        return back()->with('success', $stats->translated === 0
+            ? 'Everything is translated already.'
+            : "Translated {$stats->translated} texts into the draft. Check them, then publish.");
     }
 
     public function removeTranslation(Entry $entry, string $locale, DeleteTranslation $delete): RedirectResponse
