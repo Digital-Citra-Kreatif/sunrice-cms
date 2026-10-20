@@ -345,30 +345,34 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
 function LanguageBar({ entryUrl, editUrl, current, locales, canAdd, canRemove, onRemove }: {
     entryUrl: string; editUrl: string; current: string; locales: EntryLocale[]; canAdd: boolean; canRemove: boolean; onRemove: () => void;
 }) {
+    const present = locales.filter((l) => l.status !== null);
+    const missing = locales.filter((l) => l.status === null);
+
     return (
         <nav aria-label="Languages" className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
-            {locales.map((l) => {
-                const name = `${l.name ?? localeName(l.code)}${l.main ? ' (main)' : ''}`;
-                if (l.status === null) {
-                    return canAdd ? (
-                        <Button key={l.code} type="button" variant="outline" size="sm" className="cms:border-dashed"
-                            onClick={() => router.post(`${entryUrl}/translations`, { locale: l.code })}>
-                            <Plus /> {name}
-                        </Button>
-                    ) : null;
-                }
-                return (
-                    <Button key={l.code} type="button" size="sm" variant={l.code === current ? 'secondary' : 'ghost'} aria-current={l.code === current ? 'page' : undefined}
-                        onClick={() => l.code !== current && router.get(editUrl, { locale: l.code })}>
-                        {name}
-                        <Badge variant={l.status === 'published' ? 'success' : 'outline'} className="cms:ml-1">{statusLabel(l.status)}</Badge>
-                        {l.outdated && (
-                            <Badge variant="outline" className="cms:border-amber-500/60 cms:text-amber-700 cms:dark:text-amber-400"
-                                title="The main language changed since this translation was last saved.">Outdated</Badge>
-                        )}
-                    </Button>
-                );
-            })}
+            {/* The languages it has, by code: a dot for live, amber when outdated. */}
+            <div className="cms:inline-flex cms:items-center cms:gap-0.5 cms:rounded-md cms:bg-muted cms:p-0.5">
+                {present.map((l) => {
+                    const active = l.code === current;
+                    const title = `${l.name ?? localeName(l.code)}${l.main ? ' (main)' : ''}: ${l.status ? statusLabel(l.status) : ""}${l.outdated ? ', outdated (the main language changed since)' : ''}`;
+                    return (
+                        <button key={l.code} type="button" title={title} aria-label={title} aria-current={active ? 'page' : undefined}
+                            onClick={() => !active && router.get(editUrl, { locale: l.code })}
+                            className={`cms:relative cms:inline-flex cms:h-7 cms:min-w-10 cms:items-center cms:justify-center cms:gap-1.5 cms:rounded cms:px-2.5 cms:text-xs cms:font-semibold cms:tracking-wide cms:uppercase cms:transition-colors ${active ? 'cms:bg-card cms:text-foreground cms:shadow-xs' : 'cms:text-muted-foreground cms:hover:text-foreground'}`}>
+                            {l.code}
+                            {(l.outdated || l.status === 'published') && (
+                                <span aria-hidden className={`cms:size-1.5 cms:rounded-full ${l.outdated ? 'cms:bg-amber-500' : 'cms:bg-emerald-500'}`} />
+                            )}
+                        </button>
+                    );
+                })}
+            </div>
+            {canAdd && missing.map((l) => (
+                <Button key={l.code} type="button" variant="outline" size="sm" className="cms:h-8 cms:border-dashed cms:text-xs cms:uppercase"
+                    title={`Add ${l.name ?? localeName(l.code)}`} onClick={() => router.post(`${entryUrl}/translations`, { locale: l.code })}>
+                    <Plus /> {l.code}
+                </Button>
+            ))}
             {canRemove && (
                 <Button type="button" variant="ghost" size="sm" className="cms:ml-auto cms:text-destructive" onClick={onRemove}>Remove this language</Button>
             )}
