@@ -36,17 +36,21 @@ final class CreateTranslation
         }
         $main = $entry->mainTranslation() ?? throw ValidationException::withMessages(['entry' => 'The entry has no translation to copy.']);
 
-        $slug = $main->draft_slug;
-        for ($i = 2; EntryInput::taken($slug, $main->collection_id, $locale, null); $i++) {
-            $slug = "{$main->draft_slug}-{$i}";
-        }
-        $translation = $entry->translations()->create([
-            'collection_id' => $main->collection_id,
-            'locale' => $locale,
-            'draft_title' => $main->draft_title,
-            'draft_slug' => $slug,
-            'draft_data' => $main->draft_data,
-        ]);
+        // The slug check and the write in one transaction: see EntryInput::write().
+        $translation = EntryInput::write(function () use ($entry, $main, $locale): EntryTranslation {
+            $slug = $main->draft_slug;
+            for ($i = 2; EntryInput::taken($slug, $main->collection_id, $locale, null); $i++) {
+                $slug = "{$main->draft_slug}-{$i}";
+            }
+
+            return $entry->translations()->create([
+                'collection_id' => $main->collection_id,
+                'locale' => $locale,
+                'draft_title' => $main->draft_title,
+                'draft_slug' => $slug,
+                'draft_data' => $main->draft_data,
+            ]);
+        });
         $entry->unsetRelation('translations');
         $this->activity->record('translated', 'entry', $entry, $main->draft_title, ['locale' => $locale]);
 

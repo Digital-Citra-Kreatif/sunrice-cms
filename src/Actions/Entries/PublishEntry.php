@@ -7,7 +7,6 @@ namespace Sunrice\Cms\Actions\Entries;
 use DateTimeInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
 use Sunrice\Cms\Events\EntryPublished;
@@ -40,21 +39,21 @@ final class PublishEntry
         if ($entry->collection->trashed()) {
             throw ValidationException::withMessages(['entry' => "The collection \"{$entry->collection->title}\" was deleted."]);
         }
-        $values = EntryInput::validate(
-            $translation->editableSchema(),
-            $translation->draft_title,
-            $translation->draft_slug,
-            $translation->draft_data,
-            $translation->collection_id,
-            $translation->locale,
-            $translation->id,
-        );
-
         // Where the live page was, to redirect from if its address changes.
         $site = app(Site::class);
         $oldPath = $translation->isPublished() ? $site->path($translation, $translation->slug) : null;
 
-        DB::transaction(function () use ($translation, $values, $publishAt, $site, $oldPath): void {
+        // The slug check and the write in one transaction: see EntryInput::write().
+        $values = EntryInput::write(function () use ($translation, $publishAt, $site, $oldPath): array {
+            $values = EntryInput::validate(
+                $translation->editableSchema(),
+                $translation->draft_title,
+                $translation->draft_slug,
+                $translation->draft_data,
+                $translation->collection_id,
+                $translation->locale,
+                $translation->id,
+            );
             $translation->fill([
                 'status' => EntryTranslation::PUBLISHED,
                 'title' => $values['title'],
@@ -76,6 +75,8 @@ final class PublishEntry
                 $site->moved($oldPath, $newPath);
             }
             $this->terms->handle($translation->entry);
+
+            return $values;
         });
         $this->activity->record('published', 'entry', $entry, $values['title'], ['locale' => $translation->locale]);
         EntryPublished::dispatch($translation);
