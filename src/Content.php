@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms;
 
+use Closure;
 use Sunrice\Cms\Query\EntryQuery;
 use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Site\Page;
+use Sunrice\Cms\Site\SiteHooks;
 
 /**
  * The CMS for templates, also as the `Cms` alias when the app doesn't use
@@ -20,6 +22,13 @@ use Sunrice\Cms\Site\Page;
  *
  *     <nav>@foreach (Cms::localeUrls() as $locale => $url) … @endforeach</nav>
  *     Cms::site()->name()
+ *
+ * The same as functions: cms_entries(), cms_menu(), cms_global(),
+ * cms_locale_urls(), cms_body_class(), cms_page(); and `<body @bodyClass>`.
+ * In a service provider's boot(), hooks for every page:
+ *
+ *     Cms::resolveTemplateUsing(fn (Page $page): ?string => $page->collection?->handle === 'shop' ? 'shop.product' : null);
+ *     Cms::bodyClassUsing(fn (Page $page): array => $page->home ? ['landing'] : []);
  *
  * @api
  */
@@ -80,6 +89,30 @@ final class Content
     public static function localeUrls(): array
     {
         return Page::current()?->localeUrls() ?? [];
+    }
+
+    /**
+     * Choose the view of the CMS's pages (entries, listings, term and
+     * search pages): the hook gets the page with the view chosen so far
+     * (`$page->view`) and returns another view's name, or null to keep it.
+     * Hooks run in the order registered.
+     *
+     * @param  Closure(Page): ?string  $hook
+     */
+    public static function resolveTemplateUsing(Closure $hook): void
+    {
+        app(SiteHooks::class)->resolveTemplateUsing($hook);
+    }
+
+    /**
+     * Add classes to the <body> of the CMS's pages (Cms::bodyClass(),
+     * `@bodyClass`): the hook gets the page and returns a list of classes.
+     *
+     * @param  Closure(Page): list<string>  $hook
+     */
+    public static function bodyClassUsing(Closure $hook): void
+    {
+        app(SiteHooks::class)->bodyClassUsing($hook);
     }
 
     /** Settings → Site: name(), description, title(…), hidden() … */

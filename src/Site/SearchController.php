@@ -34,7 +34,7 @@ final class SearchController
         $results = $search->entries($query, locale: $locale);
         abort_if($results->currentPage() > 1 && $results->isEmpty(), 404);
         $view = View::exists('cms.search') ? 'cms.search' : 'sunrice-cms::search';
-        (new Page(Page::SEARCH, $locale, $view, pageNumber: $results->currentPage()))->share();
+        $view = (new Page(Page::SEARCH, $locale, $view, pageNumber: $results->currentPage()))->share()->view;
 
         return response()->view($view, [
             'query' => $query,

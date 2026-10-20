@@ -66,6 +66,7 @@ final class CmsServiceProvider extends ServiceProvider
         $this->app->scoped(Site\Site::class);
         $this->app->scoped(Support\SiteCache::class);
         $this->app->singleton(Site\PageCache::class);
+        $this->app->singleton(Site\SiteHooks::class);
     }
 
     public function boot(): void
@@ -78,6 +79,8 @@ final class CmsServiceProvider extends ServiceProvider
             $blade->component(View\Components\Terms::class, 'sunrice-cms::terms');
             $blade->component(View\Components\Search::class, 'sunrice-cms::search');
             $blade->component(View\Components\Comments::class, 'sunrice-cms::comments');
+            // <body @bodyClass> or <body @bodyClass('dark')>: the whole class="…" attribute.
+            $blade->directive('bodyClass', fn (string $extra): string => '<?php echo \'class="\'.e(\Sunrice\Cms\Content::bodyClass('.($extra === '' ? '[]' : $extra).')).\'"\'; ?>');
         });
         if (! class_exists('Cms')) {
             AliasLoader::getInstance()->alias('Cms', Content::class);

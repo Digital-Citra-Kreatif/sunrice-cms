@@ -136,8 +136,8 @@ final class SiteController
         app()->setLocale($locale);
         $collection = $translation->entry->collection;
         $view = self::view($collection->handle, $collection->template, $translation->entry->template);
-        (new Page(Page::ENTRY, $locale, $view, entry: $translation, collection: $collection, preview: $preview,
-            home: app(Site::class)->isHomepage($translation), fallback: $fallback, draft: $draft))->share();
+        $view = (new Page(Page::ENTRY, $locale, $view, entry: $translation, collection: $collection, preview: $preview,
+            home: app(Site::class)->isHomepage($translation), fallback: $fallback, draft: $draft))->share()->view;
 
         return $this->hidden(response()->view($view, [
             'entry' => $translation,
@@ -174,7 +174,7 @@ final class SiteController
             }
         }
         $schema = $taxonomy->schema();
-        (new Page(Page::TERM, $locale, $view, term: $translation, pageNumber: $entries->currentPage(), fallback: $fallback))->share();
+        $view = (new Page(Page::TERM, $locale, $view, term: $translation, pageNumber: $entries->currentPage(), fallback: $fallback))->share()->view;
 
         return $this->hidden(response()->view($view, [
             'term' => $translation,
@@ -211,7 +211,7 @@ final class SiteController
             }
         }
 
-        (new Page(Page::LISTING, $listing->locale, $view, collection: $collection, pageNumber: $entries->currentPage()))->share();
+        $view = (new Page(Page::LISTING, $listing->locale, $view, collection: $collection, pageNumber: $entries->currentPage()))->share()->view;
 
         return $this->hidden(response()->view($view, [
             'collection' => $collection,

@@ -56,10 +56,24 @@ final readonly class Page
         return $page instanceof self ? $page : null;
     }
 
-    /** @internal set by the site's controller */
-    public function share(): void
+    /**
+     * Sets the page shown, with the view Cms::resolveTemplateUsing() hooks
+     * chose, and returns it.
+     *
+     * @internal set by the site's controllers
+     */
+    public function share(): self
     {
-        request()->attributes->set(self::KEY, $this);
+        $page = app(SiteHooks::class)->template($this);
+        request()->attributes->set(self::KEY, $page);
+
+        return $page;
+    }
+
+    /** The same page rendered with another view. */
+    public function withView(string $view): self
+    {
+        return new self($this->type, $this->locale, $view, $this->entry, $this->collection, $this->term, $this->preview, $this->home, $this->pageNumber, $this->fallback, $this->draft);
     }
 
     /**
@@ -104,7 +118,7 @@ final readonly class Page
         $own[] = 'template-'.str_replace(['::', '.', '/'], '-', $this->view);
         $own[] = 'lang-'.$this->locale;
 
-        return self::clean([...$own, ...$classes]);
+        return self::clean([...$own, ...app(SiteHooks::class)->bodyClasses($this), ...$classes]);
     }
 
     /**
