@@ -47,8 +47,10 @@ return [
         // Collection handles it covers; null: every collection with pages.
         'collections' => null,
         'per_page' => 10,
-        // Searches one visitor (IP address) may make per minute.
+        // Searches one visitor (IP address) may make per minute, and
+        // everyone together (then everyone waits a minute).
         'per_minute' => 30,
+        'per_minute_global' => 300,
     ],
 
     'comments' => [

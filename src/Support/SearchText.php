@@ -14,8 +14,13 @@ use Illuminate\Support\Str;
  */
 final class SearchText
 {
-    /** Longer text is cut: enough for any page's words. */
-    private const MAX = 60000;
+    /**
+     * Longer text is cut: 20,000 characters is a few thousand words, more
+     * than a page shows, and keeps the full-text index (and on SQLite the
+     * scan) small. What's cut is text far down a page, found through its
+     * title and first words anyway.
+     */
+    private const MAX = 20000;
 
     /** @param array<mixed> $data */
     public static function of(array $data): ?string
