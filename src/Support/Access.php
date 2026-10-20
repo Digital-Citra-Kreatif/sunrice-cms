@@ -15,11 +15,11 @@ use Sunrice\Cms\Models\Taxonomy;
  * Who may do what with content. Each permission comes for everything, or
  * scoped to one collection, taxonomy or form:
  *
- *   cms.entries.{action}            cms.entries.{collection}.{action}     view, create, update, publish, delete
+ *   cms.entries.{action}            cms.entries.{collection}.{action}     view, create, update, publish, delete, export
  *   cms.entries.update-own, .delete-own   their own entries, in collections they may view
  *   cms.entries.translate           the other languages of entries they may view, not the main one
  *   cms.terms.manage                cms.terms.{taxonomy}.manage
- *   cms.submissions.{action}        cms.submissions.{form}.{action}       view, delete
+ *   cms.submissions.{action}        cms.submissions.{form}.{action}       view, export, delete
  *
  *     Access::entries($user, 'publish', $collection)
  *
@@ -27,9 +27,9 @@ use Sunrice\Cms\Models\Taxonomy;
  */
 final class Access
 {
-    public const ENTRY_ACTIONS = ['view', 'create', 'update', 'publish', 'delete'];
+    public const ENTRY_ACTIONS = ['view', 'create', 'update', 'publish', 'delete', 'export'];
 
-    public const SUBMISSION_ACTIONS = ['view', 'delete'];
+    public const SUBMISSION_ACTIONS = ['view', 'export', 'delete'];
 
     /**
      * Whether a user may do this with entries: of a collection (or, with
@@ -80,7 +80,7 @@ final class Access
             || ($handle !== null ? $user->can("cms.terms.{$handle}.manage") : self::anyScoped($user, 'cms.terms.%s.manage', Handles::taxonomies()));
     }
 
-    /** Whether a user may view or delete a form's submissions (with none: some form's). */
+    /** Whether a user may view, export or delete a form's submissions (with none: some form's). */
     public static function submissions(?Authorizable $user, string $action, Form|string|null $form = null): bool
     {
         if ($user === null) {

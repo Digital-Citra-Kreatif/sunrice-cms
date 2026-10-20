@@ -26,7 +26,7 @@ interface Props {
     collections: { handle: string; title: string }[];
     entries: { data: Row[]; total: number; from: number | null; to: number | null; prev_page_url: string | null; next_page_url: string | null } | null;
     query: { search: string; trashed: boolean };
-    can?: { create: boolean; update?: boolean; publish?: boolean; delete?: boolean };
+    can?: { create: boolean; update?: boolean; publish?: boolean; delete?: boolean; export?: boolean };
 }
 
 export default function EntriesIndex({ collection, collections, entries, query, can }: Props) {
@@ -83,7 +83,7 @@ export default function EntriesIndex({ collection, collections, entries, query, 
                         {collection.listing && !query.trashed && (
                             <Button variant="outline" asChild><Link href={adminUrl(`cms/collections/${collection.handle}/listing`)}><LayoutList /> Listing page</Link></Button>
                         )}
-                        {entries.total > 0 && !query.trashed && (
+                        {entries.total > 0 && can?.export && !query.trashed && (
                             <Button variant="outline" asChild><a href={`${base}/export`}><Download /> Export CSV</a></Button>
                         )}
                         {can?.create && !query.trashed && (

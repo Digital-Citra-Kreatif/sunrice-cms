@@ -80,7 +80,7 @@ final class CmsPlugin extends BasePlugin
         // Each permission for one collection, taxonomy or form too (see Support\Access).
         $panel->permissionsUsing(fn (): array => Support\ScopedPermissions::all());
         // sunrice:roles: people who write and look after the content, not the structure or the people.
-        $panel->defaultRole('editor', [Panel::ACCESS, 'sunrice.media.*', 'cms.entries.*', 'cms.terms.*', 'cms.globals.*', 'cms.menus.*', 'cms.comments.*', 'cms.submissions.view']);
+        $panel->defaultRole('editor', [Panel::ACCESS, 'sunrice.media.*', 'cms.entries.*', 'cms.terms.*', 'cms.globals.*', 'cms.menus.*', 'cms.comments.*', 'cms.submissions.view', 'cms.submissions.export']);
         // Writes entries, publishes nothing, and edits only their own.
         $panel->defaultRole('author', [Panel::ACCESS, 'sunrice.media.view', 'sunrice.media.upload', 'cms.entries.view', 'cms.entries.create', 'cms.entries.update-own', 'cms.entries.delete-own']);
         // Writes the other languages of every entry.
@@ -92,6 +92,7 @@ final class CmsPlugin extends BasePlugin
             Permission::make('cms.entries.update', 'Edit drafts', 'Content'),
             Permission::make('cms.entries.publish', 'Publish and unpublish entries', 'Content'),
             Permission::make('cms.entries.delete', 'Trash and restore entries', 'Content'),
+            Permission::make('cms.entries.export', 'Export entries as CSV', 'Content'),
             Permission::make('cms.entries.update-own', 'Edit drafts of their own entries', 'Content'),
             Permission::make('cms.entries.delete-own', 'Trash their own entries', 'Content'),
             Permission::make('cms.entries.translate', 'Edit entries\' other languages (not the main one)', 'Content'),
@@ -101,7 +102,8 @@ final class CmsPlugin extends BasePlugin
             Permission::make('cms.comments.view', 'View comments', 'Content'),
             Permission::make('cms.comments.moderate', 'Approve, answer and edit comments, mark spam', 'Content'),
             Permission::make('cms.comments.delete', 'Trash and delete comments', 'Content'),
-            Permission::make('cms.submissions.view', 'View and export form submissions', 'Content'),
+            Permission::make('cms.submissions.view', 'View form submissions', 'Content'),
+            Permission::make('cms.submissions.export', 'Export form submissions as CSV', 'Content'),
             Permission::make('cms.submissions.delete', 'Delete form submissions', 'Content'),
             Permission::make('cms.blueprints.manage', 'Manage blueprints and fieldsets', 'Content structure'),
         );
@@ -146,7 +148,7 @@ final class CmsPlugin extends BasePlugin
             Route::prefix('cms')->name('cms.submissions.')->controller(SubmissionController::class)->group(function (): void {
                 Route::get('submissions', 'home')->name('home')->middleware(AuthorizeContent::class.':submissions,view');
                 Route::get('forms/{form:handle}/submissions', 'index')->name('index')->middleware(AuthorizeContent::class.':submissions,view');
-                Route::get('forms/{form:handle}/submissions/export', 'export')->name('export')->middleware(AuthorizeContent::class.':submissions,view');
+                Route::get('forms/{form:handle}/submissions/export', 'export')->name('export')->middleware(AuthorizeContent::class.':submissions,export');
                 Route::delete('submissions/{submission}', 'destroy')->name('destroy')->middleware(AuthorizeContent::class.':submissions,delete');
                 Route::get('submissions/{submission}/files/{field}', 'file')->name('file')->middleware(AuthorizeContent::class.':submissions,view');
             });
@@ -189,7 +191,7 @@ final class CmsPlugin extends BasePlugin
             });
             Route::prefix('cms')->name('cms.entries.')->controller(EntryManageController::class)->group(function (): void {
                 Route::post('collections/{collection:handle}/entries/bulk', 'bulk')->name('bulk')->middleware(AuthorizeContent::class.':entries,view');
-                Route::get('collections/{collection:handle}/entries/export', 'export')->name('export')->middleware(AuthorizeContent::class.':entries,view');
+                Route::get('collections/{collection:handle}/entries/export', 'export')->name('export')->middleware(AuthorizeContent::class.':entries,export');
                 Route::post('entries/{entry}/duplicate', 'duplicate')->name('duplicate')->middleware(AuthorizeContent::class.':entries,create');
                 Route::put('entries/{entry}/settings', 'settings')->name('settings')->middleware(AuthorizeContent::class.':entries,update');
                 Route::post('entries/{entry}/move', 'move')->name('move')->middleware(AuthorizeContent::class.':entries,update');

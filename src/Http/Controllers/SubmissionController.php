@@ -22,7 +22,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Content → Submissions: what visitors sent, per form, to read, delete
- * and export (cms.submissions.view, .delete).
+ * and export (cms.submissions.view, .export, .delete).
  *
  * @internal
  */
@@ -35,7 +35,7 @@ final class SubmissionController
         $first = Form::query()->orderBy('title')->get()->first(fn (Form $form): bool => Access::submissions($request->user(), 'view', $form));
 
         return $first === null
-            ? Inertia::render('Cms/Submissions/Index', ['form' => null, 'forms' => [], 'submissions' => null, 'can' => ['delete' => false]])
+            ? Inertia::render('Cms/Submissions/Index', ['form' => null, 'forms' => [], 'submissions' => null, 'can' => ['delete' => false, 'export' => false]])
             : redirect()->route('sunrice.admin.cms.submissions.index', $first->handle);
     }
 
@@ -59,7 +59,7 @@ final class SubmissionController
                 ->filter(fn (Form $f): bool => Access::submissions($request->user(), 'view', $f))->values()
                 ->map(fn (Form $f): array => ['handle' => $f->handle, 'title' => $f->title, 'count' => $f->submissions_count])->all(),
             'submissions' => $submissions,
-            'can' => ['delete' => Access::submissions($request->user(), 'delete', $form)],
+            'can' => ['delete' => Access::submissions($request->user(), 'delete', $form), 'export' => Access::submissions($request->user(), 'export', $form)],
         ]);
     }
 

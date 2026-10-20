@@ -22,7 +22,7 @@ use Throwable;
  */
 final class ScopedPermissions
 {
-    private const ENTRY_LABELS = ['view' => 'View', 'create' => 'Create', 'update' => 'Edit drafts', 'publish' => 'Publish and unpublish', 'delete' => 'Trash and restore'];
+    private const ENTRY_LABELS = ['view' => 'View', 'create' => 'Create', 'update' => 'Edit drafts', 'publish' => 'Publish and unpublish', 'delete' => 'Trash and restore', 'export' => 'Export as CSV'];
 
     private const KEY = 'sunrice-cms:scoped-permissions';
 
@@ -67,7 +67,8 @@ final class ScopedPermissions
             $make("cms.terms.{$taxonomy->handle}.manage", 'Manage terms', "Terms: {$taxonomy->title}");
         }
         foreach (Form::query()->orderBy('title')->get(['handle', 'title']) as $form) {
-            $make("cms.submissions.{$form->handle}.view", 'View and export submissions', "Submissions: {$form->title}");
+            $make("cms.submissions.{$form->handle}.view", 'View submissions', "Submissions: {$form->title}");
+            $make("cms.submissions.{$form->handle}.export", 'Export submissions as CSV', "Submissions: {$form->title}");
             $make("cms.submissions.{$form->handle}.delete", 'Delete submissions', "Submissions: {$form->title}");
         }
 

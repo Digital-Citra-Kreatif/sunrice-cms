@@ -317,7 +317,7 @@ final class EntryController
     private static function can(Request $request, Collection $collection, ?Entry $entry = null, ?string $locale = null): array
     {
         $can = [];
-        foreach (['create', 'update', 'publish', 'delete'] as $ability) {
+        foreach (['create', 'update', 'publish', 'delete', 'export'] as $ability) {
             $can[$ability] = Access::entries($request->user(), $ability, $collection, $entry, $locale);
         }
 
