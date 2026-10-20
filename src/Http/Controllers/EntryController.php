@@ -36,6 +36,7 @@ use Sunrice\Cms\Models\Revision;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Support\Access;
+use Sunrice\Cms\Support\AdminUrls;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\References;
 use Sunrice\Cms\Support\Seo;
@@ -123,6 +124,7 @@ final class EntryController
             'id' => $translation->entry_id,
             'title' => $translation->draft_title,
             'collection' => $translation->entry->collection->title,
+            'collectionHandle' => $translation->entry->collection->handle,
             'status' => $translation->status(),
         ], $items)]);
     }
@@ -170,11 +172,24 @@ final class EntryController
     {
         $translation = $create->handle($collection, $request->only(['title', 'slug', 'data', 'seo']));
 
-        return redirect()->route('sunrice.admin.cms.entries.edit', $translation->entry_id)->with('success', "\"{$translation->draft_title}\" created as a draft.");
+        return redirect()->to((string) AdminUrls::entry($translation->entry))->with('success', "\"{$translation->draft_title}\" created as a draft.");
     }
 
-    public function edit(Request $request, Entry $entry): Response
+    /** An entry's old short address: to the one under its collection. */
+    public function open(Request $request, Entry $entry): RedirectResponse
     {
+        $locale = $request->query('locale');
+
+        return redirect()->to((string) AdminUrls::entry($entry, is_string($locale) ? $locale : null));
+    }
+
+    public function edit(Request $request, Collection $collection, Entry $entry): Response|RedirectResponse
+    {
+        // Under another collection (or its old handle): to its own.
+        if ($entry->collection_id !== $collection->id) {
+            return $this->open($request, $entry);
+        }
+        $entry->setRelation('collection', $collection);
         $translation = self::translation($entry, $request->query('locale'));
         $collection = $entry->collection;
         $main = $entry->mainTranslation();
@@ -316,7 +331,7 @@ final class EntryController
         $locale = $request->input('locale');
         $translation = $create->handle($entry, is_string($locale) ? $locale : '');
 
-        return redirect()->route('sunrice.admin.cms.entries.edit', [$entry->id, 'locale' => $translation->locale])
+        return redirect()->to((string) AdminUrls::entry($entry, $translation->locale))
             ->with('success', 'Added as a draft, copied from the main language. Translate it, then publish.');
     }
 
@@ -344,7 +359,7 @@ final class EntryController
         $entry->loadMissing('translations');
         $delete->handle($entry->translation($locale) ?? abort(404));
 
-        return redirect()->route('sunrice.admin.cms.entries.edit', $entry->id)->with('success', 'The translation was removed.');
+        return redirect()->to((string) AdminUrls::entry($entry))->with('success', 'The translation was removed.');
     }
 
     public function restoreRevision(Request $request, Revision $revision, RestoreRevision $restore): RedirectResponse

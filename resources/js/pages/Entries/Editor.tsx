@@ -228,7 +228,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
             </PageHeader>
 
             {entry && locales.length > 1 && (
-                <LanguageBar entryUrl={url} current={entry.locale} locales={locales} canAdd={can.create && !entry.trashed}
+                <LanguageBar entryUrl={url} editUrl={`${list}/${entry.id}/edit`} current={entry.locale} locales={locales} canAdd={can.create && !entry.trashed}
                     canRemove={can.delete && !entry.isMain && !entry.trashed}
                     onRemove={() => confirm(`Remove the ${localeName(entry.locale)} translation of "${values.title}"? Its revisions go with it.`,
                         () => router.delete(`${url}/translations/${entry.locale}`))} />
@@ -342,8 +342,8 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
     );
 }
 
-function LanguageBar({ entryUrl, current, locales, canAdd, canRemove, onRemove }: {
-    entryUrl: string; current: string; locales: EntryLocale[]; canAdd: boolean; canRemove: boolean; onRemove: () => void;
+function LanguageBar({ entryUrl, editUrl, current, locales, canAdd, canRemove, onRemove }: {
+    entryUrl: string; editUrl: string; current: string; locales: EntryLocale[]; canAdd: boolean; canRemove: boolean; onRemove: () => void;
 }) {
     return (
         <nav aria-label="Languages" className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
@@ -359,7 +359,7 @@ function LanguageBar({ entryUrl, current, locales, canAdd, canRemove, onRemove }
                 }
                 return (
                     <Button key={l.code} type="button" size="sm" variant={l.code === current ? 'secondary' : 'ghost'} aria-current={l.code === current ? 'page' : undefined}
-                        onClick={() => l.code !== current && router.get(`${entryUrl}/edit`, { locale: l.code })}>
+                        onClick={() => l.code !== current && router.get(editUrl, { locale: l.code })}>
                         {name}
                         <Badge variant={l.status === 'published' ? 'success' : 'outline'} className="cms:ml-1">{statusLabel(l.status)}</Badge>
                         {l.outdated && (

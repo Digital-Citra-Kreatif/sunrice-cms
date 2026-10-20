@@ -93,11 +93,11 @@ final class References
             $item = match ($row->source_type) {
                 ContentReference::ENTRY => ($entry = $entries->get($row->source_id)) === null ? null : [
                     'label' => $entry->collection->title.': '.($entry->translation($row->locale)->draft_title ?? '#'.$entry->id).$language.($entry->trashed() ? ' — in the trash' : ''),
-                    'url' => Route::has('sunrice.admin.cms.entries.edit') ? route('sunrice.admin.cms.entries.edit', [$entry->id, 'locale' => $row->locale]) : null,
+                    'url' => AdminUrls::entry($entry, $row->locale),
                 ],
                 ContentReference::TERM => ($term = $terms->get($row->source_id)) === null ? null : [
                     'label' => $term->taxonomy->title.': '.$term->title($row->locale).$language.($term->trashed() ? ' — in the trash' : ''),
-                    'url' => Route::has('sunrice.admin.cms.terms.edit') ? route('sunrice.admin.cms.terms.edit', [$term->id, 'locale' => $row->locale]) : null,
+                    'url' => AdminUrls::term($term, $row->locale),
                 ],
                 ContentReference::GLOBAL => ($set = $sets->get($row->source_id)) === null ? null : [
                     'label' => 'Globals: '.$set->title.$language,

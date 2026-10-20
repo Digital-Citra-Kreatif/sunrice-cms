@@ -81,7 +81,7 @@ function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared,
                     <>
                         {term.url && <Button type="button" variant="ghost" asChild><a href={term.url} target="_blank" rel="noopener noreferrer"><ExternalLink /> View</a></Button>}
                         {locales.length > 1 && (
-                            <Select value={locale} onValueChange={(next: string) => router.get(adminUrl(`cms/terms/${term.id}/edit`), { locale: next })}>
+                            <Select value={locale} onValueChange={(next: string) => router.get(`${list}/${term.id}/edit`, { locale: next })}>
                                 <SelectTrigger className="cms:w-48" aria-label="Language"><SelectValue /></SelectTrigger>
                                 <SelectContent>{locales.map((code, i) => <SelectItem key={code} value={code}>{localeName(code)}{i === 0 ? ' (main)' : ''}</SelectItem>)}</SelectContent>
                             </Select>

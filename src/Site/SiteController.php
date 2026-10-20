@@ -8,7 +8,6 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use Sunrice\Admin\Panel;
 use Sunrice\Cms\Actions\Entries\SaveEntrySettings;
@@ -19,6 +18,7 @@ use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Support\Access;
+use Sunrice\Cms\Support\AdminUrls;
 
 /**
  * Renders entries on the site: the fallback route (paths no app route
@@ -93,7 +93,7 @@ final class SiteController
             'draft' => $draft,
             'liveUrl' => $live,
             'draftUrl' => $live === null ? null : $live.'?draft',
-            'editUrl' => Route::has('sunrice.admin.cms.entries.edit') ? route('sunrice.admin.cms.entries.edit', [$translation->entry_id, 'locale' => $translation->locale]) : null,
+            'editUrl' => AdminUrls::entry($translation->entry, $translation->locale),
         ])->render();
         $content = (string) $response->getContent();
         $content = preg_match('/<body\b[^>]*>/i', $content) === 1

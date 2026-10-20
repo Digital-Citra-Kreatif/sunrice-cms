@@ -25,6 +25,7 @@ use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Support\Access;
+use Sunrice\Cms\Support\AdminUrls;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -79,7 +80,7 @@ final class EntryManageController
         abort_if($entry->collection->trashed(), 404);
         $copy = $duplicate->handle($entry);
 
-        return redirect()->route('sunrice.admin.cms.entries.edit', $copy->id)->with('success', 'Copied as a new draft.');
+        return redirect()->to((string) AdminUrls::entry($copy))->with('success', 'Copied as a new draft.');
     }
 
     /** The parent, the template and the blueprint, in every language. */

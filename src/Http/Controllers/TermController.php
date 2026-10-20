@@ -20,6 +20,7 @@ use Sunrice\Cms\Fields\Types\TermsField;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Support\Access;
+use Sunrice\Cms\Support\AdminUrls;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\References;
 use Sunrice\Cms\Support\Seo;
@@ -136,8 +137,21 @@ final class TermController
     }
 
     /** A term's page content in a language: fields, SEO and template. */
-    public function edit(Request $request, Term $term): Response
+    /** A term's old short address: to the one under its taxonomy. */
+    public function open(Request $request, Term $term): RedirectResponse
     {
+        $locale = $request->query('locale');
+
+        return redirect()->to((string) AdminUrls::term($term, is_string($locale) ? $locale : null));
+    }
+
+    public function edit(Request $request, Taxonomy $taxonomy, Term $term): Response|RedirectResponse
+    {
+        // Under another taxonomy (or its old handle): to its own.
+        if ($term->taxonomy_id !== $taxonomy->id) {
+            return $this->open($request, $term);
+        }
+        $term->setRelation('taxonomy', $taxonomy);
         $locale = $request->query('locale');
         $locale = is_string($locale) && Locales::has($locale) ? $locale : Locales::default();
         $term->load('translations');

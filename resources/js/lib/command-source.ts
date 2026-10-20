@@ -1,6 +1,6 @@
 import { pickerQuery } from './values.ts';
 
-interface PickerItem { id: number; title: string; collection: string; status: string }
+interface PickerItem { id: number; title: string; collection: string; collectionHandle: string; status: string }
 
 export interface EntryCommand {
     id: string;
@@ -19,7 +19,7 @@ export function entryCommands(items: PickerItem[], href: (path: string) => strin
         description: item.status === 'published' ? item.collection : `${item.collection} · ${item.status}`,
         group: 'Entries',
         icon: 'file-text',
-        url: href(`cms/entries/${item.id}/edit`),
+        url: href(`cms/collections/${item.collectionHandle}/entries/${item.id}/edit`),
     }));
 }
 

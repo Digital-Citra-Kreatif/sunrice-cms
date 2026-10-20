@@ -186,7 +186,7 @@ final class DashboardWidgets
             ->whereIn('sunrice_entry_translations.entry_id', fn (QueryBuilder $entries) => $entries->select('id')->from('sunrice_entries')->whereNull('deleted_at'))
             ->select('sunrice_entry_translations.id', 'sunrice_entry_translations.entry_id', 'sunrice_entry_translations.locale', 'sunrice_entry_translations.status',
                 'sunrice_entry_translations.draft_title', 'sunrice_entry_translations.published_at', 'sunrice_entry_translations.updated_at',
-                'sunrice_collections.title as collection_title')
+                'sunrice_collections.title as collection_title', 'sunrice_collections.handle as collection_handle')
             ->limit(self::RECENT);
     }
 
@@ -195,12 +195,13 @@ final class DashboardWidgets
     {
         $status = $translation->status();
         $collection = $translation->getAttribute('collection_title');
+        $handle = $translation->getAttribute('collection_handle');
         $main = $translation->locale === Locales::default();
 
         return [
             'title' => $translation->draft_title !== '' ? $translation->draft_title : "#{$translation->entry_id}",
             'meta' => (is_string($collection) ? $collection : '').(count(Locales::all()) > 1 ? ' · '.Str::upper($translation->locale) : ''),
-            'url' => "cms/entries/{$translation->entry_id}/edit".($main ? '' : '?locale='.urlencode($translation->locale)),
+            'url' => 'cms/collections/'.(is_string($handle) ? $handle : '').'/entries/'.$translation->entry_id.'/edit'.($main ? '' : '?locale='.urlencode($translation->locale)),
             'badge' => match ($status) {
                 'published' => 'Live',
                 'scheduled' => 'Scheduled',

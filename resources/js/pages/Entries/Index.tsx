@@ -84,7 +84,7 @@ const STATUSES: { value: string; label: string }[] = [
 
 export default function EntriesIndex(props: Props) {
     const { collection, entries, query } = props;
-    useBreadcrumbs([{ label: 'Entries', href: adminUrl('cms/entries') }, ...(collection ? [{ label: collection.title }] : [])]);
+    useBreadcrumbs([{ label: collection ? collection.title : 'Entries' }]);
 
     if (!collection || !entries || !query) {
         return (
@@ -313,7 +313,7 @@ function EntryList({
                                     </TableCell>
                                 )}
                                 <TableCell>
-                                    <Link href={adminUrl(`cms/entries/${row.id}/edit${query.locale !== mainLocale ? `?locale=${encodeURIComponent(query.locale)}` : ''}`)}
+                                    <Link href={adminUrl(`cms/collections/${collection.handle}/entries/${row.id}/edit${query.locale !== mainLocale ? `?locale=${encodeURIComponent(query.locale)}` : ''}`)}
                                         className="cms:font-medium cms:underline-offset-4 cms:hover:underline">{row.title}</Link>
                                     {(!query.columns.includes('slug') || row.parent) && (
                                         <div className="cms:text-xs cms:text-muted-foreground">

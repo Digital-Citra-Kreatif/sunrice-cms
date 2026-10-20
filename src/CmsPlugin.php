@@ -111,11 +111,18 @@ final class CmsPlugin extends BasePlugin
             Permission::make('cms.submissions.delete', 'Delete form submissions', 'Content'),
             Permission::make('cms.blueprints.manage', 'Manage blueprints and fieldsets', 'Content structure'),
         );
+        // Each collection under Content, each taxonomy under Taxonomies (from the cached handles).
+        $panel->navigationUsing(fn (): array => [
+            ...array_map(fn (string $handle, array $collection): NavigationItem => NavigationItem::make("cms-collection-{$handle}")
+                ->label($collection['title'])->url("cms/collections/{$handle}/entries")->icon($collection['listing'] ? 'newspaper' : 'file-text')
+                ->group('Content')->sort(10)->visible(fn (Authorizable $user): bool => Access::entries($user, 'view', $handle)),
+                array_keys(Support\Handles::collectionTitles()), Support\Handles::collectionTitles()),
+            ...array_map(fn (string $handle, string $title): NavigationItem => NavigationItem::make("cms-taxonomy-{$handle}")
+                ->label($title)->url("cms/taxonomies/{$handle}/terms")->icon('tag')
+                ->group('Taxonomies')->sort(60)->visible(fn (Authorizable $user): bool => Access::terms($user, $handle)),
+                array_keys(Support\Handles::taxonomyTitles()), Support\Handles::taxonomyTitles()),
+        ]);
         $panel->navigation(
-            NavigationItem::make('cms-entries')->label('Entries')->url('cms/entries')->icon('file-text')
-                ->group('Content')->sort(10)->visible(fn (Authorizable $user): bool => Access::entries($user, 'view')),
-            NavigationItem::make('cms-terms')->label('Terms')->url('cms/terms')->icon('tags')
-                ->group('Content')->sort(20)->visible(fn (Authorizable $user): bool => Access::terms($user)),
             NavigationItem::make('cms-globals')->label('Globals')->url('cms/globals')->icon('globe')
                 ->group('Content')->sort(30)->permission('cms.globals.view'),
             NavigationItem::make('cms-menus')->label('Menus')->url('cms/menus')->icon('list-tree')
@@ -171,7 +178,9 @@ final class CmsPlugin extends BasePlugin
                 Route::delete('terms/{term}', 'destroy')->name('destroy');
                 Route::post('terms/{term}/restore', 'restore')->name('restore')->withTrashed();
                 Route::delete('terms/{term}/force', 'forceDelete')->name('force-delete')->withTrashed();
-                Route::get('terms/{term}/edit', 'edit')->name('edit');
+                Route::get('taxonomies/{taxonomy:handle}/terms/{term}/edit', 'edit')->name('edit');
+                // The short address a term used to have: to the one under its taxonomy.
+                Route::get('terms/{term}/edit', 'open')->name('open');
                 Route::put('terms/{term}/content', 'content')->name('content');
             });
             Route::prefix('cms')->name('cms.entries.')->controller(EntryController::class)->group(function (): void {
@@ -181,7 +190,9 @@ final class CmsPlugin extends BasePlugin
                 Route::get('collections/{collection:handle}/entries', 'index')->name('index')->middleware(AuthorizeContent::class.':entries,view');
                 Route::get('collections/{collection:handle}/entries/create', 'create')->name('create')->middleware(AuthorizeContent::class.':entries,create');
                 Route::post('collections/{collection:handle}/entries', 'store')->name('store')->middleware(AuthorizeContent::class.':entries,create');
-                Route::get('entries/{entry}/edit', 'edit')->name('edit')->middleware(AuthorizeContent::class.':entries,view')->withTrashed();
+                Route::get('collections/{collection:handle}/entries/{entry}/edit', 'edit')->name('edit')->middleware(AuthorizeContent::class.':entries,view')->withTrashed();
+                // The short address an entry used to have: to the one under its collection.
+                Route::get('entries/{entry}/edit', 'open')->name('open')->middleware(AuthorizeContent::class.':entries,view')->withTrashed();
                 Route::put('entries/{entry}', 'update')->name('update')->middleware(AuthorizeContent::class.':entries,update');
                 Route::post('entries/{entry}/publish', 'publish')->name('publish')->middleware(AuthorizeContent::class.':entries,publish');
                 Route::post('entries/{entry}/unpublish', 'unpublish')->name('unpublish')->middleware(AuthorizeContent::class.':entries,publish');

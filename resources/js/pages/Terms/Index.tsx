@@ -45,7 +45,7 @@ function usedBySentence(usedBy: string[] = []): string {
 }
 
 export default function TermsIndex({ taxonomy, taxonomies, terms, locales, locale, trashed = false }: Props) {
-    useBreadcrumbs([{ label: 'Terms', href: adminUrl('cms/terms') }, ...(taxonomy ? [{ label: taxonomy.title }] : [])]);
+    useBreadcrumbs([{ label: taxonomy ? taxonomy.title : 'Terms' }]);
     const [confirm, confirmDialog] = useConfirm();
     const [editing, setEditing] = React.useState<number | null>(null);
     // In the order dragged until the server's comes back.
@@ -102,7 +102,7 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
                                     <Button variant="ghost" size="icon" className="cms:size-8" aria-label={`Rename ${term.fallback}`} onClick={() => setEditing(term.id)}><Pencil /></Button>
                                     {taxonomy.pages && term.title !== null && (
                                         <Button variant="ghost" size="icon" className="cms:size-8" aria-label={`Edit ${term.fallback}'s page`} asChild>
-                                            <Link href={adminUrl(`cms/terms/${term.id}/edit`) + `?locale=${locale}`}><FileText /></Link>
+                                            <Link href={adminUrl(`cms/taxonomies/${taxonomy.handle}/terms/${term.id}/edit`) + `?locale=${locale}`}><FileText /></Link>
                                         </Button>
                                     )}
                                     <Button variant="ghost" size="icon" className="cms:size-8 cms:text-destructive" aria-label={`Move ${term.fallback} to the trash`}
