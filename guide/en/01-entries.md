@@ -47,7 +47,7 @@ The editor's cards (groups, **Search and sharing**, and the cards on the right) 
 Every entry has a **draft**, which you edit, and a **live** version, which visitors see. The live version changes only when you publish.
 
 - **Publish** puts the draft on the website. For an entry already live, the button says **Publish changes**; it says **Published** when there's nothing new.
-- The arrow next to it has **Publish on a date…**: choose a date and time (in your time zone) and the entry goes live then. Until then its status is **Scheduled**. A date in the past publishes now, with that date.
+- The **Status** card beside the fields has the **Publish date**: choose a date and time (in your time zone) and press **Schedule**; the entry goes live then, and until then its status is **Scheduled**. A date in the past publishes now, with that date. On a live entry, change the date and press **Change date** (the date the site shows), or **Unpublish**. The arrow next to **Publish** has **Publish on a date…** too.
 - **Unpublish** (same menu) takes the entry off the website; it becomes a draft again. Publishing it again keeps its original date.
 
 The **Status** card on the right says whether the entry is a draft, scheduled or published (and since when), and warns when *The draft has changes the site doesn't show yet*.

@@ -288,8 +288,23 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
 
                 {entry && (
                     <aside className="cms:flex cms:flex-col cms:gap-4">
-                        <CollapsibleCard title="Status" titleClassName="cms:text-base" storageKey="cms:entry:status" contentClassName="cms:flex cms:flex-col cms:gap-1 cms:text-sm">
-                            <p>{statusLabel(entry.status)}{entry.status !== 'draft' && entry.publishedAt ? ` · ${formatDate(entry.publishedAt)}` : ''}</p>
+                        <CollapsibleCard title="Status" titleClassName="cms:text-base" storageKey="cms:entry:status" contentClassName="cms:flex cms:flex-col cms:gap-3 cms:text-sm">
+                            <dl className="cms:flex cms:flex-col cms:gap-2">
+                                <div className="cms:flex cms:items-center cms:justify-between cms:gap-3">
+                                    <dt className="cms:text-muted-foreground">Status</dt>
+                                    <dd><Badge variant={entry.status === 'published' ? 'success' : 'secondary'}>{entry.trashed ? 'In the trash' : statusLabel(entry.status)}</Badge></dd>
+                                </div>
+                                {entry.status !== 'draft' && entry.publishedAt && (
+                                    <div className="cms:flex cms:items-baseline cms:justify-between cms:gap-3">
+                                        <dt className="cms:text-muted-foreground">{entry.status === 'scheduled' ? 'Goes live' : 'Published'}</dt>
+                                        <dd className="cms:text-right cms:tabular-nums">{formatDate(entry.publishedAt)}</dd>
+                                    </div>
+                                )}
+                            </dl>
+                            {!entry.trashed && can.publish && !lock.readOnly && (
+                                <PublishDate key={entry.publishedAt ?? 'none'} status={entry.status} publishedAt={entry.publishedAt} processing={form.processing}
+                                    onPublish={(iso) => publish(iso)} onUnpublish={() => router.post(`${url}/unpublish`, locale, { preserveScroll: true })} />
+                            )}
                             {entry.status !== 'draft' && entry.hasUnpublishedChanges && <p className="cms:text-muted-foreground">The draft has changes the site doesn't show yet.</p>}
                             {locales.find((l) => l.code === entry.locale)?.outdated && (
                                 <p className="cms:text-amber-700 cms:dark:text-amber-400">The {mainLocale ? localeName(mainLocale) : 'main'} version changed since this translation was last saved.</p>
@@ -377,6 +392,42 @@ function LanguageBar({ entryUrl, editUrl, current, locales, canAdd, canRemove, o
                 <Button type="button" variant="ghost" size="sm" className="cms:ml-auto cms:text-destructive" onClick={onRemove}>Remove this language</Button>
             )}
         </nav>
+    );
+}
+
+/**
+ * The date an entry shows as published, to set or change: a past one
+ * publishes it with that date, a future one schedules it.
+ */
+function PublishDate({ status, publishedAt, processing, onPublish, onUnpublish }: {
+    status: EntryStatus; publishedAt: string | null; processing: boolean; onPublish: (iso: string | null) => void; onUnpublish: () => void;
+}) {
+    const [value, setValue] = React.useState(publishedAt ? localInputValue(new Date(publishedAt)) : '');
+    const chosen = value === '' ? null : new Date(value);
+    const future = chosen !== null && chosen.getTime() > Date.now();
+    // To the minute, as the input shows it.
+    const minute = (date: Date | null) => (date === null ? null : Math.floor(date.getTime() / 60_000));
+    const changed = minute(chosen) !== minute(publishedAt ? new Date(publishedAt) : null);
+    const label = status === 'draft'
+        ? (future ? 'Schedule' : 'Publish')
+        : (future ? (status === 'scheduled' ? 'Reschedule' : 'Schedule') : 'Change date');
+
+    return (
+        <div className="cms:flex cms:flex-col cms:gap-2 cms:border-t cms:border-border/60 cms:pt-3">
+            <Label htmlFor="entry-published-at">Publish date</Label>
+            <DatePicker id="entry-published-at" withTime className="cms:max-w-none" value={value || null} onChange={(next) => setValue(next ?? '')} />
+            <p className="cms:text-xs cms:text-muted-foreground">
+                {status === 'draft' ? 'Empty: now. A date in the future schedules it.' : 'The date shown as published. A date in the future takes it off the site until then.'}
+            </p>
+            <div className="cms:flex cms:flex-wrap cms:gap-2">
+                {(status === 'draft' || changed) && (
+                    <Button type="button" size="sm" disabled={processing} onClick={() => onPublish(chosen?.toISOString() ?? null)}>
+                        <CalendarClock /> {label}
+                    </Button>
+                )}
+                {status !== 'draft' && <Button type="button" size="sm" variant="outline" disabled={processing} onClick={onUnpublish}>Unpublish</Button>}
+            </div>
+        </div>
     );
 }
 

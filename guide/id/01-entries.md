@@ -47,7 +47,7 @@ Kartu-kartu di penyunting (group, **Search and sharing**, dan kartu di kanan) bi
 Setiap entri memiliki **draf**, yang Anda sunting, dan versi **tayang**, yang dilihat pengunjung. Versi tayang hanya berubah saat Anda menerbitkan.
 
 - **Publish** menayangkan draf di situs web. Untuk entri yang sudah tayang, tombolnya bertuliskan **Publish changes**; bertuliskan **Published** jika tidak ada yang baru.
-- Panah di sebelahnya berisi **Publish on a date…**: pilih tanggal dan jam (menurut zona waktu Anda) dan entri akan tayang saat itu. Sampai waktunya, statusnya **Scheduled**. Tanggal yang sudah lewat langsung menerbitkan, dengan tanggal tersebut.
+- Kartu **Status** di samping isian berisi **Publish date**: pilih tanggal dan jam (menurut zona waktu Anda) lalu tekan **Schedule**; entri akan tayang saat itu, dan sampai waktunya statusnya **Scheduled**. Tanggal yang sudah lewat langsung menerbitkan, dengan tanggal tersebut. Pada entri yang sudah tayang, ubah tanggalnya lalu tekan **Change date** (tanggal yang ditampilkan situs), atau **Unpublish**. Panah di sebelah **Publish** juga berisi **Publish on a date…**.
 - **Unpublish** (di menu yang sama) menarik entri dari situs web; entri kembali menjadi draf. Jika diterbitkan lagi, tanggal aslinya tetap dipakai.
 
 Kartu **Status** di kanan menunjukkan apakah entri masih draf, terjadwal, atau terbit (dan sejak kapan), dan memberi peringatan jika *The draft has changes the site doesn't show yet* (draf berisi perubahan yang belum tampil di situs).
