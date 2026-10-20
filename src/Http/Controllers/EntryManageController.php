@@ -19,6 +19,7 @@ use Sunrice\Cms\Actions\Entries\SaveEntrySettings;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
+use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\FieldText;
 use Sunrice\Cms\Support\Locales;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -90,7 +91,14 @@ final class EntryManageController
     public function settings(Request $request, Entry $entry, SaveEntrySettings $save): RedirectResponse
     {
         abort_if($entry->collection->trashed(), 404);
-        $save->handle($entry, $request->only(['parent_id', 'template', 'comments_closed']));
+        $input = $request->only(['parent_id', 'template', 'comments_closed']);
+        // Picking a view is for the collection's editors (cms.entries.update), not authors of their own entries: theirs may only stay as it is.
+        if (array_key_exists('template', $input) && ! Access::entries($request->user(), 'update', $entry->collection)) {
+            $template = is_string($input['template']) ? trim($input['template']) : '';
+            abort_unless(($template === '' ? null : $template) === $entry->template, 403);
+            unset($input['template']);
+        }
+        $save->handle($entry, $input);
 
         return back()->with('success', 'Saved.');
     }

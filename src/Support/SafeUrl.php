@@ -25,8 +25,9 @@ final class SafeUrl
             return in_array(strtolower($match[1]), self::SCHEMES, true);
         }
 
-        // A path, ?query, #anchor or //host; a backslash would let browsers read "/\evil.com" as a host.
-        return ! str_contains($clean, '\\');
+        // A path, ?query or #anchor: not //host (another site, hidden in what looks like a path),
+        // nor a backslash, which would let browsers read "/\evil.com" as a host.
+        return ! str_starts_with($clean, '//') && ! str_contains($clean, '\\');
     }
 
     /** A validation rule for link inputs. */

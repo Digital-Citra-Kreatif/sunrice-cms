@@ -16,6 +16,9 @@ return [
         'enabled' => true,
         // Middleware for the site's pages.
         'middleware' => ['web'],
+        // What the views editors pick for an entry or a term may start
+        // with, so no other view of the app can be made a public page.
+        'template_prefixes' => ['cms.'],
     ],
 
     'cache' => [

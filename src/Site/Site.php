@@ -113,6 +113,12 @@ final class Site
             ->where('entry_id', $id)->where('locale', $locale ?? Locales::default())->first();
     }
 
+    /** The language a path is in (/id/blog/kopi: "id"): its prefix's, else the main one. */
+    public function locale(string $path): string
+    {
+        return $this->splitLocale('/'.trim($path, '/'))[0];
+    }
+
     /** The language of the search page at a path (/search, /id/search), or null when it isn't one. */
     public function searchLocale(string $path): ?string
     {
