@@ -119,4 +119,17 @@ class Term extends Model
     {
         return $this->translation($locale)->title ?? '';
     }
+
+    /**
+     * Where other content points at this term through its fields: entries
+     * (draft or live), terms and global sets, a row per language and field.
+     *
+     * @return Collection<int, ContentReference>
+     */
+    public function referencedBy(): Collection
+    {
+        return ContentReference::query()->where('target_type', ContentReference::TERM)->where('target_id', $this->id)
+            ->whereNot(fn ($query) => $query->where('source_type', ContentReference::TERM)->where('source_id', $this->id))
+            ->orderBy('id')->get();
+    }
 }

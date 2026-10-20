@@ -20,12 +20,14 @@ use Sunrice\Cms\Actions\Entries\RestoreRevision;
 use Sunrice\Cms\Actions\Entries\SaveDraft;
 use Sunrice\Cms\Actions\Entries\TrashEntry;
 use Sunrice\Cms\Actions\Entries\UnpublishEntry;
+use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Revision;
 use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\Locales;
+use Sunrice\Cms\Support\References;
 use Sunrice\Cms\Support\Seo;
 
 /**
@@ -182,6 +184,8 @@ final class EntryController
                 'createdAt' => $revision->created_at?->toIso8601String(),
             ])->all(),
             // A revision restore this session can be undone.
+            // Where other content points at it, to show and to warn before it goes.
+            'usedBy' => References::usedBy(Reference::ENTRY, $entry->id),
             'undoRestore' => $request->session()->has(EntryManageController::undoKey($translation)) ? $translation->id : null,
             'can' => self::can($request, $collection, $entry, $translation->locale),
         ]);

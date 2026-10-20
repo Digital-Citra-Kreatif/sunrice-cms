@@ -8,6 +8,7 @@ use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Support\MediaUsage;
+use Sunrice\Cms\Support\References;
 use Sunrice\Cms\Support\Seo;
 
 /**
@@ -85,8 +86,9 @@ final class SaveDraft
             return $translation;
         }
         $translation->refresh();
-        // A query update fires no model events: keep the media library's "Used by" here.
+        // A query update fires no model events: keep the media library's and the references' "Used by" here.
         MediaUsage::entry($translation);
+        References::entry($translation);
         $this->activity->updated('entry', $translation->entry, $translation->draft_title, $changed);
 
         return $translation;

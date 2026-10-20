@@ -41,6 +41,8 @@ interface Props {
     } | null;
     values: { title: string; slug: string; data: FieldValues; seo: FieldValues | null };
     revisions: { id: number; title: string; createdAt: string | null }[];
+    /** Where other content points at this entry (entries, terms, global sets). */
+    usedBy?: UsedBy[];
     /** This translation's id when a revision restore this session can be undone. */
     undoRestore?: number | null;
     can: { create: boolean; update: boolean; publish: boolean; delete: boolean };
@@ -52,6 +54,14 @@ interface Props {
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FieldValues = Record<string, any>;
+type UsedBy = { label: string; url: string | null; field: string };
+
+/** " It's used by A; B." for confirmations, or nothing. */
+function usedBySentence(usedBy: UsedBy[]): string {
+    if (usedBy.length === 0) return '';
+    const shown = usedBy.slice(0, 5).map((use) => use.label).join('; ');
+    return ` It's used by ${shown}${usedBy.length > 5 ? ` and ${usedBy.length - 5} more` : ''}: those links will show nothing.`;
+}
 type FormData = { locale: string | null; title: string; slug: string; data: FieldValues; seo: FieldValues; version: number | null; publish: boolean; published_at: string | null };
 
 
@@ -66,7 +76,7 @@ export default function EntryEditorPage(props: Props) {
     return <EntryEditor key={entry ? `${entry.id}:${entry.locale}:${entry.version}:${entry.status}:${entry.trashed}:${entry.publishedAt}` : 'new'} {...props} />;
 }
 
-function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, undoRestore = null, settings, can }: Props) {
+function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, usedBy = [], undoRestore = null, settings, can }: Props) {
     const list = adminUrl(`cms/collections/${collection.handle}/entries`);
     const url = entry ? adminUrl(`cms/entries/${entry.id}`) : list;
     const heading = entry ? values.title : 'New entry';
@@ -148,7 +158,8 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                         )}
                         {entry?.trashed && can.delete && (
                             <Button type="button" variant="outline" className="cms:text-destructive"
-                                onClick={() => confirm(`Delete "${values.title}" for good, in every language, with its revisions? This can't be undone.`, () => router.delete(`${url}/force`))}>
+                                onClick={() => confirm(`Delete "${values.title}" for good, in every language, with its revisions? This can't be undone.${usedBySentence(usedBy)}`,
+                                    () => router.delete(`${url}/force`, { data: usedBy.length > 0 ? { force: 1 } : {} }))}>
                                 <Trash2 /> Delete for good
                             </Button>
                         )}
@@ -159,7 +170,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                         )}
                         {entry && !entry.trashed && can.delete && !lock.readOnly && (
                             <Button type="button" variant="outline" size="icon" className="cms:text-destructive" aria-label="Move to the trash"
-                                onClick={() => confirm(`Move "${values.title}" to the trash? It comes off the site; you can restore it.`, () => router.delete(url))}>
+                                onClick={() => confirm(`Move "${values.title}" to the trash? It comes off the site; you can restore it.${usedBySentence(usedBy)}`, () => router.delete(url))}>
                                 <Trash2 />
                             </Button>
                         )}
@@ -272,6 +283,18 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                             <CardContent className="cms:flex cms:flex-col cms:gap-1 cms:text-sm">
                                 <p>{statusLabel(entry.status)}{entry.status !== 'draft' && entry.publishedAt ? ` · ${formatDate(entry.publishedAt)}` : ''}</p>
                                 {entry.status !== 'draft' && entry.hasUnpublishedChanges && <p className="cms:text-muted-foreground">The draft has changes the site doesn't show yet.</p>}
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader><CardTitle className="cms:text-base">Used by</CardTitle></CardHeader>
+                            <CardContent className="cms:flex cms:flex-col cms:gap-1 cms:text-sm">
+                                {usedBy.length === 0 && <p className="cms:text-muted-foreground">No other content links here.</p>}
+                                {usedBy.map((use) => (
+                                    <div key={`${use.label}:${use.field}`} className="cms:min-w-0">
+                                        {use.url ? <a href={use.url} className="cms:block cms:truncate cms:underline-offset-4 hover:cms:underline">{use.label}</a> : <span className="cms:block cms:truncate">{use.label}</span>}
+                                        <span className="cms:text-xs cms:text-muted-foreground cms:font-mono">{use.field}</span>
+                                    </div>
+                                ))}
                             </CardContent>
                         </Card>
                         {settings && <PageSettings entryUrl={url} collection={collection} settings={settings} disabled={!writable} />}
