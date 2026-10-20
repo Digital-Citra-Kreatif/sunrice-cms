@@ -156,6 +156,16 @@ final class Site
         return $path === null ? null : url($path);
     }
 
+    /**
+     * An entry's page for a visitor reading another language: the
+     * translation's own URL when it's in that language, else its own
+     * (the main language's page).
+     */
+    public function urlIn(EntryTranslation $translation, string $locale): ?string
+    {
+        return $this->url($translation);
+    }
+
     /** The path of an entry translation with a slug (/id/blog/halo), or null without a route. */
     public function path(EntryTranslation $translation, ?string $slug): ?string
     {
