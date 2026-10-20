@@ -16,6 +16,7 @@ use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Query\EntryQuery;
+use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\View\Components\Filter\ActiveFilter;
 use Sunrice\Cms\View\Components\Filter\FilterControl;
 use Sunrice\Cms\View\Components\Filter\SortChoice;
@@ -342,10 +343,10 @@ final class EntryFilter extends Component
                 if (! $term instanceof Term) {
                     continue;
                 }
-                $slug = $term->translation()->slug ?? '';
+                $slug = $term->translation(Locales::current())->slug ?? '';
                 $count = $term->getAttribute('entries_count');
                 if ($slug !== '') {
-                    $options[] = ['value' => $slug, 'label' => $term->title(), 'count' => is_numeric($count) ? (int) $count : 0, 'depth' => $depth];
+                    $options[] = ['value' => $slug, 'label' => $term->title(Locales::current()), 'count' => is_numeric($count) ? (int) $count : 0, 'depth' => $depth];
                 }
                 $children = $term->relationLoaded('children') ? $term->getRelation('children') : null;
                 if ($children instanceof Items && $depth < 20) {

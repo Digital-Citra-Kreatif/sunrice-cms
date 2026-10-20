@@ -119,7 +119,7 @@ final class Terms extends Component
     {
         $descending = str_starts_with($orderBy, '-');
         $by = match (ltrim($orderBy, '-')) {
-            'title', 'name' => fn (Term $term): string => mb_strtolower($term->title()),
+            'title', 'name' => fn (Term $term): string => mb_strtolower($term->title(Locales::current())),
             'entries', 'count' => fn (Term $term): int => self::count($term),
             'created_at' => fn (Term $term): int => $term->created_at?->getTimestamp() ?? 0,
             default => null,
