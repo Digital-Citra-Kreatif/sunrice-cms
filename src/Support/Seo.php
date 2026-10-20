@@ -160,7 +160,7 @@ final class Seo
         return [
             'title' => $site->title($title),
             'description' => $description,
-            'image' => $imageId !== null ? Media::query()->find($imageId)?->url() : null,
+            'image' => $imageId !== null ? self::imageUrl($imageId) : null,
             'noindex' => $preview || ($seo['noindex'] ?? false) === true || $site->hidden(),
             'canonical' => $preview ? null : ($own ?? $canonical),
             'alternates' => $alternates,
@@ -203,6 +203,14 @@ final class Seo
         }
 
         return self::withDefault($alternates);
+    }
+
+    /** A share image's URL, read once per content version (a change to the file starts a new one). */
+    private static function imageUrl(int $id): ?string
+    {
+        $url = app(SiteCache::class)->remember("media-url:{$id}", fn (): string => Media::query()->find($id)?->url() ?? '');
+
+        return $url === '' ? null : $url;
     }
 
     /** Whether a translation's live version asks not to be indexed. */

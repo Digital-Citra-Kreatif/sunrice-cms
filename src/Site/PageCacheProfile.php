@@ -35,9 +35,9 @@ class PageCacheProfile extends CacheAllSuccessfulGetRequests
         return min(parent::cacheLifetimeInSeconds($request), SiteCache::ttl());
     }
 
-    /** The content version: pages kept before a change are never served again. */
+    /** The pages' content version: pages kept before a change are never served again. */
     public function useCacheNameSuffix(Request $request): string
     {
-        return 'v'.app(SiteCache::class)->version();
+        return 'v'.app(SiteCache::class)->version(SiteCache::PAGES);
     }
 }

@@ -16,9 +16,12 @@ use Illuminate\View\Compilers\BladeCompiler;
 use RuntimeException;
 use Spatie\Honeypot\ProtectAgainstSpam;
 use Spatie\ResponseCache\CacheProfiles\CacheAllSuccessfulGetRequests;
+use Spatie\ResponseCache\Hasher\DefaultHasher;
 use Spatie\ResponseCache\Middlewares\CacheResponse;
+use Spatie\ResponseCache\Replacers\CsrfTokenReplacer;
 use Spatie\ResponseCache\Serializers\JsonSerializer;
 use Sunrice\Admin\Events\SettingsSaved;
+use Sunrice\Admin\Exceptions\PanelMisconfigured;
 use Sunrice\Admin\Media\MediaUsages;
 use Sunrice\Cms\Fields\Fieldsets;
 use Sunrice\Cms\Fields\FieldTypes;
@@ -144,6 +147,14 @@ final class CmsServiceProvider extends ServiceProvider
         }
         if (config('responsecache.serializer', JsonSerializer::class) === JsonSerializer::class) {
             config(['responsecache.serializer' => Site\PageCacheSerializer::class]);
+        }
+        if (config('responsecache.hasher', DefaultHasher::class) === DefaultHasher::class) {
+            config(['responsecache.hasher' => Site\PageCacheHasher::class]);
+        }
+        // A kept page is served to every visitor: without the replacer, they'd all get the first one's CSRF token and no form would work.
+        $replacers = config('responsecache.replacers', []);
+        if (Site\PageCache::enabled() && (! is_array($replacers) || ! in_array(CsrfTokenReplacer::class, $replacers, true))) {
+            throw new PanelMisconfigured('sunrice-cms.cache.pages needs '.CsrfTokenReplacer::class.' in responsecache.replacers (config/responsecache.php): kept pages must give each visitor their own CSRF token.');
         }
     }
 
