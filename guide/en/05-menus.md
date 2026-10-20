@@ -33,4 +33,4 @@ Click **Save**. The whole menu is saved at once, and changes are live straight a
 > Addresses that could run code (such as `javascript:`) are refused. Use `https://`, a path, `mailto:` or `tel:`.
 
 > [!TECHNICAL]
-> Menus are created under Structure → Menus, with a handle templates use: `Cms::menu('main')`. See [Menus](docs:cms/menus).
+> Menus are created under Structure → Menu settings, with a handle templates use: `Cms::menu('main')`. See [Menus](docs:cms/menus).

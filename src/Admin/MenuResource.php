@@ -12,14 +12,20 @@ use Sunrice\Admin\Resources\Tables\Table;
 use Sunrice\Cms\Models\Menu;
 
 /**
- * Structure → Menus, guarded by the cms.menus.* permissions. Their links
- * are edited under Content → Menus.
+ * Structure → Menu settings (the menus themselves: title and handle),
+ * guarded by the cms.menus.* permissions. Their links are edited under
+ * Content → Menus.
  *
  * @internal
  */
 final class MenuResource extends Resource
 {
     protected static string $model = Menu::class;
+
+    public static function navigationLabel(): string
+    {
+        return 'Menu settings';
+    }
 
     public static function navigationGroup(): string
     {

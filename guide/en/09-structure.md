@@ -53,7 +53,7 @@ Drag the fields into order by their handle (the fields inside a group or repeate
 
 ## Menus
 
-**Structure → Menus**: a **Title** and a **Handle** (like `main` or `footer`) that templates use. Editors fill them in under Content → Menus (see [Menus](guide:website/menus)).
+**Structure → Menu settings**: a **Title** and a **Handle** (like `main` or `footer`) that templates use. Editors fill them in under Content → Menus (see [Menus](guide:website/menus)).
 
 ## Forms
 

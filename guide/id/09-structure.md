@@ -53,7 +53,7 @@ Seret field ke urutannya lewat pegangannya (field di dalam group atau repeater d
 
 ## Menu
 
-**Structure → Menus**: **Title** dan **Handle** (seperti `main` atau `footer`) yang dipakai template. Editor mengisinya di Content → Menus (lihat [Menu](guide:website/menus)).
+**Structure → Menu settings**: **Title** dan **Handle** (seperti `main` atau `footer`) yang dipakai template. Editor mengisinya di Content → Menus (lihat [Menu](guide:website/menus)).
 
 ## Formulir
 
