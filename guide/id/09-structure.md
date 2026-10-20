@@ -12,15 +12,16 @@
 | **Handle** | Kode pendek yang dipakai template, seperti `articles`: huruf kecil, angka, dan garis bawah. Bisa diubah nanti: peran tetap memegang izinnya, tetapi formulir memperingatkan tentang template dan kode yang menyebutnya, yang harus diperbarui developer. |
 | **Blueprint** | Field yang dimiliki entrinya (lihat di bawah). Menggantinya tetap mempertahankan isi entri yang sudah ada. |
 | **Other blueprints** | Blueprint lain yang bisa dipilih sebuah entri, di Page settings-nya (misalnya halaman promosi di antara halaman biasa). |
+| **Translatable** | Entri bisa punya versi di setiap bahasa. Mati: hanya dalam bahasa utama (berguna untuk konten yang tidak berbeda per bahasa). |
 | **Dated entries** | Entri menampilkan tanggal dan terurut dari yang terbaru, seperti artikel. |
 | **Manual order** | Editor mengurutkan entri sendiri (**Reorder** di daftar), bukan menurut tanggal atau judul. |
 | **Hierarchical** | Entri bisa berada di bawah entri induk, seperti halaman di bawah halaman (untuk jejak halaman dan sub-menu; alamatnya tetap). |
-| **URL** | Letak entri di situs web, dengan `{slug}` untuk slug setiap entri: `/blog/{slug}`, atau `/{slug}` untuk halaman di tingkat teratas. Kosong: entri tidak punya halaman sendiri. |
+| **Each entry has its own page** | Mati: entri tidak punya alamat, seperti FAQ atau anggota tim yang ditampilkan template. |
+| **Entry URL** | Letak entri di situs web, dengan `{slug}` untuk slug setiap entri: `/blog/{slug}`, atau `/{slug}` untuk halaman di tingkat teratas. Kosong: `/{handle}/{slug}`. |
 | **Template** | Desain yang dipakai entri, jika developer membuatnya. |
-| **Listing page URL**, **Listing page fields**, **Entries per listing page** | Halaman yang menampilkan daftar entri (seperti `/blog`), field khususnya (pengantar), dan jumlah entri per halaman. |
+| **Has a listing page**, **Listing page URL**, **Listing page fields**, **Entries per page** | Halaman yang menampilkan daftar entri (seperti `/blog`; kosong: `/{handle}`), field khususnya (pengantar), dan jumlah entri per halaman. |
 | **Allow comments** | Pengunjung boleh mengomentari entrinya (membutuhkan URL). |
 | **Structured data type** | Jenis entri yang diberitahukan ke mesin pencari (artikel, halaman web…). |
-| **SEO from fields** | Field entri mana yang mengisi judul SEO, deskripsi, dan gambar berbagi yang kosong. |
 
 Menghapus koleksi tidak menghapus entrinya: entri hilang dari panel dan situs web. Filter **Deleted** di daftar menampilkan koleksi yang dihapus, dengan **Restore** untuk mengembalikannya.
 

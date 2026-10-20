@@ -344,11 +344,14 @@ final class EntryList
      * null where it has no translation yet, and whether the main language
      * changed since it was translated (EntryTranslation::isOutdated()).
      *
+     * Only those it has in a collection that isn't translatable.
+     *
      * @return list<array{code: string, name: string, main: bool, status: string|null, outdated: bool}>
      */
     public static function locales(Entry $entry): array
     {
         $main = $entry->mainTranslation();
+        $codes = $entry->collection->translatable ? Locales::all() : array_values(array_filter(Locales::all(), fn (string $code): bool => $entry->translation($code) !== null));
 
         return array_map(fn (string $code): array => [
             'code' => $code,
@@ -356,7 +359,7 @@ final class EntryList
             'main' => $main?->locale === $code,
             'status' => ($translation = $entry->translation($code)) === null ? null : $translation->status(),
             'outdated' => $translation?->isOutdated() ?? false,
-        ], Locales::all());
+        ], $codes);
     }
 
     /** @param Builder<EntryTranslation> $query */

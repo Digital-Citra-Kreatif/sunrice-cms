@@ -23,6 +23,7 @@ use Sunrice\Cms\Support\Locales;
  * @property string|null $blueprint the blueprint's handle
  * @property list<string>|null $blueprints more blueprints (handles) its entries may use instead (Entry::$blueprint)
  * @property bool $dated entries show a date, and list newest first
+ * @property bool $translatable entries can have a version in each language; false: the main language only
  * @property string|null $route the entries' public URL pattern ("/blog/{slug}"); none: no pages
  * @property string|null $template the Blade view entries render with
  * @property bool $hierarchical entries may have a parent entry
@@ -49,7 +50,7 @@ class Collection extends Model
 
     protected $guarded = [];
 
-    protected $attributes = ['dated' => false, 'hierarchical' => false, 'ordered' => false, 'per_page' => 10];
+    protected $attributes = ['dated' => false, 'translatable' => true, 'hierarchical' => false, 'ordered' => false, 'per_page' => 10];
 
     private ?Schema $schema = null;
 
@@ -59,7 +60,7 @@ class Collection extends Model
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['dated' => 'boolean', 'comments' => 'boolean', 'hierarchical' => 'boolean', 'ordered' => 'boolean', 'per_page' => 'integer', 'blueprints' => 'array'];
+        return ['dated' => 'boolean', 'translatable' => 'boolean', 'comments' => 'boolean', 'hierarchical' => 'boolean', 'ordered' => 'boolean', 'per_page' => 'integer', 'blueprints' => 'array'];
     }
 
     /** @return HasMany<CollectionListing, $this> */

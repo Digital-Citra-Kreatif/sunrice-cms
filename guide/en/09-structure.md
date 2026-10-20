@@ -12,15 +12,16 @@ A **collection** is a kind of content: *Pages*, *Blog*, *Products*, *Events*. **
 | **Handle** | A short code used by templates, like `articles`: lowercase letters, digits and underscores. It can be changed later: roles keep their permissions, but the form warns you about templates and code that name it, which your developer must update. |
 | **Blueprint** | The fields its entries have (see below). Changing it keeps what entries already hold. |
 | **Other blueprints** | More blueprints an entry may switch to, in its Page settings (a landing page among pages, for example). |
+| **Translatable** | Entries can have a version in each language. Off: they're in the main language only (useful for things that don't change per language). |
 | **Dated entries** | Entries show a date and list newest first, like articles. |
 | **Manual order** | Editors put entries in order (**Reorder** in the list) instead of by date or title. |
 | **Hierarchical** | Entries may sit under a parent entry, like pages under pages (for breadcrumbs and sub-menus; addresses stay the same). |
-| **URL** | Where entries are on the website, with `{slug}` for each entry's slug: `/blog/{slug}`, or `/{slug}` for pages at the top. Empty: entries have no page of their own. |
+| **Each entry has its own page** | Off: entries have no address, like FAQs or team members a template shows. |
+| **Entry URL** | Where entries are on the website, with `{slug}` for each entry's slug: `/blog/{slug}`, or `/{slug}` for pages at the top. Empty: `/{handle}/{slug}`. |
 | **Template** | The design entries use, if your developer made one for it. |
-| **Listing page URL**, **Listing page fields**, **Entries per listing page** | A page listing the entries (like `/blog`), its own fields (an introduction), and how many entries it shows per page. |
+| **Has a listing page**, **Listing page URL**, **Listing page fields**, **Entries per page** | A page listing the entries (like `/blog`; empty: `/{handle}`), its own fields (an introduction), and how many entries it shows per page. |
 | **Allow comments** | Visitors may comment on its entries (it needs a URL). |
 | **Structured data type** | What search engines are told its entries are (an article, a web page…). |
-| **SEO from fields** | Which of the entries' fields fill in an empty SEO title, description and share image. |
 
 Deleting a collection doesn't delete its entries: they leave the panel and the website. The list's **Deleted** filter shows deleted collections, with **Restore** to bring one back.
 

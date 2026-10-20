@@ -64,34 +64,63 @@ final class CollectionResource extends Resource
                     ->help('The fields its entries have.'),
                 CheckboxList::make('blueprints')->label('Other blueprints')->options($blueprints)->span(2)
                     ->help('Blueprints an entry can switch to in its Page settings.'),
+                Toggle::make('translatable')->label('Translatable')->default(true)->span(2)
+                    ->help('Entries can have a version in each language. Off: the main language only.'),
             ]),
             Section::make('Order')->description('How its entries are listed, on the site and in the admin.')->columns(2)->schema([
                 Toggle::make('dated')->label('Dated entries')->help('Entries have a date and list newest first.'),
                 Toggle::make('ordered')->label('Manual order')->help('Drag entries into order on the entries list.'),
             ]),
-            Section::make('Pages and addresses')->description('Whether its entries are pages on the site, and how.')->columns(2)->schema([
-                TextInput::make('route')->label('Entry URL')->placeholder('/blog/{slug}')->unique()->span(2)
+            Section::make('Entry pages')->description('Whether each entry is a page on the site, and how.')->columns(2)->schema([
+                Toggle::make('pages')->label('Each entry has its own page')->default(true)->span(2)
+                    ->help('Off: entries have no address, like FAQs or team members shown by a template.')
+                    ->loadUsing(fn (Model $collection): bool => $collection->getAttribute('route') !== null)
+                    ->saveUsing(fn (Model $collection, mixed $on) => self::switchPage($collection, 'route', $on, '/{handle}/{slug}')),
+                TextInput::make('route')->label('Entry URL')->placeholder('/{handle}/{slug}')->unique()->span(2)->showWhen('pages')
                     ->rules([new RoutePatternRule])
-                    ->help('Empty: entries have no pages of their own (like FAQs shown by a template).'),
-                Toggle::make('hierarchical')->label('Hierarchical')->showWhen('route')
+                    ->help('Like /blog/{slug}, or / for the site root. Empty: /{handle}/{slug}.'),
+                Toggle::make('hierarchical')->label('Hierarchical')->showWhen('pages')
                     ->help('Entries can sit under a parent entry, like pages under pages.'),
-                Toggle::make('comments')->label('Allow comments')->showWhen('route')
+                Toggle::make('comments')->label('Allow comments')->showWhen('pages')
                     ->help('Visitors can comment on its entries.'),
-                TextInput::make('template')->label('Entry template')->placeholder('cms.article')->showWhen('route')
+                TextInput::make('template')->label('Entry template')->placeholder('cms.article')->showWhen('pages')
                     ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
                     ->help(TemplateHelp::text('cms.article', ['cms.{handle}', 'cms.entry'])."\nAn entry can choose its own in its Page settings."),
-                Select::make('schema_type')->label('Structured data type')->options(StructuredData::ENTRY_TYPES)->showWhen('route')
+                Select::make('schema_type')->label('Structured data type')->options(StructuredData::ENTRY_TYPES)->showWhen('pages')
                     ->help('What search engines are told its entries are. Empty: Article if dated, else Web page.'),
             ]),
             Section::make('Listing page')->description('A page listing its entries, like /blog.')->columns(2)->schema([
-                TextInput::make('listing_route')->label('Listing page URL')->placeholder('/blog')->unique()->maxLength(255)->span(2)
+                Toggle::make('listing')->label('Has a listing page')->span(2)
+                    ->loadUsing(fn (Model $collection): bool => $collection->getAttribute('listing_route') !== null)
+                    ->saveUsing(fn (Model $collection, mixed $on) => self::switchPage($collection, 'listing_route', $on, '/{handle}')),
+                TextInput::make('listing_route')->label('Listing page URL')->placeholder('/{handle}')->unique()->maxLength(255)->span(2)->showWhen('listing')
                     ->rules(['regex:#^(/[a-z0-9\-_]+)+$#'])
-                    ->help("Empty: no listing page. Its template is the first that exists of\n1. ".TemplateHelp::file('cms.{handle}-listing')."\n2. ".TemplateHelp::file('cms.listing')."\n3. the built-in template"),
-                Select::make('listing_blueprint')->label('Listing page fields')->options($blueprints())->showWhen('listing_route')
+                    ->help("Empty: /{handle}. Its template is the first that exists of\n1. ".TemplateHelp::file('cms.{handle}-listing')."\n2. ".TemplateHelp::file('cms.listing')."\n3. the built-in template"),
+                Select::make('listing_blueprint')->label('Listing page fields')->options($blueprints())->showWhen('listing')
                     ->help('Fields of the listing page itself, like an intro.'),
-                NumberInput::make('per_page')->label('Entries per page')->integer()->min(1)->max(100)->default(10)->showWhen('listing_route'),
+                NumberInput::make('per_page')->label('Entries per page')->integer()->min(1)->max(100)->default(10)->showWhen('listing'),
             ]),
         ]);
+    }
+
+    /**
+     * Entry pages or the listing page switched on or off: off clears the
+     * address, on without one gives the default (with the handle in it).
+     * Not sent (null): the address as given.
+     */
+    private static function switchPage(Model $collection, string $attribute, mixed $on, string $default): void
+    {
+        if ($on === null) {
+            return;
+        }
+        $on = filter_var($on, FILTER_VALIDATE_BOOL);
+        $address = $collection->getAttribute($attribute);
+        $handle = $collection->getAttribute('handle');
+        $next = $on ? ($address ?? str_replace('{handle}', is_string($handle) ? $handle : '', $default)) : null;
+        if ($next !== $address) {
+            $collection->setAttribute($attribute, $next);
+            $collection->save();
+        }
     }
 
     public static function table(Table $table): Table

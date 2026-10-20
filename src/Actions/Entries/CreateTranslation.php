@@ -27,6 +27,9 @@ final class CreateTranslation
         if (! Locales::has($locale)) {
             throw ValidationException::withMessages(['locale' => 'Choose one of the site\'s languages: '.implode(', ', Locales::all()).'.']);
         }
+        if (! $entry->collection->translatable) {
+            throw ValidationException::withMessages(['locale' => "{$entry->collection->title} isn't translatable: its entries are in the main language only."]);
+        }
         if ($entry->trashed()) {
             throw ValidationException::withMessages(['entry' => 'This entry is in the trash; restore it first.']);
         }
