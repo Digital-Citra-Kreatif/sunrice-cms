@@ -16,6 +16,7 @@ import CommentsIndex from '@/pages/Comments/Index.tsx';
 import SeoEdit from '@/pages/Seo/Edit.tsx';
 import SubmissionsIndex from '@/pages/Submissions/Index.tsx';
 import TermEdit from '@/pages/Terms/Edit.tsx';
+import TermCreate from '@/pages/Terms/Create.tsx';
 import TermsIndex from '@/pages/Terms/Index.tsx';
 
 definePlugin({
@@ -27,6 +28,7 @@ definePlugin({
         'Cms/Entries/Editor': EntryEditor,
         'Cms/Entries/Listing': ListingPage,
         'Cms/Terms/Index': TermsIndex,
+        'Cms/Terms/Create': TermCreate,
         'Cms/Terms/Edit': TermEdit,
         'Cms/Globals/Index': GlobalsIndex,
         'Cms/Globals/Edit': GlobalsEdit,

@@ -85,11 +85,32 @@ final class TermController
         ]);
     }
 
+    /** A new term's page: its title, slug and, in nested taxonomies, where it goes. */
+    public function create(Request $request, Taxonomy $taxonomy): Response
+    {
+        $locale = $this->locale($request);
+        $terms = Term::query()->with('translations')->where('taxonomy_id', $taxonomy->id)->orderBy('sort_order')->orderBy('id')->get();
+
+        return Inertia::render('Cms/Terms/Create', [
+            'taxonomy' => ['handle' => $taxonomy->handle, 'title' => $taxonomy->title, 'hierarchical' => $taxonomy->hierarchical],
+            'locale' => $locale,
+            'locales' => Locales::all(),
+            'parent' => $request->integer('parent') ?: null,
+            'terms' => $taxonomy->hierarchical ? array_map(fn (array $item): array => ['id' => $item[0]->id, 'title' => $item[0]->title($locale), 'depth' => $item[1]],
+                TermsField::tree(array_values($terms->all()), null, 0)) : [],
+        ]);
+    }
+
+    /** Then to the term's page when terms have pages or fields, else back to the list. */
     public function store(Request $request, Taxonomy $taxonomy, SaveTerm $save): RedirectResponse
     {
+        $locale = $this->locale($request);
         $term = $save->handle($taxonomy, $request->only(['title', 'slug', 'locale', 'parent_id']));
+        $to = $taxonomy->route !== null || $taxonomy->blueprint !== null
+            ? (string) AdminUrls::term($term, $locale)
+            : route('sunrice.admin.cms.terms.index', ['taxonomy' => $taxonomy->handle, 'locale' => $locale]);
 
-        return back()->with('success', "\"{$term->title($this->locale($request))}\" added.");
+        return redirect()->to($to)->with('success', "\"{$term->title($locale)}\" added.");
     }
 
     public function update(Request $request, Term $term, SaveTerm $save): RedirectResponse
@@ -194,6 +215,6 @@ final class TermController
     {
         $locale = $request->input('locale');
 
-        return is_string($locale) ? $locale : Locales::default();
+        return is_string($locale) && Locales::has($locale) ? $locale : Locales::default();
     }
 }

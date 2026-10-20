@@ -6,7 +6,7 @@
 
 Pick the taxonomy with the menu next to the title, and the language with **Language**. The table shows each term's **Slug**, how many **Entries** have it and when it was **Created**, nested as the terms are: in a taxonomy with nested terms, *Local* can sit under *News*. **Search terms…** finds terms by title or slug.
 
-- **New term**: type the **Title** (the **Slug** is made from it when left empty), choose where it goes under **Under** (or **Top level**), and click **Add term**.
+- **New term** opens a page: type the **Title** (the **Slug** is made from it when left empty), choose where it goes under **Under** (or **Top level**), and click **Create term**. When terms have pages, you land on the new term's page; otherwise back on the list. **Add a term under it** in a row's **⋯** menu starts one there.
 - Click a term's title to open the **term's own page** (below), or to rename it when terms have no pages. The arrow next to it opens the page on the website.
 - The **⋯** menu on a row: **Rename** (its title and slug in the language shown, and where it sits), **Edit page** and **Move to trash** (with the terms under it).
 - Drag a term by its handle to change its place among its neighbours; the terms under it come along. To put a term under another one, **rename** it and choose **Under**.

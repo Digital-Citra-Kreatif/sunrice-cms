@@ -59,8 +59,8 @@ function usedBySentence(usedBy: string[] = []): string {
 export default function TermsIndex({ taxonomy, taxonomies, terms, locales, locale, trashed = false }: Props) {
     useBreadcrumbs([{ label: taxonomy ? taxonomy.title : 'Terms' }]);
     const [confirm, confirmDialog] = useConfirm();
-    // The term being renamed, or 'new' while adding one.
-    const [editing, setEditing] = React.useState<TermRow | 'new' | null>(null);
+    // The term being renamed.
+    const [editing, setEditing] = React.useState<TermRow | null>(null);
     const [search, setSearch] = React.useState('');
     // In the order dragged until the server's comes back.
     const [rows, setRows] = React.useState(terms);
@@ -126,6 +126,9 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem onSelect={() => setEditing(term)}><Pencil /> Rename</DropdownMenuItem>
+                            {taxonomy.hierarchical && term.title !== null && (
+                                <DropdownMenuItem asChild><Link href={`${base}/create?locale=${encodeURIComponent(locale)}&parent=${term.id}`}><Plus /> Add a term under it</Link></DropdownMenuItem>
+                            )}
                             {taxonomy.pages && term.title !== null && (
                                 <DropdownMenuItem asChild><Link href={pageUrl(term)}><FileText /> Edit page</Link></DropdownMenuItem>
                             )}
@@ -166,7 +169,7 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
                         )}
                         {trashed
                             ? <Button variant="outline" onClick={() => router.get(base, { locale })}>Back to terms</Button>
-                            : <Button onClick={() => setEditing('new')}><Plus /> New term</Button>}
+                            : <Button asChild><Link href={`${base}/create?locale=${encodeURIComponent(locale)}`}><Plus /> New term</Link></Button>}
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" size="icon" aria-label="More"><MoreVertical /></Button>
@@ -216,7 +219,7 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
                 </div>
                 {rows.length === 0 ? (
                     <div className="cms:flex cms:flex-col cms:items-center cms:gap-3 cms:border-t cms:border-border/60 cms:p-10 cms:text-center cms:text-muted-foreground">
-                        {trashed ? 'The trash is empty.' : <>No terms yet.<Button size="sm" onClick={() => setEditing('new')}><Plus /> New term</Button></>}
+                        {trashed ? 'The trash is empty.' : <>No terms yet.<Button size="sm" asChild><Link href={`${base}/create?locale=${encodeURIComponent(locale)}`}><Plus /> New term</Link></Button></>}
                     </div>
                 ) : found ? (
                     found.length === 0
@@ -228,13 +231,11 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
             <Dialog open={editing !== null} onOpenChange={(open: boolean) => { if (!open) setEditing(null); }}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>{editing === 'new' ? 'New term' : `Rename “${editing?.fallback ?? ''}”`}</DialogTitle>
+                        <DialogTitle>Rename “{editing?.fallback}”</DialogTitle>
                         <DialogDescription>{locales.length > 1 ? `In ${localeName(locale)}.` : 'Its title and the slug in its address.'}</DialogDescription>
                     </DialogHeader>
                     {editing !== null && (
-                        <TermForm key={editing === 'new' ? 'new' : editing.id} action={editing === 'new' ? base : adminUrl(`cms/terms/${editing.id}`)}
-                            method={editing === 'new' ? 'post' : 'put'} locale={locale} terms={terms} hierarchical={taxonomy.hierarchical}
-                            term={editing === 'new' ? undefined : editing} submitLabel={editing === 'new' ? 'Add term' : 'Save'} onDone={() => setEditing(null)} />
+                        <TermForm key={editing.id} term={editing} locale={locale} terms={terms} hierarchical={taxonomy.hierarchical} onDone={() => setEditing(null)} />
                     )}
                 </DialogContent>
             </Dialog>
@@ -252,29 +253,26 @@ function formatDay(iso: string | null | undefined): string {
     return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-function TermForm({ action, method, locale, terms, hierarchical, term, submitLabel, onDone }: {
-    action: string; method: 'post' | 'put'; locale: string; terms: TermRow[]; hierarchical: boolean; term?: TermRow; submitLabel: string; onDone?: () => void;
-}) {
-    const form = useForm({ title: term?.title ?? '', slug: term?.slug ?? '', parent_id: term?.parentId ?? null as number | null, locale, version: term?.version ?? null });
+/** Renames a term in the language shown: its title, slug and where it sits. */
+function TermForm({ locale, terms, hierarchical, term, onDone }: { locale: string; terms: TermRow[]; hierarchical: boolean; term: TermRow; onDone: () => void }) {
+    const form = useForm({ title: term.title ?? '', slug: term.slug ?? '', parent_id: term.parentId, locale, version: term.version });
     const errors = form.errors as Record<string, string | undefined>;
     // A term can't go under itself or a term under it.
     const blocked = new Set<number>();
-    if (term) {
-        blocked.add(term.id);
-        const start = terms.findIndex((t) => t.id === term.id);
-        for (let i = start + 1; i < terms.length && (terms[i]?.depth ?? 0) > term.depth; i++) blocked.add(terms[i]!.id);
-    }
+    blocked.add(term.id);
+    const start = terms.findIndex((t) => t.id === term.id);
+    for (let i = start + 1; i < terms.length && (terms[i]?.depth ?? 0) > term.depth; i++) blocked.add(terms[i]!.id);
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        form.submit(method, action, { preserveScroll: true, onSuccess: () => onDone?.() });
+        form.put(adminUrl(`cms/terms/${term.id}`), { preserveScroll: true, onSuccess: onDone });
     };
-    const id = term ? `term-${term.id}` : 'new-term';
+    const id = `term-${term.id}`;
 
     return (
         <form onSubmit={submit} className="cms:flex cms:flex-col cms:gap-4">
             <div className="cms:flex cms:flex-col cms:gap-1.5">
                 <Label htmlFor={`${id}-title`}>Title</Label>
-                <Input id={`${id}-title`} value={form.data.title} placeholder={term?.fallback} required autoFocus
+                <Input id={`${id}-title`} value={form.data.title} placeholder={term.fallback} required autoFocus
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => form.setData('title', e.target.value)} />
                 <FieldError message={errors.title ?? errors.version} />
             </div>
@@ -301,8 +299,8 @@ function TermForm({ action, method, locale, terms, hierarchical, term, submitLab
                 </div>
             )}
             <DialogFooter>
-                {onDone && <Button type="button" variant="ghost" onClick={onDone}>Cancel</Button>}
-                <Button type="submit" disabled={form.processing}>{submitLabel}</Button>
+                <Button type="button" variant="ghost" onClick={onDone}>Cancel</Button>
+                <Button type="submit" disabled={form.processing}>Save</Button>
             </DialogFooter>
         </form>
     );

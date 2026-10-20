@@ -178,6 +178,7 @@ final class CmsPlugin extends BasePlugin
             Route::prefix('cms')->name('cms.terms.')->controller(TermController::class)->middleware(AuthorizeContent::class.':terms')->group(function (): void {
                 Route::get('terms', 'home')->name('home');
                 Route::get('taxonomies/{taxonomy:handle}/terms', 'index')->name('index');
+                Route::get('taxonomies/{taxonomy:handle}/terms/create', 'create')->name('create');
                 Route::post('taxonomies/{taxonomy:handle}/terms', 'store')->name('store');
                 Route::put('terms/{term}', 'update')->name('update');
                 Route::post('terms/{term}/move', 'move')->name('move');
