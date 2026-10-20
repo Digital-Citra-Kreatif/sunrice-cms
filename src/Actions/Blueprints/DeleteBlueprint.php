@@ -37,7 +37,8 @@ final class DeleteBlueprint
 
     /**
      * What uses the blueprint, named: collections (entries and listing
-     * pages, deleted ones too), taxonomies, global sets and forms.
+     * pages), taxonomies, global sets and forms. Deleted collections and
+     * taxonomies don't count: there is no restoring them.
      *
      * @return list<string>
      */
@@ -45,7 +46,7 @@ final class DeleteBlueprint
     {
         $handle = $blueprint->handle;
         $users = [];
-        foreach (Collection::query()->withTrashed()->where(fn ($query) => $query->where('blueprint', $handle)->orWhere('listing_blueprint', $handle))->orderBy('title')->get() as $collection) {
+        foreach (Collection::query()->where(fn ($query) => $query->where('blueprint', $handle)->orWhere('listing_blueprint', $handle))->orderBy('title')->get() as $collection) {
             if ($collection->blueprint === $handle) {
                 $users[] = "the collection \"{$collection->title}\"";
             }
@@ -53,7 +54,7 @@ final class DeleteBlueprint
                 $users[] = "the listing page of \"{$collection->title}\"";
             }
         }
-        foreach (Taxonomy::query()->withTrashed()->where('blueprint', $handle)->orderBy('title')->get() as $taxonomy) {
+        foreach (Taxonomy::query()->where('blueprint', $handle)->orderBy('title')->get() as $taxonomy) {
             $users[] = "the taxonomy \"{$taxonomy->title}\"";
         }
         foreach (GlobalSet::query()->where('blueprint', $handle)->orderBy('title')->get() as $set) {
