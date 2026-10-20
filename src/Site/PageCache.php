@@ -22,6 +22,12 @@ use Sunrice\Cms\Support\SiteCache;
  *     app(PageCache::class)->skipWhen(fn (Request $request, ?Page $page): bool =>
  *         $request->cookies->has('cart') || $page?->collection?->handle === 'products');
  *
+ * How long a page is kept: `sunrice-cms.cache.ttl` at most, shorter when
+ * lifetimeUsing() says (the shortest answer wins; 0 keeps nothing):
+ *
+ *     app(PageCache::class)->lifetimeUsing(fn (Request $request, ?Page $page): ?int =>
+ *         $page?->collection?->handle === 'events' ? 300 : null);
+ *
  * See PageCacheProfile for how responsecache asks.
  *
  * @api
@@ -30,6 +36,9 @@ final class PageCache
 {
     /** @var list<Closure(Request, ?Page): bool> */
     private array $skips = [];
+
+    /** @var list<Closure(Request, ?Page): ?int> */
+    private array $lifetimes = [];
 
     public static function enabled(): bool
     {
@@ -42,6 +51,28 @@ final class PageCache
         $this->skips[] = $skip;
 
         return $this;
+    }
+
+    /** @param Closure(Request, ?Page): ?int $lifetime seconds to keep this page; null: no opinion */
+    public function lifetimeUsing(Closure $lifetime): self
+    {
+        $this->lifetimes[] = $lifetime;
+
+        return $this;
+    }
+
+    /** The shortest lifetimeUsing() answer for a page (never below 0), or null when none has one. */
+    public function lifetime(Request $request, ?Page $page): ?int
+    {
+        $shortest = null;
+        foreach ($this->lifetimes as $lifetime) {
+            $seconds = $lifetime($request, $page);
+            if ($seconds !== null) {
+                $shortest = max(0, $shortest === null ? $seconds : min($shortest, $seconds));
+            }
+        }
+
+        return $shortest;
     }
 
     /** A visitor who sees the same pages as everyone: served and kept pages. */
@@ -63,8 +94,8 @@ final class PageCache
     /** Whether the page just rendered may be kept. */
     public function keeps(Request $request, ?Page $page): bool
     {
-        // Search results: as many pages as searches.
-        return $page?->type !== Page::SEARCH && ! $this->skipped($request, $page);
+        // Search results: as many pages as searches. Drafts and previews: never. A lifetime of 0: not at all.
+        return $page?->type !== Page::SEARCH && $page?->preview !== true && $this->lifetime($request, $page) !== 0 && ! $this->skipped($request, $page);
     }
 
     private function skipped(Request $request, ?Page $page): bool

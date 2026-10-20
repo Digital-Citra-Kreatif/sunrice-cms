@@ -15,9 +15,9 @@ use Sunrice\Cms\Models\Form;
 use Sunrice\Cms\Support\SafeUrl;
 
 /**
- * POST /forms/{handle}: a visitor sends a form. Behind the honeypot, a
- * per-address limit and, when the form asks, the captcha; answers JSON to
- * requests that ask for it.
+ * POST /forms/{handle}: a visitor sends a form, its fields as data[handle]
+ * (or by handle). Behind the honeypot, a per-address limit and, when the
+ * form asks, the captcha; answers JSON to requests that ask for it.
  *
  * @internal
  */
@@ -39,9 +39,12 @@ final class FormController
         try {
             // The captcha first: nothing else is looked at until it's passed.
             if ($form->captcha && ! $captcha->passes($request)) {
-                throw ValidationException::withMessages([self::CAPTCHA => Lang::get('Please confirm you\'re not a robot, then send the form again.', [], $locale)]);
+                throw ValidationException::withMessages([self::CAPTCHA => Lang::get('sunrice-cms::site.captcha', [], $locale)]);
             }
-            $submit->handle($form, $request->except(['_token', 'locale', $captcha->field()]), $locale);
+            // The fields as data[handle] (what the component prints), or by handle.
+            $input = $request->all();
+            $submit->handle($form, is_array($input['data'] ?? null) ? $input['data'] : $request->except(['_token', 'locale', '_form', $captcha->field()]), $locale,
+                $request->ip(), $request->userAgent(), $request->headers->get('referer'));
         } catch (ValidationException $e) {
             // Errors under the form's own bag, so two forms on a page don't mix them up.
             throw $e->errorBag($form->handle);

@@ -28,10 +28,11 @@ final class HandleField
     {
         return [
             TextInput::make('handle')->required()->maxLength(64)->unique()->onlyOnCreate()->rules([self::RULE])->help($help),
-            TextInput::make('handle')->required()->maxLength(64)->unique()->onlyOnEdit()->rules([self::RULE])->help($warning)
+            // Left out or empty when editing: it stays as it is.
+            TextInput::make('handle')->maxLength(64)->unique()->onlyOnEdit()->rules([self::RULE])->help($warning)
                 ->saveUsing(function (Model $record, mixed $value) use ($kind): void {
                     $old = $record->getAttribute('handle');
-                    if (! is_string($value) || ! is_string($old) || $value === $old) {
+                    if (! is_string($value) || $value === '' || ! is_string($old) || $value === $old) {
                         return;
                     }
                     $record->setAttribute('handle', $value);

@@ -87,19 +87,56 @@ final class TermsField extends FieldType
         ];
     }
 
-    /** The editor gets the taxonomy's terms to choose from, nested ones indented. */
+    /**
+     * The editor gets the taxonomy's handle only: it asks cms/term-picker
+     * for the terms to choose from (see options()), and the entry editor
+     * sends the chosen terms' titles (labels()).
+     */
     public function toAdmin(Field $field, Schema $schema): array
     {
-        $taxonomy = $this->taxonomy($field);
-        $options = [];
-        if ($taxonomy !== null) {
-            $terms = Term::query()->with('translations')->where('taxonomy_id', $taxonomy->id)->orderBy('sort_order')->orderBy('id')->get();
-            foreach (self::tree(array_values($terms->all()), null, 0) as [$term, $depth]) {
-                $options[] = ['value' => (string) $term->id, 'label' => str_repeat('— ', $depth).$term->title()];
-            }
+        return ['taxonomy' => $field->configString('taxonomy')] + parent::toAdmin($field, $schema);
+    }
+
+    /**
+     * Terms to choose from, in tree order with their depth, titles in the
+     * main language: all of a taxonomy's, or those whose title holds
+     * `$search`, at most `$limit` of them.
+     *
+     * @return array{items: list<array{id: int, label: string, depth: int}>, more: bool}
+     */
+    public static function options(Taxonomy $taxonomy, string $search = '', int $limit = 100): array
+    {
+        $terms = Term::query()->with('translations')->where('taxonomy_id', $taxonomy->id)->orderBy('sort_order')->orderBy('id')
+            ->when($search !== '', fn ($query) => $query->whereHas('translations', fn ($t) => $t->whereLike('title', '%'.addcslashes($search, '%_\\').'%')))
+            ->get();
+        // A search lists what matches, flat; otherwise the tree.
+        $ordered = $search !== '' ? array_map(fn (Term $term): array => [$term, 0], array_values($terms->all())) : self::tree(array_values($terms->all()), null, 0);
+        $items = [];
+        foreach (array_slice($ordered, 0, $limit) as [$term, $depth]) {
+            $items[] = ['id' => $term->id, 'label' => $term->title(), 'depth' => $depth];
         }
 
-        return ['terms' => $options] + parent::toAdmin($field, $schema);
+        return ['items' => $items, 'more' => count($ordered) > $limit];
+    }
+
+    /**
+     * Terms' titles in the main language, by id, in one query.
+     *
+     * @param  array<int>  $ids
+     * @return array<int, string>
+     */
+    public static function labels(array $ids): array
+    {
+        $ids = array_values(array_unique(array_filter($ids, fn (int $id): bool => $id > 0)));
+        if ($ids === []) {
+            return [];
+        }
+        $labels = [];
+        foreach (Term::query()->with('translations')->whereKey(array_slice($ids, 0, 500))->get() as $term) {
+            $labels[$term->id] = $term->title();
+        }
+
+        return $labels;
     }
 
     /**

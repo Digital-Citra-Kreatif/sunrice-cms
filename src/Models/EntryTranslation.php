@@ -35,6 +35,7 @@ use Sunrice\Cms\Support\SearchText;
  * @property array<string, mixed> $draft_data
  * @property Carbon|null $published_at
  * @property int $version
+ * @property int|null $main_version the main translation's version when this one was made or last saved (another language than the main one)
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Entry $entry
@@ -70,7 +71,7 @@ class EntryTranslation extends Model
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['data' => 'array', 'draft_data' => 'array', 'published_at' => 'datetime', 'version' => 'integer'];
+        return ['data' => 'array', 'draft_data' => 'array', 'published_at' => 'datetime', 'version' => 'integer', 'main_version' => 'integer'];
     }
 
     /** @return BelongsTo<Entry, $this> */
@@ -136,6 +137,32 @@ class EntryTranslation extends Model
     }
 
     /**
+     * Another language than the main one, whose main translation changed
+     * (its version moved on) since this one was made, saved or published.
+     */
+    public function isOutdated(): bool
+    {
+        if ($this->main_version === null) {
+            return false;
+        }
+        $main = $this->entry->mainTranslation();
+
+        return $main !== null && ! $main->is($this) && $main->version > $this->main_version;
+    }
+
+    /** The main translation's version as stored now, to keep in main_version; null on the main translation. */
+    public function currentMainVersion(): ?int
+    {
+        $main = $this->entry->mainTranslation();
+        if ($main === null || $main->is($this)) {
+            return null;
+        }
+        $version = self::query()->whereKey($main->id)->value('version');
+
+        return is_numeric($version) ? (int) $version : $main->version;
+    }
+
+    /**
      * The fields as templates get them: the live version, or the draft for
      * a preview. Fields shared by all languages come from the main
      * translation.
@@ -151,9 +178,11 @@ class EntryTranslation extends Model
 
     /**
      * The stored fields, complete: the live version (or the draft) with,
-     * for a language other than the main one, the shared fields from the
-     * main translation. Other languages store only their translated
-     * fields (see ownData()), so the shared ones are never stale copies.
+     * for a language other than the main one, what all languages share from
+     * the main translation: the shared fields, and the shared fields inside
+     * translated groups, repeater rows and flexible blocks the main one has
+     * too (rows and blocks matched by id). Other languages store only the
+     * rest (see ownData()), so the shared values are never stale copies.
      *
      * @return array<string, mixed>
      */
@@ -162,8 +191,8 @@ class EntryTranslation extends Model
         $data = $draft ? $this->draft_data : ($this->data ?? []);
         $main = $this->entry->mainTranslation();
         if ($main !== null && ! $main->is($this)) {
-            $shared = array_flip($this->entry->schema()->shared());
-            $data = array_replace($data, array_intersect_key($draft ? $main->draft_data : ($main->data ?? []), $shared));
+            // Fields are keyed by handle.
+            $data = array_filter($this->entry->schema()->withShared($data, $draft ? $main->draft_data : ($main->data ?? [])), is_string(...), ARRAY_FILTER_USE_KEY);
         }
 
         return $data;
@@ -171,14 +200,21 @@ class EntryTranslation extends Model
 
     /**
      * What this translation stores of the given fields: all of them for the
-     * main one, without the shared fields (top-level handles) for the others.
+     * main one; for the others, without what completeData() takes from the
+     * main translation's draft (or the given main data).
      *
      * @param  array<mixed>  $data
+     * @param  array<mixed>|null  $main  the main translation's data to compare with (null: its draft)
      * @return array<mixed>
      */
-    public function ownData(array $data): array
+    public function ownData(array $data, ?array $main = null): array
     {
-        return $this->isMain() ? $data : array_diff_key($data, array_flip($this->entry->schema()->shared()));
+        $mainTranslation = $this->entry->mainTranslation();
+        if ($mainTranslation === null || $mainTranslation->is($this)) {
+            return $data;
+        }
+
+        return $this->entry->schema()->withoutShared($data, $main ?? $mainTranslation->draft_data);
     }
 
     /** Hydrate with this context when values() is given none: a query shares one with its whole result. */

@@ -4,30 +4,42 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Http\Controllers;
 
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Sunrice\Admin\Preferences\Preferences;
 use Sunrice\Cms\Actions\Entries\CreateEntry;
 use Sunrice\Cms\Actions\Entries\CreateTranslation;
 use Sunrice\Cms\Actions\Entries\DeleteTranslation;
+use Sunrice\Cms\Actions\Entries\MachineTranslateEntry;
 use Sunrice\Cms\Actions\Entries\PublishEntry;
 use Sunrice\Cms\Actions\Entries\RestoreEntry;
 use Sunrice\Cms\Actions\Entries\RestoreRevision;
 use Sunrice\Cms\Actions\Entries\SaveDraft;
 use Sunrice\Cms\Actions\Entries\TrashEntry;
 use Sunrice\Cms\Actions\Entries\UnpublishEntry;
+use Sunrice\Cms\Admin\EntryList;
+use Sunrice\Cms\Fields\Reference;
+use Sunrice\Cms\Fields\Types\TermsField;
 use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Collection;
+use Sunrice\Cms\Models\Comment;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Revision;
+use Sunrice\Cms\Models\Taxonomy;
+use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\Locales;
+use Sunrice\Cms\Support\References;
 use Sunrice\Cms\Support\Seo;
+use Sunrice\Cms\Translation\TranslatorFactory;
 
 /**
  * Content → Entries: the list per collection and the editor. Each route
@@ -37,53 +49,42 @@ use Sunrice\Cms\Support\Seo;
  */
 final class EntryController
 {
-    public const PER_PAGE = 25;
-
     /** The sidebar's Entries item: the first collection's list. */
     public function home(Request $request): RedirectResponse|Response
     {
         $first = Access::collections($request->user())->first();
 
         return $first === null
-            ? Inertia::render('Cms/Entries/Index', ['collection' => null, 'collections' => [], 'entries' => null, 'query' => ['search' => '', 'trashed' => false]])
+            ? Inertia::render('Cms/Entries/Index', ['collection' => null, 'collections' => [], 'entries' => null, 'query' => null])
             : redirect()->route('sunrice.admin.cms.entries.index', $first->handle);
     }
 
-    public function index(Request $request, Collection $collection): Response
+    public function index(Request $request, Collection $collection, Preferences $preferences): Response
     {
-        $search = trim((string) $request->string('search'));
-        $trashed = $request->boolean('trashed');
-        $locale = Locales::default();
-
-        $entries = EntryTranslation::query()
-            ->with(['entry.translations', 'entry.parent.translations'])
-            ->where('collection_id', $collection->id)
-            ->where('locale', $locale)
-            ->whereHas('entry', fn ($query) => $trashed ? $query->onlyTrashed() : $query->withoutTrashed())
-            // whereLike: case-insensitive on every database (ILIKE on PostgreSQL).
-            ->when($search !== '', fn ($query) => $query->whereLike('draft_title', '%'.addcslashes($search, '%_\\').'%'))
-            ->when($collection->ordered,
-                fn ($query) => $query->orderBy(Entry::query()->withTrashed()->select('sort_order')->whereColumn('sunrice_entries.id', 'sunrice_entry_translations.entry_id')),
-                fn ($query) => $query->orderBy($collection->dated ? 'published_at' : 'draft_title', $collection->dated ? 'desc' : 'asc'))
-            ->orderBy('id', $collection->ordered ? 'asc' : 'desc')
-            ->paginate(self::PER_PAGE)
-            ->withQueryString()
-            ->through(fn (EntryTranslation $translation): array => [
-                'id' => $translation->entry_id,
-                'title' => $translation->draft_title,
-                'slug' => $translation->draft_slug,
-                'status' => $translation->status(),
-                'publishedAt' => $translation->published_at?->toIso8601String(),
-                'updatedAt' => $translation->updated_at?->toIso8601String(),
-                'locales' => self::locales($translation->entry),
-                'parent' => $translation->entry->parent?->mainTranslation()?->draft_title,
-            ]);
+        $user = $request->user();
+        $list = new EntryList($collection, $request, $user instanceof Authenticatable ? $user : null, $preferences);
+        $page = $list->query()->paginate($list->perPage)->withQueryString();
 
         return Inertia::render('Cms/Entries/Index', [
             'collection' => self::collection($collection),
             'collections' => Access::collections($request->user())->map(fn (Collection $c): array => ['handle' => $c->handle, 'title' => $c->title])->all(),
-            'entries' => $entries,
-            'query' => ['search' => $search, 'trashed' => $trashed],
+            'entries' => [
+                'data' => $list->rows($page->items()),
+                'total' => $page->total(),
+                'from' => $page->firstItem(),
+                'to' => $page->lastItem(),
+                'currentPage' => $page->currentPage(),
+                'lastPage' => $page->lastPage(),
+                'prev_page_url' => $page->previousPageUrl(),
+                'next_page_url' => $page->nextPageUrl(),
+            ],
+            'query' => $list->state(),
+            'columns' => array_values($list->columnList()),
+            'filters' => $list->filterOptions(),
+            'links' => $list->links(),
+            'manualOrder' => $list->inManualOrder(),
+            'perPageOptions' => EntryList::PER_PAGE,
+            'preferencesKey' => EntryList::preferenceKey($collection),
             'can' => self::can($request, $collection),
         ]);
     }
@@ -126,6 +127,31 @@ final class EntryController
         ], $items)]);
     }
 
+    /**
+     * For terms fields: a taxonomy's terms in tree order (or those whose
+     * title matches "q"), or some by id ("ids"), main-language titles.
+     */
+    public function termPicker(Request $request): JsonResponse
+    {
+        /** @var array{taxonomy: string, q?: string|null, ids?: list<int>} $input */
+        $input = $request->validate([
+            'taxonomy' => ['required', 'string', 'max:64'],
+            'q' => ['nullable', 'string', 'max:200'],
+            'ids' => ['nullable', 'array', 'max:500'],
+            'ids.*' => ['integer'],
+        ]);
+        $taxonomy = Taxonomy::query()->where('handle', $input['taxonomy'])->first() ?? abort(404);
+        if (isset($input['ids'])) {
+            $ids = array_map(intval(...), $input['ids']);
+            $found = Term::query()->whereKey($ids)->where('taxonomy_id', $taxonomy->id)->pluck('id')->all();
+            $labels = TermsField::labels(array_values(array_filter($ids, fn (int $id): bool => in_array($id, $found, true))));
+
+            return response()->json(['items' => array_map(fn (int $id, string $label): array => ['id' => $id, 'label' => $label, 'depth' => 0], array_keys($labels), $labels), 'more' => false]);
+        }
+
+        return response()->json(TermsField::options($taxonomy, trim($input['q'] ?? '')));
+    }
+
     public function create(Request $request, Collection $collection): Response
     {
         $schema = $collection->schema();
@@ -157,8 +183,8 @@ final class EntryController
 
         return Inertia::render('Cms/Entries/Editor', [
             'collection' => self::collection($collection),
-            'fields' => $schema->toAdmin(),
-            'locales' => self::locales($entry),
+            'fields' => $translation->isMain() ? $schema->toAdmin() : self::markShared($schema->toAdmin()),
+            'locales' => EntryList::locales($entry),
             // Shared fields are edited in the main language; the others show its values.
             'shared' => $shared,
             'sharedValues' => $main === null ? [] : array_intersect_key($main->draft_data, array_flip($shared)),
@@ -175,20 +201,67 @@ final class EntryController
                 'url' => $translation->isLive() && ! $entry->trashed() ? $translation->url() : null,
                 'previewUrl' => URL::temporarySignedRoute('sunrice.cms.preview', now()->addMinutes(30), ['translation' => $translation->id]),
             ],
-            'values' => ['title' => $translation->draft_title, 'slug' => $translation->draft_slug, 'data' => $translation->draft_data, 'seo' => $translation->draft_data[Seo::KEY] ?? null],
+            // Another language's rows and blocks show the main one's shared values.
+            'values' => ['title' => $translation->draft_title, 'slug' => $translation->draft_slug, 'data' => $translation->completeData(true), 'seo' => $translation->draft_data[Seo::KEY] ?? null],
             // Every language's: the parent and its own Blade view.
             'settings' => ['parentId' => $entry->parent_id, 'template' => $entry->template, 'commentsClosed' => $entry->comments_closed, 'blueprint' => $entry->blueprintHandle()],
             // The blueprints it may use, when there's a choice (Page settings).
             'blueprints' => self::blueprints($collection),
-            'revisions' => $translation->revisions()->limit(20)->get()->map(fn (Revision $revision): array => [
+            // Loaded after the page shows (Inertia's deferred props): the sidebar's lists.
+            'revisions' => Inertia::defer(fn (): array => $translation->revisions()->limit(20)->get()->map(fn (Revision $revision): array => [
                 'id' => $revision->id,
                 'title' => $revision->title,
                 'createdAt' => $revision->created_at?->toIso8601String(),
-            ])->all(),
+            ])->all()),
+            'comments' => $collection->comments && ($request->user()?->can('cms.comments.view') ?? false)
+                ? Inertia::defer(fn (): array => self::comments($entry, $request))
+                : null,
+            // The chosen terms' titles, so terms fields show them without asking (the options come from cms/term-picker).
+            'termLabels' => TermsField::labels(array_map(fn (Reference $reference): int => $reference->id, array_filter(
+                $schema->references($translation->completeData(true)),
+                fn (Reference $reference): bool => $reference->type === Reference::TERM,
+            ))),
+            // Where other content points at it, to show and to warn before it goes.
+            'usedBy' => References::usedBy(Reference::ENTRY, $entry->id),
             // A revision restore this session can be undone.
             'undoRestore' => $request->session()->has(EntryManageController::undoKey($translation)) ? $translation->id : null,
+            // "Translate from …": another language, with machine translation set up.
+            'machineTranslate' => ! $translation->isMain() && app(TranslatorFactory::class)->configured() ? $translation->id : null,
             'can' => self::can($request, $collection, $entry, $translation->locale),
         ]);
+    }
+
+    /**
+     * The entry's comments for the editor's sidebar: counts by status and
+     * the latest five (not spam, not in the trash).
+     *
+     * @return array{counts: array{pending: int, approved: int, spam: int}, latest: list<array<string, mixed>>, canModerate: bool}
+     */
+    private static function comments(Entry $entry, Request $request): array
+    {
+        $counts = ['pending' => 0, 'approved' => 0, 'spam' => 0];
+        foreach (Comment::query()->where('entry_id', $entry->id)->toBase()->selectRaw('status, count(*) as total')->groupBy('status')->get() as $row) {
+            if (is_string($row->status) && isset($counts[$row->status])) {
+                $counts[$row->status] = is_numeric($row->total) ? (int) $row->total : 0;
+            }
+        }
+        $latest = Comment::query()->where('entry_id', $entry->id)->whereIn('status', [Comment::PENDING, Comment::APPROVED])
+            ->latest()->orderByDesc('id')->limit(5)->get();
+        Comment::withAuthors($latest);
+
+        return [
+            'counts' => $counts,
+            'latest' => array_values(array_map(fn (Comment $comment): array => [
+                'id' => $comment->id,
+                'author' => $comment->authorName(),
+                'excerpt' => Str::limit($comment->body, 160),
+                'status' => $comment->status,
+                'locale' => $comment->locale,
+                'reply' => $comment->parent_id !== null,
+                'createdAt' => $comment->created_at?->toIso8601String(),
+            ], $latest->all())),
+            'canModerate' => $request->user()?->can('cms.comments.moderate') ?? false,
+        ];
     }
 
     /** Saves the draft; with "publish", publishes it too (needs cms.entries.publish). */
@@ -247,6 +320,25 @@ final class EntryController
             ->with('success', 'Added as a draft, copied from the main language. Translate it, then publish.');
     }
 
+    /** Machine-translates what this language hasn't translated yet from the main one, into its draft. */
+    public function translate(Request $request, EntryTranslation $translation, TranslatorFactory $translators, MachineTranslateEntry $machine): RedirectResponse
+    {
+        abort_unless($translators->configured() && ! $translation->entry->trashed(), 404);
+        $version = $request->input('version');
+        try {
+            $stats = $machine->handle($translation, is_int($version) || is_string($version) ? $version : null);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', 'The translation service failed: '.$e->getMessage());
+        }
+        if ($stats->errors !== []) {
+            return back()->with('error', 'Not translated: '.implode(' ', $stats->errors));
+        }
+
+        return back()->with('success', $stats->translated === 0
+            ? 'Everything is translated already.'
+            : "Translated {$stats->translated} texts into the draft. Check them, then publish.");
+    }
+
     public function removeTranslation(Entry $entry, string $locale, DeleteTranslation $delete): RedirectResponse
     {
         $entry->loadMissing('translations');
@@ -273,28 +365,54 @@ final class EntryController
     {
         abort_if($entry->collection->trashed(), 404);
         $entry->loadMissing('translations');
-        if (is_string($locale) && $locale !== '') {
-            return $entry->translation($locale) ?? abort(404);
+        $translation = is_string($locale) && $locale !== '' ? $entry->translation($locale) : $entry->mainTranslation();
+        abort_if($translation === null, 404);
+        // The entry it belongs to is this one, its languages loaded already (no queries again for isMain(), completeData()…).
+        foreach ($entry->translations as $other) {
+            $other->setRelation('entry', $entry);
         }
 
-        return $entry->mainTranslation() ?? abort(404);
+        return $translation;
     }
 
     /**
-     * The site's languages with the entry's state in each: its status, or
-     * null where it has no translation yet.
+     * Field definitions for another language than the main one: the shared
+     * fields inside translated groups, repeaters and blocks marked `shared`,
+     * so the editor shows them read-only.
      *
-     * @return list<array{code: string, main: bool, status: string|null}>
+     * @param  list<array<string, mixed>>  $fields
+     * @return list<array<string, mixed>>
      */
-    private static function locales(Entry $entry): array
+    private static function markShared(array $fields, bool $nested = false): array
     {
-        $main = $entry->mainTranslation();
+        foreach ($fields as $i => $field) {
+            if (($field['translatable'] ?? true) === false) {
+                if ($nested) {
+                    $fields[$i]['shared'] = true;
+                }
 
-        return array_map(fn (string $code): array => [
-            'code' => $code,
-            'main' => $main?->locale === $code,
-            'status' => ($translation = $entry->translation($code)) === null ? null : $translation->status(),
-        ], Locales::all());
+                continue;
+            }
+            if (is_array($field['fields'] ?? null)) {
+                /** @var list<array<string, mixed>> $children */
+                $children = $field['fields'];
+                $fields[$i]['fields'] = self::markShared($children, true);
+            }
+            if (is_array($field['blocks'] ?? null)) {
+                $blocks = $field['blocks'];
+                foreach ($blocks as $b => $block) {
+                    if (is_array($block) && is_array($block['fields'] ?? null)) {
+                        /** @var list<array<string, mixed>> $children */
+                        $children = $block['fields'];
+                        $block['fields'] = self::markShared($children, true);
+                        $blocks[$b] = $block;
+                    }
+                }
+                $fields[$i]['blocks'] = $blocks;
+            }
+        }
+
+        return $fields;
     }
 
     private static function publishAt(Request $request): ?\DateTimeInterface

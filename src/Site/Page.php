@@ -13,7 +13,10 @@ use Sunrice\Cms\Support\Locales;
 
 /**
  * The site page being shown, for layouts: `Cms::page()` (null outside the
- * CMS's pages), `Cms::bodyClass()` and `Cms::localeUrls()`.
+ * CMS's pages), `Cms::bodyClass()` and `Cms::localeUrls()`. `$fallback`:
+ * the entry or term is the main language's, shown in a language it isn't
+ * translated into (`$locale`). `$draft`: an editor looking at the live
+ * page's unpublished changes (`?draft`; `$preview` too).
  *
  * @api
  */
@@ -42,6 +45,8 @@ final readonly class Page
         public bool $preview = false,
         public bool $home = false,
         public int $pageNumber = 1,
+        public bool $fallback = false,
+        public bool $draft = false,
     ) {}
 
     public static function current(): ?self
@@ -51,16 +56,30 @@ final readonly class Page
         return $page instanceof self ? $page : null;
     }
 
-    /** @internal set by the site's controller */
-    public function share(): void
+    /**
+     * Sets the page shown, with the view Cms::resolveTemplateUsing() hooks
+     * chose, and returns it.
+     *
+     * @internal set by the site's controllers
+     */
+    public function share(): self
     {
-        request()->attributes->set(self::KEY, $this);
+        $page = app(SiteHooks::class)->template($this);
+        request()->attributes->set(self::KEY, $page);
+
+        return $page;
+    }
+
+    /** The same page rendered with another view. */
+    public function withView(string $view): self
+    {
+        return new self($this->type, $this->locale, $view, $this->entry, $this->collection, $this->term, $this->preview, $this->home, $this->pageNumber, $this->fallback, $this->draft);
     }
 
     /**
      * Classes for the <body>, so CSS and scripts can target a kind of page:
      *
-     *   entry     page-entry collection-{handle} entry-{id} entry-{slug} [home] [has-parent parent-{id}] [is-preview]
+     *   entry     page-entry collection-{handle} entry-{id} entry-{slug} [home] [has-parent parent-{id}] [is-preview | is-draft]
      *   listing   page-listing collection-{handle} [paged paged-{n}]
      *   term      page-term taxonomy-{handle} term-{id} term-{slug} [paged paged-{n}]
      *   search    page-search [paged paged-{n}]
@@ -91,13 +110,15 @@ final readonly class Page
         if ($this->pageNumber > 1) {
             array_push($own, 'paged', 'paged-'.$this->pageNumber);
         }
-        if ($this->preview) {
+        if ($this->draft) {
+            $own[] = 'is-draft';
+        } elseif ($this->preview) {
             $own[] = 'is-preview';
         }
         $own[] = 'template-'.str_replace(['::', '.', '/'], '-', $this->view);
         $own[] = 'lang-'.$this->locale;
 
-        return self::clean([...$own, ...$classes]);
+        return self::clean([...$own, ...app(SiteHooks::class)->bodyClasses($this), ...$classes]);
     }
 
     /**
@@ -111,18 +132,36 @@ final readonly class Page
         $urls = [];
         if ($this->entry !== null) {
             $entry = $this->entry->entry;
+            $site = app(Site::class);
+            $main = null;
             foreach ($entry->translations as $translation) {
                 $translation->setRelation('entry', $entry);
                 if ($translation->isLive() && ($url = $translation->url()) !== null) {
                     $urls[$translation->locale] = $url;
                 }
+                if ($translation->locale === Locales::default()) {
+                    $main = $translation;
+                }
+            }
+            // Languages it isn't live in show the main language's (Site::fallback()).
+            foreach (Locales::all() as $locale) {
+                if (! isset($urls[$locale]) && $main !== null && $site->isFallbackFor($main, $locale) && ($url = $site->urlIn($main, $locale)) !== null) {
+                    $urls[$locale] = $url;
+                }
             }
         } elseif ($this->term !== null) {
             $term = $this->term->term;
+            $site = app(Site::class);
             foreach ($term->translations as $translation) {
                 $translation->setRelation('term', $term);
                 if (($url = $translation->url()) !== null) {
                     $urls[$translation->locale] = $this->paged($url);
+                }
+            }
+            $main = $term->translations->firstWhere('locale', Locales::default());
+            foreach (Locales::all() as $locale) {
+                if (! isset($urls[$locale]) && $main !== null && Site::fallback() && ($url = $site->termUrlIn($main, $locale)) !== null) {
+                    $urls[$locale] = $this->paged($url);
                 }
             }
         } elseif ($this->type === self::SEARCH) {

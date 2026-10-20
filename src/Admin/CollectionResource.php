@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Admin;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Resources\Forms\CheckboxList;
 use Sunrice\Admin\Resources\Forms\Form;
 use Sunrice\Admin\Resources\Forms\NumberInput;
@@ -11,11 +15,15 @@ use Sunrice\Admin\Resources\Forms\Select;
 use Sunrice\Admin\Resources\Forms\TextInput;
 use Sunrice\Admin\Resources\Forms\Toggle;
 use Sunrice\Admin\Resources\Resource;
+use Sunrice\Admin\Resources\Tables\Action;
+use Sunrice\Admin\Resources\Tables\ActionFailed;
 use Sunrice\Admin\Resources\Tables\Column;
+use Sunrice\Admin\Resources\Tables\Filter;
 use Sunrice\Admin\Resources\Tables\Table;
+use Sunrice\Cms\Actions\Collections\RestoreDeleted;
 use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Collection;
-use Sunrice\Cms\Site\RoutePattern;
+use Sunrice\Cms\Site\RoutePatternRule;
 use Sunrice\Cms\Support\StructuredData;
 
 /**
@@ -59,12 +67,8 @@ final class CollectionResource extends Resource
             Toggle::make('ordered')->label('Manual order')->help('Editors put entries in order (Move up, Move down), instead of by date or title.'),
             Toggle::make('hierarchical')->label('Hierarchical')->help('Entries may have a parent entry, like pages under pages (for breadcrumbs and sub-menus; their URLs stay the same).'),
             TextInput::make('route')->label('URL')->placeholder('/blog/{slug}')->unique()
-                ->rules([function (string $attribute, mixed $value, \Closure $fail): void {
-                    if (is_string($value) && $value !== '' && ! RoutePattern::isValid($value)) {
-                        $fail('Use a path with {slug} once, like /blog/{slug} or /{slug} for pages: lowercase letters, digits, dashes.');
-                    }
-                }])
-                ->help('Where entries are on the site. Empty: they have no page of their own.'),
+                ->rules([new RoutePatternRule])
+                ->help('Where entries are on the site. Empty: they have no page of their own. A related entry\'s slug goes in with its field: /projects/{project}/{slug}.'),
             TextInput::make('listing_route')->label('Listing page URL')->placeholder('/blog')->unique()->maxLength(255)
                 ->rules(['regex:#^(/[a-z0-9\-_]+)+$#'])
                 ->help('A page listing the entries, like /blog (template cms.{handle}-listing, else cms.listing). Empty: none.'),
@@ -78,6 +82,7 @@ final class CollectionResource extends Resource
             TextInput::make('template')->placeholder('cms.article')
                 ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
                 ->help('The Blade view for its entries. Empty: cms.{handle}, else cms.entry.'),
+            SeoMapping::section('an entry\'s'),
         ]);
     }
 
@@ -90,6 +95,21 @@ final class CollectionResource extends Resource
                 Column::make('blueprint'),
                 Column::make('route')->label('URL'),
                 Column::make('dated')->boolean(),
+            ])
+            // Deleted ones keep their entries: list them, and bring them back.
+            ->filters([Filter::make('trashed')->label('Deleted')->options(['only' => 'Deleted'])->query(fn (Builder $query) => $query->withoutGlobalScope(SoftDeletingScope::class)->whereNotNull($query->qualifyColumn('deleted_at')))])
+            ->actions([
+                Action::make('restore')->trashed()->ability('delete')->handle(function (Model $collection): string {
+                    if ($collection instanceof Collection) {
+                        try {
+                            app(RestoreDeleted::class)->collection($collection);
+                        } catch (ValidationException $e) {
+                            throw new ActionFailed(implode(' ', $e->validator->errors()->all()));
+                        }
+                    }
+
+                    return 'Restored.';
+                }),
             ])
             ->defaultSort('title');
     }

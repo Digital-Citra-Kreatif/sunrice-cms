@@ -8,6 +8,7 @@ use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Support\MediaUsage;
+use Sunrice\Cms\Support\References;
 use Sunrice\Cms\Support\Seo;
 
 /**
@@ -39,6 +40,11 @@ final class SaveDraft
             // Another language than the main one leaves the shared fields alone.
             $schema = $translation->editableSchema();
             $data = EntryInput::merge($schema, $translation->draft_data, $input['data'] ?? null);
+            // Validated with the main language's shared values in rows and blocks; ownData() drops them again.
+            $main = $translation->entry->mainTranslation();
+            if ($main !== null && ! $main->is($translation)) {
+                $data = $translation->entry->schema()->withShared($data, $main->draft_data);
+            }
             $values = EntryInput::validate(
                 $schema,
                 array_key_exists('title', $input) ? $input['title'] : $translation->draft_title,
@@ -67,6 +73,8 @@ final class SaveDraft
                 return [];
             }
 
+            // Another language is up to date with the main one as it is now (EntryTranslation::isOutdated()).
+            $mainVersion = $translation->currentMainVersion();
             // Only if nobody saved in between: the version check and the write are one statement.
             $saved = EntryTranslation::query()->whereKey($translation->id)->where('version', (int) $expected)->update([
                 'draft_title' => $values['title'],
@@ -74,7 +82,7 @@ final class SaveDraft
                 'draft_data' => json_encode($values['data'], JSON_THROW_ON_ERROR),
                 'version' => (int) $expected + 1,
                 'updated_at' => now(),
-            ]);
+            ] + ($mainVersion === null ? [] : ['main_version' => $mainVersion]));
             if ($saved === 0) {
                 throw ValidationException::withMessages(['version' => 'Someone else saved this entry after you opened it. Reload to see their changes.']);
             }
@@ -85,8 +93,9 @@ final class SaveDraft
             return $translation;
         }
         $translation->refresh();
-        // A query update fires no model events: keep the media library's "Used by" here.
+        // A query update fires no model events: keep the media library's and the references' "Used by" here.
         MediaUsage::entry($translation);
+        References::entry($translation);
         $this->activity->updated('entry', $translation->entry, $translation->draft_title, $changed);
 
         return $translation;

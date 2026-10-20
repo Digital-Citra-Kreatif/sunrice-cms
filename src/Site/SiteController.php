@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Site;
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
+use Sunrice\Admin\Panel;
 use Sunrice\Cms\Actions\Entries\SaveEntrySettings;
 use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\HydrationContext;
@@ -15,6 +18,7 @@ use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Settings\SiteSettings;
+use Sunrice\Cms\Support\Access;
 
 /**
  * Renders entries on the site: the fallback route (paths no app route
@@ -36,13 +40,21 @@ final class SiteController
             return $this->renderListing($listing, $request);
         }
         $page = $site->match($request->path());
+        // The address's language: another than the page's when it stands in for a translation (Site::fallback()).
+        $locale = $site->locale($request->path());
         if ($page instanceof TermTranslation) {
-            return $this->renderTerm($page);
+            return $this->renderTerm($page, $locale);
         }
         $translation = $page;
-        // The homepage is at /: its own address goes there.
-        if ($translation !== null && ($own = $site->ownPath($translation)) !== null && ($served = $site->path($translation, $translation->slug)) !== $own
-            && '/'.trim($request->path(), '/') === $own) {
+        $path = '/'.trim($request->path(), '/');
+        if ($translation !== null && $translation->locale !== $locale) {
+            // The homepage in a language it isn't translated into is at /{locale}.
+            if ($site->isHomepage($translation) && $path !== '/'.$locale) {
+                return redirect()->to(self::withQuery(url('/'.$locale), $request), 301);
+            }
+        } elseif ($translation !== null && ($own = $site->ownPath($translation)) !== null && ($served = $site->path($translation, $translation->slug)) !== $own
+            && $path === $own) {
+            // The homepage is at /: its own address goes there.
             return redirect()->to(self::withQuery(url((string) $served), $request), 301);
         }
         if ($translation === null) {
@@ -52,7 +64,51 @@ final class SiteController
             return redirect()->to(self::withQuery($redirect->to_url, $request), $redirect->status);
         }
 
-        return $this->render($translation, preview: false);
+        // Editors signed in to the panel see the unpublished changes on the page itself.
+        if ($translation->locale === $locale && self::seesDrafts($translation)) {
+            if ($translation->hasUnpublishedChanges()) {
+                $draft = $request->query->has('draft');
+
+                return $this->withDraftBanner($this->render($translation, preview: $draft, draft: $draft), $translation, $draft);
+            }
+        }
+
+        return $this->render($translation, preview: false, locale: $locale);
+    }
+
+    /** Signed in to the panel with cms.entries.view-drafts, and may see the entry's collection. */
+    private static function seesDrafts(EntryTranslation $translation): bool
+    {
+        $user = auth(app(Panel::class)->getGuard())->user();
+
+        return $user instanceof Authorizable && $user->can('cms.entries.view-drafts') && Access::entries($user, 'view', $translation->entry->collection);
+    }
+
+    /** The draft banner after <body>, whatever the template; and never kept by any cache. */
+    private function withDraftBanner(Response $response, EntryTranslation $translation, bool $draft): Response
+    {
+        $live = $translation->url();
+        $banner = view('sunrice-cms::draft-banner', [
+            'entry' => $translation,
+            'draft' => $draft,
+            'liveUrl' => $live,
+            'draftUrl' => $live === null ? null : $live.'?draft',
+            'editUrl' => Route::has('sunrice.admin.cms.entries.edit') ? route('sunrice.admin.cms.entries.edit', [$translation->entry_id, 'locale' => $translation->locale]) : null,
+        ])->render();
+        $content = (string) $response->getContent();
+        $content = preg_match('/<body\b[^>]*>/i', $content) === 1
+            ? (string) preg_replace_callback('/<body\b[^>]*>/i', fn (array $m): string => $m[0].$banner, $content, 1)
+            : $banner.$content;
+        $view = $response->getOriginalContent();
+        $response->setContent($content);
+        // Still the view the page was rendered from, for whoever inspects the response.
+        $response->original = $view;
+        $response->headers->set('Cache-Control', 'private, no-store');
+        if ($draft) {
+            $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
+        }
+
+        return $response;
     }
 
     /** A draft as it would look, from the editor's signed, expiring link. */
@@ -72,33 +128,40 @@ final class SiteController
         return $query === null || $query === '' ? $url : $url.(str_contains($url, '?') ? '&' : '?').$query;
     }
 
-    private function render(EntryTranslation $translation, bool $preview): Response
+    /** @param  string|null  $locale  the page's language: another than the translation's when it stands in for one */
+    private function render(EntryTranslation $translation, bool $preview, ?string $locale = null, bool $draft = false): Response
     {
-        app()->setLocale($translation->locale);
+        $locale ??= $translation->locale;
+        $fallback = $locale !== $translation->locale;
+        app()->setLocale($locale);
         $collection = $translation->entry->collection;
         $view = self::view($collection->handle, $collection->template, $translation->entry->template);
-        (new Page(Page::ENTRY, $translation->locale, $view, entry: $translation, collection: $collection, preview: $preview,
-            home: app(Site::class)->isHomepage($translation)))->share();
+        $view = (new Page(Page::ENTRY, $locale, $view, entry: $translation, collection: $collection, preview: $preview,
+            home: app(Site::class)->isHomepage($translation), fallback: $fallback, draft: $draft))->share()->view;
 
         return $this->hidden(response()->view($view, [
             'entry' => $translation,
             'title' => $preview ? $translation->draft_title : $translation->title,
-            'values' => $translation->values(new HydrationContext($translation->locale, $preview)),
+            'values' => $translation->values(new HydrationContext($locale, $preview)),
             // Rich text is cleaned when saved, so it's the only HTML a template may print as is.
             'richText' => array_values(array_map(fn (Field $field): string => $field->handle, array_filter($translation->entry->schema()->fields(), fn (Field $field): bool => $field->type === 'rich_text'))),
             'collection' => $collection,
-            'locale' => $translation->locale,
+            'locale' => $locale,
             'preview' => $preview,
+            'draft' => $draft,
+            // The main language's content, in a language it isn't translated into.
+            'fallback' => $fallback,
         ]));
     }
 
     /** A term's page: its fields and the live entries with it, newest first. */
-    private function renderTerm(TermTranslation $translation): Response
+    private function renderTerm(TermTranslation $translation, string $locale): Response
     {
-        app()->setLocale($translation->locale);
+        $fallback = $locale !== $translation->locale;
+        app()->setLocale($locale);
         $term = $translation->term;
         $taxonomy = $term->taxonomy;
-        $entries = EntryTranslation::query()->live()->with('entry.collection')->where('locale', $translation->locale)
+        $entries = EntryTranslation::query()->live()->with('entry.collection')->where('locale', $locale)
             ->whereHas('entry.terms', fn ($q) => $q->where('sunrice_terms.id', $term->id))
             ->orderByDesc('published_at')->orderByDesc('id')->paginate(10)->withQueryString();
         abort_if($entries->currentPage() > 1 && $entries->isEmpty(), 404);
@@ -111,7 +174,7 @@ final class SiteController
             }
         }
         $schema = $taxonomy->schema();
-        (new Page(Page::TERM, $translation->locale, $view, term: $translation, pageNumber: $entries->currentPage()))->share();
+        $view = (new Page(Page::TERM, $locale, $view, term: $translation, pageNumber: $entries->currentPage(), fallback: $fallback))->share()->view;
 
         return $this->hidden(response()->view($view, [
             'term' => $translation,
@@ -120,7 +183,8 @@ final class SiteController
             'entries' => $entries,
             'values' => $translation->values(),
             'richText' => array_values(array_map(fn (Field $field): string => $field->handle, array_filter($schema->fields(), fn (Field $field): bool => $field->type === 'rich_text'))),
-            'locale' => $translation->locale,
+            'locale' => $locale,
+            'fallback' => $fallback,
         ]));
     }
 
@@ -147,7 +211,7 @@ final class SiteController
             }
         }
 
-        (new Page(Page::LISTING, $listing->locale, $view, collection: $collection, pageNumber: $entries->currentPage()))->share();
+        $view = (new Page(Page::LISTING, $listing->locale, $view, collection: $collection, pageNumber: $entries->currentPage()))->share()->view;
 
         return $this->hidden(response()->view($view, [
             'collection' => $collection,

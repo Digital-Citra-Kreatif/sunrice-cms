@@ -50,6 +50,7 @@ final class SubmissionController
                     'locale' => $submission->locale,
                     'createdAt' => $submission->created_at?->toIso8601String(),
                     'rows' => SubmissionRows::of($submission),
+                    'visitor' => ['ip' => $submission->ip_address, 'userAgent' => $submission->user_agent, 'referrer' => $submission->referrer],
                 ];
             });
 
@@ -80,12 +81,12 @@ final class SubmissionController
         return redirect()->back()->with('success', 'Submission deleted.');
     }
 
-    /** All of a form's submissions as CSV, a column per field. Logged: it carries personal data out. */
+    /** All of a form's submissions as CSV, a column per field, then who sent it. Logged: it carries personal data out. */
     public function export(Request $request, Form $form, SecurityLog $security): StreamedResponse
     {
         $user = $request->user();
         $security->record('exported', $user instanceof Model ? $user : null, null, ['note' => $form->title.' submissions (CSV)']);
-        $headers = ['Sent', 'Language', ...array_map(SubmissionRows::label(...), $form->schema()->fields())];
+        $headers = ['Sent', 'Language', ...array_map(SubmissionRows::label(...), $form->schema()->fields()), 'IP address', 'User agent', 'Referrer'];
 
         return response()->streamDownload(function () use ($form, $headers): void {
             $out = fopen('php://output', 'w');
@@ -100,7 +101,7 @@ final class SubmissionController
                     foreach ($form->schema()->fields() as $field) {
                         $values[] = SubmissionRows::text($submission->data[$field->handle] ?? null, $field);
                     }
-                    $cells = [(string) $submission->created_at?->toDateTimeString(), $submission->locale, ...$values];
+                    $cells = [(string) $submission->created_at?->toDateTimeString(), $submission->locale, ...$values, (string) $submission->ip_address, (string) $submission->user_agent, (string) $submission->referrer];
                     Csv::write($out, $cells);
                 }
             });

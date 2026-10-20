@@ -12,6 +12,8 @@ use Sunrice\Cms\Globals;
 use Sunrice\Cms\Models\GlobalSet;
 use Sunrice\Cms\Models\GlobalValue;
 use Sunrice\Cms\Support\Locales;
+use Sunrice\Cms\Support\MediaUsage;
+use Sunrice\Cms\Support\References;
 use Sunrice\Cms\Support\Versioned;
 
 /**
@@ -55,6 +57,9 @@ final class SaveGlobals
         if ($value->exists) {
             // Only if nobody saved in between: the version check and the write are one statement.
             Versioned::update($value, $expected, ['data' => json_encode($normalized, JSON_THROW_ON_ERROR)]);
+            // A query update fires no model events: keep "Used by" here.
+            MediaUsage::global($value);
+            References::global($value);
         } else {
             $value->data = $normalized;
             $value->save();

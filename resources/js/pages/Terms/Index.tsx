@@ -1,13 +1,15 @@
 import * as React from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { ArrowDown, ArrowUp, FileText, Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react';
+import { FileText, Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
-    Button, Card, CardContent, Input, Label, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs,
+    Button, Card, CardContent, Input, Label, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SortableHandle, SortableList,
+    useBreadcrumbs,
 } from '@sunrice/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { FieldError } from '@/components/FieldInput.tsx';
 import { localeName } from '@/lib/entries.ts';
+import { childIndexes, reorderLevel } from '@/lib/tree.ts';
 
 interface TermRow {
     id: number;
@@ -20,6 +22,8 @@ interface TermRow {
     version: number | null;
     /** The main language's title, for untranslated terms. */
     fallback: string;
+    /** Where other content points at it. */
+    usedBy?: string[];
 }
 
 interface Props {
@@ -34,10 +38,19 @@ interface Props {
 
 const TOP = '__top';
 
+/** " It's used by A; B." for confirmations, or nothing. */
+function usedBySentence(usedBy: string[] = []): string {
+    if (usedBy.length === 0) return '';
+    return ` It's used by ${usedBy.slice(0, 5).join('; ')}${usedBy.length > 5 ? ` and ${usedBy.length - 5} more` : ''}.`;
+}
+
 export default function TermsIndex({ taxonomy, taxonomies, terms, locales, locale, trashed = false }: Props) {
     useBreadcrumbs([{ label: 'Terms', href: adminUrl('cms/terms') }, ...(taxonomy ? [{ label: taxonomy.title }] : [])]);
     const [confirm, confirmDialog] = useConfirm();
     const [editing, setEditing] = React.useState<number | null>(null);
+    // In the order dragged until the server's comes back.
+    const [rows, setRows] = React.useState(terms);
+    React.useEffect(() => setRows(terms), [terms]);
 
     if (!taxonomy) {
         return (
@@ -48,6 +61,64 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
         );
     }
     const base = adminUrl(`cms/taxonomies/${taxonomy.handle}/terms`);
+    const reorder = (parent: number, order: number[]) => {
+        const ids = order.map((index) => rows[index]!.id);
+        setRows(reorderLevel(rows, parent, order));
+        router.post(adminUrl('cms/terms/reorder'), { taxonomy: taxonomy.handle, ids, parent_id: parent < 0 ? null : rows[parent]!.id },
+            { preserveScroll: true, preserveState: true, onError: () => setRows(terms) });
+    };
+
+    /** The terms directly under the one at `parent` (-1: the top), dragged into order among themselves, each with the terms under it. */
+    const level = (parent: number): React.ReactNode => (
+        <SortableList items={childIndexes(rows, parent)} getId={(index) => rows[index]!.id} disabled={trashed} onReorder={(order) => reorder(parent, order)}
+            className={parent < 0 ? 'cms:gap-1' : 'cms:mt-1 cms:gap-1 cms:pl-6'}>
+            {(index, { handle, isOverlay }) => {
+                const term = rows[index]!;
+                return (
+                    <div className="cms:rounded-lg cms:border cms:border-border/70 cms:bg-card">
+                        <div className="cms:p-2">
+                            {trashed ? (
+                                <div className="cms:flex cms:items-center cms:gap-3 cms:pl-1">
+                                    <span className="cms:flex-1 cms:font-medium">{term.title ?? term.fallback}</span>
+                                    <Button variant="outline" size="sm" onClick={() => router.post(adminUrl(`cms/terms/${term.id}/restore`), {}, { preserveScroll: true })}><RotateCcw /> Restore</Button>
+                                    <Button variant="ghost" size="sm" className="cms:text-destructive"
+                                        onClick={() => confirm(`Delete "${term.fallback}" for good, in every language? Entries lose it.${usedBySentence(term.usedBy)}`,
+                                            () => router.delete(adminUrl(`cms/terms/${term.id}/force`), { preserveScroll: true, data: (term.usedBy ?? []).length > 0 ? { force: 1 } : {} }))}>
+                                        <Trash2 /> Delete for good
+                                    </Button>
+                                </div>
+                            ) : editing === term.id && !isOverlay ? (
+                                <TermForm action={adminUrl(`cms/terms/${term.id}`)} method="put" locale={locale} terms={terms} hierarchical={taxonomy.hierarchical}
+                                    term={term} submitLabel="Save" onDone={() => setEditing(null)} />
+                            ) : (
+                                <div className="cms:flex cms:items-center cms:gap-2">
+                                    <SortableHandle {...handle} label={`Move ${term.fallback}`} />
+                                    <div className="cms:min-w-0 cms:flex-1">
+                                        {term.title !== null
+                                            ? <span className="cms:font-medium">{term.title}</span>
+                                            : <span className="cms:text-muted-foreground cms:italic">{term.fallback} · not translated</span>}
+                                        {term.slug && <span className="cms:ml-2 cms:text-xs cms:text-muted-foreground">/{term.slug}</span>}
+                                    </div>
+                                    <Button variant="ghost" size="icon" className="cms:size-8" aria-label={`Rename ${term.fallback}`} onClick={() => setEditing(term.id)}><Pencil /></Button>
+                                    {taxonomy.pages && term.title !== null && (
+                                        <Button variant="ghost" size="icon" className="cms:size-8" aria-label={`Edit ${term.fallback}'s page`} asChild>
+                                            <Link href={adminUrl(`cms/terms/${term.id}/edit`) + `?locale=${locale}`}><FileText /></Link>
+                                        </Button>
+                                    )}
+                                    <Button variant="ghost" size="icon" className="cms:size-8 cms:text-destructive" aria-label={`Move ${term.fallback} to the trash`}
+                                        onClick={() => confirm(`Move "${term.fallback}" to the trash, with the terms under it? It comes off the site; you can restore it.${usedBySentence(term.usedBy)}`,
+                                            () => router.delete(adminUrl(`cms/terms/${term.id}`), { preserveScroll: true }))}>
+                                        <Trash2 />
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                        {!isOverlay && !trashed && childIndexes(rows, index).length > 0 && <div className="cms:px-2 cms:pb-2">{level(index)}</div>}
+                    </div>
+                );
+            }}
+        </SortableList>
+    );
 
     return (
         <div className="cms:flex cms:max-w-4xl cms:flex-col cms:gap-6">
@@ -84,56 +155,8 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
                 </CardContent>
             </Card>}
 
-            <Card className="cms:py-0">
-                <ul className="cms:divide-y">
-                    {terms.length === 0 && <li className="cms:p-6 cms:text-center cms:text-muted-foreground">{trashed ? 'The trash is empty.' : 'No terms yet.'}</li>}
-                    {terms.map((term) => {
-                        const siblings = terms.filter((t) => t.parentId === term.parentId);
-                        const position = siblings.findIndex((t) => t.id === term.id);
-                        return (
-                            <li key={term.id} className="cms:p-3" style={{ paddingLeft: `${0.75 + term.depth * 1.5}rem` }}>
-                                {trashed ? (
-                                    <div className="cms:flex cms:items-center cms:gap-3">
-                                        <span className="cms:flex-1 cms:font-medium">{term.title ?? term.fallback}</span>
-                                        <Button variant="outline" size="sm" onClick={() => router.post(adminUrl(`cms/terms/${term.id}/restore`), {}, { preserveScroll: true })}><RotateCcw /> Restore</Button>
-                                        <Button variant="ghost" size="sm" className="cms:text-destructive"
-                                            onClick={() => confirm(`Delete "${term.fallback}" for good, in every language? Entries lose it.`,
-                                                () => router.delete(adminUrl(`cms/terms/${term.id}/force`), { preserveScroll: true }))}>
-                                            <Trash2 /> Delete for good
-                                        </Button>
-                                    </div>
-                                ) : editing === term.id ? (
-                                    <TermForm action={adminUrl(`cms/terms/${term.id}`)} method="put" locale={locale} terms={terms} hierarchical={taxonomy.hierarchical}
-                                        term={term} submitLabel="Save" onDone={() => setEditing(null)} />
-                                ) : (
-                                    <div className="cms:flex cms:items-center cms:gap-3">
-                                        <div className="cms:min-w-0 cms:flex-1">
-                                            {term.title !== null
-                                                ? <span className="cms:font-medium">{term.title}</span>
-                                                : <span className="cms:text-muted-foreground cms:italic">{term.fallback} · not translated</span>}
-                                            {term.slug && <span className="cms:ml-2 cms:text-xs cms:text-muted-foreground">/{term.slug}</span>}
-                                        </div>
-                                        <Button variant="ghost" size="icon" className="cms:size-8" aria-label={`Move ${term.fallback} up`} disabled={position === 0}
-                                            onClick={() => router.post(adminUrl(`cms/terms/${term.id}/move`), { direction: 'up' }, { preserveScroll: true })}><ArrowUp /></Button>
-                                        <Button variant="ghost" size="icon" className="cms:size-8" aria-label={`Move ${term.fallback} down`} disabled={position === siblings.length - 1}
-                                            onClick={() => router.post(adminUrl(`cms/terms/${term.id}/move`), { direction: 'down' }, { preserveScroll: true })}><ArrowDown /></Button>
-                                        <Button variant="ghost" size="icon" className="cms:size-8" aria-label={`Rename ${term.fallback}`} onClick={() => setEditing(term.id)}><Pencil /></Button>
-                                        {taxonomy.pages && term.title !== null && (
-                                            <Button variant="ghost" size="icon" className="cms:size-8" aria-label={`Edit ${term.fallback}'s page`} asChild>
-                                                <Link href={adminUrl(`cms/terms/${term.id}/edit`) + `?locale=${locale}`}><FileText /></Link>
-                                            </Button>
-                                        )}
-                                        <Button variant="ghost" size="icon" className="cms:size-8 cms:text-destructive" aria-label={`Move ${term.fallback} to the trash`}
-                                            onClick={() => confirm(`Move "${term.fallback}" to the trash, with the terms under it? It comes off the site; you can restore it.`,
-                                                () => router.delete(adminUrl(`cms/terms/${term.id}`), { preserveScroll: true }))}>
-                                            <Trash2 />
-                                        </Button>
-                                    </div>
-                                )}
-                            </li>
-                        );
-                    })}
-                </ul>
+            <Card className="cms:p-2">
+                {rows.length === 0 ? <p className="cms:p-4 cms:text-center cms:text-muted-foreground">{trashed ? 'The trash is empty.' : 'No terms yet.'}</p> : level(-1)}
             </Card>
         </div>
     );

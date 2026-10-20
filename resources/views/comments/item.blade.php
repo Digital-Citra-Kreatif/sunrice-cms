@@ -8,7 +8,7 @@
     </p>
     <div class="sunrice-comment-body">{{ $comment->html() }}</div>
     @if ($open)
-        <p class="sunrice-comment-reply"><a href="?reply_to={{ $comment->id }}#comment-form" rel="nofollow">{{ __('Reply') }}</a></p>
+        <p class="sunrice-comment-reply"><a href="?reply_to={{ $comment->id }}#comment-form" rel="nofollow">{{ __('sunrice-cms::site.comments.reply') }}</a></p>
     @endif
     @if ($replyTo?->id === $comment->id)
         @include('sunrice-cms::comments.form', ['parent' => $comment])

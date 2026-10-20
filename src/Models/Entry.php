@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -111,6 +112,34 @@ class Entry extends Model
         return $this->collection->schemaFor($this->blueprint);
     }
 
+    /**
+     * The entries filled in with a blueprint (trashed ones too): their own
+     * when their collection offers it, else their collection's.
+     *
+     * @return Builder<Entry>
+     */
+    public static function usingBlueprint(string $handle): Builder
+    {
+        $query = self::withTrashed();
+        $collections = Collection::withTrashed()->get(['id', 'blueprint', 'blueprints'])
+            ->filter(fn (Collection $collection): bool => in_array($handle, $collection->allowedBlueprints(), true));
+        if ($collections->isEmpty()) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $any) use ($collections, $handle): void {
+            foreach ($collections as $collection) {
+                $any->orWhere(function (Builder $in) use ($collection, $handle): void {
+                    $in->where('collection_id', $collection->id);
+                    $collection->blueprint === $handle
+                        // Its own blueprint: unless the entry picked another one the collection offers.
+                        ? $in->where(fn (Builder $own) => $own->whereNull('blueprint')->orWhereNotIn('blueprint', array_values(array_diff($collection->allowedBlueprints(), [$handle]))))
+                        : $in->where('blueprint', $handle);
+                });
+            }
+        });
+    }
+
     /** @return HasMany<EntryTranslation, $this> */
     public function translations(): HasMany
     {
@@ -172,5 +201,18 @@ class Entry extends Model
     public function mainTranslation(): ?EntryTranslation
     {
         return $this->translation(Locales::default()) ?? $this->translations->sortBy('id')->first();
+    }
+
+    /**
+     * Where other content points at this entry through its fields: entries
+     * (draft or live), terms and global sets, a row per language and field.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, ContentReference>
+     */
+    public function referencedBy(): \Illuminate\Database\Eloquent\Collection
+    {
+        return ContentReference::query()->where('target_type', ContentReference::ENTRY)->where('target_id', $this->id)
+            ->whereNot(fn ($query) => $query->where('source_type', ContentReference::ENTRY)->where('source_id', $this->id))
+            ->orderBy('id')->get();
     }
 }

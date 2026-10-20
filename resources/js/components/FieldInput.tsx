@@ -1,12 +1,13 @@
 import * as React from 'react';
-import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import {
     Badge, Button, Checkbox, DatePicker, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input, Label, MediaPickerInput,
-    RichTextEditor, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Switch, Textarea,
+    moveItem, RichTextEditor, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Skeleton, SortableHandle, type SortableHandleProps, SortableList, Switch, Textarea,
 } from '@sunrice/admin-sdk/ui';
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
-import { errorsAt, move } from '@/lib/builder.ts';
-import { asRecord, dateInputValue, dateValueFromInput, newBlock, newRow } from '@/lib/values.ts';
+import { TermsPicker } from '@/components/TermsPicker.tsx';
+import { errorsAt } from '@/lib/builder.ts';
+import { asRecord, dateInputValue, dateValueFromInput, newBlock, newRow, syncKeys } from '@/lib/values.ts';
 import type { Errors, FieldDefinition, Option } from '@/types.ts';
 
 /** Radix's Select can't hold an empty value, so "none" is this. */
@@ -109,20 +110,17 @@ function Control({ field, value, onChange, errors, id, content }: Props) {
                 ? <MultiSelect options={optionsOf(field)} value={Array.isArray(value) ? value.map(String) : []} onChange={onChange} />
                 : <SingleSelect options={optionsOf(field)} value={typeof value === 'string' ? value : null} onChange={onChange} id={id} required={field.required === true} />;
         case 'terms': {
-            const options = field.terms ?? [];
-            if (field.config?.multiple === true) {
-                const ids = Array.isArray(value) ? value.map(String) : [];
-                return <MultiSelect options={options} value={ids} onChange={(next) => onChange((next as string[]).map(Number))} />;
-            }
-            return <SingleSelect options={options} id={id} required={field.required === true} value={value === null || value === undefined ? null : String(value)}
-                onChange={(next) => onChange(next === null ? null : Number(next))} />;
+            const multiple = field.config?.multiple === true;
+            const ids = Array.isArray(value) ? value.filter((v): v is number => typeof v === 'number') : typeof value === 'number' ? value : null;
+            return <TermsPicker id={id} taxonomy={typeof field.taxonomy === 'string' ? field.taxonomy : null} multiple={multiple} max={numberConfig(field, 'max') ?? null}
+                required={field.required === true} invalid={invalid} value={multiple ? (Array.isArray(ids) ? ids : []) : (typeof ids === 'number' ? ids : null)} onChange={onChange} />;
         }
         case 'entries':
             return <EntriesPicker id={id} invalid={invalid} multiple={field.config?.multiple === true} max={numberConfig(field, 'max') ?? null}
                 collections={field.collections ?? []} onChange={onChange}
                 value={typeof value === 'number' || (Array.isArray(value) && value.every((v) => typeof v === 'number')) ? value as number | number[] : null} />;
         case 'link':
-            return <LinkInput value={asRecord(value)} onChange={onChange} errors={errors} id={id} />;
+            return <LinkInput value={asRecord(value)} onChange={onChange} errors={errors} id={id} collections={field.collections ?? []} />;
         case 'media':
             return <MediaPickerInput id={id} invalid={invalid} disabled={false} multiple={field.config?.multiple === true}
                 max={numberConfig(field, 'max') ?? null} types={Array.isArray(field.config?.types) ? field.config.types as string[] : []}
@@ -151,12 +149,19 @@ function stringConfig(field: FieldDefinition, key: string): string | undefined {
 }
 
 /** A set of fields editing one object (a group, a row, a block). */
-export function Fields({ fields, value, onChange, errors, id, content }: {
+export function Fields({ fields, value, onChange, errors, id, content, bare = false }: {
     fields: FieldDefinition[]; value: Record<string, unknown>; onChange: (value: Record<string, unknown>) => void; errors: Errors; id: string; content?: boolean;
+    /** Without the box around them (a card holds them already). */
+    bare?: boolean;
 }) {
     return (
-        <div className="cms:flex cms:flex-col cms:gap-4 cms:rounded-lg cms:border cms:p-4">
-            {fields.map((child) => (
+        <div className={bare ? 'cms:flex cms:flex-col cms:gap-6' : 'cms:flex cms:flex-col cms:gap-4 cms:rounded-lg cms:border cms:p-4'}>
+            {fields.map((child) => child.shared ? (
+                <fieldset key={child.handle} disabled className="cms:flex cms:flex-col cms:gap-1">
+                    <FieldInput id={`${id}-${child.handle}`} field={child} value={value[child.handle]} content={content} errors={{}} onChange={() => {}} />
+                    <p className="cms:text-sm cms:text-muted-foreground">Shared by all languages: edit it in the main language.</p>
+                </fieldset>
+            ) : (
                 <FieldInput key={child.handle} id={`${id}-${child.handle}`} field={child} value={value[child.handle]} content={content}
                     errors={errorsAt(errors, child.handle)}
                     onChange={(next) => onChange({ ...value, [child.handle]: next })} />
@@ -197,23 +202,42 @@ function MultiSelect({ options, value, onChange }: { options: Option[]; value: s
     );
 }
 
-function LinkInput({ value, onChange, errors, id }: { value: Record<string, unknown>; onChange: (value: unknown) => void; errors: Errors; id: string }) {
-    const set = (key: string, next: unknown) => {
-        const link = { ...value, [key]: next };
-        onChange(link.url === '' || link.url === undefined ? null : link);
+function LinkInput({ value, onChange, errors, id, collections }: {
+    value: Record<string, unknown>; onChange: (value: unknown) => void; errors: Errors; id: string; collections: string[];
+}) {
+    const type = value.type === 'entry' ? 'entry' : 'url';
+    const set = (changes: Record<string, unknown>) => {
+        const link: Record<string, unknown> = { ...value, type, ...changes };
+        const empty = link.type === 'entry' ? typeof link.entry_id !== 'number' : link.url === '' || link.url === undefined || link.url === null;
+        // An empty link is no link; the text and tab choice wait for an address or entry.
+        onChange(empty ? (link.label || link.new_tab ? link : null) : link);
     };
 
     return (
-        <div className="cms:grid cms:gap-2 cms:md:grid-cols-[2fr_1fr_auto] cms:md:items-center">
-            <Input id={id} aria-label="Address" placeholder="https://… or /about" value={typeof value.url === 'string' ? value.url : ''}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => set('url', e.target.value)} aria-invalid={errors.url !== undefined} />
-            <Input aria-label="Link text" placeholder="Link text" value={typeof value.label === 'string' ? value.label : ''}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => set('label', e.target.value)} />
-            <label className="cms:flex cms:items-center cms:gap-2 cms:text-sm">
-                <Checkbox checked={value.new_tab === true} onCheckedChange={(checked: boolean) => set('new_tab', checked)} />
-                New tab
-            </label>
-            <div className="cms:md:col-span-3"><FieldError message={errors.url ?? errors.label} /></div>
+        <div className="cms:flex cms:flex-col cms:gap-2">
+            <div role="radiogroup" aria-label="Link to" className="cms:inline-flex cms:w-fit cms:rounded-md cms:border cms:p-0.5">
+                {(['url', 'entry'] as const).map((option) => (
+                    <Button key={option} type="button" size="sm" role="radio" aria-checked={type === option} variant={type === option ? 'secondary' : 'ghost'}
+                        onClick={() => set({ type: option, url: option === 'url' ? value.url : undefined, entry_id: option === 'entry' ? value.entry_id : undefined })}>
+                        {option === 'url' ? 'Address' : 'Entry'}
+                    </Button>
+                ))}
+            </div>
+            <div className="cms:grid cms:gap-2 cms:md:grid-cols-[2fr_1fr_auto] cms:md:items-start">
+                {type === 'url'
+                    ? <Input id={id} aria-label="Address" placeholder="https://… or /about" value={typeof value.url === 'string' ? value.url : ''}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => set({ url: e.target.value })} aria-invalid={errors.url !== undefined} />
+                    : <EntriesPicker id={id} invalid={errors.entry_id !== undefined} multiple={false} max={null} collections={collections}
+                        value={typeof value.entry_id === 'number' ? value.entry_id : null}
+                        onChange={(next) => set({ entry_id: typeof next === 'number' ? next : undefined })} />}
+                <Input aria-label="Link text" placeholder={type === 'entry' ? 'Link text (the entry\'s title)' : 'Link text'} value={typeof value.label === 'string' ? value.label : ''}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => set({ label: e.target.value })} />
+                <label className="cms:flex cms:h-9 cms:items-center cms:gap-2 cms:text-sm">
+                    <Checkbox checked={value.new_tab === true} onCheckedChange={(checked: boolean) => set({ new_tab: checked })} />
+                    New tab
+                </label>
+                <div className="cms:md:col-span-3"><FieldError message={errors.url ?? errors.entry_id ?? errors.label ?? errors.type} /></div>
+            </div>
         </div>
     );
 }
@@ -223,37 +247,58 @@ function isCompact(field: FieldDefinition, content: boolean): boolean {
     return !content && (field.fields ?? []).every((child) => child.type === 'text');
 }
 
+/**
+ * Keys for a list's items while they're added, removed and dragged (new
+ * rows have no id yet): call remove() or move() before changing the list.
+ */
+function useItemKeys(count: number) {
+    const keys = React.useRef<string[]>([]);
+    keys.current = syncKeys(keys.current, count);
+
+    return {
+        keys: keys.current,
+        remove: (index: number) => { keys.current = keys.current.filter((_, i) => i !== index); },
+        move: (from: number, to: number) => { keys.current = moveItem(keys.current, from, to); },
+    };
+}
+
 function Rows({ field, value, onChange, errors, id, content = false }: Omit<Props, 'value'> & { value: unknown[] }) {
     const columns = field.fields ?? [];
     const rows = value.map(asRecord);
+    const keys = useItemKeys(rows.length);
     const set = (index: number, row: Record<string, unknown>) => onChange(rows.map((r, i) => (i === index ? row : r)));
+    const remove = (index: number) => { keys.remove(index); onChange(rows.filter((_, i) => i !== index)); };
     const noun = (field.label || 'row').toLowerCase().replace(/s$/, '');
     const Noun = noun.charAt(0).toUpperCase() + noun.slice(1);
+    const items = rows.map((row, index) => ({ row, index, key: keys.keys[index] ?? String(index) }));
 
     return (
         <div className="cms:flex cms:flex-col cms:gap-2">
-            {rows.map((row, index) => isCompact(field, content) ? (
-                <div key={index} className="cms:flex cms:items-start cms:gap-2">
-                    {columns.map((column) => (
-                        <div key={column.handle} className="cms:flex cms:flex-1 cms:flex-col cms:gap-1">
-                            <Input aria-label={column.label || column.handle} placeholder={column.label || column.handle}
-                                value={typeof row[column.handle] === 'string' ? row[column.handle] as string : ''}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => set(index, { ...row, [column.handle]: e.target.value })} />
-                            <FieldError message={errors[`${index}.${column.handle}`]} />
-                        </div>
-                    ))}
-                    <Button type="button" variant="ghost" size="icon" aria-label={`Remove ${noun} ${index + 1}`} onClick={() => onChange(rows.filter((_, i) => i !== index))}>
-                        <Trash2 />
-                    </Button>
-                </div>
-            ) : (
-                <div key={typeof row._id === 'string' ? row._id : index} className="cms:flex cms:flex-col cms:gap-2">
-                    <ItemBar label={`${Noun} ${index + 1}`} index={index} count={rows.length}
-                        onMove={(by) => onChange(move(rows, index, by))} onRemove={() => onChange(rows.filter((_, i) => i !== index))}
-                        hidden={content ? row._hidden === true : undefined} onHidden={(hidden) => set(index, { ...row, _hidden: hidden })} />
-                    <Fields fields={columns} value={row} onChange={(next) => set(index, next)} errors={errorsAt(errors, String(index))} id={`${id}-${index}`} content={content} />
-                </div>
-            ))}
+            <SortableList items={items} getId={(item) => item.key}
+                onReorder={(next, from, to) => { keys.move(from, to); onChange(next.map((item) => item.row)); }}>
+                {({ row, index }, { handle }) => isCompact(field, content) ? (
+                    <div className="cms:flex cms:items-start cms:gap-2">
+                        <SortableHandle {...handle} label={`Move ${noun} ${index + 1}`} className="cms:mt-1" />
+                        {columns.map((column) => (
+                            <div key={column.handle} className="cms:flex cms:flex-1 cms:flex-col cms:gap-1">
+                                <Input aria-label={column.label || column.handle} placeholder={column.label || column.handle}
+                                    value={typeof row[column.handle] === 'string' ? row[column.handle] as string : ''}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => set(index, { ...row, [column.handle]: e.target.value })} />
+                                <FieldError message={errors[`${index}.${column.handle}`]} />
+                            </div>
+                        ))}
+                        <Button type="button" variant="ghost" size="icon" aria-label={`Remove ${noun} ${index + 1}`} onClick={() => remove(index)}>
+                            <Trash2 />
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="cms:flex cms:flex-col cms:gap-2">
+                        <ItemBar label={`${Noun} ${index + 1}`} handle={handle} onRemove={() => remove(index)}
+                            hidden={content ? row._hidden === true : undefined} onHidden={(hidden) => set(index, { ...row, _hidden: hidden })} />
+                        <Fields fields={columns} value={row} onChange={(next) => set(index, next)} errors={errorsAt(errors, String(index))} id={`${id}-${index}`} content={content} />
+                    </div>
+                )}
+            </SortableList>
             <div>
                 <Button type="button" variant="outline" size="sm" onClick={() => onChange([...rows, content ? newRow() : {}])}>
                     <Plus /> Add {noun}
@@ -266,27 +311,32 @@ function Rows({ field, value, onChange, errors, id, content = false }: Omit<Prop
 function Blocks({ field, value, onChange, errors, id }: Omit<Props, 'value'> & { value: unknown[] }) {
     const types = field.blocks ?? [];
     const blocks = value.map(asRecord);
+    const keys = useItemKeys(blocks.length);
     const set = (index: number, block: Record<string, unknown>) => onChange(blocks.map((b, i) => (i === index ? block : b)));
+    const remove = (index: number) => { keys.remove(index); onChange(blocks.filter((_, i) => i !== index)); };
+    const items = blocks.map((block, index) => ({ block, index, key: keys.keys[index] ?? String(index) }));
 
     return (
         <div className="cms:flex cms:flex-col cms:gap-3">
-            {blocks.map((block, index) => {
-                const type = types.find((t) => t.type === block.type);
-                return (
-                    <div key={typeof block.id === 'string' ? block.id : index} className="cms:flex cms:flex-col cms:gap-2">
-                        <ItemBar label={type?.label ?? String(block.type)} badge index={index} count={blocks.length}
-                            onMove={(by) => onChange(move(blocks, index, by))} onRemove={() => onChange(blocks.filter((_, i) => i !== index))}
-                            hidden={block.hidden === true} onHidden={(hidden) => set(index, { ...block, hidden })} />
-                        {type ? (
-                            <Fields fields={type.fields} value={asRecord(block.values)} onChange={(values) => set(index, { ...block, values })}
-                                errors={errorsAt(errors, `${index}.values`)} id={`${id}-${index}`} content />
-                        ) : (
-                            <p className="cms:rounded-lg cms:border cms:p-4 cms:text-sm cms:text-muted-foreground">This kind of block no longer exists. Its values are kept.</p>
-                        )}
-                        <FieldError message={errors[`${index}.type`]} />
-                    </div>
-                );
-            })}
+            <SortableList items={items} getId={(item) => item.key} className="cms:gap-3"
+                onReorder={(next, from, to) => { keys.move(from, to); onChange(next.map((item) => item.block)); }}>
+                {({ block, index }, { handle }) => {
+                    const type = types.find((t) => t.type === block.type);
+                    return (
+                        <div className="cms:flex cms:flex-col cms:gap-2">
+                            <ItemBar label={type?.label ?? String(block.type)} badge handle={handle} onRemove={() => remove(index)}
+                                hidden={block.hidden === true} onHidden={(hidden) => set(index, { ...block, hidden })} />
+                            {type ? (
+                                <Fields fields={type.fields} value={asRecord(block.values)} onChange={(values) => set(index, { ...block, values })}
+                                    errors={errorsAt(errors, `${index}.values`)} id={`${id}-${index}`} content />
+                            ) : (
+                                <p className="cms:rounded-lg cms:border cms:p-4 cms:text-sm cms:text-muted-foreground">This kind of block no longer exists. Its values are kept.</p>
+                            )}
+                            <FieldError message={errors[`${index}.type`]} />
+                        </div>
+                    );
+                }}
+            </SortableList>
             <div>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -303,13 +353,14 @@ function Blocks({ field, value, onChange, errors, id }: Omit<Props, 'value'> & {
     );
 }
 
-/** The bar above a row or block: its name, move, show/hide and remove. */
-function ItemBar({ label, badge = false, index, count, onMove, onRemove, hidden, onHidden }: {
-    label: string; badge?: boolean; index: number; count: number; onMove: (by: -1 | 1) => void; onRemove: () => void;
+/** The bar above a row or block: its drag handle, name, show/hide and remove. */
+function ItemBar({ label, badge = false, handle, onRemove, hidden, onHidden }: {
+    label: string; badge?: boolean; handle: SortableHandleProps; onRemove: () => void;
     hidden?: boolean; onHidden: (hidden: boolean) => void;
 }) {
     return (
         <div className="cms:flex cms:items-center cms:gap-2">
+            <SortableHandle {...handle} label={`Move ${label}`} />
             {badge ? <Badge variant="secondary">{label}</Badge> : <span className="cms:text-sm cms:font-medium">{label}</span>}
             {hidden !== undefined && (
                 <label className="cms:ml-auto cms:flex cms:items-center cms:gap-2 cms:text-sm cms:text-muted-foreground">
@@ -317,11 +368,8 @@ function ItemBar({ label, badge = false, index, count, onMove, onRemove, hidden,
                     Show
                 </label>
             )}
-            <div className={hidden === undefined ? 'cms:ml-auto cms:flex' : 'cms:flex'}>
-                <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-label={`Move ${label} up`} disabled={index === 0} onClick={() => onMove(-1)}><ArrowUp /></Button>
-                <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-label={`Move ${label} down`} disabled={index === count - 1} onClick={() => onMove(1)}><ArrowDown /></Button>
-                <Button type="button" variant="ghost" size="icon" className="cms:size-8 cms:text-destructive" aria-label={`Remove ${label}`} onClick={onRemove}><Trash2 /></Button>
-            </div>
+            <Button type="button" variant="ghost" size="icon" className={`cms:size-8 cms:text-destructive ${hidden === undefined ? 'cms:ml-auto' : ''}`}
+                aria-label={`Remove ${label}`} onClick={onRemove}><Trash2 /></Button>
         </div>
     );
 }

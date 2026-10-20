@@ -1,15 +1,16 @@
 import * as React from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowDown, ArrowUp, IndentDecrease, IndentIncrease, Link2, List, LoaderCircle, Plus, Tag, Trash2 } from 'lucide-react';
+import { IndentDecrease, IndentIncrease, Link2, List, LoaderCircle, Plus, Tag, Trash2 } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
     Badge, Button, Card, Checkbox, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input, Label, PageHeader,
-    Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs, useUnsavedChanges,
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SortableHandle, SortableList, useBreadcrumbs, useUnsavedChanges,
 } from '@sunrice/admin-sdk/ui';
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
 import { FieldError } from '@/components/FieldInput.tsx';
 import { localeName } from '@/lib/entries.ts';
-import { type FlatItem, flatten, indent, type MenuNode, moveItem, newItem, outdent, removeItem, toTree } from '@/lib/menu.ts';
+import { type FlatItem, flatten, indent, type MenuNode, newItem, outdent, removeItem, toTree } from '@/lib/menu.ts';
+import { childIndexes, reorderLevel } from '@/lib/tree.ts';
 import { isSafeUrl, pickerQuery } from '@/lib/values.ts';
 
 interface Props {
@@ -49,6 +50,53 @@ export default function MenuEdit({ menu, items: initial, locales, limits, terms,
     };
     useUnsavedChanges(dirty, can.update ? persist : undefined);
 
+    /** The items directly under the one at `parent` (-1: the top), dragged into order among themselves, each with its own children. */
+    const level = (parent: number): React.ReactNode => (
+        <SortableList items={childIndexes(items, parent)} getId={(index) => items[index]!.key} disabled={!can.update}
+            onReorder={(order) => change(reorderLevel(items, parent, order))} className={parent < 0 ? 'cms:gap-1' : 'cms:mt-1 cms:gap-1 cms:pl-6'}>
+            {(index, { handle, isOverlay }) => {
+                const item = items[index]!;
+                return (
+                    <div className={`cms:rounded-lg cms:border cms:bg-card ${isOverlay ? '' : 'cms:border-border/70'}`}>
+                        <div className="cms:flex cms:flex-col cms:gap-2 cms:p-2">
+                            <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
+                                {can.update && <SortableHandle {...handle} label={`Move ${item.labels[main] || item.target?.title || item.url || 'link'}`} />}
+                                <Input aria-label={`Label (${localeName(main)})`} className="cms:max-w-xs" disabled={!can.update}
+                                    placeholder={item.target?.title ?? 'Label'} value={item.labels[main] ?? ''}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => update(index, { labels: { ...item.labels, [main]: e.target.value } })} />
+                                <span className="cms:min-w-0 cms:flex-1 cms:truncate cms:text-sm cms:text-muted-foreground">
+                                    {item.url !== null
+                                        ? item.url
+                                        : <>{item.target ? `${item.target.kind}: ${item.target.title}` : 'Gone'} {(!item.target || !item.target.live) && <Badge variant="outline">Not on the site</Badge>}</>}
+                                </span>
+                                {can.update && (
+                                    <div className="cms:flex cms:items-center">
+                                        <label className="cms:mr-2 cms:flex cms:items-center cms:gap-1.5 cms:text-sm">
+                                            <Checkbox checked={item.new_tab} onCheckedChange={(checked: boolean) => update(index, { new_tab: checked })} /> New tab
+                                        </label>
+                                        <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-label="Out a level" disabled={item.depth === 0} onClick={() => change(outdent(items, index))}><IndentDecrease /></Button>
+                                        <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-label="In a level" onClick={() => change(indent(items, index, limits.depth))}><IndentIncrease /></Button>
+                                        <Button type="button" variant="ghost" size="icon" className="cms:size-8 cms:text-destructive" aria-label="Remove, with what's under it" onClick={() => change(removeItem(items, index))}><Trash2 /></Button>
+                                    </div>
+                                )}
+                            </div>
+                            {locales.length > 1 && (
+                                <div className="cms:flex cms:flex-wrap cms:gap-2 cms:pl-9">
+                                    {locales.slice(1).map((code) => (
+                                        <Input key={code} aria-label={`Label (${localeName(code)})`} className="cms:max-w-xs" disabled={!can.update}
+                                            placeholder={`${localeName(code)}: as ${localeName(main)}`} value={item.labels[code] ?? ''}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => update(index, { labels: { ...item.labels, [code]: e.target.value } })} />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        {!isOverlay && childIndexes(items, index).length > 0 && <div className="cms:px-2 cms:pb-2">{level(index)}</div>}
+                    </div>
+                );
+            }}
+        </SortableList>
+    );
+
     return (
         <form onSubmit={save} className="cms:flex cms:max-w-4xl cms:flex-col cms:gap-6">
             <Head title={menu.title} />
@@ -72,45 +120,8 @@ export default function MenuEdit({ menu, items: initial, locales, limits, terms,
                 <p role="alert" className="cms:text-sm cms:text-destructive">Some links need fixing: {Object.values(errors).filter(Boolean)[0]}</p>
             )}
 
-            <Card className="cms:py-0">
-                <ul className="cms:divide-y">
-                    {items.length === 0 && <li className="cms:p-6 cms:text-center cms:text-muted-foreground">No links yet. Add an entry or a link.</li>}
-                    {items.map((item, index) => (
-                        <li key={item.key} className="cms:flex cms:flex-col cms:gap-2 cms:p-3" style={{ paddingLeft: `${0.75 + item.depth * 2}rem` }}>
-                            <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
-                                <Input aria-label={`Label (${localeName(main)})`} className="cms:max-w-xs" disabled={!can.update}
-                                    placeholder={item.target?.title ?? 'Label'} value={item.labels[main] ?? ''}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => update(index, { labels: { ...item.labels, [main]: e.target.value } })} />
-                                <span className="cms:min-w-0 cms:flex-1 cms:truncate cms:text-sm cms:text-muted-foreground">
-                                    {item.url !== null
-                                        ? item.url
-                                        : <>{item.target ? `${item.target.kind}: ${item.target.title}` : 'Gone'} {(!item.target || !item.target.live) && <Badge variant="outline">Not on the site</Badge>}</>}
-                                </span>
-                                {can.update && (
-                                    <div className="cms:flex cms:items-center">
-                                        <label className="cms:mr-2 cms:flex cms:items-center cms:gap-1.5 cms:text-sm">
-                                            <Checkbox checked={item.new_tab} onCheckedChange={(checked: boolean) => update(index, { new_tab: checked })} /> New tab
-                                        </label>
-                                        <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-label="Out a level" disabled={item.depth === 0} onClick={() => change(outdent(items, index))}><IndentDecrease /></Button>
-                                        <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-label="In a level" onClick={() => change(indent(items, index, limits.depth))}><IndentIncrease /></Button>
-                                        <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-label="Move up" onClick={() => change(moveItem(items, index, -1))}><ArrowUp /></Button>
-                                        <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-label="Move down" onClick={() => change(moveItem(items, index, 1))}><ArrowDown /></Button>
-                                        <Button type="button" variant="ghost" size="icon" className="cms:size-8 cms:text-destructive" aria-label="Remove, with what's under it" onClick={() => change(removeItem(items, index))}><Trash2 /></Button>
-                                    </div>
-                                )}
-                            </div>
-                            {locales.length > 1 && (
-                                <div className="cms:flex cms:flex-wrap cms:gap-2">
-                                    {locales.slice(1).map((code) => (
-                                        <Input key={code} aria-label={`Label (${localeName(code)})`} className="cms:max-w-xs" disabled={!can.update}
-                                            placeholder={`${localeName(code)}: as ${localeName(main)}`} value={item.labels[code] ?? ''}
-                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => update(index, { labels: { ...item.labels, [code]: e.target.value } })} />
-                                    ))}
-                                </div>
-                            )}
-                        </li>
-                    ))}
-                </ul>
+            <Card className="cms:p-2">
+                {items.length === 0 ? <p className="cms:p-4 cms:text-center cms:text-muted-foreground">No links yet. Add an entry or a link.</p> : level(-1)}
             </Card>
 
             <AddDialog kind={adding} terms={terms} listings={listings} onClose={() => setAdding(null)} onAdd={(item) => { change([...items, item]); setAdding(null); }} main={main} />

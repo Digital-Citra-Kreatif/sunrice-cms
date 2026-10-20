@@ -228,6 +228,20 @@ final class EntryQuery
         return $this;
     }
 
+    /**
+     * Entries whose list field (a select with several choices, say) holds
+     * any of these values: whereContains('features', ['wifi', 'parking']).
+     *
+     * @param  list<int|string>  $values
+     */
+    public function whereContains(string $field, array $values): self
+    {
+        $field = self::handle($field);
+        $this->add(['whereContains', $field, $values], fn (Builder $q) => $this->whereFieldHolds($q, $field, $values));
+
+        return $this;
+    }
+
     /** Leave out these entries (the one shown, in a "related" list). */
     public function except(Entry|EntryTranslation|int ...$entries): self
     {
@@ -355,24 +369,29 @@ final class EntryQuery
         return is_int($count) ? $count : 0;
     }
 
-    /** @return LengthAwarePaginator<int, EntryTranslation> */
-    public function paginate(int $perPage = 10): LengthAwarePaginator
+    /**
+     * A page of entries; `$pageName` is the query string's page number
+     * (two lists on one page each take their own).
+     *
+     * @return LengthAwarePaginator<int, EntryTranslation>
+     */
+    public function paginate(int $perPage = 10, string $pageName = 'page'): LengthAwarePaginator
     {
         if (! $this->cached()) {
-            $paginator = $this->builder()->paginate($perPage);
+            $paginator = $this->builder()->paginate($perPage, ['*'], $pageName);
             $this->hydrate($paginator->getCollection());
 
             return $paginator;
         }
-        $page = Paginator::resolveCurrentPage();
+        $page = Paginator::resolveCurrentPage($pageName);
         /** @var array{ids: list<int>, total: int} $cached */
-        $cached = $this->remembered("page:{$perPage}:{$page}", function () use ($perPage, $page): array {
-            $paginator = $this->builder()->paginate($perPage, ['*'], 'page', $page);
+        $cached = $this->remembered("page:{$perPage}:{$page}", function () use ($perPage, $page, $pageName): array {
+            $paginator = $this->builder()->paginate($perPage, ['*'], $pageName, $page);
 
             return ['ids' => $paginator->getCollection()->pluck('id')->all(), 'total' => $paginator->total()];
         });
 
-        return new Paginated($this->hydrate($this->byIds($cached['ids'])), $cached['total'], $perPage, $page, ['path' => Paginator::resolveCurrentPath()]);
+        return new Paginated($this->hydrate($this->byIds($cached['ids'])), $cached['total'], $perPage, $page, ['path' => Paginator::resolveCurrentPath(), 'pageName' => $pageName]);
     }
 
     /**
@@ -505,11 +524,11 @@ final class EntryQuery
     }
 
     /**
-     * Entries whose list field (entries, terms) holds any of these ids, in
-     * the main language.
+     * Entries whose list field (entries, terms, a select's choices) holds
+     * any of these ids or values, in the main language.
      *
      * @param  Builder<EntryTranslation>  $query
-     * @param  list<int>  $ids
+     * @param  list<int|string>  $ids
      */
     private function whereFieldHolds(Builder $query, string $field, array $ids): void
     {
@@ -590,21 +609,7 @@ final class EntryQuery
      */
     private function castExpression(Builder $query, string $column, string $cast): string
     {
-        $value = $query->getQuery()->getGrammar()->wrap($column);
-        $driver = $this->driver($query);
-        if ($cast === 'date') {
-            return match ($driver) {
-                'sqlite' => "datetime({$value})",
-                'pgsql' => "CAST({$value} AS TIMESTAMP)",
-                default => "CAST({$value} AS DATETIME)",
-            };
-        }
-
-        return match ($driver) {
-            'sqlite' => "CAST({$value} AS REAL)",
-            'pgsql' => "CAST({$value} AS DOUBLE PRECISION)",
-            default => "CAST({$value} AS DECIMAL(20, 6))",
-        };
+        return JsonCast::expression($query, $column, $cast);
     }
 
     /** A date to compare with a cast date field: "2026-01-01 00:00:00". */
@@ -616,16 +621,6 @@ final class EntryQuery
         $value = is_scalar($value) ? (string) $value : '';
 
         return strlen($value) <= 10 ? $value.' 00:00:00' : str_replace('T', ' ', substr($value, 0, 19));
-    }
-
-    /**
-     * @template TModel of \Illuminate\Database\Eloquent\Model
-     *
-     * @param  Builder<TModel>  $query
-     */
-    private function driver(Builder $query): string
-    {
-        return $query->getModel()->getConnection()->getDriverName();
     }
 
     /**

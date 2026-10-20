@@ -32,6 +32,9 @@ use Sunrice\Cms\Support\Locales;
  * @property int $per_page entries per listing page
  * @property bool $comments visitors may comment on its entries
  * @property string|null $schema_type its entries' schema.org type (StructuredData::ENTRY_TYPES); null: Article when dated, else WebPage
+ * @property string|null $seo_title_field a text field whose value is the SEO title when the SEO card leaves it empty
+ * @property string|null $seo_description_field a text or textarea field for the description
+ * @property string|null $seo_image_field a media field whose first image is the share image
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at

@@ -66,8 +66,13 @@ abstract class CmsTool extends Tool
     {
         $entry = $translation->entry;
         $locales = [];
+        $outdated = [];
         foreach (Locales::all() as $code) {
-            $locales[$code] = $entry->translation($code)?->status();
+            $other = $entry->translation($code);
+            $locales[$code] = $other?->status();
+            if ($other?->isOutdated() === true) {
+                $outdated[] = $code;
+            }
         }
 
         return [
@@ -82,6 +87,9 @@ abstract class CmsTool extends Tool
             'url' => $translation->isLive() && ! $entry->trashed() ? $translation->url() : null,
             'trashed' => $entry->trashed(),
             'languages' => $locales,
+            // This translation, and the languages, whose main language changed since they were translated.
+            'outdated' => $translation->isOutdated(),
+            'outdated_languages' => $outdated,
         ];
     }
 

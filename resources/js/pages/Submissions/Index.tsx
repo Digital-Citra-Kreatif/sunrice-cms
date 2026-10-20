@@ -14,6 +14,8 @@ interface Row {
     locale: string;
     createdAt: string | null;
     rows: { handle: string; label: string; value: string; file: string | null }[];
+    /** Who sent it, when kept (sunrice-cms.forms.visitor_details). */
+    visitor: { ip: string | null; userAgent: string | null; referrer: string | null };
 }
 
 interface Props {
@@ -121,6 +123,16 @@ export default function SubmissionsIndex({ form, forms, submissions, can }: Prop
                             </div>
                         ))}
                     </dl>
+                    {open && (open.visitor.ip || open.visitor.userAgent || open.visitor.referrer) && (
+                        <dl className="cms:flex cms:flex-col cms:gap-3 cms:border-t cms:pt-3 cms:text-sm">
+                            {([['IP address', open.visitor.ip], ['Browser', open.visitor.userAgent], ['Sent from', open.visitor.referrer]] as const).map(([label, value]) => value && (
+                                <div key={label}>
+                                    <dt className="cms:font-medium">{label}</dt>
+                                    <dd className="cms:break-all cms:text-muted-foreground">{value}</dd>
+                                </div>
+                            ))}
+                        </dl>
+                    )}
                     {can.delete && open && (
                         <DialogFooter>
                             <Button variant="destructive" onClick={() => remove(open)}><Trash2 /> Delete</Button>

@@ -1,4 +1,4 @@
-import { c as Te, _ as Pd, R as B, j as v, L as $d, a as Bd, U as zd, i as jd, u as _, b as Fd } from "./admin-CMJJ6uIw.js";
+import { c as Te, _ as Pd, R as B, j as v, L as $d, a as Bd, U as zd, i as jd, u as _, b as Fd } from "./admin-B1Twwp6a.js";
 const fa = {
   name: "bold",
   size: 24,
@@ -19019,7 +19019,7 @@ function D1({ id: n, value: e, onChange: t, invalid: r, labelledBy: i }) {
     },
     onUpdate: ({ editor: a }) => t(a.isEmpty ? null : a.getHTML())
   });
-  return /* @__PURE__ */ v.jsxs("div", { className: `cms:rounded-md cms:border cms:bg-background ${r ? "cms:border-destructive" : ""}`, children: [
+  return /* @__PURE__ */ v.jsxs("div", { className: `cms:rounded-lg cms:border cms:border-input/80 cms:bg-card cms:shadow-xs cms:transition-[border-color,box-shadow] cms:duration-150 cms:ease-out-quart cms:focus-within:border-ring/70 cms:focus-within:ring-4 cms:focus-within:ring-ring-glow cms:dark:bg-input/20 ${r ? "cms:border-destructive cms:focus-within:ring-destructive/20" : ""}`, children: [
     l && /* @__PURE__ */ v.jsx(T1, { editor: l, onLink: () => o("link"), onImage: () => o("image") }),
     /* @__PURE__ */ v.jsx(Ku, { editor: l }),
     l && /* @__PURE__ */ v.jsx(A1, { editor: l, open: s === "link", onClose: () => o(null) }),
