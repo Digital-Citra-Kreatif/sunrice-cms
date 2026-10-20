@@ -13,10 +13,12 @@ use Sunrice\Admin\Preferences\Preferences;
 use Sunrice\Admin\Security\SecurityLog;
 use Sunrice\Admin\Support\Csv;
 use Sunrice\Cms\Actions\Entries\BulkEntries;
+use Sunrice\Cms\Actions\Entries\ChangeBlueprint;
 use Sunrice\Cms\Actions\Entries\DuplicateEntry;
 use Sunrice\Cms\Actions\Entries\ForceDeleteEntry;
 use Sunrice\Cms\Actions\Entries\MoveEntry;
 use Sunrice\Cms\Actions\Entries\PutBackDraft;
+use Sunrice\Cms\Actions\Entries\ReorderEntries;
 use Sunrice\Cms\Actions\Entries\SaveEntrySettings;
 use Sunrice\Cms\Admin\EntryList;
 use Sunrice\Cms\Models\Collection;
@@ -80,11 +82,17 @@ final class EntryManageController
         return redirect()->route('sunrice.admin.cms.entries.edit', $copy->id)->with('success', 'Copied as a new draft.');
     }
 
-    /** The parent and the template, in every language. */
-    public function settings(Request $request, Entry $entry, SaveEntrySettings $save): RedirectResponse
+    /** The parent, the template and the blueprint, in every language. */
+    public function settings(Request $request, Entry $entry, SaveEntrySettings $save, ChangeBlueprint $blueprint): RedirectResponse
     {
         abort_if($entry->collection->trashed(), 404);
         $input = $request->only(['parent_id', 'template', 'comments_closed']);
+        if ($request->has('blueprint')) {
+            // Every language's fields: for those who may edit the entry itself, not translators.
+            abort_unless(Access::entries($request->user(), 'update', $entry->collection, $entry), 403);
+            $handle = $request->input('blueprint');
+            $blueprint->handle($entry, is_string($handle) ? $handle : null);
+        }
         // Picking a view is for the collection's editors (cms.entries.update), not authors of their own entries: theirs may only stay as it is.
         if (array_key_exists('template', $input) && ! Access::entries($request->user(), 'update', $entry->collection)) {
             $template = is_string($input['template']) ? trim($input['template']) : '';
@@ -101,6 +109,19 @@ final class EntryManageController
         $move->handle($entry, $request->string('direction')->toString());
 
         return back();
+    }
+
+    /** Entries of an ordered collection in the order dragged: "collection", "ids" and "parent_id". */
+    public function reorder(Request $request, ReorderEntries $reorder): RedirectResponse
+    {
+        $handle = $request->input('collection');
+        $collection = is_string($handle) ? Collection::query()->where('handle', $handle)->first() : null;
+        abort_if($collection === null, 404);
+        abort_unless(Access::entries($request->user(), 'update', $collection), 403);
+        $parent = $request->input('parent_id');
+        $reorder->handle($collection, (array) $request->input('ids', []), is_numeric($parent) ? (int) $parent : null);
+
+        return back()->with('success', 'Order saved.');
     }
 
     /** For good; one used elsewhere only with "force" (the editor asks first). */

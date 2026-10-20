@@ -35,4 +35,6 @@ export interface EntryLocale {
     name?: string;
     main: boolean;
     status: EntryStatus | null;
+    /** The main language changed since this translation was last saved. */
+    outdated?: boolean;
 }

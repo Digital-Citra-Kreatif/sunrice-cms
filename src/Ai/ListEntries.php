@@ -15,7 +15,7 @@ use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Support\Locales;
 
 #[IsReadOnly]
-#[Description('Without "collection": the collections (handle, title, URL pattern, number of entries). With one: its entries in the main language (id, title, slug, status, date, URL, status in each language), searched by title, newest or alphabetical first, 25 a page. "trashed": the trash instead.')]
+#[Description('Without "collection": the collections (handle, title, URL pattern, number of entries). With one: its entries in the main language (id, title, slug, status, date, URL, status in each language, outdated_languages: translations made before the main language last changed), searched by title, newest or alphabetical first, 25 a page. "trashed": the trash instead.')]
 final class ListEntries extends CmsTool
 {
     protected string $name = 'cms_list_entries';

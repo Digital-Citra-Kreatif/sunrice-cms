@@ -132,9 +132,8 @@ final class SwitchMainLanguage
 
     private function entries(string $from, string $to): void
     {
-        $schemas = [];
         Entry::query()->withTrashed()->whereHas('translations', fn ($q) => $q->where('locale', $from))->with(['translations', 'collection'])
-            ->chunkById(100, function ($entries) use ($from, $to, &$schemas): void {
+            ->chunkById(100, function ($entries) use ($from, $to): void {
                 foreach ($entries as $entry) {
                     $old = $entry->translation($from);
                     if ($old === null) {
@@ -146,7 +145,7 @@ final class SwitchMainLanguage
                         $entry->setRelation('translations', $entry->translations->push($new));
                         $this->counts['copied_entries']++;
                     }
-                    $schema = $schemas[$entry->collection_id] ??= $entry->collection->schema();
+                    $schema = $entry->schema();
                     $this->switchEntry($entry, $schema, $old, $new);
                     $this->counts['entries']++;
                 }

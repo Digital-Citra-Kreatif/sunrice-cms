@@ -43,7 +43,7 @@ final class SaveDraft
             // Validated with the main language's shared values in rows and blocks; ownData() drops them again.
             $main = $translation->entry->mainTranslation();
             if ($main !== null && ! $main->is($translation)) {
-                $data = $translation->entry->collection->schema()->withShared($data, $main->draft_data);
+                $data = $translation->entry->schema()->withShared($data, $main->draft_data);
             }
             $values = EntryInput::validate(
                 $schema,
@@ -73,6 +73,8 @@ final class SaveDraft
                 return [];
             }
 
+            // Another language is up to date with the main one as it is now (EntryTranslation::isOutdated()).
+            $mainVersion = $translation->currentMainVersion();
             // Only if nobody saved in between: the version check and the write are one statement.
             $saved = EntryTranslation::query()->whereKey($translation->id)->where('version', (int) $expected)->update([
                 'draft_title' => $values['title'],
@@ -80,7 +82,7 @@ final class SaveDraft
                 'draft_data' => json_encode($values['data'], JSON_THROW_ON_ERROR),
                 'version' => (int) $expected + 1,
                 'updated_at' => now(),
-            ]);
+            ] + ($mainVersion === null ? [] : ['main_version' => $mainVersion]));
             if ($saved === 0) {
                 throw ValidationException::withMessages(['version' => 'Someone else saved this entry after you opened it. Reload to see their changes.']);
             }

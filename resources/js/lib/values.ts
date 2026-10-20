@@ -50,3 +50,26 @@ export function pickerQuery({ ids, search, collections }: { ids?: number[]; sear
 
     return params.toString();
 }
+
+let nextKey = 0;
+
+/**
+ * Keys for the items of a list that have no id of their own (new repeater
+ * rows, a select's options), kept in step as items are added, removed and
+ * moved: the same keys when the count still matches, else fresh ones.
+ */
+export function syncKeys(keys: readonly string[], count: number): string[] {
+    if (keys.length === count) return keys.slice();
+    if (keys.length < count) return [...keys, ...Array.from({ length: count - keys.length }, () => `k${++nextKey}`)];
+
+    return keys.slice(0, count);
+}
+
+/** The term picker endpoint's query string. */
+export function termPickerQuery({ taxonomy, q, ids }: { taxonomy: string; q?: string; ids?: number[] }): string {
+    const params = new URLSearchParams({ taxonomy });
+    if (q) params.set('q', q);
+    for (const id of ids ?? []) params.append('ids[]', String(id));
+
+    return params.toString();
+}

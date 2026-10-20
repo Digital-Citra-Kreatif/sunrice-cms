@@ -35,6 +35,7 @@ use Sunrice\Cms\Http\Controllers\TermController;
 use Sunrice\Cms\Http\Middleware\AuthorizeContent;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\GlobalSet;
+use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Settings\CodeSettings;
 use Sunrice\Cms\Settings\CommentSettings;
 use Sunrice\Cms\Settings\LocaleSettings;
@@ -82,7 +83,7 @@ final class CmsPlugin extends BasePlugin
         // Each permission for one collection, taxonomy or form too (see Support\Access).
         $panel->permissionsUsing(fn (): array => Support\ScopedPermissions::all());
         // sunrice:roles: people who write and look after the content, not the structure or the people.
-        $panel->defaultRole('editor', [Panel::ACCESS, 'sunrice.media.*', 'cms.entries.*', 'cms.terms.*', 'cms.globals.*', 'cms.menus.*', 'cms.comments.*', 'cms.submissions.view']);
+        $panel->defaultRole('editor', [Panel::ACCESS, 'sunrice.media.*', 'cms.entries.*', 'cms.terms.*', 'cms.globals.*', 'cms.menus.*', 'cms.comments.*', 'cms.submissions.view', 'cms.submissions.export']);
         // Writes entries, publishes nothing, and edits only their own.
         $panel->defaultRole('author', [Panel::ACCESS, 'sunrice.media.view', 'sunrice.media.upload', 'cms.entries.view', 'cms.entries.create', 'cms.entries.update-own', 'cms.entries.delete-own', 'cms.entries.view-drafts']);
         // Writes the other languages of every entry.
@@ -94,6 +95,7 @@ final class CmsPlugin extends BasePlugin
             Permission::make('cms.entries.update', 'Edit drafts', 'Content'),
             Permission::make('cms.entries.publish', 'Publish and unpublish entries', 'Content'),
             Permission::make('cms.entries.delete', 'Trash and restore entries', 'Content'),
+            Permission::make('cms.entries.export', 'Export entries as CSV', 'Content'),
             Permission::make('cms.entries.update-own', 'Edit drafts of their own entries', 'Content'),
             Permission::make('cms.entries.delete-own', 'Trash their own entries', 'Content'),
             Permission::make('cms.entries.translate', 'Edit entries\' other languages (not the main one)', 'Content'),
@@ -104,7 +106,8 @@ final class CmsPlugin extends BasePlugin
             Permission::make('cms.comments.view', 'View comments', 'Content'),
             Permission::make('cms.comments.moderate', 'Approve, answer and edit comments, mark spam', 'Content'),
             Permission::make('cms.comments.delete', 'Trash and delete comments', 'Content'),
-            Permission::make('cms.submissions.view', 'View and export form submissions', 'Content'),
+            Permission::make('cms.submissions.view', 'View form submissions', 'Content'),
+            Permission::make('cms.submissions.export', 'Export form submissions as CSV', 'Content'),
             Permission::make('cms.submissions.delete', 'Delete form submissions', 'Content'),
             Permission::make('cms.blueprints.manage', 'Manage blueprints and fieldsets', 'Content structure'),
         );
@@ -149,7 +152,7 @@ final class CmsPlugin extends BasePlugin
             Route::prefix('cms')->name('cms.submissions.')->controller(SubmissionController::class)->group(function (): void {
                 Route::get('submissions', 'home')->name('home')->middleware(AuthorizeContent::class.':submissions,view');
                 Route::get('forms/{form:handle}/submissions', 'index')->name('index')->middleware(AuthorizeContent::class.':submissions,view');
-                Route::get('forms/{form:handle}/submissions/export', 'export')->name('export')->middleware(AuthorizeContent::class.':submissions,view');
+                Route::get('forms/{form:handle}/submissions/export', 'export')->name('export')->middleware(AuthorizeContent::class.':submissions,export');
                 Route::delete('submissions/{submission}', 'destroy')->name('destroy')->middleware(AuthorizeContent::class.':submissions,delete');
                 Route::get('submissions/{submission}/files/{field}', 'file')->name('file')->middleware(AuthorizeContent::class.':submissions,view');
             });
@@ -164,6 +167,7 @@ final class CmsPlugin extends BasePlugin
                 Route::post('taxonomies/{taxonomy:handle}/terms', 'store')->name('store');
                 Route::put('terms/{term}', 'update')->name('update');
                 Route::post('terms/{term}/move', 'move')->name('move');
+                Route::post('terms/reorder', 'reorder')->name('reorder');
                 Route::delete('terms/{term}', 'destroy')->name('destroy');
                 Route::post('terms/{term}/restore', 'restore')->name('restore')->withTrashed();
                 Route::delete('terms/{term}/force', 'forceDelete')->name('force-delete')->withTrashed();
@@ -173,6 +177,7 @@ final class CmsPlugin extends BasePlugin
             Route::prefix('cms')->name('cms.entries.')->controller(EntryController::class)->group(function (): void {
                 Route::get('entries', 'home')->name('home')->middleware(AuthorizeContent::class.':entries,view');
                 Route::get('entry-picker', 'picker')->name('picker')->middleware(AuthorizeContent::class.':entries,view');
+                Route::get('term-picker', 'termPicker')->name('term-picker')->middleware(AuthorizeContent::class.':entries,view');
                 Route::get('collections/{collection:handle}/entries', 'index')->name('index')->middleware(AuthorizeContent::class.':entries,view');
                 Route::get('collections/{collection:handle}/entries/create', 'create')->name('create')->middleware(AuthorizeContent::class.':entries,create');
                 Route::post('collections/{collection:handle}/entries', 'store')->name('store')->middleware(AuthorizeContent::class.':entries,create');
@@ -193,10 +198,11 @@ final class CmsPlugin extends BasePlugin
             });
             Route::prefix('cms')->name('cms.entries.')->controller(EntryManageController::class)->group(function (): void {
                 Route::post('collections/{collection:handle}/entries/bulk', 'bulk')->name('bulk')->middleware(AuthorizeContent::class.':entries,view');
-                Route::get('collections/{collection:handle}/entries/export', 'export')->name('export')->middleware(AuthorizeContent::class.':entries,view');
+                Route::get('collections/{collection:handle}/entries/export', 'export')->name('export')->middleware(AuthorizeContent::class.':entries,export');
                 Route::post('entries/{entry}/duplicate', 'duplicate')->name('duplicate')->middleware(AuthorizeContent::class.':entries,create');
                 Route::put('entries/{entry}/settings', 'settings')->name('settings')->middleware(AuthorizeContent::class.':entries,update');
                 Route::post('entries/{entry}/move', 'move')->name('move')->middleware(AuthorizeContent::class.':entries,update');
+                Route::post('entries/reorder', 'reorder')->name('reorder')->middleware(AuthorizeContent::class.':entries,update');
                 Route::delete('entries/{entry}/force', 'forceDelete')->name('force-delete')->middleware(AuthorizeContent::class.':entries,delete')->withTrashed();
                 Route::post('entry-translations/{translation}/undo-restore', 'undoRestore')->name('undo-restore')->middleware(AuthorizeContent::class.':entries,update');
             });
@@ -226,11 +232,13 @@ final class CmsPlugin extends BasePlugin
         // The CMS's developer docs (this repository's docs/cms) for Help → Docs and read_docs, and its user guide.
         $panel->docs('CMS', dirname(__DIR__, 3).'/docs/cms');
         $panel->guide('Website', dirname(__DIR__).'/guide');
-        // One editor at a time per entry or global set, per language (useEditLock).
+        // One editor at a time per entry, global set or term page, per language (useEditLock).
         $panel->lockable('cms.entry', fn (string $id, string $locale, Authorizable $user): bool => ($entry = Entry::query()->whereHas('collection')->find($id)) !== null
             && Access::entries($user, 'update', $entry->collection, $entry, $locale));
         $panel->lockable('cms.global', fn (string $id, string $locale, Authorizable $user): bool => $user->can('cms.globals.update')
             && GlobalSet::query()->whereKey($id)->exists());
+        $panel->lockable('cms.term', fn (string $id, string $locale, Authorizable $user): bool => ($term = Term::query()->whereHas('taxonomy')->find($id)) !== null
+            && Access::terms($user, $term->taxonomy));
         // Deleting a user: what happens to their entries and comments (DeleteUser).
         $panel->userContent('cms.entries', 'entries',
             fn (Model $user): int => ReleaseUserContent::entries($user),

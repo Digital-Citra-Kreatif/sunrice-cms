@@ -19,6 +19,7 @@ use Sunrice\Cms\Globals;
 use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\CollectionListing;
+use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Fieldset;
 use Sunrice\Cms\Models\Form;
@@ -243,15 +244,16 @@ final class RenameFieldHandle
     {
         $rename = fn (mixed $data): mixed => is_array($data) ? $this->walk($fields, $data, 'blueprint:'.$blueprint, [], 0) : $data;
 
-        $collections = Collection::withTrashed()->where('blueprint', $blueprint)->pluck('id');
-        $this->each(EntryTranslation::query()->with('entry.collection', 'entry.translations')->whereIn('collection_id', $collections), ['data', 'draft_data'], $rename, $dryRun, $counts['entries'],
+        // Entries with this blueprint: their collection's, or their own (Entry::$blueprint).
+        $entries = Entry::usingBlueprint($blueprint)->select('id');
+        $this->each(EntryTranslation::query()->with('entry.collection', 'entry.translations')->whereIn('entry_id', $entries), ['data', 'draft_data'], $rename, $dryRun, $counts['entries'],
             function (EntryTranslation $translation): void {
                 References::entry($translation);
                 if ($translation->data !== null) {
                     $translation->newQuery()->whereKey($translation->id)->update(['search_text' => SearchText::of($translation->completeData())]);
                 }
             });
-        $this->each(Revision::query()->whereIn('entry_translation_id', EntryTranslation::query()->whereIn('collection_id', $collections)->select('id')), ['data'], $rename, $dryRun, $counts['revisions']);
+        $this->each(Revision::query()->whereIn('entry_translation_id', EntryTranslation::query()->whereIn('entry_id', Entry::usingBlueprint($blueprint)->select('id'))->select('id')), ['data'], $rename, $dryRun, $counts['revisions']);
         $this->each(TermTranslation::query()->with('term.taxonomy')->whereIn('taxonomy_id', Taxonomy::withTrashed()->where('blueprint', $blueprint)->select('id')), ['data'], $rename, $dryRun, $counts['terms'],
             fn (TermTranslation $translation) => References::term($translation));
         $this->each(GlobalValue::query()->with('globalSet')->whereIn('global_set_id', GlobalSet::query()->where('blueprint', $blueprint)->select('id')), ['data'], $rename, $dryRun, $counts['globals'],

@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Sunrice\Cms\Fields\Schema;
 use Sunrice\Cms\Settings\CommentSettings;
 use Sunrice\Cms\Support\Locales;
 
@@ -24,6 +26,7 @@ use Sunrice\Cms\Support\Locales;
  * @property int|null $parent_id
  * @property int $sort_order
  * @property string|null $template a Blade view for this entry alone
+ * @property string|null $blueprint its own blueprint (a handle the collection allows); null: the collection's
  * @property bool $comments_closed it takes no new comments
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -87,6 +90,54 @@ class Entry extends Model
     {
         // Trashed collections too: their entries still exist.
         return $this->belongsTo(Collection::class)->withTrashed();
+    }
+
+    /**
+     * The blueprint its fields come from: its own when the collection
+     * allows it (ChangeBlueprint), else the collection's.
+     */
+    public function blueprintHandle(): ?string
+    {
+        return $this->blueprint !== null && in_array($this->blueprint, $this->collection->allowedBlueprints(), true)
+            ? $this->blueprint
+            : $this->collection->blueprint;
+    }
+
+    /**
+     * Its fields: those of its blueprint (see blueprintHandle()). Use this,
+     * not the collection's schema, for anything about this entry.
+     */
+    public function schema(): Schema
+    {
+        return $this->collection->schemaFor($this->blueprint);
+    }
+
+    /**
+     * The entries filled in with a blueprint (trashed ones too): their own
+     * when their collection offers it, else their collection's.
+     *
+     * @return Builder<Entry>
+     */
+    public static function usingBlueprint(string $handle): Builder
+    {
+        $query = self::withTrashed();
+        $collections = Collection::withTrashed()->get(['id', 'blueprint', 'blueprints'])
+            ->filter(fn (Collection $collection): bool => in_array($handle, $collection->allowedBlueprints(), true));
+        if ($collections->isEmpty()) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $any) use ($collections, $handle): void {
+            foreach ($collections as $collection) {
+                $any->orWhere(function (Builder $in) use ($collection, $handle): void {
+                    $in->where('collection_id', $collection->id);
+                    $collection->blueprint === $handle
+                        // Its own blueprint: unless the entry picked another one the collection offers.
+                        ? $in->where(fn (Builder $own) => $own->whereNull('blueprint')->orWhereNotIn('blueprint', array_values(array_diff($collection->allowedBlueprints(), [$handle]))))
+                        : $in->where('blueprint', $handle);
+                });
+            }
+        });
     }
 
     /** @return HasMany<EntryTranslation, $this> */

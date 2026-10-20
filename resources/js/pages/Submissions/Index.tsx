@@ -22,7 +22,7 @@ interface Props {
     form: { handle: string; title: string } | null;
     forms: { handle: string; title: string; count: number }[];
     submissions: { data: Row[]; total: number; from: number | null; to: number | null; prev_page_url: string | null; next_page_url: string | null } | null;
-    can: { delete: boolean };
+    can: { delete: boolean; export: boolean };
 }
 
 /** Columns the list shows; the rest are in the submission's dialog. */
@@ -51,7 +51,7 @@ export default function SubmissionsIndex({ form, forms, submissions, can }: Prop
             <Head title={`${form.title} submissions`} />
             <PageHeader
                 title={form.title}
-                actions={submissions.total > 0 && (
+                actions={submissions.total > 0 && can.export && (
                     <Button variant="outline" asChild>
                         <a href={adminUrl(`cms/forms/${form.handle}/submissions/export`)}><Download /> Export CSV</a>
                     </Button>

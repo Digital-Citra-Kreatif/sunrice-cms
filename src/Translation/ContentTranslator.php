@@ -81,7 +81,7 @@ final class ContentTranslator
         if ($source === null || $entry->trashed()) {
             return null;
         }
-        $schema = $entry->collection->schema();
+        $schema = $entry->schema();
         $target = $entry->translation($this->to);
         $label = $entry->collection->title.' “'.$source->draft_title.'”';
         $sourceSeo = is_array($source->draft_data[Seo::KEY] ?? null) ? $source->draft_data[Seo::KEY] : [];

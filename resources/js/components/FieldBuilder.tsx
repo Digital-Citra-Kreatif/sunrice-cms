@@ -1,11 +1,11 @@
 import * as React from 'react';
-import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react';
 import {
     Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input, Label,
-    Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Switch, Textarea,
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SortableHandle, SortableList, Switch, Textarea,
 } from '@sunrice/admin-sdk/ui';
 import { FieldError, FieldInput } from '@/components/FieldInput.tsx';
-import { type BuilderField, errorsAt, errorsUnder, hasErrors, MAX_DEPTH, move, newField, relabel } from '@/lib/builder.ts';
+import { type BuilderField, errorsAt, errorsUnder, hasErrors, MAX_DEPTH, newField, relabel } from '@/lib/builder.ts';
 import type { Errors, FieldTypeInfo } from '@/types.ts';
 
 interface Props {
@@ -19,7 +19,7 @@ interface Props {
     idPrefix?: string;
 }
 
-/** The fields of a blueprint or fieldset: add, edit, reorder and remove, groups and repeaters nested. */
+/** The fields of a blueprint or fieldset: add, edit, drag into order and remove, groups and repeaters nested (each level its own list). */
 export function FieldBuilder({ fields, onChange, types, errors, depth = 1, idPrefix = 'field' }: Props) {
     const [open, setOpen] = React.useState<Set<string>>(() => new Set());
     const toggle = (key: string) => setOpen((keys) => {
@@ -37,36 +37,40 @@ export function FieldBuilder({ fields, onChange, types, errors, depth = 1, idPre
     return (
         <div className="cms:flex cms:flex-col cms:gap-2">
             {fields.length === 0 && <p className="cms:rounded-lg cms:border cms:border-dashed cms:p-4 cms:text-sm cms:text-muted-foreground">No fields yet.</p>}
-            {fields.map((field, index) => {
-                const type = types.find((t) => t.type === field.type);
-                const expanded = open.has(field.key) || hasErrors(errors, String(index));
-                const id = `${idPrefix}-${field.key}`;
+            <SortableList items={fields} getId={(field) => field.key} onReorder={(next) => onChange(next)}>
+                {(field, { index, handle, isOverlay }) => {
+                    const type = types.find((t) => t.type === field.type);
+                    const expanded = !isOverlay && (open.has(field.key) || hasErrors(errors, String(index)));
+                    const id = `${idPrefix}-${field.key}`;
 
-                return (
-                    <div key={field.key} className={`cms:rounded-lg cms:border cms:bg-card ${hasErrors(errors, String(index)) ? 'cms:border-destructive' : ''}`}>
-                        <div className="cms:flex cms:items-center cms:gap-2 cms:p-2">
-                            <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-expanded={expanded} aria-controls={id}
-                                aria-label={`${expanded ? 'Close' : 'Open'} ${field.label || field.handle}`} onClick={() => toggle(field.key)}>
-                                {expanded ? <ChevronDown /> : <ChevronRight />}
-                            </Button>
-                            <button type="button" className="cms:flex cms:min-w-0 cms:flex-1 cms:items-center cms:gap-2 cms:text-left" onClick={() => toggle(field.key)}>
-                                <span className="cms:truncate cms:font-medium">{field.label || field.handle}</span>
-                                <code className="cms:truncate cms:text-xs cms:text-muted-foreground">{field.handle}</code>
-                            </button>
-                            {field.required && <Badge variant="outline">Required</Badge>}
-                            <Badge variant="secondary">{type?.label ?? field.type}</Badge>
-                            <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-label="Move up" disabled={index === 0} onClick={() => onChange(move(fields, index, -1))}><ArrowUp /></Button>
-                            <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-label="Move down" disabled={index === fields.length - 1} onClick={() => onChange(move(fields, index, 1))}><ArrowDown /></Button>
-                            <Button type="button" variant="ghost" size="icon" className="cms:size-8 cms:text-destructive" aria-label={`Remove ${field.label || field.handle}`}
-                                onClick={() => onChange(fields.filter((_, i) => i !== index))}><Trash2 /></Button>
+                    return (
+                        <div className={`cms:rounded-lg cms:border cms:bg-card ${hasErrors(errors, String(index)) ? 'cms:border-destructive' : ''}`}>
+                            <div className="cms:flex cms:items-center cms:gap-2 cms:p-2">
+                                <SortableHandle {...handle} label={`Move ${field.label || field.handle}`} />
+                                <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-expanded={expanded} aria-controls={id}
+                                    aria-label={`${expanded ? 'Close' : 'Open'} ${field.label || field.handle}`} onClick={() => toggle(field.key)}>
+                                    {expanded ? <ChevronDown /> : <ChevronRight />}
+                                </Button>
+                                <button type="button" className="cms:flex cms:min-w-0 cms:flex-1 cms:items-center cms:gap-2 cms:text-left" onClick={() => toggle(field.key)}>
+                                    <span className="cms:truncate cms:font-medium">{field.label || field.handle}</span>
+                                    <code className="cms:truncate cms:text-xs cms:text-muted-foreground">{field.handle}</code>
+                                </button>
+                                {field.required && <Badge variant="outline">Required</Badge>}
+                                <Badge variant="secondary">{type?.label ?? field.type}</Badge>
+                                {type?.hasChildren && field.fields.length > 0 && !expanded && (
+                                    <span className="cms:text-xs cms:text-muted-foreground">{field.fields.length} inside</span>
+                                )}
+                                <Button type="button" variant="ghost" size="icon" className="cms:size-8 cms:text-destructive" aria-label={`Remove ${field.label || field.handle}`}
+                                    onClick={() => onChange(fields.filter((_, i) => i !== index))}><Trash2 /></Button>
+                            </div>
+                            {expanded && (
+                                <FieldSettings id={id} field={field} type={type} siblings={fields} onChange={(next) => update(index, next)}
+                                    types={types} errors={errorsUnder(errors, String(index))} depth={depth} />
+                            )}
                         </div>
-                        {expanded && (
-                            <FieldSettings id={id} field={field} type={type} siblings={fields} onChange={(next) => update(index, next)}
-                                types={types} errors={errorsUnder(errors, String(index))} depth={depth} />
-                        )}
-                    </div>
-                );
-            })}
+                    );
+                }}
+            </SortableList>
             <div>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>

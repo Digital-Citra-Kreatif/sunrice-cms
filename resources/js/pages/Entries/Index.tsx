@@ -4,6 +4,7 @@ import {
     ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Columns3, Compass, Download, ExternalLink, LayoutList, Plus, Search, X,
 } from 'lucide-react';
 import { useConfirm } from '@/components/Confirm.tsx';
+import { EntryReorderList } from '@/components/EntryReorderList.tsx';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
     Badge, Button, Card, Checkbox, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
@@ -25,8 +26,9 @@ interface Row {
     createdAt: string | null;
     author: string | null;
     locales: EntryLocale[];
-    /** The parent's title, in hierarchical collections. */
+    /** The parent's title and id, in hierarchical collections. */
     parent?: string | null;
+    parentId?: number | null;
     /** The visible field columns' text, by key ("field.price"). */
     cells: Record<string, string | null>;
 }
@@ -69,7 +71,7 @@ interface Props {
     manualOrder?: boolean;
     perPageOptions?: number[];
     preferencesKey?: string;
-    can?: { create: boolean; update?: boolean; publish?: boolean; delete?: boolean };
+    can?: { create: boolean; update?: boolean; publish?: boolean; delete?: boolean; export?: boolean };
 }
 
 const ALL = '__all';
@@ -104,6 +106,7 @@ function EntryList({
     const mainLocale = filters.locales[0] ?? query.locale;
     const [search, setSearch] = React.useState(query.search);
     const [selected, setSelected] = React.useState<number[]>([]);
+    const [reordering, setReordering] = React.useState(false);
     const [confirm, confirmDialog] = useConfirm();
     const { setColumns, setPerPage } = useTablePreferences(preferencesKey ?? `table.cms.entries.${collection.handle}`, { columns: query.columns, perPage: query.perPage });
     React.useEffect(() => setSelected([]), [entries]);
@@ -149,6 +152,8 @@ function EntryList({
     };
 
     const moveable = manualOrder && !!can?.update;
+    // Dragging saves the order of what's shown, the rest of its level after it: only when the whole collection is on this page.
+    const draggable = moveable && entries !== null && entries.lastPage <= 1 && entries.data.length > 1;
     const span = 1 + visible.length + (bulkActions.length > 0 ? 1 : 0) + (moveable ? 1 : 0);
     const exportQuery = entryListQueryString(params());
     const groups = [...new Set(links.map((link) => link.group))];
@@ -186,7 +191,7 @@ function EntryList({
                         {collection.listing && !trashed && (
                             <Button variant="outline" asChild><Link href={adminUrl(`cms/collections/${collection.handle}/listing`)}><LayoutList /> Listing page</Link></Button>
                         )}
-                        {entries.total > 0 && (
+                        {entries.total > 0 && can?.export && (
                             <Button variant="outline" asChild><a href={`${base}/export${exportQuery ? `?${exportQuery}` : ''}`}><Download /> Export CSV</a></Button>
                         )}
                         {can?.create && !trashed && (
@@ -238,6 +243,11 @@ function EntryList({
                             ))}
                         </div>
                     )}
+                    {draggable && (
+                        <Button variant={reordering ? 'secondary' : 'outline'} aria-pressed={reordering} onClick={() => setReordering(!reordering)}>
+                            <ArrowUpDown /> {reordering ? 'Done' : 'Reorder'}
+                        </Button>
+                    )}
                     {columns.length > 0 && (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -269,7 +279,7 @@ function EntryList({
                 </div>
             </div>
 
-            <Card className="cms:gap-0 cms:overflow-hidden cms:py-0">
+            {reordering && draggable ? <EntryReorderList collection={collection.handle} rows={entries.data} /> : <Card className="cms:gap-0 cms:overflow-hidden cms:py-0">
                 <Table>
                     <TableHeader className="cms:bg-muted/60">
                         <TableRow className="cms:hover:bg-transparent">
@@ -351,7 +361,7 @@ function EntryList({
                         </div>
                     )}
                 </div>
-            </Card>
+            </Card>}
         </div>
     );
 }
@@ -392,9 +402,9 @@ function CellValue({ row, column, mainLocale }: { row: Row; column: Column; main
                     <Badge variant={row.status === 'published' ? 'default' : 'secondary'}>{statusLabel(row.status)}</Badge>
                     {row.locales.length > 1 && row.locales.filter((l) => !l.main).map((l) => (
                         <Badge key={l.code} variant={l.status === 'published' ? 'default' : 'outline'}
-                            className={l.status === null ? 'cms:opacity-50' : ''}
-                            title={`${localeName(l.code)}: ${l.status === null ? 'not translated' : statusLabel(l.status)}`}>
-                            {l.code.toUpperCase()}
+                            className={l.status === null ? 'cms:opacity-50' : l.outdated ? 'cms:ring-2 cms:ring-amber-500/60' : ''}
+                            title={`${localeName(l.code)}: ${l.status === null ? 'not translated' : statusLabel(l.status)}${l.outdated ? ', outdated: the main language changed since' : ''}`}>
+                            {l.code.toUpperCase()}{l.outdated && <span aria-hidden="true">·!</span>}
                         </Badge>
                     ))}
                 </div>

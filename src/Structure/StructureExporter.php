@@ -44,7 +44,8 @@ final class StructureExporter
             'fieldsets' => Fieldset::query()->orderBy('handle')->get()->map(fn (Fieldset $f): array => ['handle' => $f->handle, 'title' => $f->title, 'fields' => $f->fields])->all(),
             'blueprints' => Blueprint::query()->orderBy('handle')->get()->map(fn (Blueprint $b): array => ['handle' => $b->handle, 'title' => $b->title, 'fields' => $b->fields])->all(),
             'collections' => Collection::query()->with('listings')->orderBy('handle')->get()->map(fn (Collection $c): array => [
-                ...$c->only(StructureImporter::COLLECTION),
+                // "blueprints" only when it offers more than its own.
+                ...array_diff_key($c->only(StructureImporter::COLLECTION), $c->blueprints === null ? ['blueprints' => true] : []),
                 'listings' => (object) $c->listings->sortBy('locale')->mapWithKeys(fn (CollectionListing $l): array => [$l->locale => $l->data])->all(),
             ])->all(),
             'taxonomies' => Taxonomy::query()->with('collections')->orderBy('handle')->get()->map(fn (Taxonomy $t): array => [
@@ -104,6 +105,7 @@ final class StructureExporter
                     'slug' => self::entrySlug($entry),
                     'parent' => $entry->parent === null ? null : self::entrySlug($entry->parent),
                     'template' => $entry->template,
+                    ...($entry->blueprint === null ? [] : ['blueprint' => $entry->blueprint]),
                     'translations' => (object) $entry->translations->sortBy('locale')->mapWithKeys(fn (EntryTranslation $t): array => [$t->locale => [
                         'title' => $t->draft_title, 'slug' => $t->draft_slug, 'data' => $t->draft_data, 'published' => $t->isPublished(),
                     ]])->all(),

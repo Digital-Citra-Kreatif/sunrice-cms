@@ -54,9 +54,8 @@ final class FormResource extends Resource
     {
         return $form->schema([
             TextInput::make('title')->required(),
-            TextInput::make('handle')->required()->maxLength(64)->unique()->onlyOnCreate()
-                ->rules(['regex:/^[a-z][a-z0-9_]*$/'])
-                ->help('How templates show it: <x-sunrice-cms::form handle="contact" />. It can\'t change later.'),
+            ...HandleField::make('form', 'How templates show it: <x-sunrice-cms::form handle="contact" />.',
+                'Careful: templates that show it (<x-sunrice-cms::form handle="…" />) need the new handle too. Roles keep their permissions for its submissions.'),
             Select::make('blueprint')->required()
                 ->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
                 ->help('Its fields. Visitors get the text, textarea, number, toggle, select, date and file ones.'),

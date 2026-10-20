@@ -27,7 +27,7 @@ final class References
 {
     public static function entry(EntryTranslation $translation): void
     {
-        $schema = $translation->entry->collection->schema();
+        $schema = $translation->entry->schema();
         self::sync(ContentReference::ENTRY, $translation->entry_id, $translation->locale,
             [...$schema->references($translation->draft_data), ...$schema->references($translation->data ?? [])]);
     }

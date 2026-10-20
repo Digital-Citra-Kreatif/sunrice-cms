@@ -13,6 +13,7 @@ use Spatie\Permission\PermissionRegistrar;
 use Sunrice\Cms\Actions\Blueprints\SaveBlueprint;
 use Sunrice\Cms\Actions\Collections\SaveCollection;
 use Sunrice\Cms\Actions\Collections\SaveListing;
+use Sunrice\Cms\Actions\Entries\ChangeBlueprint;
 use Sunrice\Cms\Actions\Entries\CreateEntry;
 use Sunrice\Cms\Actions\Entries\CreateTranslation;
 use Sunrice\Cms\Actions\Entries\PublishEntry;
@@ -68,7 +69,7 @@ final class StructureImporter
     public const SECTIONS = ['fieldsets', 'blueprints', 'collections', 'taxonomies', 'globals', 'forms', 'terms', 'entries', 'menus', 'redirects'];
 
     /** A collection's settings in the file. */
-    public const COLLECTION = ['handle', 'title', 'blueprint', 'dated', 'ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template'];
+    public const COLLECTION = ['handle', 'title', 'blueprint', 'blueprints', 'dated', 'ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template'];
 
     public const TAXONOMY = ['handle', 'title', 'hierarchical', 'route', 'blueprint', 'template'];
 
@@ -251,7 +252,7 @@ final class StructureImporter
             'template' => self::TEMPLATE,
         ])->validate();
         $before = $existing?->only(self::COLLECTION);
-        $collection = app(SaveCollection::class)->handle(array_intersect_key($item, array_flip(['title', 'blueprint', 'dated'])) + ($existing === null ? ['handle' => $item['handle']] : []), $existing);
+        $collection = app(SaveCollection::class)->handle(array_intersect_key($item, array_flip(['title', 'blueprint', 'blueprints', 'dated'])) + ($existing === null ? ['handle' => $item['handle']] : []), $existing);
         $collection->forceFill(array_intersect_key($validated, array_flip(['ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template'])))->save();
         $this->report->add('collection', $collection->handle, $this->status($before, $collection->only(self::COLLECTION)));
     }
@@ -406,6 +407,12 @@ final class StructureImporter
             if ($entry === null) {
                 $saved = app(CreateEntry::class)->handle($collection, $input + ['locale' => $locale]);
                 $entry = $saved->entry;
+                // Its own blueprint, if the collection offers it: then its fields are written.
+                $blueprint = is_string($item['blueprint'] ?? null) ? $item['blueprint'] : null;
+                if ($blueprint !== null && $blueprint !== $collection->blueprint && in_array($blueprint, $collection->allowedBlueprints(), true)) {
+                    app(ChangeBlueprint::class)->handle($entry, $blueprint);
+                    $saved = app(SaveDraft::class)->handle($saved->fresh() ?? $saved, $input);
+                }
             } else {
                 $saved = app(SaveDraft::class)->handle(app(CreateTranslation::class)->handle($entry, $locale), $input);
             }

@@ -198,7 +198,11 @@ final class EntryFilter extends Component
                 $filter->value = self::chosen($raw, array_column($options, 'value'), $multiple);
                 break;
             default:
-                $schemaField = $collection->schema()->field($field);
+                // The field as any blueprint the collection offers has it.
+                $schemaField = null;
+                foreach ($collection->allSchemas() as $schema) {
+                    $schemaField ??= $schema->field($field);
+                }
                 $filter->storesList = $schemaField?->configBool('multiple') ?? false;
                 $options = self::selectOptions($definition['options'] ?? $schemaField?->config('options') ?? []);
                 $allowed = array_column($options, 'value');

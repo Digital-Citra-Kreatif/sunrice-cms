@@ -21,6 +21,7 @@ use Sunrice\Cms\Support\Locales;
  * @property string $handle
  * @property string $title
  * @property string|null $blueprint the blueprint's handle
+ * @property list<string>|null $blueprints more blueprints (handles) its entries may use instead (Entry::$blueprint)
  * @property bool $dated entries show a date, and list newest first
  * @property string|null $route the entries' public URL pattern ("/blog/{slug}"); none: no pages
  * @property string|null $template the Blade view entries render with
@@ -52,10 +53,13 @@ class Collection extends Model
 
     private ?Schema $schema = null;
 
+    /** @var array<string, Schema> other allowed blueprints' fields, by handle */
+    private array $schemas = [];
+
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['dated' => 'boolean', 'comments' => 'boolean', 'hierarchical' => 'boolean', 'ordered' => 'boolean', 'per_page' => 'integer'];
+        return ['dated' => 'boolean', 'comments' => 'boolean', 'hierarchical' => 'boolean', 'ordered' => 'boolean', 'per_page' => 'integer', 'blueprints' => 'array'];
     }
 
     /** @return HasMany<CollectionListing, $this> */
@@ -123,9 +127,46 @@ class Collection extends Model
         return $this->schema ??= $this->blueprintModel()?->schema() ?? Schema::make([]);
     }
 
+    /**
+     * The blueprints its entries may use: its own first, then the others
+     * allowed (handles; an entry picks one with ChangeBlueprint).
+     *
+     * @return list<string>
+     */
+    public function allowedBlueprints(): array
+    {
+        $handles = [$this->blueprint, ...(is_array($this->blueprints) ? $this->blueprints : [])];
+
+        return array_values(array_unique(array_filter($handles, fn (mixed $handle): bool => is_string($handle) && $handle !== '')));
+    }
+
+    /**
+     * The fields of an entry with this blueprint (a handle): its own when
+     * null or not allowed. Loaded once per handle.
+     */
+    public function schemaFor(?string $blueprint): Schema
+    {
+        if ($blueprint === null || $blueprint === $this->blueprint || ! in_array($blueprint, $this->allowedBlueprints(), true)) {
+            return $this->schema();
+        }
+
+        return $this->schemas[$blueprint] ??= Blueprint::query()->where('handle', $blueprint)->first()?->schema() ?? Schema::make([]);
+    }
+
+    /**
+     * The fields of every allowed blueprint (for queries across entries).
+     *
+     * @return list<Schema>
+     */
+    public function allSchemas(): array
+    {
+        return [$this->schema(), ...array_map(fn (string $handle): Schema => $this->schemaFor($handle), array_values(array_diff($this->allowedBlueprints(), [$this->blueprint])))];
+    }
+
     /** Forget the loaded fields, e.g. after the blueprint changed. */
     public function flushSchema(): void
     {
         $this->schema = null;
+        $this->schemas = [];
     }
 }

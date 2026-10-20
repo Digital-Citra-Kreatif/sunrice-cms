@@ -10,6 +10,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Sunrice\Cms\Actions\Terms\DeleteTerm;
 use Sunrice\Cms\Actions\Terms\MoveTerm;
+use Sunrice\Cms\Actions\Terms\ReorderTerms;
 use Sunrice\Cms\Actions\Terms\RestoreTerm;
 use Sunrice\Cms\Actions\Terms\SaveTerm;
 use Sunrice\Cms\Actions\Terms\SaveTermContent;
@@ -93,6 +94,19 @@ final class TermController
     public function move(Request $request, Term $term, MoveTerm $move): RedirectResponse
     {
         $move->handle($term, $request->input('direction') === 'up' ? -1 : 1);
+
+        return back();
+    }
+
+    /** One level's terms in the order dragged: "taxonomy", "ids" and "parent_id". */
+    public function reorder(Request $request, ReorderTerms $reorder): RedirectResponse
+    {
+        $handle = $request->input('taxonomy');
+        $taxonomy = is_string($handle) ? Taxonomy::query()->where('handle', $handle)->first() : null;
+        abort_if($taxonomy === null, 404);
+        abort_unless(Access::terms($request->user(), $taxonomy), 403);
+        $parent = $request->input('parent_id');
+        $reorder->handle($taxonomy, (array) $request->input('ids', []), is_numeric($parent) ? (int) $parent : null);
 
         return back();
     }

@@ -15,6 +15,7 @@ use Sunrice\Admin\Panel;
 use Sunrice\Admin\Preferences\Preferences;
 use Sunrice\Cms\Fields\CustomField;
 use Sunrice\Cms\Fields\Field;
+use Sunrice\Cms\Fields\Schema;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
@@ -205,6 +206,7 @@ final class EntryList
                 'author' => $author === null ? null : ($authors['u'.$author] ?? null),
                 'locales' => self::locales($translation->entry),
                 'parent' => $translation->entry->parent?->mainTranslation()?->draft_title,
+                'parentId' => $translation->entry->parent_id,
                 'cells' => $cells,
             ];
         }, $translations);
@@ -218,7 +220,14 @@ final class EntryList
      */
     public function export(Closure $write): void
     {
-        $fields = $this->collection->schema()->fields();
+        // A column per top-level field of every blueprint the collection offers; each entry fills its own's.
+        $fields = [];
+        foreach ($this->collection->allSchemas() as $schema) {
+            foreach ($schema->fields() as $field) {
+                $fields[$field->handle] ??= $field;
+            }
+        }
+        $fields = array_values($fields);
         $write(['ID', 'Title', 'Slug', 'Status', 'Published', 'URL', 'Updated', 'Author', ...array_map(FieldText::label(...), $fields)]);
         $authors = $this->authorNames();
         $this->query()->chunk(500, function ($translations) use ($fields, $authors, $write): void {
@@ -227,14 +236,15 @@ final class EntryList
             foreach ($list as $translation) {
                 $translation->entry->setRelation('collection', $this->collection);
                 $data = $translation->completeData(true);
+                $own = $translation->entry->schema();
                 $author = $translation->entry->author_id;
                 $write([
                     $translation->entry_id, $translation->draft_title, $translation->draft_slug, $translation->entry->trashed() ? 'trashed' : $translation->status(),
                     $translation->published_at?->toDateTimeString(), $translation->isLive() && ! $translation->entry->trashed() ? $translation->url() : null,
                     $translation->updated_at?->toDateTimeString(), $author === null ? null : ($authors['u'.$author] ?? null),
-                    ...array_map(fn (Field $field): ?string => isset($this->fields[$field->handle])
+                    ...array_map(fn (Field $field): ?string => ($mine = $own->field($field->handle)) === null ? '' : (isset($this->fields[$field->handle])
                         ? $this->cell($data[$field->handle] ?? null, $this->fields[$field->handle], $titles, false)
-                        : FieldText::text($data[$field->handle] ?? null, $field), $fields),
+                        : FieldText::text($data[$field->handle] ?? null, $mine)), $fields),
                 ]);
             }
         });
@@ -331,9 +341,10 @@ final class EntryList
 
     /**
      * The site's languages with the entry's state in each: its status, or
-     * null where it has no translation yet.
+     * null where it has no translation yet, and whether the main language
+     * changed since it was translated (EntryTranslation::isOutdated()).
      *
-     * @return list<array{code: string, name: string, main: bool, status: string|null}>
+     * @return list<array{code: string, name: string, main: bool, status: string|null, outdated: bool}>
      */
     public static function locales(Entry $entry): array
     {
@@ -344,6 +355,7 @@ final class EntryList
             'name' => Locales::name($code),
             'main' => $main?->locale === $code,
             'status' => ($translation = $entry->translation($code)) === null ? null : $translation->status(),
+            'outdated' => $translation?->isOutdated() ?? false,
         ], Locales::all());
     }
 
@@ -504,9 +516,22 @@ final class EntryList
     /** @return array<string, array{field: Field, kind: string, label: string, sortable: bool, translatable: bool}> */
     private function fieldColumns(): array
     {
-        $schema = $this->collection->schema();
         $taken = array_map(mb_strtolower(...), ['Title', ...array_values(self::COLUMNS)]);
         $columns = [];
+        // Every blueprint the collection offers (Entry::$blueprint), its own first.
+        foreach ($this->collection->allSchemas() as $schema) {
+            $this->addFieldColumns($schema, $taken, $columns);
+        }
+
+        return $columns;
+    }
+
+    /**
+     * @param  list<string>  $taken
+     * @param  array<string, array{field: Field, kind: string, label: string, sortable: bool, translatable: bool}>  $columns
+     */
+    private function addFieldColumns(Schema $schema, array $taken, array &$columns): void
+    {
         foreach ($schema->fields() as $field) {
             $type = $schema->type($field);
             $base = $type instanceof CustomField ? $type->baseType() : $type->type();
@@ -526,8 +551,6 @@ final class EntryList
                 'translatable' => $schema->isTranslatable($field),
             ];
         }
-
-        return $columns;
     }
 
     /** @return list<string> */

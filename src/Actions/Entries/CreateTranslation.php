@@ -49,7 +49,9 @@ final class CreateTranslation
                 'draft_title' => $main->draft_title,
                 'draft_slug' => $slug,
                 // Only the translated fields: the shared ones (in rows and blocks too) stay the main translation's.
-                'draft_data' => $entry->collection->schema()->withoutShared($main->draft_data, $main->draft_data),
+                'draft_data' => $entry->schema()->withoutShared($main->draft_data, $main->draft_data),
+                // Up to date with the main language until that changes.
+                'main_version' => $main->version,
             ]);
         });
         $entry->unsetRelation('translations');
