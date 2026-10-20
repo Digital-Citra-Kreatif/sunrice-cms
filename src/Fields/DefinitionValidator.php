@@ -74,7 +74,7 @@ final class DefinitionValidator
             $key = "{$path}.{$index}";
             $type = is_array($field) && is_string($field['type'] ?? null) && $this->types->has($field['type']) ? $this->types->get($field['type']) : null;
             $rules[$key] = ['array'];
-            $rules["{$key}.handle"] = ['required', 'string', 'max:64', 'regex:/^[a-z][a-z0-9_]*$/'];
+            $rules["{$key}.handle"] = ['required', 'string', 'max:64', self::handleRule()];
             $rules["{$key}.type"] = ['required', 'string', Rule::in(array_keys($this->types->all()))];
             $rules["{$key}.label"] = ['nullable', 'string', 'max:255'];
             $rules["{$key}.instructions"] = ['nullable', 'string', 'max:1000'];
@@ -113,6 +113,16 @@ final class DefinitionValidator
                 }
             }
         }
+    }
+
+    /** A field's handle: lowercase letters, digits and underscores, from a letter; said plainly when it isn't. */
+    private static function handleRule(): \Closure
+    {
+        return function (string $attribute, mixed $value, \Closure $fail): void {
+            if (is_string($value) && preg_match('/^[a-z][a-z0-9_]*$/', $value) !== 1) {
+                $fail("\"{$value}\" can't be a handle: use lowercase letters, numbers and underscores, starting with a letter (like hero_image).");
+            }
+        };
     }
 
     private static function strictBoolean(): \Closure

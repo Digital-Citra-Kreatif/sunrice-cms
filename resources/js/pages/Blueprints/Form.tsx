@@ -6,7 +6,7 @@ import { Button, Card, CardContent, Input, Label, PageHeader, useBreadcrumbs, us
 import { useConfirm } from '@/components/Confirm.tsx';
 import { FieldBuilder } from '@/components/FieldBuilder.tsx';
 import { FieldError } from '@/components/FieldInput.tsx';
-import { type BuilderField, errorsUnder, fromDefinitions, handleFromLabel, toDefinitions } from '@/lib/builder.ts';
+import { type BuilderField, cleanHandle, errorsUnder, fromDefinitions, handleFromLabel, toDefinitions } from '@/lib/builder.ts';
 import type { FieldDefinition, FieldTypeInfo, Option } from '@/types.ts';
 
 interface Props {
@@ -99,7 +99,7 @@ export default function BlueprintForm({ kind = 'blueprint', blueprint, fieldType
                     <div className="cms:flex cms:flex-col cms:gap-2">
                         <Label htmlFor="handle">Handle</Label>
                         <Input id="handle" className="cms:font-mono" value={form.data.handle} disabled={blueprint !== null} required
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setHandleTouched(true); form.setData('handle', e.target.value); }} />
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setHandleTouched(true); form.setData('handle', cleanHandle(e.target.value)); }} />
                         <p className="cms:text-sm cms:text-muted-foreground">{blueprint ? 'Set when it was created.' : 'Lowercase letters, digits and underscores. It can\'t change later.'}</p>
                         <FieldError message={errors.handle} />
                     </div>

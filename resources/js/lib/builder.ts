@@ -28,6 +28,21 @@ export function handleFromLabel(label: string): string {
     return handle;
 }
 
+/**
+ * What can be typed in a handle box: lowercase letters, numbers and
+ * underscores, from a letter ("Hero Image" typed becomes "hero_image").
+ */
+export function cleanHandle(typed: string): string {
+    return typed
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9_]+/g, '_')
+        .replace(/^[0-9_]+/, '')
+        .replace(/_{2,}/g, '_')
+        .slice(0, 64);
+}
+
 /** A handle not yet used on this level: "text", then "text_2"… */
 export function uniqueHandle(base: string, siblings: { handle: string }[]): string {
     const taken = new Set(siblings.map((field) => field.handle));
