@@ -170,6 +170,7 @@ final class CmsServiceProvider extends ServiceProvider
         Route::middleware([...$middleware, 'signed'])->get('cms-preview/{translation}', [Site\SiteController::class, 'preview'])->name('sunrice.cms.preview');
         if (config('sunrice-cms.site.enabled', true) === true) {
             Route::middleware($middleware)->get('sitemap.xml', Site\SitemapController::class)->name('sunrice.cms.sitemap');
+            Route::middleware($middleware)->get('sitemap-{part}.xml', [Site\SitemapController::class, 'part'])->where('part', '[1-9][0-9]{0,5}')->name('sunrice.cms.sitemap.part');
             // The homepage: the fallback doesn't match /. An app's own / route, loaded later, replaces it.
             // The whole-page cache, when spatie/laravel-responsecache is installed (on with cache.pages).
             $pages = class_exists(CacheResponse::class) ? [CacheResponse::class] : [];
