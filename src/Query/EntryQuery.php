@@ -9,6 +9,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection as Items;
 use InvalidArgumentException;
+use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
@@ -24,7 +25,8 @@ use Sunrice\Cms\Support\Locales;
  *
  * Only published entries past their date, of collections not deleted.
  * Field filters read the main language's published values (shared fields
- * live there).
+ * live there). A result's entries share one HydrationContext, so their
+ * values() load each media file, entry and term once for the whole list.
  *
  * @api
  */
@@ -35,11 +37,14 @@ final class EntryQuery
     /** @var Builder<EntryTranslation> */
     private Builder $query;
 
+    private string $locale;
+
     /** @param list<string> $collections handles; none for all */
     public function __construct(array $collections = [], ?string $locale = null)
     {
-        $this->query = EntryTranslation::query()->live()->with('entry.collection')
-            ->where('locale', $locale ?? Locales::current())
+        $this->locale = $locale ?? Locales::current();
+        $this->query = EntryTranslation::query()->live()->with(['entry.collection', 'entry.translations'])
+            ->where('locale', $this->locale)
             ->when($collections !== [], fn (Builder $q) => $q->whereIn('collection_id', Collection::query()->whereIn('handle', $collections)->select('id')));
     }
 
@@ -215,12 +220,12 @@ final class EntryQuery
     /** @return Items<int, EntryTranslation> */
     public function get(): Items
     {
-        return $this->query->get()->toBase();
+        return $this->hydrate($this->query->get()->toBase());
     }
 
     public function first(): ?EntryTranslation
     {
-        return $this->query->first();
+        return $this->hydrate($this->query->limit(1)->get()->toBase())->first();
     }
 
     public function count(): int
@@ -231,6 +236,29 @@ final class EntryQuery
     /** @return LengthAwarePaginator<int, EntryTranslation> */
     public function paginate(int $perPage = 10): LengthAwarePaginator
     {
-        return $this->query->paginate($perPage);
+        $paginator = $this->query->paginate($perPage);
+        $this->hydrate($paginator->getCollection());
+
+        return $paginator;
+    }
+
+    /**
+     * One context for the whole result, with everything its fields point
+     * at loaded up front: one query per kind, not per entry.
+     *
+     * @param  Items<int, EntryTranslation>  $translations
+     * @return Items<int, EntryTranslation>
+     */
+    private function hydrate(Items $translations): Items
+    {
+        $context = new HydrationContext($this->locale);
+        $references = [];
+        foreach ($translations as $translation) {
+            $translation->hydrateWith($context);
+            array_push($references, ...$translation->entry->collection->schema()->references($translation->storedValues()));
+        }
+        $context->preload($references);
+
+        return $translations;
     }
 }

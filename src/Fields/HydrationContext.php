@@ -34,6 +34,25 @@ final class HydrationContext
     ) {}
 
     /**
+     * Loads what these references point at, one query per kind, so a list
+     * of entries costs no more than one (Schema::references()).
+     *
+     * @param  list<Reference>  $references
+     */
+    public function preload(array $references): void
+    {
+        $ids = [Reference::MEDIA => [], Reference::TERM => [], Reference::ENTRY => []];
+        foreach ($references as $reference) {
+            if (isset($ids[$reference->type])) {
+                $ids[$reference->type][] = $reference->id;
+            }
+        }
+        $this->preloadMedia($ids[Reference::MEDIA]);
+        $this->preloadTerms($ids[Reference::TERM]);
+        $this->preloadEntries($ids[Reference::ENTRY]);
+    }
+
+    /**
      * Loads these media files in one query, for media() and mediaMany().
      *
      * @param  list<int>  $ids
@@ -71,6 +90,23 @@ final class HydrationContext
     }
 
     /**
+     * Loads these terms (with their translations) in one query, for terms().
+     *
+     * @param  list<int>  $ids
+     */
+    public function preloadTerms(array $ids): void
+    {
+        $missing = array_values(array_diff(array_unique($ids), array_keys($this->terms)));
+        if ($missing === []) {
+            return;
+        }
+        $found = Term::query()->with('translations')->whereKey($missing)->get()->keyBy('id');
+        foreach ($missing as $id) {
+            $this->terms[$id] = $found->get($id);
+        }
+    }
+
+    /**
      * Terms with their translations, in the given order, skipping deleted
      * ones; loaded once per context.
      *
@@ -79,15 +115,28 @@ final class HydrationContext
      */
     public function terms(array $ids): Collection
     {
-        $missing = array_values(array_diff(array_unique($ids), array_keys($this->terms)));
-        if ($missing !== []) {
-            $found = Term::query()->with('translations')->whereKey($missing)->get()->keyBy('id');
-            foreach ($missing as $id) {
-                $this->terms[$id] = $found->get($id);
-            }
-        }
+        $this->preloadTerms($ids);
 
         return collect($ids)->map(fn (int $id): ?Term => $this->terms[$id] ?? null)->filter()->values();
+    }
+
+    /**
+     * Loads these entries (with their translations) in one query, for entries().
+     *
+     * @param  list<int>  $ids  entry ids
+     */
+    public function preloadEntries(array $ids): void
+    {
+        $missing = array_values(array_diff(array_unique($ids), array_keys($this->entries)));
+        if ($missing === []) {
+            return;
+        }
+        $found = Entry::query()->with(['translations', 'collection'])->whereKey($missing)->get()->keyBy('id');
+        foreach ($missing as $id) {
+            $entry = $found->get($id);
+            $translation = $entry === null || $entry->collection->trashed() ? null : ($entry->translation($this->locale) ?? $entry->mainTranslation());
+            $this->entries[$id] = $translation !== null && ($this->preview || $translation->isLive()) ? $translation : null;
+        }
     }
 
     /**
@@ -101,15 +150,7 @@ final class HydrationContext
      */
     public function entries(array $ids): Collection
     {
-        $missing = array_values(array_diff(array_unique($ids), array_keys($this->entries)));
-        if ($missing !== []) {
-            $found = Entry::query()->with(['translations', 'collection'])->whereKey($missing)->get()->keyBy('id');
-            foreach ($missing as $id) {
-                $entry = $found->get($id);
-                $translation = $entry === null || $entry->collection->trashed() ? null : ($entry->translation($this->locale) ?? $entry->mainTranslation());
-                $this->entries[$id] = $translation !== null && ($this->preview || $translation->isLive()) ? $translation : null;
-            }
-        }
+        $this->preloadEntries($ids);
 
         return collect($ids)->map(fn (int $id): ?EntryTranslation => $this->entries[$id] ?? null)->filter()->values();
     }

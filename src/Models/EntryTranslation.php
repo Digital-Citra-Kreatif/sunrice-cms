@@ -54,6 +54,9 @@ class EntryTranslation extends Model
 
     protected $attributes = ['status' => self::DRAFT, 'draft_data' => '{}', 'version' => 1];
 
+    /** The context values() hydrates with when given none: shared by a query's whole result (EntryQuery). */
+    private ?HydrationContext $hydration = null;
+
     protected static function booted(): void
     {
         // The live version's words for site search, whenever it changes.
@@ -141,16 +144,35 @@ class EntryTranslation extends Model
      */
     public function values(?HydrationContext $context = null): array
     {
-        $context ??= new HydrationContext($this->locale);
-        $schema = $this->entry->collection->schema();
-        $data = $context->preview ? $this->draft_data : ($this->data ?? []);
+        $context ??= $this->hydration ?? new HydrationContext($this->locale);
+
+        return $this->entry->collection->schema()->hydrate($this->storedValues($context->preview), $context);
+    }
+
+    /**
+     * The stored fields values() hydrates: the live version's (or the
+     * draft's), with the shared fields from the main translation.
+     *
+     * @return array<mixed>
+     */
+    public function storedValues(bool $preview = false): array
+    {
+        $data = $preview ? $this->draft_data : ($this->data ?? []);
         $main = $this->entry->mainTranslation();
         if ($main !== null && ! $main->is($this)) {
-            $shared = array_flip($schema->shared());
-            $data = array_replace($data, array_intersect_key($context->preview ? $main->draft_data : ($main->data ?? []), $shared));
+            $shared = array_flip($this->entry->collection->schema()->shared());
+            $data = array_replace($data, array_intersect_key($preview ? $main->draft_data : ($main->data ?? []), $shared));
         }
 
-        return $schema->hydrate($data, $context);
+        return $data;
+    }
+
+    /** Hydrate with this context when values() is given none: a query shares one with its whole result. */
+    public function hydrateWith(HydrationContext $context): static
+    {
+        $this->hydration = $context;
+
+        return $this;
     }
 
     /** The fields this translation edits: all of them for the main one, the translated ones for the others. */
