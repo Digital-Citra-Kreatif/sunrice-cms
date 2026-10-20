@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Sunrice\Cms;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Route;
 use Sunrice\Admin\Assets\PluginBundle;
 use Sunrice\Admin\BasePlugin;
 use Sunrice\Admin\Navigation\NavigationItem;
 use Sunrice\Admin\Panel;
 use Sunrice\Admin\Permissions\Permission;
+use Sunrice\Cms\Actions\Users\ReleaseUserContent;
 use Sunrice\Cms\Admin\CollectionResource;
 use Sunrice\Cms\Admin\FormResource;
 use Sunrice\Cms\Admin\GlobalSetResource;
@@ -213,6 +215,15 @@ final class CmsPlugin extends BasePlugin
             && Access::entries($user, 'update', $entry->collection, $entry, $locale));
         $panel->lockable('cms.global', fn (string $id, string $locale, Authorizable $user): bool => $user->can('cms.globals.update')
             && GlobalSet::query()->whereKey($id)->exists());
+        // Deleting a user: what happens to their entries and comments (DeleteUser).
+        $panel->userContent('cms.entries', 'entries',
+            fn (Model $user): int => ReleaseUserContent::entries($user),
+            fn (Model $user, string $mode, ?Model $heir) => app(ReleaseUserContent::class)->handleEntries($user, $mode, $heir));
+        $panel->userContent('cms.comments', 'comments',
+            fn (Model $user): int => ReleaseUserContent::comments($user),
+            fn (Model $user, string $mode, ?Model $heir) => app(ReleaseUserContent::class)->handleComments($user, $mode, $heir));
+        // Getting these is worth an alert: site-wide scripts, and the shape of all content.
+        $panel->privilegedPermissions('cms.settings.code', 'cms.blueprints.manage');
         $panel->bundle(PluginBundle::make('cms')->module(self::asset('admin.js'))->style(self::asset('admin.css'))->pages('Cms/'));
         if ($this->fieldTypes !== []) {
             $types = $this->fieldTypes;
