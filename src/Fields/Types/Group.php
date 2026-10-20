@@ -12,9 +12,11 @@ use Sunrice\Cms\Fields\Schema;
 /** Fields kept together under one handle: `$entry->get('hero')['title']`. */
 final class Group extends FieldType
 {
+    public const TYPE = 'group';
+
     public function type(): string
     {
-        return 'group';
+        return self::TYPE;
     }
 
     public function rules(Field $field): array

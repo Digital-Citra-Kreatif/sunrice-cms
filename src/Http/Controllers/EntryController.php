@@ -155,7 +155,7 @@ final class EntryController
 
         return Inertia::render('Cms/Entries/Editor', [
             'collection' => self::collection($collection),
-            'fields' => $collection->schema()->toAdmin(),
+            'fields' => $translation->isMain() ? $collection->schema()->toAdmin() : self::markShared($collection->schema()->toAdmin()),
             'locales' => self::locales($entry),
             // Shared fields are edited in the main language; the others show its values.
             'shared' => $shared,
@@ -173,7 +173,8 @@ final class EntryController
                 'url' => $translation->isLive() && ! $entry->trashed() ? $translation->url() : null,
                 'previewUrl' => URL::temporarySignedRoute('sunrice.cms.preview', now()->addMinutes(30), ['translation' => $translation->id]),
             ],
-            'values' => ['title' => $translation->draft_title, 'slug' => $translation->draft_slug, 'data' => $translation->draft_data, 'seo' => $translation->draft_data[Seo::KEY] ?? null],
+            // Another language's rows and blocks show the main one's shared values.
+            'values' => ['title' => $translation->draft_title, 'slug' => $translation->draft_slug, 'data' => $translation->completeData(true), 'seo' => $translation->draft_data[Seo::KEY] ?? null],
             // Every language's: the parent and its own Blade view.
             'settings' => ['parentId' => $entry->parent_id, 'template' => $entry->template, 'commentsClosed' => $entry->comments_closed],
             'revisions' => $translation->revisions()->limit(20)->get()->map(fn (Revision $revision): array => [
@@ -292,6 +293,46 @@ final class EntryController
             'main' => $main?->locale === $code,
             'status' => ($translation = $entry->translation($code)) === null ? null : $translation->status(),
         ], Locales::all());
+    }
+
+    /**
+     * Field definitions for another language than the main one: the shared
+     * fields inside translated groups, repeaters and blocks marked `shared`,
+     * so the editor shows them read-only.
+     *
+     * @param  list<array<string, mixed>>  $fields
+     * @return list<array<string, mixed>>
+     */
+    private static function markShared(array $fields, bool $nested = false): array
+    {
+        foreach ($fields as $i => $field) {
+            if (($field['translatable'] ?? true) === false) {
+                if ($nested) {
+                    $fields[$i]['shared'] = true;
+                }
+
+                continue;
+            }
+            if (is_array($field['fields'] ?? null)) {
+                /** @var list<array<string, mixed>> $children */
+                $children = $field['fields'];
+                $fields[$i]['fields'] = self::markShared($children, true);
+            }
+            if (is_array($field['blocks'] ?? null)) {
+                $blocks = $field['blocks'];
+                foreach ($blocks as $b => $block) {
+                    if (is_array($block) && is_array($block['fields'] ?? null)) {
+                        /** @var list<array<string, mixed>> $children */
+                        $children = $block['fields'];
+                        $block['fields'] = self::markShared($children, true);
+                        $blocks[$b] = $block;
+                    }
+                }
+                $fields[$i]['blocks'] = $blocks;
+            }
+        }
+
+        return $fields;
     }
 
     private static function publishAt(Request $request): ?\DateTimeInterface

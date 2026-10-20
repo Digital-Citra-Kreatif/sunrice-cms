@@ -162,7 +162,12 @@ export function Fields({ fields, value, onChange, errors, id, content }: {
 }) {
     return (
         <div className="cms:flex cms:flex-col cms:gap-4 cms:rounded-lg cms:border cms:p-4">
-            {fields.map((child) => (
+            {fields.map((child) => child.shared ? (
+                <fieldset key={child.handle} disabled className="cms:flex cms:flex-col cms:gap-1">
+                    <FieldInput id={`${id}-${child.handle}`} field={child} value={value[child.handle]} content={content} errors={{}} onChange={() => {}} />
+                    <p className="cms:text-sm cms:text-muted-foreground">Shared by all languages: edit it in the main language.</p>
+                </fieldset>
+            ) : (
                 <FieldInput key={child.handle} id={`${id}-${child.handle}`} field={child} value={value[child.handle]} content={content}
                     errors={errorsAt(errors, child.handle)}
                     onChange={(next) => onChange({ ...value, [child.handle]: next })} />

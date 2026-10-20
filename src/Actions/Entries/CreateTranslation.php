@@ -48,8 +48,8 @@ final class CreateTranslation
                 'locale' => $locale,
                 'draft_title' => $main->draft_title,
                 'draft_slug' => $slug,
-                // Only the translated fields: the shared ones stay the main translation's.
-                'draft_data' => array_diff_key($main->draft_data, array_flip($entry->collection->schema()->shared())),
+                // Only the translated fields: the shared ones (in rows and blocks too) stay the main translation's.
+                'draft_data' => $entry->collection->schema()->withoutShared($main->draft_data, $main->draft_data),
             ]);
         });
         $entry->unsetRelation('translations');
