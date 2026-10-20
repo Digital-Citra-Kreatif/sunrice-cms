@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Settings;
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Sunrice\Admin\Resources\Forms\Form;
 use Sunrice\Admin\Resources\Forms\MediaPicker;
 use Sunrice\Admin\Resources\Forms\Section;
@@ -12,6 +13,7 @@ use Sunrice\Admin\Resources\Forms\Textarea;
 use Sunrice\Admin\Resources\Forms\TextInput;
 use Sunrice\Admin\Resources\Forms\Toggle;
 use Sunrice\Admin\Settings\Settings;
+use Sunrice\Admin\Support\Card;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Support\Locales;
@@ -65,7 +67,15 @@ final class SiteSettings extends Settings
 
     public static function description(): string
     {
-        return 'The homepage, and what search results and shared links show.';
+        return 'The homepage, the site\'s name and description, and structured data.';
+    }
+
+    /** The rest of what search engines and shared links see is on its own page. */
+    public static function cards(Authorizable $user): array
+    {
+        return [Card::make('Search engines and sharing')
+            ->description('Hiding the site from search engines, the share image, page titles and which fields fill in each page\'s SEO.')
+            ->link('Open Settings → SEO', route('sunrice.admin.cms.seo.edit', [], false))];
     }
 
     public static function form(Form $form): Form
@@ -73,15 +83,9 @@ final class SiteSettings extends Settings
         return $form->schema([
             Select::make('homepage')->label('Homepage')->options(self::homepages())
                 ->help('The entry shown at the site\'s address (/), in each language it\'s published in. Its own address redirects there.'),
-            Section::make('Search and sharing')->description('For pages that don\'t set their own in their SEO card.')->columns(2)->schema([
-                TextInput::make('name')->label('Site name')->maxLength(100)->placeholder(self::appName()),
-                TextInput::make('twitter')->label('X (Twitter) account')->maxLength(16)->placeholder('@acme')->rules(['regex:/^@?[A-Za-z0-9_]{1,15}$/']),
+            Section::make('The site')->description('Its name and what it\'s about, for search results and shared links of pages that don\'t say their own. Search engines, share image and titles: Settings → SEO.')->columns(2)->schema([
+                TextInput::make('name')->label('Site name')->maxLength(100)->placeholder(self::appName())->span(2),
                 Textarea::make('description')->label('Description')->rows(2)->maxLength(500)->span(2),
-                TextInput::make('separator')->label('Title separator')->maxLength(5)->help('Between a page\'s title and the site name.'),
-                Toggle::make('appendName')->label('Add the site name to titles')->help('"About | Acme" in search results and tabs.'),
-                MediaPicker::make('image')->label('Share image')->images()->span(2),
-                Toggle::make('noindex')->label('Hide the whole site from search engines')->span(2)
-                    ->help('For a site still being built. Every page asks not to be indexed and the sitemap is empty.'),
             ]),
             Section::make('Structured data')->description('What search engines are told pages are (schema.org), for richer results: articles, breadcrumbs, the site\'s search box.')->columns(2)->schema([
                 Toggle::make('structuredData')->label('Add structured data to pages')->span(2),

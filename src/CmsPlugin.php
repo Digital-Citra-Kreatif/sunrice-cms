@@ -30,6 +30,7 @@ use Sunrice\Cms\Http\Controllers\FieldsetController;
 use Sunrice\Cms\Http\Controllers\GlobalsController;
 use Sunrice\Cms\Http\Controllers\ListingController;
 use Sunrice\Cms\Http\Controllers\MenuController;
+use Sunrice\Cms\Http\Controllers\SeoController;
 use Sunrice\Cms\Http\Controllers\SubmissionController;
 use Sunrice\Cms\Http\Controllers\TermController;
 use Sunrice\Cms\Http\Middleware\AuthorizeContent;
@@ -131,6 +132,8 @@ final class CmsPlugin extends BasePlugin
                 ->group('Content')->sort(45)->permission('cms.comments.view'),
             NavigationItem::make('cms-submissions')->label('Submissions')->url('cms/submissions')->icon('inbox')
                 ->group('Content')->sort(50)->visible(fn (Authorizable $user): bool => Access::submissions($user, 'view')),
+            NavigationItem::make('cms-seo')->label('SEO')->url('cms/seo')->icon('search')
+                ->group('Structure')->sort(99)->permission('cms.settings.site'),
             NavigationItem::make('cms-blueprints')->label('Blueprints')->url('cms/blueprints')->icon('layout-template')
                 ->group('Structure')->sort(91)->permission('cms.blueprints.manage'),
             NavigationItem::make('cms-fieldsets')->label('Fieldsets')->url('cms/fieldsets')->icon('blocks')
@@ -140,6 +143,10 @@ final class CmsPlugin extends BasePlugin
             Route::middleware('can:cms.blueprints.manage')->prefix('cms')->name('cms.')->group(function (): void {
                 Route::resource('blueprints', BlueprintController::class)->except('show');
                 Route::resource('fieldsets', FieldsetController::class)->except('show');
+            });
+            Route::prefix('cms')->name('cms.seo.')->controller(SeoController::class)->middleware('can:cms.settings.site')->group(function (): void {
+                Route::get('seo', 'edit')->name('edit');
+                Route::put('seo', 'update')->name('update');
             });
             Route::prefix('cms')->name('cms.menus.')->controller(MenuController::class)->group(function (): void {
                 Route::get('menus', 'index')->name('index')->middleware('can:cms.menus.view');

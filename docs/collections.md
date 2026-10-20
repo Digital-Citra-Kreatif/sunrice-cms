@@ -19,7 +19,7 @@ Manage them in the admin under **Structure → Collections** (permissions `cms.c
 | `listing_blueprint`, `per_page` | The listing page's own fields (an intro…), edited from the entries list, and how many entries it shows per page (10). `SaveListing` saves the fields (and the listing page's own SEO, `$seo`) per language and, given the `version` the editor opened (`CollectionListing::$version`), refuses a save over someone else's newer one. |
 | `ordered` | **Manual order**: editors put entries in order in the list (**Reorder**, then drag; in a hierarchical collection among an entry's siblings), instead of by date or title. |
 | `hierarchical` | Entries may have a **parent** entry, like pages under pages, for breadcrumbs and sub-menus. URLs stay flat: *Team* under *About* is still `/team`. |
-| `seo_title_field`, `seo_description_field`, `seo_image_field` | **SEO from fields**: a text field for the SEO title, a text or textarea field for the description and a media field for the share image, used where an entry's SEO card is empty. See [SEO](site.md#seo). |
+| `seo_title_field`, `seo_description_field`, `seo_image_field` | Chosen in **Settings → SEO**: a text field for the SEO title, a text or textarea field for the description and a media field for the share image, used where an entry's SEO card is empty. See [SEO](site.md#seo). |
 
 ```php
 use Sunrice\Cms\Actions\Collections\SaveCollection;

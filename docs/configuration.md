@@ -56,7 +56,7 @@ See [Search](site.md#search).
 
 | Key | Default | Env | |
 | --- | --- | --- | --- |
-| `seo.noindex` | `false` | `SUNRICE_NOINDEX` | Ask search engines to stay away from the whole site (a staging copy): noindex everywhere, an `X-Robots-Tag` header and an empty sitemap. Settings → Site has the same switch. |
+| `seo.noindex` | `false` | `SUNRICE_NOINDEX` | Ask search engines to stay away from the whole site (a staging copy): noindex everywhere, an `X-Robots-Tag` header and an empty sitemap. Settings → SEO has the same switch. |
 
 ## Comments and forms
 

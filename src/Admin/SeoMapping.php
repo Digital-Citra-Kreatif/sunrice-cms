@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Admin;
 
-use Sunrice\Admin\Resources\Forms\Section;
-use Sunrice\Admin\Resources\Forms\Select;
 use Sunrice\Cms\Models\Blueprint;
+use Sunrice\Cms\Models\Collection;
+use Sunrice\Cms\Models\Taxonomy;
 
 /**
- * The "SEO from fields" card of Structure → Collections and Taxonomies:
- * which fields fill in what a page's SEO card leaves empty (Seo::for()).
+ * Which fields a collection or taxonomy can fill its pages' SEO from,
+ * for Settings → SEO (Seo::for() reads the choice).
  *
  * @internal
  */
@@ -23,21 +23,29 @@ final class SeoMapping
         'seo_image_field' => ['media'],
     ];
 
-    public static function section(string $whose): Section
+    /**
+     * The fields a collection (any of its blueprints) or taxonomy can use
+     * for each, handle => label, from the blueprints given (all of them,
+     * loaded once by the caller) or loaded here.
+     *
+     * @param  array<string, Blueprint>|null  $blueprints  by handle
+     * @return array{seo_title_field: array<string, string>, seo_description_field: array<string, string>, seo_image_field: array<string, string>}
+     */
+    public static function options(Collection|Taxonomy $owner, ?array $blueprints = null): array
     {
-        $blueprints = Blueprint::query()->orderBy('title')->get();
-        $options = fn (array $types): array => $blueprints->flatMap(fn (Blueprint $blueprint): array => array_values(array_filter(
-            $blueprint->schema()->fields(),
-            fn ($field): bool => in_array($field->type, $types, true),
-        )))->mapWithKeys(fn ($field): array => [$field->handle => $field->displayLabel().' ('.$field->handle.')'])->sort()->all();
+        $handles = $owner instanceof Collection ? $owner->allowedBlueprints() : ($owner->blueprint !== null ? [$owner->blueprint] : []);
+        $blueprints ??= Blueprint::query()->whereIn('handle', $handles)->get()->keyBy('handle')->all();
+        $options = ['seo_title_field' => [], 'seo_description_field' => [], 'seo_image_field' => []];
+        foreach ($handles as $handle) {
+            foreach (isset($blueprints[$handle]) ? $blueprints[$handle]->schema()->fields() : [] as $field) {
+                foreach (self::TYPES as $column => $types) {
+                    if (in_array($field->type, $types, true)) {
+                        $options[$column][$field->handle] ??= $field->displayLabel();
+                    }
+                }
+            }
+        }
 
-        return Section::make('SEO from fields')
-            ->description("What {$whose} SEO card leaves empty comes from these fields, then from Settings → Site.")
-            ->columns(3)
-            ->schema([
-                Select::make('seo_title_field')->label('Title')->options($options(self::TYPES['seo_title_field']))->help('A text field.'),
-                Select::make('seo_description_field')->label('Description')->options($options(self::TYPES['seo_description_field']))->help('A text or textarea field.'),
-                Select::make('seo_image_field')->label('Share image')->options($options(self::TYPES['seo_image_field']))->help('A media field: its first image.'),
-            ]);
+        return $options;
     }
 }

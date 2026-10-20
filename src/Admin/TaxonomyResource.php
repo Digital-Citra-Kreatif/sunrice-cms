@@ -82,7 +82,6 @@ final class TaxonomyResource extends Resource
             TextInput::make('template')->placeholder('cms.topic')
                 ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
                 ->help('The Blade view term pages render with. Empty: cms.taxonomy-{handle}, else cms.term.'),
-            SeoMapping::section('a term page\'s'),
         ]);
     }
 
