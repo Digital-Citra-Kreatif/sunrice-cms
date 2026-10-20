@@ -134,6 +134,12 @@ final class CmsServiceProvider extends ServiceProvider
                 $schedule->command('model:prune', ['--model' => [Models\Submission::class, Models\Comment::class]])->daily();
             });
             $this->publishes([dirname(__DIR__).'/config/sunrice-cms.php' => config_path('sunrice-cms.php')], 'sunrice-cms-config');
+            // Starter templates for the site, to edit freely: layout, pages, partials, error pages and a stylesheet.
+            $this->publishes([
+                dirname(__DIR__).'/stubs/templates' => resource_path('views/cms'),
+                dirname(__DIR__).'/stubs/errors' => resource_path('views/errors'),
+                dirname(__DIR__).'/stubs/public/site.css' => public_path('cms/site.css'),
+            ], 'sunrice-cms-templates');
             // Also "laravel-assets", which Laravel apps publish on every composer update.
             $this->publishes([dirname(__DIR__).'/dist' => public_path(CmsPlugin::ASSETS)], ['sunrice-cms-assets', 'laravel-assets']);
         }
