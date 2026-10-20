@@ -164,8 +164,8 @@ class EntryTranslation extends Model
         $data = $draft ? $this->draft_data : ($this->data ?? []);
         $main = $this->entry->mainTranslation();
         if ($main !== null && ! $main->is($this)) {
-            /** @var array<string, mixed> $data */
-            $data = $this->entry->collection->schema()->withShared($data, $draft ? $main->draft_data : ($main->data ?? []));
+            // Fields are keyed by handle.
+            $data = array_filter($this->entry->collection->schema()->withShared($data, $draft ? $main->draft_data : ($main->data ?? [])), is_string(...), ARRAY_FILTER_USE_KEY);
         }
 
         return $data;
