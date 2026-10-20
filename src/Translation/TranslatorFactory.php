@@ -51,7 +51,7 @@ final class TranslatorFactory
         return match ($driver) {
             'gemini' => new GeminiTranslator($key, $model ?? GeminiTranslator::DEFAULT_MODEL, $batch, $timeout),
             'openrouter' => new OpenRouterTranslator($key, $model ?? OpenRouterTranslator::DEFAULT_MODEL, $batch, $timeout),
-            default => throw new RuntimeException('Machine translation isn\'t set up: set SUNRICE_TRANSLATE_DRIVER to gemini or openrouter, and its key (see docs/cms/translation.md).'),
+            default => throw new RuntimeException('Machine translation isn\'t set up: set SUNRICE_TRANSLATE_DRIVER to gemini or openrouter, and its key (see docs/translation.md in sunrice/cms).'),
         };
     }
 

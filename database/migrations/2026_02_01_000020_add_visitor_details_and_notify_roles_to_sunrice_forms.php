@@ -11,7 +11,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('sunrice_form_submissions', function (Blueprint $table): void {
-            // Who sent it, for telling spam and abuse apart (personal data: see docs/cms/forms.md).
+            // Who sent it, for telling spam and abuse apart (personal data: see packages/cms/docs/forms.md).
             $table->string('ip_address', 45)->nullable();
             $table->string('user_agent', 512)->nullable();
             $table->string('referrer', 2000)->nullable();

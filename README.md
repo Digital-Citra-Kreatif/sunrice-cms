@@ -19,7 +19,7 @@ Developed in [Digital-Citra-Kreatif/sunrice](https://github.com/Digital-Citra-Kr
 composer require sunrice/cms
 ```
 
-Add `Sunrice\Cms\CmsPlugin::make()` to your panel (`$panel->plugin(CmsPlugin::make())`) and run `php artisan sunrice:install --roles`. Starter templates for the site: `php artisan vendor:publish --tag=sunrice-cms-templates`. The full steps: [Installation](https://github.com/Digital-Citra-Kreatif/sunrice/blob/main/docs/admin/installation.md).
+Add `Sunrice\Cms\CmsPlugin::make()` to your panel (`$panel->plugin(CmsPlugin::make())`) and run `php artisan sunrice:install --roles`. Starter templates for the site: `php artisan vendor:publish --tag=sunrice-cms-templates`. The full steps: [Installation](https://github.com/Digital-Citra-Kreatif/sunrice/blob/main/packages/admin/docs/installation.md).
 
 ## Admin assets
 
@@ -31,6 +31,6 @@ php artisan vendor:publish --tag=sunrice-cms-assets --force
 
 ## Documentation
 
-- [Collections and entries](https://github.com/Digital-Citra-Kreatif/sunrice/blob/main/docs/cms/collections.md), [Fields](https://github.com/Digital-Citra-Kreatif/sunrice/blob/main/docs/cms/fields.md), [The site](https://github.com/Digital-Citra-Kreatif/sunrice/blob/main/docs/cms/site.md), [Helpers and the `Cms` facade](https://github.com/Digital-Citra-Kreatif/sunrice/blob/main/docs/cms/helpers.md)
-- [Configuration](https://github.com/Digital-Citra-Kreatif/sunrice/blob/main/docs/cms/configuration.md), [Commands](https://github.com/Digital-Citra-Kreatif/sunrice/blob/main/docs/cms/commands.md)
+- [Collections and entries](https://github.com/Digital-Citra-Kreatif/sunrice/blob/main/packages/cms/docs/collections.md), [Fields](https://github.com/Digital-Citra-Kreatif/sunrice/blob/main/packages/cms/docs/fields.md), [The site](https://github.com/Digital-Citra-Kreatif/sunrice/blob/main/packages/cms/docs/site.md), [Helpers and the `Cms` facade](https://github.com/Digital-Citra-Kreatif/sunrice/blob/main/packages/cms/docs/helpers.md)
+- [Configuration](https://github.com/Digital-Citra-Kreatif/sunrice/blob/main/packages/cms/docs/configuration.md), [Commands](https://github.com/Digital-Citra-Kreatif/sunrice/blob/main/packages/cms/docs/commands.md)
 - [All the docs](https://github.com/Digital-Citra-Kreatif/sunrice/blob/main/docs/README.md) and [Upgrading](https://github.com/Digital-Citra-Kreatif/sunrice/blob/main/docs/upgrading.md)

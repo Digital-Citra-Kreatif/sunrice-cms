@@ -15,7 +15,7 @@ use Sunrice\Cms\Support\RoleMembers;
 
 /**
  * Settings → Comments, guarded by cms.settings.comments: how comments are
- * moderated and protected (see docs/cms/comments.md).
+ * moderated and protected (see packages/cms/docs/comments.md).
  *
  * @api
  */
