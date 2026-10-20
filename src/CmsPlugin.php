@@ -14,6 +14,7 @@ use Sunrice\Admin\Panel;
 use Sunrice\Admin\Permissions\Permission;
 use Sunrice\Cms\Actions\Users\ReleaseUserContent;
 use Sunrice\Cms\Admin\CollectionResource;
+use Sunrice\Cms\Admin\DashboardWidgets;
 use Sunrice\Cms\Admin\FormResource;
 use Sunrice\Cms\Admin\GlobalSetResource;
 use Sunrice\Cms\Admin\MenuResource;
@@ -222,6 +223,8 @@ final class CmsPlugin extends BasePlugin
         $panel->userContent('cms.comments', 'comments',
             fn (Model $user): int => ReleaseUserContent::comments($user),
             fn (Model $user, string $mode, ?Model $heir) => app(ReleaseUserContent::class)->handleComments($user, $mode, $heir));
+        // The dashboard: content per collection, recent edits, comments waiting, what's coming up, submissions.
+        $panel->widgets(...DashboardWidgets::all());
         // Getting these is worth an alert: site-wide scripts, and the shape of all content.
         $panel->privilegedPermissions('cms.settings.code', 'cms.blueprints.manage');
         $panel->bundle(PluginBundle::make('cms')->module(self::asset('admin.js'))->style(self::asset('admin.css'))->pages('Cms/'));
