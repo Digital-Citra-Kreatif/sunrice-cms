@@ -76,6 +76,14 @@ return [
         'prune_after_days' => env('SUNRICE_FORMS_PRUNE_DAYS'),
     ],
 
+    'ai' => [
+        // Let super admins' AI agents create and change templates in
+        // resources/views/cms (cms_write_template). Off unless asked for:
+        // Blade runs PHP, so a leaked super admin token could run code on
+        // the server.
+        'templates' => env('SUNRICE_AI_TEMPLATES', false),
+    ],
+
     'revisions' => [
         // Published versions kept per entry and language; older ones are deleted on publish.
         'keep' => 50,

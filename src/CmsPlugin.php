@@ -200,17 +200,28 @@ final class CmsPlugin extends BasePlugin
         });
         $panel->tools(
             Ai\ListEntries::class, Ai\GetEntry::class, Ai\SaveEntry::class, Ai\PublishEntry::class, Ai\UnpublishEntry::class,
-            Ai\TranslateEntry::class, Ai\TrashEntry::class, Ai\ListTerms::class, Ai\SaveTerm::class,
-            Ai\GetGlobals::class, Ai\SaveGlobals::class, Ai\ListSubmissions::class,
+            Ai\TranslateEntry::class, Ai\TrashEntry::class, Ai\ManageEntry::class, Ai\EntryRevisions::class, Ai\Reorder::class,
+            Ai\ListTerms::class, Ai\SaveTerm::class, Ai\GetGlobals::class, Ai\SaveGlobals::class,
+            Ai\GetListing::class, Ai\SaveListing::class, Ai\GetMenu::class, Ai\SaveMenu::class,
+            Ai\ListSubmissions::class, Ai\DeleteSubmissions::class,
+            Ai\GetBlueprint::class, Ai\SaveBlueprint::class, Ai\FieldTypes::class,
+            Ai\SeoAudit::class, Ai\RenderPage::class, Ai\GetTemplateGuide::class, Ai\ReadTemplate::class, Ai\WriteTemplate::class,
         )->aiInstructions(<<<'MD'
-            Content (the CMS): collections hold entries, written per language as drafts and published to the site.
-            - Find entries with cms_list_entries (no arguments lists the collections), read one with cms_get_entry, which shows its fields.
-            - Write with cms_save_entry: it saves the draft; the site changes only when it's published (cms_publish_entry, or "publish": true). Ask before publishing, unpublishing or trashing.
-            - Other languages: cms_translate_entry copies the main language into a new draft; then save it with "locale".
-            - Media fields take ids from list_media; terms fields ids from cms_list_terms; entries fields entry ids.
-            - Site-wide values: cms_get_globals and cms_save_globals. Form submissions: cms_list_submissions.
-            - Collections, taxonomies, global sets, menus, redirects and forms themselves are resources (list_records, save_record).
+            Content (the CMS): collections are kinds of content (pages, articles); each has a blueprint (its fields) and entries. An entry has a translation per language (title, slug, fields, SEO), edited as a draft and published to the site. Taxonomies hold terms; globals are site-wide values; menus are navigation; templates are Blade views.
+            - Find entries with cms_list_entries (no arguments lists the collections); read one with cms_get_entry, which shows its fields.
+            - Write with cms_save_entry (only what you send changes): it saves the draft; the site changes only when it's published (cms_publish_entry, or "publish": true). Ask before publishing, unpublishing, trashing or deleting.
+            - Lifecycle: cms_trash_entry, then cms_manage_entry (delete for good, duplicate, set as the homepage); cms_entry_revisions lists, shows and restores published versions.
+            - Order: cms_reorder for entries (collections with Manual order), terms and menu items.
+            - Other languages: cms_translate_entry adds one, then save it with "locale". Only translatable fields have a value per language; the rest are shared with the main language. The same for terms, globals and listing pages.
+            - Media fields take ids from list_media (upload_media adds files; give images alt text); terms fields ids from cms_list_terms; entries fields entry ids.
+            - Live as soon as saved (ask first): globals (cms_get_globals, cms_save_globals), listing pages (cms_get_listing, cms_save_listing), menus (cms_get_menu, cms_save_menu).
+            - Structure: cms_field_types, then cms_get_blueprint and cms_save_blueprint; collections, taxonomies, global sets, menus, redirects and forms themselves are resources (list_records, save_record).
+            - Forms: cms_list_submissions, cms_delete_submissions (ask first).
+            - SEO: cms_seo_audit, then fix with cms_save_entry ("seo") and update_media (alt text).
+            - Templates: read cms_get_template_guide first, then cms_read_template / cms_write_template, and check pages with cms_render_page.
             MD);
+        // The CMS's developer docs (this repository's docs/cms), for read_docs.
+        $panel->docs('CMS', dirname(__DIR__, 3).'/docs/cms');
         // One editor at a time per entry or global set, per language (useEditLock).
         $panel->lockable('cms.entry', fn (string $id, string $locale, Authorizable $user): bool => ($entry = Entry::query()->whereHas('collection')->find($id)) !== null
             && Access::entries($user, 'update', $entry->collection, $entry, $locale));
