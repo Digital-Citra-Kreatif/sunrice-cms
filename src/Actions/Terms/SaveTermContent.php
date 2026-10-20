@@ -53,10 +53,7 @@ final class SaveTermContent
         $changed = array_keys(array_filter($data, fn (mixed $v, int|string $k): bool => ! array_key_exists($k, $before) || $before[$k] != $v, ARRAY_FILTER_USE_BOTH));
 
         if (array_key_exists('template', $input)) {
-            $template = is_string($input['template']) && trim($input['template']) !== '' ? trim($input['template']) : null;
-            if ($template !== null && (strlen($template) > 100 || preg_match(SaveEntrySettings::TEMPLATE, $template) !== 1)) {
-                throw ValidationException::withMessages(['template' => 'Use a view name like cms.topic: lowercase letters, digits, dashes, dots.']);
-            }
+            $template = SaveEntrySettings::template($input['template'], 'cms.topic');
             if ($term->template !== $template) {
                 $term->forceFill(['template' => $template])->save();
                 $changed[] = 'template';

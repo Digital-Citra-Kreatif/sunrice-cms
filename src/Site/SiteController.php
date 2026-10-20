@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\View;
+use Sunrice\Cms\Actions\Entries\SaveEntrySettings;
 use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Models\Entry;
@@ -42,13 +43,13 @@ final class SiteController
         // The homepage is at /: its own address goes there.
         if ($translation !== null && ($own = $site->ownPath($translation)) !== null && ($served = $site->path($translation, $translation->slug)) !== $own
             && '/'.trim($request->path(), '/') === $own) {
-            return redirect()->to(url((string) $served), 301);
+            return redirect()->to(self::withQuery(url((string) $served), $request), 301);
         }
         if ($translation === null) {
             $redirect = $site->redirect($request->path());
             abort_if($redirect === null, 404);
 
-            return redirect()->to($redirect->to_url, $redirect->status);
+            return redirect()->to(self::withQuery($redirect->to_url, $request), $redirect->status);
         }
 
         return $this->render($translation, preview: false);
@@ -59,7 +60,16 @@ final class SiteController
     {
         abort_if($translation->entry->trashed() || $translation->entry->collection->trashed(), 404);
 
-        return $this->render($translation, preview: true)->header('X-Robots-Tag', 'noindex, nofollow');
+        // Not for search engines, nor for any cache: it's a draft, behind a link that expires.
+        return $this->render($translation, preview: true)->header('X-Robots-Tag', 'noindex, nofollow')->header('Cache-Control', 'private, no-store');
+    }
+
+    /** An address with the request's query string carried over (?utm_source=…). */
+    private static function withQuery(string $url, Request $request): string
+    {
+        $query = $request->getQueryString();
+
+        return $query === null || $query === '' ? $url : $url.(str_contains($url, '?') ? '&' : '?').$query;
     }
 
     private function render(EntryTranslation $translation, bool $preview): Response
@@ -93,7 +103,7 @@ final class SiteController
             ->orderByDesc('published_at')->orderByDesc('id')->paginate(10)->withQueryString();
         abort_if($entries->currentPage() > 1 && $entries->isEmpty(), 404);
         $view = 'sunrice-cms::term';
-        foreach (array_filter([$term->template, $taxonomy->template, "cms.taxonomy-{$taxonomy->handle}", 'cms.term']) as $candidate) {
+        foreach (array_filter([self::own($term->template), $taxonomy->template, "cms.taxonomy-{$taxonomy->handle}", 'cms.term']) as $candidate) {
             if (View::exists($candidate)) {
                 $view = $candidate;
 
@@ -156,15 +166,21 @@ final class SiteController
         return app(SiteSettings::class)->hidden() ? $response->header('X-Robots-Tag', 'noindex, nofollow') : $response;
     }
 
-    /** The collection's template, else cms.{handle}, else cms.entry, else the CMS's plain one. */
+    /** The entry's own template, else the collection's, else cms.{handle}, else cms.entry, else the CMS's plain one. */
     public static function view(string $handle, ?string $template, ?string $entryTemplate = null): string
     {
-        foreach (array_filter([$entryTemplate, $template, "cms.{$handle}", 'cms.entry']) as $view) {
+        foreach (array_filter([self::own($entryTemplate), $template, "cms.{$handle}", 'cms.entry']) as $view) {
             if (View::exists($view)) {
                 return $view;
             }
         }
 
         return 'sunrice-cms::entry';
+    }
+
+    /** An entry's or term's own template, only under the site's template prefixes (never another view of the app). */
+    private static function own(?string $template): ?string
+    {
+        return $template !== null && SaveEntrySettings::allowed($template) ? $template : null;
     }
 }

@@ -11,7 +11,8 @@ use Sunrice\Cms\Models\Entry;
 /**
  * An entry's settings beyond its fields, in every language: its parent
  * entry (in a hierarchical collection; never itself or one below it, at
- * most Entry::MAX_DEPTH deep) and its own Blade view.
+ * most Entry::MAX_DEPTH deep) and its own Blade view, under the site's
+ * template prefixes only (template()).
  *
  * @api
  */
@@ -37,11 +38,7 @@ final class SaveEntrySettings
             }
         }
         if (array_key_exists('template', $input)) {
-            $template = is_string($input['template']) ? trim($input['template']) : null;
-            if ($template !== null && $template !== '' && (strlen($template) > 100 || preg_match(self::TEMPLATE, $template) !== 1)) {
-                throw ValidationException::withMessages(['template' => 'Use a view name like cms.landing: lowercase letters, digits, dashes, dots.']);
-            }
-            $template = $template === '' ? null : $template;
+            $template = self::template($input['template'], 'cms.landing');
             if ($entry->template !== $template) {
                 $entry->template = $template;
                 $changed[] = 'template';
@@ -60,6 +57,51 @@ final class SaveEntrySettings
         }
 
         return $entry;
+    }
+
+    /**
+     * A template as typed, checked: a view name under one of the site's
+     * template prefixes (config sunrice-cms.site.template_prefixes, "cms."
+     * by default), so no other view of the app can be made a public page.
+     * Null when empty.
+     *
+     * @throws ValidationException
+     */
+    public static function template(mixed $input, string $example = 'cms.landing'): ?string
+    {
+        $template = is_string($input) ? trim($input) : '';
+        if ($template === '') {
+            return null;
+        }
+        if (strlen($template) > 100 || preg_match(self::TEMPLATE, $template) !== 1) {
+            throw ValidationException::withMessages(['template' => "Use a view name like {$example}: lowercase letters, digits, dashes, dots."]);
+        }
+        if (! self::allowed($template)) {
+            throw ValidationException::withMessages(['template' => 'Use a view under '.implode(', ', self::prefixes()).", like {$example}."]);
+        }
+
+        return $template;
+    }
+
+    /** Whether a view name is under one of the site's template prefixes. */
+    public static function allowed(string $template): bool
+    {
+        foreach (self::prefixes() as $prefix) {
+            if (str_starts_with($template, $prefix)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** @return non-empty-list<string> */
+    private static function prefixes(): array
+    {
+        $prefixes = config('sunrice-cms.site.template_prefixes', ['cms.']);
+        $prefixes = is_array($prefixes) ? array_values(array_filter($prefixes, fn (mixed $p): bool => is_string($p) && $p !== '')) : [];
+
+        return $prefixes === [] ? ['cms.'] : $prefixes;
     }
 
     /** @throws ValidationException */
