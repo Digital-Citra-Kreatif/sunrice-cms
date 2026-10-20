@@ -89,6 +89,10 @@ final class CmsServiceProvider extends ServiceProvider
             foreach (['created', 'forceDeleted', 'deleted'] as $event) {
                 Event::listen("eloquent.{$event}: {$class}", fn () => Support\ScopedPermissions::sync());
             }
+            // Changed or restored: the cached handles and permission labels.
+            foreach (['updated', 'restored'] as $event) {
+                Event::listen("eloquent.{$event}: {$class}", fn () => Support\ScopedPermissions::flush());
+            }
         }
         // Changes to what the site shows clear its caches.
         Support\ContentWatch::register();

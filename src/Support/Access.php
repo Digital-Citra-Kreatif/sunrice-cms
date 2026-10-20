@@ -42,7 +42,7 @@ final class Access
             return false;
         }
         $handle = $collection instanceof Collection ? $collection->handle : $collection;
-        if ($user->can("cms.entries.{$action}") || ($handle !== null ? $user->can("cms.entries.{$handle}.{$action}") : self::anyScoped($user, "cms.entries.%s.{$action}", self::collectionHandles()))) {
+        if ($user->can("cms.entries.{$action}") || ($handle !== null ? $user->can("cms.entries.{$handle}.{$action}") : self::anyScoped($user, "cms.entries.%s.{$action}", Handles::collections()))) {
             return true;
         }
         if ($handle === null || ! in_array($action, ['update', 'delete'], true) || ! self::entries($user, 'view', $handle)) {
@@ -77,7 +77,7 @@ final class Access
         $handle = $taxonomy instanceof Taxonomy ? $taxonomy->handle : $taxonomy;
 
         return $user->can('cms.terms.manage')
-            || ($handle !== null ? $user->can("cms.terms.{$handle}.manage") : self::anyScoped($user, 'cms.terms.%s.manage', Taxonomy::query()->pluck('handle')->all()));
+            || ($handle !== null ? $user->can("cms.terms.{$handle}.manage") : self::anyScoped($user, 'cms.terms.%s.manage', Handles::taxonomies()));
     }
 
     /** Whether a user may view or delete a form's submissions (with none: some form's). */
@@ -89,20 +89,14 @@ final class Access
         $handle = $form instanceof Form ? $form->handle : $form;
 
         return $user->can("cms.submissions.{$action}")
-            || ($handle !== null ? $user->can("cms.submissions.{$handle}.{$action}") : self::anyScoped($user, "cms.submissions.%s.{$action}", Form::query()->pluck('handle')->all()));
+            || ($handle !== null ? $user->can("cms.submissions.{$handle}.{$action}") : self::anyScoped($user, "cms.submissions.%s.{$action}", Handles::forms()));
     }
 
-    /** @return list<string> */
-    private static function collectionHandles(): array
-    {
-        return array_values(array_filter(Collection::query()->pluck('handle')->all(), is_string(...)));
-    }
-
-    /** @param array<mixed> $handles */
+    /** @param list<string> $handles */
     private static function anyScoped(Authorizable $user, string $pattern, array $handles): bool
     {
         foreach ($handles as $handle) {
-            if (is_string($handle) && $user->can(sprintf($pattern, $handle))) {
+            if ($user->can(sprintf($pattern, $handle))) {
                 return true;
             }
         }
