@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Head, router } from '@inertiajs/react';
-import { Check, ChevronLeft, ChevronRight, ExternalLink, MessageSquareReply, Pencil, RotateCcw, ShieldAlert, Trash2, Undo2 } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, ExternalLink, MessageSquare, MessageSquareReply, Search, Pencil, RotateCcw, ShieldAlert, Trash2, Undo2 } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
     Badge, Button, Card, Checkbox, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input, PageHeader, Select,
@@ -81,8 +81,11 @@ export default function CommentsIndex({ tab, counts, filters, collections, comme
                 title="Comments"
                 actions={
                     <>
-                        <Input type="search" placeholder="Search text, name or email" aria-label="Search comments" className="cms:w-64"
-                            value={search} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)} />
+                        <div className="cms:relative cms:w-full cms:sm:w-64">
+                            <Search className="cms:pointer-events-none cms:absolute cms:top-1/2 cms:left-3 cms:size-4 cms:-translate-y-1/2 cms:text-muted-foreground" />
+                            <Input type="search" placeholder="Search text, name or email" aria-label="Search comments" className="cms:pl-9"
+                                value={search} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)} />
+                        </div>
                         {collections.length > 1 && (
                             <Select value={filters.collection ?? 'all'} onValueChange={(value: string) => visit({ collection: value === 'all' ? null : value })}>
                                 <SelectTrigger className="cms:w-48" aria-label="Collection"><SelectValue /></SelectTrigger>
@@ -129,7 +132,10 @@ export default function CommentsIndex({ tab, counts, filters, collections, comme
             )}
 
             {comments.data.length === 0 ? (
-                <p className="cms:text-muted-foreground">{filters.search ? 'No comments match.' : 'No comments here.'}</p>
+                <div className="cms:flex cms:flex-col cms:items-center cms:gap-3 cms:rounded-xl cms:border cms:border-dashed cms:px-6 cms:py-16 cms:text-center">
+                    <span className="cms:grid cms:size-10 cms:place-items-center cms:rounded-full cms:bg-muted cms:text-muted-foreground"><MessageSquare className="cms:size-4" /></span>
+                    <p className="cms:text-sm cms:text-muted-foreground">{filters.search ? 'No comments match.' : 'No comments here.'}</p>
+                </div>
             ) : (
                 <Card className="cms:divide-y cms:p-0">
                     <div className="cms:flex cms:items-center cms:gap-3 cms:px-4 cms:py-2 cms:text-sm cms:text-muted-foreground">
@@ -145,7 +151,7 @@ export default function CommentsIndex({ tab, counts, filters, collections, comme
                                     <span id={`comment-${row.id}-author`} className="cms:font-medium">{row.author}</span>
                                     {row.email && <span className="cms:text-muted-foreground">{row.email}</span>}
                                     {row.member && <Badge variant="outline">Signed in</Badge>}
-                                    {!row.trashed && <Badge variant={row.status === 'approved' ? 'secondary' : row.status === 'spam' ? 'destructive' : 'default'}>{STATUS[row.status]}</Badge>}
+                                    {!row.trashed && <Badge variant={row.status === 'approved' ? 'success' : row.status === 'spam' ? 'destructive' : 'warning'}>{STATUS[row.status]}</Badge>}
                                     <span className="cms:text-muted-foreground">{row.createdAt ? formatDate(row.createdAt) : ''} · {row.locale.toUpperCase()}</span>
                                 </div>
                                 <p className="cms:text-sm cms:text-muted-foreground">

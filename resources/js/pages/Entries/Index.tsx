@@ -345,7 +345,7 @@ function EntryList({
                     <div className="cms:flex cms:items-center cms:gap-4">
                         <span>{entries.total === 0 ? 'No entries' : `${entries.from}–${entries.to} of ${entries.total}`}</span>
                         <Select value={String(query.perPage)} onValueChange={(value: string) => { void setPerPage(Number(value)); visit({ perPage: Number(value) }); }}>
-                            <SelectTrigger className="cms:h-8 cms:w-32" aria-label="Entries per page"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="cms:h-8 cms:w-auto" aria-label="Entries per page"><SelectValue /></SelectTrigger>
                             <SelectContent>
                                 {perPageOptions.map((option) => <SelectItem key={option} value={String(option)}>{option} per page</SelectItem>)}
                             </SelectContent>
@@ -399,9 +399,9 @@ function CellValue({ row, column, mainLocale }: { row: Row; column: Column; main
         case 'status':
             return (
                 <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-1">
-                    <Badge variant={row.status === 'published' ? 'default' : 'secondary'}>{statusLabel(row.status)}</Badge>
+                    <Badge variant={row.status === 'published' ? 'success' : 'secondary'}>{statusLabel(row.status)}</Badge>
                     {row.locales.length > 1 && row.locales.filter((l) => !l.main).map((l) => (
-                        <Badge key={l.code} variant={l.status === 'published' ? 'default' : 'outline'}
+                        <Badge key={l.code} variant={l.status === 'published' ? 'secondary' : 'outline'}
                             className={l.status === null ? 'cms:opacity-50' : l.outdated ? 'cms:ring-2 cms:ring-amber-500/60' : ''}
                             title={`${localeName(l.code)}: ${l.status === null ? 'not translated' : statusLabel(l.status)}${l.outdated ? ', outdated: the main language changed since' : ''}`}>
                             {l.code.toUpperCase()}{l.outdated && <span aria-hidden="true">·!</span>}
