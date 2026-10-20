@@ -53,9 +53,15 @@ final class CommentController
                 $q->where(fn (Builder $w) => $w->whereRaw("LOWER(body) LIKE ? ESCAPE '!'", [$like])
                     ->orWhereRaw("LOWER(author_name) LIKE ? ESCAPE '!'", [$like])->orWhereRaw("LOWER(author_email) LIKE ? ESCAPE '!'", [$like]));
             });
+        // One query for every tab's count: by status, the trash apart.
+        $byStatus = ['trash' => 0];
+        foreach ($filtered()->withTrashed()->toBase()->selectRaw('status, case when deleted_at is null then 1 else 0 end as live, count(*) as total')->groupByRaw('status, case when deleted_at is null then 1 else 0 end')->get() as $row) {
+            $key = is_numeric($row->live) && (int) $row->live === 1 && is_string($row->status) ? $row->status : 'trash';
+            $byStatus[$key] = ($byStatus[$key] ?? 0) + (is_numeric($row->total) ? (int) $row->total : 0);
+        }
         $counts = [];
         foreach (self::TABS as $name => $statuses) {
-            $counts[$name] = $name === 'trash' ? $filtered()->onlyTrashed()->count() : $filtered()->whereIn('status', $statuses)->count();
+            $counts[$name] = $name === 'trash' ? $byStatus['trash'] : array_sum(array_map(fn (string $status): int => $byStatus[$status] ?? 0, $statuses));
         }
         $comments = ($tab === 'trash' ? $filtered()->onlyTrashed() : $filtered()->whereIn('status', self::TABS[$tab]))
             ->with(['entry.translations', 'parent'])->latest()->orderByDesc('id')->paginate(self::PER_PAGE)->withQueryString();
