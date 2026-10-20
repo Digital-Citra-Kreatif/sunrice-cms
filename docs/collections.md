@@ -109,7 +109,7 @@ Tick entries to publish, unpublish or trash them together (in the trash: restore
 
 ## Languages
 
-The languages content is written in are set in **Settings → Languages** (`Sunrice\Cms\Settings\LocaleSettings`, permission `cms.settings.locales`): one per line, its code and its name, the main one first:
+The languages content is written in are set in **Settings → Languages** (`Sunrice\Cms\Settings\LocaleSettings`, permission `cms.settings.locales`): a row per language, its code and its name, the main one first (with **Add a language**, which suggests common ones, and arrows to reorder). They're kept as lines, so in code and over the AI tools it's the same text:
 
 ```
 en: English

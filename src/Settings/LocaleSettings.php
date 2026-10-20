@@ -6,7 +6,7 @@ namespace Sunrice\Cms\Settings;
 
 use Closure;
 use Sunrice\Admin\Resources\Forms\Form;
-use Sunrice\Admin\Resources\Forms\Textarea;
+use Sunrice\Admin\Resources\Forms\Pairs;
 use Sunrice\Admin\Settings\Settings;
 use Sunrice\Cms\Models\CollectionListing;
 use Sunrice\Cms\Models\EntryTranslation;
@@ -32,6 +32,14 @@ final class LocaleSettings extends Settings
     /** A language code as Laravel's app.locale uses them: "en", "id", "pt_BR", "zh-Hant". */
     public const CODE = '/^[a-z]{2,3}([_-][A-Za-z0-9]{2,8})?$/';
 
+    /** Languages offered when adding one: code => name. */
+    public const KNOWN = [
+        'en' => 'English', 'id' => 'Bahasa Indonesia', 'ms' => 'Bahasa Melayu', 'jv' => 'Basa Jawa', 'su' => 'Basa Sunda',
+        'zh' => '中文', 'zh-Hant' => '繁體中文', 'ja' => '日本語', 'ko' => '한국어', 'th' => 'ไทย', 'vi' => 'Tiếng Việt', 'tl' => 'Filipino',
+        'hi' => 'हिन्दी', 'ar' => 'العربية', 'tr' => 'Türkçe', 'nl' => 'Nederlands', 'de' => 'Deutsch', 'fr' => 'Français',
+        'es' => 'Español', 'pt' => 'Português', 'pt_BR' => 'Português (Brasil)', 'it' => 'Italiano', 'ru' => 'Русский', 'pl' => 'Polski',
+    ];
+
     /** One language per line, "code: Name", the main one first; empty: config sunrice-cms.locales. */
     public string $languages = '';
 
@@ -52,13 +60,23 @@ final class LocaleSettings extends Settings
 
     public static function form(Form $form): Form
     {
-        $current = implode("\n", array_map(fn (string $code, string $name): string => "{$code}: {$name}", array_keys(Locales::names()), Locales::names()));
-
         return $form->schema([
-            Textarea::make('languages')->label('Content languages')->rows(5)->maxLength(2000)->required()
-                ->placeholder($current)->rules([fn (string $attribute, mixed $value, Closure $fail) => self::check($value, $fail)])
-                ->help('One per line: its code (as in addresses, /id/…) and its name, "id: Bahasa Indonesia". The first is the main language, at the plain addresses; the others get their own. To change the main language once there is content, run php artisan sunrice:switch-main-language.'),
+            Pairs::make('languages')->label('Content languages')->labels('Code', 'Name')->maxLength(2000)->required()
+                ->suggest(self::KNOWN + Locales::names())->firstBadge('Main')->addLabel('Add a language')
+                ->rules([fn (string $attribute, mixed $value, Closure $fail) => self::check($value, $fail)])
+                ->help('The code is how addresses show the language (/id/…); its name is what editors see. The first is the main language, at the plain addresses. Once there is content, change the main one with php artisan sunrice:switch-main-language.'),
         ]);
+    }
+
+    /** Unsaved (config applies): the form shows the languages in use. */
+    public function toArray(): array
+    {
+        $values = parent::toArray();
+        if (trim($this->languages) === '') {
+            $values['languages'] = self::lines(Locales::names());
+        }
+
+        return $values;
     }
 
     /**

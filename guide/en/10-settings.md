@@ -21,14 +21,9 @@ Settings are live as soon as you click **Save**.
 
 ## Languages
 
-**Content languages** lists the languages content is written in, one per line: the code used in addresses, a colon, and the name:
+**Content languages** lists the languages content is written in, a row each: the **code** used in addresses (`id`) and the **name** editors see (`Bahasa Indonesia`). **Add a language** adds a row; typing a code suggests common languages and fills in the name. The arrows change the order, and × removes a row.
 
-```
-en: English
-id: Bahasa Indonesia
-```
-
-The first line is the **main language**, at the plain addresses (`/about`); the others get their code in front (`/id/about`). The panel refuses an empty list and a language listed twice.
+The first row is the **main language** (marked *Main*), at the plain addresses (`/about`); the others get their code in front (`/id/about`). The panel refuses an empty list and a language listed twice.
 
 - **Adding a language** makes it available in the editor's language bar. Nothing is translated automatically.
 - **Removing a language** hides its content (nothing is deleted); add it back to bring the content back.
