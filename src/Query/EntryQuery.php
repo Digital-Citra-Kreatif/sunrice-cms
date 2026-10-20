@@ -289,7 +289,7 @@ final class EntryQuery
             } else {
                 // The main language's value, cast when the field sorts as a number or date.
                 $cast = $this->cast($column);
-                $value = $cast === null ? $q->getQuery()->getGrammar()->wrap('main.'.$this->dataColumn().'->'.$column) : $this->castExpression($q, 'main.'.$this->dataColumn().'->'.$column, $cast);
+                $value = $cast === null ? JsonCast::value($q, 'main.'.$this->dataColumn().'->'.$column) : $this->castExpression($q, 'main.'.$this->dataColumn().'->'.$column, $cast);
                 $q->orderBy(EntryTranslation::query()->from(self::TABLE.' as main')->select(new Sql($value))
                     ->whereColumn('main.entry_id', self::TABLE.'.entry_id')->where('main.locale', Locales::default())->limit(1), $direction);
             }
@@ -514,7 +514,12 @@ final class EntryQuery
         }
         $values = is_array($value) ? array_values($value) : [$value];
         $castable = $cast === 'number' ? array_all($values, fn (mixed $v): bool => is_numeric($v)) : ($cast === 'date' && array_all($values, fn (mixed $v): bool => is_string($v) || $v instanceof DateTimeInterface));
-        $target = $castable && $cast !== null ? new Sql($this->castExpression($query, $column, $cast)) : $column;
+        $target = match (true) {
+            $castable && $cast !== null => new Sql($this->castExpression($query, $column, $cast)),
+            // Booleans: Laravel's own JSON boolean comparison.
+            str_contains($column, '->') && ! array_any($values, fn (mixed $v): bool => is_bool($v)) => new Sql(JsonCast::value($query, $column)),
+            default => $column,
+        };
         $values = $castable ? array_map(fn (mixed $v): float|int|string => $cast === 'date' ? self::dateValue($v) : (is_numeric($v) ? $v + 0 : 0), $values) : $values;
         match ($operator) {
             'in' => $query->whereIn($target, $values),

@@ -397,7 +397,7 @@ final class EntryList
         $cast = in_array($column['kind'], ['number', 'date'], true) ? $column['kind'] : null;
         $own = $column['translatable'] || $this->locale === Locales::default();
         $path = ($own ? self::TABLE.'.' : 'main.').'draft_data->'.$handle;
-        $value = new Sql($cast === null ? $query->getQuery()->getGrammar()->wrap($path) : JsonCast::expression($query, $path, $cast));
+        $value = new Sql($cast === null ? JsonCast::value($query, $path) : JsonCast::expression($query, $path, $cast));
 
         return $own ? $value : EntryTranslation::query()->from(self::TABLE.' as main')->select($value)
             ->whereColumn('main.entry_id', self::TABLE.'.entry_id')->where('main.locale', Locales::default())->limit(1);
