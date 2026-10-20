@@ -122,23 +122,31 @@ final readonly class Page
             foreach ($term->translations as $translation) {
                 $translation->setRelation('term', $term);
                 if (($url = $translation->url()) !== null) {
-                    $urls[$translation->locale] = $url;
+                    $urls[$translation->locale] = $this->paged($url);
                 }
             }
         } elseif ($this->type === self::SEARCH) {
+            $q = request()->query(Search::NAME);
+            $query = http_build_query(array_filter([Search::NAME => is_string($q) ? $q : null, 'page' => $this->pageNumber > 1 ? $this->pageNumber : null]));
             foreach (Locales::all() as $locale) {
-                $urls[$locale] = Search::url($locale).(($q = request()->query(Search::NAME)) !== null && is_string($q) ? '?'.http_build_query([Search::NAME => $q]) : '');
+                $urls[$locale] = Search::url($locale).($query === '' ? '' : "?{$query}");
             }
         } elseif ($this->collection !== null) {
             foreach (Locales::all() as $locale) {
                 if (($url = $this->collection->listingUrl($locale)) !== null) {
-                    $urls[$locale] = $url;
+                    $urls[$locale] = $this->paged($url);
                 }
             }
         }
 
         // In the order of the site's languages.
         return array_filter(array_replace(array_fill_keys(Locales::all(), null), $urls), fn (?string $url): bool => $url !== null);
+    }
+
+    /** The same page number in another language, past the first page. */
+    private function paged(string $url): string
+    {
+        return $this->pageNumber > 1 ? "{$url}?page={$this->pageNumber}" : $url;
     }
 
     /**

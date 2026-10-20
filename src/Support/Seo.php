@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Support;
 
+use Closure;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -91,40 +92,64 @@ final class Seo
 
     /**
      * The same for a term's page: its SEO (under "seo" in the term's data)
-     * or its title, and its other languages' pages.
+     * or its title, and its other languages' pages. Past the first page of
+     * its entries, the canonical and alternate URLs carry the page number
+     * (null: the page shown, when it's this term's).
      *
      * @return SeoTags
      */
-    public static function forTerm(TermTranslation $translation): array
+    public static function forTerm(TermTranslation $translation, ?int $page = null): array
     {
+        $page ??= self::shownPage(fn (Page $shown): bool => $shown->term?->is($translation) === true);
         $seo = is_array($translation->data[self::KEY] ?? null) ? $translation->data[self::KEY] : [];
         $alternates = [];
         foreach ($translation->term->translations as $other) {
             $other->setRelation('term', $translation->term);
             if (($url = $other->url()) !== null) {
-                $alternates[$other->locale] = $url;
+                $alternates[$other->locale] = self::paged($url, $page);
             }
         }
 
-        return self::tags($seo, is_string($seo['title'] ?? null) ? $seo['title'] : $translation->title, false, $translation->url(),
+        $url = $translation->url();
+
+        return self::tags($seo, is_string($seo['title'] ?? null) ? $seo['title'] : $translation->title, false, $url === null ? null : self::paged($url, $page),
             self::withDefault($alternates), $translation->locale, 'website');
     }
 
     /**
-     * The same for a collection's listing page: its title, in each language.
+     * The same for a collection's listing page: its title, in each
+     * language, with the page number past the first page (null: the page
+     * shown, when it's this listing).
      *
      * @return SeoTags
      */
-    public static function forListing(Collection $collection, string $locale): array
+    public static function forListing(Collection $collection, string $locale, ?int $page = null): array
     {
+        $page ??= self::shownPage(fn (Page $shown): bool => $shown->collection?->is($collection) === true && $shown->locale === $locale);
         $alternates = [];
         foreach (Locales::all() as $other) {
             if (($url = $collection->listingUrl($other)) !== null) {
-                $alternates[$other] = $url;
+                $alternates[$other] = self::paged($url, $page);
             }
         }
 
-        return self::tags([], $collection->title, false, $collection->listingUrl($locale), self::withDefault($alternates), $locale, 'website');
+        $url = $collection->listingUrl($locale);
+
+        return self::tags([], $collection->title, false, $url === null ? null : self::paged($url, $page), self::withDefault($alternates), $locale, 'website');
+    }
+
+    /** The number of the page shown, when it's the one asked about (else 1). */
+    private static function shownPage(Closure $isThis): int
+    {
+        $shown = Page::current();
+
+        return $shown !== null && $isThis($shown) ? $shown->pageNumber : 1;
+    }
+
+    /** A URL with ?page=n past the first page: each page is its own, not a copy of the first. */
+    private static function paged(string $url, int $page): string
+    {
+        return $page > 1 ? "{$url}?page={$page}" : $url;
     }
 
     /**
@@ -137,8 +162,8 @@ final class Seo
     {
         return match (true) {
             $page?->entry !== null => self::for($page->entry, $page->preview),
-            $page?->term !== null => self::forTerm($page->term),
-            $page?->collection !== null => self::forListing($page->collection, $page->locale),
+            $page?->term !== null => self::forTerm($page->term, $page->pageNumber),
+            $page?->collection !== null => self::forListing($page->collection, $page->locale, $page->pageNumber),
             // Search results aren't pages to index.
             $page?->type === Page::SEARCH => self::tags(['noindex' => true], $title ?? 'Search', false, null, [], $page->locale, 'website'),
             default => self::tags([], $title ?? '', false, url()->current(), [], app()->getLocale(), 'website'),
