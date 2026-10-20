@@ -82,7 +82,7 @@ final class SiteSettings extends Settings
     {
         return $form->schema([
             Select::make('homepage')->label('Homepage')->options(self::homepages())
-                ->help('The entry shown at the site\'s address (/), in each language it\'s published in. Its own address redirects there.'),
+                ->help('The entry shown at /. Its own address redirects there.'),
             Section::make('The site')->description('Its name and what it\'s about, for search results and shared links of pages that don\'t say their own. Search engines, share image and titles: Settings → SEO.')->columns(2)->schema([
                 TextInput::make('name')->label('Site name')->maxLength(100)->placeholder(self::appName())->span(2),
                 Textarea::make('description')->label('Description')->rows(2)->maxLength(500)->span(2),
@@ -90,7 +90,7 @@ final class SiteSettings extends Settings
             Section::make('Structured data')->description('What search engines are told pages are (schema.org), for richer results: articles, breadcrumbs, the site\'s search box.')->columns(2)->schema([
                 Toggle::make('structuredData')->label('Add structured data to pages')->span(2),
                 Select::make('publisher')->label('Published by')->options(['Organization' => 'An organization', 'Person' => 'A person']),
-                MediaPicker::make('logo')->label('Logo')->images()->help('The organization\'s logo: square or wide, at least 112 pixels.'),
+                MediaPicker::make('logo')->label('Logo')->images()->help('Square or wide, at least 112 pixels.'),
             ]),
         ]);
     }

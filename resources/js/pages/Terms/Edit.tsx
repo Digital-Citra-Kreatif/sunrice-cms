@@ -8,6 +8,7 @@ import {
 } from '@sunrice/admin-sdk/ui';
 import { FieldError, Fields } from '@/components/FieldInput.tsx';
 import { FieldSections } from '@/components/FieldSections.tsx';
+import { TemplateHelp } from '@/components/TemplateHelp.tsx';
 import { VersionConflict } from '@/components/VersionConflict.tsx';
 import { errorsAt, hasErrors } from '@/lib/builder.ts';
 import { localeName } from '@/lib/entries.ts';
@@ -115,9 +116,9 @@ function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared,
                             contentClassName="cms:flex cms:flex-col cms:gap-2">
                             <fieldset disabled={!writable} className="cms:flex cms:min-w-0 cms:flex-col cms:gap-2">
                                 <Label htmlFor="template" className="cms:sr-only">Template</Label>
-                                <Input id="template" className="cms:font-mono" placeholder="The taxonomy's" value={form.data.template}
+                                <Input id="template" className="cms:font-mono" placeholder={`cms.${taxonomy.handle}-special`} value={form.data.template}
                                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => form.setData('template', e.target.value)} aria-invalid={errors.template !== undefined} />
-                                <p className="cms:text-xs cms:text-muted-foreground">The Blade view its page renders with. Empty: the taxonomy's.</p>
+                                <TemplateHelp example={`cms.${taxonomy.handle}-special`} fallbacks={['the taxonomy\'s template, if set', `cms.taxonomy-${taxonomy.handle}`, 'cms.term']} />
                                 <FieldError message={errors.template} />
                             </fieldset>
                         </CollapsibleCard>

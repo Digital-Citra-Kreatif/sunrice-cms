@@ -57,9 +57,8 @@ final class TaxonomyResource extends Resource
         return $form->schema([
             Section::make('General')->columns(2)->schema([
                 TextInput::make('title')->required(),
-                ...HandleField::make('taxonomy', 'How templates and code name it, like "categories". Filled in from the title.',
-                    'Careful: terms fields and templates that name it (the cms.taxonomy-{handle} view, whereTerm(\'…\')) need the new handle too. Roles keep their permissions for it.'),
-                Toggle::make('hierarchical')->label('Nested terms')->span(2)->help('Terms can go under other terms, like categories and subcategories.'),
+                ...HandleField::make('taxonomy', 'Used in templates and code, like "categories".', HandleField::WARNING),
+                Toggle::make('hierarchical')->label('Nested terms')->span(2)->help('Terms can sit under other terms, like subcategories.'),
                 CheckboxList::make('collections')->span(2)
                     ->help('The collections whose entries it groups.')
                     ->options(fn () => Collection::query()->orderBy('title')->get()->mapWithKeys(fn (Collection $c): array => [(string) $c->id => $c->title])->all())
@@ -73,7 +72,7 @@ final class TaxonomyResource extends Resource
                     }),
                 Select::make('blueprint')->label('Term fields')->span(2)
                     ->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
-                    ->help('Fields of terms\' own, like a description or an image, edited on each term\'s page.'),
+                    ->help('Extra fields for each term, like a description or an image.'),
             ]),
             Section::make('Term pages')->description('Whether each term has a page on the site listing its entries.')->columns(2)->schema([
                 TextInput::make('route')->label('Term pages URL')->span(2)->placeholder('/topics/{slug}')->unique()->maxLength(255)
@@ -85,7 +84,7 @@ final class TaxonomyResource extends Resource
                     ->help('Empty: terms have no pages.'),
                 TextInput::make('template')->label('Term page template')->placeholder('cms.topic')->showWhen('route')->span(2)
                     ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
-                    ->help('The Blade view term pages render with. Empty: cms.taxonomy-{handle}, else cms.term.'),
+                    ->help(TemplateHelp::text('cms.topic', ['cms.taxonomy-{handle}', 'cms.term'])."\nA term can choose its own on its page."),
             ]),
         ]);
     }

@@ -65,7 +65,7 @@ final class LocaleSettings extends Settings
                 ->suggest(self::KNOWN + Locales::names())->firstBadge('Main')->addLabel('Add a language')
                 ->rules([fn (string $attribute, mixed $value, Closure $fail) => self::check($value, $fail)])
                 ->extra('Address', '/{key}', '/')
-                ->help('The code identifies the language, its name is what editors see, and the address is what the site\'s addresses start with: empty for the default, the plain addresses (/) for the main language and /code for the others. The first is the main language. Once there is content, change the main one with php artisan sunrice:switch-main-language.'),
+                ->help('The first is the main language. Address: what its URLs start with (/ for plain ones). Once there is content, change the main one with php artisan sunrice:switch-main-language.'),
         ]);
     }
 

@@ -44,12 +44,12 @@ final class GlobalSetResource extends Resource
             TextInput::make('title')->required(),
             TextInput::make('handle')->required()->maxLength(64)->unique()->onlyOnCreate()->slugFrom('title')
                 ->rules([HandleField::rule()])
-                ->help('How templates read it, like "contact". Filled in from the title; it can\'t change later.'),
+                ->help('Used in templates, like "contact". It can\'t change later.'),
             TextInput::make('handle')->onlyOnEdit()->disabled()
-                ->help('How templates read it. It can\'t change.'),
+                ->help('Used in templates.'),
             Select::make('blueprint')
                 ->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
-                ->help('Its fields. Changing it keeps the values already saved.'),
+                ->help('Its fields.'),
         ]);
     }
 

@@ -18,6 +18,9 @@ use Sunrice\Cms\Support\ScopedPermissions;
  */
 final class HandleField
 {
+    /** The edit form's help: what a new handle breaks. */
+    public const WARNING = 'Changing it breaks templates and code that use the old one.';
+
     /** Lowercase letters, numbers and underscores, from a letter, said plainly when it isn't. */
     public static function rule(): \Closure
     {

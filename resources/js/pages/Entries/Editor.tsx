@@ -8,6 +8,7 @@ import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Skeleton, Switch, useBreadcrumbs, useEditLock, useUnsavedChanges, ViewingNotice,
 } from '@sunrice/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
+import { TemplateHelp } from '@/components/TemplateHelp.tsx';
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
 import { EntryComments, type EntryCommentsSummary } from '@/components/EntryComments.tsx';
 import { FieldSections } from '@/components/FieldSections.tsx';
@@ -511,8 +512,9 @@ function PageSettings({ entryUrl, collection, settings, blueprints, disabled }: 
                 )}
                 <div className="cms:flex cms:flex-col cms:gap-2">
                     <Label htmlFor="template">Template</Label>
-                    <Input id="template" className="cms:font-mono" placeholder="The collection's" value={form.data.template}
+                    <Input id="template" className="cms:font-mono" placeholder={`cms.${collection.handle}-landing`} value={form.data.template}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => form.setData('template', e.target.value)} aria-invalid={errors.template !== undefined} />
+                    <TemplateHelp example={`cms.${collection.handle}-landing`} fallbacks={['the collection\'s template, if set', `cms.${collection.handle}`, 'cms.entry']} />
                     <FieldError message={errors.template} />
                 </div>
                 {collection.comments && (

@@ -59,37 +59,36 @@ final class CollectionResource extends Resource
         return $form->schema([
             Section::make('General')->columns(2)->schema([
                 TextInput::make('title')->required(),
-                ...HandleField::make('collection', 'How templates and code name it, like "articles". Filled in from the title.',
-                    'Careful: templates and code that name it (the cms.{handle} view, Cms::entries(\'…\'), entries fields limited to it) need the new handle too. Roles keep their permissions for it.'),
+                ...HandleField::make('collection', 'Used in templates and code, like "articles".', HandleField::WARNING),
                 Select::make('blueprint')->options($blueprints())
-                    ->help('The fields its entries have. Changing it keeps what entries already hold.'),
+                    ->help('The fields its entries have.'),
                 CheckboxList::make('blueprints')->label('Other blueprints')->options($blueprints)->span(2)
-                    ->help('Blueprints an entry may switch to instead, in its Page settings (fields both have keep their values).'),
+                    ->help('Blueprints an entry can switch to in its Page settings.'),
             ]),
             Section::make('Order')->description('How its entries are listed, on the site and in the admin.')->columns(2)->schema([
-                Toggle::make('dated')->label('Dated entries')->help('Entries show a date and list newest first, like articles.'),
-                Toggle::make('ordered')->label('Manual order')->help('Editors drag entries into order on its entries list, instead of by date or title.'),
+                Toggle::make('dated')->label('Dated entries')->help('Entries have a date and list newest first.'),
+                Toggle::make('ordered')->label('Manual order')->help('Drag entries into order on the entries list.'),
             ]),
             Section::make('Pages and addresses')->description('Whether its entries are pages on the site, and how.')->columns(2)->schema([
                 TextInput::make('route')->label('Entry URL')->placeholder('/blog/{slug}')->unique()->span(2)
                     ->rules([new RoutePatternRule])
-                    ->help('Empty: entries have no page of their own, like team members or FAQs that templates list. A related entry\'s slug goes in with its field: /projects/{project}/{slug}.'),
+                    ->help('Empty: entries have no pages of their own (like FAQs shown by a template).'),
                 Toggle::make('hierarchical')->label('Hierarchical')->showWhen('route')
-                    ->help('Entries may have a parent entry, like pages under pages (for breadcrumbs and sub-menus).'),
+                    ->help('Entries can sit under a parent entry, like pages under pages.'),
                 Toggle::make('comments')->label('Allow comments')->showWhen('route')
-                    ->help('Visitors may comment on its entries. Settings → Comments says how they\'re moderated.'),
+                    ->help('Visitors can comment on its entries.'),
                 TextInput::make('template')->label('Entry template')->placeholder('cms.article')->showWhen('route')
                     ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
-                    ->help('The Blade view for its entries. Empty: cms.{handle}, else cms.entry.'),
+                    ->help(TemplateHelp::text('cms.article', ['cms.{handle}', 'cms.entry'])."\nAn entry can choose its own in its Page settings."),
                 Select::make('schema_type')->label('Structured data type')->options(StructuredData::ENTRY_TYPES)->showWhen('route')
-                    ->help('What search engines are told its entries are. Empty: Article when entries are dated, else Web page.'),
+                    ->help('What search engines are told its entries are. Empty: Article if dated, else Web page.'),
             ]),
             Section::make('Listing page')->description('A page listing its entries, like /blog.')->columns(2)->schema([
                 TextInput::make('listing_route')->label('Listing page URL')->placeholder('/blog')->unique()->maxLength(255)->span(2)
                     ->rules(['regex:#^(/[a-z0-9\-_]+)+$#'])
-                    ->help('Empty: none. Its template is cms.{handle}-listing, else cms.listing.'),
+                    ->help("Empty: no listing page. Its template is the first that exists of\n1. ".TemplateHelp::file('cms.{handle}-listing')."\n2. ".TemplateHelp::file('cms.listing')."\n3. the built-in template"),
                 Select::make('listing_blueprint')->label('Listing page fields')->options($blueprints())->showWhen('listing_route')
-                    ->help('Fields of the listing page itself, like an intro, edited from the entries list.'),
+                    ->help('Fields of the listing page itself, like an intro.'),
                 NumberInput::make('per_page')->label('Entries per page')->integer()->min(1)->max(100)->default(10)->showWhen('listing_route'),
             ]),
         ]);

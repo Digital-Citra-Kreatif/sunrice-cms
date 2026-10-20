@@ -68,9 +68,9 @@ final class MenuResource extends Resource
             TextInput::make('title')->required(),
             TextInput::make('handle')->required()->maxLength(64)->unique()->onlyOnCreate()->slugFrom('title')
                 ->rules([HandleField::rule()])
-                ->help('How templates read it, like "main" or "footer". Filled in from the title; it can\'t change later.'),
+                ->help('Used in templates, like "main" or "footer". It can\'t change later.'),
             TextInput::make('handle')->onlyOnEdit()->disabled()
-                ->help('How templates read it: <x-sunrice-cms::menu handle="…" />. It can\'t change.'),
+                ->help('Used in templates: <x-sunrice-cms::menu handle="…" />.'),
         ]);
     }
 
