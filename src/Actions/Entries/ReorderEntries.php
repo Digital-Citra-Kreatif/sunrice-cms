@@ -12,11 +12,11 @@ use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Support\SiteCache;
 
 /**
- * Puts some entries of an ordered collection in the order given (dragged
- * in the list): they swap among the places they held, so a page of the
- * list can be reordered without the others moving. In a hierarchical
- * collection they are siblings: all under `$parentId` (null: the top
- * level). The collection is numbered 1…n again, in one transaction.
+ * Puts entries in the order given, in a collection whose entries are in
+ * the order editors put them in (`ordered`): the entries of one level
+ * (those under `$parentId` in a hierarchical collection, else all of
+ * them) are numbered 1…n again, the ones given first, the others after
+ * them as they were.
  *
  * @api
  */
@@ -35,55 +35,71 @@ final class ReorderEntries
     public function handle(Collection $collection, array $ids, ?int $parentId = null): void
     {
         if (! $collection->ordered) {
-            throw ValidationException::withMessages(['ids' => 'This collection lists entries by date or title: turn on Manual order to move them.']);
+            throw ValidationException::withMessages(['ids' => 'This collection lists entries by date or title: turn on Manual order to order them.']);
         }
-        $ids = self::ids($ids);
+        if ($parentId !== null && ! $collection->hierarchical) {
+            throw ValidationException::withMessages(['parent_id' => 'Entries of this collection have no parents.']);
+        }
+        $order = self::ids($ids);
 
-        DB::transaction(function () use ($collection, $ids, $parentId): void {
-            $entries = Entry::query()->where('collection_id', $collection->id)->whereKey($ids)->lockForUpdate()->get(['id', 'parent_id']);
-            $siblings = $entries->every(fn (Entry $entry): bool => $entry->parent_id === $parentId);
-            if ($entries->count() !== count($ids) || ($collection->hierarchical || $parentId !== null) && ! $siblings) {
-                throw ValidationException::withMessages(['ids' => $collection->hierarchical
-                    ? 'Only entries of this collection under the same parent can be put in order together.'
-                    : 'Only entries of this collection can be put in order.']);
+        DB::transaction(function () use ($collection, $order, $parentId): void {
+            $level = [];
+            foreach (Entry::query()->withTrashed()->where('collection_id', $collection->id)
+                ->when($collection->hierarchical, fn ($query) => $query->where('parent_id', $parentId))
+                ->orderBy('sort_order')->orderBy('id')->lockForUpdate()->pluck('id') as $id) {
+                $level[] = is_numeric($id) ? (int) $id : 0;
             }
-            $order = [];
-            foreach (Entry::query()->withTrashed()->where('collection_id', $collection->id)->orderBy('sort_order')->orderBy('id')->lockForUpdate()->pluck('id') as $id) {
-                $order[] = is_numeric($id) ? (int) $id : 0;
+            $unknown = array_diff($order, $level);
+            if ($unknown !== []) {
+                throw ValidationException::withMessages(['ids' => 'Not entries of this collection'.($collection->hierarchical ? ' at this level' : '').': '.implode(', ', $unknown).'.']);
             }
-            // The places these entries held, now in the new order.
-            $slots = array_keys(array_intersect($order, $ids));
-            foreach ($slots as $i => $slot) {
-                $order[$slot] = $ids[$i];
+            $positions = [];
+            foreach ([...$order, ...array_diff($level, $order)] as $index => $id) {
+                $positions[$id] = $index + 1;
             }
-            foreach ($order as $position => $id) {
-                Entry::query()->withTrashed()->whereKey($id)->where('sort_order', '!=', $position + 1)->update(['sort_order' => $position + 1]);
-            }
+            self::renumber($positions);
         });
-        // A query update fires no model events: the site's lists change.
-        $this->cache->changed("collection {$collection->handle}", SiteCache::PAGES, SiteCache::MENUS, SiteCache::SITEMAP);
-        $this->activity->record('reordered', 'collection', $collection, $collection->title, ['note' => count($ids) === 1 ? '1 entry' : count($ids).' entries']);
+        $this->activity->record('reordered', 'collection', $collection, $collection->title, ['note' => 'entries']);
+        $this->cache->changed("collection {$collection->handle} order", SiteCache::PAGES);
+    }
+
+    /**
+     * Writes the positions: one statement per few hundred, not one per row.
+     *
+     * @param  array<int, int>  $positions  id => sort_order
+     */
+    private static function renumber(array $positions): void
+    {
+        $table = DB::getQueryGrammar()->wrapTable((new Entry)->getTable());
+        foreach (array_chunk($positions, 300, true) as $chunk) {
+            $bindings = [];
+            foreach ($chunk as $id => $position) {
+                array_push($bindings, $id, $position);
+            }
+            $marks = implode(',', array_fill(0, count($chunk), '?'));
+            DB::update("UPDATE {$table} SET sort_order = CASE id ".str_repeat('WHEN ? THEN ? ', count($chunk))."END WHERE id IN ({$marks})", [...$bindings, ...array_keys($chunk)]);
+        }
     }
 
     /**
      * @param  array<mixed>  $ids
-     * @return non-empty-list<int>
+     * @return list<int>
      *
      * @throws ValidationException
      */
-    public static function ids(array $ids): array
+    private static function ids(array $ids): array
     {
-        $clean = [];
+        $valid = [];
         foreach ($ids as $id) {
             if (! is_int($id) && ! (is_string($id) && ctype_digit($id))) {
-                throw ValidationException::withMessages(['ids' => 'Give the ids of what to put in order.']);
+                throw ValidationException::withMessages(['ids' => 'Give entry ids (numbers).']);
             }
-            $clean[] = (int) $id;
+            $valid[] = (int) $id;
         }
-        if ($clean === [] || count($clean) > 500 || count(array_unique($clean)) !== count($clean)) {
-            throw ValidationException::withMessages(['ids' => 'Give each id once, at most 500.']);
+        if ($valid === [] || count(array_unique($valid)) !== count($valid)) {
+            throw ValidationException::withMessages(['ids' => 'Give each entry id once, in the new order.']);
         }
 
-        return $clean;
+        return $valid;
     }
 }

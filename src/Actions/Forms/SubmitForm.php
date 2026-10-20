@@ -15,11 +15,14 @@ use Sunrice\Cms\Mail\SubmissionReceived;
 use Sunrice\Cms\Models\Form;
 use Sunrice\Cms\Models\Submission;
 use Sunrice\Cms\Support\Locales;
+use Sunrice\Cms\Support\RoleMembers;
 
 /**
  * Keeps what a visitor sent with a form, checked against its fields (files
- * kept on the private upload disk), and emails it to the form's addresses
- * (queued when the app has a queue).
+ * kept on the private upload disk), with who sent it (IP address, user
+ * agent, referrer; unless sunrice-cms.forms.visitor_details is off), and
+ * emails it to the form's addresses and the members of its roles (queued
+ * when the app has a queue).
  *
  * @api
  */
@@ -27,10 +30,11 @@ final class SubmitForm
 {
     /**
      * @param  array<mixed>  $input  the visitor's values by field handle
+     * @param  string|null  $referrer  the page it was sent from
      *
      * @throws ValidationException
      */
-    public function handle(Form $form, array $input, ?string $locale = null): Submission
+    public function handle(Form $form, array $input, ?string $locale = null, ?string $ip = null, ?string $userAgent = null, ?string $referrer = null): Submission
     {
         $schema = $form->schema();
         $data = array_intersect_key($input, array_flip(array_map(fn ($field): string => $field->handle, $schema->fields())));
@@ -47,18 +51,29 @@ final class SubmitForm
         }
 
         $data = $this->storeFiles($form, $data);
+        $visitor = config('sunrice-cms.forms.visitor_details', true) !== false;
         $submission = $form->submissions()->create([
             'locale' => $locale !== null && Locales::has($locale) ? $locale : Locales::default(),
             'data' => $schema->normalize($data),
+            'ip_address' => $visitor && $ip !== null && filter_var($ip, FILTER_VALIDATE_IP) !== false ? $ip : null,
+            'user_agent' => $visitor ? self::cut($userAgent, 512) : null,
+            'referrer' => $visitor && $referrer !== null && preg_match('#^https?://#i', $referrer) === 1 ? self::cut($referrer, 2000) : null,
         ]);
 
         $addresses = array_values(array_filter($form->notify ?? [], fn (string $address): bool => filter_var($address, FILTER_VALIDATE_EMAIL) !== false));
-        // One email each: the addresses aren't shown to each other.
-        foreach ($addresses as $address) {
+        // One email each, to the addresses and the roles' members: the addresses aren't shown to each other.
+        foreach (array_unique([...$addresses, ...RoleMembers::emails($form->notify_roles ?? [])]) as $address) {
             Mail::to($address)->queue(new SubmissionReceived($submission));
         }
 
         return $submission;
+    }
+
+    private static function cut(?string $text, int $length): ?string
+    {
+        $text = $text === null ? '' : trim(mb_substr($text, 0, $length));
+
+        return $text !== '' ? $text : null;
     }
 
     /** The disk files sent with forms are kept on (never public). */

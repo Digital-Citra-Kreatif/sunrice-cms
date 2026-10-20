@@ -20,6 +20,9 @@ use Sunrice\Cms\Actions\Forms\SubmitForm;
  * @property int $form_id
  * @property string $locale
  * @property array<string, mixed> $data
+ * @property string|null $ip_address the sender's (unless sunrice-cms.forms.visitor_details is off)
+ * @property string|null $user_agent their browser
+ * @property string|null $referrer the page they sent it from
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Form $form

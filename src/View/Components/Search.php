@@ -22,7 +22,9 @@ use Sunrice\Cms\Site\Search as SiteSearch;
  *     </x-sunrice-cms::search>
  *
  * `action` is the search page in the page's language, `name` the query
- * string's name (q), `query` what was searched.
+ * string's name (q; `name="find"` for a search of your own beside the
+ * site's), `query` what was searched; `page-name` is the results' page
+ * number in the query string (page).
  *
  * @api
  */
@@ -30,7 +32,7 @@ final class Search extends Component
 {
     public string $action;
 
-    public string $name = SiteSearch::NAME;
+    public string $name;
 
     public string $query;
 
@@ -38,14 +40,15 @@ final class Search extends Component
     public ?LengthAwarePaginator $results = null;
 
     /** @param string|list<string>|null $collection handles, or "help,faq"; null: what the search page covers */
-    public function __construct(bool $results = false, string|array|null $collection = null, ?int $perPage = null)
+    public function __construct(bool $results = false, string|array|null $collection = null, ?int $perPage = null, string $name = SiteSearch::NAME, string $pageName = 'page')
     {
         $this->action = SiteSearch::url();
-        $query = request()->query(SiteSearch::NAME);
+        $this->name = $name;
+        $query = request()->query($name);
         $this->query = is_string($query) ? trim(mb_substr($query, 0, 100)) : '';
         if ($results) {
             $handles = is_string($collection) ? array_values(array_filter(array_map('trim', explode(',', $collection)))) : $collection;
-            $this->results = app(SiteSearch::class)->entries($this->query, $handles, $perPage);
+            $this->results = app(SiteSearch::class)->entries($this->query, $handles, $perPage, pageName: $pageName);
         }
     }
 

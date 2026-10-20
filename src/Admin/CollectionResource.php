@@ -75,6 +75,7 @@ final class CollectionResource extends Resource
             TextInput::make('template')->placeholder('cms.article')
                 ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
                 ->help('The Blade view for its entries. Empty: cms.{handle}, else cms.entry.'),
+            SeoMapping::section('an entry\'s'),
         ]);
     }
 

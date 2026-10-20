@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Http\Controllers;
 
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Sunrice\Admin\Preferences\Preferences;
 use Sunrice\Cms\Actions\Entries\CreateEntry;
 use Sunrice\Cms\Actions\Entries\CreateTranslation;
 use Sunrice\Cms\Actions\Entries\DeleteTranslation;
@@ -21,6 +23,7 @@ use Sunrice\Cms\Actions\Entries\RestoreRevision;
 use Sunrice\Cms\Actions\Entries\SaveDraft;
 use Sunrice\Cms\Actions\Entries\TrashEntry;
 use Sunrice\Cms\Actions\Entries\UnpublishEntry;
+use Sunrice\Cms\Admin\EntryList;
 use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Fields\Types\TermsField;
 use Sunrice\Cms\Models\Collection;
@@ -42,54 +45,42 @@ use Sunrice\Cms\Support\Seo;
  */
 final class EntryController
 {
-    public const PER_PAGE = 25;
-
     /** The sidebar's Entries item: the first collection's list. */
     public function home(Request $request): RedirectResponse|Response
     {
         $first = Access::collections($request->user())->first();
 
         return $first === null
-            ? Inertia::render('Cms/Entries/Index', ['collection' => null, 'collections' => [], 'entries' => null, 'query' => ['search' => '', 'trashed' => false]])
+            ? Inertia::render('Cms/Entries/Index', ['collection' => null, 'collections' => [], 'entries' => null, 'query' => null])
             : redirect()->route('sunrice.admin.cms.entries.index', $first->handle);
     }
 
-    public function index(Request $request, Collection $collection): Response
+    public function index(Request $request, Collection $collection, Preferences $preferences): Response
     {
-        $search = trim((string) $request->string('search'));
-        $trashed = $request->boolean('trashed');
-        $locale = Locales::default();
-
-        $entries = EntryTranslation::query()
-            ->with(['entry.translations', 'entry.parent.translations'])
-            ->where('collection_id', $collection->id)
-            ->where('locale', $locale)
-            ->whereHas('entry', fn ($query) => $trashed ? $query->onlyTrashed() : $query->withoutTrashed())
-            // whereLike: case-insensitive on every database (ILIKE on PostgreSQL).
-            ->when($search !== '', fn ($query) => $query->whereLike('draft_title', '%'.addcslashes($search, '%_\\').'%'))
-            ->when($collection->ordered,
-                fn ($query) => $query->orderBy(Entry::query()->withTrashed()->select('sort_order')->whereColumn('sunrice_entries.id', 'sunrice_entry_translations.entry_id')),
-                fn ($query) => $query->orderBy($collection->dated ? 'published_at' : 'draft_title', $collection->dated ? 'desc' : 'asc'))
-            ->orderBy('id', $collection->ordered ? 'asc' : 'desc')
-            ->paginate(self::PER_PAGE)
-            ->withQueryString()
-            ->through(fn (EntryTranslation $translation): array => [
-                'id' => $translation->entry_id,
-                'title' => $translation->draft_title,
-                'slug' => $translation->draft_slug,
-                'status' => $translation->status(),
-                'publishedAt' => $translation->published_at?->toIso8601String(),
-                'updatedAt' => $translation->updated_at?->toIso8601String(),
-                'locales' => self::locales($translation->entry),
-                'parent' => $translation->entry->parent?->mainTranslation()?->draft_title,
-                'parentId' => $translation->entry->parent_id,
-            ]);
+        $user = $request->user();
+        $list = new EntryList($collection, $request, $user instanceof Authenticatable ? $user : null, $preferences);
+        $page = $list->query()->paginate($list->perPage)->withQueryString();
 
         return Inertia::render('Cms/Entries/Index', [
             'collection' => self::collection($collection),
             'collections' => Access::collections($request->user())->map(fn (Collection $c): array => ['handle' => $c->handle, 'title' => $c->title])->all(),
-            'entries' => $entries,
-            'query' => ['search' => $search, 'trashed' => $trashed],
+            'entries' => [
+                'data' => $list->rows($page->items()),
+                'total' => $page->total(),
+                'from' => $page->firstItem(),
+                'to' => $page->lastItem(),
+                'currentPage' => $page->currentPage(),
+                'lastPage' => $page->lastPage(),
+                'prev_page_url' => $page->previousPageUrl(),
+                'next_page_url' => $page->nextPageUrl(),
+            ],
+            'query' => $list->state(),
+            'columns' => array_values($list->columnList()),
+            'filters' => $list->filterOptions(),
+            'links' => $list->links(),
+            'manualOrder' => $list->inManualOrder(),
+            'perPageOptions' => EntryList::PER_PAGE,
+            'preferencesKey' => EntryList::preferenceKey($collection),
             'can' => self::can($request, $collection),
         ]);
     }
@@ -188,7 +179,7 @@ final class EntryController
         return Inertia::render('Cms/Entries/Editor', [
             'collection' => self::collection($collection),
             'fields' => $collection->schema()->toAdmin(),
-            'locales' => self::locales($entry),
+            'locales' => EntryList::locales($entry),
             // Shared fields are edited in the main language; the others show its values.
             'shared' => $shared,
             'sharedValues' => $main === null ? [] : array_intersect_key($main->draft_data, array_flip($shared)),
@@ -348,25 +339,6 @@ final class EntryController
         }
 
         return $entry->mainTranslation() ?? abort(404);
-    }
-
-    /**
-     * The site's languages with the entry's state in each: its status, or
-     * null where it has no translation yet, and whether the main language
-     * changed since it was translated.
-     *
-     * @return list<array{code: string, main: bool, status: string|null, outdated: bool}>
-     */
-    private static function locales(Entry $entry): array
-    {
-        $main = $entry->mainTranslation();
-
-        return array_map(fn (string $code): array => [
-            'code' => $code,
-            'main' => $main?->locale === $code,
-            'status' => ($translation = $entry->translation($code)) === null ? null : $translation->status(),
-            'outdated' => $translation?->isOutdated() ?? false,
-        ], Locales::all());
     }
 
     private static function publishAt(Request $request): ?\DateTimeInterface

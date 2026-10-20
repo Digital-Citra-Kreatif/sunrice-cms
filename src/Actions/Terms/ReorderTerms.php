@@ -7,15 +7,14 @@ namespace Sunrice\Cms\Actions\Terms;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
-use Sunrice\Cms\Actions\Entries\ReorderEntries;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Support\SiteCache;
 
 /**
- * Puts some terms of one level (all under `$parentId`, null: the top) in
- * the order given (dragged in the list): they swap among the places they
- * held. The level is numbered 0…n again, in one transaction.
+ * Puts terms in the order given: the terms of one level of a taxonomy
+ * (those under `$parentId`, or the top level) are numbered 0…n again,
+ * the ones given first, the others after them as they were.
  *
  * @api
  */
@@ -33,26 +32,68 @@ final class ReorderTerms
      */
     public function handle(Taxonomy $taxonomy, array $ids, ?int $parentId = null): void
     {
-        $ids = ReorderEntries::ids($ids);
+        if ($parentId !== null && ! $taxonomy->hierarchical) {
+            throw ValidationException::withMessages(['parent_id' => 'Terms of this taxonomy have no parents.']);
+        }
+        $order = self::ids($ids);
 
-        DB::transaction(function () use ($taxonomy, $ids, $parentId): void {
-            $order = [];
-            foreach (Term::query()->where('taxonomy_id', $taxonomy->id)->where('parent_id', $parentId)->orderBy('sort_order')->orderBy('id')->lockForUpdate()->pluck('id') as $id) {
-                $order[] = is_numeric($id) ? (int) $id : 0;
+        DB::transaction(function () use ($taxonomy, $order, $parentId): void {
+            $level = [];
+            foreach (Term::query()->where('taxonomy_id', $taxonomy->id)->where('parent_id', $parentId)
+                ->orderBy('sort_order')->orderBy('id')->lockForUpdate()->pluck('id') as $id) {
+                $level[] = is_numeric($id) ? (int) $id : 0;
             }
-            if (array_diff($ids, $order) !== []) {
-                throw ValidationException::withMessages(['ids' => 'Only terms of this taxonomy at the same level can be put in order together.']);
+            $unknown = array_diff($order, $level);
+            if ($unknown !== []) {
+                throw ValidationException::withMessages(['ids' => 'Not terms of this taxonomy at this level: '.implode(', ', $unknown).'.']);
             }
-            $slots = array_keys(array_intersect($order, $ids));
-            foreach ($slots as $i => $slot) {
-                $order[$slot] = $ids[$i];
+            $positions = [];
+            foreach ([...$order, ...array_diff($level, $order)] as $index => $id) {
+                $positions[$id] = $index;
             }
-            foreach ($order as $position => $id) {
-                Term::query()->whereKey($id)->where('sort_order', '!=', $position)->update(['sort_order' => $position]);
-            }
+            self::renumber($positions);
         });
-        // A query update fires no model events: term lists and menus change.
-        $this->cache->changed("taxonomy {$taxonomy->handle}", SiteCache::PAGES, SiteCache::MENUS);
-        $this->activity->record('reordered', 'taxonomy', $taxonomy, $taxonomy->title, ['note' => count($ids) === 1 ? '1 term' : count($ids).' terms']);
+        $this->activity->record('reordered', 'taxonomy', $taxonomy, $taxonomy->title, ['note' => 'terms']);
+        $this->cache->changed("taxonomy {$taxonomy->handle} order", SiteCache::PAGES);
+    }
+
+    /**
+     * Writes the positions: one statement per few hundred, not one per row.
+     *
+     * @param  array<int, int>  $positions  id => sort_order
+     */
+    private static function renumber(array $positions): void
+    {
+        $table = DB::getQueryGrammar()->wrapTable((new Term)->getTable());
+        foreach (array_chunk($positions, 300, true) as $chunk) {
+            $bindings = [];
+            foreach ($chunk as $id => $position) {
+                array_push($bindings, $id, $position);
+            }
+            $marks = implode(',', array_fill(0, count($chunk), '?'));
+            DB::update("UPDATE {$table} SET sort_order = CASE id ".str_repeat('WHEN ? THEN ? ', count($chunk))."END WHERE id IN ({$marks})", [...$bindings, ...array_keys($chunk)]);
+        }
+    }
+
+    /**
+     * @param  array<mixed>  $ids
+     * @return list<int>
+     *
+     * @throws ValidationException
+     */
+    private static function ids(array $ids): array
+    {
+        $valid = [];
+        foreach ($ids as $id) {
+            if (! is_int($id) && ! (is_string($id) && ctype_digit($id))) {
+                throw ValidationException::withMessages(['ids' => 'Give term ids (numbers).']);
+            }
+            $valid[] = (int) $id;
+        }
+        if ($valid === [] || count(array_unique($valid)) !== count($valid)) {
+            throw ValidationException::withMessages(['ids' => 'Give each term id once, in the new order.']);
+        }
+
+        return $valid;
     }
 }

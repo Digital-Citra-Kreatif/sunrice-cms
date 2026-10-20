@@ -13,7 +13,8 @@ use Sunrice\Cms\Fields\Types;
 
 /**
  * A form visitors fill in on the site: its fields come from a blueprint,
- * and what's sent is kept as a Submission (and emailed to `notify`).
+ * and what's sent is kept as a Submission (and emailed to `notify` and
+ * the members of `notify_roles`).
  * Only the simple field types are offered to visitors (PUBLIC_TYPES).
  *
  * @property int $id
@@ -21,6 +22,7 @@ use Sunrice\Cms\Fields\Types;
  * @property string $title
  * @property string|null $blueprint
  * @property list<string>|null $notify
+ * @property list<string>|null $notify_roles role names whose members are emailed too
  * @property string|null $message
  * @property bool $captcha visitors pass the captcha to send it
  * @property string|null $redirect_url where visitors go once it's sent
@@ -43,7 +45,7 @@ class Form extends Model
 
     protected function casts(): array
     {
-        return ['notify' => 'array', 'captcha' => 'boolean', 'per_minute' => 'integer'];
+        return ['notify' => 'array', 'notify_roles' => 'array', 'captcha' => 'boolean', 'per_minute' => 'integer'];
     }
 
     /** @return HasMany<Submission, $this> */

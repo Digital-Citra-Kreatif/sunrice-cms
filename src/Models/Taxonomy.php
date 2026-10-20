@@ -23,6 +23,9 @@ use Sunrice\Cms\Fields\Schema;
  * @property string|null $route term pages' URL pattern ("/topics/{slug}"); none: no pages
  * @property string|null $blueprint terms' own fields
  * @property string|null $template the Blade view term pages render with
+ * @property string|null $seo_title_field a text field whose value is the SEO title when the SEO card leaves it empty
+ * @property string|null $seo_description_field a text or textarea field for the description
+ * @property string|null $seo_image_field a media field whose first image is the share image
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at

@@ -6,6 +6,7 @@ namespace Sunrice\Cms\Admin;
 
 use Closure;
 use Illuminate\Database\Eloquent\Model;
+use Sunrice\Admin\Resources\Forms\CheckboxList;
 use Sunrice\Admin\Resources\Forms\Form;
 use Sunrice\Admin\Resources\Forms\NumberInput;
 use Sunrice\Admin\Resources\Forms\Select;
@@ -18,6 +19,7 @@ use Sunrice\Admin\Resources\Tables\Table;
 use Sunrice\Admin\Security\Captcha;
 use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Form as FormModel;
+use Sunrice\Cms\Support\RoleMembers;
 use Sunrice\Cms\Support\SafeUrl;
 
 /**
@@ -77,6 +79,9 @@ final class FormResource extends Resource
                 ->saveUsing(function (Model $form, mixed $value): void {
                     $form->forceFill(['notify' => self::addresses($value) ?: null])->save();
                 }),
+            CheckboxList::make('notify_roles')->label('Also email roles')
+                ->options(fn (): array => RoleMembers::options())
+                ->help('Everyone with these roles gets each submission too, one email each.'),
             Textarea::make('message')->label('Thank-you message')->rows(2)->maxLength(1000)
                 ->placeholder('Thank you, we got your message.'),
             TextInput::make('redirect_url')->label('After sending, go to')->maxLength(2000)->placeholder('/thank-you')
