@@ -21,6 +21,7 @@ The rest is in `config/sunrice-cms.php` under `translation`: `batch_size` (texts
 - **Terms**: the title, fields and SEO description, saved as they are (`SaveTerm`, `SaveTermContent`).
 - **Globals**: their translated fields (`SaveGlobals`).
 - **Menus**: link labels.
+- **Language files**, only when asked for with `--only=lang`: the app's own Laravel translations, `lang/<from>/*.php` (subfolders too) and `lang/<from>.json`, written to `lang/<to>/…` and `lang/<to>.json`. Keys already translated are kept (unless `--force`), and keys only the target has stay.
 
 A text counts as translated when it's there, not empty, and not the source's text any more (a new translation starts as a copy of the main language). `--force` translates everything again.
 
@@ -34,6 +35,7 @@ php artisan sunrice:translate                           # from the main language
 php artisan sunrice:translate --to=id --to=fr --from=en
 php artisan sunrice:translate --only=entries --collection=blog
 php artisan sunrice:translate --only=terms --only=globals --only=menus
+php artisan sunrice:translate --only=lang                # the app's lang/ files
 php artisan sunrice:translate --force                   # translate again what is translated
 ```
 

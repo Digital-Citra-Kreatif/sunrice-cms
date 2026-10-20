@@ -8,24 +8,28 @@ use Illuminate\Console\Command;
 use RuntimeException;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Translation\ContentTranslator;
+use Sunrice\Cms\Translation\LangFileTranslator;
 use Sunrice\Cms\Translation\TranslationStats;
 use Sunrice\Cms\Translation\Translator;
 use Sunrice\Cms\Translation\TranslatorFactory;
 
-/** Machine-translates content into the other languages (ContentTranslator). */
+/** Machine-translates content (ContentTranslator) and the app's language files (LangFileTranslator) into the other languages. */
 final class TranslateCommand extends Command
 {
-    public const PARTS = ['entries', 'terms', 'globals', 'menus'];
+    public const PARTS = ['entries', 'terms', 'globals', 'menus', 'lang'];
+
+    /** What runs without --only: content, not the app's language files. */
+    public const DEFAULT_PARTS = ['entries', 'terms', 'globals', 'menus'];
 
     protected $signature = 'sunrice:translate
         {--to=* : Languages to translate into (default: all but the source)}
         {--from= : The language to translate from (default: the main one)}
-        {--only=* : entries, terms, globals, menus (default: all)}
+        {--only=* : entries, terms, globals, menus, lang (default: all but lang)}
         {--collection=* : Only entries of these collections (handles)}
         {--force : Translate again what is translated already}
         {--dry-run : Count what would be translated, without sending anything}';
 
-    protected $description = 'Machine-translate content into the other languages (entries into their drafts)';
+    protected $description = 'Machine-translate content (entries into their drafts) and the app\'s language files into the other languages';
 
     public function handle(TranslatorFactory $factory): int
     {
@@ -34,7 +38,7 @@ final class TranslateCommand extends Command
         $to = array_values(array_filter((array) $this->option('to'), is_string(...)));
         $to = array_values(array_diff($to === [] ? Locales::all() : $to, [$from]));
         $parts = array_values(array_filter((array) $this->option('only'), is_string(...)));
-        $parts = $parts === [] ? self::PARTS : $parts;
+        $parts = $parts === [] ? self::DEFAULT_PARTS : $parts;
         $collections = array_values(array_filter((array) $this->option('collection'), is_string(...)));
         $dryRun = (bool) $this->option('dry-run');
 
@@ -70,6 +74,8 @@ final class TranslateCommand extends Command
             in_array('terms', $parts, true) && $content->terms();
             in_array('globals', $parts, true) && $content->globals();
             in_array('menus', $parts, true) && $content->menus();
+            in_array('lang', $parts, true) && (new LangFileTranslator($translator, $from, $locale, (bool) $this->option('force'), $dryRun, $stats))
+                ->onProgress(fn (string $line) => $this->line("  {$line}"))->translate();
         }
 
         $this->newLine();
