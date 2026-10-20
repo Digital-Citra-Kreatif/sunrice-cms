@@ -31,6 +31,11 @@
 <meta property="og:type" content="{{ $seo['type'] }}">
 <meta property="og:site_name" content="{{ $seo['site_name'] }}">
 <meta property="og:locale" content="{{ str_replace('-', '_', $seo['locale']) }}">
+@foreach (array_keys($seo['alternates']) as $locale)
+@if ($locale !== 'x-default' && $locale !== $seo['locale'])
+<meta property="og:locale:alternate" content="{{ str_replace('-', '_', $locale) }}">
+@endif
+@endforeach
 <meta property="og:title" content="{{ $seo['title'] }}">
 @if ($seo['description'])
 <meta property="og:description" content="{{ $seo['description'] }}">
@@ -41,9 +46,22 @@
 @if ($seo['canonical'])
 <meta property="og:url" content="{{ $seo['canonical'] }}">
 @endif
+@if ($seo['published_time'])
+<meta property="article:published_time" content="{{ $seo['published_time'] }}">
+@endif
+@if ($seo['modified_time'])
+<meta property="article:modified_time" content="{{ $seo['modified_time'] }}">
+@endif
 <meta name="twitter:card" content="{{ $seo['image'] ? 'summary_large_image' : 'summary' }}">
 @if ($seo['twitter'])
 <meta name="twitter:site" content="{{ $seo['twitter'] }}">
+@endif
+<meta name="twitter:title" content="{{ $seo['title'] }}">
+@if ($seo['description'])
+<meta name="twitter:description" content="{{ $seo['description'] }}">
+@endif
+@if ($seo['image'])
+<meta name="twitter:image" content="{{ $seo['image'] }}">
 @endif
 @if (app(\Sunrice\Cms\Settings\SiteSettings::class)->structuredData)
 <script type="application/ld+json">{!! \Sunrice\Cms\Support\StructuredData::json(\Sunrice\Cms\Support\StructuredData::graph(\Sunrice\Cms\Site\Page::current(), array_values($schema))) !!}</script>
