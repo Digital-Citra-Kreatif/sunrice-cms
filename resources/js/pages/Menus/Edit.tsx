@@ -58,13 +58,14 @@ export default function MenuEdit({ menu, items: initial, locales, limits, terms,
                 const item = items[index]!;
                 return (
                     <div className={`cms:rounded-lg cms:border cms:bg-card ${isOverlay ? '' : 'cms:border-border/70'}`}>
-                        <div className="cms:flex cms:flex-col cms:gap-2 cms:p-2">
+                        <div className="cms:flex cms:items-start cms:gap-2 cms:p-2">
+                            {can.update && <div className="cms:flex cms:h-10 cms:shrink-0 cms:items-center"><SortableHandle {...handle} label={`Move ${item.labels[main] || item.target?.title || item.url || 'link'}`} /></div>}
+                            <div className="cms:flex cms:min-w-0 cms:flex-1 cms:flex-col cms:gap-2">
                             <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
-                                {can.update && <SortableHandle {...handle} label={`Move ${item.labels[main] || item.target?.title || item.url || 'link'}`} />}
-                                <Input aria-label={`Label (${localeName(main)})`} className="cms:max-w-xs" disabled={!can.update}
+                                <Input aria-label={`Label (${localeName(main)})`} className="cms:w-full cms:sm:max-w-xs" disabled={!can.update}
                                     placeholder={item.target?.title ?? 'Label'} value={item.labels[main] ?? ''}
                                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => update(index, { labels: { ...item.labels, [main]: e.target.value } })} />
-                                <span className="cms:min-w-0 cms:flex-1 cms:truncate cms:text-sm cms:text-muted-foreground">
+                                <span className="cms:min-w-32 cms:flex-1 cms:truncate cms:text-sm cms:text-muted-foreground">
                                     {item.url !== null
                                         ? item.url
                                         : <>{item.target ? `${item.target.kind}: ${item.target.title}` : 'Gone'} {(!item.target || !item.target.live) && <Badge variant="outline">Not on the site</Badge>}</>}
@@ -81,14 +82,15 @@ export default function MenuEdit({ menu, items: initial, locales, limits, terms,
                                 )}
                             </div>
                             {locales.length > 1 && (
-                                <div className="cms:flex cms:flex-wrap cms:gap-2 cms:pl-9">
+                                <div className="cms:flex cms:flex-wrap cms:gap-2">
                                     {locales.slice(1).map((code) => (
-                                        <Input key={code} aria-label={`Label (${localeName(code)})`} className="cms:max-w-xs" disabled={!can.update}
+                                        <Input key={code} aria-label={`Label (${localeName(code)})`} className="cms:w-full cms:sm:max-w-xs" disabled={!can.update}
                                             placeholder={`${localeName(code)}: as ${localeName(main)}`} value={item.labels[code] ?? ''}
                                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => update(index, { labels: { ...item.labels, [code]: e.target.value } })} />
                                     ))}
                                 </div>
                             )}
+                            </div>
                         </div>
                         {!isOverlay && childIndexes(items, index).length > 0 && <div className="cms:px-2 cms:pb-2">{level(index)}</div>}
                     </div>
