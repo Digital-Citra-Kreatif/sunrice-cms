@@ -58,7 +58,7 @@ Kartu **Status** di kanan menunjukkan apakah entri masih draf, terjadwal, atau t
 ## Melihat hasil kerja Anda di situs
 
 - **Preview** membuka draf yang tersimpan seperti tampilannya nanti di situs, di tab baru. Simpan dulu: pratinjau menampilkan yang tersimpan, bukan yang ada di layar Anda. Tautan pratinjau berlaku 30 menit, dan siapa pun yang Anda kirimi bisa membukanya selama itu.
-- **View** membuka halaman yang tayang.
+- **View page** membuka halaman yang tayang.
 - Jika peran Anda boleh melihat draf di situs, halaman tayang yang punya perubahan belum terbit menampilkan spanduk kecil selama Anda masuk, dengan **View draft**. Pengunjung tidak pernah melihatnya.
 
 ## Pengaturan halaman
@@ -84,8 +84,9 @@ Setiap penerbitan menyimpan sebuah **revisi**: salinan dari yang diterbitkan, be
 
 ## Tindakan lain
 
+- Tombol **⋯** di samping **Save draft** berisi aksi lainnya.
 - **Duplicate** menyalin entri, dalam semua bahasa, sebagai draf baru berjudul "… (copy)".
-- Tombol tempat sampah **memindahkan entri ke tempat sampah**: entri hilang dari situs web dan dari daftar, dalam semua bahasa, dan bisa dipulihkan. Jika dipakai konten lain, panel menyebutkan di mana terlebih dahulu.
+- **Move to trash** **memindahkan entri ke tempat sampah**: entri hilang dari situs web dan dari daftar, dalam semua bahasa, dan bisa dipulihkan. Jika dipakai konten lain, panel menyebutkan di mana terlebih dahulu.
 - Di tempat sampah, entri memiliki **Restore** dan **Delete for good** (menghapus semuanya, dalam semua bahasa, beserta revisinya; tidak bisa dibatalkan).
 
 ## Jika orang lain sedang menyunting

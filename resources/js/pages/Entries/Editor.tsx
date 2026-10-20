@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Deferred, Head, router, useForm } from '@inertiajs/react';
-import { CalendarClock, Check, ChevronDown, Copy, ExternalLink, Eye, Languages, LoaderCircle, Plus, RotateCcw, Trash2, Undo2 } from 'lucide-react';
+import { CalendarClock, Check, ChevronDown, Copy, ExternalLink, Eye, Languages, LoaderCircle, MoreHorizontal, Plus, RotateCcw, Trash2, Undo2 } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
     Badge, Button, Card, CardContent, CollapsibleCard, DatePicker, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -160,7 +160,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                         )}
                         {entry?.url && (
                             <Button type="button" variant="ghost" asChild>
-                                <a href={entry.url} target="_blank" rel="noopener noreferrer"><ExternalLink /> View</a>
+                                <a href={entry.url} target="_blank" rel="noopener noreferrer"><ExternalLink /> View page</a>
                             </Button>
                         )}
                         {entry?.trashed && can.delete && (
@@ -175,22 +175,30 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                                 <Trash2 /> Delete for good
                             </Button>
                         )}
-                        {entry && !entry.trashed && can.create && (
-                            <Button type="button" variant="ghost" title="Copy every language as a new draft" onClick={() => router.post(`${url}/duplicate`)}>
-                                <Copy /> Duplicate
-                            </Button>
-                        )}
-                        {entry && !entry.trashed && can.delete && !lock.readOnly && (
-                            <Button type="button" variant="outline" size="icon" className="cms:text-destructive" aria-label="Move to the trash"
-                                onClick={() => confirm(`Move "${values.title}" to the trash? It comes off the site; you can restore it.${usedBySentence(usedBy)}`, () => router.delete(url))}>
-                                <Trash2 />
-                            </Button>
-                        )}
-                        {entry && writable && machineTranslate !== null && (
-                            <Button type="button" variant="outline" disabled={form.processing || form.isDirty} title={form.isDirty ? 'Save your changes first' : 'Fill in what isn\'t translated yet, into the draft'}
-                                onClick={() => router.post(adminUrl(`cms/entries/${machineTranslate}/translate`), { version: entry.version }, { preserveScroll: true })}>
-                                <Languages /> Translate from {locales.find((l) => l.main)?.name ?? (mainLocale ? localeName(mainLocale) : 'the main language')}
-                            </Button>
+                        {entry && !entry.trashed && (can.create || (can.delete && !lock.readOnly) || (writable && machineTranslate !== null)) && (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button type="button" variant="outline" size="icon" aria-label="More actions"><MoreHorizontal /></Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="cms:min-w-52">
+                                    {writable && machineTranslate !== null && (
+                                        <DropdownMenuItem disabled={form.processing || form.isDirty}
+                                            onSelect={() => router.post(adminUrl(`cms/entries/${machineTranslate}/translate`), { version: entry.version }, { preserveScroll: true })}>
+                                            <Languages /> {form.isDirty ? 'Save to translate' : `Translate from ${locales.find((l) => l.main)?.name ?? (mainLocale ? localeName(mainLocale) : 'the main language')}`}
+                                        </DropdownMenuItem>
+                                    )}
+                                    {can.create && <DropdownMenuItem onSelect={() => router.post(`${url}/duplicate`)}><Copy /> Duplicate</DropdownMenuItem>}
+                                    {can.delete && !lock.readOnly && (
+                                        <>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem className="cms:text-destructive"
+                                                onSelect={() => confirm(`Move "${values.title}" to the trash? It comes off the site; you can restore it.${usedBySentence(usedBy)}`, () => router.delete(url))}>
+                                                <Trash2 /> Move to trash
+                                            </DropdownMenuItem>
+                                        </>
+                                    )}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         )}
                         {writable && (
                             <Button type="submit" variant={entry && can.publish ? 'outline' : 'default'} disabled={form.processing}>

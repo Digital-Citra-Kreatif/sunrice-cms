@@ -26,7 +26,7 @@ Di dalam group, baris repeater, dan blok flexible, aturannya sama per baris: tek
 
 ## Menerjemahkan dengan mesin
 
-Jika developer Anda menyiapkan terjemahan mesin, penyunting terjemahan memiliki tombol **Translate from …**. Tombol ini mengisi bagian yang belum diterjemahkan, dari bahasa utama, ke dalam draf. Simpan dulu perubahan Anda sendiri (tombol menunggu sampai Anda menyimpan), lalu baca hasilnya, perbaiki, dan terbitkan setelah benar.
+Jika developer Anda menyiapkan terjemahan mesin, penyunting terjemahan memiliki **Translate from …** di menu **⋯**. Tombol ini mengisi bagian yang belum diterjemahkan, dari bahasa utama, ke dalam draf. Simpan dulu perubahan Anda sendiri (tombol menunggu sampai Anda menyimpan), lalu baca hasilnya, perbaiki, dan terbitkan setelah benar.
 
 ## Halaman yang belum diterjemahkan
 

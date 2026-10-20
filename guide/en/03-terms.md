@@ -4,13 +4,13 @@
 
 ## The terms list
 
-Pick the taxonomy with the menu next to the title, and the language with **Language**. Terms are shown as they nest: in a taxonomy with nested terms, *Local* can sit under *News*.
+Pick the taxonomy with the menu next to the title, and the language with **Language**. The table shows each term's **Slug**, how many **Entries** have it and when it was **Created**, nested as the terms are: in a taxonomy with nested terms, *Local* can sit under *News*. **Search terms…** finds terms by title or slug.
 
-- **Add term**: type the **Title** (the **Slug** is made from it when left empty), choose where it goes under **Under** (or **Top level**), and click **Add term**.
-- The pencil **renames** a term in the language shown: its title and slug.
+- **New term**: type the **Title** (the **Slug** is made from it when left empty), choose where it goes under **Under** (or **Top level**), and click **Add term**.
+- Click a term's title to open the **term's own page** (below), or to rename it when terms have no pages. The arrow next to it opens the page on the website.
+- The **⋯** menu on a row: **Rename** (its title and slug in the language shown, and where it sits), **Edit page** and **Move to trash** (with the terms under it).
 - Drag a term by its handle to change its place among its neighbours; the terms under it come along. To put a term under another one, **rename** it and choose **Under**.
-- The page icon opens the **term's own page** (below).
-- The bin **moves it to the trash**, with the terms under it.
+- The **⋮** menu next to **New term** lists the collections that use the taxonomy, opens the **Taxonomy settings** and the **Trash**.
 
 Terms that have no title in the language shown appear in grey as *… · not translated*. Rename them in that language to translate them.
 
@@ -22,7 +22,7 @@ When the taxonomy has term pages on the website (like `/topics/news`), each term
 - **Search and sharing**: an SEO title, a description, a share image and *Hide from search engines* (see [SEO](guide:website/seo));
 - a **Template**, if your developer made a special design (leave it empty for the taxonomy's own).
 
-Choose the language at the top, edit, and click **Save**. Changes are live straight away: terms have no drafts. **View** opens the page on the website. **Used by** lists the content that links to this term through its fields.
+Choose the language at the top, edit, and click **Save**. Changes are live straight away: terms have no drafts. **View page** opens the page on the website. **Used by** lists the content that links to this term through its fields.
 
 One person edits a term's page in a language at a time: if a colleague has it open, you can **View only** or **Take over**. If a colleague saved the same term after you opened it, choose **Load theirs** or **Save mine anyway**.
 

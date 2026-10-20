@@ -17,6 +17,7 @@ use Sunrice\Cms\Actions\Terms\SaveTermContent;
 use Sunrice\Cms\Actions\Terms\TrashTerm;
 use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Fields\Types\TermsField;
+use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Support\Access;
@@ -47,19 +48,22 @@ final class TermController
         $locale = $request->query('locale');
         $locale = is_string($locale) && Locales::has($locale) ? $locale : Locales::default();
         $trashed = $request->boolean('trashed');
-        $terms = Term::query()->when($trashed, fn ($q) => $q->onlyTrashed())->with('translations')->where('taxonomy_id', $taxonomy->id)->orderBy('sort_order')->orderBy('id')->get();
+        $terms = Term::query()->when($trashed, fn ($q) => $q->onlyTrashed())->with('translations')->withCount('entries')->where('taxonomy_id', $taxonomy->id)->orderBy('sort_order')->orderBy('id')->get();
         // Where each is used, to warn before trashing or deleting it.
         $usedBy = References::usedByMany(Reference::TERM, array_values(array_map(fn (Term $term): int => $term->id, $terms->all())));
 
         return Inertia::render('Cms/Terms/Index', [
             'taxonomy' => ['handle' => $taxonomy->handle, 'title' => $taxonomy->title, 'hierarchical' => $taxonomy->hierarchical,
                 // Terms have pages, or fields of their own: edit them on their page.
-                'pages' => $taxonomy->route !== null || $taxonomy->blueprint !== null],
+                'pages' => $taxonomy->route !== null || $taxonomy->blueprint !== null,
+                'settings' => $request->user()?->can('cms.taxonomies.update') === true ? route('sunrice.admin.resources.taxonomies.edit', $taxonomy->id) : null,
+                'collections' => $taxonomy->collections()->orderBy('title')->get(['sunrice_collections.handle', 'sunrice_collections.title'])
+                    ->map(fn (Collection $collection): array => ['title' => $collection->title, 'url' => route('sunrice.admin.cms.entries.index', $collection->handle)])->all()],
             'trashed' => $trashed,
             'taxonomies' => Taxonomy::query()->orderBy('title')->get()->filter(fn (Taxonomy $t): bool => Access::terms($request->user(), $t))->values()->map(fn (Taxonomy $t): array => ['handle' => $t->handle, 'title' => $t->title])->all(),
             'locales' => Locales::all(),
             'locale' => $locale,
-            'terms' => array_map(function (array $item) use ($locale, $usedBy): array {
+            'terms' => array_map(function (array $item) use ($locale, $usedBy, $taxonomy): array {
                 [$term, $depth] = $item;
                 $translation = $term->translations->firstWhere('locale', $locale);
 
@@ -72,6 +76,9 @@ final class TermController
                     'slug' => $translation->slug ?? null,
                     'version' => $translation->version ?? null,
                     'fallback' => $term->title(),
+                    'entries' => $term->entries_count ?? 0,
+                    'createdAt' => $term->created_at?->toIso8601String(),
+                    'url' => $translation !== null && $taxonomy->route !== null ? $term->url($locale) : null,
                     'usedBy' => array_map(fn (array $use): string => $use['label'], $usedBy[$term->id] ?? []),
                 ];
             }, $trashed ? array_map(fn (Term $t): array => [$t, 0], array_values($terms->all())) : TermsField::tree(array_values($terms->all()), null, 0)),
