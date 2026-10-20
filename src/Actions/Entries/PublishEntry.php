@@ -62,6 +62,8 @@ final class PublishEntry
                 'data' => $values['data'],
                 'draft_data' => $values['data'],
                 'published_at' => $publishAt !== null ? Carbon::instance($publishAt) : ($translation->published_at ?? now()),
+                // Counted up too, so an editor opened before this publish can't save over it unknowingly.
+                'version' => $translation->version + 1,
             ])->save();
             $id = Auth::id();
             $translation->revisions()->create([

@@ -12,6 +12,7 @@ use Sunrice\Cms\Globals;
 use Sunrice\Cms\Models\GlobalSet;
 use Sunrice\Cms\Models\GlobalValue;
 use Sunrice\Cms\Support\Locales;
+use Sunrice\Cms\Support\Versioned;
 
 /**
  * Saves a global set's values in a language; they're live at once.
@@ -29,15 +30,17 @@ final class SaveGlobals
 
     /**
      * @param  array<mixed>  $data
+     * @param  int|string|null  $version  the one the editor opened: a save over someone else's newer one is refused
      *
      * @throws ValidationException
      */
-    public function handle(GlobalSet $set, array $data, ?string $locale = null): GlobalValue
+    public function handle(GlobalSet $set, array $data, ?string $locale = null, int|string|null $version = null): GlobalValue
     {
         $locale ??= Locales::default();
         if (! Locales::has($locale)) {
             throw ValidationException::withMessages(['locale' => 'Choose one of the site\'s languages: '.implode(', ', Locales::all()).'.']);
         }
+        $expected = Versioned::expected($version);
         $schema = $set->editableSchema($locale);
         $value = $set->values()->firstOrNew(['locale' => $locale], ['data' => []]);
         // What the site showed: the stored values over the defaults.
@@ -49,8 +52,13 @@ final class SaveGlobals
 
         $changed = array_keys(array_filter($normalized, fn (mixed $v, int|string $k): bool => ! array_key_exists($k, $before) || $before[$k] != $v, ARRAY_FILTER_USE_BOTH));
         /** @var array<string, mixed> $normalized */
-        $value->data = $normalized;
-        $value->save();
+        if ($value->exists) {
+            // Only if nobody saved in between: the version check and the write are one statement.
+            Versioned::update($value, $expected, ['data' => json_encode($normalized, JSON_THROW_ON_ERROR)]);
+        } else {
+            $value->data = $normalized;
+            $value->save();
+        }
         $set->unsetRelation('values');
         $this->globals->flush();
         $this->activity->updated('globals', $set, $set->title, array_map(strval(...), $changed));

@@ -64,6 +64,7 @@ final class TermController
                     // Untranslated: the main language's title, to show what it is.
                     'title' => $translation->title ?? null,
                     'slug' => $translation->slug ?? null,
+                    'version' => $translation->version ?? null,
                     'fallback' => $term->title(),
                 ];
             }, $trashed ? array_map(fn (Term $t): array => [$t, 0], array_values($terms->all())) : TermsField::tree(array_values($terms->all()), null, 0)),
@@ -79,7 +80,7 @@ final class TermController
 
     public function update(Request $request, Term $term, SaveTerm $save): RedirectResponse
     {
-        $save->handle($term->taxonomy, $request->only(['title', 'slug', 'locale', 'parent_id']), $term);
+        $save->handle($term->taxonomy, $request->only(['title', 'slug', 'locale', 'parent_id', 'version']), $term);
 
         return back()->with('success', 'Saved.');
     }
@@ -136,12 +137,13 @@ final class TermController
             'sharedValues' => array_intersect_key(array_replace($schema->defaults(), $main->data ?? []), array_flip($schema->shared())),
             'values' => array_replace($schema->defaults(), $translation->data ?? []),
             'seo' => $translation->data[Seo::KEY] ?? null,
+            'version' => $translation?->version,
         ]);
     }
 
     public function content(Request $request, Term $term, SaveTermContent $save): RedirectResponse
     {
-        $save->handle($term, $request->only(['data', 'seo', 'template']), $this->locale($request));
+        $save->handle($term, $request->only(['data', 'seo', 'template', 'version']), $this->locale($request));
 
         return back()->with('success', 'Saved. The site shows it now.');
     }

@@ -16,6 +16,7 @@ use Illuminate\Support\Carbon;
  * @property int $collection_id
  * @property string $locale
  * @property array<string, mixed> $data
+ * @property int $version counted up on each save; a save with an older one is refused
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Collection $collection
@@ -30,7 +31,7 @@ class CollectionListing extends Model
 
     protected function casts(): array
     {
-        return ['data' => 'array'];
+        return ['data' => 'array', 'version' => 'integer'];
     }
 
     /** @return BelongsTo<Collection, $this> */

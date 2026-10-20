@@ -13,6 +13,7 @@ use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\Seo;
+use Sunrice\Cms\Support\Versioned;
 
 /**
  * A term's page content in a language: its taxonomy's fields and its
@@ -27,7 +28,7 @@ final class SaveTermContent
     public function __construct(private readonly ActivityLog $activity) {}
 
     /**
-     * @param  array{data?: mixed, seo?: mixed, template?: mixed}  $input
+     * @param  array{data?: mixed, seo?: mixed, template?: mixed, version?: mixed}  $input  version: the one the editor opened; a save over someone else's newer one is refused
      *
      * @throws ValidationException
      */
@@ -38,6 +39,7 @@ final class SaveTermContent
         if ($translation === null) {
             throw ValidationException::withMessages(['locale' => 'Give the term a title in this language first.']);
         }
+        $expected = Versioned::expected($input['version'] ?? null);
         $schema = $term->taxonomy->schema();
         if ($locale !== Locales::default()) {
             $schema = $schema->except($schema->shared());
@@ -51,20 +53,20 @@ final class SaveTermContent
             $data[Seo::KEY] = Seo::validate($input[Seo::KEY]);
         }
         $changed = array_keys(array_filter($data, fn (mixed $v, int|string $k): bool => ! array_key_exists($k, $before) || $before[$k] != $v, ARRAY_FILTER_USE_BOTH));
-
+        $template = $term->template;
         if (array_key_exists('template', $input)) {
             $template = is_string($input['template']) && trim($input['template']) !== '' ? trim($input['template']) : null;
             if ($template !== null && (strlen($template) > 100 || preg_match(SaveEntrySettings::TEMPLATE, $template) !== 1)) {
                 throw ValidationException::withMessages(['template' => 'Use a view name like cms.topic: lowercase letters, digits, dashes, dots.']);
             }
-            if ($term->template !== $template) {
-                $term->forceFill(['template' => $template])->save();
-                $changed[] = 'template';
-            }
         }
-        /** @var array<string, mixed> $data */
-        $translation->data = $data;
-        $translation->save();
+
+        // Only if nobody saved in between: the version check and the write are one statement.
+        Versioned::update($translation, $expected, ['data' => json_encode($data, JSON_THROW_ON_ERROR)]);
+        if ($term->template !== $template) {
+            $term->forceFill(['template' => $template])->save();
+            $changed[] = 'template';
+        }
         $this->activity->updated('term', $term, $term->title($locale), array_map(strval(...), $changed));
 
         return $translation;

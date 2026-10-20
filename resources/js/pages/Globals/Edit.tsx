@@ -4,6 +4,7 @@ import { ArrowLeft, LoaderCircle } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
 import { Button, Card, CardContent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs, useEditLock, useUnsavedChanges, KeptEditsNotice, ViewingNotice } from '@sunrice/admin-sdk/ui';
 import { FieldInput } from '@/components/FieldInput.tsx';
+import { VersionConflict } from '@/components/VersionConflict.tsx';
 import { errorsAt } from '@/lib/builder.ts';
 import { localeName } from '@/lib/entries.ts';
 import type { FieldDefinition } from '@/types.ts';
@@ -20,18 +21,20 @@ interface Props {
     /** Fields shared by all languages: read-only outside the main one. */
     shared: string[];
     values: FieldValues;
+    /** The saved values' version, to refuse a save over someone else's newer one; null before the first save. */
+    version: number | null;
     can: { update: boolean };
 }
 
 export default function GlobalsEditPage(props: Props) {
     // A fresh form per language and after each save.
-    return <GlobalsEdit key={`${props.locale}:${JSON.stringify(props.values)}`} {...props} />;
+    return <GlobalsEdit key={`${props.locale}:${props.version}:${JSON.stringify(props.values)}`} {...props} />;
 }
 
-function GlobalsEdit({ set, fields, locale, locales, shared, values, can }: Props) {
+function GlobalsEdit({ set, fields, locale, locales, shared, values, version, can }: Props) {
     const url = adminUrl(`cms/globals/${set.handle}`);
     useBreadcrumbs([{ label: 'Globals', href: adminUrl('cms/globals') }, { label: set.title }]);
-    const form = useForm<{ locale: string; data: FieldValues }>({ locale, data: values });
+    const form = useForm<{ locale: string; data: FieldValues; version: number | null }>({ locale, data: values, version });
     const errors = form.errors as Record<string, string | undefined>;
     const mainLocale = locales[0];
     const lock = useEditLock({
@@ -40,6 +43,11 @@ function GlobalsEdit({ set, fields, locale, locales, shared, values, can }: Prop
     });
     const writable = can.update && !lock.readOnly;
     const save = () => form.processing || form.put(url, { preserveScroll: true });
+    // After "someone else saved": save over their version anyway.
+    const saveMine = () => {
+        form.transform((data) => ({ ...data, version: null }));
+        form.put(url, { preserveScroll: true });
+    };
     const loadKept = async (id: number) => {
         const kept = await lock.loadKept(id);
         if (kept.data && typeof kept.data === 'object') form.setData('data', kept.data as FieldValues);
@@ -80,6 +88,7 @@ function GlobalsEdit({ set, fields, locale, locales, shared, values, can }: Prop
             ) : (
                 <fieldset disabled={!writable} className="cms:flex cms:flex-col cms:gap-4">
                     <ViewingNotice by={lock.viewingBy} />
+                    <VersionConflict message={errors.version} processing={form.processing} onSaveMine={saveMine} />
                     <KeptEditsNotice kept={lock.kept} disabled={!writable} onLoad={(id: number) => void loadKept(id)} onDiscard={(id: number) => void lock.discardKept(id)} />
                     <Card>
                         <CardContent className="cms:flex cms:flex-col cms:gap-6">
