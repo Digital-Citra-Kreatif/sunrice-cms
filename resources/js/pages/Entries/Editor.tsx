@@ -1,10 +1,11 @@
 import * as React from 'react';
-import { Head, Link, router, useForm } from '@inertiajs/react';
-import { ArrowLeft, CalendarClock, ChevronDown, Copy, ExternalLink, Eye, LoaderCircle, Plus, RotateCcw, Trash2, Undo2 } from 'lucide-react';
+import { Head, router, useForm } from '@inertiajs/react';
+import { CalendarClock, ChevronDown, Copy, ExternalLink, Eye, LoaderCircle, Plus, RotateCcw, Trash2, Undo2 } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
     Badge, Button, Card, CardContent, CardHeader, CardTitle, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, Input, Label, Switch, useBreadcrumbs, useEditLock, useUnsavedChanges, KeptEditsNotice, ViewingNotice,
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, Input, KeptEditsNotice, Label, PageHeader,
+    Switch, useBreadcrumbs, useEditLock, useUnsavedChanges, ViewingNotice,
 } from '@sunrice/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
@@ -122,80 +123,79 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
             {confirmDialog}
             {lock.dialogs}
 
-            <div className="cms:flex cms:flex-wrap cms:items-center cms:justify-between cms:gap-4">
-                <div className="cms:flex cms:min-w-0 cms:items-center cms:gap-3">
-                    <Button variant="outline" size="icon" className="cms:size-8 cms:shrink-0" asChild>
-                        <Link href={list} aria-label={`Back to ${collection.title}`}><ArrowLeft /></Link>
-                    </Button>
-                    <h1 className="cms:truncate cms:text-2xl cms:font-medium cms:tracking-tight">{heading}</h1>
-                    {entry && <Badge variant={entry.status === 'published' ? 'default' : 'secondary'}>{entry.trashed ? 'In the trash' : statusLabel(entry.status)}</Badge>}
-                    {form.isDirty && <span className="cms:text-sm cms:text-muted-foreground">Unsaved changes</span>}
-                </div>
-                <div className="cms:flex cms:items-center cms:gap-2">
-                    {entry && !entry.trashed && (
-                        <Button type="button" variant="ghost" asChild>
-                            <a href={entry.previewUrl} target="_blank" rel="noopener noreferrer"
-                                title={form.isDirty ? 'Shows the saved draft: save first to see your changes.' : 'Shows the saved draft.'}>
-                                <Eye /> Preview
-                            </a>
-                        </Button>
-                    )}
-                    {entry?.url && (
-                        <Button type="button" variant="ghost" asChild>
-                            <a href={entry.url} target="_blank" rel="noopener noreferrer"><ExternalLink /> View</a>
-                        </Button>
-                    )}
-                    {entry?.trashed && can.delete && (
-                        <Button type="button" variant="outline" onClick={() => router.post(`${url}/restore`, {}, { preserveScroll: true })}>
-                            <RotateCcw /> Restore
-                        </Button>
-                    )}
-                    {entry?.trashed && can.delete && (
-                        <Button type="button" variant="outline" className="cms:text-destructive"
-                            onClick={() => confirm(`Delete "${values.title}" for good, in every language, with its revisions? This can't be undone.`, () => router.delete(`${url}/force`))}>
-                            <Trash2 /> Delete for good
-                        </Button>
-                    )}
-                    {entry && !entry.trashed && can.create && (
-                        <Button type="button" variant="ghost" title="Copy every language as a new draft" onClick={() => router.post(`${url}/duplicate`)}>
-                            <Copy /> Duplicate
-                        </Button>
-                    )}
-                    {entry && !entry.trashed && can.delete && !lock.readOnly && (
-                        <Button type="button" variant="outline" size="icon" className="cms:text-destructive" aria-label="Move to the trash"
-                            onClick={() => confirm(`Move "${values.title}" to the trash? It comes off the site; you can restore it.`, () => router.delete(url))}>
-                            <Trash2 />
-                        </Button>
-                    )}
-                    {writable && (
-                        <Button type="submit" variant={entry && can.publish ? 'outline' : 'default'} disabled={form.processing}>
-                            {form.processing && <LoaderCircle className="cms:animate-spin" />}
-                            {entry ? 'Save draft' : 'Create draft'}
-                        </Button>
-                    )}
-                    {entry && !entry.trashed && can.publish && !lock.readOnly && (
-                        <div className="cms:flex">
-                            <Button type="button" className="cms:rounded-r-none" disabled={form.processing || upToDate} onClick={() => publish()}>
-                                {entry.status === 'draft' ? 'Publish' : upToDate ? 'Published' : 'Publish changes'}
+            <PageHeader
+                title={heading}
+                back={{ href: list, label: `Back to ${collection.title}` }}
+                actions={
+                    <>
+                        {entry && !entry.trashed && (
+                            <Button type="button" variant="ghost" asChild>
+                                <a href={entry.previewUrl} target="_blank" rel="noopener noreferrer"
+                                    title={form.isDirty ? 'Shows the saved draft: save first to see your changes.' : 'Shows the saved draft.'}>
+                                    <Eye /> Preview
+                                </a>
                             </Button>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button type="button" size="icon" className="cms:rounded-l-none cms:border-l cms:border-primary-foreground/20" aria-label="More publishing options"><ChevronDown /></Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onSelect={() => setScheduling(true)}><CalendarClock /> Publish on a date…</DropdownMenuItem>
-                                    {entry.status !== 'draft' && (
-                                        <>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuItem onSelect={() => router.post(`${url}/unpublish`, locale, { preserveScroll: true })}>Unpublish</DropdownMenuItem>
-                                        </>
-                                    )}
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
-                    )}
-                </div>
-            </div>
+                        )}
+                        {entry?.url && (
+                            <Button type="button" variant="ghost" asChild>
+                                <a href={entry.url} target="_blank" rel="noopener noreferrer"><ExternalLink /> View</a>
+                            </Button>
+                        )}
+                        {entry?.trashed && can.delete && (
+                            <Button type="button" variant="outline" onClick={() => router.post(`${url}/restore`, {}, { preserveScroll: true })}>
+                                <RotateCcw /> Restore
+                            </Button>
+                        )}
+                        {entry?.trashed && can.delete && (
+                            <Button type="button" variant="outline" className="cms:text-destructive"
+                                onClick={() => confirm(`Delete "${values.title}" for good, in every language, with its revisions? This can't be undone.`, () => router.delete(`${url}/force`))}>
+                                <Trash2 /> Delete for good
+                            </Button>
+                        )}
+                        {entry && !entry.trashed && can.create && (
+                            <Button type="button" variant="ghost" title="Copy every language as a new draft" onClick={() => router.post(`${url}/duplicate`)}>
+                                <Copy /> Duplicate
+                            </Button>
+                        )}
+                        {entry && !entry.trashed && can.delete && !lock.readOnly && (
+                            <Button type="button" variant="outline" size="icon" className="cms:text-destructive" aria-label="Move to the trash"
+                                onClick={() => confirm(`Move "${values.title}" to the trash? It comes off the site; you can restore it.`, () => router.delete(url))}>
+                                <Trash2 />
+                            </Button>
+                        )}
+                        {writable && (
+                            <Button type="submit" variant={entry && can.publish ? 'outline' : 'default'} disabled={form.processing}>
+                                {form.processing && <LoaderCircle className="cms:animate-spin" />}
+                                {entry ? 'Save draft' : 'Create draft'}
+                            </Button>
+                        )}
+                        {entry && !entry.trashed && can.publish && !lock.readOnly && (
+                            <div className="cms:flex">
+                                <Button type="button" className="cms:rounded-r-none" disabled={form.processing || upToDate} onClick={() => publish()}>
+                                    {entry.status === 'draft' ? 'Publish' : upToDate ? 'Published' : 'Publish changes'}
+                                </Button>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button type="button" size="icon" className="cms:rounded-l-none cms:border-l cms:border-primary-foreground/20" aria-label="More publishing options"><ChevronDown /></Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onSelect={() => setScheduling(true)}><CalendarClock /> Publish on a date…</DropdownMenuItem>
+                                        {entry.status !== 'draft' && (
+                                            <>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem onSelect={() => router.post(`${url}/unpublish`, locale, { preserveScroll: true })}>Unpublish</DropdownMenuItem>
+                                            </>
+                                        )}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+                        )}
+                    </>
+                }
+            >
+                {entry && <Badge variant={entry.status === 'published' ? 'default' : 'secondary'}>{entry.trashed ? 'In the trash' : statusLabel(entry.status)}</Badge>}
+                {form.isDirty && <span className="cms:text-sm cms:text-muted-foreground">Unsaved changes</span>}
+            </PageHeader>
 
             {entry && locales.length > 1 && (
                 <LanguageBar entryUrl={url} current={entry.locale} locales={locales} canAdd={can.create && !entry.trashed}

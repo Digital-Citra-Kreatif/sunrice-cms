@@ -3,7 +3,7 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import { ArrowDown, ArrowUp, FileText, Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
-    Button, Card, CardContent, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs,
+    Button, Card, CardContent, Input, Label, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs,
 } from '@sunrice/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { FieldError } from '@/components/FieldInput.tsx';
@@ -41,8 +41,7 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
         return (
             <div className="cms:flex cms:flex-col cms:gap-4">
                 <Head title="Terms" />
-                <h1 className="cms:text-2xl cms:font-medium cms:tracking-tight">Terms</h1>
-                <p className="cms:text-muted-foreground">There are no taxonomies yet. Create one under Structure → Taxonomies (categories, tags…), then add its terms here.</p>
+                <PageHeader title="Terms" description="There are no taxonomies yet. Create one under Structure → Taxonomies (categories, tags…), then add its terms here." />
             </div>
         );
     }
@@ -52,24 +51,29 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
         <div className="cms:flex cms:max-w-4xl cms:flex-col cms:gap-6">
             <Head title={taxonomy.title} />
             {confirmDialog}
-            <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-3">
-                <h1 className="cms:text-2xl cms:font-medium cms:tracking-tight">{taxonomy.title}</h1>
+            <PageHeader
+                title={taxonomy.title}
+                actions={
+                    <>
+                        <Button variant={trashed ? 'secondary' : 'ghost'} size="sm" onClick={() => router.get(base, { locale, ...(trashed ? {} : { trashed: 1 }) })}>
+                            {trashed ? 'Back to terms' : 'Trash'}
+                        </Button>
+                        {locales.length > 1 && (
+                            <Select value={locale} onValueChange={(next: string) => router.get(base, { locale: next, ...(trashed ? { trashed: 1 } : {}) })}>
+                                <SelectTrigger className="cms:w-48" aria-label="Language"><SelectValue /></SelectTrigger>
+                                <SelectContent>{locales.map((code) => <SelectItem key={code} value={code}>{localeName(code)}</SelectItem>)}</SelectContent>
+                            </Select>
+                        )}
+                    </>
+                }
+            >
                 {taxonomies.length > 1 && (
                     <Select value={taxonomy.handle} onValueChange={(handle: string) => router.get(adminUrl(`cms/taxonomies/${handle}/terms`))}>
                         <SelectTrigger className="cms:w-48" aria-label="Taxonomy"><SelectValue /></SelectTrigger>
                         <SelectContent>{taxonomies.map((t) => <SelectItem key={t.handle} value={t.handle}>{t.title}</SelectItem>)}</SelectContent>
                     </Select>
                 )}
-                <Button variant={trashed ? 'secondary' : 'ghost'} size="sm" className="cms:ml-auto" onClick={() => router.get(base, { locale, ...(trashed ? {} : { trashed: 1 }) })}>
-                    {trashed ? 'Back to terms' : 'Trash'}
-                </Button>
-                {locales.length > 1 && (
-                    <Select value={locale} onValueChange={(next: string) => router.get(base, { locale: next, ...(trashed ? { trashed: 1 } : {}) })}>
-                        <SelectTrigger className="cms:w-48" aria-label="Language"><SelectValue /></SelectTrigger>
-                        <SelectContent>{locales.map((code) => <SelectItem key={code} value={code}>{localeName(code)}</SelectItem>)}</SelectContent>
-                    </Select>
-                )}
-            </div>
+            </PageHeader>
 
             {!trashed && <Card>
                 <CardContent>

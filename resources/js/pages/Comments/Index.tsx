@@ -3,8 +3,8 @@ import { Head, router } from '@inertiajs/react';
 import { Check, ChevronLeft, ChevronRight, ExternalLink, MessageSquareReply, Pencil, RotateCcw, ShieldAlert, Trash2, Undo2 } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
-    Badge, Button, Card, Checkbox, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input,
-    Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsList, TabsTrigger, Textarea, useBreadcrumbs,
+    Badge, Button, Card, Checkbox, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input, PageHeader, Select,
+    SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsList, TabsTrigger, Textarea, useBreadcrumbs,
 } from '@sunrice/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { FieldError } from '@/components/FieldInput.tsx';
@@ -77,22 +77,24 @@ export default function CommentsIndex({ tab, counts, filters, collections, comme
     return (
         <div className="cms:flex cms:flex-col cms:gap-6">
             <Head title="Comments" />
-            <div className="cms:flex cms:flex-wrap cms:items-center cms:justify-between cms:gap-4">
-                <h1 className="cms:text-2xl cms:font-medium cms:tracking-tight">Comments</h1>
-                <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
-                    <Input type="search" placeholder="Search text, name or email" aria-label="Search comments" className="cms:w-64"
-                        value={search} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)} />
-                    {collections.length > 1 && (
-                        <Select value={filters.collection ?? 'all'} onValueChange={(value: string) => visit({ collection: value === 'all' ? null : value })}>
-                            <SelectTrigger className="cms:w-48" aria-label="Collection"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Every collection</SelectItem>
-                                {collections.map((c) => <SelectItem key={c.handle} value={c.handle}>{c.title}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                    )}
-                </div>
-            </div>
+            <PageHeader
+                title="Comments"
+                actions={
+                    <>
+                        <Input type="search" placeholder="Search text, name or email" aria-label="Search comments" className="cms:w-64"
+                            value={search} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)} />
+                        {collections.length > 1 && (
+                            <Select value={filters.collection ?? 'all'} onValueChange={(value: string) => visit({ collection: value === 'all' ? null : value })}>
+                                <SelectTrigger className="cms:w-48" aria-label="Collection"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Every collection</SelectItem>
+                                    {collections.map((c) => <SelectItem key={c.handle} value={c.handle}>{c.title}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        )}
+                    </>
+                }
+            />
 
             {filters.entry !== null && (
                 <p className="cms:text-sm cms:text-muted-foreground">

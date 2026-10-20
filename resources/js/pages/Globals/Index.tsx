@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { adminUrl } from '@sunrice/admin-sdk';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, useBreadcrumbs } from '@sunrice/admin-sdk/ui';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, PageHeader, useBreadcrumbs } from '@sunrice/admin-sdk/ui';
 
 export default function GlobalsIndex({ sets }: { sets: { handle: string; title: string; blueprint: string | null }[] }) {
     useBreadcrumbs([{ label: 'Globals' }]);
@@ -8,10 +8,7 @@ export default function GlobalsIndex({ sets }: { sets: { handle: string; title: 
     return (
         <div className="cms:flex cms:flex-col cms:gap-6">
             <Head title="Globals" />
-            <div>
-                <h1 className="cms:text-2xl cms:font-medium cms:tracking-tight">Globals</h1>
-                <p className="cms:text-sm cms:text-muted-foreground">Values the whole site uses, like contact details and footer text.</p>
-            </div>
+            <PageHeader title="Globals" description="Values the whole site uses, like contact details and footer text." />
             {sets.length === 0 && <p className="cms:text-muted-foreground">There are no global sets yet. Create one under Structure → Global sets.</p>}
             <div className="cms:grid cms:gap-4 cms:sm:grid-cols-2 cms:lg:grid-cols-3">
                 {sets.map((set) => (

@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowDown, ArrowLeft, ArrowUp, IndentDecrease, IndentIncrease, Link2, List, LoaderCircle, Plus, Tag, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, IndentDecrease, IndentIncrease, Link2, List, LoaderCircle, Plus, Tag, Trash2 } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
-    Badge, Button, Card, Checkbox, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input, Label,
+    Badge, Button, Card, Checkbox, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input, Label, PageHeader,
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs, useUnsavedChanges,
 } from '@sunrice/admin-sdk/ui';
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
@@ -52,24 +52,21 @@ export default function MenuEdit({ menu, items: initial, locales, limits, terms,
     return (
         <form onSubmit={save} className="cms:flex cms:max-w-4xl cms:flex-col cms:gap-6">
             <Head title={menu.title} />
-            <div className="cms:flex cms:flex-wrap cms:items-center cms:justify-between cms:gap-4">
-                <div className="cms:flex cms:min-w-0 cms:items-center cms:gap-3">
-                    <Button variant="outline" size="icon" className="cms:size-8 cms:shrink-0" asChild>
-                        <Link href={adminUrl('cms/menus')} aria-label="Back to menus"><ArrowLeft /></Link>
-                    </Button>
-                    <h1 className="cms:truncate cms:text-2xl cms:font-medium cms:tracking-tight">{menu.title}</h1>
-                    {dirty && <span className="cms:text-sm cms:text-muted-foreground">Unsaved changes</span>}
-                </div>
-                {can.update && (
-                    <div className="cms:flex cms:gap-2">
+            <PageHeader
+                title={menu.title}
+                back={{ href: adminUrl('cms/menus'), label: 'Back to menus' }}
+                actions={can.update && (
+                    <>
                         <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('entry')}><Plus /> Entry</Button>
                         {terms.length > 0 && <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('term')}><Tag /> Term</Button>}
                         {listings.length > 0 && <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('listing')}><List /> Listing</Button>}
                         <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('url')}><Link2 /> Link</Button>
                         <Button type="submit" disabled={form.processing}>{form.processing && <LoaderCircle className="cms:animate-spin" />} Save</Button>
-                    </div>
+                    </>
                 )}
-            </div>
+            >
+                {dirty && <span className="cms:text-sm cms:text-muted-foreground">Unsaved changes</span>}
+            </PageHeader>
             <FieldError message={errors.items} />
             {Object.keys(errors).some((key) => key.startsWith('items.')) && (
                 <p role="alert" className="cms:text-sm cms:text-destructive">Some links need fixing: {Object.values(errors).filter(Boolean)[0]}</p>
