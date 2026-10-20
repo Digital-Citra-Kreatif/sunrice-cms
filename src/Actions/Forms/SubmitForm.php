@@ -53,8 +53,9 @@ final class SubmitForm
         ]);
 
         $addresses = array_values(array_filter($form->notify ?? [], fn (string $address): bool => filter_var($address, FILTER_VALIDATE_EMAIL) !== false));
-        if ($addresses !== []) {
-            Mail::to($addresses)->queue(new SubmissionReceived($submission));
+        // One email each: the addresses aren't shown to each other.
+        foreach ($addresses as $address) {
+            Mail::to($address)->queue(new SubmissionReceived($submission));
         }
 
         return $submission;
