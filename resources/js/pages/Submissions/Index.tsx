@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { Head, router } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight, Download, Trash2 } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import { ChevronLeft, ChevronRight, Download, Inbox, Plus, Trash2 } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
     Button, Card, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, PageHeader, Select, SelectContent, SelectItem,
@@ -23,12 +23,14 @@ interface Props {
     forms: { handle: string; title: string; count: number }[];
     submissions: { data: Row[]; total: number; from: number | null; to: number | null; prev_page_url: string | null; next_page_url: string | null } | null;
     can: { delete: boolean; export: boolean };
+    /** No forms yet: where to create one (for those who may), relative to the panel. */
+    createForm?: string | null;
 }
 
 /** Columns the list shows; the rest are in the submission's dialog. */
 const COLUMNS = 3;
 
-export default function SubmissionsIndex({ form, forms, submissions, can }: Props) {
+export default function SubmissionsIndex({ form, forms, submissions, can, createForm = null }: Props) {
     useBreadcrumbs([{ label: 'Submissions', href: adminUrl('cms/submissions') }, ...(form ? [{ label: form.title }] : [])]);
     const [open, setOpen] = React.useState<Row | null>(null);
     const [confirm, confirmDialog] = useConfirm();
@@ -37,7 +39,17 @@ export default function SubmissionsIndex({ form, forms, submissions, can }: Prop
         return (
             <div className="cms:flex cms:flex-col cms:gap-4">
                 <Head title="Submissions" />
-                <PageHeader title="Submissions" description="There are no forms yet. Create one under Structure → Forms and put it on a page; what visitors send shows up here." />
+                <PageHeader title="Submissions" description="What visitors send through the site's forms." />
+                <Card className="cms:flex cms:flex-col cms:items-center cms:gap-3 cms:px-6 cms:py-14 cms:text-center">
+                    <Inbox className="cms:size-8 cms:text-muted-foreground" />
+                    <div className="cms:flex cms:flex-col cms:gap-1">
+                        <p className="cms:font-medium">No forms yet</p>
+                        <p className="cms:max-w-sm cms:text-sm cms:text-muted-foreground">
+                            {createForm ? 'Create a form, put it on a page, and what visitors send shows up here.' : 'Once someone creates a form and puts it on a page, what visitors send shows up here.'}
+                        </p>
+                    </div>
+                    {createForm && <Button asChild><Link href={adminUrl(createForm)}><Plus /> Create a form</Link></Button>}
+                </Card>
             </div>
         );
     }
