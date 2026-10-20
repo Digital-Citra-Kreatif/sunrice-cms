@@ -10,6 +10,11 @@ return [
      */
     'locales' => array_values(array_filter(explode(',', (string) env('SUNRICE_LOCALES', (string) env('APP_LOCALE', 'en'))))),
 
+    // Their names, by code (['id' => 'Bahasa Indonesia']); others are
+    // named in English ("Indonesian"). Settings → Languages, once saved,
+    // replaces both.
+    'locale_names' => [],
+
     'site' => [
         // Serve entries at their collections' routes. The CMS's route is
         // the app's fallback: the app's own routes always come first.

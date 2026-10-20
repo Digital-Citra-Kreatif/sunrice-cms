@@ -65,6 +65,8 @@ final class CmsServiceProvider extends ServiceProvider
         $this->app->scoped(Menus::class);
         $this->app->scoped(Site\Site::class);
         $this->app->scoped(Support\SiteCache::class);
+        // Read by Locales all the time: once per request.
+        $this->app->scoped(Settings\LocaleSettings::class);
         $this->app->singleton(Site\PageCache::class);
     }
 
@@ -103,6 +105,14 @@ final class CmsServiceProvider extends ServiceProvider
         Event::listen(SettingsSaved::class, function (SettingsSaved $event): void {
             if ($event->section === Settings\SiteSettings::key() && app()->resolved(Site\Site::class)) {
                 app(Site\Site::class)->flush();
+            }
+        });
+        // Other languages: every address may have changed.
+        Event::listen(SettingsSaved::class, function (SettingsSaved $event): void {
+            if ($event->section === Settings\LocaleSettings::key()) {
+                app()->forgetInstance(Settings\LocaleSettings::class);
+                app()->forgetInstance(Site\Site::class);
+                app(Support\SiteCache::class)->changed('languages');
             }
         });
         // Code on every page is a way in: changing it is a security event, and alerts.

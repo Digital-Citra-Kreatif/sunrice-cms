@@ -280,7 +280,7 @@ final class EntryController
      * The site's languages with the entry's state in each: its status, or
      * null where it has no translation yet.
      *
-     * @return list<array{code: string, main: bool, status: string|null}>
+     * @return list<array{code: string, name: string, main: bool, status: string|null}>
      */
     private static function locales(Entry $entry): array
     {
@@ -288,6 +288,7 @@ final class EntryController
 
         return array_map(fn (string $code): array => [
             'code' => $code,
+            'name' => Locales::name($code),
             'main' => $main?->locale === $code,
             'status' => ($translation = $entry->translation($code)) === null ? null : $translation->status(),
         ], Locales::all());

@@ -7,7 +7,7 @@ import {
     Badge, Button, Card, Checkbox, Input, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableBody, TableCell,
     TableHead, TableHeader, TableRow, useBreadcrumbs,
 } from '@sunrice/admin-sdk/ui';
-import { type EntryLocale, type EntryStatus, formatDate, statusLabel } from '@/lib/entries.ts';
+import { type EntryLocale, type EntryStatus, formatDate, localeName, statusLabel } from '@/lib/entries.ts';
 
 interface Row {
     id: number;
@@ -163,7 +163,7 @@ export default function EntriesIndex({ collection, collections, entries, query, 
                                         {row.locales.length > 1 && row.locales.filter((l) => !l.main).map((l) => (
                                             <Badge key={l.code} variant={l.status === 'published' ? 'default' : 'outline'}
                                                 className={l.status === null ? 'cms:opacity-50' : ''}
-                                                title={`${l.code}: ${l.status === null ? 'not translated' : statusLabel(l.status)}`}>
+                                                title={`${l.name ?? localeName(l.code)}: ${l.status === null ? 'not translated' : statusLabel(l.status)}`}>
                                                 {l.code.toUpperCase()}
                                             </Badge>
                                         ))}

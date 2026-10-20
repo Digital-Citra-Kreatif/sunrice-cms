@@ -316,7 +316,7 @@ function LanguageBar({ entryUrl, current, locales, canAdd, canRemove, onRemove }
     return (
         <nav aria-label="Languages" className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
             {locales.map((l) => {
-                const name = `${localeName(l.code)}${l.main ? ' (main)' : ''}`;
+                const name = `${l.name ?? localeName(l.code)}${l.main ? ' (main)' : ''}`;
                 if (l.status === null) {
                     return canAdd ? (
                         <Button key={l.code} type="button" variant="outline" size="sm" className="cms:border-dashed"
