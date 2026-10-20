@@ -35,6 +35,7 @@ use Sunrice\Cms\Support\SearchText;
  * @property array<string, mixed> $draft_data
  * @property Carbon|null $published_at
  * @property int $version
+ * @property int|null $main_version the main translation's version when this one was made or last saved (another language than the main one)
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Entry $entry
@@ -70,7 +71,7 @@ class EntryTranslation extends Model
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['data' => 'array', 'draft_data' => 'array', 'published_at' => 'datetime', 'version' => 'integer'];
+        return ['data' => 'array', 'draft_data' => 'array', 'published_at' => 'datetime', 'version' => 'integer', 'main_version' => 'integer'];
     }
 
     /** @return BelongsTo<Entry, $this> */
@@ -133,6 +134,32 @@ class EntryTranslation extends Model
     public function isMain(): bool
     {
         return $this->entry->mainTranslation()?->is($this) ?? true;
+    }
+
+    /**
+     * Another language than the main one, whose main translation changed
+     * (its version moved on) since this one was made, saved or published.
+     */
+    public function isOutdated(): bool
+    {
+        if ($this->main_version === null) {
+            return false;
+        }
+        $main = $this->entry->mainTranslation();
+
+        return $main !== null && ! $main->is($this) && $main->version > $this->main_version;
+    }
+
+    /** The main translation's version as stored now, to keep in main_version; null on the main translation. */
+    public function currentMainVersion(): ?int
+    {
+        $main = $this->entry->mainTranslation();
+        if ($main === null || $main->is($this)) {
+            return null;
+        }
+        $version = self::query()->whereKey($main->id)->value('version');
+
+        return is_numeric($version) ? (int) $version : $main->version;
     }
 
     /**

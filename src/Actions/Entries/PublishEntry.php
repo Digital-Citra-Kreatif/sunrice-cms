@@ -64,7 +64,13 @@ final class PublishEntry
                 'published_at' => $publishAt !== null ? Carbon::instance($publishAt) : ($translation->published_at ?? now()),
                 // Counted up too, so an editor opened before this publish can't save over it unknowingly.
                 'version' => $translation->version + 1,
-            ])->save();
+            ]);
+            // Another language is up to date with the main one as it is now (EntryTranslation::isOutdated()).
+            $mainVersion = $translation->currentMainVersion();
+            if ($mainVersion !== null) {
+                $translation->main_version = $mainVersion;
+            }
+            $translation->save();
             $id = Auth::id();
             $translation->revisions()->create([
                 'user_id' => is_int($id) ? $id : null,

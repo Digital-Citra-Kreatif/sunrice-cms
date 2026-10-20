@@ -50,6 +50,8 @@ final class CreateTranslation
                 'draft_slug' => $slug,
                 // Only the translated fields: the shared ones stay the main translation's.
                 'draft_data' => array_diff_key($main->draft_data, array_flip($entry->collection->schema()->shared())),
+                // Up to date with the main language until that changes.
+                'main_version' => $main->version,
             ]);
         });
         $entry->unsetRelation('translations');
