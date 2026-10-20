@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Translation\Translator;
 use Illuminate\View\Compilers\BladeCompiler;
 use RuntimeException;
 use Spatie\Honeypot\ProtectAgainstSpam;
@@ -74,6 +75,13 @@ final class CmsServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(dirname(__DIR__).'/database/migrations');
         $this->loadViewsFrom(dirname(__DIR__).'/resources/views', 'sunrice-cms');
+        // What visitors read (sunrice-cms::site.*), and Indonesian for Laravel's own lines the app hasn't got.
+        $this->loadTranslationsFrom(dirname(__DIR__).'/resources/lang', 'sunrice-cms');
+        $this->callAfterResolving('translator', function (mixed $translator): void {
+            if ($translator instanceof Translator) {
+                Support\CoreTranslations::register($translator);
+            }
+        });
         // <x-sunrice-cms::entries> and <x-sunrice-cms::terms> (the others are anonymous views).
         $this->callAfterResolving('blade.compiler', function (BladeCompiler $blade): void {
             $blade->component(View\Components\Entries::class, 'sunrice-cms::entries');

@@ -30,7 +30,7 @@ final class CommentReplied extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: __(':name replied to your comment', ['name' => $this->reply->authorName()]));
+        return new Envelope(subject: __('sunrice-cms::site.comments.replied_subject', ['name' => $this->reply->authorName()]));
     }
 
     public function content(): Content

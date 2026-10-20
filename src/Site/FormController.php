@@ -39,7 +39,7 @@ final class FormController
         try {
             // The captcha first: nothing else is looked at until it's passed.
             if ($form->captcha && ! $captcha->passes($request)) {
-                throw ValidationException::withMessages([self::CAPTCHA => Lang::get('Please confirm you\'re not a robot, then send the form again.', [], $locale)]);
+                throw ValidationException::withMessages([self::CAPTCHA => Lang::get('sunrice-cms::site.captcha', [], $locale)]);
             }
             $submit->handle($form, $request->except(['_token', 'locale', $captcha->field()]), $locale);
         } catch (ValidationException $e) {

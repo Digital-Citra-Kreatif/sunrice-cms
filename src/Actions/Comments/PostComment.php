@@ -43,10 +43,10 @@ final class PostComment
     {
         $locale = $locale !== null && Locales::has($locale) ? $locale : Locales::default();
         if (! $entry->acceptsComments()) {
-            throw ValidationException::withMessages(['body' => Lang::get('Comments are closed.', [], $locale)]);
+            throw ValidationException::withMessages(['body' => Lang::get('sunrice-cms::site.comments.closed', [], $locale)]);
         }
         if ($user === null && $this->settings->signedInOnly) {
-            throw ValidationException::withMessages(['body' => Lang::get('Sign in to comment.', [], $locale)]);
+            throw ValidationException::withMessages(['body' => Lang::get('sunrice-cms::site.comments.sign_in', [], $locale)]);
         }
         $guest = $user === null;
         /** @var array{body: string, parent_id?: int|string|null, author_name?: string, author_email?: string, notify_replies?: bool|string|null} $valid */
@@ -62,7 +62,7 @@ final class PostComment
         if (($valid['parent_id'] ?? null) !== null) {
             $parent = Comment::query()->where('entry_id', $entry->id)->approved()->find((int) $valid['parent_id']);
             if ($parent === null) {
-                throw ValidationException::withMessages(['parent_id' => Lang::get('The comment you replied to is gone.', [], $locale)]);
+                throw ValidationException::withMessages(['parent_id' => Lang::get('sunrice-cms::site.comments.parent_gone', [], $locale)]);
             }
         }
         $moderator = $user !== null && Gate::forUser($user)->allows('cms.comments.moderate');
