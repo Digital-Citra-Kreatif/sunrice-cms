@@ -2,15 +2,12 @@ import * as React from 'react';
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react';
 import {
     Badge, Button, Checkbox, DatePicker, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input, Label, MediaPickerInput,
-    Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Skeleton, Switch, Textarea,
+    RichTextEditor, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Switch, Textarea,
 } from '@sunrice/admin-sdk/ui';
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
 import { errorsAt, move } from '@/lib/builder.ts';
 import { asRecord, dateInputValue, dateValueFromInput, newBlock, newRow } from '@/lib/values.ts';
 import type { Errors, FieldDefinition, Option } from '@/types.ts';
-
-/** The rich text editor (ProseMirror) is large: loaded when a rich text field shows. */
-const RichTextEditor = React.lazy(() => import('@/components/RichTextEditor.tsx').then((m) => ({ default: m.RichTextEditor })));
 
 /** Radix's Select can't hold an empty value, so "none" is this. */
 const NONE = '__none';
@@ -91,11 +88,8 @@ function Control({ field, value, onChange, errors, id, content }: Props) {
             return <Textarea id={id} aria-invalid={invalid} value={typeof value === 'string' ? value : ''} rows={numberConfig(field, 'rows') ?? 4}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)} />;
         case 'rich_text':
-            return (
-                <React.Suspense fallback={<Skeleton className="cms:h-48 cms:w-full" />}>
-                    <RichTextEditor id={id} labelledBy={`${id}-label`} invalid={invalid} value={typeof value === 'string' ? value : ''} onChange={onChange} />
-                </React.Suspense>
-            );
+            // The panel's editor; its code loads when the first one shows.
+            return <RichTextEditor id={id} labelledBy={`${id}-label`} invalid={invalid} value={typeof value === 'string' ? value : ''} onChange={onChange} />;
         case 'number':
             return (
                 <Input
