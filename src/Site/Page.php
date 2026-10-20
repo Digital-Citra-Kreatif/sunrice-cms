@@ -15,7 +15,8 @@ use Sunrice\Cms\Support\Locales;
  * The site page being shown, for layouts: `Cms::page()` (null outside the
  * CMS's pages), `Cms::bodyClass()` and `Cms::localeUrls()`. `$fallback`:
  * the entry or term is the main language's, shown in a language it isn't
- * translated into (`$locale`).
+ * translated into (`$locale`). `$draft`: an editor looking at the live
+ * page's unpublished changes (`?draft`; `$preview` too).
  *
  * @api
  */
@@ -45,6 +46,7 @@ final readonly class Page
         public bool $home = false,
         public int $pageNumber = 1,
         public bool $fallback = false,
+        public bool $draft = false,
     ) {}
 
     public static function current(): ?self
@@ -63,7 +65,7 @@ final readonly class Page
     /**
      * Classes for the <body>, so CSS and scripts can target a kind of page:
      *
-     *   entry     page-entry collection-{handle} entry-{id} entry-{slug} [home] [has-parent parent-{id}] [is-preview]
+     *   entry     page-entry collection-{handle} entry-{id} entry-{slug} [home] [has-parent parent-{id}] [is-preview | is-draft]
      *   listing   page-listing collection-{handle} [paged paged-{n}]
      *   term      page-term taxonomy-{handle} term-{id} term-{slug} [paged paged-{n}]
      *   search    page-search [paged paged-{n}]
@@ -94,7 +96,9 @@ final readonly class Page
         if ($this->pageNumber > 1) {
             array_push($own, 'paged', 'paged-'.$this->pageNumber);
         }
-        if ($this->preview) {
+        if ($this->draft) {
+            $own[] = 'is-draft';
+        } elseif ($this->preview) {
             $own[] = 'is-preview';
         }
         $own[] = 'template-'.str_replace(['::', '.', '/'], '-', $this->view);

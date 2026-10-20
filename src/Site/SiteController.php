@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Site;
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
+use Sunrice\Admin\Panel;
 use Sunrice\Cms\Actions\Entries\SaveEntrySettings;
 use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\HydrationContext;
@@ -15,6 +18,7 @@ use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Settings\SiteSettings;
+use Sunrice\Cms\Support\Access;
 
 /**
  * Renders entries on the site: the fallback route (paths no app route
@@ -60,7 +64,51 @@ final class SiteController
             return redirect()->to(self::withQuery($redirect->to_url, $request), $redirect->status);
         }
 
+        // Editors signed in to the panel see the unpublished changes on the page itself.
+        if ($translation->locale === $locale && self::seesDrafts($translation)) {
+            if ($translation->hasUnpublishedChanges()) {
+                $draft = $request->query->has('draft');
+
+                return $this->withDraftBanner($this->render($translation, preview: $draft, draft: $draft), $translation, $draft);
+            }
+        }
+
         return $this->render($translation, preview: false, locale: $locale);
+    }
+
+    /** Signed in to the panel with cms.entries.view-drafts, and may see the entry's collection. */
+    private static function seesDrafts(EntryTranslation $translation): bool
+    {
+        $user = auth(app(Panel::class)->getGuard())->user();
+
+        return $user instanceof Authorizable && $user->can('cms.entries.view-drafts') && Access::entries($user, 'view', $translation->entry->collection);
+    }
+
+    /** The draft banner after <body>, whatever the template; and never kept by any cache. */
+    private function withDraftBanner(Response $response, EntryTranslation $translation, bool $draft): Response
+    {
+        $live = $translation->url();
+        $banner = view('sunrice-cms::draft-banner', [
+            'entry' => $translation,
+            'draft' => $draft,
+            'liveUrl' => $live,
+            'draftUrl' => $live === null ? null : $live.'?draft',
+            'editUrl' => Route::has('sunrice.admin.cms.entries.edit') ? route('sunrice.admin.cms.entries.edit', [$translation->entry_id, 'locale' => $translation->locale]) : null,
+        ])->render();
+        $content = (string) $response->getContent();
+        $content = preg_match('/<body\b[^>]*>/i', $content) === 1
+            ? (string) preg_replace_callback('/<body\b[^>]*>/i', fn (array $m): string => $m[0].$banner, $content, 1)
+            : $banner.$content;
+        $view = $response->getOriginalContent();
+        $response->setContent($content);
+        // Still the view the page was rendered from, for whoever inspects the response.
+        $response->original = $view;
+        $response->headers->set('Cache-Control', 'private, no-store');
+        if ($draft) {
+            $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
+        }
+
+        return $response;
     }
 
     /** A draft as it would look, from the editor's signed, expiring link. */
@@ -81,7 +129,7 @@ final class SiteController
     }
 
     /** @param  string|null  $locale  the page's language: another than the translation's when it stands in for one */
-    private function render(EntryTranslation $translation, bool $preview, ?string $locale = null): Response
+    private function render(EntryTranslation $translation, bool $preview, ?string $locale = null, bool $draft = false): Response
     {
         $locale ??= $translation->locale;
         $fallback = $locale !== $translation->locale;
@@ -89,7 +137,7 @@ final class SiteController
         $collection = $translation->entry->collection;
         $view = self::view($collection->handle, $collection->template, $translation->entry->template);
         (new Page(Page::ENTRY, $locale, $view, entry: $translation, collection: $collection, preview: $preview,
-            home: app(Site::class)->isHomepage($translation), fallback: $fallback))->share();
+            home: app(Site::class)->isHomepage($translation), fallback: $fallback, draft: $draft))->share();
 
         return $this->hidden(response()->view($view, [
             'entry' => $translation,
@@ -100,6 +148,7 @@ final class SiteController
             'collection' => $collection,
             'locale' => $locale,
             'preview' => $preview,
+            'draft' => $draft,
             // The main language's content, in a language it isn't translated into.
             'fallback' => $fallback,
         ]));

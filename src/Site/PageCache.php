@@ -63,8 +63,8 @@ final class PageCache
     /** Whether the page just rendered may be kept. */
     public function keeps(Request $request, ?Page $page): bool
     {
-        // Search results: as many pages as searches.
-        return $page?->type !== Page::SEARCH && ! $this->skipped($request, $page);
+        // Search results: as many pages as searches. Drafts and previews: never.
+        return $page?->type !== Page::SEARCH && $page?->preview !== true && ! $this->skipped($request, $page);
     }
 
     private function skipped(Request $request, ?Page $page): bool
