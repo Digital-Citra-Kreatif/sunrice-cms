@@ -6,8 +6,8 @@ function ss() {
 }
 function gt(t) {
   const a = ss();
-  if (a.version !== 2)
-    throw new Error(`[sunrice] This plugin was built for admin runtime 2, but the panel runs ${a.version}. Rebuild it with a matching @sunrice/admin-sdk.`);
+  if (a.version !== 3)
+    throw new Error(`[sunrice] This plugin was built for admin runtime 3, but the panel runs ${a.version}. Rebuild it with a matching @sunrice/admin-sdk.`);
   for (const [l, c] of Object.entries(t.pages ?? {}))
     a.registerPage(l, c);
 }
