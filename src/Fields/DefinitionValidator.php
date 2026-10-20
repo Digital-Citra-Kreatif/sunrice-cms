@@ -87,6 +87,16 @@ final class DefinitionValidator
                     $fail("\"{$name}\" can't be used as an extra rule. Use one of: ".implode(', ', self::RULES).'.');
                 }
             }];
+            $own = is_array($field) ? ($field['handle'] ?? null) : null;
+            $siblings = array_values(array_filter(array_map(fn (mixed $other): mixed => is_array($other) ? ($other['handle'] ?? null) : null, $fields), fn (mixed $handle): bool => is_string($handle) && $handle !== $own));
+            $rules["{$key}.condition"] = ['nullable', 'array:field,operator,value'];
+            $rules["{$key}.condition.field"] = ["required_with:{$key}.condition", 'string', Rule::in($siblings)];
+            $rules["{$key}.condition.operator"] = ["required_with:{$key}.condition", 'string', Rule::in(Field::OPERATORS)];
+            $rules["{$key}.condition.value"] = ['nullable', function (string $attribute, mixed $value, \Closure $fail): void {
+                if (! is_scalar($value) || (is_string($value) && mb_strlen($value) > 255)) {
+                    $fail('The value to compare with must be short text, a number or true/false.');
+                }
+            }];
             $rules["{$key}.config"] = ['nullable', 'array'];
             $rules["{$key}.fields"] = ['nullable', 'array', 'list', 'max:200'];
             if ($type === null) {
@@ -264,6 +274,7 @@ final class DefinitionValidator
                 validation: $field->validation,
                 config: $config,
                 fields: $type->hasChildren() ? $this->clean($field->fields) : [],
+                condition: $field->condition,
             );
         }, $fields);
     }

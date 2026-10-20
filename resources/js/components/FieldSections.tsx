@@ -1,6 +1,7 @@
 import { Card, CardContent, CollapsibleCard } from '@sunrice/admin-sdk/ui';
 import { FieldError, FieldInput, Fields, labelOf } from '@/components/FieldInput.tsx';
 import { errorsAt, hasErrors } from '@/lib/builder.ts';
+import { isShown } from '@/lib/conditions.ts';
 import type { Errors, FieldDefinition } from '@/types.ts';
 
 // Field values are any JSON; see the entry editor for why `any`.
@@ -26,11 +27,14 @@ interface Props {
 /**
  * An editor's fields: a card of fields, and each group field as a card of
  * its own that folds away (remembered, and opened on an error inside).
+ * A field whose condition isn't met is left out.
  */
 export function FieldSections({ fields, values, onChange, errors, storageKey, shared = [], sharedValues = {}, sharedNote, disabled = false }: Props) {
     // Runs of plain fields, and groups on their own.
     const sections: (FieldDefinition | FieldDefinition[])[] = [];
-    for (const field of fields) {
+    // Fields hidden by their condition (as the server decides) are left out.
+    const siblings = { ...sharedValues, ...values };
+    for (const field of fields.filter((each) => isShown(each, siblings))) {
         const last = sections[sections.length - 1];
         if (field.type === 'group') sections.push(field);
         else if (Array.isArray(last)) last.push(field);

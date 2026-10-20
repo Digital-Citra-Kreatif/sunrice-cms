@@ -249,11 +249,23 @@ final class Schema
             $key = $prefix === '' ? $field->handle : $prefix.'.'.$field->handle;
             $type = $this->type($field);
             // Required or nullable first, so an empty required field says "is required".
-            $rules[$key] = [$field->required ? 'required' : 'nullable', ...$type->rules($field), ...$field->validation];
-            $rules += $type->nestedRules($field, $key, $data[$field->handle] ?? null);
+            $own = [$key => [$field->required ? 'required' : 'nullable', ...$type->rules($field), ...$field->validation]]
+                + $type->nestedRules($field, $key, $data[$field->handle] ?? null);
+            // Hidden by its condition: nothing in it is required, but what
+            // it keeps (it's stored as it is) is still checked.
+            $rules += $field->isShownWith($data) ? $own : array_map(self::optional(...), $own);
         }
 
         return $rules;
+    }
+
+    /**
+     * @param  list<mixed>  $rules
+     * @return list<mixed> the rules with "required" (and its variants) made "nullable"
+     */
+    private static function optional(array $rules): array
+    {
+        return array_map(fn (mixed $rule): mixed => is_string($rule) && str_starts_with($rule, 'required') ? 'nullable' : $rule, $rules);
     }
 
     /**

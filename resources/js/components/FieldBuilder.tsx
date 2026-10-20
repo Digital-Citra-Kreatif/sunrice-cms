@@ -6,7 +6,8 @@ import {
 } from '@sunrice/admin-sdk/ui';
 import { FieldError, FieldInput } from '@/components/FieldInput.tsx';
 import { type BuilderField, errorsAt, errorsUnder, hasErrors, MAX_DEPTH, newField, relabel } from '@/lib/builder.ts';
-import type { Errors, FieldTypeInfo } from '@/types.ts';
+import { OPERATORS } from '@/lib/conditions.ts';
+import type { Errors, FieldCondition, FieldTypeInfo } from '@/types.ts';
 
 interface Props {
     fields: BuilderField[];
@@ -147,6 +148,8 @@ function FieldSettings({ id, field, type, siblings, onChange, types, errors, dep
                 </div>
             </div>
 
+            <ConditionSettings id={id} field={field} siblings={siblings} onChange={onChange} errors={errorsUnder(errors, 'condition')} />
+
             {(type?.settings.length ?? 0) > 0 && (
                 <div className="cms:grid cms:gap-4 cms:md:grid-cols-2">
                     {type?.settings.map((setting) => (
@@ -175,6 +178,50 @@ function FieldSettings({ id, field, type, siblings, onChange, types, errors, dep
                 </div>
             )}
             <FieldError message={errors.type} />
+        </div>
+    );
+}
+
+const ALWAYS = '__always';
+
+/** "Show only when …": another field on this level, how to compare, and with what. */
+function ConditionSettings({ id, field, siblings, onChange, errors }: { id: string; field: BuilderField; siblings: BuilderField[]; onChange: (field: BuilderField) => void; errors: Errors }) {
+    const others = siblings.filter((sibling) => sibling.key !== field.key && sibling.handle !== '');
+    const condition = field.condition ?? null;
+    const operator = OPERATORS.find((o) => o.value === condition?.operator) ?? OPERATORS[0]!;
+    const set = (changes: Partial<FieldCondition> | null) =>
+        onChange({ ...field, condition: changes === null ? null : { field: condition?.field ?? others[0]?.handle ?? '', operator: condition?.operator ?? 'equals', value: condition?.value ?? '', ...changes } });
+
+    if (others.length === 0 && condition === null) return null;
+
+    return (
+        <div className="cms:flex cms:flex-col cms:gap-2">
+            <Label htmlFor={`${id}-condition`}>Show</Label>
+            <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
+                <Select value={condition?.field ?? ALWAYS} onValueChange={(value: string) => set(value === ALWAYS ? null : { field: value })}>
+                    <SelectTrigger id={`${id}-condition`} className="cms:w-56"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value={ALWAYS}>Always</SelectItem>
+                        {others.map((other) => <SelectItem key={other.key} value={other.handle}>When {other.label || other.handle}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+                {condition && (
+                    <>
+                        <Select value={operator.value} onValueChange={(value: string) => set({ operator: value as FieldCondition['operator'] })}>
+                            <SelectTrigger aria-label="How to compare" className="cms:w-36"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                                {OPERATORS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                        {operator.needsValue && (
+                            <Input aria-label="Value" className="cms:w-48" placeholder="a value, or true / false" value={String(condition.value ?? '')}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => set({ value: e.target.value })} />
+                        )}
+                    </>
+                )}
+            </div>
+            <p className="cms:text-sm cms:text-muted-foreground">A hidden field isn't required, and keeps what it had.</p>
+            <FieldError message={errors.field ?? errors.operator ?? errors.value ?? errors[''] } />
         </div>
     );
 }

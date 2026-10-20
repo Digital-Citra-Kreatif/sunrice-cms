@@ -78,6 +78,24 @@ A block's values are readable as properties (`$block->heading`) or keys (`$block
 
 A `fieldset` field puts the fieldset's fields in its own place; their handles count as the blueprint's own. A fieldset can include other fieldsets, but never itself (directly or through another). An include whose fieldset is gone stays in the blueprint and keeps its data. A fieldset can't be deleted while a blueprint or another fieldset includes it or uses it as a kind of block.
 
+## Showing a field only sometimes
+
+A field can show only when another field on its level is so: in the
+blueprint builder, **Show** → *When Layout* *is* `video`. In the
+definition:
+
+```php
+['handle' => 'video_url', 'type' => 'text', 'required' => true,
+    'condition' => ['field' => 'layout', 'operator' => 'equals', 'value' => 'video']],
+```
+
+Operators: `equals` and `not_equals` (with a value; a list field matches
+when one of its values does, a toggle with `true` or `false`), `filled`
+and `empty`. Inside groups, repeater rows and blocks, the other field is a
+sibling there. A hidden field (and everything in it) isn't required, and
+keeps what it had, still checked against its other rules; templates still
+get its value. `Field::isShownWith()` tells whether it shows.
+
 ## Using fields in code
 
 ```php

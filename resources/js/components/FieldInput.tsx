@@ -7,6 +7,7 @@ import {
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
 import { TermsPicker } from '@/components/TermsPicker.tsx';
 import { errorsAt } from '@/lib/builder.ts';
+import { isShown } from '@/lib/conditions.ts';
 import { asRecord, dateInputValue, dateValueFromInput, newBlock, newRow, syncKeys } from '@/lib/values.ts';
 import type { Errors, FieldDefinition, Option } from '@/types.ts';
 
@@ -156,7 +157,7 @@ export function Fields({ fields, value, onChange, errors, id, content, bare = fa
 }) {
     return (
         <div className={bare ? 'cms:flex cms:flex-col cms:gap-6' : 'cms:flex cms:flex-col cms:gap-4 cms:rounded-lg cms:border cms:p-4'}>
-            {fields.map((child) => child.shared ? (
+            {fields.filter((child) => isShown(child, value)).map((child) => child.shared ? (
                 <fieldset key={child.handle} disabled className="cms:flex cms:flex-col cms:gap-1">
                     <FieldInput id={`${id}-${child.handle}`} field={child} value={value[child.handle]} content={content} errors={{}} onChange={() => {}} />
                     <p className="cms:text-sm cms:text-muted-foreground">Shared by all languages: edit it in the main language.</p>
