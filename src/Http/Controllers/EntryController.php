@@ -17,6 +17,7 @@ use Sunrice\Admin\Preferences\Preferences;
 use Sunrice\Cms\Actions\Entries\CreateEntry;
 use Sunrice\Cms\Actions\Entries\CreateTranslation;
 use Sunrice\Cms\Actions\Entries\DeleteTranslation;
+use Sunrice\Cms\Actions\Entries\MachineTranslateEntry;
 use Sunrice\Cms\Actions\Entries\PublishEntry;
 use Sunrice\Cms\Actions\Entries\RestoreEntry;
 use Sunrice\Cms\Actions\Entries\RestoreRevision;
@@ -35,7 +36,9 @@ use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\Locales;
+use Sunrice\Cms\Support\References;
 use Sunrice\Cms\Support\Seo;
+use Sunrice\Cms\Translation\TranslatorFactory;
 
 /**
  * Content → Entries: the list per collection and the editor. Each route
@@ -178,7 +181,7 @@ final class EntryController
 
         return Inertia::render('Cms/Entries/Editor', [
             'collection' => self::collection($collection),
-            'fields' => $collection->schema()->toAdmin(),
+            'fields' => $translation->isMain() ? $collection->schema()->toAdmin() : self::markShared($collection->schema()->toAdmin()),
             'locales' => EntryList::locales($entry),
             // Shared fields are edited in the main language; the others show its values.
             'shared' => $shared,
@@ -196,7 +199,8 @@ final class EntryController
                 'url' => $translation->isLive() && ! $entry->trashed() ? $translation->url() : null,
                 'previewUrl' => URL::temporarySignedRoute('sunrice.cms.preview', now()->addMinutes(30), ['translation' => $translation->id]),
             ],
-            'values' => ['title' => $translation->draft_title, 'slug' => $translation->draft_slug, 'data' => $translation->draft_data, 'seo' => $translation->draft_data[Seo::KEY] ?? null],
+            // Another language's rows and blocks show the main one's shared values.
+            'values' => ['title' => $translation->draft_title, 'slug' => $translation->draft_slug, 'data' => $translation->completeData(true), 'seo' => $translation->draft_data[Seo::KEY] ?? null],
             // Every language's: the parent and its own Blade view.
             'settings' => ['parentId' => $entry->parent_id, 'template' => $entry->template, 'commentsClosed' => $entry->comments_closed],
             // Loaded after the page shows (Inertia's deferred props): the sidebar's lists.
@@ -210,11 +214,15 @@ final class EntryController
                 : null,
             // The chosen terms' titles, so terms fields show them without asking (the options come from cms/term-picker).
             'termLabels' => TermsField::labels(array_map(fn (Reference $reference): int => $reference->id, array_filter(
-                $collection->schema()->references([...$translation->draft_data, ...($main === null ? [] : array_intersect_key($main->draft_data, array_flip($shared)))]),
+                $collection->schema()->references($translation->completeData(true)),
                 fn (Reference $reference): bool => $reference->type === Reference::TERM,
             ))),
+            // Where other content points at it, to show and to warn before it goes.
+            'usedBy' => References::usedBy(Reference::ENTRY, $entry->id),
             // A revision restore this session can be undone.
             'undoRestore' => $request->session()->has(EntryManageController::undoKey($translation)) ? $translation->id : null,
+            // "Translate from …": another language, with machine translation set up.
+            'machineTranslate' => ! $translation->isMain() && app(TranslatorFactory::class)->configured() ? $translation->id : null,
             'can' => self::can($request, $collection, $entry, $translation->locale),
         ]);
     }
@@ -308,6 +316,25 @@ final class EntryController
             ->with('success', 'Added as a draft, copied from the main language. Translate it, then publish.');
     }
 
+    /** Machine-translates what this language hasn't translated yet from the main one, into its draft. */
+    public function translate(Request $request, EntryTranslation $translation, TranslatorFactory $translators, MachineTranslateEntry $machine): RedirectResponse
+    {
+        abort_unless($translators->configured() && ! $translation->entry->trashed(), 404);
+        $version = $request->input('version');
+        try {
+            $stats = $machine->handle($translation, is_int($version) || is_string($version) ? $version : null);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', 'The translation service failed: '.$e->getMessage());
+        }
+        if ($stats->errors !== []) {
+            return back()->with('error', 'Not translated: '.implode(' ', $stats->errors));
+        }
+
+        return back()->with('success', $stats->translated === 0
+            ? 'Everything is translated already.'
+            : "Translated {$stats->translated} texts into the draft. Check them, then publish.");
+    }
+
     public function removeTranslation(Entry $entry, string $locale, DeleteTranslation $delete): RedirectResponse
     {
         $entry->loadMissing('translations');
@@ -334,11 +361,54 @@ final class EntryController
     {
         abort_if($entry->collection->trashed(), 404);
         $entry->loadMissing('translations');
-        if (is_string($locale) && $locale !== '') {
-            return $entry->translation($locale) ?? abort(404);
+        $translation = is_string($locale) && $locale !== '' ? $entry->translation($locale) : $entry->mainTranslation();
+        abort_if($translation === null, 404);
+        // The entry it belongs to is this one, its languages loaded already (no queries again for isMain(), completeData()…).
+        foreach ($entry->translations as $other) {
+            $other->setRelation('entry', $entry);
         }
 
-        return $entry->mainTranslation() ?? abort(404);
+        return $translation;
+    }
+
+    /**
+     * Field definitions for another language than the main one: the shared
+     * fields inside translated groups, repeaters and blocks marked `shared`,
+     * so the editor shows them read-only.
+     *
+     * @param  list<array<string, mixed>>  $fields
+     * @return list<array<string, mixed>>
+     */
+    private static function markShared(array $fields, bool $nested = false): array
+    {
+        foreach ($fields as $i => $field) {
+            if (($field['translatable'] ?? true) === false) {
+                if ($nested) {
+                    $fields[$i]['shared'] = true;
+                }
+
+                continue;
+            }
+            if (is_array($field['fields'] ?? null)) {
+                /** @var list<array<string, mixed>> $children */
+                $children = $field['fields'];
+                $fields[$i]['fields'] = self::markShared($children, true);
+            }
+            if (is_array($field['blocks'] ?? null)) {
+                $blocks = $field['blocks'];
+                foreach ($blocks as $b => $block) {
+                    if (is_array($block) && is_array($block['fields'] ?? null)) {
+                        /** @var list<array<string, mixed>> $children */
+                        $children = $block['fields'];
+                        $block['fields'] = self::markShared($children, true);
+                        $blocks[$b] = $block;
+                    }
+                }
+                $fields[$i]['blocks'] = $blocks;
+            }
+        }
+
+        return $fields;
     }
 
     private static function publishAt(Request $request): ?\DateTimeInterface

@@ -7,6 +7,7 @@ namespace Sunrice\Cms;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\Menu;
 use Sunrice\Cms\Models\MenuItem;
+use Sunrice\Cms\Site\Site;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\SiteCache;
 
@@ -115,7 +116,7 @@ final class Menus
             }
             $translation = $term->translations->firstWhere('locale', $locale) ?? $term->translation();
             $translation?->setRelation('term', $term);
-            $url = $translation?->url();
+            $url = $translation === null ? null : app(Site::class)->termUrlIn($translation, $locale);
 
             return $url === null ? null : ['label' => $label ?? $translation->title, 'url' => $url];
         }
@@ -136,7 +137,8 @@ final class Menus
         }
         $translation = $entry->translation($locale);
         $translation = $translation !== null && $translation->isLive() ? $translation : $entry->mainTranslation();
-        $url = $translation !== null && $translation->isLive() ? $translation->url() : null;
+        // Not live in this language: the main language's page (at this language's address with Site::fallback()).
+        $url = $translation !== null && $translation->isLive() ? app(Site::class)->urlIn($translation, $locale) : null;
 
         return $url === null ? null : ['label' => $label ?? (string) $translation->title, 'url' => $url];
     }

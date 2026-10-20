@@ -22,6 +22,8 @@ interface TermRow {
     version: number | null;
     /** The main language's title, for untranslated terms. */
     fallback: string;
+    /** Where other content points at it. */
+    usedBy?: string[];
 }
 
 interface Props {
@@ -35,6 +37,12 @@ interface Props {
 }
 
 const TOP = '__top';
+
+/** " It's used by A; B." for confirmations, or nothing. */
+function usedBySentence(usedBy: string[] = []): string {
+    if (usedBy.length === 0) return '';
+    return ` It's used by ${usedBy.slice(0, 5).join('; ')}${usedBy.length > 5 ? ` and ${usedBy.length - 5} more` : ''}.`;
+}
 
 export default function TermsIndex({ taxonomy, taxonomies, terms, locales, locale, trashed = false }: Props) {
     useBreadcrumbs([{ label: 'Terms', href: adminUrl('cms/terms') }, ...(taxonomy ? [{ label: taxonomy.title }] : [])]);
@@ -74,8 +82,8 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
                                     <span className="cms:flex-1 cms:font-medium">{term.title ?? term.fallback}</span>
                                     <Button variant="outline" size="sm" onClick={() => router.post(adminUrl(`cms/terms/${term.id}/restore`), {}, { preserveScroll: true })}><RotateCcw /> Restore</Button>
                                     <Button variant="ghost" size="sm" className="cms:text-destructive"
-                                        onClick={() => confirm(`Delete "${term.fallback}" for good, in every language? Entries lose it.`,
-                                            () => router.delete(adminUrl(`cms/terms/${term.id}/force`), { preserveScroll: true }))}>
+                                        onClick={() => confirm(`Delete "${term.fallback}" for good, in every language? Entries lose it.${usedBySentence(term.usedBy)}`,
+                                            () => router.delete(adminUrl(`cms/terms/${term.id}/force`), { preserveScroll: true, data: (term.usedBy ?? []).length > 0 ? { force: 1 } : {} }))}>
                                         <Trash2 /> Delete for good
                                     </Button>
                                 </div>
@@ -98,7 +106,7 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
                                         </Button>
                                     )}
                                     <Button variant="ghost" size="icon" className="cms:size-8 cms:text-destructive" aria-label={`Move ${term.fallback} to the trash`}
-                                        onClick={() => confirm(`Move "${term.fallback}" to the trash, with the terms under it? It comes off the site; you can restore it.`,
+                                        onClick={() => confirm(`Move "${term.fallback}" to the trash, with the terms under it? It comes off the site; you can restore it.${usedBySentence(term.usedBy)}`,
                                             () => router.delete(adminUrl(`cms/terms/${term.id}`), { preserveScroll: true }))}>
                                         <Trash2 />
                                     </Button>

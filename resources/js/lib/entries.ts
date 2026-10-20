@@ -31,6 +31,8 @@ export function localeName(code: string, inLocale?: string): string {
 
 export interface EntryLocale {
     code: string;
+    /** As Settings → Languages names it. */
+    name?: string;
     main: boolean;
     status: EntryStatus | null;
     /** The main language changed since this translation was last saved. */

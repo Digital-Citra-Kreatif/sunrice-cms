@@ -15,11 +15,13 @@ use Sunrice\Cms\Actions\Terms\RestoreTerm;
 use Sunrice\Cms\Actions\Terms\SaveTerm;
 use Sunrice\Cms\Actions\Terms\SaveTermContent;
 use Sunrice\Cms\Actions\Terms\TrashTerm;
+use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Fields\Types\TermsField;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\Locales;
+use Sunrice\Cms\Support\References;
 use Sunrice\Cms\Support\Seo;
 
 /**
@@ -45,6 +47,8 @@ final class TermController
         $locale = is_string($locale) && Locales::has($locale) ? $locale : Locales::default();
         $trashed = $request->boolean('trashed');
         $terms = Term::query()->when($trashed, fn ($q) => $q->onlyTrashed())->with('translations')->where('taxonomy_id', $taxonomy->id)->orderBy('sort_order')->orderBy('id')->get();
+        // Where each is used, to warn before trashing or deleting it.
+        $usedBy = References::usedByMany(Reference::TERM, array_values(array_map(fn (Term $term): int => $term->id, $terms->all())));
 
         return Inertia::render('Cms/Terms/Index', [
             'taxonomy' => ['handle' => $taxonomy->handle, 'title' => $taxonomy->title, 'hierarchical' => $taxonomy->hierarchical,
@@ -54,7 +58,7 @@ final class TermController
             'taxonomies' => Taxonomy::query()->orderBy('title')->get()->filter(fn (Taxonomy $t): bool => Access::terms($request->user(), $t))->values()->map(fn (Taxonomy $t): array => ['handle' => $t->handle, 'title' => $t->title])->all(),
             'locales' => Locales::all(),
             'locale' => $locale,
-            'terms' => array_map(function (array $item) use ($locale): array {
+            'terms' => array_map(function (array $item) use ($locale, $usedBy): array {
                 [$term, $depth] = $item;
                 $translation = $term->translations->firstWhere('locale', $locale);
 
@@ -67,6 +71,7 @@ final class TermController
                     'slug' => $translation->slug ?? null,
                     'version' => $translation->version ?? null,
                     'fallback' => $term->title(),
+                    'usedBy' => array_map(fn (array $use): string => $use['label'], $usedBy[$term->id] ?? []),
                 ];
             }, $trashed ? array_map(fn (Term $t): array => [$t, 0], array_values($terms->all())) : TermsField::tree(array_values($terms->all()), null, 0)),
         ]);
@@ -121,10 +126,11 @@ final class TermController
         return back()->with('success', 'Restored.');
     }
 
-    public function forceDelete(Term $term, DeleteTerm $delete): RedirectResponse
+    /** For good; one used elsewhere only with "force" (the list asks first). */
+    public function forceDelete(Request $request, Term $term, DeleteTerm $delete): RedirectResponse
     {
         abort_unless($term->trashed(), 404);
-        $delete->handle($term);
+        $delete->handle($term, $request->boolean('force'));
 
         return back()->with('success', 'Deleted for good.');
     }
@@ -152,6 +158,7 @@ final class TermController
             'values' => array_replace($schema->defaults(), $translation->data ?? []),
             'seo' => $translation->data[Seo::KEY] ?? null,
             'version' => $translation?->version,
+            'usedBy' => References::usedBy(Reference::TERM, $term->id),
         ]);
     }
 

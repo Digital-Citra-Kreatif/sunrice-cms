@@ -40,14 +40,14 @@ final class CommentController
         $user = $request->user(app(Panel::class)->getGuard()) ?? $request->user();
         try {
             if ($settings->captcha && ! $captcha->passes($request)) {
-                throw ValidationException::withMessages(['_captcha' => Lang::get('Please confirm you\'re not a robot, then send the form again.', [], $locale)]);
+                throw ValidationException::withMessages(['_captcha' => Lang::get('sunrice-cms::site.captcha', [], $locale)]);
             }
             $comment = $post->handle($entry, $request->only(['body', 'parent_id', 'author_name', 'author_email', 'notify_replies']),
                 $user instanceof Model ? $user : null, $locale, $request->ip());
         } catch (ValidationException $e) {
             throw $e->errorBag(self::BAG)->redirectTo(url()->previous().'#comment-form');
         }
-        $message = Lang::get($comment->isApproved() ? 'Your comment is posted.' : 'Thank you! Your comment will appear once it is approved.', [], $locale);
+        $message = Lang::get($comment->isApproved() ? 'sunrice-cms::site.comments.posted' : 'sunrice-cms::site.comments.held', [], $locale);
 
         if ($request->expectsJson()) {
             return response()->json(['message' => $message, 'status' => $comment->status, 'id' => $comment->id], 201);
@@ -59,7 +59,10 @@ final class CommentController
     public function unsubscribe(Comment $comment): Response
     {
         $comment->forceFill(['notify_replies' => false])->saveQuietly();
+        app()->setLocale($comment->locale);
+        $translation = $comment->entry->translation($comment->locale) ?? $comment->entry->mainTranslation();
+        $url = $translation !== null && $translation->isLive() && ! $comment->entry->trashed() ? $translation->url() : null;
 
-        return response(e(Lang::get('You won\'t get emails about replies to this comment any more.', [], $comment->locale)), 200, ['Content-Type' => 'text/plain; charset=UTF-8', 'X-Robots-Tag' => 'noindex']);
+        return response()->view('sunrice-cms::comment-unsubscribed', ['locale' => $comment->locale, 'url' => $url])->header('X-Robots-Tag', 'noindex');
     }
 }

@@ -151,4 +151,17 @@ class Entry extends Model
     {
         return $this->translation(Locales::default()) ?? $this->translations->sortBy('id')->first();
     }
+
+    /**
+     * Where other content points at this entry through its fields: entries
+     * (draft or live), terms and global sets, a row per language and field.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, ContentReference>
+     */
+    public function referencedBy(): \Illuminate\Database\Eloquent\Collection
+    {
+        return ContentReference::query()->where('target_type', ContentReference::ENTRY)->where('target_id', $this->id)
+            ->whereNot(fn ($query) => $query->where('source_type', ContentReference::ENTRY)->where('source_id', $this->id))
+            ->orderBy('id')->get();
+    }
 }

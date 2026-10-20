@@ -32,7 +32,10 @@ class PageCacheProfile extends CacheAllSuccessfulGetRequests
 
     public function cacheLifetimeInSeconds(Request $request): int
     {
-        return min(parent::cacheLifetimeInSeconds($request), SiteCache::ttl());
+        $lifetime = min(parent::cacheLifetimeInSeconds($request), SiteCache::ttl());
+        $own = app(PageCache::class)->lifetime($request, Page::current());
+
+        return $own === null ? $lifetime : min($lifetime, $own);
     }
 
     /** The pages' content version: pages kept before a change are never served again. */
