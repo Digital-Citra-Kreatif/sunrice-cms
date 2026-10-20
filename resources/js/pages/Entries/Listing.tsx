@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { Head, Link, router, useForm } from '@inertiajs/react';
-import { ArrowLeft, ExternalLink, LoaderCircle } from 'lucide-react';
+import { Head, router, useForm } from '@inertiajs/react';
+import { ExternalLink, LoaderCircle } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
-import { Button, Card, CardContent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs, useUnsavedChanges } from '@sunrice/admin-sdk/ui';
+import { Button, Card, CardContent, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs, useUnsavedChanges } from '@sunrice/admin-sdk/ui';
 import { FieldInput } from '@/components/FieldInput.tsx';
 import { errorsAt } from '@/lib/builder.ts';
 import { localeName } from '@/lib/entries.ts';
@@ -42,33 +42,32 @@ function ListingEdit({ collection, fields, locale, locales, shared, values, can 
     return (
         <form onSubmit={(e) => { e.preventDefault(); save(); }} className="cms:flex cms:max-w-3xl cms:flex-col cms:gap-6">
             <Head title={`${collection.title}: listing page`} />
-            <div className="cms:flex cms:flex-wrap cms:items-center cms:justify-between cms:gap-4">
-                <div className="cms:flex cms:min-w-0 cms:items-center cms:gap-3">
-                    <Button variant="outline" size="icon" className="cms:size-8 cms:shrink-0" asChild>
-                        <Link href={back} aria-label={`Back to ${collection.title}`}><ArrowLeft /></Link>
-                    </Button>
-                    <h1 className="cms:truncate cms:text-2xl cms:font-medium cms:tracking-tight">{collection.title}: listing page</h1>
-                    {form.isDirty && <span className="cms:text-sm cms:text-muted-foreground">Unsaved changes</span>}
-                </div>
-                <div className="cms:flex cms:items-center cms:gap-2">
-                    {locales.length > 1 && (
-                        <Select value={locale} onValueChange={(next: string) => router.get(url, { locale: next })}>
-                            <SelectTrigger className="cms:w-48" aria-label="Language"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                                {locales.map((code, i) => <SelectItem key={code} value={code}>{localeName(code)}{i === 0 ? ' (main)' : ''}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                    )}
-                    {collection.url && (
-                        <Button type="button" variant="ghost" asChild><a href={collection.url} target="_blank" rel="noopener noreferrer"><ExternalLink /> View</a></Button>
-                    )}
-                    {writable && (
-                        <Button type="submit" disabled={form.processing}>
-                            {form.processing && <LoaderCircle className="cms:animate-spin" />} Save
-                        </Button>
-                    )}
-                </div>
-            </div>
+            <PageHeader
+                title={`${collection.title}: listing page`}
+                back={{ href: back, label: `Back to ${collection.title}` }}
+                actions={
+                    <>
+                        {locales.length > 1 && (
+                            <Select value={locale} onValueChange={(next: string) => router.get(url, { locale: next })}>
+                                <SelectTrigger className="cms:w-48" aria-label="Language"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    {locales.map((code, i) => <SelectItem key={code} value={code}>{localeName(code)}{i === 0 ? ' (main)' : ''}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        )}
+                        {collection.url && (
+                            <Button type="button" variant="ghost" asChild><a href={collection.url} target="_blank" rel="noopener noreferrer"><ExternalLink /> View</a></Button>
+                        )}
+                        {writable && (
+                            <Button type="submit" disabled={form.processing}>
+                                {form.processing && <LoaderCircle className="cms:animate-spin" />} Save
+                            </Button>
+                        )}
+                    </>
+                }
+            >
+                {form.isDirty && <span className="cms:text-sm cms:text-muted-foreground">Unsaved changes</span>}
+            </PageHeader>
 
             {fields.length === 0 ? (
                 <p className="cms:text-muted-foreground">The listing page has no fields of its own: choose a listing blueprint for the collection under Structure → Collections.</p>

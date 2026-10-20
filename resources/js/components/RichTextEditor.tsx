@@ -56,7 +56,7 @@ export function RichTextEditor({ id, value, onChange, invalid, labelledBy }: Pro
     });
 
     return (
-        <div className={`cms:rounded-md cms:border cms:bg-background ${invalid ? 'cms:border-destructive' : ''}`}>
+        <div className={`cms:rounded-lg cms:border cms:border-input/80 cms:bg-card cms:shadow-xs cms:transition-[border-color,box-shadow] cms:duration-150 cms:ease-out-quart cms:focus-within:border-ring/70 cms:focus-within:ring-4 cms:focus-within:ring-ring-glow cms:dark:bg-input/20 ${invalid ? 'cms:border-destructive cms:focus-within:ring-destructive/20' : ''}`}>
             {editor && <Toolbar editor={editor} onLink={() => setDialog('link')} onImage={() => setDialog('image')} />}
             <EditorContent editor={editor} />
             {editor && <LinkDialog editor={editor} open={dialog === 'link'} onClose={() => setDialog(null)} />}

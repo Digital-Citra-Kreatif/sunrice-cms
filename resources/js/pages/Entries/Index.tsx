@@ -4,8 +4,8 @@ import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Download, LayoutList, Pl
 import { useConfirm } from '@/components/Confirm.tsx';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
-    Badge, Button, Card, Checkbox, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-    Table, TableBody, TableCell, TableHead, TableHeader, TableRow, useBreadcrumbs,
+    Badge, Button, Card, Checkbox, Input, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableBody, TableCell,
+    TableHead, TableHeader, TableRow, useBreadcrumbs,
 } from '@sunrice/admin-sdk/ui';
 import { type EntryLocale, type EntryStatus, formatDate, statusLabel } from '@/lib/entries.ts';
 
@@ -68,8 +68,7 @@ export default function EntriesIndex({ collection, collections, entries, query, 
         return (
             <div className="cms:flex cms:flex-col cms:gap-4">
                 <Head title="Entries" />
-                <h1 className="cms:text-2xl cms:font-medium cms:tracking-tight">Entries</h1>
-                <p className="cms:text-muted-foreground">There are no collections yet. Create one under Structure → Collections, then come back to write its entries.</p>
+                <PageHeader title="Entries" description="There are no collections yet. Create one under Structure → Collections, then come back to write its entries." />
             </div>
         );
     }
@@ -77,30 +76,31 @@ export default function EntriesIndex({ collection, collections, entries, query, 
     return (
         <div className="cms:flex cms:flex-col cms:gap-6">
             <Head title={collection.title} />
-            <div className="cms:flex cms:flex-wrap cms:items-center cms:justify-between cms:gap-4">
-                <div className="cms:flex cms:items-center cms:gap-3">
-                    <h1 className="cms:text-2xl cms:font-medium cms:tracking-tight">{collection.title}</h1>
-                    {collections.length > 1 && (
-                        <Select value={collection.handle} onValueChange={(handle: string) => router.get(adminUrl(`cms/collections/${handle}/entries`))}>
-                            <SelectTrigger className="cms:w-48" aria-label="Collection"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                                {collections.map((c) => <SelectItem key={c.handle} value={c.handle}>{c.title}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                    )}
-                </div>
-                <div className="cms:flex cms:items-center cms:gap-2">
-                    {collection.listing && !query.trashed && (
-                        <Button variant="outline" asChild><Link href={adminUrl(`cms/collections/${collection.handle}/listing`)}><LayoutList /> Listing page</Link></Button>
-                    )}
-                    {entries.total > 0 && !query.trashed && (
-                        <Button variant="outline" asChild><a href={`${base}/export`}><Download /> Export CSV</a></Button>
-                    )}
-                    {can?.create && !query.trashed && (
-                        <Button asChild><Link href={`${base}/create`}><Plus /> New entry</Link></Button>
-                    )}
-                </div>
-            </div>
+            <PageHeader
+                title={collection.title}
+                actions={
+                    <>
+                        {collection.listing && !query.trashed && (
+                            <Button variant="outline" asChild><Link href={adminUrl(`cms/collections/${collection.handle}/listing`)}><LayoutList /> Listing page</Link></Button>
+                        )}
+                        {entries.total > 0 && !query.trashed && (
+                            <Button variant="outline" asChild><a href={`${base}/export`}><Download /> Export CSV</a></Button>
+                        )}
+                        {can?.create && !query.trashed && (
+                            <Button asChild><Link href={`${base}/create`}><Plus /> New entry</Link></Button>
+                        )}
+                    </>
+                }
+            >
+                {collections.length > 1 && (
+                    <Select value={collection.handle} onValueChange={(handle: string) => router.get(adminUrl(`cms/collections/${handle}/entries`))}>
+                        <SelectTrigger className="cms:w-48" aria-label="Collection"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                            {collections.map((c) => <SelectItem key={c.handle} value={c.handle}>{c.title}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                )}
+            </PageHeader>
 
             <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-3">
                 <div className="cms:relative cms:w-full cms:max-w-sm">
@@ -145,8 +145,8 @@ export default function EntriesIndex({ collection, collections, entries, query, 
                                 </TableCell>
                             </TableRow>
                         )}
-                        {entries.data.map((row) => (
-                            <TableRow key={row.id} data-state={selected.includes(row.id) ? 'selected' : undefined}>
+                        {entries.data.map((row, i) => (
+                            <TableRow key={row.id} className="sunrice-row-in" style={{ '--i': i } as React.CSSProperties} data-state={selected.includes(row.id) ? 'selected' : undefined}>
                                 {bulkActions.length > 0 && (
                                     <TableCell>
                                         <Checkbox aria-label={`Select ${row.title}`} checked={selected.includes(row.id)}

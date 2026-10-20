@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { Head, Link, router, useForm } from '@inertiajs/react';
-import { ArrowLeft, LoaderCircle, Trash2 } from 'lucide-react';
+import { Head, router, useForm } from '@inertiajs/react';
+import { LoaderCircle, Trash2 } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
-import { Button, Card, CardContent, Input, Label, useBreadcrumbs, useUnsavedChanges } from '@sunrice/admin-sdk/ui';
+import { Button, Card, CardContent, Input, Label, PageHeader, useBreadcrumbs, useUnsavedChanges } from '@sunrice/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { FieldBuilder } from '@/components/FieldBuilder.tsx';
 import { FieldError } from '@/components/FieldInput.tsx';
@@ -67,25 +67,23 @@ export default function BlueprintForm({ kind = 'blueprint', blueprint, fieldType
             <Head title={title} />
             {confirmDialog}
 
-            <div className="cms:flex cms:flex-wrap cms:items-center cms:justify-between cms:gap-4">
-                <div className="cms:flex cms:min-w-0 cms:items-center cms:gap-3">
-                    <Button variant="outline" size="icon" className="cms:size-8 cms:shrink-0" asChild>
-                        <Link href={base} aria-label={`Back to ${noun.toLowerCase()}s`}><ArrowLeft /></Link>
-                    </Button>
-                    <h1 className="cms:truncate cms:text-2xl cms:font-medium cms:tracking-tight">{title}</h1>
-                </div>
-                <div className="cms:flex cms:items-center cms:gap-2">
-                    {blueprint && (
-                        <Button type="button" variant="outline" size="icon" className="cms:text-destructive" aria-label={`Delete ${title}`} onClick={remove}>
-                            <Trash2 />
+            <PageHeader
+                title={title}
+                back={{ href: base, label: `Back to ${noun.toLowerCase()}s` }}
+                actions={
+                    <>
+                        {blueprint && (
+                            <Button type="button" variant="outline" size="icon" className="cms:text-destructive" aria-label={`Delete ${title}`} onClick={remove}>
+                                <Trash2 />
+                            </Button>
+                        )}
+                        <Button type="submit" disabled={form.processing}>
+                            {form.processing && <LoaderCircle className="cms:animate-spin" />}
+                            {blueprint ? 'Save' : `Create ${noun.toLowerCase()}`}
                         </Button>
-                    )}
-                    <Button type="submit" disabled={form.processing}>
-                        {form.processing && <LoaderCircle className="cms:animate-spin" />}
-                        {blueprint ? 'Save' : `Create ${noun.toLowerCase()}`}
-                    </Button>
-                </div>
-            </div>
+                    </>
+                }
+            />
 
             <FieldError message={errors.blueprint ?? errors.fieldset} />
 

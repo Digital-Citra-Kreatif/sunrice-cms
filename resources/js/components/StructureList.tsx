@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Plus, Trash2 } from 'lucide-react';
-import { Button, Card, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, useBreadcrumbs } from '@sunrice/admin-sdk/ui';
+import { Button, Card, PageHeader, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, useBreadcrumbs } from '@sunrice/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
 
 export interface StructureRow {
@@ -21,13 +21,7 @@ export function StructureList({ noun, base, rows, intro }: { noun: string; base:
         <div className="cms:flex cms:flex-col cms:gap-6">
             <Head title={plural} />
             {confirmDialog}
-            <div className="cms:flex cms:flex-wrap cms:items-center cms:justify-between cms:gap-4">
-                <div>
-                    <h1 className="cms:text-2xl cms:font-medium cms:tracking-tight">{plural}</h1>
-                    <p className="cms:text-sm cms:text-muted-foreground">{intro}</p>
-                </div>
-                <Button asChild><Link href={`${base}/create`}><Plus /> New {noun.toLowerCase()}</Link></Button>
-            </div>
+            <PageHeader title={plural} description={intro} actions={<Button asChild><Link href={`${base}/create`}><Plus /> New {noun.toLowerCase()}</Link></Button>} />
             <Card className="cms:py-0">
                 <Table>
                     <TableHeader>

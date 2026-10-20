@@ -1,9 +1,10 @@
 import * as React from 'react';
-import { Head, Link, router, useForm } from '@inertiajs/react';
-import { ArrowLeft, ExternalLink, LoaderCircle } from 'lucide-react';
+import { Head, router, useForm } from '@inertiajs/react';
+import { ExternalLink, LoaderCircle } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
-    Button, Card, CardContent, CardHeader, CardTitle, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs, useUnsavedChanges,
+    Button, Card, CardContent, CardHeader, CardTitle, Input, Label, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+    useBreadcrumbs, useUnsavedChanges,
 } from '@sunrice/admin-sdk/ui';
 import { FieldError, FieldInput, Fields } from '@/components/FieldInput.tsx';
 import { errorsAt } from '@/lib/builder.ts';
@@ -46,25 +47,24 @@ function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared,
     return (
         <form onSubmit={(e) => { e.preventDefault(); save(); }} className="cms:flex cms:max-w-3xl cms:flex-col cms:gap-6">
             <Head title={term.title} />
-            <div className="cms:flex cms:flex-wrap cms:items-center cms:justify-between cms:gap-4">
-                <div className="cms:flex cms:min-w-0 cms:items-center cms:gap-3">
-                    <Button variant="outline" size="icon" className="cms:size-8 cms:shrink-0" asChild>
-                        <Link href={`${list}?locale=${locale}`} aria-label={`Back to ${taxonomy.title}`}><ArrowLeft /></Link>
-                    </Button>
-                    <h1 className="cms:truncate cms:text-2xl cms:font-medium cms:tracking-tight">{term.title}</h1>
-                    {form.isDirty && <span className="cms:text-sm cms:text-muted-foreground">Unsaved changes</span>}
-                </div>
-                <div className="cms:flex cms:items-center cms:gap-2">
-                    {term.url && <Button type="button" variant="ghost" asChild><a href={term.url} target="_blank" rel="noopener noreferrer"><ExternalLink /> View</a></Button>}
-                    {locales.length > 1 && (
-                        <Select value={locale} onValueChange={(next: string) => router.get(adminUrl(`cms/terms/${term.id}/edit`), { locale: next })}>
-                            <SelectTrigger className="cms:w-48" aria-label="Language"><SelectValue /></SelectTrigger>
-                            <SelectContent>{locales.map((code, i) => <SelectItem key={code} value={code}>{localeName(code)}{i === 0 ? ' (main)' : ''}</SelectItem>)}</SelectContent>
-                        </Select>
-                    )}
-                    {translated && <Button type="submit" disabled={form.processing}>{form.processing && <LoaderCircle className="cms:animate-spin" />} Save</Button>}
-                </div>
-            </div>
+            <PageHeader
+                title={term.title}
+                back={{ href: `${list}?locale=${locale}`, label: `Back to ${taxonomy.title}` }}
+                actions={
+                    <>
+                        {term.url && <Button type="button" variant="ghost" asChild><a href={term.url} target="_blank" rel="noopener noreferrer"><ExternalLink /> View</a></Button>}
+                        {locales.length > 1 && (
+                            <Select value={locale} onValueChange={(next: string) => router.get(adminUrl(`cms/terms/${term.id}/edit`), { locale: next })}>
+                                <SelectTrigger className="cms:w-48" aria-label="Language"><SelectValue /></SelectTrigger>
+                                <SelectContent>{locales.map((code, i) => <SelectItem key={code} value={code}>{localeName(code)}{i === 0 ? ' (main)' : ''}</SelectItem>)}</SelectContent>
+                            </Select>
+                        )}
+                        {translated && <Button type="submit" disabled={form.processing}>{form.processing && <LoaderCircle className="cms:animate-spin" />} Save</Button>}
+                    </>
+                }
+            >
+                {form.isDirty && <span className="cms:text-sm cms:text-muted-foreground">Unsaved changes</span>}
+            </PageHeader>
 
             {!translated ? (
                 <p className="cms:text-muted-foreground">This term has no title in {localeName(locale)} yet: give it one in the list first.</p>
