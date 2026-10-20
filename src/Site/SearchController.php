@@ -20,11 +20,14 @@ final class SearchController
 {
     public function __invoke(Request $request, Search $search, string $locale): Response
     {
-        // Searches one visitor may make per minute.
-        $perMinute = config('sunrice-cms.search.per_minute', 30);
-        $key = 'sunrice-search|'.$request->ip();
-        abort_if(RateLimiter::tooManyAttempts($key, is_numeric($perMinute) ? (int) $perMinute : 30), 429);
-        RateLimiter::hit($key, 60);
+        // Searches one visitor may make per minute, and everyone together.
+        $limits = ['sunrice-search|'.$request->ip() => self::limit('per_minute', 30), 'sunrice-search|all' => self::limit('per_minute_global', 300)];
+        foreach ($limits as $key => $limit) {
+            abort_if(RateLimiter::tooManyAttempts($key, $limit), 429);
+        }
+        foreach (array_keys($limits) as $key) {
+            RateLimiter::hit($key, 60);
+        }
         app()->setLocale($locale);
         $query = $request->query(Search::NAME);
         $query = is_string($query) ? trim(mb_substr($query, 0, 100)) : '';
@@ -39,5 +42,12 @@ final class SearchController
             'title' => $query === '' ? 'Search' : "Search: {$query}",
             'locale' => $locale,
         ])->header('X-Robots-Tag', 'noindex, follow');
+    }
+
+    private static function limit(string $key, int $default): int
+    {
+        $limit = config("sunrice-cms.search.{$key}", $default);
+
+        return is_numeric($limit) ? max(1, (int) $limit) : $default;
     }
 }

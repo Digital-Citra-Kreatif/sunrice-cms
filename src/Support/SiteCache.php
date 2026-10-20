@@ -38,20 +38,21 @@ final class SiteCache
 
     /**
      * The value under a key in this content version, made by `$make` when
-     * it isn't cached yet (or caching is off).
+     * it isn't cached yet (or caching is off), kept for `$ttl` seconds
+     * (null: config `ttl`).
      *
      * @template T
      *
      * @param  Closure(): T  $make
      * @return T
      */
-    public function remember(string $key, Closure $make): mixed
+    public function remember(string $key, Closure $make, ?int $ttl = null): mixed
     {
         if (! self::enabled()) {
             return $make();
         }
 
-        return $this->store()->remember($this->key($key), self::ttl(), $make);
+        return $this->store()->remember($this->key($key), $ttl ?? self::ttl(), $make);
     }
 
     /** The full cache key of `$key` in this content version. */
