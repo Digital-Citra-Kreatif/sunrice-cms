@@ -51,6 +51,8 @@ final class SaveDraft
             if (array_key_exists(Seo::KEY, $input)) {
                 $values['data'][Seo::KEY] = Seo::validate($input[Seo::KEY]);
             }
+            // Shared fields copied into another language's draft before would go stale: drop them.
+            $values['data'] = $translation->ownData($values['data']);
 
             $changed = array_keys(array_filter([
                 'title' => $values['title'] !== $translation->draft_title,

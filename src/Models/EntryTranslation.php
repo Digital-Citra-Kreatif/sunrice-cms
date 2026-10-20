@@ -59,7 +59,7 @@ class EntryTranslation extends Model
         // The live version's words for site search, whenever it changes.
         static::saving(function (self $translation): void {
             if ($translation->isDirty('data')) {
-                $translation->search_text = SearchText::of($translation->data ?? []);
+                $translation->search_text = SearchText::of($translation->completeData());
             }
         });
     }
@@ -142,15 +142,40 @@ class EntryTranslation extends Model
     public function values(?HydrationContext $context = null): array
     {
         $context ??= new HydrationContext($this->locale);
-        $schema = $this->entry->collection->schema();
-        $data = $context->preview ? $this->draft_data : ($this->data ?? []);
+
+        return $this->entry->collection->schema()->hydrate($this->completeData($context->preview), $context);
+    }
+
+    /**
+     * The stored fields, complete: the live version (or the draft) with,
+     * for a language other than the main one, the shared fields from the
+     * main translation. Other languages store only their translated
+     * fields (see ownData()), so the shared ones are never stale copies.
+     *
+     * @return array<string, mixed>
+     */
+    public function completeData(bool $draft = false): array
+    {
+        $data = $draft ? $this->draft_data : ($this->data ?? []);
         $main = $this->entry->mainTranslation();
         if ($main !== null && ! $main->is($this)) {
-            $shared = array_flip($schema->shared());
-            $data = array_replace($data, array_intersect_key($context->preview ? $main->draft_data : ($main->data ?? []), $shared));
+            $shared = array_flip($this->entry->collection->schema()->shared());
+            $data = array_replace($data, array_intersect_key($draft ? $main->draft_data : ($main->data ?? []), $shared));
         }
 
-        return $schema->hydrate($data, $context);
+        return $data;
+    }
+
+    /**
+     * What this translation stores of the given fields: all of them for the
+     * main one, without the shared fields (top-level handles) for the others.
+     *
+     * @param  array<mixed>  $data
+     * @return array<mixed>
+     */
+    public function ownData(array $data): array
+    {
+        return $this->isMain() ? $data : array_diff_key($data, array_flip($this->entry->collection->schema()->shared()));
     }
 
     /** The fields this translation edits: all of them for the main one, the translated ones for the others. */

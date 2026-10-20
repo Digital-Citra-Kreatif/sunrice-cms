@@ -13,6 +13,7 @@ use Sunrice\Cms\Events\EntryPublished;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Revision;
 use Sunrice\Cms\Site\Site;
+use Sunrice\Cms\Support\SearchText;
 
 /**
  * Publishes the draft of an entry translation: the site shows it from its
@@ -75,6 +76,16 @@ final class PublishEntry
                 $site->moved($oldPath, $newPath);
             }
             $this->terms->handle($translation->entry);
+            // The other languages' search text holds this one's shared fields.
+            if ($translation->isMain()) {
+                $translation->entry->load('translations');
+                foreach ($translation->entry->translations as $other) {
+                    if (! $other->is($translation) && $other->data !== null) {
+                        $other->setRelation('entry', $translation->entry);
+                        $other->forceFill(['search_text' => SearchText::of($other->completeData())])->save();
+                    }
+                }
+            }
 
             return $values;
         });

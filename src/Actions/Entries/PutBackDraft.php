@@ -24,7 +24,7 @@ final class PutBackDraft
         $translation->fill([
             'draft_title' => $draft['title'],
             'draft_slug' => $taken ? $translation->draft_slug : $draft['slug'],
-            'draft_data' => $draft['data'],
+            'draft_data' => $translation->ownData($draft['data']),
             'version' => $translation->version + 1,
         ])->save();
         $this->activity->record('updated', 'entry', $translation->entry, $draft['title'], ['locale' => $translation->locale, 'note' => 'undid a revision restore']);
