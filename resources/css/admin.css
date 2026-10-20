@@ -30,6 +30,13 @@
     --color-border: var(--border);
     --color-input: var(--input);
     --color-ring: var(--ring);
+    --color-ring-glow: var(--ring-glow);
+    --color-accent-tint: var(--accent-tint);
+    --color-surface-glass: var(--surface-glass);
+    --shadow-card: var(--shadow-card);
+    --shadow-pop: var(--shadow-pop);
+    --ease-out-quart: var(--ease-out-quart);
+    --ease-spring: var(--ease-spring);
     --radius-sm: calc(var(--radius) - 4px);
     --radius-md: calc(var(--radius) - 2px);
     --radius-lg: var(--radius);
