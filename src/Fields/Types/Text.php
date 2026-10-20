@@ -7,7 +7,7 @@ namespace Sunrice\Cms\Fields\Types;
 use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\FieldType;
 
-/** One line of text. Settings: max (characters), placeholder, default. */
+/** One line of text. Settings: max (characters, up to 255 in the builder; none: 65535), placeholder, default. */
 final class Text extends FieldType
 {
     public function type(): string
@@ -17,7 +17,8 @@ final class Text extends FieldType
 
     public function rules(Field $field): array
     {
-        return ['string', 'max:'.($field->configInt('max') ?? 255)];
+        // Only the field's own limit: legacy data longer than the builder's hint stays valid. Text columns top out at 65535.
+        return ['string', 'max:'.min($field->configInt('max') ?? 65535, 65535)];
     }
 
     public function normalize(mixed $value, Field $field): mixed

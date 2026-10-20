@@ -59,6 +59,6 @@ final class Group extends FieldType
 
     public function toAdmin(Field $field, Schema $schema): array
     {
-        return ['fields' => Schema::children($field)->toAdmin()] + parent::toAdmin($field, $schema);
+        return ['fields' => Schema::children($field, $schema->depth())->toAdmin()] + parent::toAdmin($field, $schema);
     }
 }

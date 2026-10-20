@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
  * @property int $global_set_id
  * @property string $locale
  * @property array<string, mixed> $data
+ * @property int $version counted up on each save; a save with an older one is refused
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read GlobalSet $globalSet
@@ -30,7 +31,7 @@ class GlobalValue extends Model
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['data' => 'array'];
+        return ['data' => 'array', 'version' => 'integer'];
     }
 
     /** @return BelongsTo<GlobalSet, $this> */

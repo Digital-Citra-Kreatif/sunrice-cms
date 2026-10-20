@@ -150,7 +150,13 @@ final class DefinitionValidator
         }
     }
 
-    /** Whether a fieldset includes another, directly or through others (or uses it as a block kind). */
+    /**
+     * Whether a fieldset includes another, directly or through others.
+     * Kinds of block don't count: a fieldset may use itself, or one that
+     * includes it, as a block. Includes expand when the schema is built
+     * and would never end; blocks only nest as deep as the content does,
+     * and the editor gets their fields Schema::MAX_DEPTH blocks deep.
+     */
     private function includes(string $handle, ?string $target, int $depth = 0): bool
     {
         if ($target === null || $depth > Schema::MAX_DEPTH) {

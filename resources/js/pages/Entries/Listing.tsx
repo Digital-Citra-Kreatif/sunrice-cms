@@ -4,6 +4,7 @@ import { ExternalLink, LoaderCircle } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
 import { Button, Card, CardContent, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs, useUnsavedChanges } from '@sunrice/admin-sdk/ui';
 import { FieldInput } from '@/components/FieldInput.tsx';
+import { VersionConflict } from '@/components/VersionConflict.tsx';
 import { errorsAt } from '@/lib/builder.ts';
 import { localeName } from '@/lib/entries.ts';
 import type { FieldDefinition } from '@/types.ts';
@@ -20,23 +21,30 @@ interface Props {
     /** Fields shared by all languages: read-only outside the main one. */
     shared: string[];
     values: FieldValues;
+    /** The saved values' version, to refuse a save over someone else's newer one; null before the first save. */
+    version: number | null;
     can: { update: boolean };
 }
 
 export default function ListingPage(props: Props) {
     // A fresh form per language and after each save.
-    return <ListingEdit key={`${props.locale}:${JSON.stringify(props.values)}`} {...props} />;
+    return <ListingEdit key={`${props.locale}:${props.version}:${JSON.stringify(props.values)}`} {...props} />;
 }
 
-function ListingEdit({ collection, fields, locale, locales, shared, values, can }: Props) {
+function ListingEdit({ collection, fields, locale, locales, shared, values, version, can }: Props) {
     const url = adminUrl(`cms/collections/${collection.handle}/listing`);
     const back = adminUrl(`cms/collections/${collection.handle}/entries`);
     useBreadcrumbs([{ label: collection.title, href: back }, { label: 'Listing page' }]);
-    const form = useForm<{ locale: string; data: FieldValues }>({ locale, data: values });
+    const form = useForm<{ locale: string; data: FieldValues; version: number | null }>({ locale, data: values, version });
     const errors = form.errors as Record<string, string | undefined>;
     const mainLocale = locales[0];
     const writable = can.update;
     const save = () => form.processing || form.put(url, { preserveScroll: true });
+    // After "someone else saved": save over their version anyway.
+    const saveMine = () => {
+        form.transform((data) => ({ ...data, version: null }));
+        form.put(url, { preserveScroll: true });
+    };
     useUnsavedChanges(form.isDirty, writable ? save : undefined);
 
     return (
@@ -73,6 +81,7 @@ function ListingEdit({ collection, fields, locale, locales, shared, values, can 
                 <p className="cms:text-muted-foreground">The listing page has no fields of its own: choose a listing blueprint for the collection under Structure → Collections.</p>
             ) : (
                 <fieldset disabled={!writable} className="cms:flex cms:flex-col cms:gap-4">
+                    <VersionConflict message={errors.version} processing={form.processing} onSaveMine={saveMine} />
                     <Card>
                         <CardContent className="cms:flex cms:flex-col cms:gap-6">
                             {fields.map((field) => shared.includes(field.handle) ? (

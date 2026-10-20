@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Sunrice\Cms\Actions\Entries;
 
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
 use Sunrice\Cms\Models\Collection;
@@ -41,12 +40,13 @@ final class CreateEntry
         }
         $schema = $collection->schema();
         $data = EntryInput::merge($schema, $schema->defaults(), $input['data'] ?? null);
-        $values = EntryInput::validate($schema, $input['title'] ?? null, $input['slug'] ?? null, $data, $collection->id, $locale, null);
-        if (($seo = Seo::validate($input[Seo::KEY] ?? null)) !== null) {
-            $values['data'][Seo::KEY] = $seo;
-        }
 
-        $translation = DB::transaction(function () use ($collection, $locale, $values): EntryTranslation {
+        // The slug check and the write in one transaction: see EntryInput::write().
+        $translation = EntryInput::write(function () use ($collection, $locale, $schema, $input, $data): EntryTranslation {
+            $values = EntryInput::validate($schema, $input['title'] ?? null, $input['slug'] ?? null, $data, $collection->id, $locale, null);
+            if (($seo = Seo::validate($input[Seo::KEY] ?? null)) !== null) {
+                $values['data'][Seo::KEY] = $seo;
+            }
             $id = Auth::id();
             $entry = Entry::query()->create(['collection_id' => $collection->id, 'author_id' => is_int($id) ? $id : null, 'sort_order' => MoveEntry::last($collection->id)]);
 
@@ -58,7 +58,7 @@ final class CreateEntry
                 'draft_data' => $values['data'],
             ]);
         });
-        $this->activity->record('created', 'entry', $translation->entry_id, $values['title'], ['collection' => $collection->handle, 'locale' => $locale]);
+        $this->activity->record('created', 'entry', $translation->entry_id, $translation->draft_title, ['collection' => $collection->handle, 'locale' => $locale]);
 
         return $translation;
     }

@@ -16,6 +16,8 @@ interface TermRow {
     /** In the language shown; null when not translated yet. */
     title: string | null;
     slug: string | null;
+    /** The translation's version, to refuse a save over someone else's newer one; null when not translated. */
+    version: number | null;
     /** The main language's title, for untranslated terms. */
     fallback: string;
 }
@@ -140,7 +142,7 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
 function TermForm({ action, method, locale, terms, hierarchical, term, submitLabel, onDone }: {
     action: string; method: 'post' | 'put'; locale: string; terms: TermRow[]; hierarchical: boolean; term?: TermRow; submitLabel: string; onDone?: () => void;
 }) {
-    const form = useForm({ title: term?.title ?? '', slug: term?.slug ?? '', parent_id: term?.parentId ?? null as number | null, locale });
+    const form = useForm({ title: term?.title ?? '', slug: term?.slug ?? '', parent_id: term?.parentId ?? null as number | null, locale, version: term?.version ?? null });
     const errors = form.errors as Record<string, string | undefined>;
     // A term can't go under itself or a term under it.
     const blocked = new Set<number>();
@@ -161,7 +163,7 @@ function TermForm({ action, method, locale, terms, hierarchical, term, submitLab
                 <Label htmlFor={`${id}-title`} className={term ? 'cms:sr-only' : ''}>Title</Label>
                 <Input id={`${id}-title`} value={form.data.title} placeholder={term?.fallback} required
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => form.setData('title', e.target.value)} />
-                <FieldError message={errors.title} />
+                <FieldError message={errors.title ?? errors.version} />
             </div>
             <div className="cms:flex cms:flex-col cms:gap-1">
                 <Label htmlFor={`${id}-slug`} className={term ? 'cms:sr-only' : ''}>Slug</Label>

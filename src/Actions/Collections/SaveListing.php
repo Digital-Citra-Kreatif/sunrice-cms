@@ -11,6 +11,7 @@ use Sunrice\Cms\Actions\Entries\EntryInput;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\CollectionListing;
 use Sunrice\Cms\Support\Locales;
+use Sunrice\Cms\Support\Versioned;
 
 /**
  * Saves a collection's listing page fields in a language; fields left out
@@ -24,15 +25,17 @@ final class SaveListing
 
     /**
      * @param  array<mixed>  $data
+     * @param  int|string|null  $version  the one the editor opened: a save over someone else's newer one is refused
      *
      * @throws ValidationException
      */
-    public function handle(Collection $collection, array $data, ?string $locale = null): CollectionListing
+    public function handle(Collection $collection, array $data, ?string $locale = null, int|string|null $version = null): CollectionListing
     {
         $locale ??= Locales::default();
         if (! Locales::has($locale)) {
             throw ValidationException::withMessages(['locale' => 'Choose one of the site\'s languages: '.implode(', ', Locales::all()).'.']);
         }
+        $expected = Versioned::expected($version);
         $schema = $collection->listingSchema();
         if ($locale !== Locales::default()) {
             $schema = $schema->except($schema->shared());
@@ -46,8 +49,13 @@ final class SaveListing
 
         $changed = array_keys(array_filter($normalized, fn (mixed $v, int|string $k): bool => ! array_key_exists($k, $before) || $before[$k] != $v, ARRAY_FILTER_USE_BOTH));
         /** @var array<string, mixed> $normalized */
-        $listing->data = $normalized;
-        $listing->save();
+        if ($listing->exists) {
+            // Only if nobody saved in between: the version check and the write are one statement.
+            Versioned::update($listing, $expected, ['data' => json_encode($normalized, JSON_THROW_ON_ERROR)]);
+        } else {
+            $listing->data = $normalized;
+            $listing->save();
+        }
         $collection->unsetRelation('listings');
         $this->activity->updated('listing', $collection, $collection->title, array_map(strval(...), $changed));
 

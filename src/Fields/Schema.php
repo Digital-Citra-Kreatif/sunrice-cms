@@ -21,19 +21,27 @@ use Sunrice\Cms\Fields\Types\Missing;
  */
 final class Schema
 {
-    /** Includes may nest this deep; deeper ones stay unexpanded. */
+    /**
+     * Includes may nest this deep; deeper ones stay unexpanded. The editor
+     * gets flexible blocks' fields this many blocks deep too; deeper blocks
+     * come without fields (a fieldset may use itself as a kind of block).
+     */
     public const MAX_DEPTH = 5;
 
     /** @param list<Field> $fields */
     private function __construct(
         private readonly array $fields,
         private readonly FieldTypes $types,
+        private readonly int $depth = 0,
     ) {}
 
-    /** @param list<Field> $fields */
-    public static function make(array $fields): self
+    /**
+     * @param  list<Field>  $fields
+     * @param  int  $depth  how many flexible blocks deep these fields are (a block's fieldset: its field's depth + 1)
+     */
+    public static function make(array $fields, int $depth = 0): self
     {
-        return new self(self::expand($fields, app(Fieldsets::class)), app(FieldTypes::class));
+        return new self(self::expand($fields, app(Fieldsets::class)), app(FieldTypes::class), $depth);
     }
 
     /**
@@ -92,10 +100,16 @@ final class Schema
         return $this->types->has($field->type) ? $this->types->get($field->type) : new Missing($field->type);
     }
 
-    /** A schema of a group's or repeater's fields (already expanded with their parent). */
-    public static function children(Field $field): self
+    /** A schema of a group's or repeater's fields (already expanded with their parent), at the parent's depth. */
+    public static function children(Field $field, int $depth = 0): self
     {
-        return new self($field->fields, app(FieldTypes::class));
+        return new self($field->fields, app(FieldTypes::class), $depth);
+    }
+
+    /** How many flexible blocks deep these fields are. */
+    public function depth(): int
+    {
+        return $this->depth;
     }
 
     public function isTranslatable(Field $field): bool
@@ -120,7 +134,7 @@ final class Schema
      */
     public function except(array $handles): self
     {
-        return new self(array_values(array_filter($this->fields, fn (Field $field): bool => ! in_array($field->handle, $handles, true))), $this->types);
+        return new self(array_values(array_filter($this->fields, fn (Field $field): bool => ! in_array($field->handle, $handles, true))), $this->types, $this->depth);
     }
 
     /**
@@ -208,7 +222,8 @@ final class Schema
     }
 
     /**
-     * The definitions sent to the editor.
+     * The definitions sent to the editor. Flexible blocks' fields go
+     * MAX_DEPTH blocks deep; deeper blocks are listed without fields.
      *
      * @return list<array<string, mixed>>
      */

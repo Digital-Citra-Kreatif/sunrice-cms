@@ -15,12 +15,15 @@ use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Support\Locales;
+use Sunrice\Cms\Support\Versioned;
 
 /**
  * Creates a term or changes one, in one language. Input: title, slug
  * (made from the title when empty; unique in the taxonomy and language),
  * locale (the main one when left out) and parent_id (a term of the same
- * taxonomy, if it's hierarchical; never the term itself or one under it).
+ * taxonomy, if it's hierarchical; never the term itself or one under it)
+ * and version (the one the editor opened: a save over someone else's
+ * newer one is refused).
  *
  * @api
  */
@@ -72,7 +75,12 @@ final class SaveTerm
         $slug = ($validated['slug'] ?? null) ?: self::uniqueSlug($taxonomy, $locale, $title, $existing?->id);
 
         $creating = ! $term->exists;
-        DB::transaction(function () use ($term, $taxonomy, $validated, $locale, $title, $slug, $existing, $input): void {
+        $expected = Versioned::expected($input['version'] ?? null);
+        DB::transaction(function () use ($term, $taxonomy, $validated, $locale, $title, $slug, $existing, $expected, $input): void {
+            if ($existing !== null) {
+                // Only if nobody saved in between: the version check and the write are one statement.
+                Versioned::update($existing, $expected, ['title' => $title, 'slug' => $slug]);
+            }
             if (array_key_exists('parent_id', $input)) {
                 $term->parent_id = $validated['parent_id'] ?? null;
             }
@@ -81,8 +89,10 @@ final class SaveTerm
                 $term->sort_order = is_numeric($last) ? (int) $last + 1 : 0;
             }
             $term->save();
-            ($existing ?? new TermTranslation(['term_id' => $term->id, 'taxonomy_id' => $taxonomy->id, 'locale' => $locale]))
-                ->fill(['title' => $title, 'slug' => $slug])->save();
+            if ($existing === null) {
+                (new TermTranslation(['term_id' => $term->id, 'taxonomy_id' => $taxonomy->id, 'locale' => $locale]))
+                    ->fill(['title' => $title, 'slug' => $slug])->save();
+            }
         });
         $term->unsetRelation('translations');
         $this->activity->record($creating ? 'created' : 'updated', 'term', $term, $title, ['taxonomy' => $taxonomy->handle, 'locale' => $locale]);

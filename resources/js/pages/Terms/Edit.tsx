@@ -7,6 +7,7 @@ import {
     useBreadcrumbs, useUnsavedChanges,
 } from '@sunrice/admin-sdk/ui';
 import { FieldError, FieldInput, Fields } from '@/components/FieldInput.tsx';
+import { VersionConflict } from '@/components/VersionConflict.tsx';
 import { errorsAt } from '@/lib/builder.ts';
 import { localeName } from '@/lib/entries.ts';
 import { SEO_FIELDS } from '@/lib/seo.ts';
@@ -28,20 +29,27 @@ interface Props {
     sharedValues: FieldValues;
     values: FieldValues;
     seo: FieldValues | null;
+    /** The translation's version, to refuse a save over someone else's newer one; null when not translated. */
+    version: number | null;
 }
 
 export default function TermEditPage(props: Props) {
     // A fresh form per language and after each save.
-    return <TermEdit key={`${props.locale}:${JSON.stringify([props.values, props.seo, props.term.template])}`} {...props} />;
+    return <TermEdit key={`${props.locale}:${props.version}:${JSON.stringify([props.values, props.seo, props.term.template])}`} {...props} />;
 }
 
-function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared, sharedValues, values, seo }: Props) {
+function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared, sharedValues, values, seo, version }: Props) {
     const list = adminUrl(`cms/taxonomies/${taxonomy.handle}/terms`);
     const url = adminUrl(`cms/terms/${term.id}/content`);
     useBreadcrumbs([{ label: taxonomy.title, href: `${list}?locale=${locale}` }, { label: term.title }]);
-    const form = useForm<{ locale: string; data: FieldValues; seo: FieldValues; template: string }>({ locale, data: values, seo: seo ?? {}, template: term.template ?? '' });
+    const form = useForm<{ locale: string; data: FieldValues; seo: FieldValues; template: string; version: number | null }>({ locale, data: values, seo: seo ?? {}, template: term.template ?? '', version });
     const errors = form.errors as Record<string, string | undefined>;
     const save = () => form.processing || form.put(url, { preserveScroll: true });
+    // After "someone else saved": save over their version anyway.
+    const saveMine = () => {
+        form.transform((data) => ({ ...data, version: null }));
+        form.put(url, { preserveScroll: true });
+    };
     useUnsavedChanges(form.isDirty, translated ? save : undefined);
 
     return (
@@ -70,6 +78,7 @@ function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared,
                 <p className="cms:text-muted-foreground">This term has no title in {localeName(locale)} yet: give it one in the list first.</p>
             ) : (
                 <>
+                    <VersionConflict message={errors.version} processing={form.processing} onSaveMine={saveMine} />
                     {fields.length > 0 && (
                         <Card>
                             <CardContent className="cms:flex cms:flex-col cms:gap-6">

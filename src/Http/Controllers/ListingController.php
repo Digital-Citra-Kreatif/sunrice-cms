@@ -36,6 +36,7 @@ final class ListingController
             'locales' => Locales::all(),
             'shared' => $locale === Locales::default() ? [] : $schema->shared(),
             'values' => $collection->listingData($locale, $schema),
+            'version' => $collection->listings->firstWhere('locale', $locale)?->version,
             'can' => ['update' => Access::entries($request->user(), 'update', $collection)],
         ]);
     }
@@ -45,7 +46,8 @@ final class ListingController
         abort_if($collection->listing_route === null, 404);
         $data = $request->input('data');
         $locale = $request->input('locale');
-        $save->handle($collection, is_array($data) ? $data : [], is_string($locale) ? $locale : null);
+        $version = $request->input('version');
+        $save->handle($collection, is_array($data) ? $data : [], is_string($locale) ? $locale : null, is_int($version) || is_string($version) ? $version : null);
 
         return back()->with('success', 'Saved. The site shows it now.');
     }

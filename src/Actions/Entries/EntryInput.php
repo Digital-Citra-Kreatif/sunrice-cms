@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Actions\Entries;
 
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -13,7 +15,10 @@ use Sunrice\Cms\Models\EntryTranslation;
 
 /**
  * Checks an entry's title, slug and fields and returns them as stored.
- * Shared by CreateEntry, SaveDraft and PublishEntry.
+ * Shared by CreateEntry, SaveDraft and PublishEntry, which validate and
+ * write inside write(): the slug check locks the translations it looks
+ * at until the write is done, and a slug taken in between by a save the
+ * lock couldn't hold off is refused instead of crashing.
  *
  * @internal
  */
@@ -89,7 +94,34 @@ final class EntryInput
         return array_replace($stored, array_intersect_key($input, $handles));
     }
 
-    /** Whether another translation in the collection and language has the slug, live or in its draft (trashed entries count). */
+    /**
+     * Runs a write that may take a slug, in a transaction. The slug checks
+     * in it lock what they find until it commits (where the driver can);
+     * a slug the unique index refuses anyway is a validation error.
+     *
+     * @template T
+     *
+     * @param  \Closure(): T  $write
+     * @return T
+     *
+     * @throws ValidationException
+     */
+    public static function write(\Closure $write): mixed
+    {
+        try {
+            return DB::transaction($write);
+        } catch (UniqueConstraintViolationException) {
+            throw ValidationException::withMessages(['slug' => 'This slug is already used. Choose another one.']);
+        }
+    }
+
+    /**
+     * Whether another translation in the collection and language has the
+     * slug, live or in its draft (trashed entries count). In a transaction
+     * the rows it finds stay locked until it ends, so two saves can't take
+     * the same slug at once (SQLite has no row locks; there the unique
+     * index on live slugs has the last word, see write()).
+     */
     public static function taken(string $slug, int $collectionId, string $locale, ?int $except): bool
     {
         return EntryTranslation::query()
@@ -97,6 +129,7 @@ final class EntryInput
             ->where('locale', $locale)
             ->when($except !== null, fn ($query) => $query->whereKeyNot($except))
             ->where(fn ($query) => $query->where('slug', $slug)->orWhere('draft_slug', $slug))
+            ->lockForUpdate()
             ->exists();
     }
 

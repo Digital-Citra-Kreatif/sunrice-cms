@@ -7,13 +7,13 @@ namespace Sunrice\Cms\Actions\Entries;
 use DateTimeInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
 use Sunrice\Cms\Events\EntryPublished;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Revision;
 use Sunrice\Cms\Site\Site;
+use Sunrice\Cms\Support\SearchText;
 
 /**
  * Publishes the draft of an entry translation: the site shows it from its
@@ -40,21 +40,21 @@ final class PublishEntry
         if ($entry->collection->trashed()) {
             throw ValidationException::withMessages(['entry' => "The collection \"{$entry->collection->title}\" was deleted."]);
         }
-        $values = EntryInput::validate(
-            $translation->editableSchema(),
-            $translation->draft_title,
-            $translation->draft_slug,
-            $translation->draft_data,
-            $translation->collection_id,
-            $translation->locale,
-            $translation->id,
-        );
-
         // Where the live page was, to redirect from if its address changes.
         $site = app(Site::class);
         $oldPath = $translation->isPublished() ? $site->path($translation, $translation->slug) : null;
 
-        DB::transaction(function () use ($translation, $values, $publishAt, $site, $oldPath): void {
+        // The slug check and the write in one transaction: see EntryInput::write().
+        $values = EntryInput::write(function () use ($translation, $publishAt, $site, $oldPath): array {
+            $values = EntryInput::validate(
+                $translation->editableSchema(),
+                $translation->draft_title,
+                $translation->draft_slug,
+                $translation->draft_data,
+                $translation->collection_id,
+                $translation->locale,
+                $translation->id,
+            );
             $translation->fill([
                 'status' => EntryTranslation::PUBLISHED,
                 'title' => $values['title'],
@@ -62,6 +62,8 @@ final class PublishEntry
                 'data' => $values['data'],
                 'draft_data' => $values['data'],
                 'published_at' => $publishAt !== null ? Carbon::instance($publishAt) : ($translation->published_at ?? now()),
+                // Counted up too, so an editor opened before this publish can't save over it unknowingly.
+                'version' => $translation->version + 1,
             ])->save();
             $id = Auth::id();
             $translation->revisions()->create([
@@ -76,6 +78,18 @@ final class PublishEntry
                 $site->moved($oldPath, $newPath);
             }
             $this->terms->handle($translation->entry);
+            // The other languages' search text holds this one's shared fields.
+            if ($translation->isMain()) {
+                $translation->entry->load('translations');
+                foreach ($translation->entry->translations as $other) {
+                    if (! $other->is($translation) && $other->data !== null) {
+                        $other->setRelation('entry', $translation->entry);
+                        $other->forceFill(['search_text' => SearchText::of($other->completeData())])->save();
+                    }
+                }
+            }
+
+            return $values;
         });
         $this->activity->record('published', 'entry', $entry, $values['title'], ['locale' => $translation->locale]);
         EntryPublished::dispatch($translation);

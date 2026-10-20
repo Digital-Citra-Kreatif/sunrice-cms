@@ -25,7 +25,7 @@ final class RestoreRevision
         $translation->fill([
             'draft_title' => $revision->title,
             'draft_slug' => $taken ? $translation->draft_slug : $revision->slug,
-            'draft_data' => $revision->data,
+            'draft_data' => $translation->ownData($revision->data),
             'version' => $translation->version + 1,
         ])->save();
         $this->activity->record('reverted', 'entry', $translation->entry, $revision->title, ['locale' => $translation->locale, 'revision' => $revision->id]);

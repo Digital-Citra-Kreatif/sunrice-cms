@@ -43,6 +43,7 @@ final class GlobalsController
             'locales' => Locales::all(),
             'shared' => $main ? [] : $set->schema()->shared(),
             'values' => $set->data($locale),
+            'version' => $set->values->firstWhere('locale', $locale)?->version,
             'can' => ['update' => $request->user()?->can('cms.globals.update') ?? false],
         ]);
     }
@@ -51,7 +52,8 @@ final class GlobalsController
     {
         $data = $request->input('data');
         $locale = $request->input('locale');
-        $save->handle($set, is_array($data) ? $data : [], is_string($locale) ? $locale : null);
+        $version = $request->input('version');
+        $save->handle($set, is_array($data) ? $data : [], is_string($locale) ? $locale : null, is_int($version) || is_string($version) ? $version : null);
 
         return back()->with('success', 'Saved. The site shows it now.');
     }
