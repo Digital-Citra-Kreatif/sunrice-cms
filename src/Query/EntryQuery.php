@@ -590,21 +590,7 @@ final class EntryQuery
      */
     private function castExpression(Builder $query, string $column, string $cast): string
     {
-        $value = $query->getQuery()->getGrammar()->wrap($column);
-        $driver = $this->driver($query);
-        if ($cast === 'date') {
-            return match ($driver) {
-                'sqlite' => "datetime({$value})",
-                'pgsql' => "CAST({$value} AS TIMESTAMP)",
-                default => "CAST({$value} AS DATETIME)",
-            };
-        }
-
-        return match ($driver) {
-            'sqlite' => "CAST({$value} AS REAL)",
-            'pgsql' => "CAST({$value} AS DOUBLE PRECISION)",
-            default => "CAST({$value} AS DECIMAL(20, 6))",
-        };
+        return JsonCast::expression($query, $column, $cast);
     }
 
     /** A date to compare with a cast date field: "2026-01-01 00:00:00". */
@@ -616,16 +602,6 @@ final class EntryQuery
         $value = is_scalar($value) ? (string) $value : '';
 
         return strlen($value) <= 10 ? $value.' 00:00:00' : str_replace('T', ' ', substr($value, 0, 19));
-    }
-
-    /**
-     * @template TModel of \Illuminate\Database\Eloquent\Model
-     *
-     * @param  Builder<TModel>  $query
-     */
-    private function driver(Builder $query): string
-    {
-        return $query->getModel()->getConnection()->getDriverName();
     }
 
     /**
