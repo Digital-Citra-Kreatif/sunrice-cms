@@ -43,7 +43,7 @@ final class GetEntry extends CmsTool
         if ($translation instanceof Response) {
             return $translation;
         }
-        $schema = $entry->collection->schema();
+        $schema = $entry->schema();
         $data = $translation->draft_data;
         unset($data[Seo::KEY]);
 

@@ -20,6 +20,7 @@ use Sunrice\Cms\Actions\Entries\RestoreRevision;
 use Sunrice\Cms\Actions\Entries\SaveDraft;
 use Sunrice\Cms\Actions\Entries\TrashEntry;
 use Sunrice\Cms\Actions\Entries\UnpublishEntry;
+use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
@@ -151,11 +152,12 @@ final class EntryController
         $translation = self::translation($entry, $request->query('locale'));
         $collection = $entry->collection;
         $main = $entry->mainTranslation();
-        $shared = $translation->isMain() ? [] : $collection->schema()->shared();
+        $schema = $entry->schema();
+        $shared = $translation->isMain() ? [] : $schema->shared();
 
         return Inertia::render('Cms/Entries/Editor', [
             'collection' => self::collection($collection),
-            'fields' => $collection->schema()->toAdmin(),
+            'fields' => $schema->toAdmin(),
             'locales' => self::locales($entry),
             // Shared fields are edited in the main language; the others show its values.
             'shared' => $shared,
@@ -175,7 +177,9 @@ final class EntryController
             ],
             'values' => ['title' => $translation->draft_title, 'slug' => $translation->draft_slug, 'data' => $translation->draft_data, 'seo' => $translation->draft_data[Seo::KEY] ?? null],
             // Every language's: the parent and its own Blade view.
-            'settings' => ['parentId' => $entry->parent_id, 'template' => $entry->template, 'commentsClosed' => $entry->comments_closed],
+            'settings' => ['parentId' => $entry->parent_id, 'template' => $entry->template, 'commentsClosed' => $entry->comments_closed, 'blueprint' => $entry->blueprintHandle()],
+            // The blueprints it may use, when there's a choice (Page settings).
+            'blueprints' => self::blueprints($collection),
             'revisions' => $translation->revisions()->limit(20)->get()->map(fn (Revision $revision): array => [
                 'id' => $revision->id,
                 'title' => $revision->title,
@@ -311,6 +315,23 @@ final class EntryController
     {
         return ['handle' => $collection->handle, 'title' => $collection->title, 'dated' => $collection->dated, 'hierarchical' => $collection->hierarchical, 'comments' => $collection->comments,
             'ordered' => $collection->ordered, 'listing' => $collection->listing_route !== null];
+    }
+
+    /**
+     * The blueprints a collection's entries may choose from, by title;
+     * none when there's only its own.
+     *
+     * @return list<array{handle: string, title: string}>
+     */
+    private static function blueprints(Collection $collection): array
+    {
+        $handles = $collection->allowedBlueprints();
+        if (count($handles) < 2) {
+            return [];
+        }
+        $titles = Blueprint::query()->whereIn('handle', $handles)->pluck('title', 'handle');
+
+        return array_map(fn (string $handle): array => ['handle' => $handle, 'title' => is_string($titles[$handle] ?? null) ? $titles[$handle] : $handle], $handles);
     }
 
     /** @return array<string, bool> what the user may do here: in the collection, with the entry in this language */

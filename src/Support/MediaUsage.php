@@ -23,7 +23,7 @@ final class MediaUsage
     {
         $entry = $translation->entry;
         $collection = $entry->collection;
-        $schema = $collection->schema();
+        $schema = $entry->schema();
         $ids = [...self::ids($schema, $translation->draft_data), ...self::ids($schema, $translation->data ?? [])];
         $url = Route::has('sunrice.admin.cms.entries.edit') ? route('sunrice.admin.cms.entries.edit', [$entry->id, 'locale' => $translation->locale]) : null;
         app(MediaUsages::class)->sync('cms.entry', (string) $entry->id, $ids,

@@ -5,7 +5,7 @@ import { adminUrl } from '@sunrice/admin-sdk';
 import {
     Badge, Button, Card, CardContent, CardHeader, CardTitle, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, Input, KeptEditsNotice, Label, PageHeader,
-    Switch, useBreadcrumbs, useEditLock, useUnsavedChanges, ViewingNotice,
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Switch, useBreadcrumbs, useEditLock, useUnsavedChanges, ViewingNotice,
 } from '@sunrice/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
@@ -18,7 +18,9 @@ import type { FieldDefinition } from '@/types.ts';
 interface Props {
     collection: { handle: string; title: string; dated: boolean; hierarchical?: boolean; ordered?: boolean; comments?: boolean };
     /** Every language's: the parent entry and the entry's own Blade view. */
-    settings?: { parentId: number | null; template: string | null };
+    settings?: { parentId: number | null; template: string | null; commentsClosed?: boolean; blueprint?: string | null };
+    /** The blueprints the entry may use, when its collection offers more than one. */
+    blueprints?: { handle: string; title: string }[];
     fields: FieldDefinition[];
     /** The site's languages and the entry's status in each (none for a new entry). */
     locales?: EntryLocale[];
@@ -66,7 +68,7 @@ export default function EntryEditorPage(props: Props) {
     return <EntryEditor key={entry ? `${entry.id}:${entry.locale}:${entry.version}:${entry.status}:${entry.trashed}:${entry.publishedAt}` : 'new'} {...props} />;
 }
 
-function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, undoRestore = null, settings, can }: Props) {
+function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, undoRestore = null, settings, blueprints = [], can }: Props) {
     const list = adminUrl(`cms/collections/${collection.handle}/entries`);
     const url = entry ? adminUrl(`cms/entries/${entry.id}`) : list;
     const heading = entry ? values.title : 'New entry';
@@ -274,7 +276,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                                 {entry.status !== 'draft' && entry.hasUnpublishedChanges && <p className="cms:text-muted-foreground">The draft has changes the site doesn't show yet.</p>}
                             </CardContent>
                         </Card>
-                        {settings && <PageSettings entryUrl={url} collection={collection} settings={settings} disabled={!writable} />}
+                        {settings && <PageSettings entryUrl={url} collection={collection} settings={settings} blueprints={blueprints} disabled={!writable} />}
                         <Card>
                             <CardHeader><CardTitle className="cms:text-base">Revisions</CardTitle></CardHeader>
                             <CardContent className="cms:flex cms:flex-col cms:gap-2 cms:text-sm">
@@ -369,14 +371,19 @@ function ScheduleDialog({ open, onClose, onSchedule, current, processing }: {
     );
 }
 
-/** The parent entry, the entry's own template and its comments, saved apart from the fields (every language's). */
-function PageSettings({ entryUrl, collection, settings, disabled }: {
+/** The parent entry, the entry's own template, blueprint and comments, saved apart from the fields (every language's). */
+function PageSettings({ entryUrl, collection, settings, blueprints, disabled }: {
     entryUrl: string;
     collection: Props['collection'];
-    settings: { parentId: number | null; template: string | null; commentsClosed?: boolean };
+    settings: NonNullable<Props['settings']>;
+    blueprints: NonNullable<Props['blueprints']>;
     disabled: boolean;
 }) {
-    const form = useForm({ parent_id: settings.parentId, template: settings.template ?? '', comments_closed: settings.commentsClosed === true });
+    const savedBlueprint = blueprints.length > 1 ? (settings.blueprint ?? blueprints[0]!.handle) : undefined;
+    const form = useForm({
+        parent_id: settings.parentId, template: settings.template ?? '', comments_closed: settings.commentsClosed === true,
+        ...(savedBlueprint !== undefined ? { blueprint: savedBlueprint } : {}),
+    });
     const errors = form.errors as Record<string, string | undefined>;
 
     return (
@@ -390,6 +397,21 @@ function PageSettings({ entryUrl, collection, settings, disabled }: {
                             <EntriesPicker id="parent" multiple={false} max={1} collections={[collection.handle]} invalid={errors.parent_id !== undefined}
                                 value={form.data.parent_id} onChange={(value) => form.setData('parent_id', typeof value === 'number' ? value : null)} />
                             <FieldError message={errors.parent_id} />
+                        </div>
+                    )}
+                    {blueprints.length > 1 && (
+                        <div className="cms:flex cms:flex-col cms:gap-2">
+                            <Label htmlFor="blueprint">Blueprint</Label>
+                            <Select value={form.data.blueprint} onValueChange={(handle: string) => form.setData('blueprint', handle)}>
+                                <SelectTrigger id="blueprint" aria-invalid={errors.blueprint !== undefined}><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    {blueprints.map((blueprint) => <SelectItem key={blueprint.handle} value={blueprint.handle}>{blueprint.title}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                            {form.data.blueprint !== savedBlueprint && (
+                                <p className="cms:text-muted-foreground">The fields change in every language; values of fields both blueprints have are kept. Save your draft first: the editor reloads.</p>
+                            )}
+                            <FieldError message={errors.blueprint} />
                         </div>
                     )}
                     <div className="cms:flex cms:flex-col cms:gap-2">
@@ -407,7 +429,8 @@ function PageSettings({ entryUrl, collection, settings, disabled }: {
                     )}
                     {form.isDirty && (
                         <Button type="button" size="sm" disabled={form.processing}
-                            onClick={() => form.put(`${entryUrl}/settings`, { preserveScroll: true, onSuccess: () => form.setDefaults() })}>Save settings</Button>
+                            // A new blueprint means new fields and versions: the editor starts afresh.
+                            onClick={() => form.put(`${entryUrl}/settings`, { preserveScroll: true, preserveState: form.data.blueprint === savedBlueprint, onSuccess: () => form.setDefaults() })}>Save settings</Button>
                     )}
                 </fieldset>
             </CardContent>

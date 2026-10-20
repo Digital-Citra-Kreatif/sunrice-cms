@@ -25,7 +25,7 @@ final class SyncEntryTerms
         }
         $data = $main->data ?? [];
         $ids = [];
-        foreach ($entry->collection->schema()->fields() as $field) {
+        foreach ($entry->schema()->fields() as $field) {
             if ($field->type === TermsField::TYPE) {
                 $value = $data[$field->handle] ?? null;
                 array_push($ids, ...array_filter(is_array($value) ? $value : [$value], is_int(...)));

@@ -459,7 +459,7 @@ final class EntryQuery
         $references = [];
         foreach ($translations as $translation) {
             $translation->hydrateWith($context);
-            array_push($references, ...$translation->entry->collection->schema()->references($translation->completeData($this->preview)));
+            array_push($references, ...$translation->entry->schema()->references($translation->completeData($this->preview)));
         }
         $context->preload($references);
 
@@ -577,7 +577,7 @@ final class EntryQuery
     private function schemas(): array
     {
         return $this->schemas ??= array_values(Collection::query()->when($this->collections !== [], fn (Builder $q) => $q->whereIn('handle', $this->collections))
-            ->get()->map(fn (Collection $collection): Schema => $collection->schema())->all());
+            ->get()->flatMap(fn (Collection $collection): array => $collection->allSchemas())->all());
     }
 
     /**

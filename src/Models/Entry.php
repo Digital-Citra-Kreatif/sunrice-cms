@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Sunrice\Cms\Fields\Schema;
 use Sunrice\Cms\Settings\CommentSettings;
 use Sunrice\Cms\Support\Locales;
 
@@ -24,6 +25,7 @@ use Sunrice\Cms\Support\Locales;
  * @property int|null $parent_id
  * @property int $sort_order
  * @property string|null $template a Blade view for this entry alone
+ * @property string|null $blueprint its own blueprint (a handle the collection allows); null: the collection's
  * @property bool $comments_closed it takes no new comments
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -87,6 +89,26 @@ class Entry extends Model
     {
         // Trashed collections too: their entries still exist.
         return $this->belongsTo(Collection::class)->withTrashed();
+    }
+
+    /**
+     * The blueprint its fields come from: its own when the collection
+     * allows it (ChangeBlueprint), else the collection's.
+     */
+    public function blueprintHandle(): ?string
+    {
+        return $this->blueprint !== null && in_array($this->blueprint, $this->collection->allowedBlueprints(), true)
+            ? $this->blueprint
+            : $this->collection->blueprint;
+    }
+
+    /**
+     * Its fields: those of its blueprint (see blueprintHandle()). Use this,
+     * not the collection's schema, for anything about this entry.
+     */
+    public function schema(): Schema
+    {
+        return $this->collection->schemaFor($this->blueprint);
     }
 
     /** @return HasMany<EntryTranslation, $this> */

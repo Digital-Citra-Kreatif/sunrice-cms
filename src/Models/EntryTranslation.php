@@ -146,7 +146,7 @@ class EntryTranslation extends Model
     {
         $context ??= $this->hydration ?? new HydrationContext($this->locale);
 
-        return $this->entry->collection->schema()->hydrate($this->completeData($context->preview), $context);
+        return $this->entry->schema()->hydrate($this->completeData($context->preview), $context);
     }
 
     /**
@@ -162,7 +162,7 @@ class EntryTranslation extends Model
         $data = $draft ? $this->draft_data : ($this->data ?? []);
         $main = $this->entry->mainTranslation();
         if ($main !== null && ! $main->is($this)) {
-            $shared = array_flip($this->entry->collection->schema()->shared());
+            $shared = array_flip($this->entry->schema()->shared());
             $data = array_replace($data, array_intersect_key($draft ? $main->draft_data : ($main->data ?? []), $shared));
         }
 
@@ -178,7 +178,7 @@ class EntryTranslation extends Model
      */
     public function ownData(array $data): array
     {
-        return $this->isMain() ? $data : array_diff_key($data, array_flip($this->entry->collection->schema()->shared()));
+        return $this->isMain() ? $data : array_diff_key($data, array_flip($this->entry->schema()->shared()));
     }
 
     /** Hydrate with this context when values() is given none: a query shares one with its whole result. */
@@ -192,7 +192,7 @@ class EntryTranslation extends Model
     /** The fields this translation edits: all of them for the main one, the translated ones for the others. */
     public function editableSchema(): Schema
     {
-        $schema = $this->entry->collection->schema();
+        $schema = $this->entry->schema();
 
         return $this->isMain() ? $schema : $schema->except($schema->shared());
     }
