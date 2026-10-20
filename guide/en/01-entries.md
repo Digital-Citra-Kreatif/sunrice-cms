@@ -11,7 +11,7 @@ The list shows one collection at a time; pick another one with the collection me
 - Filter by author, by a term (such as a category) and by **Language**: the list shows the titles and statuses in that language.
 - Click a column's title to sort by it. **Columns** chooses which columns you see, including some of the entry's own fields (a price, a date…). The panel remembers your columns and page size.
 - **Go to** leads to what you might need next: the collection's listing page, its terms, its settings and its blueprint, as your role allows.
-- **Export CSV** downloads the list as filtered, sorted and in its language, every page of it, for a spreadsheet.
+- **Export CSV** downloads the list as filtered, sorted and in its language, every page of it, for a spreadsheet. It needs its own permission: being able to see a list isn't enough to download it.
 
 The filters stay in the page's address, so you can bookmark a view or send it to a colleague.
 
@@ -21,7 +21,7 @@ Tick entries (or the box at the top for the whole page) to **Publish**, **Unpubl
 
 ### Putting entries in order
 
-In a collection with *manual order*, the list has **Order** arrows: **Move up** and **Move down** put each entry in its place. They show while the list is in its own order, without filters or search. Other collections list their entries newest first (when they have dates) or by title.
+In a collection with *manual order*, click **Reorder** above the list, drag each entry into its place by its handle (or use the keyboard: focus the handle, press Space, move with the arrow keys, press Space again), and click **Done**. In a collection where entries nest, an entry moves among the entries beside it. The **Order** arrows (**Move up** and **Move down**) also move one entry a place, while the list is in its own order, without filters or search. Other collections list their entries newest first (when they have dates) or by title.
 
 ## Writing an entry
 
@@ -38,7 +38,9 @@ From then on, **Save draft** keeps your work (or press **Ctrl S** / **⌘ S**). 
 - **Media** fields pick images or files from the [media library](guide:panel/media), or upload new ones.
 - **Entries** and **Terms** fields link to other entries or to categories and tags; search by title.
 - **Link** fields take a web address, or another entry (choose **Entry** to follow its address even if it changes).
-- **Groups**, **repeaters** and **flexible** fields hold several fields together; repeaters and flexible fields add rows or blocks you can reorder.
+- **Groups**, **repeaters** and **flexible** fields hold several fields together; repeaters and flexible fields add rows or blocks, which you drag into order by their handle.
+
+The editor's cards (groups, **Search and sharing**, and the cards on the right) fold away when you click their title. The panel remembers which ones you folded, and opens a card by itself when a field inside it has an error.
 
 ## Drafts and publishing
 
@@ -64,8 +66,13 @@ The **Status** card on the right says whether the entry is a draft, scheduled or
 The **Page settings** card on the right is saved on its own, for every language, with **Save settings**:
 
 - **Parent**: in collections where entries nest (like pages under pages), the entry this one sits under. It's used for breadcrumbs and sub-menus; the web address doesn't change.
+- **Blueprint**: when the collection offers more than one set of fields (a normal page or a landing page, say), the one this entry uses. Switching keeps every value: fields both have keep theirs, and the others are kept out of sight and come back if you switch back. The editor reloads with the new fields.
 - **Template**: a different design for this entry alone, if your developer made one. Leave it empty for the collection's own.
 - **Accept new comments**: in collections with comments, switch it off to close this entry's comments (approved ones stay). **Comments** opens this entry's comments.
+
+## Comments
+
+In collections with comments, the **Comments** card shows how many of this entry's comments are waiting, approved or spam, and the latest five, with **Approve**, **Spam** and **Reply** if your role moderates comments. Its link opens the [comments page](guide:website/comments) with only this entry's comments.
 
 ## Used by
 

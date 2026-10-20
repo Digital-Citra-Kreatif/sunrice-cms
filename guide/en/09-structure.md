@@ -9,10 +9,11 @@ A **collection** is a kind of content: *Pages*, *Blog*, *Products*, *Events*. **
 | Setting | |
 | --- | --- |
 | **Title** | The name editors see. |
-| **Handle** | A short code used by templates, like `articles`: lowercase letters, digits and underscores. It can't change later. |
+| **Handle** | A short code used by templates, like `articles`: lowercase letters, digits and underscores. It can be changed later: roles keep their permissions, but the form warns you about templates and code that name it, which your developer must update. |
 | **Blueprint** | The fields its entries have (see below). Changing it keeps what entries already hold. |
+| **Other blueprints** | More blueprints an entry may switch to, in its Page settings (a landing page among pages, for example). |
 | **Dated entries** | Entries show a date and list newest first, like articles. |
-| **Manual order** | Editors put entries in order (Move up, Move down) instead of by date or title. |
+| **Manual order** | Editors put entries in order (**Reorder** in the list) instead of by date or title. |
 | **Hierarchical** | Entries may sit under a parent entry, like pages under pages (for breadcrumbs and sub-menus; addresses stay the same). |
 | **URL** | Where entries are on the website, with `{slug}` for each entry's slug: `/blog/{slug}`, or `/{slug}` for pages at the top. Empty: entries have no page of their own. |
 | **Template** | The design entries use, if your developer made one for it. |
@@ -23,7 +24,7 @@ A **collection** is a kind of content: *Pages*, *Blog*, *Products*, *Events*. **
 
 Deleting a collection doesn't delete its entries: they leave the panel and the website. The list's **Deleted** filter shows deleted collections, with **Restore** to bring one back.
 
-Each collection gets its own permissions (view, create, edit, publish, delete its entries), so a role can be limited to the *Blog*, for example. See [Users and roles](guide:panel/users-roles).
+Each collection gets its own permissions (view, create, edit, publish, delete and export its entries), so a role can be limited to the *Blog*, for example. See [Users and roles](guide:panel/users-roles).
 
 ## Blueprints and fieldsets
 
@@ -40,11 +41,11 @@ To add a field, choose its type, then set:
 
 The types: **Text**, **Textarea**, **Rich text**, **Number**, **Toggle**, **Select**, **Date**, **Link**, **Media**, **Entries**, **Terms**, **Group** (fields together), **Repeater** (rows of fields), **Flexible content** (blocks of different kinds), **Fieldset** (include a fieldset) and **File (forms)** (files visitors send with a form).
 
-Use **Move up** and **Move down** to order the fields, then click **Save** (or **Create blueprint** for a new one). A blueprint still in use can't be deleted.
+Drag the fields into order by their handle (the fields inside a group or repeater among themselves), then click **Save** (or **Create blueprint** for a new one). A blueprint still in use can't be deleted.
 
 ## Taxonomies
 
-**Structure → Taxonomies**: a **Title**, a **Handle**, **Nested terms** (terms under other terms, like subcategories), the **Collections** whose entries it groups, a **Term pages URL** (like `/topics/{slug}`; empty: terms have no pages), **Term fields** (a blueprint for the terms' own fields), a **Template**, and **SEO from fields**. Editors then add the terms under Content → Terms (see [Terms](guide:website/terms)). To let editors give entries terms, add a **Terms** field to the collection's blueprint.
+**Structure → Taxonomies**: a **Title**, a **Handle** (changeable later, as for collections), **Nested terms** (terms under other terms, like subcategories), the **Collections** whose entries it groups, a **Term pages URL** (like `/topics/{slug}`; empty: terms have no pages), **Term fields** (a blueprint for the terms' own fields), a **Template**, and **SEO from fields**. Editors then add the terms under Content → Terms (see [Terms](guide:website/terms)). To let editors give entries terms, add a **Terms** field to the collection's blueprint.
 
 ## Global sets
 
@@ -56,7 +57,7 @@ Use **Move up** and **Move down** to order the fields, then click **Save** (or *
 
 ## Forms
 
-**Structure → Forms**: a **Title**, a **Handle**, a **Blueprint** with the form's fields (visitors get the text, textarea, number, toggle, select, date and file ones), and:
+**Structure → Forms**: a **Title**, a **Handle** (changeable later, as for collections), a **Blueprint** with the form's fields (visitors get the text, textarea, number, toggle, select, date and file ones), and:
 
 - **Email to**: addresses that receive each submission, one per line; **Also email roles**: everyone with these roles too.
 - **Thank-you message**: shown after sending; or **After sending, go to** a page of your choice.

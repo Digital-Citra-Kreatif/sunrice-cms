@@ -12,6 +12,8 @@ When the site has more than one language, the entry editor shows a bar of them a
 - A language with a dashed outline and a **+** has no translation yet. Click it to add one: it starts as a draft copied from the main language, ready to translate.
 - **Remove this language** deletes the translation you're on, with its revisions. The main language can't be removed: move the whole entry to the trash instead.
 
+A translation marked **Outdated** was saved before the latest change to the main language: its text may no longer match. The entry's **Status** card says so too.
+
 Each translation is saved, published, scheduled and unpublished on its own. Publishing the English version doesn't publish the Indonesian one.
 
 ## Translated and shared fields
@@ -32,11 +34,11 @@ When an entry has no live translation in a language, visitors to that language u
 
 ## The entries list and languages
 
-The list's **Language** menu shows the titles and statuses of one language. Entries without a translation in that language aren't listed there; switch to the main language to find them. With the **Status** column, each entry also shows a small badge per other language.
+The list's **Language** menu shows the titles and statuses of one language. Entries without a translation in that language aren't listed there; switch to the main language to find them. With the **Status** column, each entry also shows a small badge per other language; an outdated translation's badge is outlined in amber.
 
 ## Keeping translations up to date
 
-When the main language changes, the other languages don't change with it, apart from the shared fields. After editing the main language, open each translation and bring it up to date, then publish it. The **Columns** menu can show when each translation was last changed, to compare.
+When the main language changes, the other languages don't change with it, apart from the shared fields. Instead, they're marked **Outdated** (in the language bar and in the list's language badges) until someone saves them again. Open each outdated translation, compare it with the main language, bring it up to date, and save or publish it: the mark goes away.
 
 ## Other content in several languages
 

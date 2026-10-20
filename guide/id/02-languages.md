@@ -12,6 +12,8 @@ Jika situs memiliki lebih dari satu bahasa, penyunting entri menampilkan bilah b
 - Bahasa dengan garis putus-putus dan tanda **+** belum memiliki terjemahan. Klik untuk menambahkannya: terjemahan dimulai sebagai draf yang disalin dari bahasa utama, siap diterjemahkan.
 - **Remove this language** menghapus terjemahan yang sedang dibuka, beserta revisinya. Bahasa utama tidak bisa dihapus: pindahkan seluruh entri ke tempat sampah sebagai gantinya.
 
+Terjemahan yang ditandai **Outdated** terakhir disimpan sebelum perubahan terbaru di bahasa utama: isinya mungkin sudah tidak sesuai. Kartu **Status** entri juga memberi tahu.
+
 Setiap terjemahan disimpan, diterbitkan, dijadwalkan, dan ditarik dari situs secara terpisah. Menerbitkan versi bahasa Inggris tidak ikut menerbitkan versi bahasa Indonesia.
 
 ## Field yang diterjemahkan dan yang dipakai bersama
@@ -32,11 +34,11 @@ Jika sebuah entri belum memiliki terjemahan yang tayang dalam suatu bahasa, peng
 
 ## Daftar entri dan bahasa
 
-Menu **Language** di daftar menampilkan judul dan status dalam satu bahasa. Entri yang belum punya terjemahan dalam bahasa itu tidak tercantum; beralihlah ke bahasa utama untuk menemukannya. Dengan kolom **Status**, setiap entri juga menampilkan lencana kecil untuk tiap bahasa lain.
+Menu **Language** di daftar menampilkan judul dan status dalam satu bahasa. Entri yang belum punya terjemahan dalam bahasa itu tidak tercantum; beralihlah ke bahasa utama untuk menemukannya. Dengan kolom **Status**, setiap entri juga menampilkan lencana kecil untuk tiap bahasa lain; lencana terjemahan yang usang diberi garis jingga.
 
 ## Menjaga terjemahan tetap mutakhir
 
-Saat bahasa utama berubah, bahasa lain tidak ikut berubah, kecuali field bersama. Setelah menyunting bahasa utama, buka setiap terjemahan, perbarui isinya, lalu terbitkan. Menu **Columns** bisa menampilkan kapan setiap terjemahan terakhir diubah, untuk membandingkan.
+Saat bahasa utama berubah, bahasa lain tidak ikut berubah, kecuali field bersama. Sebagai gantinya, bahasa lain ditandai **Outdated** (di bilah bahasa dan di lencana bahasa pada daftar) sampai ada yang menyimpannya lagi. Buka setiap terjemahan yang usang, bandingkan dengan bahasa utama, perbarui isinya, lalu simpan atau terbitkan: tandanya hilang.
 
 ## Konten lain dalam beberapa bahasa
 

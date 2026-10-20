@@ -13,7 +13,7 @@ Click the date to open a submission:
 - the language of the page they used;
 - if your site keeps them: the visitor's **IP address**, **Browser** and the page they **Sent from**.
 
-**Delete** removes a submission (and its files) for good. **Export CSV** downloads every submission of the form for a spreadsheet.
+**Delete** removes a submission (and its files) for good. **Export CSV** downloads every submission of the form for a spreadsheet; it needs its own permission, besides reading them.
 
 You see only the forms your role allows.
 

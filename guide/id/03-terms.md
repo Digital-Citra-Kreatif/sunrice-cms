@@ -8,7 +8,7 @@ Pilih taksonomi lewat menu di samping judul, dan bahasanya lewat **Language**. T
 
 - **Add term**: ketik **Title** (judul; **Slug** dibuat dari judul jika dikosongkan), pilih letaknya di **Under** (di bawah term lain) atau **Top level** (tingkat teratas), lalu klik **Add term**.
 - Ikon pensil **mengganti nama** term dalam bahasa yang sedang tampil: judul dan slug-nya.
-- Panah **memindahkan** term naik atau turun di antara term sejajarnya.
+- Seret term lewat pegangannya untuk mengubah posisinya di antara term sejajarnya; term di bawahnya ikut pindah. Untuk menempatkan term di bawah term lain, **ganti namanya** dan pilih **Under**.
 - Ikon halaman membuka **halaman term itu sendiri** (lihat di bawah).
 - Ikon tempat sampah **memindahkannya ke tempat sampah**, beserta term di bawahnya.
 
@@ -24,7 +24,7 @@ Jika taksonomi memiliki halaman term di situs web (misalnya `/topik/berita`), ha
 
 Pilih bahasa di bagian atas, sunting, lalu klik **Save**. Perubahan langsung tayang: term tidak memiliki draf. **View** membuka halamannya di situs web. **Used by** menampilkan konten yang menautkan ke term ini lewat field-nya.
 
-Jika rekan menyimpan term yang sama setelah Anda membukanya, pilih **Load theirs** atau **Save mine anyway**.
+Satu orang menyunting halaman term dalam satu bahasa pada satu waktu: jika rekan sedang membukanya, Anda bisa memilih **View only** atau **Take over**. Jika rekan menyimpan term yang sama setelah Anda membukanya, pilih **Load theirs** atau **Save mine anyway**.
 
 ## Tempat sampah
 
@@ -32,7 +32,7 @@ Jika rekan menyimpan term yang sama setelah Anda membukanya, pilih **Load theirs
 
 ## Memberi term pada entri
 
-Di penyunting entri, field **Terms** memungkinkan Anda memilih dari taksonominya: cari berdasarkan judul, dan pilih satu atau beberapa, sesuai yang diizinkan field. Term sama untuk semua bahasa sebuah entri.
+Di penyunting entri, field **Terms** memungkinkan Anda memilih dari taksonominya: term dimuat saat field tampil (daftar yang panjang dicari, bukan ditampilkan semua), dan Anda memilih satu atau beberapa, sesuai yang diizinkan field. Term sama untuk semua bahasa sebuah entri.
 
 > [!TECHNICAL]
 > Taksonomi, koleksinya, halaman term, dan field-nya diatur di Structure → Taxonomies. Lihat [Taxonomies and terms](docs:cms/taxonomies).

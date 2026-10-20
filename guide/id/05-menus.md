@@ -19,7 +19,7 @@ Tombol di atas daftar menambahkan tautan ke:
 
 - **Label**: teks yang tampil, per bahasa. Untuk entri, term, dan halaman daftar, label boleh kosong (judulnya yang dipakai); **Link** membutuhkan label dalam bahasa utama, dan bahasa lain memakainya jika belum punya label sendiri.
 - **New tab**: membuka tautan di tab peramban baru. Gunakan untuk tautan ke situs web lain.
-- **Move up** dan **Move down** mengubah urutan.
+- Seret tautan lewat pegangannya untuk mengubah posisinya di antara tautan setingkat (atau dengan papan ketik: fokus ke pegangan, tekan Spasi, pindahkan dengan tombol panah, tekan Spasi lagi).
 - **In a level** menempatkan tautan di bawah tautan di atasnya (sub-menu); **Out a level** mengembalikannya. Menu bisa sampai tiga tingkat.
 - **Remove, with what's under it** menghapus tautan beserta sub-tautannya.
 

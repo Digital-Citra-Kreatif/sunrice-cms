@@ -6,7 +6,7 @@ Comments are switched on per collection by a site manager (Structure → Collect
 
 ## Moderating
 
-The tabs sort comments by state: **All** (waiting and approved), **Pending** (waiting for approval), **Approved**, **Spam** and **Trash**. Search the text, the name or the email, or filter by collection. Each comment shows its entry, the comment it answers (if it's a reply) and its language.
+The tabs sort comments by state: **All** (waiting and approved), **Pending** (waiting for approval), **Approved**, **Spam** and **Trash**. Search the text, the name or the email, or filter by collection or by entry. Each comment shows its entry, the comment it answers (if it's a reply) and its language.
 
 For each comment:
 
@@ -20,7 +20,7 @@ Tick several comments to approve, mark as spam or trash them together.
 
 ## Closing comments on one entry
 
-In the entry editor, **Page settings → Accept new comments** closes or opens that entry's comments. Approved comments stay visible; visitors just can't add new ones. Its **Comments** link opens the moderation list for that entry. Comments can also close by themselves some days after publishing, if Settings → Comments says so.
+In the entry editor, **Page settings → Accept new comments** closes or opens that entry's comments. Approved comments stay visible; visitors just can't add new ones. Its **Comments** link opens the moderation list for that entry. The editor's **Comments** card also shows the entry's latest comments, with **Approve**, **Spam** and **Reply**. Comments can also close by themselves some days after publishing, if Settings → Comments says so.
 
 ## Emails
 

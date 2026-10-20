@@ -11,7 +11,7 @@ Daftar menampilkan satu koleksi dalam satu waktu; pilih koleksi lain lewat menu 
 - Saring berdasarkan penulis, term (misalnya kategori), dan **Language**: daftar menampilkan judul dan status dalam bahasa tersebut.
 - Klik judul kolom untuk mengurutkan. **Columns** memilih kolom yang tampil, termasuk beberapa field entri itu sendiri (harga, tanggal…). Panel mengingat pilihan kolom dan jumlah baris per halaman Anda.
 - **Go to** mengarah ke hal yang mungkin Anda perlukan berikutnya: halaman daftar koleksi, term-nya, pengaturannya, dan blueprint-nya, sesuai izin peran Anda.
-- **Export CSV** mengunduh daftar sesuai filter, urutan, dan bahasanya, semua halamannya, untuk dibuka di spreadsheet.
+- **Export CSV** mengunduh daftar sesuai filter, urutan, dan bahasanya, semua halamannya, untuk dibuka di spreadsheet. Ini membutuhkan izin tersendiri: bisa melihat daftar belum berarti boleh mengunduhnya.
 
 Filter tersimpan di alamat halaman, jadi Anda bisa menyimpan tampilan sebagai markah atau mengirimkannya ke rekan.
 
@@ -21,7 +21,7 @@ Centang beberapa entri (atau kotak di atas untuk seluruh halaman) untuk **Publis
 
 ### Mengurutkan entri
 
-Di koleksi dengan *urutan manual*, daftar memiliki panah **Order**: **Move up** (naik) dan **Move down** (turun) menempatkan setiap entri pada posisinya. Panah ini muncul saat daftar dalam urutannya sendiri, tanpa filter atau pencarian. Koleksi lain menampilkan entri terbaru lebih dulu (jika bertanggal) atau menurut judul.
+Di koleksi dengan *urutan manual*, klik **Reorder** di atas daftar, seret setiap entri ke posisinya lewat pegangannya (atau dengan papan ketik: fokus ke pegangan, tekan Spasi, pindahkan dengan tombol panah, tekan Spasi lagi), lalu klik **Done**. Di koleksi yang entrinya bertingkat, entri berpindah di antara entri sejajarnya. Panah **Order** (**Move up** dan **Move down**) juga memindahkan satu entri satu posisi, saat daftar dalam urutannya sendiri, tanpa filter atau pencarian. Koleksi lain menampilkan entri terbaru lebih dulu (jika bertanggal) atau menurut judul.
 
 ## Menulis entri
 
@@ -38,7 +38,9 @@ Selanjutnya, **Save draft** menyimpan pekerjaan Anda (atau tekan **Ctrl S** / **
 - Field **Media** memilih gambar atau berkas dari [pustaka media](guide:panel/media), atau mengunggah yang baru.
 - Field **Entries** dan **Terms** menautkan ke entri lain atau ke kategori dan tag; cari berdasarkan judul.
 - Field **Link** menerima alamat web, atau entri lain (pilih **Entry** agar mengikuti alamat entri itu meskipun berubah).
-- Field **Group**, **Repeater**, dan **Flexible** menampung beberapa field sekaligus; repeater dan flexible menambahkan baris atau blok yang bisa diurutkan ulang.
+- Field **Group**, **Repeater**, dan **Flexible** menampung beberapa field sekaligus; repeater dan flexible menambahkan baris atau blok, yang Anda seret ke urutannya lewat pegangannya.
+
+Kartu-kartu di penyunting (group, **Search and sharing**, dan kartu di kanan) bisa dilipat dengan mengeklik judulnya. Panel mengingat kartu mana yang Anda lipat, dan membuka sendiri kartu yang field di dalamnya bermasalah.
 
 ## Draf dan penerbitan
 
@@ -64,8 +66,13 @@ Kartu **Status** di kanan menunjukkan apakah entri masih draf, terjadwal, atau t
 Kartu **Page settings** di kanan disimpan tersendiri, untuk semua bahasa, dengan **Save settings**:
 
 - **Parent** (induk): di koleksi yang entrinya bertingkat (seperti halaman di bawah halaman), entri tempat entri ini berada. Dipakai untuk jejak halaman dan sub-menu; alamat webnya tidak berubah.
+- **Blueprint**: jika koleksi menawarkan lebih dari satu susunan field (misalnya halaman biasa atau halaman promosi), susunan yang dipakai entri ini. Menggantinya tetap menyimpan semua nilai: field yang ada di keduanya mempertahankan isinya, dan sisanya disimpan tersembunyi dan muncul lagi jika Anda kembali. Penyunting dimuat ulang dengan field yang baru.
 - **Template**: desain lain khusus untuk entri ini, jika developer membuatnya. Kosongkan untuk desain koleksi.
 - **Accept new comments**: di koleksi yang memiliki komentar, matikan untuk menutup komentar entri ini (komentar yang sudah disetujui tetap tampil). **Comments** membuka komentar entri ini.
+
+## Komentar
+
+Di koleksi yang memiliki komentar, kartu **Comments** menampilkan berapa komentar entri ini yang menunggu, disetujui, atau spam, dan lima yang terbaru, dengan **Approve**, **Spam**, dan **Reply** jika peran Anda memoderasi komentar. Tautannya membuka [halaman komentar](guide:website/comments) yang hanya berisi komentar entri ini.
 
 ## Dipakai oleh
 

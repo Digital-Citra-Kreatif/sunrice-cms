@@ -19,7 +19,7 @@ The buttons above the list add a link to:
 
 - **Label**: the text shown, per language. For entries, terms and listing pages it's optional (the title is used); a **Link** needs a label in the main language, and other languages use it when they have none.
 - **New tab**: opens the link in a new browser tab. Keep it for links to other websites.
-- **Move up** and **Move down** change the order.
+- Drag a link by its handle to change its place among the links at its level (or use the keyboard: focus the handle, press Space, move with the arrow keys, press Space again).
 - **In a level** puts a link under the one above it (a sub-menu); **Out a level** brings it back. Menus go three levels deep.
 - **Remove, with what's under it** deletes the link and its sub-links.
 

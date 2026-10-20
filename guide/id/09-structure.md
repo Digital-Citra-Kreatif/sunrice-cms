@@ -9,10 +9,11 @@
 | Pengaturan | |
 | --- | --- |
 | **Title** | Nama yang dilihat editor. |
-| **Handle** | Kode pendek yang dipakai template, seperti `articles`: huruf kecil, angka, dan garis bawah. Tidak bisa diubah nanti. |
+| **Handle** | Kode pendek yang dipakai template, seperti `articles`: huruf kecil, angka, dan garis bawah. Bisa diubah nanti: peran tetap memegang izinnya, tetapi formulir memperingatkan tentang template dan kode yang menyebutnya, yang harus diperbarui developer. |
 | **Blueprint** | Field yang dimiliki entrinya (lihat di bawah). Menggantinya tetap mempertahankan isi entri yang sudah ada. |
+| **Other blueprints** | Blueprint lain yang bisa dipilih sebuah entri, di Page settings-nya (misalnya halaman promosi di antara halaman biasa). |
 | **Dated entries** | Entri menampilkan tanggal dan terurut dari yang terbaru, seperti artikel. |
-| **Manual order** | Editor mengurutkan entri sendiri (Move up, Move down), bukan menurut tanggal atau judul. |
+| **Manual order** | Editor mengurutkan entri sendiri (**Reorder** di daftar), bukan menurut tanggal atau judul. |
 | **Hierarchical** | Entri bisa berada di bawah entri induk, seperti halaman di bawah halaman (untuk jejak halaman dan sub-menu; alamatnya tetap). |
 | **URL** | Letak entri di situs web, dengan `{slug}` untuk slug setiap entri: `/blog/{slug}`, atau `/{slug}` untuk halaman di tingkat teratas. Kosong: entri tidak punya halaman sendiri. |
 | **Template** | Desain yang dipakai entri, jika developer membuatnya. |
@@ -23,7 +24,7 @@
 
 Menghapus koleksi tidak menghapus entrinya: entri hilang dari panel dan situs web. Filter **Deleted** di daftar menampilkan koleksi yang dihapus, dengan **Restore** untuk mengembalikannya.
 
-Setiap koleksi mendapat izinnya sendiri (melihat, membuat, menyunting, menerbitkan, menghapus entrinya), sehingga sebuah peran bisa dibatasi hanya ke *Blog*, misalnya. Lihat [Pengguna dan peran](guide:panel/users-roles).
+Setiap koleksi mendapat izinnya sendiri (melihat, membuat, menyunting, menerbitkan, menghapus, dan mengekspor entrinya), sehingga sebuah peran bisa dibatasi hanya ke *Blog*, misalnya. Lihat [Pengguna dan peran](guide:panel/users-roles).
 
 ## Blueprint dan fieldset
 
@@ -40,11 +41,11 @@ Untuk menambah field, pilih jenisnya, lalu atur:
 
 Jenis-jenisnya: **Text**, **Textarea**, **Rich text**, **Number**, **Toggle**, **Select**, **Date**, **Link**, **Media**, **Entries**, **Terms**, **Group** (beberapa field bersama), **Repeater** (baris berisi field), **Flexible content** (blok berbagai jenis), **Fieldset** (menyertakan fieldset), dan **File (forms)** (berkas yang dikirim pengunjung lewat formulir).
 
-Gunakan **Move up** dan **Move down** untuk mengurutkan field, lalu klik **Save** (atau **Create blueprint** untuk yang baru). Blueprint yang masih dipakai tidak bisa dihapus.
+Seret field ke urutannya lewat pegangannya (field di dalam group atau repeater di antara sesamanya), lalu klik **Save** (atau **Create blueprint** untuk yang baru). Blueprint yang masih dipakai tidak bisa dihapus.
 
 ## Taksonomi
 
-**Structure → Taxonomies**: **Title**, **Handle**, **Nested terms** (term di bawah term lain, seperti subkategori), **Collections** yang entrinya dikelompokkan, **Term pages URL** (seperti `/topik/{slug}`; kosong: term tidak punya halaman), **Term fields** (blueprint untuk field term), **Template**, dan **SEO from fields**. Editor lalu menambahkan term di Content → Terms (lihat [Term](guide:website/terms)). Agar editor bisa memberi term pada entri, tambahkan field **Terms** ke blueprint koleksinya.
+**Structure → Taxonomies**: **Title**, **Handle** (bisa diubah nanti, seperti pada koleksi), **Nested terms** (term di bawah term lain, seperti subkategori), **Collections** yang entrinya dikelompokkan, **Term pages URL** (seperti `/topik/{slug}`; kosong: term tidak punya halaman), **Term fields** (blueprint untuk field term), **Template**, dan **SEO from fields**. Editor lalu menambahkan term di Content → Terms (lihat [Term](guide:website/terms)). Agar editor bisa memberi term pada entri, tambahkan field **Terms** ke blueprint koleksinya.
 
 ## Global set
 
@@ -56,7 +57,7 @@ Gunakan **Move up** dan **Move down** untuk mengurutkan field, lalu klik **Save*
 
 ## Formulir
 
-**Structure → Forms**: **Title**, **Handle**, **Blueprint** berisi field formulir (pengunjung mendapat field text, textarea, number, toggle, select, date, dan file), serta:
+**Structure → Forms**: **Title**, **Handle** (bisa diubah nanti, seperti pada koleksi), **Blueprint** berisi field formulir (pengunjung mendapat field text, textarea, number, toggle, select, date, dan file), serta:
 
 - **Email to**: alamat yang menerima setiap kiriman, satu per baris; **Also email roles**: semua orang dengan peran ini juga.
 - **Thank-you message**: tampil setelah mengirim; atau **After sending, go to** halaman pilihan Anda.

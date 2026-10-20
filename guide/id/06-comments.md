@@ -6,7 +6,7 @@ Komentar dinyalakan per koleksi oleh pengelola situs (Structure → Collections,
 
 ## Memoderasi
 
-Tab mengelompokkan komentar berdasarkan statusnya: **All** (menunggu dan disetujui), **Pending** (menunggu persetujuan), **Approved** (disetujui), **Spam**, dan **Trash** (tempat sampah). Cari berdasarkan teks, nama, atau email, atau saring per koleksi. Setiap komentar menampilkan entrinya, komentar yang dibalasnya (jika berupa balasan), dan bahasanya.
+Tab mengelompokkan komentar berdasarkan statusnya: **All** (menunggu dan disetujui), **Pending** (menunggu persetujuan), **Approved** (disetujui), **Spam**, dan **Trash** (tempat sampah). Cari berdasarkan teks, nama, atau email, atau saring per koleksi atau per entri. Setiap komentar menampilkan entrinya, komentar yang dibalasnya (jika berupa balasan), dan bahasanya.
 
 Untuk setiap komentar:
 
@@ -20,7 +20,7 @@ Centang beberapa komentar untuk menyetujui, menandai sebagai spam, atau membuang
 
 ## Menutup komentar pada satu entri
 
-Di penyunting entri, **Page settings → Accept new comments** menutup atau membuka komentar entri itu. Komentar yang sudah disetujui tetap tampil; pengunjung hanya tidak bisa menambah yang baru. Tautan **Comments**-nya membuka daftar moderasi untuk entri itu. Komentar juga bisa tertutup sendiri beberapa hari setelah terbit, jika diatur di Settings → Comments.
+Di penyunting entri, **Page settings → Accept new comments** menutup atau membuka komentar entri itu. Komentar yang sudah disetujui tetap tampil; pengunjung hanya tidak bisa menambah yang baru. Tautan **Comments**-nya membuka daftar moderasi untuk entri itu. Kartu **Comments** di penyunting juga menampilkan komentar terbaru entri itu, dengan **Approve**, **Spam**, dan **Reply**. Komentar juga bisa tertutup sendiri beberapa hari setelah terbit, jika diatur di Settings → Comments.
 
 ## Email
 
