@@ -43,7 +43,7 @@ final class Menus
                     ->with('items.entry.translations', 'items.entry.collection', 'items.term.translations', 'items.term.taxonomy', 'items.collection')->first();
 
                 return $menu === null ? [] : $this->tree($menu->items->all(), null, $locale);
-            });
+            }, SiteCache::MENUS);
         }
 
         // Which link is the page shown: per request, so not cached with them.

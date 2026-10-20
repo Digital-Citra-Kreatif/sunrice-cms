@@ -11,22 +11,41 @@ use Sunrice\Admin\Media\Media;
 use Sunrice\Cms\Models;
 use Sunrice\Cms\Settings\CodeSettings;
 use Sunrice\Cms\Settings\SiteSettings;
+use Sunrice\Cms\Site\PageCache;
 
 /**
  * Notices changes to what the site shows, from any source (the admin,
- * AI tools, code), and tells SiteCache. Drafts are not on the site, so
- * saving one changes nothing.
+ * AI tools, code), and tells SiteCache which areas they touch. Drafts
+ * are not on the site, so saving one changes nothing.
  *
  * @internal
  */
 final class ContentWatch
 {
-    /** Saved or deleted, they change the site. */
+    /**
+     * Saved or deleted, they change the site: the cache areas each one
+     * touches (empty: all of them).
+     *
+     * @var array<class-string<Model>, list<string>>
+     */
     private const MODELS = [
-        Models\Collection::class, Models\CollectionListing::class, Models\Taxonomy::class, Models\Term::class,
-        Models\TermTranslation::class, Models\Menu::class, Models\MenuItem::class, Models\GlobalSet::class,
-        Models\GlobalValue::class, Models\Blueprint::class, Models\Fieldset::class, Models\Redirect::class,
-        Models\Form::class, Models\Comment::class, Media::class,
+        // Routes, menus and the sitemap all follow collections, taxonomies and terms.
+        Models\Collection::class => [],
+        Models\CollectionListing::class => [],
+        Models\Taxonomy::class => [],
+        Models\Term::class => [],
+        Models\TermTranslation::class => [],
+        Models\Menu::class => [SiteCache::MENUS, SiteCache::PAGES],
+        Models\MenuItem::class => [SiteCache::MENUS, SiteCache::PAGES],
+        // What templates render: only kept pages change.
+        Models\GlobalSet::class => [SiteCache::PAGES],
+        Models\GlobalValue::class => [SiteCache::PAGES],
+        Models\Blueprint::class => [SiteCache::PAGES],
+        Models\Fieldset::class => [SiteCache::PAGES],
+        Models\Form::class => [SiteCache::PAGES],
+        Media::class => [SiteCache::PAGES],
+        // Only looked up when no page is at the address, and those aren't kept.
+        Models\Redirect::class => [SiteCache::ROUTES],
     ];
 
     /** What of an entry translation the site shows (the rest is its draft). */
@@ -37,9 +56,9 @@ final class ContentWatch
 
     public static function register(): void
     {
-        foreach (self::MODELS as $class) {
+        foreach (self::MODELS as $class => $areas) {
             foreach (['saved', 'deleted', 'restored'] as $event) {
-                Event::listen("eloquent.{$event}: {$class}", fn (Model $model) => self::changed($model));
+                Event::listen("eloquent.{$event}: {$class}", fn (Model $model) => self::changed($model, $areas));
             }
         }
         Event::listen('eloquent.saved: '.Models\EntryTranslation::class, function (Models\EntryTranslation $translation): void {
@@ -56,16 +75,41 @@ final class ContentWatch
         foreach (['deleted', 'restored'] as $event) {
             Event::listen("eloquent.{$event}: ".Models\Entry::class, fn (Models\Entry $entry) => self::changed($entry));
         }
+        // Comments are read from the database on every render, so only a kept
+        // page shows them, and only approved ones. Visitors post comments, so
+        // nothing else of theirs may touch the cache.
+        Event::listen('eloquent.saved: '.Models\Comment::class, function (Models\Comment $comment): void {
+            if ($comment->isApproved() || $comment->getOriginal('status') === Models\Comment::APPROVED) {
+                self::comment($comment);
+            }
+        });
+        foreach (['deleted', 'restored'] as $event) {
+            Event::listen("eloquent.{$event}: ".Models\Comment::class, function (Models\Comment $comment): void {
+                if ($comment->isApproved()) {
+                    self::comment($comment);
+                }
+            });
+        }
         Event::listen(SettingsSaved::class, function (SettingsSaved $event): void {
-            if (in_array($event->section, [SiteSettings::key(), CodeSettings::key()], true)) {
+            if ($event->section === SiteSettings::key()) {
                 app(SiteCache::class)->changed("settings {$event->section}");
+            } elseif ($event->section === CodeSettings::key()) {
+                app(SiteCache::class)->changed("settings {$event->section}", SiteCache::PAGES);
             }
         });
     }
 
-    private static function changed(Model $model): void
+    /** @param  list<string>  $areas */
+    private static function changed(Model $model, array $areas = []): void
     {
         $key = $model->getKey();
-        app(SiteCache::class)->changed(strtolower(class_basename($model)).(is_scalar($key) ? ' '.$key : ''));
+        app(SiteCache::class)->changed(strtolower(class_basename($model)).(is_scalar($key) ? ' '.$key : ''), ...$areas);
+    }
+
+    private static function comment(Models\Comment $comment): void
+    {
+        if (PageCache::enabled()) {
+            self::changed($comment, [SiteCache::PAGES]);
+        }
     }
 }

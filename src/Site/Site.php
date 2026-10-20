@@ -50,7 +50,7 @@ final class Site
         // What was found at the path before, by id (only pages found: any path may be asked for).
         $cache = app(SiteCache::class);
         $key = 'page:'.sha1($locale.'|'.$rest);
-        $found = SiteCache::enabled() ? $cache->store()->get($cache->key($key)) : null;
+        $found = SiteCache::enabled() ? $cache->store()->get($cache->key($key, SiteCache::ROUTES)) : null;
         if (is_array($found) && is_int($found[1] ?? null)) {
             $page = $found[0] === 'entry' ? $this->entryQuery()->whereKey($found[1])->first() : $this->termQuery()->whereKey($found[1])->first();
             if ($page !== null) {
@@ -59,7 +59,7 @@ final class Site
         }
         $page = $this->resolve($locale, $rest);
         if ($page !== null && SiteCache::enabled()) {
-            $cache->store()->put($cache->key($key), [$page instanceof EntryTranslation ? 'entry' : 'term', $page->id], SiteCache::ttl());
+            $cache->store()->put($cache->key($key, SiteCache::ROUTES), [$page instanceof EntryTranslation ? 'entry' : 'term', $page->id], SiteCache::ttl());
         }
 
         return $page;
@@ -84,7 +84,8 @@ final class Site
     /** @return Builder<EntryTranslation> */
     private function entryQuery(): Builder
     {
-        return EntryTranslation::query()->live()->with('entry.collection');
+        // Its other languages too: for hreflang links (Seo::alternates()).
+        return EntryTranslation::query()->live()->with('entry.collection', 'entry.translations');
     }
 
     /** @return Builder<TermTranslation> */
@@ -109,8 +110,7 @@ final class Site
     {
         $id = $this->homepageId();
 
-        return $id === null ? null : EntryTranslation::query()->live()->with('entry.collection')
-            ->where('entry_id', $id)->where('locale', $locale ?? Locales::default())->first();
+        return $id === null ? null : $this->entryQuery()->where('entry_id', $id)->where('locale', $locale ?? Locales::default())->first();
     }
 
     /** The language a path is in (/id/blog/kopi: "id"): its prefix's, else the main one. */
@@ -142,7 +142,7 @@ final class Site
         }
         /** @var array<string, int> $routes listing routes and their collections */
         $routes = app(SiteCache::class)->remember('listings', fn (): array => Collection::query()->whereNotNull('listing_route')->pluck('id', 'listing_route')
-            ->map(fn (mixed $id): int => is_numeric($id) ? (int) $id : 0)->all());
+            ->map(fn (mixed $id): int => is_numeric($id) ? (int) $id : 0)->all(), SiteCache::ROUTES);
         $collection = isset($routes[$rest]) ? Collection::query()->find($routes[$rest]) : null;
 
         return $collection === null ? null : new Listing($collection, $locale);
@@ -247,7 +247,7 @@ final class Site
                 }
 
                 return $routes;
-            });
+            }, SiteCache::ROUTES);
             $patterns = [];
             foreach ($routes as [$type, $id, $route]) {
                 $patterns[] = [$type, $id, new RoutePattern($route)];

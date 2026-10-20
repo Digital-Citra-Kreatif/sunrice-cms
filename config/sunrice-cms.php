@@ -34,6 +34,10 @@ return [
         // when templates show nothing personal (or skip those pages with
         // PageCache::skipWhen()).
         'pages' => env('SUNRICE_PAGE_CACHE', false),
+        // Query parameters that make a kept page different, besides `page`
+        // and `q`. Any other (?utm_source=…) is ignored, so it can't fill
+        // the cache store with copies of one page.
+        'query' => [],
     ],
 
     'search' => [
