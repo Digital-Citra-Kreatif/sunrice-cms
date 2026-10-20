@@ -6,6 +6,7 @@ namespace Sunrice\Cms\Support;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
+use Sunrice\Admin\Actions\Permissions\RenamePermissions;
 use Sunrice\Admin\Actions\Permissions\SyncPermissions;
 use Sunrice\Admin\Panel;
 use Sunrice\Admin\Permissions\Permission;
@@ -16,7 +17,8 @@ use Throwable;
 
 /**
  * The permissions for one collection, taxonomy or form (see Access),
- * kept in step with them: created when one is, deleted with it.
+ * kept in step with them: created when one is, renamed with its handle
+ * (renamed()), deleted with it.
  *
  * @internal
  */
@@ -25,6 +27,13 @@ final class ScopedPermissions
     private const ENTRY_LABELS = ['view' => 'View', 'create' => 'Create', 'update' => 'Edit drafts', 'publish' => 'Publish and unpublish', 'delete' => 'Trash and restore', 'export' => 'Export as CSV'];
 
     private const KEY = 'sunrice-cms:scoped-permissions';
+
+    /** The actions scoped permissions come in, by what they're scoped to. */
+    private const SCOPES = [
+        'collection' => ['cms.entries.%s.', Access::ENTRY_ACTIONS],
+        'taxonomy' => ['cms.terms.%s.', ['manage']],
+        'form' => ['cms.submissions.%s.', Access::SUBMISSION_ACTIONS],
+    ];
 
     /**
      * Cached (as plain values) until a collection, taxonomy or form changes.
@@ -81,6 +90,27 @@ final class ScopedPermissions
         Cache::forget(self::KEY);
         Handles::flush();
         app(Panel::class)->flushPermissions();
+    }
+
+    /**
+     * After a collection's, taxonomy's or form's handle changed: its stored
+     * permissions are renamed in place, so the roles and people that had
+     * them keep them ("cms.entries.blog.view" becomes "cms.entries.news.view").
+     *
+     * @param  'collection'|'taxonomy'|'form'  $kind
+     */
+    public static function renamed(string $kind, string $old, string $new): void
+    {
+        if ($old === $new) {
+            return;
+        }
+        [$pattern, $actions] = self::SCOPES[$kind];
+        $names = [];
+        foreach ($actions as $action) {
+            $names[sprintf($pattern, $old).$action] = sprintf($pattern, $new).$action;
+        }
+        app(RenamePermissions::class)->handle($names);
+        self::flush();
     }
 
     /** After a collection, taxonomy or form came or went: its permissions too. */

@@ -47,9 +47,8 @@ final class CollectionResource extends Resource
     {
         return $form->schema([
             TextInput::make('title')->required(),
-            TextInput::make('handle')->required()->maxLength(64)->unique()->onlyOnCreate()
-                ->rules(['regex:/^[a-z][a-z0-9_]*$/'])
-                ->help('Lowercase letters, digits and underscores, like "articles". It can\'t change later.'),
+            ...HandleField::make('collection', 'Lowercase letters, digits and underscores, like "articles".',
+                'Careful: templates and code that name it (the cms.{handle} view, Cms::entries(\'…\'), entries fields limited to it) need the new handle too. Roles keep their permissions for it.'),
             Select::make('blueprint')
                 ->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
                 ->help('The fields its entries have. Changing it keeps what entries already hold.'),

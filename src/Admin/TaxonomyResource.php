@@ -48,9 +48,8 @@ final class TaxonomyResource extends Resource
     {
         return $form->schema([
             TextInput::make('title')->required(),
-            TextInput::make('handle')->required()->maxLength(64)->unique()->onlyOnCreate()
-                ->rules(['regex:/^[a-z][a-z0-9_]*$/'])
-                ->help('Lowercase letters, digits and underscores, like "categories". It can\'t change later.'),
+            ...HandleField::make('taxonomy', 'Lowercase letters, digits and underscores, like "categories".',
+                'Careful: terms fields and templates that name it (the cms.taxonomy-{handle} view, whereTerm(\'…\')) need the new handle too. Roles keep their permissions for it.'),
             Toggle::make('hierarchical')->label('Nested terms')->help('Terms can go under other terms, like categories and subcategories.'),
             CheckboxList::make('collections')
                 ->help('The collections whose entries it groups.')
