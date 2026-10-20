@@ -128,7 +128,7 @@ function Control({ field, value, onChange, errors, id, content }: Props) {
                 collections={field.collections ?? []} onChange={onChange}
                 value={typeof value === 'number' || (Array.isArray(value) && value.every((v) => typeof v === 'number')) ? value as number | number[] : null} />;
         case 'link':
-            return <LinkInput value={asRecord(value)} onChange={onChange} errors={errors} id={id} />;
+            return <LinkInput value={asRecord(value)} onChange={onChange} errors={errors} id={id} collections={field.collections ?? []} />;
         case 'media':
             return <MediaPickerInput id={id} invalid={invalid} disabled={false} multiple={field.config?.multiple === true}
                 max={numberConfig(field, 'max') ?? null} types={Array.isArray(field.config?.types) ? field.config.types as string[] : []}
@@ -208,23 +208,42 @@ function MultiSelect({ options, value, onChange }: { options: Option[]; value: s
     );
 }
 
-function LinkInput({ value, onChange, errors, id }: { value: Record<string, unknown>; onChange: (value: unknown) => void; errors: Errors; id: string }) {
-    const set = (key: string, next: unknown) => {
-        const link = { ...value, [key]: next };
-        onChange(link.url === '' || link.url === undefined ? null : link);
+function LinkInput({ value, onChange, errors, id, collections }: {
+    value: Record<string, unknown>; onChange: (value: unknown) => void; errors: Errors; id: string; collections: string[];
+}) {
+    const type = value.type === 'entry' ? 'entry' : 'url';
+    const set = (changes: Record<string, unknown>) => {
+        const link: Record<string, unknown> = { ...value, type, ...changes };
+        const empty = link.type === 'entry' ? typeof link.entry_id !== 'number' : link.url === '' || link.url === undefined || link.url === null;
+        // An empty link is no link; the text and tab choice wait for an address or entry.
+        onChange(empty ? (link.label || link.new_tab ? link : null) : link);
     };
 
     return (
-        <div className="cms:grid cms:gap-2 cms:md:grid-cols-[2fr_1fr_auto] cms:md:items-center">
-            <Input id={id} aria-label="Address" placeholder="https://… or /about" value={typeof value.url === 'string' ? value.url : ''}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => set('url', e.target.value)} aria-invalid={errors.url !== undefined} />
-            <Input aria-label="Link text" placeholder="Link text" value={typeof value.label === 'string' ? value.label : ''}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => set('label', e.target.value)} />
-            <label className="cms:flex cms:items-center cms:gap-2 cms:text-sm">
-                <Checkbox checked={value.new_tab === true} onCheckedChange={(checked: boolean) => set('new_tab', checked)} />
-                New tab
-            </label>
-            <div className="cms:md:col-span-3"><FieldError message={errors.url ?? errors.label} /></div>
+        <div className="cms:flex cms:flex-col cms:gap-2">
+            <div role="radiogroup" aria-label="Link to" className="cms:inline-flex cms:w-fit cms:rounded-md cms:border cms:p-0.5">
+                {(['url', 'entry'] as const).map((option) => (
+                    <Button key={option} type="button" size="sm" role="radio" aria-checked={type === option} variant={type === option ? 'secondary' : 'ghost'}
+                        onClick={() => set({ type: option, url: option === 'url' ? value.url : undefined, entry_id: option === 'entry' ? value.entry_id : undefined })}>
+                        {option === 'url' ? 'Address' : 'Entry'}
+                    </Button>
+                ))}
+            </div>
+            <div className="cms:grid cms:gap-2 cms:md:grid-cols-[2fr_1fr_auto] cms:md:items-start">
+                {type === 'url'
+                    ? <Input id={id} aria-label="Address" placeholder="https://… or /about" value={typeof value.url === 'string' ? value.url : ''}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => set({ url: e.target.value })} aria-invalid={errors.url !== undefined} />
+                    : <EntriesPicker id={id} invalid={errors.entry_id !== undefined} multiple={false} max={null} collections={collections}
+                        value={typeof value.entry_id === 'number' ? value.entry_id : null}
+                        onChange={(next) => set({ entry_id: typeof next === 'number' ? next : undefined })} />}
+                <Input aria-label="Link text" placeholder={type === 'entry' ? 'Link text (the entry\'s title)' : 'Link text'} value={typeof value.label === 'string' ? value.label : ''}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => set({ label: e.target.value })} />
+                <label className="cms:flex cms:h-9 cms:items-center cms:gap-2 cms:text-sm">
+                    <Checkbox checked={value.new_tab === true} onCheckedChange={(checked: boolean) => set({ new_tab: checked })} />
+                    New tab
+                </label>
+                <div className="cms:md:col-span-3"><FieldError message={errors.url ?? errors.entry_id ?? errors.label ?? errors.type} /></div>
+            </div>
         </div>
     );
 }

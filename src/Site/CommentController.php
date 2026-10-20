@@ -59,7 +59,10 @@ final class CommentController
     public function unsubscribe(Comment $comment): Response
     {
         $comment->forceFill(['notify_replies' => false])->saveQuietly();
+        app()->setLocale($comment->locale);
+        $translation = $comment->entry->translation($comment->locale) ?? $comment->entry->mainTranslation();
+        $url = $translation !== null && $translation->isLive() && ! $comment->entry->trashed() ? $translation->url() : null;
 
-        return response(e(Lang::get('sunrice-cms::site.comments.unsubscribed', [], $comment->locale)), 200, ['Content-Type' => 'text/plain; charset=UTF-8', 'X-Robots-Tag' => 'noindex']);
+        return response()->view('sunrice-cms::comment-unsubscribed', ['locale' => $comment->locale, 'url' => $url])->header('X-Robots-Tag', 'noindex');
     }
 }

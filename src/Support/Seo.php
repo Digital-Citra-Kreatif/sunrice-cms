@@ -214,14 +214,19 @@ final class Seo
 
     /**
      * The tags of the page being shown (see Page), or the site's own for a
-     * page of the app's: `$title` is then the page's title.
+     * page of the app's: `$title` is then the page's title. A page shown
+     * with the main language's content (Page::$fallback) is canonical to
+     * the main language's page and has no hreflang links.
      *
      * @return SeoTags
      */
     public static function forPage(?Page $page, ?string $title = null): array
     {
         return match (true) {
+            // The main language's page shown in another language: canonical to the main page, no hreflang links.
+            $page?->entry !== null && $page->fallback => ['alternates' => []] + self::for($page->entry, $page->preview),
             $page?->entry !== null => self::for($page->entry, $page->preview),
+            $page?->term !== null && $page->fallback => ['alternates' => []] + self::forTerm($page->term, $page->pageNumber),
             $page?->term !== null => self::forTerm($page->term, $page->pageNumber),
             $page?->collection !== null => self::forListing($page->collection, $page->locale, $page->pageNumber),
             // Search results aren't pages to index.

@@ -70,6 +70,7 @@ final class CmsServiceProvider extends ServiceProvider
         // Read by Locales all the time: once per request.
         $this->app->scoped(Settings\LocaleSettings::class);
         $this->app->singleton(Site\PageCache::class);
+        $this->app->singleton(Site\SiteHooks::class);
     }
 
     public function boot(): void
@@ -91,6 +92,8 @@ final class CmsServiceProvider extends ServiceProvider
             $blade->component(View\Components\EntryFilter::class, 'sunrice-cms::entry-filter');
             $blade->component(View\Components\Form::class, 'sunrice-cms::form');
             $blade->component(View\Components\Comments::class, 'sunrice-cms::comments');
+            // <body @bodyClass> or <body @bodyClass('dark')>: the whole class="…" attribute.
+            $blade->directive('bodyClass', fn (string $extra): string => '<?php echo \'class="\'.e(\Sunrice\Cms\Content::bodyClass('.($extra === '' ? '[]' : $extra).')).\'"\'; ?>');
         });
         if (! class_exists('Cms')) {
             AliasLoader::getInstance()->alias('Cms', Content::class);
@@ -160,6 +163,12 @@ final class CmsServiceProvider extends ServiceProvider
                 $schedule->command('model:prune', ['--model' => [Models\Submission::class, Models\Comment::class]])->daily();
             });
             $this->publishes([dirname(__DIR__).'/config/sunrice-cms.php' => config_path('sunrice-cms.php')], 'sunrice-cms-config');
+            // Starter templates for the site, to edit freely: layout, pages, partials, error pages and a stylesheet.
+            $this->publishes([
+                dirname(__DIR__).'/stubs/templates' => resource_path('views/cms'),
+                dirname(__DIR__).'/stubs/errors' => resource_path('views/errors'),
+                dirname(__DIR__).'/stubs/public/site.css' => public_path('cms/site.css'),
+            ], 'sunrice-cms-templates');
             // Also "laravel-assets", which Laravel apps publish on every composer update.
             $this->publishes([dirname(__DIR__).'/dist' => public_path(CmsPlugin::ASSETS)], ['sunrice-cms-assets', 'laravel-assets']);
         }
