@@ -1,0 +1,93 @@
+# Entries
+
+Entries are the website's content: pages, articles, products, events. Each entry belongs to a **collection**, and the collection's fields decide what you fill in. Open **Entries** under Content to work with them.
+
+## The list
+
+The list shows one collection at a time; pick another one with the collection menu next to the title. You see only the collections your role allows.
+
+- **Search** finds entries by title or slug; type `#12` to find the entry with number 12.
+- **Status** shows only **Drafts**, **Published**, **Scheduled** (published, going live later) or the **Trash**.
+- Filter by author, by a term (such as a category) and by **Language**: the list shows the titles and statuses in that language.
+- Click a column's title to sort by it. **Columns** chooses which columns you see, including some of the entry's own fields (a price, a date…). The panel remembers your columns and page size.
+- **Go to** leads to what you might need next: the collection's listing page, its terms, its settings and its blueprint, as your role allows.
+- **Export CSV** downloads the list as filtered, sorted and in its language, every page of it, for a spreadsheet.
+
+The filters stay in the page's address, so you can bookmark a view or send it to a colleague.
+
+### Several at once
+
+Tick entries (or the box at the top for the whole page) to **Publish**, **Unpublish** or **Move to the trash** them together. In the trash, **Restore** or **Delete for good**. Entries you may not change, or that can't be published as they are (a required field is empty, for example), are skipped, and the panel says how many.
+
+### Putting entries in order
+
+In a collection with *manual order*, the list has **Order** arrows: **Move up** and **Move down** put each entry in its place. They show while the list is in its own order, without filters or search. Other collections list their entries newest first (when they have dates) or by title.
+
+## Writing an entry
+
+1. Click **New entry**.
+2. Type the **Title**. The **Slug**, the entry's part of the web address (`/blog/my-first-post`), is made from the title when you leave it empty; only lowercase letters, numbers and dashes.
+3. Fill in the fields. Required ones say so; a field you leave in error is named when you save.
+4. Click **Create draft**.
+
+From then on, **Save draft** keeps your work (or press **Ctrl S** / **⌘ S**). Saving a draft never changes the website.
+
+### Fields you'll meet
+
+- **Rich text** has a toolbar for headings, bold, italic, lists, quotes, links and images from the media library.
+- **Media** fields pick images or files from the [media library](guide:panel/media), or upload new ones.
+- **Entries** and **Terms** fields link to other entries or to categories and tags; search by title.
+- **Link** fields take a web address, or another entry (choose **Entry** to follow its address even if it changes).
+- **Groups**, **repeaters** and **flexible** fields hold several fields together; repeaters and flexible fields add rows or blocks you can reorder.
+
+## Drafts and publishing
+
+Every entry has a **draft**, which you edit, and a **live** version, which visitors see. The live version changes only when you publish.
+
+- **Publish** puts the draft on the website. For an entry already live, the button says **Publish changes**; it says **Published** when there's nothing new.
+- The arrow next to it has **Publish on a date…**: choose a date and time (in your time zone) and the entry goes live then. Until then its status is **Scheduled**. A date in the past publishes now, with that date.
+- **Unpublish** (same menu) takes the entry off the website; it becomes a draft again. Publishing it again keeps its original date.
+
+The **Status** card on the right says whether the entry is a draft, scheduled or published (and since when), and warns when *The draft has changes the site doesn't show yet*.
+
+> [!NOTE]
+> If your role can write but not publish (the *author* role, for example), you save drafts and someone else publishes them.
+
+## Seeing your work on the website
+
+- **Preview** opens the saved draft as it will look on the website, in a new tab. Save first: the preview shows what's saved, not what's on your screen. The preview link works for 30 minutes, and anyone you send it to can open it in that time.
+- **View** opens the live page.
+- If your role may see drafts on the site, live pages with unpublished changes show you a small banner while you're signed in, with **View draft**. Visitors never see it.
+
+## Page settings
+
+The **Page settings** card on the right is saved on its own, for every language, with **Save settings**:
+
+- **Parent**: in collections where entries nest (like pages under pages), the entry this one sits under. It's used for breadcrumbs and sub-menus; the web address doesn't change.
+- **Template**: a different design for this entry alone, if your developer made one. Leave it empty for the collection's own.
+- **Accept new comments**: in collections with comments, switch it off to close this entry's comments (approved ones stay). **Comments** opens this entry's comments.
+
+## Used by
+
+The **Used by** card lists the other content that links to this entry (other entries, terms, globals), with the field that links. Before trashing an entry, check it: links to it would lead nowhere.
+
+## Revisions
+
+Every publish keeps a **revision**: a copy of what was published, with the date. The **Revisions** card lists them; **Restore** loads one into the draft, so you can check it and publish when ready. Changed your mind? **Undo the restore** puts your previous draft back (until you sign out). The latest 50 revisions of each language are kept.
+
+## More actions
+
+- **Duplicate** copies the entry, in every language, as a new draft titled "… (copy)".
+- The bin button **moves it to the trash**: it comes off the website and out of the list, in every language, and can be restored. If other content uses it, the panel names where first.
+- In the trash, an entry has **Restore** and **Delete for good** (everything, in every language, with its revisions; this can't be undone).
+
+## When someone else is editing
+
+Only one person edits an entry in a language at a time. If a colleague has it open, you can **View only** or **Take over** (see [Working safely](guide:panel/welcome#working-safely)). If they saved after you opened it, choose **Load theirs** or **Save mine anyway**.
+
+## Listing pages
+
+A collection may have a **listing page** that lists its entries on the website (like `/blog`). Its own words (an introduction, a heading) and its search and sharing details are edited with **Listing page** above the entries list, and saved straight away (there's no draft).
+
+> [!TECHNICAL]
+> Collections, their URLs and templates are set up under Structure. See [Collections and entries](docs:cms/collections) and [The site](docs:cms/site).
