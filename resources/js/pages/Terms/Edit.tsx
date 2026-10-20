@@ -31,6 +31,8 @@ interface Props {
     seo: FieldValues | null;
     /** The translation's version, to refuse a save over someone else's newer one; null when not translated. */
     version: number | null;
+    /** Where other content points at this term. */
+    usedBy?: { label: string; url: string | null; field: string }[];
 }
 
 export default function TermEditPage(props: Props) {
@@ -38,7 +40,7 @@ export default function TermEditPage(props: Props) {
     return <TermEdit key={`${props.locale}:${props.version}:${JSON.stringify([props.values, props.seo, props.term.template])}`} {...props} />;
 }
 
-function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared, sharedValues, values, seo, version }: Props) {
+function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared, sharedValues, values, seo, version, usedBy = [] }: Props) {
     const list = adminUrl(`cms/taxonomies/${taxonomy.handle}/terms`);
     const url = adminUrl(`cms/terms/${term.id}/content`);
     useBreadcrumbs([{ label: taxonomy.title, href: `${list}?locale=${locale}` }, { label: term.title }]);
@@ -98,6 +100,18 @@ function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared,
                         <CardHeader><CardTitle className="cms:text-base">Search and sharing</CardTitle></CardHeader>
                         <CardContent>
                             <Fields id="seo" fields={SEO_FIELDS} value={form.data.seo} errors={errorsAt(errors, 'seo')} onChange={(next) => form.setData('seo', next)} />
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader><CardTitle className="cms:text-base">Used by</CardTitle></CardHeader>
+                        <CardContent className="cms:flex cms:flex-col cms:gap-1 cms:text-sm">
+                            {usedBy.length === 0 && <p className="cms:text-muted-foreground">No content links here through its fields.</p>}
+                            {usedBy.map((use) => (
+                                <div key={`${use.label}:${use.field}`} className="cms:flex cms:items-baseline cms:gap-2">
+                                    {use.url ? <a href={use.url} className="cms:truncate cms:underline-offset-4 hover:cms:underline">{use.label}</a> : <span className="cms:truncate">{use.label}</span>}
+                                    <span className="cms:text-xs cms:text-muted-foreground cms:font-mono">{use.field}</span>
+                                </div>
+                            ))}
                         </CardContent>
                     </Card>
                     <Card>

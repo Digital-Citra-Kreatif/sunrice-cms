@@ -28,6 +28,7 @@ use Sunrice\Cms\Fields\FieldTypes;
 use Sunrice\Cms\Fields\Types;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\GlobalValue;
+use Sunrice\Cms\Models\TermTranslation;
 
 /**
  * Boots the CMS. The CMS is added to a panel as a plugin (CmsPlugin);
@@ -88,6 +89,11 @@ final class CmsServiceProvider extends ServiceProvider
         EntryTranslation::saved(fn (EntryTranslation $translation) => Support\MediaUsage::entry($translation));
         EntryTranslation::deleted(fn (EntryTranslation $translation) => app(MediaUsages::class)->forget('cms.entry', (string) $translation->entry_id, $translation->locale));
         GlobalValue::saved(fn (GlobalValue $value) => Support\MediaUsage::global($value));
+        // Which entries and terms content points at (Support\References), kept on every save.
+        EntryTranslation::saved(fn (EntryTranslation $translation) => Support\References::entry($translation));
+        EntryTranslation::deleted(fn (EntryTranslation $translation) => Support\References::forget(Models\ContentReference::ENTRY, $translation->entry_id, $translation->locale));
+        TermTranslation::saved(fn (TermTranslation $translation) => Support\References::term($translation));
+        GlobalValue::saved(fn (GlobalValue $value) => Support\References::global($value));
         $this->pageCache();
         // A collection, taxonomy or form came or went: so do its permissions.
         foreach ([Models\Collection::class, Models\Taxonomy::class, Models\Form::class] as $class) {
@@ -126,7 +132,10 @@ final class CmsServiceProvider extends ServiceProvider
             $this->siteRoutes();
         }
         if ($this->app->runningInConsole()) {
-            $this->commands([Console\PublishScheduledCommand::class]);
+            $this->commands([
+                Console\PublishScheduledCommand::class, Console\RenameFieldCommand::class, Console\ExportStructureCommand::class, Console\ImportStructureCommand::class,
+                Console\OrphansCommand::class, Console\DemoContentCommand::class,
+            ]);
             $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
                 $schedule->command('sunrice:publish-scheduled')->everyMinute()->withoutOverlapping();
                 // Old form submissions and their files (sunrice-cms.forms.prune_after_days).

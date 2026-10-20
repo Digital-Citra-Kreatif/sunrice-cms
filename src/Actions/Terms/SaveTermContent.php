@@ -12,6 +12,7 @@ use Sunrice\Cms\Actions\Entries\SaveEntrySettings;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Support\Locales;
+use Sunrice\Cms\Support\References;
 use Sunrice\Cms\Support\Seo;
 use Sunrice\Cms\Support\Versioned;
 
@@ -60,6 +61,8 @@ final class SaveTermContent
 
         // Only if nobody saved in between: the version check and the write are one statement.
         Versioned::update($translation, $expected, ['data' => json_encode($data, JSON_THROW_ON_ERROR)]);
+        // A query update fires no model events.
+        References::term($translation);
         if ($term->template !== $template) {
             $term->forceFill(['template' => $template])->save();
             $changed[] = 'template';

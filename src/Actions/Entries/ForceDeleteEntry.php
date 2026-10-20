@@ -9,13 +9,18 @@ use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
 use Sunrice\Admin\Media\MediaUsages;
 use Sunrice\Cms\Events\EntryDeleted;
+use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Models\Comment;
+use Sunrice\Cms\Models\ContentReference;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\Revision;
+use Sunrice\Cms\Support\References;
 
 /**
  * Deletes a trashed entry for good, with its languages, revisions and
- * terms. Entries must be in the trash first.
+ * terms. Entries must be in the trash first. One that other content
+ * points at (Entry::referencedBy()) is refused unless forced; those
+ * fields then show nothing for it.
  *
  * @api
  */
@@ -23,11 +28,15 @@ final class ForceDeleteEntry
 {
     public function __construct(private readonly ActivityLog $activity) {}
 
-    /** @throws ValidationException when the entry isn't in the trash */
-    public function handle(Entry $entry): void
+    /** @throws ValidationException when the entry isn't in the trash, or is used elsewhere and $force is false */
+    public function handle(Entry $entry, bool $force = false): void
     {
         if (! $entry->trashed()) {
             throw ValidationException::withMessages(['entry' => 'Move the entry to the trash first.']);
+        }
+        $usedBy = References::usedBy(Reference::ENTRY, $entry->id);
+        if (! $force && $usedBy !== []) {
+            throw ValidationException::withMessages(['entry' => 'This entry is used by '.References::sentence($usedBy).'. Delete it anyway to leave those links empty.']);
         }
         $label = TrashEntry::label($entry);
         // Explicitly, not by the foreign keys' cascade: not every connection enforces them.
@@ -42,6 +51,7 @@ final class ForceDeleteEntry
             $entry->translations()->delete();
             $entry->forceDelete();
             app(MediaUsages::class)->forget('cms.entry', (string) $entry->id);
+            References::forget(ContentReference::ENTRY, $entry->id);
         });
         $this->activity->record('deleted', 'entry', $entry, $label);
         EntryDeleted::dispatch($entry);

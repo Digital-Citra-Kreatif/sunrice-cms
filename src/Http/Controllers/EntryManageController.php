@@ -103,10 +103,11 @@ final class EntryManageController
         return back();
     }
 
-    public function forceDelete(Entry $entry, ForceDeleteEntry $delete): RedirectResponse
+    /** For good; one used elsewhere only with "force" (the editor asks first). */
+    public function forceDelete(Request $request, Entry $entry, ForceDeleteEntry $delete): RedirectResponse
     {
         $collection = $entry->collection->handle;
-        $delete->handle($entry);
+        $delete->handle($entry, $request->boolean('force'));
 
         return redirect()->route('sunrice.admin.cms.entries.index', [$collection, 'status' => 'trashed'])->with('success', 'Deleted for good.');
     }
