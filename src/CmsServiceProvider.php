@@ -72,7 +72,7 @@ final class CmsServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(dirname(__DIR__).'/database/migrations');
         $this->loadViewsFrom(dirname(__DIR__).'/resources/views', 'sunrice-cms');
-        // <x-sunrice-cms::entries> and <x-sunrice-cms::terms> (the others are anonymous views).
+        // The class components (seo and code are anonymous views).
         $this->callAfterResolving('blade.compiler', function (BladeCompiler $blade): void {
             $blade->component(View\Components\Entries::class, 'sunrice-cms::entries');
             $blade->component(View\Components\Terms::class, 'sunrice-cms::terms');
