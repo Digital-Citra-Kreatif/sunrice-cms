@@ -54,6 +54,9 @@ class EntryTranslation extends Model
 
     protected $attributes = ['status' => self::DRAFT, 'draft_data' => '{}', 'version' => 1];
 
+    /** The context values() hydrates with when given none: shared by a query's whole result (EntryQuery). */
+    private ?HydrationContext $hydration = null;
+
     protected static function booted(): void
     {
         // The live version's words for site search, whenever it changes.
@@ -141,7 +144,7 @@ class EntryTranslation extends Model
      */
     public function values(?HydrationContext $context = null): array
     {
-        $context ??= new HydrationContext($this->locale);
+        $context ??= $this->hydration ?? new HydrationContext($this->locale);
 
         return $this->entry->collection->schema()->hydrate($this->completeData($context->preview), $context);
     }
@@ -176,6 +179,14 @@ class EntryTranslation extends Model
     public function ownData(array $data): array
     {
         return $this->isMain() ? $data : array_diff_key($data, array_flip($this->entry->collection->schema()->shared()));
+    }
+
+    /** Hydrate with this context when values() is given none: a query shares one with its whole result. */
+    public function hydrateWith(HydrationContext $context): static
+    {
+        $this->hydration = $context;
+
+        return $this;
     }
 
     /** The fields this translation edits: all of them for the main one, the translated ones for the others. */

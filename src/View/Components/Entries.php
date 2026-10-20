@@ -21,8 +21,9 @@ use Sunrice\Cms\Models\Term;
  *
  * `order`: latest (default), oldest, alphabetical, ordered (as editors
  * put them), or a field ("event_date", "-event_date" for newest first).
- * `:paginate="12"` gives a paginator (`$component->entries->links()`).
- * Everything else is Cms::entries(): see EntryQuery.
+ * `:paginate="12"` gives a paginator (`$component->entries->links()`);
+ * `search` finds words; `remember` keeps the matched ids in the site's
+ * cache. Everything else is Cms::entries(): see EntryQuery.
  *
  * @api
  */
@@ -47,9 +48,14 @@ final class Entries extends Component
         Entry|int|string|null $parent = null,
         array $where = [],
         Entry|EntryTranslation|int|array|null $except = null,
+        ?string $search = null,
+        bool $remember = false,
     ) {
         $handles = is_string($collection) ? array_values(array_filter(array_map('trim', explode(',', $collection)))) : $collection;
-        $query = Content::entries(...$handles);
+        $query = Content::entries(...$handles)->remember($remember);
+        if ($search !== null) {
+            $query->search($search);
+        }
         if ($term !== null) {
             $query->whereTerm(...(is_array($term) ? $term : [$term]));
         }
