@@ -223,11 +223,17 @@ final class CmsPlugin extends BasePlugin
         }
     }
 
-    /** A published asset's URL, versioned by the built file so browsers fetch a new one after an update. */
+    /** @var array<string, string|null> the built files' versions, once per process */
+    private static array $versions = [];
+
+    /** A published asset's URL, versioned by the built file (looked at once per process) so browsers fetch a new one after an update. */
     private static function asset(string $file): string
     {
-        $built = dirname(__DIR__)."/dist/{$file}";
-        $version = is_file($built) ? substr(md5((string) filemtime($built).filesize($built)), 0, 12) : null;
+        if (! array_key_exists($file, self::$versions)) {
+            $stat = @stat(dirname(__DIR__)."/dist/{$file}");
+            self::$versions[$file] = $stat === false ? null : substr(md5($stat['mtime'].$stat['size']), 0, 12);
+        }
+        $version = self::$versions[$file];
 
         return asset(self::ASSETS."/{$file}").($version === null ? '' : "?v={$version}");
     }
