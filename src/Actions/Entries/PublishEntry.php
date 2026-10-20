@@ -43,9 +43,10 @@ final class PublishEntry
         // Where the live page was, to redirect from if its address changes.
         $site = app(Site::class);
         $oldPath = $translation->isPublished() ? $site->path($translation, $translation->slug) : null;
+        $oldSlug = $translation->isPublished() ? $translation->slug : null;
 
         // The slug check and the write in one transaction: see EntryInput::write().
-        $values = EntryInput::write(function () use ($translation, $publishAt, $site, $oldPath): array {
+        $values = EntryInput::write(function () use ($translation, $publishAt, $site, $oldPath, $oldSlug): array {
             $values = EntryInput::validate(
                 $translation->editableSchema(),
                 $translation->draft_title,
@@ -76,6 +77,10 @@ final class PublishEntry
             $newPath = $site->path($translation, $translation->slug);
             if ($oldPath !== null && $newPath !== null) {
                 $site->moved($oldPath, $newPath);
+            }
+            // Pages whose URL holds this slug (/projects/{project}/{slug}) moved with it.
+            if ($oldSlug !== null && $oldSlug !== $translation->slug) {
+                $site->relatedMoved($translation, $oldSlug);
             }
             $this->terms->handle($translation->entry);
             // The other languages' search text holds this one's shared fields.

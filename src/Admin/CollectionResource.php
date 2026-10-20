@@ -14,7 +14,7 @@ use Sunrice\Admin\Resources\Tables\Column;
 use Sunrice\Admin\Resources\Tables\Table;
 use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Collection;
-use Sunrice\Cms\Site\RoutePattern;
+use Sunrice\Cms\Site\RoutePatternRule;
 use Sunrice\Cms\Support\StructuredData;
 
 /**
@@ -56,12 +56,8 @@ final class CollectionResource extends Resource
             Toggle::make('ordered')->label('Manual order')->help('Editors put entries in order (Move up, Move down), instead of by date or title.'),
             Toggle::make('hierarchical')->label('Hierarchical')->help('Entries may have a parent entry, like pages under pages (for breadcrumbs and sub-menus; their URLs stay the same).'),
             TextInput::make('route')->label('URL')->placeholder('/blog/{slug}')->unique()
-                ->rules([function (string $attribute, mixed $value, \Closure $fail): void {
-                    if (is_string($value) && $value !== '' && ! RoutePattern::isValid($value)) {
-                        $fail('Use a path with {slug} once, like /blog/{slug} or /{slug} for pages: lowercase letters, digits, dashes.');
-                    }
-                }])
-                ->help('Where entries are on the site. Empty: they have no page of their own.'),
+                ->rules([new RoutePatternRule])
+                ->help('Where entries are on the site. Empty: they have no page of their own. A related entry\'s slug goes in with its field: /projects/{project}/{slug}.'),
             TextInput::make('listing_route')->label('Listing page URL')->placeholder('/blog')->unique()->maxLength(255)
                 ->rules(['regex:#^(/[a-z0-9\-_]+)+$#'])
                 ->help('A page listing the entries, like /blog (template cms.{handle}-listing, else cms.listing). Empty: none.'),

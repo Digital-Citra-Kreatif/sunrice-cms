@@ -28,6 +28,9 @@ final class Site
     /** The homepage entry's id, once read (false: not read yet). */
     private int|false|null $homepage = false;
 
+    /** @var array<string, array<int, array<string, string>>> related entries' live slugs by language, per collection and route field */
+    private array $related = [];
+
     /** The live entry translation at a path, or null. */
     public function find(string $path): ?EntryTranslation
     {
@@ -68,14 +71,20 @@ final class Site
     private function resolve(string $locale, string $rest): EntryTranslation|TermTranslation|null
     {
         foreach ($this->patterns() as [$type, $id, $pattern]) {
-            $slug = $pattern->match($rest);
-            if ($slug === null) {
+            $matched = $pattern->match($rest);
+            if ($matched === null) {
                 continue;
             }
+            if ($type === 'taxonomy') {
+                return $this->termQuery()->where('taxonomy_id', $id)->where('locale', $locale)->where('slug', $matched['slug'])->first();
+            }
+            $found = $this->entryQuery()->where('collection_id', $id)->where('locale', $locale)->where('slug', $matched['slug'])->first();
+            // Slugs are unique in a collection and language; the related entries' must be theirs now (an old one redirects).
+            if ($found !== null && $matched['parameters'] !== [] && $this->parameters($found, $pattern, $locale) !== $matched['parameters']) {
+                return null;
+            }
 
-            return $type === 'collection'
-                ? $this->entryQuery()->where('collection_id', $id)->where('locale', $locale)->where('slug', $slug)->first()
-                : $this->termQuery()->where('taxonomy_id', $id)->where('locale', $locale)->where('slug', $slug)->first();
+            return $found;
         }
 
         return null;
@@ -169,16 +178,153 @@ final class Site
     /** The path of an entry translation with a slug (/id/blog/halo), or null without a route. */
     public function path(EntryTranslation $translation, ?string $slug): ?string
     {
+        if ($translation->entry_id === $this->homepageId() && $translation->entry->collection->route !== null && $slug !== null) {
+            $prefix = $translation->locale === Locales::default() ? '' : '/'.$translation->locale;
+
+            return $prefix === '' ? '/' : $prefix;
+        }
+
+        return $this->routePath($translation, $translation->locale, $slug);
+    }
+
+    /**
+     * The path from the collection's pattern in a language, with the
+     * related entries' slugs in it (/projects/tower/unit-1).
+     */
+    private function routePath(EntryTranslation $translation, string $locale, ?string $slug): ?string
+    {
         $route = $translation->entry->collection->route;
         if ($route === null || $slug === null) {
             return null;
         }
-        $prefix = $translation->locale === Locales::default() ? '' : '/'.$translation->locale;
-        if ($translation->entry_id === $this->homepageId()) {
-            return $prefix === '' ? '/' : $prefix;
+        $pattern = new RoutePattern($route);
+
+        return ($locale === Locales::default() ? '' : '/'.$locale).$pattern->path($slug, $this->parameters($translation, $pattern, $locale));
+    }
+
+    /**
+     * The related entries' slugs a pattern's {field}s take, in a language
+     * (else the main one's; "-" when a field links to nothing live).
+     *
+     * @return array<string, string>
+     */
+    private function parameters(EntryTranslation $translation, RoutePattern $pattern, string $locale): array
+    {
+        $parameters = [];
+        foreach ($pattern->parameters() as $field) {
+            $id = self::relatedId($translation, $field);
+            $slugs = $id === null ? [] : ($this->relatedSlugs($translation->entry->collection, $field)[$id] ?? []);
+            $parameters[$field] = $slugs[$locale] ?? $slugs[Locales::default()] ?? RoutePattern::NONE;
         }
 
-        return $prefix.(new RoutePattern($route))->path($slug);
+        return $parameters;
+    }
+
+    /** The entry a route field links to, from the live version (shared fields from the main language). */
+    private static function relatedId(EntryTranslation $translation, string $field): ?int
+    {
+        $data = $translation->data ?? [];
+        $value = array_key_exists($field, $data) ? $data[$field] : ($translation->entry->mainTranslation()->data[$field] ?? null);
+        $value = is_array($value) ? reset($value) : $value;
+
+        return is_int($value) && $value > 0 ? $value : null;
+    }
+
+    /**
+     * The live slugs of the entries a collection's route field may link
+     * to, by entry and language: one query (or none, cached) for all.
+     *
+     * @return array<int, array<string, string>>
+     */
+    private function relatedSlugs(Collection $collection, string $field): array
+    {
+        $key = $collection->id.'|'.$field;
+        if (! isset($this->related[$key])) {
+            $handles = $collection->schema()->field($field)?->configStrings('collections') ?? [];
+            sort($handles);
+            /** @var array<int, array<string, string>> $slugs */
+            $slugs = $handles === [] ? [] : app(SiteCache::class)->remember('related-slugs:'.implode(',', $handles), fn (): array => self::loadSlugs($handles), SiteCache::ROUTES);
+            $this->related[$key] = $slugs;
+        }
+
+        return $this->related[$key];
+    }
+
+    /**
+     * @param  list<string>  $handles
+     * @return array<int, array<string, string>>
+     */
+    private static function loadSlugs(array $handles): array
+    {
+        $slugs = [];
+        $translations = EntryTranslation::query()->live()->whereNotNull('slug')
+            ->whereIn('collection_id', Collection::query()->whereIn('handle', $handles)->select('id'))
+            ->toBase()->get(['entry_id', 'locale', 'slug']);
+        foreach ($translations as $row) {
+            if (is_numeric($row->entry_id) && is_string($row->locale) && is_string($row->slug)) {
+                $slugs[(int) $row->entry_id][$row->locale] = $row->slug;
+            }
+        }
+
+        return $slugs;
+    }
+
+    /**
+     * After an entry's slug changed: the pages whose URL holds it (a
+     * collection routed as /projects/{project}/{slug}) moved too, and
+     * their old addresses redirect.
+     */
+    public function relatedMoved(EntryTranslation $related, string $oldSlug): void
+    {
+        $collection = $related->entry->collection;
+        foreach ($this->dependents($collection->handle) as [$dependent, $field]) {
+            $key = $dependent->id.'|'.$field;
+            $ids = [];
+            // Whichever language holds the field (the main one, when it's shared).
+            foreach (EntryTranslation::query()->where('collection_id', $dependent->id)->select(['id', 'entry_id', 'data'])->lazyById(500) as $row) {
+                $value = ($row->data ?? [])[$field] ?? null;
+                if ((is_array($value) ? reset($value) : $value) === $related->entry_id) {
+                    $ids[] = $row->entry_id;
+                }
+            }
+            if ($ids === []) {
+                continue;
+            }
+            $handles = $dependent->schema()->field($field)?->configStrings('collections') ?? [];
+            $now = self::loadSlugs($handles);
+            $before = $now;
+            $before[$related->entry_id][$related->locale] = $oldSlug;
+            $pages = $this->entryQuery()->whereIn('entry_id', array_unique($ids))->get();
+            foreach ($pages as $page) {
+                $this->related[$key] = $before;
+                $from = $this->path($page, $page->slug);
+                $this->related[$key] = $now;
+                $to = $this->path($page, $page->slug);
+                if ($from !== null && $to !== null) {
+                    $this->moved($from, $to);
+                }
+            }
+            unset($this->related[$key]);
+        }
+    }
+
+    /**
+     * Collections whose URL holds a field that may link into a collection.
+     *
+     * @return list<array{0: Collection, 1: string}>
+     */
+    private function dependents(string $handle): array
+    {
+        $dependents = [];
+        foreach (Collection::query()->where('route', 'like', '%}%{%')->get() as $collection) {
+            foreach ((new RoutePattern((string) $collection->route))->parameters() as $field) {
+                if (in_array($handle, $collection->schema()->field($field)?->configStrings('collections') ?? [], true)) {
+                    $dependents[] = [$collection, $field];
+                }
+            }
+        }
+
+        return $dependents;
     }
 
     /** Where an old address moved, if it did. */
@@ -206,12 +352,7 @@ final class Site
     /** The path a page has besides the one it's served at (the homepage's own address), to redirect from. */
     public function ownPath(EntryTranslation $translation): ?string
     {
-        $route = $translation->entry->collection->route;
-        if ($route === null || $translation->slug === null) {
-            return null;
-        }
-
-        return ($translation->locale === Locales::default() ? '' : '/'.$translation->locale).(new RoutePattern($route))->path($translation->slug);
+        return $this->routePath($translation, $translation->locale, $translation->slug);
     }
 
     /** Forget the collections loaded, after one changed. */
@@ -219,6 +360,7 @@ final class Site
     {
         $this->patterns = null;
         $this->homepage = false;
+        $this->related = [];
     }
 
     private function homepageId(): ?int
