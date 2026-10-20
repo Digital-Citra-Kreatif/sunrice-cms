@@ -13,7 +13,9 @@ use Sunrice\Cms\Support\Locales;
 
 /**
  * The site page being shown, for layouts: `Cms::page()` (null outside the
- * CMS's pages), `Cms::bodyClass()` and `Cms::localeUrls()`.
+ * CMS's pages), `Cms::bodyClass()` and `Cms::localeUrls()`. `$fallback`:
+ * the entry or term is the main language's, shown in a language it isn't
+ * translated into (`$locale`).
  *
  * @api
  */
@@ -42,6 +44,7 @@ final readonly class Page
         public bool $preview = false,
         public bool $home = false,
         public int $pageNumber = 1,
+        public bool $fallback = false,
     ) {}
 
     public static function current(): ?self
@@ -111,18 +114,36 @@ final readonly class Page
         $urls = [];
         if ($this->entry !== null) {
             $entry = $this->entry->entry;
+            $site = app(Site::class);
+            $main = null;
             foreach ($entry->translations as $translation) {
                 $translation->setRelation('entry', $entry);
                 if ($translation->isLive() && ($url = $translation->url()) !== null) {
                     $urls[$translation->locale] = $url;
                 }
+                if ($translation->locale === Locales::default()) {
+                    $main = $translation;
+                }
+            }
+            // Languages it isn't live in show the main language's (Site::fallback()).
+            foreach (Locales::all() as $locale) {
+                if (! isset($urls[$locale]) && $main !== null && $site->isFallbackFor($main, $locale) && ($url = $site->urlIn($main, $locale)) !== null) {
+                    $urls[$locale] = $url;
+                }
             }
         } elseif ($this->term !== null) {
             $term = $this->term->term;
+            $site = app(Site::class);
             foreach ($term->translations as $translation) {
                 $translation->setRelation('term', $term);
                 if (($url = $translation->url()) !== null) {
                     $urls[$translation->locale] = $this->paged($url);
+                }
+            }
+            $main = $term->translations->firstWhere('locale', Locales::default());
+            foreach (Locales::all() as $locale) {
+                if (! isset($urls[$locale]) && $main !== null && Site::fallback() && ($url = $site->termUrlIn($main, $locale)) !== null) {
+                    $urls[$locale] = $this->paged($url);
                 }
             }
         } elseif ($this->type === self::SEARCH) {

@@ -36,13 +36,21 @@ final class SiteController
             return $this->renderListing($listing, $request);
         }
         $page = $site->match($request->path());
+        // The address's language: another than the page's when it stands in for a translation (Site::fallback()).
+        $locale = $site->locale($request->path());
         if ($page instanceof TermTranslation) {
-            return $this->renderTerm($page);
+            return $this->renderTerm($page, $locale);
         }
         $translation = $page;
-        // The homepage is at /: its own address goes there.
-        if ($translation !== null && ($own = $site->ownPath($translation)) !== null && ($served = $site->path($translation, $translation->slug)) !== $own
-            && '/'.trim($request->path(), '/') === $own) {
+        $path = '/'.trim($request->path(), '/');
+        if ($translation !== null && $translation->locale !== $locale) {
+            // The homepage in a language it isn't translated into is at /{locale}.
+            if ($site->isHomepage($translation) && $path !== '/'.$locale) {
+                return redirect()->to(self::withQuery(url('/'.$locale), $request), 301);
+            }
+        } elseif ($translation !== null && ($own = $site->ownPath($translation)) !== null && ($served = $site->path($translation, $translation->slug)) !== $own
+            && $path === $own) {
+            // The homepage is at /: its own address goes there.
             return redirect()->to(self::withQuery(url((string) $served), $request), 301);
         }
         if ($translation === null) {
@@ -52,7 +60,7 @@ final class SiteController
             return redirect()->to(self::withQuery($redirect->to_url, $request), $redirect->status);
         }
 
-        return $this->render($translation, preview: false);
+        return $this->render($translation, preview: false, locale: $locale);
     }
 
     /** A draft as it would look, from the editor's signed, expiring link. */
@@ -72,33 +80,39 @@ final class SiteController
         return $query === null || $query === '' ? $url : $url.(str_contains($url, '?') ? '&' : '?').$query;
     }
 
-    private function render(EntryTranslation $translation, bool $preview): Response
+    /** @param  string|null  $locale  the page's language: another than the translation's when it stands in for one */
+    private function render(EntryTranslation $translation, bool $preview, ?string $locale = null): Response
     {
-        app()->setLocale($translation->locale);
+        $locale ??= $translation->locale;
+        $fallback = $locale !== $translation->locale;
+        app()->setLocale($locale);
         $collection = $translation->entry->collection;
         $view = self::view($collection->handle, $collection->template, $translation->entry->template);
-        (new Page(Page::ENTRY, $translation->locale, $view, entry: $translation, collection: $collection, preview: $preview,
-            home: app(Site::class)->isHomepage($translation)))->share();
+        (new Page(Page::ENTRY, $locale, $view, entry: $translation, collection: $collection, preview: $preview,
+            home: app(Site::class)->isHomepage($translation), fallback: $fallback))->share();
 
         return $this->hidden(response()->view($view, [
             'entry' => $translation,
             'title' => $preview ? $translation->draft_title : $translation->title,
-            'values' => $translation->values(new HydrationContext($translation->locale, $preview)),
+            'values' => $translation->values(new HydrationContext($locale, $preview)),
             // Rich text is cleaned when saved, so it's the only HTML a template may print as is.
             'richText' => array_values(array_map(fn (Field $field): string => $field->handle, array_filter($collection->schema()->fields(), fn (Field $field): bool => $field->type === 'rich_text'))),
             'collection' => $collection,
-            'locale' => $translation->locale,
+            'locale' => $locale,
             'preview' => $preview,
+            // The main language's content, in a language it isn't translated into.
+            'fallback' => $fallback,
         ]));
     }
 
     /** A term's page: its fields and the live entries with it, newest first. */
-    private function renderTerm(TermTranslation $translation): Response
+    private function renderTerm(TermTranslation $translation, string $locale): Response
     {
-        app()->setLocale($translation->locale);
+        $fallback = $locale !== $translation->locale;
+        app()->setLocale($locale);
         $term = $translation->term;
         $taxonomy = $term->taxonomy;
-        $entries = EntryTranslation::query()->live()->with('entry.collection')->where('locale', $translation->locale)
+        $entries = EntryTranslation::query()->live()->with('entry.collection')->where('locale', $locale)
             ->whereHas('entry.terms', fn ($q) => $q->where('sunrice_terms.id', $term->id))
             ->orderByDesc('published_at')->orderByDesc('id')->paginate(10)->withQueryString();
         abort_if($entries->currentPage() > 1 && $entries->isEmpty(), 404);
@@ -111,7 +125,7 @@ final class SiteController
             }
         }
         $schema = $taxonomy->schema();
-        (new Page(Page::TERM, $translation->locale, $view, term: $translation, pageNumber: $entries->currentPage()))->share();
+        (new Page(Page::TERM, $locale, $view, term: $translation, pageNumber: $entries->currentPage(), fallback: $fallback))->share();
 
         return $this->hidden(response()->view($view, [
             'term' => $translation,
@@ -120,7 +134,8 @@ final class SiteController
             'entries' => $entries,
             'values' => $translation->values(),
             'richText' => array_values(array_map(fn (Field $field): string => $field->handle, array_filter($schema->fields(), fn (Field $field): bool => $field->type === 'rich_text'))),
-            'locale' => $translation->locale,
+            'locale' => $locale,
+            'fallback' => $fallback,
         ]));
     }
 

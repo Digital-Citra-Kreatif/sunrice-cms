@@ -48,11 +48,11 @@ final class Site
     {
         [$locale, $rest] = $this->splitLocale('/'.trim($path, '/'));
         if ($rest === '/') {
-            return $this->homepage($locale);
+            return $this->homepage($locale) ?? ($this->fallsBack($locale) ? $this->homepage() : null);
         }
         // What was found at the path before, by id (only pages found: any path may be asked for).
         $cache = app(SiteCache::class);
-        $key = 'page:'.sha1($locale.'|'.$rest);
+        $key = 'page:'.sha1($locale.'|'.$rest.'|'.(int) self::fallback());
         $found = SiteCache::enabled() ? $cache->store()->get($cache->key($key, SiteCache::ROUTES)) : null;
         if (is_array($found) && is_int($found[1] ?? null)) {
             $page = $found[0] === 'entry' ? $this->entryQuery()->whereKey($found[1])->first() : $this->termQuery()->whereKey($found[1])->first();
@@ -76,9 +76,21 @@ final class Site
                 continue;
             }
             if ($type === 'taxonomy') {
-                return $this->termQuery()->where('taxonomy_id', $id)->where('locale', $locale)->where('slug', $matched['slug'])->first();
+                $term = $this->termQuery()->where('taxonomy_id', $id)->where('locale', $locale)->where('slug', $matched['slug'])->first();
+                // Not translated: the main language's, at this language's address.
+                if ($term === null && $this->fallsBack($locale)) {
+                    $term = $this->termQuery()->where('taxonomy_id', $id)->where('locale', Locales::default())->where('slug', $matched['slug'])
+                        ->whereDoesntHave('term.translations', fn (Builder $q) => $q->where('locale', $locale))->first();
+                }
+
+                return $term;
             }
             $found = $this->entryQuery()->where('collection_id', $id)->where('locale', $locale)->where('slug', $matched['slug'])->first();
+            // Not live in this language: the main language's, at this language's address.
+            if ($found === null && $this->fallsBack($locale)) {
+                $found = $this->entryQuery()->where('collection_id', $id)->where('locale', Locales::default())->where('slug', $matched['slug'])
+                    ->whereDoesntHave('entry.translations', fn (Builder $q) => $q->live()->where('locale', $locale))->first();
+            }
             // Slugs are unique in a collection and language; the related entries' must be theirs now (an old one redirects).
             if ($found !== null && $matched['parameters'] !== [] && $this->parameters($found, $pattern, $locale) !== $matched['parameters']) {
                 return null;
@@ -88,6 +100,17 @@ final class Site
         }
 
         return null;
+    }
+
+    /** Whether pages not translated into a language show the main language's there (`sunrice-cms.site.fallback`). */
+    public static function fallback(): bool
+    {
+        return filter_var(config('sunrice-cms.site.fallback', true), FILTER_VALIDATE_BOOL);
+    }
+
+    private function fallsBack(string $locale): bool
+    {
+        return $locale !== Locales::default() && self::fallback();
     }
 
     /** @return Builder<EntryTranslation> */
@@ -104,14 +127,30 @@ final class Site
     }
 
     /** The URL of a term's page in its language, or null when its taxonomy has no pages. */
-    public function termUrl(TermTranslation $translation): ?string
+    public function termUrl(TermTranslation $translation, ?string $locale = null): ?string
     {
         $route = $translation->term->taxonomy->route;
         if ($route === null || $translation->term->trashed()) {
             return null;
         }
+        $locale ??= $translation->locale;
 
-        return url(($translation->locale === Locales::default() ? '' : '/'.$translation->locale).(new RoutePattern($route))->path($translation->slug));
+        return url(($locale === Locales::default() ? '' : '/'.$locale).(new RoutePattern($route))->path((string) $translation->slug));
+    }
+
+    /**
+     * A term's page for a visitor reading a language: its translation's
+     * there; else, with the main-language fallback, the main language's
+     * page at that language's address; else the main language's own.
+     */
+    public function termUrlIn(TermTranslation $translation, string $locale): ?string
+    {
+        if ($translation->locale !== $locale && $this->fallsBack($locale) && $translation->locale === Locales::default()
+            && $translation->term->translations->firstWhere('locale', $locale) === null) {
+            return $this->termUrl($translation, $locale);
+        }
+
+        return $this->termUrl($translation);
     }
 
     /** The homepage (Settings → Site) in a language, when it's live there. */
@@ -166,13 +205,33 @@ final class Site
     }
 
     /**
-     * An entry's page for a visitor reading another language: the
-     * translation's own URL when it's in that language, else its own
-     * (the main language's page).
+     * An entry's page for a visitor reading a language: the translation's
+     * own URL when it's in that language; for the main language's when the
+     * entry isn't live in that language, with the fallback on, the page at
+     * that language's address (/id/blog/hello); else its own URL.
      */
     public function urlIn(EntryTranslation $translation, string $locale): ?string
     {
-        return $this->url($translation);
+        if ($translation->locale === $locale || ! $this->isFallbackFor($translation, $locale)) {
+            return $this->url($translation);
+        }
+        if ($translation->entry_id === $this->homepageId() && $translation->entry->collection->route !== null) {
+            return url('/'.$locale);
+        }
+        $path = $this->routePath($translation, $locale, $translation->slug);
+
+        return $path === null ? null : url($path);
+    }
+
+    /** Whether a main-language translation stands in for its entry in a language it isn't live in. */
+    public function isFallbackFor(EntryTranslation $translation, string $locale): bool
+    {
+        if (! $this->fallsBack($locale) || $translation->locale !== Locales::default() || ! $translation->isLive()) {
+            return false;
+        }
+        $own = $translation->entry->translations->firstWhere('locale', $locale);
+
+        return $own === null || ! $own->isLive();
     }
 
     /** The path of an entry translation with a slug (/id/blog/halo), or null without a route. */

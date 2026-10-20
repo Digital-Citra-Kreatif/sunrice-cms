@@ -19,6 +19,10 @@ return [
         // What the views editors pick for an entry or a term may start
         // with, so no other view of the app can be made a public page.
         'template_prefixes' => ['cms.'],
+        // An entry or term not translated into a language (or not live in
+        // it) shows the main language's content at that language's address,
+        // canonical to the main page. Off: a 404 there.
+        'fallback' => env('SUNRICE_FALLBACK', true),
     ],
 
     'cache' => [
