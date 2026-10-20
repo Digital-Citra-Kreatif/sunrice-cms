@@ -11,7 +11,7 @@ export interface EntryCommand {
     url: string;
 }
 
-/** The entry picker's results (GET cms/entry-picker) as command palette items. */
+/** The entry picker's results (GET cms/entries/picker) as command palette items. */
 export function entryCommands(items: PickerItem[], href: (path: string) => string): EntryCommand[] {
     return items.map((item) => ({
         id: String(item.id),
@@ -29,7 +29,7 @@ export function entryCommands(items: PickerItem[], href: (path: string) => strin
  * request gives no results.
  */
 export async function searchEntries(query: string, signal: AbortSignal, href: (path: string) => string): Promise<EntryCommand[]> {
-    const response = await fetch(`${href('cms/entry-picker')}?${pickerQuery({ search: query.trim(), collections: [] })}`, {
+    const response = await fetch(`${href('cms/entries/picker')}?${pickerQuery({ search: query.trim(), collections: [] })}`, {
         signal, headers: { Accept: 'application/json' }, credentials: 'same-origin',
     });
     if (!response.ok) return [];

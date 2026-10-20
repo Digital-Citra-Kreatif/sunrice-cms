@@ -48,7 +48,7 @@ export default function BlueprintForm({ kind = 'blueprint', blueprint, fieldType
             fields: toDefinitions(fields, hasChildren),
         }));
         if (blueprint) {
-            form.put(`${base}/${blueprint.id}`, { preserveScroll: true, onSuccess: saved });
+            form.put(`${base}/${blueprint.handle}`, { preserveScroll: true, onSuccess: saved });
         } else {
             form.post(base, { onSuccess: saved });
         }
@@ -60,7 +60,7 @@ export default function BlueprintForm({ kind = 'blueprint', blueprint, fieldType
     useUnsavedChanges(dirty, save);
 
     const remove = () => blueprint && confirm(`Delete the ${noun.toLowerCase()} "${blueprint.title}"? Content keeps its values.`,
-        () => router.delete(`${base}/${blueprint.id}`, { preserveScroll: true }));
+        () => router.delete(`${base}/${blueprint.handle}`, { preserveScroll: true }));
 
     return (
         <form onSubmit={submit} className="cms:flex cms:max-w-5xl cms:flex-col cms:gap-6">

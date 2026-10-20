@@ -23,7 +23,7 @@
 | **Allow comments** | Pengunjung boleh mengomentari entrinya (membutuhkan URL). |
 | **Structured data type** | Jenis entri yang diberitahukan ke mesin pencari (artikel, halaman web…). |
 
-Menghapus koleksi tidak menghapus entrinya: entri hilang dari panel dan situs web. Filter **Deleted** di daftar menampilkan koleksi yang dihapus, dengan **Restore** untuk mengembalikannya.
+Menghapus koleksi tidak menghapus entrinya: entri hilang dari panel dan situs web. Tombol **Trash** di daftar menampilkan koleksi yang dihapus, dengan **Restore** untuk mengembalikannya.
 
 Setiap koleksi mendapat izinnya sendiri (melihat, membuat, menyunting, menerbitkan, menghapus, dan mengekspor entrinya), sehingga sebuah peran bisa dibatasi hanya ke *Blog*, misalnya. Lihat [Pengguna dan peran](guide:panel/users-roles).
 
@@ -46,15 +46,15 @@ Seret field ke urutannya lewat pegangannya (field di dalam group atau repeater d
 
 ## Taksonomi
 
-**Structure → Taxonomies**: **Title**, **Handle** (bisa diubah nanti, seperti pada koleksi), **Nested terms** (term di bawah term lain, seperti subkategori), **Collections** yang entrinya dikelompokkan, **Term pages URL** (seperti `/topik/{slug}`; kosong: term tidak punya halaman), **Term fields** (blueprint untuk field term), **Template**, dan **SEO from fields**. Editor lalu menambahkan term di Content → Terms (lihat [Term](guide:website/terms)). Agar editor bisa memberi term pada entri, tambahkan field **Terms** ke blueprint koleksinya.
+**Structure → Taxonomies**: **Title**, **Handle** (bisa diubah nanti, seperti pada koleksi), **Nested terms** (term di bawah term lain, seperti subkategori), **Collections** yang entrinya dikelompokkan, **Term pages URL** (seperti `/topik/{slug}`; kosong: term tidak punya halaman), **Term fields** (blueprint untuk field term), dan **Template**. Editor lalu menambahkan term di bagian Taxonomies pada sidebar (lihat [Term](guide:website/terms)). Agar editor bisa memberi term pada entri, tambahkan field **Terms** ke blueprint koleksinya.
 
 ## Global set
 
-**Structure → Global sets**: **Title**, **Handle**, dan **Blueprint** untuk field set tersebut. Editor mengisinya di Content → Globals (lihat [Global](guide:website/globals)).
+**Content → Globals → New global set**: **Title**, **Handle**, dan **Blueprint** untuk field set tersebut (nanti, lewat **Settings** set itu). Membuka sebuah set menampilkan isinya (lihat [Global](guide:website/globals)).
 
 ## Menu
 
-**Structure → Menu settings**: **Title** dan **Handle** (seperti `main` atau `footer`) yang dipakai template. Editor mengisinya di Content → Menus (lihat [Menu](guide:website/menus)).
+**Content → Menus → New menu**: **Title** dan **Handle** (seperti `main` atau `footer`) yang dipakai template (nanti, lewat **Settings** menu itu). Membuka sebuah menu menampilkan tautannya (lihat [Menu](guide:website/menus)).
 
 ## Formulir
 

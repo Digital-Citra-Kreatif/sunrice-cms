@@ -19,19 +19,19 @@ final class AdminUrls
 {
     public static function entry(Entry $entry, ?string $locale = null): ?string
     {
-        if (! Route::has('sunrice.admin.cms.entries.edit')) {
+        if (! Route::has('sunrice.admin.cms.collections.entries.edit')) {
             return null;
         }
 
-        return route('sunrice.admin.cms.entries.edit', ['collection' => $entry->collection->handle, 'entry' => $entry->id, ...($locale !== null && $locale !== '' ? ['locale' => $locale] : [])]);
+        return route('sunrice.admin.cms.collections.entries.edit', ['collection' => $entry->collection->handle, 'entry' => $entry->id, ...($locale !== null && $locale !== '' ? ['locale' => $locale] : [])]);
     }
 
     public static function term(Term $term, ?string $locale = null): ?string
     {
-        if (! Route::has('sunrice.admin.cms.terms.edit')) {
+        if (! Route::has('sunrice.admin.cms.taxonomies.terms.edit')) {
             return null;
         }
 
-        return route('sunrice.admin.cms.terms.edit', ['taxonomy' => $term->taxonomy->handle, 'term' => $term->id, ...($locale !== null && $locale !== '' ? ['locale' => $locale] : [])]);
+        return route('sunrice.admin.cms.taxonomies.terms.edit', ['taxonomy' => $term->taxonomy->handle, 'term' => $term->id, ...($locale !== null && $locale !== '' ? ['locale' => $locale] : [])]);
     }
 }

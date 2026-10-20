@@ -189,7 +189,7 @@ function EntryList({
                             </DropdownMenu>
                         )}
                         {collection.listing && !trashed && (
-                            <Button variant="outline" asChild><Link href={adminUrl(`cms/collections/${collection.handle}/listing`)}><LayoutList /> Listing page</Link></Button>
+                            <Button variant="outline" asChild><Link href={adminUrl(`cms/collections/${collection.handle}/listing/edit`)}><LayoutList /> Listing page</Link></Button>
                         )}
                         {entries.total > 0 && can?.export && (
                             <Button variant="outline" asChild><a href={`${base}/export${exportQuery ? `?${exportQuery}` : ''}`}><Download /> Export CSV</a></Button>

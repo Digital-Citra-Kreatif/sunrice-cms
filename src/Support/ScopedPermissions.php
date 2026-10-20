@@ -26,12 +26,14 @@ final class ScopedPermissions
 {
     private const ENTRY_LABELS = ['view' => 'View', 'create' => 'Create', 'update' => 'Edit drafts', 'publish' => 'Publish and unpublish', 'delete' => 'Trash and restore', 'export' => 'Export as CSV'];
 
+    private const TERM_LABELS = ['view' => 'View terms', 'create' => 'Create terms', 'update' => 'Edit terms', 'delete' => 'Trash and delete terms'];
+
     private const KEY = 'sunrice-cms:scoped-permissions';
 
     /** The actions scoped permissions come in, by what they're scoped to. */
     private const SCOPES = [
         'collection' => ['cms.entries.%s.', Access::ENTRY_ACTIONS],
-        'taxonomy' => ['cms.terms.%s.', ['manage']],
+        'taxonomy' => ['cms.terms.%s.', Access::TERM_ACTIONS],
         'form' => ['cms.submissions.%s.', Access::SUBMISSION_ACTIONS],
     ];
 
@@ -73,7 +75,9 @@ final class ScopedPermissions
             }
         }
         foreach (Taxonomy::query()->orderBy('title')->get(['handle', 'title']) as $taxonomy) {
-            $make("cms.terms.{$taxonomy->handle}.manage", 'Manage terms', "Terms: {$taxonomy->title}");
+            foreach (self::TERM_LABELS as $action => $label) {
+                $make("cms.terms.{$taxonomy->handle}.{$action}", $label, "Terms: {$taxonomy->title}");
+            }
         }
         foreach (Form::query()->orderBy('title')->get(['handle', 'title']) as $form) {
             $make("cms.submissions.{$form->handle}.view", 'View submissions', "Submissions: {$form->title}");

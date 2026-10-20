@@ -35,7 +35,7 @@ final class FieldsetController
 
     public function create(BuilderData $builder): Response
     {
-        return Inertia::render('Cms/Blueprints/Form', ['kind' => 'fieldset', 'blueprint' => null, ...$builder->toArray()]);
+        return Inertia::render('Cms/Fieldsets/Edit', ['kind' => 'fieldset', 'blueprint' => null, ...$builder->toArray()]);
     }
 
     public function store(Request $request, SaveFieldset $save): RedirectResponse
@@ -47,7 +47,7 @@ final class FieldsetController
 
     public function edit(Fieldset $fieldset, BuilderData $builder, DeleteFieldset $delete): Response
     {
-        return Inertia::render('Cms/Blueprints/Form', [
+        return Inertia::render('Cms/Fieldsets/Edit', [
             'kind' => 'fieldset',
             'blueprint' => ['id' => $fieldset->id, 'handle' => $fieldset->handle, 'title' => $fieldset->title, 'fields' => $fieldset->fields],
             'usedBy' => $delete->usedBy($fieldset),

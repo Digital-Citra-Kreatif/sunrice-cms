@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Admin;
 
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Resources\Forms\CheckboxList;
 use Sunrice\Admin\Resources\Forms\Form;
@@ -16,10 +14,8 @@ use Sunrice\Admin\Resources\Forms\Select;
 use Sunrice\Admin\Resources\Forms\TextInput;
 use Sunrice\Admin\Resources\Forms\Toggle;
 use Sunrice\Admin\Resources\Resource;
-use Sunrice\Admin\Resources\Tables\Action;
 use Sunrice\Admin\Resources\Tables\ActionFailed;
 use Sunrice\Admin\Resources\Tables\Column;
-use Sunrice\Admin\Resources\Tables\Filter;
 use Sunrice\Admin\Resources\Tables\Table;
 use Sunrice\Cms\Actions\Collections\RestoreDeleted;
 use Sunrice\Cms\Models\Blueprint;
@@ -50,6 +46,11 @@ final class CollectionResource extends Resource
     public static function navigationSort(): int
     {
         return 90;
+    }
+
+    public static function recordKey(): string
+    {
+        return 'handle';
     }
 
     public static function form(Form $form): Form
@@ -133,21 +134,18 @@ final class CollectionResource extends Resource
                 Column::make('route')->label('URL'),
                 Column::make('dated')->boolean(),
             ])
-            // Deleted ones keep their entries: list them, and bring them back.
-            ->filters([Filter::make('trashed')->label('Deleted')->options(['only' => 'Deleted'])->query(fn (Builder $query) => $query->withoutGlobalScope(SoftDeletingScope::class)->whereNotNull($query->qualifyColumn('deleted_at')))])
-            ->actions([
-                Action::make('restore')->trashed()->ability('delete')->handle(function (Model $collection): string {
-                    if ($collection instanceof Collection) {
-                        try {
-                            app(RestoreDeleted::class)->collection($collection);
-                        } catch (ValidationException $e) {
-                            throw new ActionFailed(implode(' ', $e->validator->errors()->all()));
-                        }
-                    }
-
-                    return 'Restored.';
-                }),
-            ])
             ->defaultSort('title');
+    }
+
+    /** Deleted ones keep their entries: the list's trash brings them back. */
+    public static function restoreRecord(Model $record): void
+    {
+        if ($record instanceof Collection) {
+            try {
+                app(RestoreDeleted::class)->collection($record);
+            } catch (ValidationException $e) {
+                throw new ActionFailed(implode(' ', $e->validator->errors()->all()));
+            }
+        }
     }
 }

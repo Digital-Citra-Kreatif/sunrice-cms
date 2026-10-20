@@ -40,7 +40,7 @@ final class BlueprintController
 
     public function create(BuilderData $builder): Response
     {
-        return Inertia::render('Cms/Blueprints/Form', ['blueprint' => null, ...$builder->toArray()]);
+        return Inertia::render('Cms/Blueprints/Edit', ['blueprint' => null, ...$builder->toArray()]);
     }
 
     public function store(Request $request, SaveBlueprint $save): RedirectResponse
@@ -52,7 +52,7 @@ final class BlueprintController
 
     public function edit(Blueprint $blueprint, BuilderData $builder): Response
     {
-        return Inertia::render('Cms/Blueprints/Form', [
+        return Inertia::render('Cms/Blueprints/Edit', [
             'blueprint' => ['id' => $blueprint->id, 'handle' => $blueprint->handle, 'title' => $blueprint->title, 'fields' => $blueprint->fields],
             ...$builder->toArray(),
         ]);

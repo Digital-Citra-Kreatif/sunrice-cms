@@ -20,7 +20,7 @@ final class SaveBlueprint extends CmsTool
 
     public function handle(Request $request): Response
     {
-        if (! $this->can('cms.blueprints.manage')) {
+        if (! $this->can('cms.blueprints.update')) {
             return $this->denied('manage blueprints');
         }
         /** @var array{kind?: string|null, handle: string, title?: string|null, fields?: array<mixed>|null} $args */

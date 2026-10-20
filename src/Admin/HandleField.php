@@ -21,12 +21,17 @@ final class HandleField
     /** The edit form's help: what a new handle breaks. */
     public const WARNING = 'Changing it breaks templates and code that use the old one.';
 
-    /** Lowercase letters, numbers and underscores, from a letter, said plainly when it isn't. */
+    /** Words the admin's addresses use next to a handle (/admin/cms/collections/create). */
+    public const RESERVED = ['create', 'export', 'bulk', 'options', 'picker'];
+
+    /** Lowercase letters, numbers and underscores, from a letter, said plainly when it isn't; not a RESERVED word. */
     public static function rule(): \Closure
     {
         return function (string $attribute, mixed $value, \Closure $fail): void {
             if (is_string($value) && $value !== '' && preg_match('/^[a-z][a-z0-9_]*$/', $value) !== 1) {
                 $fail('Use lowercase letters, numbers and underscores, starting with a letter (like main_menu).');
+            } elseif (in_array($value, self::RESERVED, true)) {
+                $fail("\"{$value}\" is used by the admin's addresses: choose another handle.");
             }
         };
     }

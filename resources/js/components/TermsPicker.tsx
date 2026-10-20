@@ -13,7 +13,7 @@ export const TermLabels = React.createContext<Record<string, string>>({});
 const NONE = '__none';
 
 async function fetchTerms(params: { taxonomy: string; q?: string; ids?: number[] }): Promise<{ items: TermOption[]; more: boolean }> {
-    const response = await fetch(`${adminUrl('cms/term-picker')}?${termPickerQuery(params)}`, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+    const response = await fetch(`${adminUrl('cms/terms/picker')}?${termPickerQuery(params)}`, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
     if (!response.ok) throw new Error(String(response.status));
 
     return (await response.json()) as { items: TermOption[]; more: boolean };
@@ -31,7 +31,7 @@ interface Props {
 }
 
 /**
- * A terms field: the taxonomy's terms load when it shows (cms/term-picker);
+ * A terms field: the taxonomy's terms load when it shows (cms/terms/picker);
  * a large taxonomy is searched instead of listed whole.
  */
 export function TermsPicker({ id, taxonomy, multiple, max, required, invalid, value, onChange }: Props) {

@@ -23,7 +23,7 @@ A **collection** is a kind of content: *Pages*, *Blog*, *Products*, *Events*. **
 | **Allow comments** | Visitors may comment on its entries (it needs a URL). |
 | **Structured data type** | What search engines are told its entries are (an article, a web page…). |
 
-Deleting a collection doesn't delete its entries: they leave the panel and the website. The list's **Deleted** filter shows deleted collections, with **Restore** to bring one back.
+Deleting a collection doesn't delete its entries: they leave the panel and the website. The list's **Trash** shows deleted collections, with **Restore** to bring one back.
 
 Each collection gets its own permissions (view, create, edit, publish, delete and export its entries), so a role can be limited to the *Blog*, for example. See [Users and roles](guide:panel/users-roles).
 
@@ -46,15 +46,15 @@ Drag the fields into order by their handle (the fields inside a group or repeate
 
 ## Taxonomies
 
-**Structure → Taxonomies**: a **Title**, a **Handle** (changeable later, as for collections), **Nested terms** (terms under other terms, like subcategories), the **Collections** whose entries it groups, a **Term pages URL** (like `/topics/{slug}`; empty: terms have no pages), **Term fields** (a blueprint for the terms' own fields), a **Template**, and **SEO from fields**. Editors then add the terms under Content → Terms (see [Terms](guide:website/terms)). To let editors give entries terms, add a **Terms** field to the collection's blueprint.
+**Structure → Taxonomies**: a **Title**, a **Handle** (changeable later, as for collections), **Nested terms** (terms under other terms, like subcategories), the **Collections** whose entries it groups, a **Term pages URL** (like `/topics/{slug}`; empty: terms have no pages), **Term fields** (a blueprint for the terms' own fields), and a **Template**. Editors then add the terms under Taxonomies in the sidebar (see [Terms](guide:website/terms)). To let editors give entries terms, add a **Terms** field to the collection's blueprint.
 
 ## Global sets
 
-**Structure → Global sets**: a **Title**, a **Handle** and a **Blueprint** for the set's fields. Editors fill them in under Content → Globals (see [Globals](guide:website/globals)).
+**Content → Globals → New global set**: a **Title**, a **Handle** and a **Blueprint** for the set's fields (later, the set's **Settings**). Opening a set shows its values (see [Globals](guide:website/globals)).
 
 ## Menus
 
-**Structure → Menu settings**: a **Title** and a **Handle** (like `main` or `footer`) that templates use. Editors fill them in under Content → Menus (see [Menus](guide:website/menus)).
+**Content → Menus → New menu**: a **Title** and a **Handle** (like `main` or `footer`) that templates use (later, the menu's **Settings**). Opening a menu shows its links (see [Menus](guide:website/menus)).
 
 ## Forms
 

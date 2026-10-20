@@ -101,7 +101,7 @@ final class References
                 ],
                 ContentReference::GLOBAL => ($set = $sets->get($row->source_id)) === null ? null : [
                     'label' => 'Globals: '.$set->title.$language,
-                    'url' => Route::has('sunrice.admin.cms.globals.edit') ? route('sunrice.admin.cms.globals.edit', [$set->handle, 'locale' => $row->locale]) : null,
+                    'url' => Route::has('sunrice.admin.cms.globals.values.edit') ? route('sunrice.admin.cms.globals.values.edit', [$set->handle, 'locale' => $row->locale]) : null,
                 ],
                 default => null,
             };

@@ -97,7 +97,7 @@ final class EntryList
         $search = $request->query('search');
         $this->search = is_string($search) ? mb_substr(trim($search), 0, 200) : '';
         $status = $request->query('status');
-        $this->status = is_string($status) && in_array($status, self::STATUSES, true) ? $status : ($request->boolean('trashed') ? 'trashed' : '');
+        $this->status = is_string($status) && in_array($status, self::STATUSES, true) ? $status : '';
         $author = $request->query('author');
         $this->author = is_string($author) && ctype_digit($author) ? (int) $author : null;
         $terms = $request->query('terms');
@@ -307,21 +307,21 @@ final class EntryList
         $links = [];
         $collection = $this->collection;
         if ($collection->listing_route !== null) {
-            $links[] = ['group' => 'Listing page', 'label' => 'Edit the listing page', 'href' => route('sunrice.admin.cms.listings.edit', $collection->handle)];
+            $links[] = ['group' => 'Listing page', 'label' => 'Edit the listing page', 'href' => route('sunrice.admin.cms.collections.listing.edit', $collection->handle)];
             $url = $collection->listingUrl(Locales::default());
             if ($url !== null) {
                 $links[] = ['group' => 'Listing page', 'label' => 'View the listing page', 'href' => $url, 'external' => true];
             }
         }
         foreach ($this->taxonomies() as $taxonomy) {
-            if (Access::terms($user, $taxonomy)) {
-                $links[] = ['group' => 'Terms', 'label' => $taxonomy->title, 'href' => route('sunrice.admin.cms.terms.index', $taxonomy->handle)];
+            if (Access::terms($user, 'view', $taxonomy)) {
+                $links[] = ['group' => 'Terms', 'label' => $taxonomy->title, 'href' => route('sunrice.admin.cms.taxonomies.terms.index', $taxonomy->handle)];
             }
         }
         if ($user?->can('cms.collections.update') === true) {
-            $links[] = ['group' => 'Structure', 'label' => 'Collection settings', 'href' => route('sunrice.admin.resources.collections.edit', $collection->id)];
+            $links[] = ['group' => 'Structure', 'label' => 'Collection settings', 'href' => route('sunrice.admin.cms.collections.edit', $collection->handle)];
         }
-        $blueprint = $user?->can('cms.blueprints.manage') === true ? $collection->blueprintModel() : null;
+        $blueprint = $user?->can('cms.blueprints.update') === true ? $collection->blueprintModel() : null;
         if ($blueprint !== null) {
             $links[] = ['group' => 'Structure', 'label' => "Blueprint: {$blueprint->title}", 'href' => route('sunrice.admin.cms.blueprints.edit', $blueprint->id)];
         }

@@ -18,7 +18,7 @@ final class FieldTypes extends CmsTool
 
     public function handle(Request $request): Response
     {
-        if (! $this->can('cms.blueprints.manage')) {
+        if (! $this->can('cms.blueprints.view')) {
             return $this->denied('manage blueprints');
         }
 

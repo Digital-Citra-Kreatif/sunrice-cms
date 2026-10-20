@@ -10,7 +10,7 @@ import { useConfirm } from '@/components/Confirm.tsx';
 import { FieldError } from '@/components/FieldInput.tsx';
 import { formatDate } from '@/lib/entries.ts';
 
-type Tab = 'all' | 'pending' | 'approved' | 'spam' | 'trash';
+type Tab = 'all' | 'pending' | 'approved' | 'spam' | 'trashed';
 
 interface Row {
     id: number;
@@ -38,7 +38,7 @@ interface Props {
 
 const TABS: { value: Tab; label: string }[] = [
     { value: 'all', label: 'All' }, { value: 'pending', label: 'Pending' }, { value: 'approved', label: 'Approved' },
-    { value: 'spam', label: 'Spam' }, { value: 'trash', label: 'Trash' },
+    { value: 'spam', label: 'Spam' }, { value: 'trashed', label: 'Trash' },
 ];
 
 const STATUS: Record<Row['status'], string> = { pending: 'Pending', approved: 'Approved', spam: 'Spam' };
@@ -114,15 +114,15 @@ export default function CommentsIndex({ tab, counts, filters, collections, comme
             {selected.length > 0 && (
                 <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-2 cms:text-sm" role="toolbar" aria-label="With the selected comments">
                     <span className="cms:text-muted-foreground">{selected.length} selected</span>
-                    {can.moderate && tab !== 'trash' && (
+                    {can.moderate && tab !== 'trashed' && (
                         <>
                             <Button size="sm" variant="outline" onClick={() => bulk('approve')}><Check /> Approve</Button>
                             <Button size="sm" variant="outline" onClick={() => bulk('unapprove')}><Undo2 /> Unapprove</Button>
                             <Button size="sm" variant="outline" onClick={() => bulk('spam')}><ShieldAlert /> Spam</Button>
                         </>
                     )}
-                    {can.delete && tab !== 'trash' && <Button size="sm" variant="outline" onClick={() => bulk('trash')}><Trash2 /> Trash</Button>}
-                    {can.delete && tab === 'trash' && (
+                    {can.delete && tab !== 'trashed' && <Button size="sm" variant="outline" onClick={() => bulk('trash')}><Trash2 /> Trash</Button>}
+                    {can.delete && tab === 'trashed' && (
                         <>
                             <Button size="sm" variant="outline" onClick={() => bulk('restore')}><RotateCcw /> Restore</Button>
                             <Button size="sm" variant="destructive" onClick={() => bulk('delete')}><Trash2 /> Delete for good</Button>

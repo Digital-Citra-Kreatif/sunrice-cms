@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { Head, router, useForm } from '@inertiajs/react';
-import { LoaderCircle } from 'lucide-react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import { LoaderCircle, Settings2 } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
 import { Button, KeptEditsNotice, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs, useEditLock, useUnsavedChanges, ViewingNotice } from '@sunrice/admin-sdk/ui';
 import { FieldSections } from '@/components/FieldSections.tsx';
@@ -23,6 +23,8 @@ interface Props {
     /** The saved values' version, to refuse a save over someone else's newer one; null before the first save. */
     version: number | null;
     can: { update: boolean };
+    /** Its title, handle and fields (the set's resource), when the user may change them. */
+    settings?: string | null;
 }
 
 export default function GlobalsEditPage(props: Props) {
@@ -30,8 +32,8 @@ export default function GlobalsEditPage(props: Props) {
     return <GlobalsEdit key={`${props.locale}:${props.version}:${JSON.stringify(props.values)}`} {...props} />;
 }
 
-function GlobalsEdit({ set, fields, locale, locales, shared, values, version, can }: Props) {
-    const url = adminUrl(`cms/globals/${set.handle}`);
+function GlobalsEdit({ set, fields, locale, locales, shared, values, version, can, settings }: Props) {
+    const url = adminUrl(`cms/globals/${set.handle}/values`);
     useBreadcrumbs([{ label: 'Globals', href: adminUrl('cms/globals') }, { label: set.title }]);
     const form = useForm<{ locale: string; data: FieldValues; version: number | null }>({ locale, data: values, version });
     const errors = form.errors as Record<string, string | undefined>;
@@ -62,6 +64,7 @@ function GlobalsEdit({ set, fields, locale, locales, shared, values, version, ca
                 back={{ href: adminUrl('cms/globals'), label: 'Back to globals' }}
                 actions={
                     <>
+                        {settings && <Button type="button" variant="ghost" asChild><Link href={settings}><Settings2 /> Settings</Link></Button>}
                         {locales.length > 1 && (
                             <Select value={locale} onValueChange={(next: string) => router.get(url, { locale: next })}>
                                 <SelectTrigger className="cms:w-48" aria-label="Language"><SelectValue /></SelectTrigger>

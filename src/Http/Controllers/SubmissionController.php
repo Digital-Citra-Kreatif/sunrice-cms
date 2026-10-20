@@ -37,8 +37,8 @@ final class SubmissionController
         return $first === null
             ? Inertia::render('Cms/Submissions/Index', ['form' => null, 'forms' => [], 'submissions' => null, 'can' => ['delete' => false, 'export' => false],
                 // No forms yet: where to make one, for those who may.
-                'createForm' => $request->user()?->can('cms.forms.create') === true ? route('sunrice.admin.resources.forms.create', [], false) : null])
-            : redirect()->route('sunrice.admin.cms.submissions.index', $first->handle);
+                'createForm' => $request->user()?->can('cms.forms.create') === true ? route('sunrice.admin.cms.forms.create', [], false) : null])
+            : redirect()->route('sunrice.admin.cms.forms.submissions.index', $first->handle);
     }
 
     public function index(Request $request, Form $form): Response

@@ -131,12 +131,13 @@ final class EntryManageController
         $collection = $entry->collection->handle;
         $delete->handle($entry, $request->boolean('force'));
 
-        return redirect()->route('sunrice.admin.cms.entries.index', [$collection, 'status' => 'trashed'])->with('success', 'Deleted for good.');
+        return redirect()->route('sunrice.admin.cms.collections.entries.index', [$collection, 'status' => 'trashed'])->with('success', 'Deleted for good.');
     }
 
     /** Puts back the draft a revision restore replaced, in this session. */
-    public function undoRestore(Request $request, EntryTranslation $translation, PutBackDraft $putBack): RedirectResponse
+    public function undoRestore(Request $request, Entry $entry, string $locale, PutBackDraft $putBack): RedirectResponse
     {
+        $translation = EntryController::translationOf($entry, $locale);
         $draft = $request->session()->pull(self::undoKey($translation));
         if (! is_array($draft) || ! is_string($draft['title'] ?? null) || ! is_string($draft['slug'] ?? null) || ! is_array($draft['data'] ?? null)) {
             return back()->with('error', 'There is no restore to undo.');

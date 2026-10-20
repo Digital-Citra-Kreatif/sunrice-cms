@@ -19,7 +19,7 @@ interface Props {
 }
 
 async function fetchItems(params: { ids?: number[]; search?: string; collections: string[] }): Promise<Item[]> {
-    const response = await fetch(`${adminUrl('cms/entry-picker')}?${pickerQuery(params)}`, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+    const response = await fetch(`${adminUrl('cms/entries/picker')}?${pickerQuery(params)}`, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
     if (!response.ok) throw new Error(String(response.status));
 
     return ((await response.json()) as { items: Item[] }).items;

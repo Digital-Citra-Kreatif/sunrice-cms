@@ -162,7 +162,7 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
                 actions={
                     <>
                         {locales.length > 1 && (
-                            <Select value={locale} onValueChange={(next: string) => router.get(base, { locale: next, ...(trashed ? { trashed: 1 } : {}) })}>
+                            <Select value={locale} onValueChange={(next: string) => router.get(base, { locale: next, ...(trashed ? { status: 'trashed' } : {}) })}>
                                 <SelectTrigger className="cms:w-40" aria-label="Language"><SelectValue /></SelectTrigger>
                                 <SelectContent>{locales.map((code) => <SelectItem key={code} value={code}>{localeName(code)}</SelectItem>)}</SelectContent>
                             </Select>
@@ -183,7 +183,7 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
                                     </>
                                 )}
                                 {taxonomy.settings && <DropdownMenuItem asChild><Link href={taxonomy.settings}><Settings2 /> Taxonomy settings</Link></DropdownMenuItem>}
-                                {!trashed && <DropdownMenuItem onSelect={() => router.get(base, { locale, trashed: 1 })}><Trash2 /> Trash</DropdownMenuItem>}
+                                {!trashed && <DropdownMenuItem onSelect={() => router.get(base, { locale, status: 'trashed' })}><Trash2 /> Trash</DropdownMenuItem>}
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </>

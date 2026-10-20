@@ -51,6 +51,11 @@ final class FormResource extends Resource
         return 97;
     }
 
+    public static function recordKey(): string
+    {
+        return 'handle';
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([

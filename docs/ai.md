@@ -11,20 +11,20 @@ With the CMS, AI agents connected to the panel ([AI access](../../admin/docs/ai.
 | `cms_unpublish_entry` | `cms.entries.publish` | Take a language off the site, keeping its draft. |
 | `cms_translate_entry` | `cms.entries.create` | Add a language, copied from the main one. |
 | `cms_trash_entry` | `cms.entries.delete` | Move an entry to the trash, or restore it. |
-| `cms_list_terms` | `cms.terms.manage` or `cms.entries.view` | Taxonomies and their terms, for terms fields. |
-| `cms_save_term` | `cms.terms.manage` | Add or rename a term, or give it another language. |
+| `cms_list_terms` | `cms.terms.view` or `cms.entries.view` | Taxonomies and their terms, for terms fields. |
+| `cms_save_term` | `cms.terms.create` (new) or `cms.terms.update` | Add or rename a term, or give it another language. |
 | `cms_get_globals`, `cms_save_globals` | `cms.globals.view`, `.update` | Global sets' fields and values, per language. |
 | `cms_list_submissions` | `cms.submissions.view` | Forms and what visitors sent. |
 | `cms_delete_submissions` | `cms.submissions.delete` | Delete submissions for good, with their files. |
 | `cms_manage_entry` | `cms.entries.delete`, `.create`, `cms.settings.site` | Delete an entry in the trash for good (`ForceDeleteEntry`), duplicate it as a draft (`DuplicateEntry`), or make it the homepage (Settings → Site). |
 | `cms_entry_revisions` | `cms.entries.view` / `.update` | An entry's published versions in a language: list, show, and restore one into the draft (`RestoreRevision`). |
-| `cms_reorder` | `cms.entries.update`, `cms.terms.manage`, `cms.menus.update` | The manual order of one level of entries (collections with Manual order), terms or menu items (`ReorderEntries`, `ReorderTerms`, `ReorderMenuItems`). |
+| `cms_reorder` | `cms.entries.update`, `cms.terms.update`, `cms.menus.update` | The manual order of one level of entries (collections with Manual order), terms or menu items (`ReorderEntries`, `ReorderTerms`, `ReorderMenuItems`). |
 | `cms_get_listing`, `cms_save_listing` | `cms.entries.view`, `.update` | A collection's listing page fields per language (`SaveListing`, with its version check). |
 | `cms_get_menu`, `cms_save_menu` | `cms.menus.view`, `.update` | A menu's items as a tree and as the site shows them; replace the tree (`SaveMenu`, validated like the menu editor). |
-| `cms_field_types`, `cms_get_blueprint`, `cms_save_blueprint` | `cms.blueprints.manage` | The field types and their settings; blueprints and fieldsets, created or replaced whole (`SaveBlueprint`, `SaveFieldset`). |
+| `cms_field_types`, `cms_get_blueprint`, `cms_save_blueprint` | `cms.blueprints.view` (saving: `cms.blueprints.update`, or `cms.fieldsets.update` for a fieldset) | The field types and their settings; blueprints and fieldsets, created or replaced whole (`SaveBlueprint`, `SaveFieldset`). |
 | `cms_seo_audit` | `cms.entries.view` | Live pages' SEO problems, 50 a page: meta title and description lengths, share image, noindex, thin content, long slugs, languages missing; titles on several pages and images without alt text. |
 | `cms_render_page` | `sunrice.access` | A public page as a signed-out visitor sees it: status, redirect, the template's error, HTML. The panel's and the MCP endpoint's paths are refused. |
-| `cms_get_template_guide`, `cms_read_template` | `cms.blueprints.manage` | How templates work, which view each page uses now, the templates there are; a template's source (the site's, or the CMS's fallbacks). |
+| `cms_get_template_guide`, `cms_read_template` | `cms.blueprints.view` | How templates work, which view each page uses now, the templates there are; a template's source (the site's, or the CMS's fallbacks). |
 | `cms_write_template` | super admin, and `sunrice-cms.ai.templates` | Create, replace or delete a template in `resources/views/cms`: Blade compiled as a syntax check first, a backup of what it replaces kept in `storage/app/sunrice-cms/template-backups`, paths outside refused. A `template changed` security event. |
 
 Read-only tokens get only the reading tools (`cms_list_*`, `cms_get_*`, `cms_field_types`, `cms_seo_audit`, `cms_render_page`, `cms_read_template`), and of those only what viewing permissions allow (`cms.blueprints.manage` isn't one). Agents are told to ask before publishing, unpublishing, trashing, deleting or changing what's live as soon as it's saved: globals, listing pages and menus.

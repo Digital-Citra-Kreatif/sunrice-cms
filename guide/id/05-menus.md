@@ -33,4 +33,4 @@ Klik **Save**. Seluruh menu disimpan sekaligus, dan perubahan langsung tayang.
 > Alamat yang bisa menjalankan kode (misalnya `javascript:`) ditolak. Gunakan `https://`, alamat di situs, `mailto:`, atau `tel:`.
 
 > [!TECHNICAL]
-> Menu dibuat di Structure → Menu settings, dengan handle yang dipakai template: `Cms::menu('main')`. Lihat [Menus](docs:cms/menus).
+> Menu dibuat di Content → Menus (**New menu**), dengan handle yang dipakai template: `Cms::menu('main')`. Lihat [Menus](docs:cms/menus).

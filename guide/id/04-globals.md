@@ -12,7 +12,7 @@ Global tidak memiliki draf: nilai yang disimpan langsung tayang di situs web, di
 
 Field yang dipakai bersama oleh semua bahasa (nomor telepon, logo) disunting di bahasa utama dan tampil abu-abu di bahasa lain, seperti pada entri.
 
-Jika set menyatakan tidak punya field, pengelola situs masih perlu memilih field-nya di Structure → Global sets.
+Jika set menyatakan tidak punya field, pengelola situs masih perlu memilih field-nya di **Settings** set tersebut (Content → Globals).
 
 ## Jika orang lain sedang menyunting
 

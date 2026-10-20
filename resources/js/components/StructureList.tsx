@@ -39,14 +39,14 @@ export function StructureList({ noun, base, rows, intro }: { noun: string; base:
                         )}
                         {rows.map((row) => (
                             <TableRow key={row.id}>
-                                <TableCell><Link href={`${base}/${row.id}/edit`} className="cms:font-medium cms:hover:underline">{row.title}</Link></TableCell>
+                                <TableCell><Link href={`${base}/${row.handle}/edit`} className="cms:font-medium cms:hover:underline">{row.title}</Link></TableCell>
                                 <TableCell><code className="cms:text-xs">{row.handle}</code></TableCell>
                                 <TableCell>{row.fields}</TableCell>
                                 {row.usedBy && <TableCell className="cms:text-muted-foreground">{row.usedBy.join(', ') || '—'}</TableCell>}
                                 <TableCell>
                                     <Button variant="ghost" size="icon" className="cms:size-8 cms:text-destructive" aria-label={`Delete ${row.title}`}
                                         onClick={() => confirm(`Delete the ${noun.toLowerCase()} "${row.title}"? Content keeps its values.`,
-                                            () => router.delete(`${base}/${row.id}`, { preserveScroll: true }))}>
+                                            () => router.delete(`${base}/${row.handle}`, { preserveScroll: true }))}>
                                         <Trash2 />
                                     </Button>
                                 </TableCell>

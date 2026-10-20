@@ -28,7 +28,7 @@ use Sunrice\Cms\Support\Seo;
 
 /**
  * Content → Terms: a taxonomy's terms, in tree order, edited in place.
- * Behind cms.terms.manage (see CmsPlugin).
+ * Behind cms.terms.{view,create,update,delete} (see CmsPlugin).
  *
  * @internal
  */
@@ -36,18 +36,18 @@ final class TermController
 {
     public function home(Request $request): RedirectResponse|Response
     {
-        $first = Taxonomy::query()->orderBy('title')->get()->first(fn (Taxonomy $t): bool => Access::terms($request->user(), $t));
+        $first = Taxonomy::query()->orderBy('title')->get()->first(fn (Taxonomy $t): bool => Access::terms($request->user(), 'view', $t));
 
         return $first === null
             ? Inertia::render('Cms/Terms/Index', ['taxonomy' => null, 'taxonomies' => [], 'terms' => [], 'locales' => Locales::all(), 'locale' => Locales::default()])
-            : redirect()->route('sunrice.admin.cms.terms.index', $first->handle);
+            : redirect()->route('sunrice.admin.cms.taxonomies.terms.index', $first->handle);
     }
 
     public function index(Request $request, Taxonomy $taxonomy): Response
     {
         $locale = $request->query('locale');
         $locale = is_string($locale) && Locales::has($locale) ? $locale : Locales::default();
-        $trashed = $request->boolean('trashed');
+        $trashed = $request->query('status') === 'trashed';
         $terms = Term::query()->when($trashed, fn ($q) => $q->onlyTrashed())->with('translations')->withCount('entries')->where('taxonomy_id', $taxonomy->id)->orderBy('sort_order')->orderBy('id')->get();
         // Where each is used, to warn before trashing or deleting it.
         $usedBy = References::usedByMany(Reference::TERM, array_values(array_map(fn (Term $term): int => $term->id, $terms->all())));
@@ -56,11 +56,11 @@ final class TermController
             'taxonomy' => ['handle' => $taxonomy->handle, 'title' => $taxonomy->title, 'hierarchical' => $taxonomy->hierarchical,
                 // Terms have pages, or fields of their own: edit them on their page.
                 'pages' => $taxonomy->route !== null || $taxonomy->blueprint !== null,
-                'settings' => $request->user()?->can('cms.taxonomies.update') === true ? route('sunrice.admin.resources.taxonomies.edit', $taxonomy->id) : null,
+                'settings' => $request->user()?->can('cms.taxonomies.update') === true ? route('sunrice.admin.cms.taxonomies.edit', $taxonomy->handle) : null,
                 'collections' => $taxonomy->collections()->orderBy('title')->get(['sunrice_collections.handle', 'sunrice_collections.title'])
-                    ->map(fn (Collection $collection): array => ['title' => $collection->title, 'url' => route('sunrice.admin.cms.entries.index', $collection->handle)])->all()],
+                    ->map(fn (Collection $collection): array => ['title' => $collection->title, 'url' => route('sunrice.admin.cms.collections.entries.index', $collection->handle)])->all()],
             'trashed' => $trashed,
-            'taxonomies' => Taxonomy::query()->orderBy('title')->get()->filter(fn (Taxonomy $t): bool => Access::terms($request->user(), $t))->values()->map(fn (Taxonomy $t): array => ['handle' => $t->handle, 'title' => $t->title])->all(),
+            'taxonomies' => Taxonomy::query()->orderBy('title')->get()->filter(fn (Taxonomy $t): bool => Access::terms($request->user(), 'view', $t))->values()->map(fn (Taxonomy $t): array => ['handle' => $t->handle, 'title' => $t->title])->all(),
             'locales' => Locales::all(),
             'locale' => $locale,
             'terms' => array_map(function (array $item) use ($locale, $usedBy, $taxonomy): array {
@@ -108,7 +108,7 @@ final class TermController
         $term = $save->handle($taxonomy, $request->only(['title', 'slug', 'locale', 'parent_id']));
         $to = $taxonomy->route !== null || $taxonomy->blueprint !== null
             ? (string) AdminUrls::term($term, $locale)
-            : route('sunrice.admin.cms.terms.index', ['taxonomy' => $taxonomy->handle, 'locale' => $locale]);
+            : route('sunrice.admin.cms.taxonomies.terms.index', ['taxonomy' => $taxonomy->handle, 'locale' => $locale]);
 
         return redirect()->to($to)->with('success', "\"{$term->title($locale)}\" added.");
     }
@@ -133,7 +133,7 @@ final class TermController
         $handle = $request->input('taxonomy');
         $taxonomy = is_string($handle) ? Taxonomy::query()->where('handle', $handle)->first() : null;
         abort_if($taxonomy === null, 404);
-        abort_unless(Access::terms($request->user(), $taxonomy), 403);
+        abort_unless(Access::terms($request->user(), 'update', $taxonomy), 403);
         $parent = $request->input('parent_id');
         $reorder->handle($taxonomy, (array) $request->input('ids', []), is_numeric($parent) ? (int) $parent : null);
 

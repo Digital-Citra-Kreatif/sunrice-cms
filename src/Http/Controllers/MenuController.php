@@ -16,20 +16,14 @@ use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Support\Locales;
 
 /**
- * Content → Menus: the menus and their links. Behind cms.menus.view,
- * saving behind cms.menus.update (see CmsPlugin).
+ * A menu's links (/admin/cms/menus/{handle}/links); the menus themselves
+ * are MenuResource. Behind cms.menus.view, saving behind cms.menus.update
+ * (see CmsPlugin).
  *
  * @internal
  */
 final class MenuController
 {
-    public function index(): Response
-    {
-        return Inertia::render('Cms/Menus/Index', [
-            'menus' => Menu::query()->orderBy('title')->get()->map(fn (Menu $menu): array => ['handle' => $menu->handle, 'title' => $menu->title])->all(),
-        ]);
-    }
-
     public function edit(Request $request, Menu $menu): Response
     {
         $menu->load('items.entry.translations', 'items.entry.collection', 'items.term.translations', 'items.term.taxonomy', 'items.collection');
@@ -45,6 +39,8 @@ final class MenuController
             'listings' => Collection::query()->whereNotNull('listing_route')->orderBy('title')->get()
                 ->map(fn (Collection $collection): array => ['id' => $collection->id, 'title' => $collection->title])->all(),
             'can' => ['update' => $request->user()?->can('cms.menus.update') ?? false],
+            // Its title and handle.
+            'settings' => $request->user()?->can('cms.menus.update') === true ? route('sunrice.admin.cms.menus.edit', $menu->handle) : null,
         ]);
     }
 

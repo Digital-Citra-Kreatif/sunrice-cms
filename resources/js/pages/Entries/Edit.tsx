@@ -184,7 +184,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                                 <DropdownMenuContent align="end" className="cms:min-w-52">
                                     {writable && machineTranslate !== null && (
                                         <DropdownMenuItem disabled={form.processing || form.isDirty}
-                                            onSelect={() => router.post(adminUrl(`cms/entries/${machineTranslate}/translate`), { version: entry.version }, { preserveScroll: true })}>
+                                            onSelect={() => router.post(adminUrl(`cms/entries/${entry.id}/translations/${entry.locale}/translate`), { version: entry.version }, { preserveScroll: true })}>
                                             <Languages /> {form.isDirty ? 'Save to translate' : `Translate from ${locales.find((l) => l.main)?.name ?? (mainLocale ? localeName(mainLocale) : 'the main language')}`}
                                         </DropdownMenuItem>
                                     )}
@@ -332,7 +332,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                         {comments !== null && collection.comments && <EntryComments entryId={entry.id} comments={comments} />}
                         <CollapsibleCard title="Revisions" titleClassName="cms:text-base" storageKey="cms:entry:revisions" contentClassName="cms:flex cms:flex-col cms:gap-2 cms:text-sm">
                             {undoRestore !== null && can.update && (
-                                <Button type="button" variant="outline" size="sm" onClick={() => router.post(adminUrl(`cms/entry-translations/${undoRestore}/undo-restore`), {}, { preserveScroll: true })}>
+                                <Button type="button" variant="outline" size="sm" onClick={() => router.post(adminUrl(`cms/entries/${entry.id}/translations/${entry.locale}/undo-restore`), {}, { preserveScroll: true })}>
                                     <Undo2 /> Undo the restore
                                 </Button>
                             )}
@@ -347,7 +347,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                                             </div>
                                             {can.update && !entry.trashed && (
                                                 <Button type="button" variant="ghost" size="sm"
-                                                    onClick={() => router.post(adminUrl(`cms/revisions/${revision.id}/restore`), {}, { preserveScroll: true })}>
+                                                    onClick={() => router.post(adminUrl(`cms/entries/${entry.id}/revisions/${revision.id}/restore`), {}, { preserveScroll: true })}>
                                                     Restore
                                                 </Button>
                                             )}

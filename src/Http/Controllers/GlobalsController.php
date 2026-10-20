@@ -13,22 +13,14 @@ use Sunrice\Cms\Models\GlobalSet;
 use Sunrice\Cms\Support\Locales;
 
 /**
- * Content → Globals: the global sets, and their values in each language.
- * Behind cms.globals.view, saving behind cms.globals.update (see CmsPlugin).
+ * A global set's values in each language (/admin/cms/globals/{handle}/values);
+ * the sets themselves are GlobalSetResource. Behind cms.globals.view,
+ * saving behind cms.globals.update (see CmsPlugin).
  *
  * @internal
  */
 final class GlobalsController
 {
-    public function index(): Response
-    {
-        return Inertia::render('Cms/Globals/Index', [
-            'sets' => GlobalSet::query()->orderBy('title')->get()->map(fn (GlobalSet $set): array => [
-                'handle' => $set->handle, 'title' => $set->title, 'blueprint' => $set->blueprint,
-            ])->all(),
-        ]);
-    }
-
     public function edit(Request $request, GlobalSet $set): Response
     {
         $locale = $request->query('locale');
@@ -45,6 +37,8 @@ final class GlobalsController
             'values' => $set->data($locale),
             'version' => $set->values->firstWhere('locale', $locale)?->version,
             'can' => ['update' => $request->user()?->can('cms.globals.update') ?? false],
+            // Its title, handle and fields.
+            'settings' => $request->user()?->can('cms.globals.update') === true ? route('sunrice.admin.cms.globals.edit', $set->handle) : null,
         ]);
     }
 

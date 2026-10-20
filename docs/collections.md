@@ -27,7 +27,7 @@ use Sunrice\Cms\Actions\Collections\SaveCollection;
 $articles = app(SaveCollection::class)->handle(['handle' => 'articles', 'title' => 'Articles', 'blueprint' => 'article', 'dated' => true]);
 ```
 
-Deleting a collection (`DeleteCollection`) doesn't erase its entries: they leave the admin and the site. The list's **Deleted** filter shows deleted collections with a **Restore** action, and `sunrice:orphans --purge` deletes them for good, freeing their handles ([leftovers](structure.md#leftovers)). To rename a field without losing its values, use `sunrice:rename-field` ([renaming a field](structure.md#renaming-a-field)).
+Deleting a collection (`DeleteCollection`) doesn't erase its entries: they leave the admin and the site. The list's **Trash** (`?status=trashed`) shows deleted collections with **Restore**, and `sunrice:orphans --purge` deletes them for good, freeing their handles ([leftovers](structure.md#leftovers)). To rename a field without losing its values, use `sunrice:rename-field` ([renaming a field](structure.md#renaming-a-field)).
 
 ### Per-entry blueprints
 
@@ -79,7 +79,7 @@ In the editor:
 - Group fields, **Search and sharing** and the sidebar's cards (status, page settings, comments, revisions) fold away; each remembers being open or closed in the browser, and opens by itself when a field inside has an error.
 - Repeater rows, flexible blocks and an entries field's chosen entries are dragged into order by their handle (or with the keyboard: focus the handle, space, arrows, space).
 - **Comments** (when the collection takes comments and the person has `cms.comments.view`): the counts by status and the latest five, with **Approve**, **Spam** and **Reply** for those with `cms.comments.moderate`, and a link to the [comments page](comments.md) showing only this entry's (`?entry=`).
-- The revisions and comments load just after the page shows (Inertia's deferred props), and a terms field's terms load when it shows (`cms/term-picker`), so a large entry opens fast.
+- The revisions and comments load just after the page shows (Inertia's deferred props), and a terms field's terms load when it shows (`cms/terms/picker`), so a large entry opens fast.
 
 **Reordering** in code: `ReorderEntries::handle($collection, $ids, $parentId)` puts one level of an ordered collection's entries (those under `$parentId` in a hierarchical one, null for the top level; else all of them) in the order given, the rest of the level after them as they were; the level is numbered again in one transaction, and the change is logged (`reordered`) and clears the site's cache. Its route is `POST cms/entries/reorder` (`collection`, `ids`, `parent_id`), behind `cms.entries.update` for that collection. `MoveEntry` still moves one entry a place up or down.
 
@@ -94,7 +94,7 @@ Each collection's list (`EntryController::index`, built by `Sunrice\Cms\Admin\En
 | Parameter | |
 | --- | --- |
 | `search` | Titles and slugs containing the text (any case); `#12` finds the entry with id 12. |
-| `status` | `draft`, `published`, `scheduled` (published with a date to come) or `trashed` (the trash; `trashed=1` works too). None: everything but the trash. |
+| `status` | `draft`, `published`, `scheduled` (published with a date to come) or `trashed` (the trash). None: everything but the trash. |
 | `author` | Entries a user created (the filter offers everyone who wrote in the collection). |
 | `terms[topics]` | Entries with that term (id) of a taxonomy attached to the collection, one per taxonomy. |
 | `locale` | The language listed (its titles, slugs and statuses); the main one by default. Entries without that language aren't listed. |

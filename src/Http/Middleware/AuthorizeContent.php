@@ -34,7 +34,7 @@ final class AuthorizeContent
         $param = fn (string $name): mixed => $route?->parameter($name);
         $allowed = match ($area) {
             'entries' => Access::entries($user, $action, ...self::entryScope($param, $request)),
-            'terms' => Access::terms($user, self::taxonomy($param)),
+            'terms' => Access::terms($user, $action, self::taxonomy($param)),
             'submissions' => Access::submissions($user, $action, self::form($param)),
             default => false,
         };

@@ -33,7 +33,7 @@ final class MediaUsage
     public static function global(GlobalValue $value): void
     {
         $set = $value->globalSet;
-        $url = Route::has('sunrice.admin.cms.globals.edit') ? route('sunrice.admin.cms.globals.edit', [$set->handle, 'locale' => $value->locale]) : null;
+        $url = Route::has('sunrice.admin.cms.globals.values.edit') ? route('sunrice.admin.cms.globals.values.edit', [$set->handle, 'locale' => $value->locale]) : null;
         app(MediaUsages::class)->sync('cms.global', (string) $set->id, self::ids($set->schema(), $value->data),
             "Globals: {$set->title} (".strtoupper($value->locale).')', $url, $value->locale);
     }

@@ -57,7 +57,7 @@ final class EntryController
 
         return $first === null
             ? Inertia::render('Cms/Entries/Index', ['collection' => null, 'collections' => [], 'entries' => null, 'query' => null])
-            : redirect()->route('sunrice.admin.cms.entries.index', $first->handle);
+            : redirect()->route('sunrice.admin.cms.collections.entries.index', $first->handle);
     }
 
     public function index(Request $request, Collection $collection, Preferences $preferences): Response
@@ -158,7 +158,7 @@ final class EntryController
     {
         $schema = $collection->schema();
 
-        return Inertia::render('Cms/Entries/Editor', [
+        return Inertia::render('Cms/Entries/Edit', [
             'collection' => self::collection($collection),
             'fields' => $schema->toAdmin(),
             'entry' => null,
@@ -196,7 +196,7 @@ final class EntryController
         $schema = $entry->schema();
         $shared = $translation->isMain() ? [] : $schema->shared();
 
-        return Inertia::render('Cms/Entries/Editor', [
+        return Inertia::render('Cms/Entries/Edit', [
             'collection' => self::collection($collection),
             'fields' => $translation->isMain() ? $schema->toAdmin() : self::markShared($schema->toAdmin()),
             'locales' => EntryList::locales($entry),
@@ -316,7 +316,7 @@ final class EntryController
     {
         $trash->handle($entry);
 
-        return redirect()->route('sunrice.admin.cms.entries.index', $entry->collection->handle)->with('success', 'Moved to the trash.');
+        return redirect()->route('sunrice.admin.cms.collections.entries.index', $entry->collection->handle)->with('success', 'Moved to the trash.');
     }
 
     public function restore(Entry $entry, RestoreEntry $restore): RedirectResponse
@@ -336,8 +336,9 @@ final class EntryController
     }
 
     /** Machine-translates what this language hasn't translated yet from the main one, into its draft. */
-    public function translate(Request $request, EntryTranslation $translation, TranslatorFactory $translators, MachineTranslateEntry $machine): RedirectResponse
+    public function translate(Request $request, Entry $entry, string $locale, TranslatorFactory $translators, MachineTranslateEntry $machine): RedirectResponse
     {
+        $translation = self::translationOf($entry, $locale);
         abort_unless($translators->configured() && ! $translation->entry->trashed(), 404);
         $version = $request->input('version');
         try {
@@ -362,9 +363,10 @@ final class EntryController
         return redirect()->to((string) AdminUrls::entry($entry))->with('success', 'The translation was removed.');
     }
 
-    public function restoreRevision(Request $request, Revision $revision, RestoreRevision $restore): RedirectResponse
+    public function restoreRevision(Request $request, Entry $entry, Revision $revision, RestoreRevision $restore): RedirectResponse
     {
         $translation = $revision->translation;
+        abort_unless($translation->entry_id === $entry->id, 404);
         abort_if($translation->entry->collection->trashed(), 404);
         // The draft it replaces, so the restore can be undone (this session).
         $request->session()->put(EntryManageController::undoKey($translation), [
@@ -476,5 +478,14 @@ final class EntryController
         }
 
         return $can;
+    }
+
+    /** One language of an entry, from its address (entries/{entry}/translations/{locale}/…). */
+    public static function translationOf(Entry $entry, string $locale): EntryTranslation
+    {
+        $translation = $entry->translations()->where('locale', $locale)->first();
+        abort_if($translation === null, 404);
+
+        return $translation;
     }
 }

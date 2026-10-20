@@ -1,6 +1,6 @@
 # Terms
 
-**Terms** group entries by topic: *News* and *Events* in a taxonomy called *Categories*, or *Jakarta* and *Bali* in *Places*. Visitors use them to find related content, and entries get them through a **Terms** field. Open **Terms** under Content.
+**Terms** group entries by topic: *News* and *Events* in a taxonomy called *Categories*, or *Jakarta* and *Bali* in *Places*. Visitors use them to find related content, and entries get them through a **Terms** field. Each taxonomy has its own item under **Taxonomies** in the sidebar.
 
 ## The terms list
 

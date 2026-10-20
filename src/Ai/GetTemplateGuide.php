@@ -61,7 +61,7 @@ MD;
 
     public function handle(Request $request): Response
     {
-        if (! $this->can('cms.blueprints.manage')) {
+        if (! $this->can('cms.blueprints.view')) {
             return $this->denied('work on the site\'s templates (Manage blueprints)');
         }
 

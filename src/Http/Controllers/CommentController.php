@@ -32,7 +32,7 @@ final class CommentController
     private const PER_PAGE = 25;
 
     /** Tabs and the statuses they show (all: what isn't spam). */
-    private const TABS = ['all' => [Comment::PENDING, Comment::APPROVED], 'pending' => [Comment::PENDING], 'approved' => [Comment::APPROVED], 'spam' => [Comment::SPAM], 'trash' => []];
+    private const TABS = ['all' => [Comment::PENDING, Comment::APPROVED], 'pending' => [Comment::PENDING], 'approved' => [Comment::APPROVED], 'spam' => [Comment::SPAM], 'trashed' => []];
 
     public function index(Request $request): Response
     {
@@ -54,16 +54,16 @@ final class CommentController
                     ->orWhereRaw("LOWER(author_name) LIKE ? ESCAPE '!'", [$like])->orWhereRaw("LOWER(author_email) LIKE ? ESCAPE '!'", [$like]));
             });
         // One query for every tab's count: by status, the trash apart.
-        $byStatus = ['trash' => 0];
+        $byStatus = ['trashed' => 0];
         foreach ($filtered()->withTrashed()->toBase()->selectRaw('status, case when deleted_at is null then 1 else 0 end as live, count(*) as total')->groupByRaw('status, case when deleted_at is null then 1 else 0 end')->get() as $row) {
-            $key = is_numeric($row->live) && (int) $row->live === 1 && is_string($row->status) ? $row->status : 'trash';
+            $key = is_numeric($row->live) && (int) $row->live === 1 && is_string($row->status) ? $row->status : 'trashed';
             $byStatus[$key] = ($byStatus[$key] ?? 0) + (is_numeric($row->total) ? (int) $row->total : 0);
         }
         $counts = [];
         foreach (self::TABS as $name => $statuses) {
-            $counts[$name] = $name === 'trash' ? $byStatus['trash'] : array_sum(array_map(fn (string $status): int => $byStatus[$status] ?? 0, $statuses));
+            $counts[$name] = $name === 'trashed' ? $byStatus['trashed'] : array_sum(array_map(fn (string $status): int => $byStatus[$status] ?? 0, $statuses));
         }
-        $comments = ($tab === 'trash' ? $filtered()->onlyTrashed() : $filtered()->whereIn('status', self::TABS[$tab]))
+        $comments = ($tab === 'trashed' ? $filtered()->onlyTrashed() : $filtered()->whereIn('status', self::TABS[$tab]))
             ->with(['entry.translations', 'parent'])->latest()->orderByDesc('id')->paginate(self::PER_PAGE)->withQueryString();
         Comment::withAuthors([...$comments->items(), ...array_filter(array_map(fn (Comment $c): ?Comment => $c->parent, $comments->items()))]);
 

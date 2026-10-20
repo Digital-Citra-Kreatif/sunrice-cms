@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { IndentDecrease, IndentIncrease, Link2, List, LoaderCircle, Plus, Tag, Trash2 } from 'lucide-react';
+import { IndentDecrease, IndentIncrease, Link2, List, LoaderCircle, Plus, Settings2, Tag, Trash2 } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
     Badge, Button, Card, Checkbox, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input, Label, PageHeader,
@@ -21,12 +21,14 @@ interface Props {
     terms: { id: number; title: string; taxonomy: string }[];
     listings: { id: number; title: string }[];
     can: { update: boolean };
+    /** Its title and handle (the menu's resource), when the user may change them. */
+    settings?: string | null;
 }
 
 type Kind = 'entry' | 'term' | 'listing' | 'url';
 
-export default function MenuEdit({ menu, items: initial, locales, limits, terms, listings, can }: Props) {
-    const url = adminUrl(`cms/menus/${menu.handle}`);
+export default function MenuEdit({ menu, items: initial, locales, limits, terms, listings, can, settings }: Props) {
+    const url = adminUrl(`cms/menus/${menu.handle}/links`);
     useBreadcrumbs([{ label: 'Menus', href: adminUrl('cms/menus') }, { label: menu.title }]);
     const [items, setItems] = React.useState<FlatItem[]>(() => flatten(initial));
     const [adding, setAdding] = React.useState<Kind | null>(null);
@@ -107,6 +109,7 @@ export default function MenuEdit({ menu, items: initial, locales, limits, terms,
                 back={{ href: adminUrl('cms/menus'), label: 'Back to menus' }}
                 actions={can.update && (
                     <>
+                        {settings && <Button type="button" variant="ghost" asChild><Link href={settings}><Settings2 /> Settings</Link></Button>}
                         <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('entry')}><Plus /> Entry</Button>
                         {terms.length > 0 && <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('term')}><Tag /> Term</Button>}
                         {listings.length > 0 && <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('listing')}><List /> Listing</Button>}
@@ -163,7 +166,7 @@ function AddDialog({ kind, terms, listings, onClose, onAdd, main }: {
 
     const add = async () => {
         if (kind === 'entry' && entryId !== null) {
-            const response = await fetch(`${adminUrl('cms/entry-picker')}?${pickerQuery({ ids: [entryId], collections: [] })}`, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+            const response = await fetch(`${adminUrl('cms/entries/picker')}?${pickerQuery({ ids: [entryId], collections: [] })}`, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
             const found = response.ok ? ((await response.json()) as { items: { title: string; collection: string; status: string }[] }).items[0] : undefined;
             onAdd(newItem({ entry_id: entryId, target: found ? { title: found.title, kind: found.collection, live: found.status === 'published' } : null, labels }));
         } else if (kind === 'term' && choice !== '') {

@@ -12,7 +12,7 @@ Globals have no drafts: saved values are live on the website straight away, on e
 
 Fields shared by all languages (a phone number, a logo) are edited in the main language and shown greyed out in the others, as in entries.
 
-If the set says it has no fields, a site manager still has to choose its fields under Structure → Global sets.
+If the set says it has no fields, a site manager still has to choose its fields in the set's **Settings** (Content → Globals).
 
 ## When someone else is editing
 
