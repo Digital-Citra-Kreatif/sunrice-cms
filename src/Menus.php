@@ -225,6 +225,8 @@ final class Menus
         }
         $translation = $entry->translation($locale);
         $translation = $translation !== null && $translation->isLive() ? $translation : $entry->mainTranslation();
+        // Its entry (and the entry's collection) are loaded already: the URL needs no queries of its own.
+        $translation?->setRelation('entry', $entry);
         // Not live in this language: the main language's page (at this language's address with Site::fallback()).
         $url = $translation !== null && $translation->isLive() ? app(Site::class)->urlIn($translation, $locale) : null;
 
