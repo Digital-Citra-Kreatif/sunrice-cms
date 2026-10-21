@@ -63,7 +63,7 @@ final class FormResource extends Resource
         return $form->schema([
             Section::make('General')->columns(2)->schema([
                 TextInput::make('title')->required(),
-                ...HandleField::make('form', 'Used in templates: <x-sunrice-cms::form handle="contact" />.'),
+                ...HandleField::make('form', 'A short name for this form, used by the site\'s templates.'),
                 Select::make('blueprint')->required()
                     ->verbatim()->options(BlueprintChoices::options(BlueprintChoices::FORM))
                     ->help('Its fields. Visitors see the text, textarea, number, toggle, select, date and file ones.'),

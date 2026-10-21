@@ -16,7 +16,7 @@ Manage them in the admin under **Structure → Collections** (permissions `cms.c
 | `route` | The entries' URL, like `/blog/{slug}` or `/projects/{project}/{slug}`; none: no pages. See [the site](site.md). |
 | `template` | The Blade view entries render with; none: `cms.{handle}`, then `cms.entry`. |
 | `listing_route` | The URL of a page listing the entries, like `/blog`; none: no listing page. See [the site](site.md#listing-pages). |
-| `listing_blueprint`, `per_page` | The listing page's own fields (an intro…), edited from the entries list, and how many entries it shows per page (10). `SaveListing` saves the fields (and the listing page's own SEO, `$seo`) per language and, given the `version` the editor opened (`CollectionListing::$version`), refuses a save over someone else's newer one. |
+| `listing_blueprint`, `per_page` | The listing page's own fields (an intro…; **Listing page blueprint** in the form, shown while it has a listing page, with **Create blueprint** / **Edit** links), edited from the entries list (**Listing page**, per language: its language switch marks the languages with texts of their own, prop `translated`), and how many entries it shows per page (10). `SaveListing` saves the fields (and the listing page's own SEO, `$seo`) per language and, given the `version` the editor opened (`CollectionListing::$version`), refuses a save over someone else's newer one. |
 | `ordered` | **Manual order**: editors put entries in order in the list (**Reorder**, then drag; a hierarchical collection shows its tree, and an entry moves among its siblings with its children), instead of by date or title. |
 | `hierarchical` | Entries may have a **parent** entry, like pages under pages, for breadcrumbs and sub-menus. URLs stay flat: *Team* under *About* is still `/team`. |
 | `seo_title_field`, `seo_description_field`, `seo_image_field` | Chosen in **Settings → SEO**, from the fields of its own blueprints: a text field for the SEO title, a text or textarea field for the description and a media field for the share image, used where an entry's SEO card is empty. See [SEO](site.md#seo). |
@@ -102,6 +102,8 @@ Each collection's list (`EntryController::index`, built by `Sunrice\Cms\Admin\En
 | `locale` | The language listed (its titles, slugs and statuses); the main one by default. Entries without that language aren't listed. |
 | `sort` | `title`, `slug`, `status`, `published_at`, `updated_at`, `created_at`, `author` or `field.{handle}`, with `-` first for descending. None: the collection's order (manual, newest first when dated, else by title). |
 | `per_page` | 10, 25, 50 or 100. |
+
+Attaching a taxonomy to a collection (Structure → Taxonomies) also adds a terms field for it to the collection's blueprints that have none, so its entries get the taxonomy's terms in the editor ([Taxonomies](taxonomies.md)).
 
 Besides the title, the **Columns** menu shows the slug, the status (with a badge per other language), the author, the dates, and **field columns**: the blueprint's top-level text, textarea, number, date, select, toggle and entries fields (custom fields built on them too), shown as short text (select labels, Yes/No, linked entries' titles). Field columns sort by the draft's value (shared fields: the main language's), numbers and dates as such; entries fields and multiple selects don't sort. The chosen columns and page size are kept per person ([preferences](../../admin/docs/preferences.md), key `table.cms.entries.{collection}`); a `per_page` in the address wins.
 

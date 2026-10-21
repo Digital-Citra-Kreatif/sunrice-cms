@@ -21,9 +21,10 @@ use Sunrice\Cms\Support\Versioned;
  * A term's page content in a language: its taxonomy's fields and its
  * SEO, and the term's own template (for every language). With `title`
  * (and `slug`), the term is renamed in that language first, or translated
- * into it when it wasn't (SaveTerm), so the term's page edits all of it;
- * without, the term must be translated into the language already. Fields
- * left out keep their values.
+ * into it when it wasn't (SaveTerm), and with `parent_id` moved under
+ * another term (null: the top level), so the term editor edits all of it;
+ * without a title, the term must be translated into the language already.
+ * Fields left out keep their values.
  *
  * @api
  */
@@ -32,7 +33,7 @@ final class SaveTermContent
     public function __construct(private readonly ActivityLog $activity) {}
 
     /**
-     * @param  array{data?: mixed, seo?: mixed, template?: mixed, version?: mixed, title?: mixed, slug?: mixed}  $input  version: the one the editor opened; a save over someone else's newer one is refused
+     * @param  array{data?: mixed, seo?: mixed, template?: mixed, version?: mixed, title?: mixed, slug?: mixed, parent_id?: mixed}  $input  version: the one the editor opened; a save over someone else's newer one is refused
      *
      * @throws ValidationException
      */
@@ -42,10 +43,13 @@ final class SaveTermContent
 
         return DB::transaction(function () use ($term, $input, $locale): TermTranslation {
             $translation = $term->translations()->where('locale', $locale)->first();
+            $parent = array_key_exists('parent_id', $input) && is_numeric($input['parent_id']) ? (int) $input['parent_id'] : null;
+            $moved = array_key_exists('parent_id', $input) && $parent !== $term->parent_id;
             if (array_key_exists('title', $input)) {
                 $slug = is_string($input['slug'] ?? null) && trim($input['slug']) !== '' ? trim($input['slug']) : $translation?->slug;
-                if ($translation === null || $translation->title !== $input['title'] || $translation->slug !== $slug) {
-                    app(SaveTerm::class)->handle($term->taxonomy, ['title' => $input['title'], 'slug' => $slug, 'locale' => $locale, 'version' => $input['version'] ?? null], $term);
+                if ($translation === null || $translation->title !== $input['title'] || $translation->slug !== $slug || $moved) {
+                    app(SaveTerm::class)->handle($term->taxonomy, ['title' => $input['title'], 'slug' => $slug, 'locale' => $locale, 'version' => $input['version'] ?? null]
+                        + ($moved ? ['parent_id' => $parent] : []), $term);
                     $renamed = $term->translations()->where('locale', $locale)->firstOrFail();
                     // Its version was just checked and counted up: the content goes on from there.
                     $input['version'] = $translation === null || ($input['version'] ?? null) === null ? null : $renamed->version;

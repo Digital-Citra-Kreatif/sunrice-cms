@@ -57,15 +57,40 @@ final class HandleField
     }
 
     /**
+     * What developers write with the handle, `:value` standing for it, and
+     * an example for while it's empty: the "For developers:" line under it.
+     *
+     * @param  'collection'|'taxonomy'|'form'|'global'|'menu'  $kind
+     * @return array{0: string, 1: string}
+     */
+    public static function snippet(string $kind): array
+    {
+        return match ($kind) {
+            'collection' => ['In templates and code: `Cms::entries(\':value\')`, templates `cms/:value.blade.php`.', 'articles'],
+            'taxonomy' => ['In templates: `<x-sunrice-cms::terms taxonomy=":value" />`, in code `whereTerm(\':value\', …)`.', 'categories'],
+            'form' => ['In a template: `<x-sunrice-cms::form handle=":value" />`', 'newsletter'],
+            'global' => ['In templates and code: `Cms::global(\':value\')`', 'contact'],
+            'menu' => ['In templates and code: `Cms::menu(\':value\')`', 'footer'],
+        };
+    }
+
+    /**
+     * The handle's fields: a plain line for editors (`$help`), then what
+     * developers write with it, following the handle as it's typed.
+     *
      * @param  'collection'|'taxonomy'|'form'|'global'|'menu'  $kind
      * @return list<TextInput> the create form's field and the edit form's
      */
     public static function make(string $kind, string $help): array
     {
+        [$snippet, $example] = self::snippet($kind);
+        $developer = __($snippet);
+        $developer = is_string($developer) ? $developer : $snippet;
+
         return [
-            TextInput::make('handle')->required()->maxLength(64)->unique()->onlyOnCreate()->slugFrom('title')->rules([self::rule()])->help($help),
+            TextInput::make('handle')->required()->maxLength(64)->unique()->onlyOnCreate()->slugFrom('title')->rules([self::rule()])->help($help)->developerHelp($developer, $example),
             // Left out or empty when editing: it stays as it is.
-            TextInput::make('handle')->maxLength(64)->unique()->onlyOnEdit()->slugFrom('title')->rules([self::rule()])->help($help)
+            TextInput::make('handle')->maxLength(64)->unique()->onlyOnEdit()->slugFrom('title')->rules([self::rule()])->help($help)->developerHelp($developer, $example)
                 ->warnWhenChanged(self::warning($kind))
                 ->saveUsing(function (Model $record, mixed $value) use ($kind): void {
                     $old = $record->getAttribute('handle');

@@ -99,7 +99,7 @@ Hanya satu orang yang bisa menyunting entri dalam satu bahasa pada satu waktu. J
 
 ## Halaman daftar
 
-Sebuah koleksi bisa memiliki **halaman daftar** yang menampilkan entrinya di situs web (misalnya `/blog`). Kata-katanya sendiri (pengantar, judul) serta pengaturan pencarian dan berbaginya disunting lewat **Ubah halaman daftar** di menu **⋮** di atas daftar entri, dan langsung tayang saat disimpan (tidak ada draf).
+Sebuah koleksi bisa memiliki **halaman daftar** yang menampilkan entrinya di situs web (misalnya `/blog`). Kata-katanya sendiri (pengantar, judul) serta pengaturan pencarian dan berbaginya disunting lewat **Ubah halaman daftar** di menu **⋮** di atas daftar entri, dan langsung tayang saat disimpan (tidak ada draf). Setiap bahasa punya kata-katanya sendiri: kode bahasa di bagian atas menunjukkan bahasa yang sedang Anda sunting dan bahasa yang sudah punya kata-katanya sendiri (tanda centang), dengan baris seperti "Menyunting: English (utama) — beralih untuk menyunting Bahasa Indonesia"; klik sebuah kode untuk beralih.
 
 > [!TECHNICAL]
 > Koleksi, alamat, dan template-nya diatur di bawah Struktur. Lihat [Collections and entries](docs:cms/collections) dan [The site](docs:cms/site).

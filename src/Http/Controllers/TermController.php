@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Sunrice\Cms\Actions\Terms\CreateTerm;
 use Sunrice\Cms\Actions\Terms\DeleteTerm;
 use Sunrice\Cms\Actions\Terms\MoveTerm;
 use Sunrice\Cms\Actions\Terms\ReorderTerms;
@@ -23,6 +24,7 @@ use Sunrice\Cms\Fields\Types\TermsField;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
+use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\AdminUrls;
 use Sunrice\Cms\Support\Locales;
@@ -30,7 +32,9 @@ use Sunrice\Cms\Support\References;
 use Sunrice\Cms\Support\Seo;
 
 /**
- * Content → Terms: a taxonomy's terms, in tree order, edited in place.
+ * Content → Terms: a taxonomy's terms, in tree order, each (and a new
+ * one) edited in one full editor: title, slug, parent, fields, SEO and
+ * template, per language.
  * Behind cms.terms.{view,create,update,delete} (see CmsPlugin).
  *
  * @internal
@@ -57,8 +61,6 @@ final class TermController
 
         return Inertia::render('Cms/Terms/Index', [
             'taxonomy' => ['handle' => $taxonomy->handle, 'title' => $taxonomy->title, 'hierarchical' => $taxonomy->hierarchical,
-                // Terms have pages, or fields of their own: edit them on their page.
-                'pages' => $taxonomy->route !== null || $taxonomy->blueprint !== null,
                 'settings' => $request->user()?->can('cms.taxonomies.update') === true ? route('sunrice.admin.cms.taxonomies.edit', $taxonomy->handle) : null,
                 // Its terms' blueprint, for those who may edit blueprints.
                 'blueprint' => EntryList::blueprintLinks($request->user() instanceof Authorizable ? $request->user() : null, array_filter([$taxonomy->blueprint]))[0]['href'] ?? null,
@@ -92,32 +94,78 @@ final class TermController
         ]);
     }
 
-    /** A new term's page: its title, slug and, in nested taxonomies, where it goes. */
+    /** A new term, in the same editor as an existing one: title, slug, where it goes, its fields, SEO and template. */
     public function create(Request $request, Taxonomy $taxonomy): Response
     {
-        $locale = $this->locale($request);
-        $terms = Term::query()->with('translations')->where('taxonomy_id', $taxonomy->id)->orderBy('sort_order')->orderBy('id')->get();
+        $locale = $request->query('locale');
+        $locale = is_string($locale) && Locales::has($locale) ? $locale : Locales::default();
+        $schema = $taxonomy->schema();
+        $parent = $request->integer('parent') ?: null;
 
-        return Inertia::render('Cms/Terms/Create', [
-            'taxonomy' => ['handle' => $taxonomy->handle, 'title' => $taxonomy->title, 'hierarchical' => $taxonomy->hierarchical],
-            'locale' => $locale,
-            'locales' => Locales::all(),
-            'parent' => $request->integer('parent') ?: null,
-            'terms' => $taxonomy->hierarchical ? array_map(fn (array $item): array => ['id' => $item[0]->id, 'title' => $item[0]->title($locale), 'depth' => $item[1]],
-                TermsField::tree(array_values($terms->all()), null, 0)) : [],
+        return Inertia::render('Cms/Terms/Edit', [
+            ...$this->editorProps($request, $taxonomy, null, $locale),
+            'term' => null,
+            'parentId' => $parent !== null && Term::query()->whereKey($parent)->where('taxonomy_id', $taxonomy->id)->exists() ? $parent : null,
+            'translated' => true,
+            'shared' => [],
+            'sharedValues' => [],
+            'values' => $schema->defaults(),
+            'seo' => null,
+            'version' => null,
+            'usedBy' => [],
         ]);
     }
 
-    /** Then to the term's page when terms have pages or fields, else back to the list. */
-    public function store(Request $request, Taxonomy $taxonomy, SaveTerm $save): RedirectResponse
+    /** Created with what the editor holds, then on to its editor. */
+    public function store(Request $request, Taxonomy $taxonomy, CreateTerm $create): RedirectResponse
     {
         $locale = $this->locale($request);
-        $term = $save->handle($taxonomy, $request->only(['title', 'slug', 'locale', 'parent_id']));
-        $to = $taxonomy->route !== null || $taxonomy->blueprint !== null
-            ? (string) AdminUrls::term($term, $locale)
-            : route('sunrice.admin.cms.taxonomies.terms.index', ['taxonomy' => $taxonomy->handle, 'locale' => $locale]);
+        $term = $create->handle($taxonomy, $request->only(['title', 'slug', 'parent_id', 'data', 'seo', 'template']), $locale);
 
-        return redirect()->to($to)->with('success', __('":title" added.', ['title' => $term->title($locale)]));
+        return redirect()->to((string) AdminUrls::term($term, $locale))->with('success', __('":title" added.', ['title' => $term->title($locale)]));
+    }
+
+    /**
+     * What the term editor needs either way: the taxonomy, the languages,
+     * the fields, where a term can go (never under itself or a term under
+     * it) and the templates tried.
+     *
+     * @return array<string, mixed>
+     */
+    private function editorProps(Request $request, Taxonomy $taxonomy, ?Term $term, string $locale): array
+    {
+        $terms = $taxonomy->hierarchical ? Term::query()->with('translations')->where('taxonomy_id', $taxonomy->id)->orderBy('sort_order')->orderBy('id')->get() : null;
+        // In tree order, the terms under one follow it, deeper: it and they are no place for it.
+        $places = [];
+        $skipBelow = null;
+        foreach ($terms === null ? [] : TermsField::tree(array_values($terms->all()), null, 0) as [$each, $depth]) {
+            if ($skipBelow !== null && $depth > $skipBelow) {
+                continue;
+            }
+            $skipBelow = null;
+            if ($term !== null && $each->id === $term->id) {
+                $skipBelow = $depth;
+
+                continue;
+            }
+            $places[] = ['id' => $each->id, 'title' => $each->title($locale), 'depth' => $depth];
+        }
+
+        return [
+            'taxonomy' => ['handle' => $taxonomy->handle, 'title' => $taxonomy->title, 'hierarchical' => $taxonomy->hierarchical],
+            'terms' => $places,
+            // Where to add a redirect by hand, for those who may.
+            'redirectsUrl' => $request->user()?->can('cms.redirects.create') === true ? route('sunrice.admin.cms.redirects.create') : null,
+            // The views tried for its page, in order, and which exist (Template → Which file?).
+            'templates' => [
+                'own' => $term === null ? null : (TemplateHelp::lookup([$term->template])[0] ?? null),
+                'fallbacks' => TemplateHelp::lookup([$taxonomy->template, "cms.taxonomy-{$taxonomy->handle}", 'cms.term']),
+            ],
+            'hasPages' => $taxonomy->route !== null,
+            'fields' => $taxonomy->schema()->toAdmin(),
+            'locale' => $locale,
+            'locales' => Locales::all(),
+        ];
     }
 
     public function update(Request $request, Term $term, SaveTerm $save): RedirectResponse
@@ -171,7 +219,6 @@ final class TermController
         return back()->with('success', 'Permanently deleted.');
     }
 
-    /** A term's page content in a language: fields, SEO and template. */
     /** A term's old short address: to the one under its taxonomy. */
     public function open(Request $request, Term $term): RedirectResponse
     {
@@ -196,23 +243,16 @@ final class TermController
         $main = $term->translations->firstWhere('locale', Locales::default());
 
         return Inertia::render('Cms/Terms/Edit', [
-            'taxonomy' => ['handle' => $taxonomy->handle, 'title' => $taxonomy->title],
+            ...$this->editorProps($request, $taxonomy, $term, $locale),
             'term' => ['id' => $term->id, 'title' => $translation->title ?? $term->title(), 'template' => $term->template, 'url' => $translation?->url(),
                 // This language's own title and slug, edited here too (empty: not translated yet).
                 'ownTitle' => $translation?->title, 'slug' => $translation?->slug, 'mainTitle' => $main?->title,
                 // Whether the term has a page of its own, whose address a new slug moves (nothing redirects from the old one).
-                'hasPage' => $taxonomy->route !== null && $translation !== null && ! $term->trashed()],
-            // Where to add a redirect by hand, for those who may.
-            'redirectsUrl' => $request->user()?->can('cms.redirects.create') === true ? route('sunrice.admin.cms.redirects.create') : null,
-            // The views tried for its page, in order, and which exist (Template → Which file?).
-            'templates' => [
-                'own' => TemplateHelp::lookup([$term->template])[0] ?? null,
-                'fallbacks' => TemplateHelp::lookup([$taxonomy->template, "cms.taxonomy-{$taxonomy->handle}", 'cms.term']),
-            ],
+                'hasPage' => $taxonomy->route !== null && $translation !== null && ! $term->trashed(),
+                // The languages it has a title in, for the language switch.
+                'translatedIn' => $term->translations->map(fn (TermTranslation $each): string => $each->locale)->values()->all()],
+            'parentId' => $term->parent_id,
             'translated' => $translation !== null,
-            'fields' => $schema->toAdmin(),
-            'locale' => $locale,
-            'locales' => Locales::all(),
             'shared' => $locale === Locales::default() ? [] : $schema->shared(),
             'sharedValues' => array_intersect_key(array_replace($schema->defaults(), $main->data ?? []), array_flip($schema->shared())),
             'values' => array_replace($schema->defaults(), $translation->data ?? []),
@@ -224,7 +264,7 @@ final class TermController
 
     public function content(Request $request, Term $term, SaveTermContent $save): RedirectResponse
     {
-        $save->handle($term, $request->only(['data', 'seo', 'template', 'version', 'title', 'slug']), $this->locale($request));
+        $save->handle($term, $request->only(['data', 'seo', 'template', 'version', 'title', 'slug', 'parent_id']), $this->locale($request));
 
         return back()->with('success', 'Saved. The site shows it now.');
     }

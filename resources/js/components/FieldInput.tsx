@@ -44,6 +44,8 @@ interface Props {
     id: string;
     /** Content (an entry), not settings: rows and blocks get their key and Show switch. */
     content?: boolean;
+    /** A number fills its place (the builder's compact rows) instead of keeping its own width. */
+    fill?: boolean;
 }
 
 /** Types whose inputs are a list or a set of inputs: labelled as a group. */
@@ -58,7 +60,7 @@ export function labelOf(field: FieldDefinition): string {
     return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
-export function FieldInput({ field, value, onChange, errors, id, content = false }: Props) {
+export function FieldInput({ field, value, onChange, errors, id, content = false, fill = false }: Props) {
     const label = labelOf(field);
     const group = GROUPS.includes(field.type) || (['select', 'terms'].includes(field.type) && field.config?.multiple === true);
     // The message under a group of inputs (ticked choices, a group's fields) is tied to the group.
@@ -75,7 +77,7 @@ export function FieldInput({ field, value, onChange, errors, id, content = false
             ) : (
                 <Label id={`${id}-label`} htmlFor={group ? undefined : id}>{label}{field.required && <span className="cms:text-destructive"> *</span>}</Label>
             )}
-            <Control field={field} value={value} onChange={onChange} errors={errors} id={id} content={content} />
+            <Control field={field} value={value} onChange={onChange} errors={errors} id={id} content={content} fill={fill} />
             {['text', 'textarea'].includes(field.type) && numberConfig(field, 'max') !== undefined && (
                 <CharacterCount length={typeof value === 'string' ? [...value].length : 0} max={numberConfig(field, 'max') ?? 0} />
             )}
@@ -96,7 +98,7 @@ function CharacterCount({ length, max }: { length: number; max: number }) {
     );
 }
 
-function Control({ field, value, onChange, errors, id, content }: Props) {
+function Control({ field, value, onChange, errors, id, content, fill = false }: Props) {
     const invalid = errors[''] !== undefined;
     switch (field.type) {
         case 'toggle':
@@ -115,7 +117,7 @@ function Control({ field, value, onChange, errors, id, content }: Props) {
             return (
                 <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-3">
                     <Input
-                        id={id} type="number" className="cms:max-w-48" aria-invalid={invalid} aria-describedby={echo ? `${id}-grouped` : undefined}
+                        id={id} type="number" className={fill ? 'cms:w-full' : 'cms:max-w-48'} placeholder={stringConfig(field, 'placeholder')} aria-invalid={invalid} aria-describedby={echo ? `${id}-grouped` : undefined}
                         value={typeof value === 'number' ? String(value) : typeof value === 'string' ? value : ''}
                         min={numberConfig(field, 'min')} max={numberConfig(field, 'max')} step={numberConfig(field, 'step') ?? 'any'}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value === '' ? null : Number(e.target.value))}
@@ -134,7 +136,7 @@ function Control({ field, value, onChange, errors, id, content }: Props) {
             return field.config?.multiple === true
                 ? <MultiSelect options={optionsOf(field)} value={Array.isArray(value) ? value.map(String) : []} onChange={onChange} invalid={invalid}
                     empty={typeof field.config?.empty === 'string' ? field.config.empty : undefined} inTickOrder={field.config?.in_tick_order === true} />
-                : <SingleSelect options={optionsOf(field)} value={typeof value === 'string' ? value : null} onChange={onChange} id={id}
+                : <SingleSelect options={optionsOf(field)} value={typeof value === 'string' ? value : null} onChange={onChange} id={id} fill={fill}
                     empty={offersEmptyChoice(optionsOf(field), field.required === true, typeof field.config?.default === 'string' && field.config.default !== '', typeof value === 'string' && value !== '')} />;
         case 'terms': {
             const multiple = field.config?.multiple === true;
@@ -198,10 +200,10 @@ export function Fields({ fields, value, onChange, errors, id, content, bare = fa
     );
 }
 
-function SingleSelect({ options, value, onChange, id, empty }: { options: Option[]; value: string | null; onChange: (value: unknown) => void; id: string; empty: boolean }) {
+function SingleSelect({ options, value, onChange, id, empty, fill = false }: { options: Option[]; value: string | null; onChange: (value: unknown) => void; id: string; empty: boolean; fill?: boolean }) {
     return (
         <Select value={value ?? NONE} onValueChange={(next: string) => onChange(next === NONE ? null : next)}>
-            <SelectTrigger id={id} className="cms:w-full cms:max-w-sm"><SelectValue /></SelectTrigger>
+            <SelectTrigger id={id} className={fill ? 'cms:w-full' : 'cms:w-full cms:max-w-sm'}><SelectValue /></SelectTrigger>
             <SelectContent>
                 {empty && <SelectItem value={NONE}>{t('None')}</SelectItem>}
                 {options.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}

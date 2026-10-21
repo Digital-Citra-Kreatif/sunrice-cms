@@ -9,15 +9,15 @@ Beberapa pengaturan menunjuk ke hal lain, jadi baru bisa dipilih setelah hal itu
 1. **Fieldset** berisi field biasa (alamat, ajakan bertindak), dan **blueprint** yang hanya berisi field biasa (teks, media, tanggal…): belum ada yang menunjuk ke koleksi atau taksonomi.
 2. **Taksonomi** (*Topik*, *Lokasi*), untuk sementara tanpa koleksinya.
 3. **Koleksi**, masing-masing dengan blueprint-nya.
-4. Kembali ke **blueprint** (dan fieldset): tambahkan field **Entri**, yang menautkan ke koleksi, dan field **Term**, yang menautkan ke taksonomi.
-5. Kembali ke **taksonomi**: centang **Koleksi** yang entrinya dikelompokkan.
+4. Kembali ke **blueprint** (dan fieldset): tambahkan field **Entri**, yang menautkan ke koleksi (field **Term** datang bersama langkah 5).
+5. Kembali ke **taksonomi**: centang **Koleksi** yang entrinya dikelompokkan (blueprint-nya mendapat field **Term** untuk taksonomi itu).
 6. **Set global**, **pengaturan menu**, dan **formulir**; lalu kontennya, dan beranda di Pengaturan → Situs.
 
 Di dasbor, **Menyiapkan situs** menampilkan apa yang masih kurang.
 
 ### Handle
 
-**Handle** (milik field, koleksi, taksonomi…) adalah nama yang dipakai template: huruf kecil, angka, dan garis bawah, diawali huruf. `contact_person` bisa; `contact-person` (tanda hubung) dan `ContactPerson` tidak. Panel membuatnya dari judul atau label saat Anda mengetik.
+**Handle** (milik field, koleksi, taksonomi…) adalah nama yang dipakai template: huruf kecil, angka, dan garis bawah, diawali huruf. `contact_person` bisa; `contact-person` (tanda hubung) dan `ContactPerson` tidak. Panel membuatnya dari judul atau label saat Anda mengetik. Di bawahnya, baris **Untuk developer** menunjukkan cara template memakainya, dengan handle yang Anda ketik (seperti `<x-sunrice-cms::form handle="newsletter" />` untuk formulir): teruskan ke developer Anda.
 
 Setiap entri sudah memiliki yang berikut, jadi tidak ada field yang boleh memakainya sebagai handle: `id`, `title`, `slug`, `url`, `status`, `locale`, `published_at`, `created_at`, `updated_at`, `parent`, `children`, `collection`, `blueprint`, `data`, `seo`, `author`.
 
@@ -41,9 +41,11 @@ Field **Fieldset** menaruh field-field fieldset itu di tempatnya, seolah-olah mi
 | **Setiap entri punya halaman sendiri** | Mati: entri tidak punya alamat, seperti FAQ atau anggota tim yang ditampilkan template. |
 | **URL entri** | Letak entri di situs web, dengan `{slug}` untuk slug setiap entri: `/blog/{slug}`, atau `/{slug}` untuk halaman di tingkat teratas. Kosong: `/{handle}/{slug}`. |
 | **Template entri** | Desain yang dipakai entri, jika developer membuatnya. |
-| **Punya halaman daftar**, **URL halaman daftar**, **Field halaman daftar**, **Entri per halaman** | Halaman yang menampilkan daftar entri (seperti `/blog`; kosong: `/{handle}`), field khususnya (pengantar), dan jumlah entri per halaman. |
+| **Punya halaman daftar**, **URL halaman daftar**, **Blueprint halaman daftar**, **Entri per halaman** | Halaman yang menampilkan daftar entri (seperti `/blog`; kosong: `/{handle}`), blueprint yang memberinya field sendiri (pengantar, gambar utama; editor mengisinya di entri koleksi itu → **Halaman daftar**; **Buat blueprint** atau **Ubah** di sebelahnya; *Tidak ada* untuk tanpa field yang bisa disunting), dan jumlah entri per halaman. |
 | **Izinkan komentar** | Pengunjung boleh mengomentari entrinya (membutuhkan URL). |
 | **Jenis structured data** | Jenis entri yang diberitahukan ke mesin pencari (artikel, halaman web, listing properti, atau orang, tempat, atau produk yang dibahas halaman…). |
+
+Setelah disimpan, kartu-kartu di formulir menautkan ke tujuan berikutnya: **Lihat entri** (Halaman entri), **Lihat di situs** ↗ dan **Sunting halaman daftar** (Halaman daftar, yang terakhir bila punya blueprint). Di bawah pengaturan template atau URL halaman daftar, **File yang mana?** membuka daftar file template yang dicoba, untuk developer Anda.
 
 Menghapus koleksi tidak menghapus entrinya: entri hilang dari panel dan situs web. Tombol **Tempat sampah** di daftar menampilkan koleksi yang dihapus, dengan **Pulihkan** untuk mengembalikannya. Menghapusnya secara permanen, beserta entrinya, dilakukan oleh developer (`sunrice:orphans --purge`), sehingga kekeliruan di panel selalu bisa dibatalkan.
 
@@ -53,15 +55,16 @@ Setiap koleksi mendapat izinnya sendiri (melihat, membuat, menyunting, menerbitk
 
 **Blueprint** adalah daftar field: apa yang diisi editor untuk entri sebuah koleksi, term sebuah taksonomi, set global, atau formulir. **Fieldset** adalah sekelompok field yang dipakai di beberapa blueprint (alamat, ajakan bertindak). Sunting di **Struktur → Blueprint** dan **Fieldset**.
 
-Untuk menambah field, pilih jenisnya, lalu atur:
+Untuk menambah field, pilih jenisnya, lalu atur (pengaturannya dikelompokkan sebagai **Dasar**, **Opsi**, **Batas dan nilai awal**, **Kapan tampil**, dan **Lanjutan**):
 
 - **Label**: yang dilihat editor. **Handle** (cara template membaca field) dibuat dari label; mengganti handle nanti menyembunyikan nilai yang tersimpan dengan handle lama, jadi mintalah developer untuk mengganti nama field dengan aman. Field di tingkat teratas blueprint tidak bisa memakai handle yang dipakai konten itu sendiri, dan builder langsung memberi tahu saat Anda mengetik: `id`, `title`, `slug`, `url`, `status`, `locale`, `published_at`, `created_at`, `updated_at`, `parent`, `children`, `collection`, `blueprint`, `data`, `seo`, `author`.
 - **Petunjuk**: teks yang tampil di bawah field.
 - **Wajib**: entri tidak bisa disimpan atau diterbitkan tanpanya.
 - **Dapat diterjemahkan**: nyala, setiap bahasa punya nilainya sendiri; mati, satu nilai dipakai bersama semua bahasa. Awalnya mengikuti tipenya (nyala untuk teks, mati untuk angka, tanggal, saklar, dan media). Di baris field, penanda **Bersama** menunjukkan field yang tidak diterjemahkan.
 - **Dalam bahasa lain** (di situs dengan beberapa bahasa): label, petunjuk, dan opsi pilihan sebagaimana dibaca pengunjung di setiap bahasa lain. Formulir di situs web menampilkannya, dan pesan kesalahannya menyebut field dengan nama ini. Kosong: seperti yang ditulis di atas.
-- **Aturan tambahan**: pemeriksaan opsional, satu per baris (misalnya `email` atau `max:100`; untuk developer: aturan validasi Laravel).
-- Pengaturan khusus tiap jenis: opsi sebuah field pilihan, koleksi yang ditautkan field entri, jenis berkas yang diterima field media, jumlah maksimal…
+- **Kapan tampil**: field bisa tampil hanya pada saat tertentu. **Tambah syarat**, lalu pilih field lain, cara membandingkan, dan nilainya (opsi daftar pilihan itu sendiri, *aktif* atau *nonaktif* untuk saklar, sebuah term atau entri): *Hanya jika Layout adalah Video*. Dengan dua syarat atau lebih, pilih **Semua ini** atau **Salah satu ini**. Field yang tersembunyi tidak wajib diisi dan tetap menyimpan isinya.
+- **Aturan tambahan** (di **Lanjutan**): pemeriksaan opsional, satu per baris (misalnya `email` atau `max:100`; untuk developer: aturan validasi Laravel).
+- Pengaturan khusus tiap jenis: opsi sebuah field pilihan, koleksi yang ditautkan field entri, jenis berkas yang diterima field media… Saklar **Beberapa** (**Beberapa term**, **Beberapa entri**, **Beberapa file**, **Beberapa pilihan**) membuat editor bisa memilih lebih dari satu; selama nyala, **Maksimal** di sebelahnya membatasi jumlahnya (kosong: tanpa batas).
 
 Jenis-jenisnya: **Teks**, **Textarea**, **Teks kaya**, **Angka**, **Toggle**, **Pilihan**, **Tanggal**, **Tautan**, **Media**, **Entri**, **Term**, **Grup** (beberapa field bersama), **Repeater** (baris berisi field), **Konten fleksibel** (blok berbagai jenis), **Fieldset** (menyertakan fieldset: field-nya ditambahkan di tempatnya dengan handle masing-masing; agar tetap di bawah satu nama, taruh di dalam **Grup**), dan **File (formulir)** (berkas yang dikirim pengunjung lewat formulir: satu, atau beberapa dengan **Beberapa file**).
 
@@ -69,7 +72,7 @@ Baris setiap field menampilkan tipe, label, dan handle-nya, dengan **Duplikat** 
 
 ## Taksonomi
 
-**Struktur → Taksonomi**: **Judul** (dan **Judul dalam …** untuk setiap bahasa lain, bagi pengunjung di halaman term-nya), **Handle** (bisa diubah nanti, seperti pada koleksi), **Term bertingkat** (term di bawah term lain, seperti subkategori), **Koleksi** yang entrinya dikelompokkan, **URL halaman term** (seperti `/topik/{slug}`; kosong: term tidak punya halaman), **Field term** (blueprint untuk field term), dan **Template halaman term**. Editor lalu menambahkan term di bagian Taksonomi pada sidebar (lihat [Term](guide:website/terms)). Agar editor bisa memberi term pada entri, tambahkan field **Term** ke blueprint koleksinya: itu sudah cukup agar daftar entri bisa disaring menurut taksonomi tersebut, tanpa mencentang koleksinya di sini.
+**Struktur → Taksonomi**: **Judul** (dan **Judul dalam …** untuk setiap bahasa lain, bagi pengunjung di halaman term-nya), **Handle** (bisa diubah nanti, seperti pada koleksi), **Term bertingkat** (term di bawah term lain, seperti subkategori), **Koleksi** yang entrinya dikelompokkan, **Field term** (blueprint untuk field term), dan di bagian **Halaman term**: **Term punya halaman** (setiap term mendapat halaman yang mendaftar entrinya), **URL halaman term** (seperti `/topik/{slug}`; kosong: `/{handle}/{slug}`) dan **Template halaman term** (dengan **Lihat halaman term** ↗ begitu ada term yang punya halaman). Editor lalu menambahkan term di bagian Taksonomi pada sidebar (lihat [Term](guide:website/terms)). Mencentang koleksi di **Koleksi** membuat editor bisa memberi term pada entrinya: blueprint-nya mendapat field **Term** untuk taksonomi ini (dinamai menurut taksonominya) kecuali sudah punya, dan daftar entrinya bisa disaring menurut taksonomi itu. Kartu di samping formulir mendaftar blueprint yang punya field seperti itu. Saat Anda tidak mencentang lagi sebuah koleksi, field itu tetap ada (beserta term yang sudah dipilih entri) kecuali Anda menyalakan **Hapus juga field term dari koleksi yang tidak dicentang lagi**, yang muncul begitu daftarnya berubah.
 
 ## Set global
 

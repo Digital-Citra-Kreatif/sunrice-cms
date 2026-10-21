@@ -32,7 +32,7 @@ final readonly class Field
      * @param  list<string>  $validation  extra Laravel rules, from DefinitionValidator::RULES
      * @param  array<string, mixed>  $config  the type's settings
      * @param  list<Field>  $fields  children (groups and repeaters)
-     * @param  array{field: string, operator: string, value: string|int|float|bool|null}|null  $condition  shown only when another field on its level is so
+     * @param  array{field: string, operator: string, value: string|int|float|bool|null}|array{match: 'all'|'any', rules: list<array{field: string, operator: string, value: string|int|float|bool|null}>}|null  $condition  shown only when other fields on its level are so: one rule, or several that must all (or any) hold
      * @param  array<string, array{label?: string, instructions?: string, options?: array<string, string>}>  $translations  by language: what visitors read there
      */
     public function __construct(
@@ -116,34 +116,90 @@ final readonly class Field
     /** What a field may be shown on: another field's value, or that it's filled in. */
     public const OPERATORS = ['equals', 'not_equals', 'filled', 'empty'];
 
-    /** @return array{field: string, operator: string, value: string|int|float|bool|null}|null */
+    /** How several rules of a condition combine: every one holds, or at least one. */
+    public const MATCHES = ['all', 'any'];
+
+    /**
+     * A condition as stored: one rule (`['field' => 'layout', 'operator'
+     * => 'equals', 'value' => 'video']`), or several (`['match' => 'any',
+     * 'rules' => [rule, rule]]`). Rules that aren't rules are left out.
+     *
+     * @return array{field: string, operator: string, value: string|int|float|bool|null}|array{match: 'all'|'any', rules: list<array{field: string, operator: string, value: string|int|float|bool|null}>}|null
+     */
     private static function conditionFrom(mixed $condition): ?array
     {
-        if (! is_array($condition) || ! is_string($condition['field'] ?? null) || ! in_array($condition['operator'] ?? null, self::OPERATORS, true)) {
+        if (! is_array($condition)) {
             return null;
         }
-        $value = $condition['value'] ?? null;
+        if (! array_key_exists('rules', $condition)) {
+            return self::ruleFrom($condition);
+        }
+        $rules = array_values(array_filter(array_map(self::ruleFrom(...), is_array($condition['rules']) ? $condition['rules'] : [])));
 
-        return ['field' => $condition['field'], 'operator' => (string) $condition['operator'], 'value' => is_scalar($value) ? $value : null];
+        return $rules === [] ? null : ['match' => ($condition['match'] ?? 'all') === 'any' ? 'any' : 'all', 'rules' => $rules];
+    }
+
+    /** @return array{field: string, operator: string, value: string|int|float|bool|null}|null */
+    private static function ruleFrom(mixed $rule): ?array
+    {
+        if (! is_array($rule) || ! is_string($rule['field'] ?? null) || ! in_array($rule['operator'] ?? null, self::OPERATORS, true)) {
+            return null;
+        }
+        $value = $rule['value'] ?? null;
+
+        return ['field' => $rule['field'], 'operator' => (string) $rule['operator'], 'value' => is_scalar($value) ? $value : null];
+    }
+
+    /**
+     * The condition's rules, one or several (none: always shown).
+     *
+     * @return list<array{field: string, operator: string, value: string|int|float|bool|null}>
+     */
+    public function conditionRules(): array
+    {
+        return match (true) {
+            $this->condition === null => [],
+            isset($this->condition['rules']) => $this->condition['rules'],
+            default => [$this->condition],
+        };
+    }
+
+    /** Whether every rule must hold ("all", also for a single rule) or one is enough ("any"). */
+    public function conditionMatch(): string
+    {
+        return ($this->condition['match'] ?? 'all') === 'any' ? 'any' : 'all';
     }
 
     /**
      * Whether the field shows, given the values on its level (the editor
-     * decides the same way): "equals" another field's value (or one of its
-     * values), "not_equals", "filled" or "empty".
+     * decides the same way): each rule compares another field's value,
+     * "equals" it (or one of its values), "not_equals", "filled" or
+     * "empty"; several rules must all hold, or any one ("match").
      *
      * @param  array<mixed>  $siblings
      */
     public function isShownWith(array $siblings): bool
     {
-        if ($this->condition === null) {
+        $rules = $this->conditionRules();
+        if ($rules === []) {
             return true;
         }
-        $other = $siblings[$this->condition['field']] ?? null;
-        $filled = $other !== null && $other !== '' && $other !== false && $other !== [];
-        $equal = in_array(self::comparable($this->condition['value']), array_map(self::comparable(...), is_array($other) ? $other : [$other]), true);
+        $met = array_map(fn (array $rule): bool => self::holds($rule, $siblings), $rules);
 
-        return match ($this->condition['operator']) {
+        return $this->conditionMatch() === 'any' ? in_array(true, $met, true) : ! in_array(false, $met, true);
+    }
+
+    /**
+     * @param  array{field: string, operator: string, value: string|int|float|bool|null}  $rule
+     * @param  array<mixed>  $siblings
+     */
+    private static function holds(array $rule, array $siblings): bool
+    {
+        $other = $siblings[$rule['field']] ?? null;
+        $filled = $other !== null && $other !== '' && $other !== false && $other !== [];
+        $equal = in_array(self::comparable($rule['value'] ?? null), array_map(self::comparable(...), is_array($other) ? $other : [$other]), true);
+
+        return match ($rule['operator']) {
             'equals' => $equal,
             'not_equals' => ! $equal,
             'filled' => $filled,

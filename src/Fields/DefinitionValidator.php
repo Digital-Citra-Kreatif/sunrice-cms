@@ -98,14 +98,28 @@ final class DefinitionValidator
             $own = is_array($field) ? ($field['handle'] ?? null) : null;
             // A condition looks at a sibling's value: a fieldset include has none of its own.
             $siblings = array_values(array_filter(array_map(fn (mixed $other): mixed => is_array($other) && ($other['type'] ?? null) !== 'fieldset' ? ($other['handle'] ?? null) : null, $fields), fn (mixed $handle): bool => is_string($handle) && $handle !== $own));
-            $rules["{$key}.condition"] = ['nullable', 'array:field,operator,value'];
-            $rules["{$key}.condition.field"] = ["required_with:{$key}.condition", 'string', Rule::in($siblings)];
-            $rules["{$key}.condition.operator"] = ["required_with:{$key}.condition", 'string', Rule::in(Field::OPERATORS)];
-            $rules["{$key}.condition.value"] = ['nullable', function (string $attribute, mixed $value, \Closure $fail): void {
+            // One rule, or several under "rules" that must all (or any) hold.
+            $condition = is_array($field) ? ($field['condition'] ?? null) : null;
+            $value = function (string $attribute, mixed $value, \Closure $fail): void {
                 if (! is_scalar($value) || (is_string($value) && mb_strlen($value) > 255)) {
                     $fail(__('The value to compare with must be short text, a number or true/false.'));
                 }
-            }];
+            };
+            $at = "{$key}.condition";
+            if (is_array($condition) && array_key_exists('rules', $condition)) {
+                $rules[$at] = ['nullable', 'array:match,rules'];
+                $rules["{$at}.match"] = ['nullable', 'string', Rule::in(Field::MATCHES)];
+                $rules["{$at}.rules"] = ['required', 'array', 'list', 'min:1', 'max:20'];
+                $rules["{$at}.rules.*"] = ['array:field,operator,value'];
+                $at .= '.rules.*';
+                $needed = 'required';
+            } else {
+                $rules[$at] = ['nullable', 'array:field,operator,value'];
+                $needed = "required_with:{$at}";
+            }
+            $rules["{$at}.field"] = [$needed, 'string', Rule::in($siblings)];
+            $rules["{$at}.operator"] = [$needed, 'string', Rule::in(Field::OPERATORS)];
+            $rules["{$at}.value"] = ['nullable', $value];
             // What visitors read in other languages: label, instructions, a select's option labels.
             $rules["{$key}.translations"] = ['nullable', 'array', function (string $attribute, mixed $value, \Closure $fail): void {
                 foreach (is_array($value) ? array_keys($value) : [] as $locale) {
@@ -301,7 +315,8 @@ final class DefinitionValidator
             $settings = Schema::make($type->settings());
             $config = [];
             foreach ($settings->normalize(array_intersect_key($field->config, array_flip(array_map(fn (Field $setting): string => $setting->handle, $settings->fields())))) as $key => $value) {
-                if (is_string($key) && $value !== null && $value !== [] && $value !== false) {
+                // A setting hidden by its own switch ("At most" while "Several" is off) isn't kept.
+                if (is_string($key) && $value !== null && $value !== [] && $value !== false && $settings->field($key)?->isShownWith($field->config) !== false) {
                     $config[$key] = $settings->field($key)?->type === Types\Repeater::TYPE && is_array($value) ? self::settingRows($value) : $value;
                 }
             }

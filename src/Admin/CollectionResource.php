@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Resources\Forms\CheckboxList;
 use Sunrice\Admin\Resources\Forms\Form;
+use Sunrice\Admin\Resources\Forms\Link;
 use Sunrice\Admin\Resources\Forms\NumberInput;
 use Sunrice\Admin\Resources\Forms\Section;
 use Sunrice\Admin\Resources\Forms\Select;
@@ -20,6 +21,7 @@ use Sunrice\Admin\Resources\Tables\Table;
 use Sunrice\Cms\Actions\Collections\RestoreDeleted;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Site\RoutePatternRule;
+use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\StructuredData;
 
 /**
@@ -57,7 +59,7 @@ final class CollectionResource extends Resource
         return $form->schema([
             Section::make('General')->columns(2)->schema([
                 TextInput::make('title')->required(),
-                ...HandleField::make('collection', 'Used in templates and code, like "articles".'),
+                ...HandleField::make('collection', 'A short name for this collection, used by the site\'s templates.'),
                 ...TranslatedFields::make('title', fn (string $name, string $language) => TextInput::make($name)->label(__('Title in :language', ['language' => $language]))->maxLength(255)
                     ->placeholder('As the title')->help(__('What visitors read in :language: the listing page, breadcrumbs, menus.', ['language' => $language]))),
                 Select::make('blueprint')->verbatim()->options(BlueprintChoices::options(BlueprintChoices::CONTENT))
@@ -71,44 +73,61 @@ final class CollectionResource extends Resource
                 Toggle::make('dated')->label('Dated entries')->help('Entries have a date and list newest first.'),
                 Toggle::make('ordered')->label('Manual order')->help('Drag entries into order on the entries list.'),
             ]),
-            Section::make('Entry pages')->description('Whether each entry is a page on the site, and how.')->columns(2)->schema([
-                Toggle::make('pages')->label('Each entry has its own page')->default(true)->span(2)
-                    ->help('Off: entries have no address, like FAQs or team members shown by a template.')
-                    ->loadUsing(fn (Model $collection): bool => $collection->getAttribute('route') !== null)
-                    ->saveUsing(fn (Model $collection, mixed $on) => self::switchPage($collection, 'route', $on, '/{handle}/{slug}')),
-                TextInput::make('route')->label('Entry URL')->placeholder('/{handle}/{slug}')->unique()->span(2)->showWhen('pages')
-                    ->rules([new RoutePatternRule])
-                    ->help('Like /blog/{slug}, or / for the site root. Empty: /{handle}/{slug}.'),
-                Toggle::make('hierarchical')->label('Hierarchical')->showWhen('pages')
-                    ->help('Entries can sit under a parent entry, like pages under pages.'),
-                Toggle::make('comments')->label('Allow comments')->showWhen('pages')
-                    ->help('Visitors can comment on its entries.'),
-                TextInput::make('template')->label('Entry template')->placeholder('cms.article')->showWhen('pages')
-                    ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
-                    ->help(TemplateHelp::text('cms.article', ['cms.{handle}', 'cms.entry'])."\n".__('An entry can choose its own in its Page settings.')),
-                Select::make('schema_type')->label('Structured data type')->options(StructuredData::ENTRY_TYPES)->showWhen('pages')
-                    ->help('What search engines are told its entries are. Empty: Article if dated, else Web page.'),
-            ]),
-            Section::make('Listing page')->description('A page listing its entries, like /blog.')->columns(2)->schema([
-                Toggle::make('listing')->label('Has a listing page')->span(2)
-                    ->loadUsing(fn (Model $collection): bool => $collection->getAttribute('listing_route') !== null)
-                    ->saveUsing(fn (Model $collection, mixed $on) => self::switchPage($collection, 'listing_route', $on, '/{handle}')),
-                TextInput::make('listing_route')->label('Listing page URL')->placeholder('/{handle}')->unique()->maxLength(255)->span(2)->showWhen('listing')
-                    ->rules(['regex:#^(/[a-z0-9\-_]+)+$#'])
-                    ->help(__('Empty: /{handle}. Its template is the first that exists, under resources/views:')."\n1. ".TemplateHelp::shortFile('cms.{handle}-listing')."\n2. ".TemplateHelp::shortFile('cms.listing')."\n3. ".__('the built-in template')),
-                Select::make('listing_blueprint')->label('Listing page fields')->verbatim()->options(BlueprintChoices::options(BlueprintChoices::CONTENT, 'listing_blueprint'))->showWhen('listing')
-                    ->help('Fields of the listing page itself, like an intro.'),
-                NumberInput::make('per_page')->label('Entries per page')->integer()->min(1)->max(100)->default(10)->showWhen('listing'),
-            ]),
+            Section::make('Entry pages')->description('Whether each entry is a page on the site, and how.')->columns(2)
+                ->links(fn (?Model $collection): array => $collection instanceof Collection
+                    ? [Link::make('View entries', route('sunrice.admin.cms.collections.entries.index', $collection->handle, false))]
+                    : [])
+                ->schema([
+                    Toggle::make('pages')->label('Each entry has its own page')->default(true)->span(2)
+                        ->help('Off: entries have no address, like FAQs or team members shown by a template.')
+                        ->loadUsing(fn (Model $collection): bool => $collection->getAttribute('route') !== null)
+                        ->saveUsing(fn (Model $collection, mixed $on) => self::switchPage($collection, 'route', $on, '/{handle}/{slug}')),
+                    TextInput::make('route')->label('Entry URL')->placeholder('/{handle}/{slug}')->unique()->span(2)->showWhen('pages')
+                        ->rules([new RoutePatternRule])
+                        ->help('Like /blog/{slug}, or / for the site root. Empty: /{handle}/{slug}.'),
+                    Toggle::make('hierarchical')->label('Hierarchical')->showWhen('pages')
+                        ->help('Entries can sit under a parent entry, like pages under pages.'),
+                    Toggle::make('comments')->label('Allow comments')->showWhen('pages')
+                        ->help('Visitors can comment on its entries.'),
+                    TextInput::make('template')->label('Entry template')->placeholder('cms.article')->showWhen('pages')
+                        ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
+                        ->help('Empty: the first template that exists. An entry can choose its own in its Page settings.')
+                        ->helpDetails('Which file?', TemplateHelp::files(['cms.{handle}', 'cms.entry'], 'cms.article')),
+                    Select::make('schema_type')->label('Structured data type')->options(StructuredData::ENTRY_TYPES)->showWhen('pages')
+                        ->help('What search engines are told its entries are. Empty: Article if dated, else Web page.'),
+                ]),
+            Section::make('Listing page')->description('A page listing its entries, like /blog.')->columns(2)
+                ->links(fn (?Model $collection): array => $collection instanceof Collection ? array_values(array_filter([
+                    ($url = $collection->listingUrl(Locales::default())) !== null ? Link::make('View on site', $url)->newTab()->showWhen('listing') : null,
+                    Link::make('Edit listing page', route('sunrice.admin.cms.collections.listing.edit', $collection->handle, false))->showWhen('listing_blueprint'),
+                ])) : [])
+                ->schema([
+                    Toggle::make('listing')->label('Has a listing page')->span(2)
+                        ->loadUsing(fn (Model $collection): bool => $collection->getAttribute('listing_route') !== null)
+                        ->saveUsing(fn (Model $collection, mixed $on) => self::switchPage($collection, 'listing_route', $on, '/{handle}')),
+                    TextInput::make('listing_route')->label('Listing page URL')->placeholder('/{handle}')->unique()->maxLength(255)->span(2)->showWhen('listing')
+                        ->rules(['regex:#^(/[a-z0-9\-_]+)+$#'])
+                        ->help('Like /blog. Empty: /{handle}.')
+                        ->helpDetails('Which file?', TemplateHelp::files(['cms.{handle}-listing', 'cms.listing'])),
+                    Select::make('listing_blueprint')->label('Listing page blueprint')->placeholder('None (no editable fields)')->verbatim()
+                        ->options(BlueprintChoices::options(BlueprintChoices::CONTENT, 'listing_blueprint'))->showWhen('listing')
+                        ->help('Gives the listing page (:url) its own fields, such as an intro or a hero image. Editors fill them in under Entries → :collection → Listing page.')
+                        ->helpValues(['url' => ['listing_route', '/{handle}'], 'collection' => ['title']])
+                        ->links([
+                            Link::make('Create blueprint', route('sunrice.admin.cms.blueprints.create', [], false))->showUnless('listing_blueprint'),
+                            Link::make('Edit', route('sunrice.admin.cms.blueprints.index', [], false).'/{listing_blueprint}/edit')->showWhen('listing_blueprint'),
+                        ]),
+                    NumberInput::make('per_page')->label('Entries per page')->integer()->min(1)->max(100)->default(10)->showWhen('listing'),
+                ]),
         ]);
     }
 
     /**
-     * Entry pages or the listing page switched on or off: off clears the
-     * address, on without one gives the default (with the handle in it).
-     * Not sent (null): the address as given.
+     * Entry pages, the listing page or a taxonomy's term pages switched on
+     * or off: off clears the address, on without one gives the default
+     * (with the handle in it). Not sent (null): the address as given.
      */
-    private static function switchPage(Model $collection, string $attribute, mixed $on, string $default): void
+    public static function switchPage(Model $collection, string $attribute, mixed $on, string $default): void
     {
         if ($on === null) {
             return;

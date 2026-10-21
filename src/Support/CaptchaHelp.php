@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Support;
 
+use Sunrice\Admin\Resources\Forms\Link;
 use Sunrice\Admin\Resources\Forms\Toggle;
 use Sunrice\Admin\Security\Captcha;
 
@@ -28,7 +29,7 @@ final class CaptchaHelp
 
         return $toggle->disabled()
             ->help('Not set up yet: ask your developer to connect a captcha service.')
-            ->helpLink('How', 'guide/website/settings#captcha')
-            ->developerHelp('Set these in the app\'s .env with the keys from Cloudflare Turnstile (free), Google reCAPTCHA v2 or hCaptcha, then clear the config cache:', Captcha::ENV_EXAMPLE);
+            ->links([Link::make('How', route('sunrice.admin.guide.show', 'website/settings', false).'#captcha')])
+            ->developerHelp('Set these in the app\'s .env with the keys from Cloudflare Turnstile (free), Google reCAPTCHA v2 or hCaptcha, then clear the config cache:', code: Captcha::ENV_EXAMPLE);
     }
 }

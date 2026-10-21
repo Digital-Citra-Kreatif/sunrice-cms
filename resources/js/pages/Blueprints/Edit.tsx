@@ -28,13 +28,27 @@ interface Props {
 function handleHelp(kind: 'blueprint' | 'fieldset', exists: boolean): string {
     if (kind === 'fieldset') {
         return exists
-            ? t('Set when it was created: flexible blocks keep it with what they hold.')
-            : t('Lowercase letters, digits and underscores. It can\'t change later: flexible blocks keep it with what they hold.');
+            ? t('A short name for this fieldset, set when it was created: flexible blocks keep it with what they hold.')
+            : t('A short name for this fieldset. It can\'t change later: flexible blocks keep it with what they hold.');
     }
 
     return exists
-        ? t('Changing it updates the collections, taxonomies, global sets, forms and entries that use it.')
-        : t('Lowercase letters, digits and underscores, made from the title until you type one.');
+        ? t('A short name for this blueprint. Changing it updates the collections, taxonomies, global sets, forms and entries that use it.')
+        : t('A short name for this blueprint, used by the collections, taxonomies, global sets and forms that pick it.');
+}
+
+/** What developers write with the handle, following it as it's typed (an example while it's empty). */
+function DeveloperHelp({ kind, handle }: { kind: 'blueprint' | 'fieldset'; handle: string }) {
+    const value = handle !== '' ? handle : kind === 'fieldset' ? 'address' : 'article';
+    const code = kind === 'fieldset' ? `['type' => 'fieldset', 'config' => ['fieldset' => '${value}']]` : `Blueprint::where('handle', '${value}')`;
+
+    return (
+        <p className="cms:text-sm cms:text-muted-foreground">
+            <span className="cms:font-medium">{t('For developers:')}</span>{' '}
+            {kind === 'fieldset' ? t('In a blueprint definition:') : t('In code:')}{' '}
+            <code className="cms:rounded cms:bg-muted cms:px-1 cms:py-0.5 cms:font-mono cms:text-[0.8125rem] cms:break-words cms:text-foreground">{code}</code>
+        </p>
+    );
 }
 
 export default function BlueprintForm({ kind = 'blueprint', blueprint, fieldTypes, locales = [], usedBy = [], reserved = [] }: Props) {
@@ -126,6 +140,7 @@ export default function BlueprintForm({ kind = 'blueprint', blueprint, fieldType
                         <Input id="handle" className="cms:font-mono" value={form.data.handle} disabled={blueprint !== null && kind === 'fieldset'} required spellCheck={false}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setHandleTouched(true); form.setData('handle', cleanHandle(e.target.value)); }} />
                         <p className="cms:text-sm cms:text-muted-foreground">{handleHelp(kind, blueprint !== null)}</p>
+                        <DeveloperHelp kind={kind} handle={form.data.handle} />
                         <div aria-live="polite">
                             {blueprint !== null && kind === 'blueprint' && form.data.handle !== '' && form.data.handle !== blueprint.handle && (
                                 <ChangeWarning id="handle-warning">

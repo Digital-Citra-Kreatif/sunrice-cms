@@ -1,14 +1,13 @@
 import * as React from 'react';
-import { Head, Link, router, useForm } from '@inertiajs/react';
-import { ExternalLink, FileText, LayoutTemplate, MoreHorizontal, Pencil, Plus, RotateCcw, Search, Settings2, Trash2 } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import { ExternalLink, LayoutTemplate, MoreHorizontal, MoreVertical, Pencil, Plus, RotateCcw, Search, Settings2, Trash2 } from 'lucide-react';
 import { adminUrl, t } from '@sunrice/admin-sdk';
 import {
-    Button, Card, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-    DropdownMenuSeparator, DropdownMenuTrigger, Input, Label, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+    Button, Card, DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+    DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, Input, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
     SortableHandle, type SortableHandleProps, SortableList, TrashHint, useBreadcrumbs,
 } from '@sunrice/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
-import { FieldError } from '@/components/FieldInput.tsx';
 import { localeName } from '@/lib/entries.ts';
 import { childIndexes, reorderLevel } from '@/lib/tree.ts';
 
@@ -34,7 +33,7 @@ interface TermRow {
 
 interface Props {
     taxonomy: {
-        handle: string; title: string; hierarchical: boolean; pages?: boolean;
+        handle: string; title: string; hierarchical: boolean;
         /** The taxonomy's settings, when the user may change them. */
         settings?: string | null;
         /** Its terms' blueprint, when the user may edit blueprints. */
@@ -52,8 +51,6 @@ interface Props {
     locale: string;
 }
 
-const TOP = '__top';
-
 /** " It's used by A; B." for confirmations, or nothing. */
 function usedBySentence(usedBy: string[] = []): string {
     if (usedBy.length === 0) return '';
@@ -64,8 +61,6 @@ function usedBySentence(usedBy: string[] = []): string {
 export default function TermsIndex({ taxonomy, taxonomies, terms, locales, locale, trashed = false, trashedCount = 0 }: Props) {
     useBreadcrumbs([{ label: taxonomy ? taxonomy.title : t('Terms') }]);
     const [confirm, confirmDialog] = useConfirm();
-    // The term being renamed.
-    const [editing, setEditing] = React.useState<TermRow | null>(null);
     const [search, setSearch] = React.useState('');
     // In the order dragged until the server's comes back.
     const [rows, setRows] = React.useState(terms);
@@ -100,10 +95,10 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
             <div className="cms:flex cms:min-w-0 cms:items-center cms:gap-2" style={{ paddingLeft: depth * 20 }}>
                 {depth > 0 && <span className="cms:text-muted-foreground" aria-hidden>└</span>}
                 {trashed ? <span className="cms:truncate cms:font-medium">{term.title ?? term.fallback}</span> : (
-                    <button type="button" className="cms:truncate cms:text-left cms:font-medium cms:underline-offset-4 cms:hover:underline"
-                        onClick={() => taxonomy.pages && term.title !== null ? router.get(pageUrl(term)) : setEditing(term)}>
+                    // The term's editor, in the language shown (untranslated: give it a title there to add it).
+                    <Link href={pageUrl(term)} className="cms:truncate cms:text-left cms:font-medium cms:underline-offset-4 cms:hover:underline">
                         {term.title ?? <span className="cms:font-normal cms:text-muted-foreground cms:italic">{t(':title · not translated', { title: term.fallback })}</span>}
-                    </button>
+                    </Link>
                 )}
                 {term.url && (
                     <a href={term.url} target="_blank" rel="noopener noreferrer" className="cms:text-muted-foreground cms:hover:text-foreground" aria-label={t('View page')} title={t('View page')}>
@@ -130,12 +125,9 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
                             <Button variant="ghost" size="icon" className="cms:size-8" aria-label={t('Actions for :title', { title: term.fallback })}><MoreHorizontal /></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem onSelect={() => setEditing(term)}><Pencil /> {t('Rename')}</DropdownMenuItem>
+                            <DropdownMenuItem asChild><Link href={pageUrl(term)}><Pencil /> {t('Edit')}</Link></DropdownMenuItem>
                             {taxonomy.hierarchical && term.title !== null && (
                                 <DropdownMenuItem asChild><Link href={`${base}/create?locale=${encodeURIComponent(locale)}&parent=${term.id}`}><Plus /> {t('Add a term under it')}</Link></DropdownMenuItem>
-                            )}
-                            {taxonomy.pages && term.title !== null && (
-                                <DropdownMenuItem asChild><Link href={pageUrl(term)}><FileText /> {t('Edit page')}</Link></DropdownMenuItem>
                             )}
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="cms:text-destructive" onSelect={() => trash(term)}><Trash2 /> {t('Move to trash')}</DropdownMenuItem>
@@ -196,7 +188,7 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
                     {trashed ? t('Back to terms') : <><Trash2 /> {t('Trash')}</>}
                 </Button>
                 {!trashed && rows.length > 1 && !found && (
-                    <p className="cms:text-sm cms:text-muted-foreground">{taxonomy.hierarchical ? t('Drag terms to set their order; a term\'s parent is set when you rename it.') : t('Drag terms to set their order.')}</p>
+                    <p className="cms:text-sm cms:text-muted-foreground">{taxonomy.hierarchical ? t('Drag terms to set their order; a term\'s parent is set in its editor (Under).') : t('Drag terms to set their order.')}</p>
                 )}
             </div>
 
@@ -221,17 +213,6 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
                 ) : trashed ? rows.map((term) => <React.Fragment key={term.id}>{row(term, null, 0)}</React.Fragment>) : level(-1)}
             </Card>
 
-            <Dialog open={editing !== null} onOpenChange={(open: boolean) => { if (!open) setEditing(null); }}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>{t('Rename “:title”', { title: editing?.fallback })}</DialogTitle>
-                        <DialogDescription>{locales.length > 1 ? t('In :language.', { language: localeName(locale) }) : t('Its title and the slug in its address.')}</DialogDescription>
-                    </DialogHeader>
-                    {editing !== null && (
-                        <TermForm key={editing.id} term={editing} locale={locale} terms={terms} hierarchical={taxonomy.hierarchical} onDone={() => setEditing(null)} />
-                    )}
-                </DialogContent>
-            </Dialog>
         </div>
     );
 }
@@ -244,57 +225,4 @@ function formatDay(iso: string | null | undefined): string {
     const date = new Date(iso);
 
     return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString(document.documentElement.lang || undefined, { day: 'numeric', month: 'short', year: 'numeric' });
-}
-
-/** Renames a term in the language shown: its title, slug and where it sits. */
-function TermForm({ locale, terms, hierarchical, term, onDone }: { locale: string; terms: TermRow[]; hierarchical: boolean; term: TermRow; onDone: () => void }) {
-    const form = useForm({ title: term.title ?? '', slug: term.slug ?? '', parent_id: term.parentId, locale, version: term.version });
-    const errors = form.errors as Record<string, string | undefined>;
-    // A term can't go under itself or a term under it.
-    const blocked = new Set<number>();
-    blocked.add(term.id);
-    const start = terms.findIndex((each) => each.id === term.id);
-    for (let i = start + 1; i < terms.length && (terms[i]?.depth ?? 0) > term.depth; i++) blocked.add(terms[i]!.id);
-    const submit = (e: React.FormEvent) => {
-        e.preventDefault();
-        form.put(adminUrl(`cms/terms/${term.id}`), { preserveScroll: true, onSuccess: onDone });
-    };
-    const id = `term-${term.id}`;
-
-    return (
-        <form onSubmit={submit} className="cms:flex cms:flex-col cms:gap-4">
-            <div className="cms:flex cms:flex-col cms:gap-1.5">
-                <Label htmlFor={`${id}-title`}>{t('Title')}</Label>
-                <Input id={`${id}-title`} value={form.data.title} placeholder={term.fallback} required autoFocus
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => form.setData('title', e.target.value)} />
-                <FieldError message={errors.title ?? errors.version} />
-            </div>
-            <div className="cms:flex cms:flex-col cms:gap-1.5">
-                <Label htmlFor={`${id}-slug`}>{t('Slug')}</Label>
-                <Input id={`${id}-slug`} className="cms:font-mono" value={form.data.slug} placeholder={t('Made from the title')}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => form.setData('slug', e.target.value)} />
-                <FieldError message={errors.slug} />
-            </div>
-            {hierarchical && (
-                <div className="cms:flex cms:flex-col cms:gap-1.5">
-                    <Label htmlFor={`${id}-parent`}>{t('Under')}</Label>
-                    <Select value={form.data.parent_id === null ? TOP : String(form.data.parent_id)}
-                        onValueChange={(value: string) => form.setData('parent_id', value === TOP ? null : Number(value))}>
-                        <SelectTrigger id={`${id}-parent`}><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value={TOP}>{t('Top level')}</SelectItem>
-                            {terms.filter((each) => !blocked.has(each.id)).map((each) => (
-                                <SelectItem key={each.id} value={String(each.id)}>{'— '.repeat(each.depth)}{each.title ?? each.fallback}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    <FieldError message={errors.parent_id} />
-                </div>
-            )}
-            <DialogFooter>
-                <Button type="button" variant="ghost" onClick={onDone}>{t('Cancel')}</Button>
-                <Button type="submit" disabled={form.processing}>{t('Save')}</Button>
-            </DialogFooter>
-        </form>
-    );
 }

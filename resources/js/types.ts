@@ -1,9 +1,18 @@
-/** Shown only when another field on its level is so. */
-export interface FieldCondition {
+/** One rule of a condition: another field on its level is so. */
+export interface FieldConditionRule {
     field: string;
     operator: 'equals' | 'not_equals' | 'filled' | 'empty';
     value?: string | number | boolean | null;
 }
+
+/** Several rules: every one holds ("all"), or one is enough ("any"). */
+export interface FieldConditionGroup {
+    match: 'all' | 'any';
+    rules: FieldConditionRule[];
+}
+
+/** Shown only when other fields on its level are so: one rule, or several. */
+export type FieldCondition = FieldConditionRule | FieldConditionGroup;
 
 /** A field definition as stored (see Sunrice\Cms\Fields\Field). */
 export interface FieldTranslation {

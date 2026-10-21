@@ -11,6 +11,7 @@ import { FieldSections } from '@/components/FieldSections.tsx';
 import { SlugNote } from '@/components/SlugNote.tsx';
 import { TemplateHelp, type TemplateLookup } from '@/components/TemplateHelp.tsx';
 import { VersionConflict } from '@/components/VersionConflict.tsx';
+import { LanguageTabs } from '@/components/LanguageTabs.tsx';
 import { errorKeysAt, errorsAt, hasErrors } from '@/lib/builder.ts';
 import { localeName, slugNote } from '@/lib/entries.ts';
 import { seoFields } from '@/lib/seo.ts';
@@ -21,14 +22,21 @@ import type { FieldDefinition } from '@/types.ts';
 type FieldValues = Record<string, any>;
 
 interface Props {
-    taxonomy: { handle: string; title: string };
+    taxonomy: { handle: string; title: string; hierarchical?: boolean };
+    /** Null: a new term, created with all of this. */
     term: {
         id: number; title: string; template: string | null; url: string | null;
         /** This language's own title and slug (null: not translated yet), and the main language's title. */
         ownTitle: string | null; slug: string | null; mainTitle: string | null;
         /** Whether it has a page of its own, whose address a new slug moves. */
         hasPage?: boolean;
-    };
+        /** The languages it has a title in. */
+        translatedIn?: string[];
+    } | null;
+    /** The term it sits under (null: the top level). */
+    parentId?: number | null;
+    /** Where it can go, in nested taxonomies (never under itself or a term under it). */
+    terms?: { id: number; title: string; depth: number }[];
     /** Where to add a redirect by hand, for those who may. */
     redirectsUrl?: string | null;
     /** The views tried for its page, in order, and which exist. */
@@ -48,24 +56,28 @@ interface Props {
     usedBy?: { label: string; url: string | null; field: string; fieldLabel?: string }[];
 }
 
+const TOP = '__top';
+
 export default function TermEditPage(props: Props) {
     // A fresh form per language and after each save.
-    return <TermEdit key={`${props.locale}:${props.version}:${JSON.stringify([props.values, props.seo, props.term.template])}`} {...props} />;
+    return <TermEdit key={`${props.term?.id ?? 'new'}:${props.locale}:${props.version}:${JSON.stringify([props.values, props.seo, props.term?.template, props.parentId])}`} {...props} />;
 }
 
-function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared, sharedValues, values, seo, version, usedBy = [], redirectsUrl = null, templates = null }: Props) {
+/** One editor for a term, new or not: title, slug, where it sits, its fields, SEO and template, in a language. */
+function TermEdit({ taxonomy, term, parentId = null, terms = [], translated, fields, locale, locales, shared, sharedValues, values, seo, version, usedBy = [], redirectsUrl = null, templates = null }: Props) {
     const list = adminUrl(`cms/taxonomies/${taxonomy.handle}/terms`);
-    const url = adminUrl(`cms/terms/${term.id}/content`);
-    useBreadcrumbs([{ label: taxonomy.title, href: `${list}?locale=${locale}` }, { label: term.title }]);
-    const form = useForm<{ locale: string; title: string; slug: string; data: FieldValues; seo: FieldValues; template: string; version: number | null }>({
-        locale, title: term.ownTitle ?? '', slug: term.slug ?? '', data: values, seo: seo ?? {}, template: term.template ?? '', version,
+    const url = term ? adminUrl(`cms/terms/${term.id}/content`) : list;
+    const heading = term ? term.title : t('New term');
+    useBreadcrumbs([{ label: taxonomy.title, href: `${list}?locale=${locale}` }, { label: heading }]);
+    const form = useForm<{ locale: string; title: string; slug: string; parent_id: number | null; data: FieldValues; seo: FieldValues; template: string; version: number | null }>({
+        locale, title: term?.ownTitle ?? '', slug: term?.slug ?? '', parent_id: parentId, data: values, seo: seo ?? {}, template: term?.template ?? '', version,
     });
     const errors = form.errors as Record<string, string | undefined>;
     const clearErrorsAt = (path: string) => {
         const keys = errorKeysAt(errors, path);
         if (keys.length > 0) form.clearErrors(...(keys as never[]));
     };
-    const save = () => form.processing || form.put(url, { preserveScroll: true });
+    const save = () => form.processing || (term ? form.put(url, { preserveScroll: true }) : form.post(url));
     // After "someone else saved": save over their version anyway.
     const saveMine = () => {
         form.transform((data) => ({ ...data, version: null }));
@@ -73,7 +85,7 @@ function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared,
     };
     // One editor at a time per term page and language.
     const lock = useEditLock({
-        type: 'cms.term', id: term.id, locale, enabled: translated, noun: t('term'), leaveTo: `${list}?locale=${locale}`,
+        type: 'cms.term', id: term?.id, locale, enabled: term !== null && translated, noun: t('term'), leaveTo: `${list}?locale=${locale}`,
         getUnsaved: () => (form.isDirty ? { data: form.data.data, seo: form.data.seo, template: form.data.template } : null),
     });
     // Not translated yet: giving it a title here adds the language.
@@ -91,21 +103,15 @@ function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared,
 
     return (
         <form noValidate onSubmit={(e) => { e.preventDefault(); save(); }} className="cms:flex cms:flex-col cms:gap-6">
-            <Head title={term.title} />
+            <Head title={term ? term.title : t('New term · :taxonomy', { taxonomy: taxonomy.title })} />
             {lock.dialogs}
             <PageHeader
-                title={term.title}
+                title={heading}
                 back={{ href: `${list}?locale=${locale}`, label: t('Back to :title', { title: taxonomy.title }) }}
                 actions={
                     <>
-                        {term.url && <Button type="button" variant="ghost" asChild><a href={term.url} target="_blank" rel="noopener noreferrer"><ExternalLink /> {t('View page')}</a></Button>}
-                        {locales.length > 1 && (
-                            <Select value={locale} onValueChange={(next: string) => router.get(`${list}/${term.id}/edit`, { locale: next })}>
-                                <SelectTrigger className="cms:w-48" aria-label={t('Language')}><SelectValue /></SelectTrigger>
-                                <SelectContent>{locales.map((code, i) => <SelectItem key={code} value={code}>{localeName(code)}{i === 0 ? ` ${t('(main)')}` : ''}</SelectItem>)}</SelectContent>
-                            </Select>
-                        )}
-                        {writable && <Button type="submit" disabled={form.processing}>{form.processing && <LoaderCircle className="cms:animate-spin" />} {t('Save')}</Button>}
+                        {term?.url && <Button type="button" variant="ghost" asChild><a href={term.url} target="_blank" rel="noopener noreferrer"><ExternalLink /> {t('View page')}</a></Button>}
+                        {writable && <Button type="submit" disabled={form.processing}>{form.processing && <LoaderCircle className="cms:animate-spin" />} {term ? t('Save') : t('Create term')}</Button>}
                     </>
                 }
             >
@@ -114,7 +120,12 @@ function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared,
 
             <div className="cms:grid cms:items-start cms:gap-6 cms:lg:grid-cols-[minmax(0,1fr)_20rem]">
                 <div className="cms:flex cms:min-w-0 cms:flex-col cms:gap-6">
+                    <LanguageTabs current={locale} locales={locales} translated={term ? (term.translatedIn ?? null) : [locale]}
+                        onSwitch={(next) => router.get(term ? `${list}/${term.id}/edit` : `${list}/create`, { locale: next, ...(term === null && form.data.parent_id !== null ? { parent: form.data.parent_id } : {}) })} />
                     <ViewingNotice by={lock.viewingBy} onTakeOver={lock.requestTakeOver} />
+                    {term === null && locales.length > 1 && (
+                        <p className="cms:text-sm cms:text-muted-foreground">{t('In :language. Translate it here afterwards: switch the language and give it a title there.', { language: localeName(locale) })}</p>
+                    )}
                     {!translated && (
                         <p className="cms:rounded-lg cms:border cms:bg-muted/40 cms:p-3 cms:text-sm cms:text-muted-foreground" role="note">
                             {t('Not in :language yet: the site shows the :main term meanwhile. Give it a title in :language and save to add it.', { language: localeName(locale), main: localeName(locales[0] ?? 'en') })}
@@ -123,7 +134,7 @@ function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared,
                     <fieldset disabled={!writable} className="cms:grid cms:min-w-0 cms:gap-4 cms:sm:grid-cols-2">
                         <div className="cms:flex cms:flex-col cms:gap-2">
                             <Label htmlFor="term-title">{t('Title')}</Label>
-                            <Input id="term-title" value={form.data.title} required placeholder={term.mainTitle ?? ''} maxLength={255} aria-invalid={errors.title !== undefined}
+                            <Input id="term-title" value={form.data.title} required autoFocus={term === null} placeholder={term?.mainTitle ?? ''} maxLength={255} aria-invalid={errors.title !== undefined}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => { form.setData('title', e.target.value); clearErrorsAt('title'); }} />
                             <FieldError message={errors.title} />
                         </div>
@@ -132,9 +143,23 @@ function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared,
                             <Input id="term-slug" className="cms:font-mono" value={form.data.slug} placeholder={t('Made from the title')} maxLength={200} aria-invalid={errors.slug !== undefined}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => { form.setData('slug', e.target.value); clearErrorsAt('slug'); }} />
                             {/* A term's page moves as soon as it's saved: nothing redirects from the old address. */}
-                            <SlugNote note={slugNote(term.hasPage ? term.slug : null, form.data.slug, false)} redirectsUrl={redirectsUrl} />
+                            <SlugNote note={slugNote(term?.hasPage ? term.slug : null, form.data.slug, false)} redirectsUrl={redirectsUrl} />
                             <FieldError message={errors.slug} />
                         </div>
+                        {taxonomy.hierarchical && (
+                            <div className="cms:flex cms:flex-col cms:gap-2 cms:sm:col-span-2">
+                                <Label htmlFor="term-parent">{t('Under')}</Label>
+                                <Select value={form.data.parent_id === null ? TOP : String(form.data.parent_id)}
+                                    onValueChange={(value: string) => { form.setData('parent_id', value === TOP ? null : Number(value)); clearErrorsAt('parent_id'); }}>
+                                    <SelectTrigger id="term-parent" className="cms:sm:w-1/2" aria-invalid={errors.parent_id !== undefined}><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value={TOP}>{t('Top level')}</SelectItem>
+                                        {terms.map((each) => <SelectItem key={each.id} value={String(each.id)}>{'— '.repeat(each.depth)}{each.title}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                                <FieldError message={errors.parent_id} />
+                            </div>
+                        )}
                     </fieldset>
                     <KeptEditsNotice kept={lock.kept} disabled={!writable} onLoad={(id: number) => void loadKept(id)} onDiscard={(id: number) => void lock.discardKept(id)} />
                     <VersionConflict message={errors.version} processing={form.processing} onSaveMine={saveMine} />
@@ -148,16 +173,17 @@ function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared,
                     </CollapsibleCard>
                 </div>
                 <aside className="cms:flex cms:min-w-0 cms:flex-col cms:gap-6">
-                    <CollapsibleCard title={t('Template')} titleClassName="cms:text-base" storageKey="cms:term:page-settings" hasErrors={errors.template !== undefined}
+                    <CollapsibleCard title={t('Page settings')} titleClassName="cms:text-base" storageKey="cms:term:page-settings" hasErrors={errors.template !== undefined}
                         contentClassName="cms:flex cms:flex-col cms:gap-2">
                         <fieldset disabled={!writable} className="cms:flex cms:min-w-0 cms:flex-col cms:gap-2">
-                            <Label htmlFor="template" className="cms:sr-only">{t('Template')}</Label>
+                            <Label htmlFor="template">{t('Template')}</Label>
                             <Input id="template" className="cms:font-mono" placeholder={`cms.${taxonomy.handle}-special`} value={form.data.template}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => form.setData('template', e.target.value)} aria-invalid={errors.template !== undefined} />
                             <TemplateHelp example={`cms.${taxonomy.handle}-special`} empty={t('Leave empty to use the taxonomy\'s template.')} value={form.data.template} lookup={templates} />
                             <FieldError message={errors.template} />
                         </fieldset>
                     </CollapsibleCard>
+{term && (
                     <CollapsibleCard title={t('Used by')} titleClassName="cms:text-base" storageKey="cms:term:used-by" contentClassName="cms:flex cms:flex-col cms:gap-1 cms:text-sm">
                         {usedBy.length === 0 && <p className="cms:text-muted-foreground">{t('No content links here through its fields.')}</p>}
                         {usedBy.map((use) => (
@@ -167,6 +193,7 @@ function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared,
                             </div>
                         ))}
                     </CollapsibleCard>
+)}
                 </aside>
             </div>
         </form>

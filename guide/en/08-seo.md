@@ -21,7 +21,7 @@ Fields left empty may be filled from the entry's own fields, if a site manager s
 
 ## Term pages and listing pages
 
-A term's own page and a collection's listing page have the same **SEO** card: on the term's page (from the terms list) and on the listing page (from **Edit the listing page** in the **⋮** menu above the entries list). Both are live as soon as you save.
+A term's own page and a collection's listing page have the same **SEO** card: in the term editor (from the terms list) and on the listing page (from **Edit the listing page** in the **⋮** menu above the entries list). Both are live as soon as you save.
 
 ## The site's defaults
 

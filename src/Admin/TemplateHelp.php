@@ -13,18 +13,21 @@ namespace Sunrice\Cms\Admin;
 final class TemplateHelp
 {
     /**
-     * The help under a template setting in a resource's form: what an empty
-     * one uses, then how a view name maps to its file (under resources/views).
+     * What a resource form's "Which file?" disclosure says (Field::helpDetails()):
+     * the files tried in order, under resources/views, the paths as code, and
+     * how a view name maps to its file when there's an example.
      *
      * @param  list<string>  $fallbacks  view names, tried in this order
      */
-    public static function text(string $example, array $fallbacks): string
+    public static function files(array $fallbacks, ?string $example = null): string
     {
-        $lines = [__('Leave empty to use the first that exists, under resources/views:')];
-        foreach ([...array_map(self::shortFile(...), $fallbacks), __('the built-in template')] as $i => $fallback) {
+        $lines = [__('The first that exists, under resources/views:')];
+        foreach ([...array_map(fn (string $view): string => '`'.self::shortFile($view).'`', $fallbacks), __('the built-in template')] as $i => $fallback) {
             $lines[] = ($i + 1).'. '.$fallback;
         }
-        $lines[] = __('A view name is a file there: :example is :file.', ['example' => $example, 'file' => self::shortFile($example)]);
+        if ($example !== null) {
+            $lines[] = __('A view name is a file there: :example is :file.', ['example' => "`{$example}`", 'file' => '`'.self::shortFile($example).'`']);
+        }
 
         return implode("\n", $lines);
     }

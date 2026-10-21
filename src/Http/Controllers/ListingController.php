@@ -10,6 +10,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Sunrice\Cms\Actions\Collections\SaveListing;
 use Sunrice\Cms\Models\Collection;
+use Sunrice\Cms\Models\CollectionListing;
 use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\Seo;
@@ -35,6 +36,8 @@ final class ListingController
             'fields' => $schema->toAdmin(),
             'locale' => $locale,
             'locales' => Locales::all(),
+            // The languages with texts of their own (the main one always counts), for the language switch.
+            'translated' => array_values(array_unique([Locales::default(), ...$collection->listings->map(fn (CollectionListing $listing): string => $listing->locale)->all()])),
             'shared' => $locale === Locales::default() ? [] : $schema->shared(),
             'values' => array_diff_key($collection->listingData($locale, $schema), [Seo::KEY => true]),
             'seo' => $collection->listings->firstWhere('locale', $locale)?->data[Seo::KEY] ?? null,

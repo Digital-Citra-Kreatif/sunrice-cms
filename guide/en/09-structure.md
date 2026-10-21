@@ -9,15 +9,15 @@ Some settings point at other things, so they can only be chosen once those exist
 1. **Fieldsets** of plain fields (an address, a call to action), and **blueprints** with plain fields only (text, media, dates…): nothing that points at a collection or a taxonomy yet.
 2. **Taxonomies** (*Topics*, *Locations*), without their collections for now.
 3. **Collections**, each with its blueprint.
-4. Back to the **blueprints** (and fieldsets): add the **Entries** fields, which link to collections, and the **Terms** fields, which link to taxonomies.
-5. Back to the **taxonomies**: tick the **Collections** whose entries they group.
+4. Back to the **blueprints** (and fieldsets): add the **Entries** fields, which link to collections (the **Terms** fields come with step 5).
+5. Back to the **taxonomies**: tick the **Collections** whose entries they group (their blueprints get a **Terms** field for it).
 6. **Global sets**, **menu settings** and **forms**; then the content, and the homepage in Settings → Site.
 
 On the dashboard, **Getting the site ready** lists what's still missing.
 
 ### Handles
 
-A **handle** (of a field, a collection, a taxonomy…) is how templates name it: lowercase letters, digits and underscores, starting with a letter. `contact_person` works; `contact-person` (a hyphen) and `ContactPerson` don't. The panel makes one from the title or label as you type.
+A **handle** (of a field, a collection, a taxonomy…) is how templates name it: lowercase letters, digits and underscores, starting with a letter. `contact_person` works; `contact-person` (a hyphen) and `ContactPerson` don't. The panel makes one from the title or label as you type. Under it, a line **For developers** shows how templates use it, with the handle you typed (like `<x-sunrice-cms::form handle="newsletter" />` for a form): pass it on to your developer.
 
 Every entry has these already, so no field may use them as its handle: `id`, `title`, `slug`, `url`, `status`, `locale`, `published_at`, `created_at`, `updated_at`, `parent`, `children`, `collection`, `blueprint`, `data`, `seo`, `author`.
 
@@ -41,9 +41,11 @@ A **collection** is a kind of content: *Pages*, *Blog*, *Products*, *Events*. **
 | **Each entry has its own page** | Off: entries have no address, like FAQs or team members a template shows. |
 | **Entry URL** | Where entries are on the website, with `{slug}` for each entry's slug: `/blog/{slug}`, or `/{slug}` for pages at the top. Empty: `/{handle}/{slug}`. |
 | **Template** | The design entries use, if your developer made one for it. |
-| **Has a listing page**, **Listing page URL**, **Listing page fields**, **Entries per page** | A page listing the entries (like `/blog`; empty: `/{handle}`), its own fields (an introduction), and how many entries it shows per page. |
+| **Has a listing page**, **Listing page URL**, **Listing page blueprint**, **Entries per page** | A page listing the entries (like `/blog`; empty: `/{handle}`), a blueprint giving it fields of its own (an introduction, a hero image; editors fill them in under the collection's entries → **Listing page**; **Create blueprint** or **Edit** next to it; *None* for no editable fields), and how many entries it shows per page. |
 | **Allow comments** | Visitors may comment on its entries (it needs a URL). |
 | **Structured data type** | What search engines are told its entries are (an article, a web page, a real estate listing, or a person, place or product the page is about…). |
+
+Once saved, the form's cards link where you'd go next: **View entries** (Entry pages), **View on site** ↗ and **Edit listing page** (Listing page, the latter when it has a blueprint). Under a template setting or the listing page's URL, **Which file?** opens the list of template files tried, for your developer.
 
 Deleting a collection doesn't delete its entries: they leave the panel and the website. The list's **Trash** shows deleted collections, with **Restore** to bring one back. Deleting them permanently, with their entries, is for a developer (`sunrice:orphans --purge`), so a slip in the panel can always be undone.
 
@@ -53,15 +55,16 @@ Each collection gets its own permissions (view, create, edit, publish, delete an
 
 A **blueprint** is a list of fields: what editors fill in for a collection's entries, a taxonomy's terms, a global set or a form. A **fieldset** is a group of fields used in several blueprints (an address, a call to action). Edit them under **Structure → Blueprints** and **Fieldsets**.
 
-To add a field, choose its type, then set:
+To add a field, choose its type, then set (its settings are grouped as **Basics**, **Options**, **Limits and defaults**, **Visibility** and **Advanced**):
 
 - **Label**: what editors see. The **Handle** (how templates read the field) is made from it; renaming a handle later hides values saved under the old one, so ask your developer to rename fields safely. A blueprint's top-level fields can't use the handles the content keeps for itself, and the builder says so as you type: `id`, `title`, `slug`, `url`, `status`, `locale`, `published_at`, `created_at`, `updated_at`, `parent`, `children`, `collection`, `blueprint`, `data`, `seo`, `author`.
 - **Instructions**: a hint shown under the field.
 - **Required**: the entry can't be saved or published without it.
 - **Translatable**: on, each language gets its own value; off, one value is shared by every language. It starts as the type suggests (on for text, off for numbers, dates, switches and media). In the field's row, a **Shared** marker shows the fields that aren't translated.
 - **In other languages** (on a site with several languages): the label, instructions and a choice list's options as visitors read them in each other language. Forms on the website show these, and their error messages name the field this way. Empty: as written above.
-- **Extra rules**: checks for developers, one per line (such as `email`).
-- Each type's own settings: the choices of a select, the collections an entries field links to, the types a media field accepts, how many items at most…
+- **Visibility**: a field can show only sometimes. **Add condition** and pick another field, how to compare and the value (a choice list's own options, *switched on* or *switched off* for a toggle, a term or an entry): *Only when Layout is Video*. With two conditions or more, choose **All of these** or **Any of these**. A hidden field isn't required and keeps what it had.
+- **Extra rules** (under **Advanced**): checks for developers, one per line (such as `email`).
+- Each type's own settings: the choices of a select, the collections an entries field links to, the types a media field accepts… A **Several** switch (**Several terms**, **Several entries**, **Several files**, **Several choices**) lets editors pick more than one; while it's on, **At most** next to it limits how many (empty: no limit).
 
 The types: **Text**, **Textarea**, **Rich text**, **Number**, **Toggle**, **Select**, **Date**, **Link**, **Media**, **Entries**, **Terms**, **Group** (fields together), **Repeater** (rows of fields), **Flexible content** (blocks of different kinds), **Fieldset** (include a fieldset: its fields are added where it is, with their own handles; to keep them under one name, put it in a **Group**) and **File (forms)** (files visitors send with a form: one, or several with **Several files**).
 
@@ -69,7 +72,7 @@ Each field's row shows its type, label and handle, with **Duplicate** (a copy ri
 
 ## Taxonomies
 
-**Structure → Taxonomies**: a **Title** (and a **Title in …** each other language, for visitors on its term pages), a **Handle** (changeable later, as for collections), **Nested terms** (terms under other terms, like subcategories), the **Collections** whose entries it groups, a **Term pages URL** (like `/topics/{slug}`; empty: terms have no pages), **Term fields** (a blueprint for the terms' own fields), and a **Template**. Editors then add the terms under Taxonomies in the sidebar (see [Terms](guide:website/terms)). To let editors give entries terms, add a **Terms** field to the collection's blueprint: that's enough for the entries list to filter by the taxonomy too, without ticking the collection here.
+**Structure → Taxonomies**: a **Title** (and a **Title in …** each other language, for visitors on its term pages), a **Handle** (changeable later, as for collections), **Nested terms** (terms under other terms, like subcategories), the **Collections** whose entries it groups, **Term fields** (a blueprint for the terms' own fields), and under **Term pages**: **Terms have pages** (each term gets a page listing its entries), its **Term page URL** (like `/topics/{slug}`; empty: `/{handle}/{slug}`) and a **Template** (with **View a term page** ↗ once a term has one). Editors then add the terms under Taxonomies in the sidebar (see [Terms](guide:website/terms)). Ticking a collection under **Collections** lets editors give its entries terms: its blueprints get a **Terms** field for the taxonomy (named after it) unless they have one already, and its entries list filters by the taxonomy. The card beside the form lists the blueprints that have such a field. When you untick a collection, the field stays (with the terms entries have) unless you switch on **Also remove the terms field from collections you untick**, which appears once the list changes.
 
 ## Global sets
 

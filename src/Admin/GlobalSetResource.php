@@ -83,7 +83,7 @@ final class GlobalSetResource extends Resource
     {
         return $form->schema([
             TextInput::make('title')->required(),
-            ...HandleField::make('global', 'Used in templates, like "contact".'),
+            ...HandleField::make('global', 'A short name for this global set, used by the site\'s templates.'),
             Select::make('blueprint')
                 ->verbatim()->options(BlueprintChoices::options(BlueprintChoices::GLOBAL))
                 ->help('Its fields.'),

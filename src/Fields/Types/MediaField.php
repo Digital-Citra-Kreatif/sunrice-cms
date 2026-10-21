@@ -72,7 +72,8 @@ final class MediaField extends FieldType
     {
         return [
             new Field('multiple', 'toggle', 'Several files'),
-            new Field('max', 'number', 'At most', instructions: 'With several files.', config: ['min' => 1, 'step' => 1]),
+            // Only with several files: inline next to the switch in the builder.
+            new Field('max', 'number', 'At most', config: ['min' => 1, 'step' => 1, 'placeholder' => 'No limit'], condition: ['field' => 'multiple', 'operator' => 'filled', 'value' => null]),
             new Field('types', 'select', 'Kinds of file', instructions: 'None chosen: any file.', config: [
                 'multiple' => true,
                 'options' => array_map(fn (string $type): array => ['value' => $type, 'label' => [
