@@ -70,7 +70,8 @@ final class BlueprintController
             $save->handle($request->only(['title', 'fields']), $blueprint);
         });
 
-        return back()->with('success', 'Blueprint saved.');
+        // At its new address when the handle changed.
+        return redirect()->route('sunrice.admin.cms.blueprints.edit', $blueprint->refresh()->handle)->with('success', 'Blueprint saved.');
     }
 
     public function destroy(Blueprint $blueprint, DeleteBlueprint $delete): RedirectResponse

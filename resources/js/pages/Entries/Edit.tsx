@@ -17,7 +17,7 @@ import { TermLabels } from '@/components/TermsPicker.tsx';
 import { seoFields } from '@/lib/seo.ts';
 import { FieldError, Fields } from '@/components/FieldInput.tsx';
 import { errorKeysAt, errorsAt, hasErrors } from '@/lib/builder.ts';
-import { type EntryLocale, type EntryStatus, followingSlug, formatDate, localeName, localInputValue, scheduleStart, slugNote, statusLabel } from '@/lib/entries.ts';
+import { type EntryLocale, type EntryStatus, datedPublish, followingSlug, formatDate, localeName, localInputValue, scheduleStart, slugNote, statusLabel } from '@/lib/entries.ts';
 import type { FieldDefinition } from '@/types.ts';
 
 interface Props {
@@ -121,6 +121,10 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
     useBreadcrumbs([{ label: collection.title, href: list }, { label: heading }]);
     const [confirm, confirmDialog] = useConfirm();
     const [scheduling, setScheduling] = React.useState(false);
+    // The Publish date picked in the side card: the header's Publish goes by it too.
+    const savedDate = entry?.publishedAt ? localInputValue(new Date(entry.publishedAt)) : '';
+    const [publishDate, setPublishDate] = React.useState(savedDate);
+    React.useEffect(() => setPublishDate(savedDate), [savedDate]);
     const [comparing, setComparing] = React.useState<Revision | null>(null);
     const [sendingBack, setSendingBack] = React.useState(false);
 
@@ -142,6 +146,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
     };
     // Nothing new to publish: the live version is the draft, and the form has no changes.
     const upToDate = entry !== null && entry.status !== 'draft' && !entry.hasUnpublishedChanges && !form.isDirty;
+    const dated = datedPublish(entry?.status ?? 'draft', publishDate, entry?.publishedAt ?? null);
     const editable = entry === null ? can.create : can.update && !entry.trashed;
     const scheduled = entry?.status === 'scheduled';
 
@@ -285,9 +290,9 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                                         <CalendarClock /> {t('Scheduled for :date', { date: formatDate(entry.publishedAt) })}
                                     </Button>
                                 ) : (
-                                    <Button type="button" variant={upToDate ? 'outline' : 'default'} className="cms:rounded-r-none cms:disabled:opacity-100" disabled={form.processing || upToDate} onClick={() => publish()}>
+                                    <Button type="button" variant={upToDate ? 'outline' : 'default'} className="cms:rounded-r-none cms:disabled:opacity-100" disabled={form.processing || upToDate} onClick={() => publish(dated.at)}>
                                         {upToDate && <Check className="cms:text-emerald-600 cms:dark:text-emerald-400" />}
-                                        {entry.status === 'draft' ? t('Publish') : upToDate ? t('Published') : t('Publish changes')}
+                                        {upToDate ? t('Published') : dated.action === 'schedule' ? t('Schedule') : dated.action === 'backdate' ? t('Publish now, back-dated') : entry.status === 'draft' ? t('Publish') : t('Publish changes')}
                                     </Button>
                                 )}
                                 <DropdownMenu>
@@ -434,7 +439,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                                 </div>
                             )}
                             {!entry.trashed && can.publish && !lock.readOnly && (
-                                <PublishDate key={entry.publishedAt ?? 'none'} status={entry.status} publishedAt={entry.publishedAt} processing={form.processing}
+                                <PublishDate status={entry.status} value={publishDate} onChange={setPublishDate} dated={dated} processing={form.processing}
                                     onPublish={(iso) => publish(iso)} onUnpublish={() => router.post(`${url}/unpublish`, locale, { preserveScroll: true })} />
                             )}
                             {entry.status !== 'draft' && entry.hasUnpublishedChanges && <p className="cms:text-muted-foreground">{t('The draft has changes the site doesn\'t show yet.')}</p>}
@@ -592,29 +597,28 @@ function LanguageBar({ entryUrl, editUrl, current, locales, canAdd, canRemove, o
  * The date an entry shows as published, to set or change: a past one
  * publishes it with that date, a future one schedules it.
  */
-function PublishDate({ status, publishedAt, processing, onPublish, onUnpublish }: {
-    status: EntryStatus; publishedAt: string | null; processing: boolean; onPublish: (iso: string | null) => void; onUnpublish: () => void;
+function PublishDate({ status, value, onChange, dated, processing, onPublish, onUnpublish }: {
+    status: EntryStatus; value: string; onChange: (value: string) => void; dated: ReturnType<typeof datedPublish>;
+    processing: boolean; onPublish: (iso: string | null) => void; onUnpublish: () => void;
 }) {
-    const [value, setValue] = React.useState(publishedAt ? localInputValue(new Date(publishedAt)) : '');
-    const chosen = value === '' ? null : new Date(value);
-    const future = chosen !== null && chosen.getTime() > Date.now();
-    // To the minute, as the input shows it.
-    const minute = (date: Date | null) => (date === null ? null : Math.floor(date.getTime() / 60_000));
-    const changed = minute(chosen) !== minute(publishedAt ? new Date(publishedAt) : null);
-    const label = status === 'draft'
-        ? (future ? t('Schedule') : t('Publish'))
-        : (future ? (status === 'scheduled' ? t('Reschedule') : t('Schedule')) : t('Change date'));
+    const changed = dated.action !== 'now';
+    const label = {
+        now: t('Publish'),
+        schedule: status === 'scheduled' ? t('Reschedule') : t('Schedule'),
+        backdate: t('Publish now, back-dated'),
+        redate: t('Change date'),
+    }[dated.action];
 
     return (
         <div className="cms:flex cms:flex-col cms:gap-2 cms:border-t cms:border-border/60 cms:pt-3">
             <Label htmlFor="entry-published-at">{t('Publish date')}</Label>
-            <DatePicker id="entry-published-at" withTime className="cms:max-w-none" value={value || null} onChange={(next) => setValue(next ?? '')} />
+            <DatePicker id="entry-published-at" withTime className="cms:max-w-none" value={value || null} onChange={(next) => onChange(next ?? '')} />
             <p className="cms:text-xs cms:text-muted-foreground">
                 {status === 'draft' ? t('Empty: now. A date in the future schedules it.') : t('The date shown as published. A date in the future takes it off the site until then.')}
             </p>
             <div className="cms:flex cms:flex-wrap cms:gap-2">
                 {(status === 'draft' || changed) && (
-                    <Button type="button" size="sm" disabled={processing} onClick={() => onPublish(chosen?.toISOString() ?? null)}>
+                    <Button type="button" size="sm" disabled={processing} onClick={() => onPublish(dated.at)}>
                         <CalendarClock /> {label}
                     </Button>
                 )}
