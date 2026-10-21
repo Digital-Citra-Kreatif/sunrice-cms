@@ -42,19 +42,19 @@ final class BlueprintController
 
     public function create(BuilderData $builder): Response
     {
-        return Inertia::render('Cms/Blueprints/Form', ['blueprint' => null, ...$builder->toArray()]);
+        return Inertia::render('Cms/Blueprints/Edit', ['blueprint' => null, ...$builder->toArray()]);
     }
 
     public function store(Request $request, SaveBlueprint $save): RedirectResponse
     {
         $blueprint = $save->handle($request->only(['handle', 'title', 'fields']));
 
-        return redirect()->route('sunrice.admin.cms.blueprints.edit', $blueprint)->with('success', "Blueprint \"{$blueprint->title}\" created.");
+        return redirect()->route('sunrice.admin.cms.blueprints.edit', $blueprint)->with('success', __('Blueprint ":title" created.', ['title' => $blueprint->title]));
     }
 
     public function edit(Blueprint $blueprint, BuilderData $builder): Response
     {
-        return Inertia::render('Cms/Blueprints/Form', [
+        return Inertia::render('Cms/Blueprints/Edit', [
             'blueprint' => ['id' => $blueprint->id, 'handle' => $blueprint->handle, 'title' => $blueprint->title, 'fields' => $blueprint->fields],
             ...$builder->toArray(),
         ]);
@@ -77,6 +77,6 @@ final class BlueprintController
     {
         $delete->handle($blueprint);
 
-        return redirect()->route('sunrice.admin.cms.blueprints.index')->with('success', "Blueprint \"{$blueprint->title}\" deleted.");
+        return redirect()->route('sunrice.admin.cms.blueprints.index')->with('success', __('Blueprint ":title" deleted.', ['title' => $blueprint->title]));
     }
 }

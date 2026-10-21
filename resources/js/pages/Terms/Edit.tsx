@@ -1,17 +1,18 @@
 import * as React from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import { ExternalLink, LoaderCircle } from 'lucide-react';
-import { adminUrl } from '@sunrice/admin-sdk';
+import { adminUrl, t } from '@sunrice/admin-sdk';
 import {
     Button, CollapsibleCard, Input, KeptEditsNotice, Label, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
     useBreadcrumbs, useEditLock, useUnsavedChanges, ViewingNotice,
 } from '@sunrice/admin-sdk/ui';
 import { FieldError, Fields } from '@/components/FieldInput.tsx';
 import { FieldSections } from '@/components/FieldSections.tsx';
+import { TemplateHelp } from '@/components/TemplateHelp.tsx';
 import { VersionConflict } from '@/components/VersionConflict.tsx';
 import { errorKeysAt, errorsAt, hasErrors } from '@/lib/builder.ts';
 import { localeName } from '@/lib/entries.ts';
-import { SEO_FIELDS } from '@/lib/seo.ts';
+import { seoFields } from '@/lib/seo.ts';
 import type { FieldDefinition } from '@/types.ts';
 
 // Field values are any JSON; see the entry editor for why `any`.
@@ -65,7 +66,7 @@ function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared,
     };
     // One editor at a time per term page and language.
     const lock = useEditLock({
-        type: 'cms.term', id: term.id, locale, enabled: translated, noun: 'term', leaveTo: `${list}?locale=${locale}`,
+        type: 'cms.term', id: term.id, locale, enabled: translated, noun: t('term'), leaveTo: `${list}?locale=${locale}`,
         getUnsaved: () => (form.isDirty ? { data: form.data.data, seo: form.data.seo, template: form.data.template } : null),
     });
     // Not translated yet: giving it a title here adds the language.
@@ -82,77 +83,82 @@ function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared,
     useUnsavedChanges(form.isDirty && !lock.takenOver, writable ? save : undefined);
 
     return (
-        <form noValidate onSubmit={(e) => { e.preventDefault(); save(); }} className="cms:flex cms:max-w-3xl cms:flex-col cms:gap-6">
+        <form noValidate onSubmit={(e) => { e.preventDefault(); save(); }} className="cms:flex cms:flex-col cms:gap-6">
             <Head title={term.title} />
             {lock.dialogs}
             <PageHeader
                 title={term.title}
-                back={{ href: `${list}?locale=${locale}`, label: `Back to ${taxonomy.title}` }}
+                back={{ href: `${list}?locale=${locale}`, label: t('Back to :title', { title: taxonomy.title }) }}
                 actions={
                     <>
-                        {term.url && <Button type="button" variant="ghost" asChild><a href={term.url} target="_blank" rel="noopener noreferrer"><ExternalLink /> View</a></Button>}
+                        {term.url && <Button type="button" variant="ghost" asChild><a href={term.url} target="_blank" rel="noopener noreferrer"><ExternalLink /> {t('View page')}</a></Button>}
                         {locales.length > 1 && (
-                            <Select value={locale} onValueChange={(next: string) => router.get(adminUrl(`cms/terms/${term.id}/edit`), { locale: next })}>
-                                <SelectTrigger className="cms:w-48" aria-label="Language"><SelectValue /></SelectTrigger>
-                                <SelectContent>{locales.map((code, i) => <SelectItem key={code} value={code}>{localeName(code)}{i === 0 ? ' (main)' : ''}</SelectItem>)}</SelectContent>
+                            <Select value={locale} onValueChange={(next: string) => router.get(`${list}/${term.id}/edit`, { locale: next })}>
+                                <SelectTrigger className="cms:w-48" aria-label={t('Language')}><SelectValue /></SelectTrigger>
+                                <SelectContent>{locales.map((code, i) => <SelectItem key={code} value={code}>{localeName(code)}{i === 0 ? ` ${t('(main)')}` : ''}</SelectItem>)}</SelectContent>
                             </Select>
                         )}
-                        {writable && <Button type="submit" disabled={form.processing}>{form.processing && <LoaderCircle className="cms:animate-spin" />} Save</Button>}
+                        {writable && <Button type="submit" disabled={form.processing}>{form.processing && <LoaderCircle className="cms:animate-spin" />} {t('Save')}</Button>}
                     </>
                 }
             >
-                {form.isDirty && <span className="cms:text-sm cms:text-muted-foreground">Unsaved changes</span>}
+                {form.isDirty && <span className="cms:text-sm cms:text-muted-foreground">{t('Unsaved changes')}</span>}
             </PageHeader>
 
-            <div className="cms:flex cms:min-w-0 cms:flex-col cms:gap-6">
-                <ViewingNotice by={lock.viewingBy} onTakeOver={lock.requestTakeOver} />
-                {!translated && (
-                    <p className="cms:rounded-lg cms:border cms:bg-muted/40 cms:p-3 cms:text-sm cms:text-muted-foreground" role="note">
-                        Not in {localeName(locale)} yet: the site shows the {localeName(locales[0] ?? 'en')} term meanwhile. Give it a title in {localeName(locale)} and save to add it.
-                    </p>
-                )}
-                <fieldset disabled={!writable} className="cms:grid cms:min-w-0 cms:gap-4 cms:sm:grid-cols-2">
-                    <div className="cms:flex cms:flex-col cms:gap-2">
-                        <Label htmlFor="term-title">Title</Label>
-                        <Input id="term-title" value={form.data.title} required placeholder={term.mainTitle ?? ''} maxLength={255} aria-invalid={errors.title !== undefined}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => { form.setData('title', e.target.value); clearErrorsAt('title'); }} />
-                        <FieldError message={errors.title} />
-                    </div>
-                    <div className="cms:flex cms:flex-col cms:gap-2">
-                        <Label htmlFor="term-slug">Slug</Label>
-                        <Input id="term-slug" className="cms:font-mono" value={form.data.slug} placeholder="Made from the title" maxLength={200} aria-invalid={errors.slug !== undefined}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => { form.setData('slug', e.target.value); clearErrorsAt('slug'); }} />
-                        <FieldError message={errors.slug} />
-                    </div>
-                </fieldset>
-                <KeptEditsNotice kept={lock.kept} disabled={!writable} onLoad={(id: number) => void loadKept(id)} onDiscard={(id: number) => void lock.discardKept(id)} />
-                <VersionConflict message={errors.version} processing={form.processing} onSaveMine={saveMine} />
-                <FieldSections disabled={!writable} fields={fields} values={form.data.data} errors={errors} storageKey={`cms:term:${taxonomy.handle}`}
-                    shared={shared} sharedValues={sharedValues} sharedNote={`Shared by all languages: the greyed-out fields are edited in ${localeName(locales[0] ?? 'en')}.`}
-                    onChange={(handle, value) => { form.setData('data', { ...form.data.data, [handle]: value }); clearErrorsAt(`data.${handle}`); }} />
-                <CollapsibleCard title="Search and sharing" titleClassName="cms:text-base" storageKey="cms:term:seo" hasErrors={hasErrors(errors, 'seo')}>
-                    <fieldset disabled={!writable} className="cms:min-w-0">
-                        <Fields bare id="seo" fields={SEO_FIELDS} value={form.data.seo} errors={errorsAt(errors, 'seo')} onChange={(next) => { form.setData('seo', next); clearErrorsAt('seo'); }} />
-                    </fieldset>
-                </CollapsibleCard>
-                <CollapsibleCard title="Used by" titleClassName="cms:text-base" storageKey="cms:term:used-by" contentClassName="cms:flex cms:flex-col cms:gap-1 cms:text-sm">
-                    {usedBy.length === 0 && <p className="cms:text-muted-foreground">No content links here through its fields.</p>}
-                    {usedBy.map((use) => (
-                        <div key={`${use.label}:${use.field}`} className="cms:flex cms:items-baseline cms:gap-2">
-                            {use.url ? <a href={use.url} className="cms:truncate cms:underline-offset-4 cms:hover:underline">{use.label}</a> : <span className="cms:truncate">{use.label}</span>}
-                            <span className="cms:text-xs cms:text-muted-foreground" title={use.field}>{use.fieldLabel ?? use.field}</span>
+            <div className="cms:grid cms:items-start cms:gap-6 cms:lg:grid-cols-[minmax(0,1fr)_20rem]">
+                <div className="cms:flex cms:min-w-0 cms:flex-col cms:gap-6">
+                    <ViewingNotice by={lock.viewingBy} onTakeOver={lock.requestTakeOver} />
+                    {!translated && (
+                        <p className="cms:rounded-lg cms:border cms:bg-muted/40 cms:p-3 cms:text-sm cms:text-muted-foreground" role="note">
+                            {t('Not in :language yet: the site shows the :main term meanwhile. Give it a title in :language and save to add it.', { language: localeName(locale), main: localeName(locales[0] ?? 'en') })}
+                        </p>
+                    )}
+                    <fieldset disabled={!writable} className="cms:grid cms:min-w-0 cms:gap-4 cms:sm:grid-cols-2">
+                        <div className="cms:flex cms:flex-col cms:gap-2">
+                            <Label htmlFor="term-title">{t('Title')}</Label>
+                            <Input id="term-title" value={form.data.title} required placeholder={term.mainTitle ?? ''} maxLength={255} aria-invalid={errors.title !== undefined}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => { form.setData('title', e.target.value); clearErrorsAt('title'); }} />
+                            <FieldError message={errors.title} />
                         </div>
-                    ))}
-                </CollapsibleCard>
-                <CollapsibleCard title="Page settings" titleClassName="cms:text-base" storageKey="cms:term:page-settings" hasErrors={errors.template !== undefined}
-                    contentClassName="cms:flex cms:flex-col cms:gap-2">
-                    <fieldset disabled={!writable} className="cms:flex cms:min-w-0 cms:flex-col cms:gap-2">
-                        <Label htmlFor="template">Template</Label>
-                        <Input id="template" className="cms:font-mono" placeholder="The taxonomy's" value={form.data.template}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => form.setData('template', e.target.value)} aria-invalid={errors.template !== undefined} />
-                        <FieldError message={errors.template} />
+                        <div className="cms:flex cms:flex-col cms:gap-2">
+                            <Label htmlFor="term-slug">{t('Slug')}</Label>
+                            <Input id="term-slug" className="cms:font-mono" value={form.data.slug} placeholder={t('Made from the title')} maxLength={200} aria-invalid={errors.slug !== undefined}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => { form.setData('slug', e.target.value); clearErrorsAt('slug'); }} />
+                            <FieldError message={errors.slug} />
+                        </div>
                     </fieldset>
-                </CollapsibleCard>
+                    <KeptEditsNotice kept={lock.kept} disabled={!writable} onLoad={(id: number) => void loadKept(id)} onDiscard={(id: number) => void lock.discardKept(id)} />
+                    <VersionConflict message={errors.version} processing={form.processing} onSaveMine={saveMine} />
+                    <FieldSections disabled={!writable} fields={fields} values={form.data.data} errors={errors} storageKey={`cms:term:${taxonomy.handle}`}
+                        shared={shared} sharedValues={sharedValues} sharedNote={t('Shared by all languages: the greyed-out fields are edited in :language.', { language: localeName(locales[0] ?? 'en') })}
+                        onChange={(handle, value) => { form.setData('data', { ...form.data.data, [handle]: value }); clearErrorsAt(`data.${handle}`); }} />
+                    <CollapsibleCard title={t('SEO')} description={t('How this term\'s page appears in search results and shared links.')} titleClassName="cms:text-base" storageKey="cms:term:seo" hasErrors={hasErrors(errors, 'seo')}>
+                        <fieldset disabled={!writable} className="cms:min-w-0">
+                            <Fields bare id="seo" fields={seoFields()} value={form.data.seo} errors={errorsAt(errors, 'seo')} onChange={(next) => { form.setData('seo', next); clearErrorsAt('seo'); }} />
+                        </fieldset>
+                    </CollapsibleCard>
+                </div>
+                <aside className="cms:flex cms:min-w-0 cms:flex-col cms:gap-6">
+                    <CollapsibleCard title={t('Template')} titleClassName="cms:text-base" storageKey="cms:term:page-settings" hasErrors={errors.template !== undefined}
+                        contentClassName="cms:flex cms:flex-col cms:gap-2">
+                        <fieldset disabled={!writable} className="cms:flex cms:min-w-0 cms:flex-col cms:gap-2">
+                            <Label htmlFor="template" className="cms:sr-only">{t('Template')}</Label>
+                            <Input id="template" className="cms:font-mono" placeholder={`cms.${taxonomy.handle}-special`} value={form.data.template}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => form.setData('template', e.target.value)} aria-invalid={errors.template !== undefined} />
+                            <TemplateHelp example={`cms.${taxonomy.handle}-special`} fallbacks={[t('the taxonomy\'s template, if set'), `cms.taxonomy-${taxonomy.handle}`, 'cms.term']} />
+                            <FieldError message={errors.template} />
+                        </fieldset>
+                    </CollapsibleCard>
+                    <CollapsibleCard title={t('Used by')} titleClassName="cms:text-base" storageKey="cms:term:used-by" contentClassName="cms:flex cms:flex-col cms:gap-1 cms:text-sm">
+                        {usedBy.length === 0 && <p className="cms:text-muted-foreground">{t('No content links here through its fields.')}</p>}
+                        {usedBy.map((use) => (
+                            <div key={`${use.label}:${use.field}`} className="cms:flex cms:items-baseline cms:gap-2">
+                                {use.url ? <a href={use.url} className="cms:truncate cms:underline-offset-4 cms:hover:underline">{use.label}</a> : <span className="cms:truncate">{use.label}</span>}
+                                <span className="cms:text-xs cms:text-muted-foreground" title={use.field}>{use.fieldLabel ?? use.field}</span>
+                            </div>
+                        ))}
+                    </CollapsibleCard>
+                </aside>
             </div>
         </form>
     );

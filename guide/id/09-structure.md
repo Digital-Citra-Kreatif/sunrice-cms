@@ -1,6 +1,6 @@
 # Struktur
 
-**Structure** adalah tempat pengelola situs menentukan konten apa yang dimiliki situs web dan bagaimana susunannya. Editor jarang memerlukannya. Perubahan di sini memengaruhi pekerjaan semua orang, jadi rencanakan bersama tim, dan bersama developer jika perubahan itu membutuhkan desain baru (template).
+**Struktur** adalah tempat pengelola situs menentukan konten apa yang dimiliki situs web dan bagaimana susunannya. Editor jarang memerlukannya. Perubahan di sini memengaruhi pekerjaan semua orang, jadi rencanakan bersama tim, dan bersama developer jika perubahan itu membutuhkan desain baru (template).
 
 ## Menyiapkan situs baru, berurutan
 
@@ -9,11 +9,11 @@ Beberapa pengaturan menunjuk ke hal lain, jadi baru bisa dipilih setelah hal itu
 1. **Fieldset** berisi field biasa (alamat, ajakan bertindak), dan **blueprint** yang hanya berisi field biasa (teks, media, tanggal…): belum ada yang menunjuk ke koleksi atau taksonomi.
 2. **Taksonomi** (*Topik*, *Lokasi*), untuk sementara tanpa koleksinya.
 3. **Koleksi**, masing-masing dengan blueprint-nya.
-4. Kembali ke **blueprint** (dan fieldset): tambahkan field **Entries**, yang menautkan ke koleksi, dan field **Terms**, yang menautkan ke taksonomi.
-5. Kembali ke **taksonomi**: centang **Collections** yang entrinya dikelompokkan.
-6. **Global set**, **pengaturan menu**, dan **formulir**; lalu kontennya, dan beranda di Settings → Site.
+4. Kembali ke **blueprint** (dan fieldset): tambahkan field **Entri**, yang menautkan ke koleksi, dan field **Term**, yang menautkan ke taksonomi.
+5. Kembali ke **taksonomi**: centang **Koleksi** yang entrinya dikelompokkan.
+6. **Set global**, **pengaturan menu**, dan **formulir**; lalu kontennya, dan beranda di Pengaturan → Situs.
 
-Di dasbor, **Getting the site ready** menampilkan apa yang masih kurang.
+Di dasbor, **Menyiapkan situs** menampilkan apa yang masih kurang.
 
 ### Handle
 
@@ -25,72 +25,73 @@ Field **Fieldset** menaruh field-field fieldset itu di tempatnya, seolah-olah mi
 
 ## Koleksi
 
-**Koleksi** adalah jenis konten: *Pages*, *Blog*, *Produk*, *Acara*. **Structure → Collections** menampilkannya; **New collection** menambah yang baru.
+**Koleksi** adalah jenis konten: *Pages*, *Blog*, *Produk*, *Acara*. **Struktur → Koleksi** menampilkannya; **Tambah koleksi** membuat yang baru.
 
 | Pengaturan | |
 | --- | --- |
-| **Title** | Nama yang dilihat editor, dan pengunjung dalam bahasa utama. |
-| **Title in …** | Di situs multibahasa, satu per bahasa lain: yang dibaca pengunjung di sana (judul halaman daftar, breadcrumb, menu). Kosong: judul di atas. |
+| **Judul** | Nama yang dilihat editor, dan pengunjung dalam bahasa utama. |
+| **Judul dalam …** | Di situs multibahasa, satu per bahasa lain: yang dibaca pengunjung di sana (judul halaman daftar, breadcrumb, menu). Kosong: judul di atas. |
 | **Handle** | Kode pendek yang dipakai template, seperti `articles`: huruf kecil, angka, dan garis bawah. Bisa diubah nanti: peran tetap memegang izinnya, tetapi formulir memperingatkan tentang template dan kode yang menyebutnya, yang harus diperbarui developer. |
 | **Blueprint** | Field yang dimiliki entrinya (lihat di bawah). Menggantinya tetap mempertahankan isi entri yang sudah ada. |
-| **Other blueprints** | Blueprint lain yang bisa dipilih sebuah entri, di Page settings-nya (misalnya halaman promosi di antara halaman biasa). |
-| **Dated entries** | Entri menampilkan tanggal dan terurut dari yang terbaru, seperti artikel. |
-| **Manual order** | Editor mengurutkan entri sendiri (**Reorder** di atas daftar entri, atau panah **Move up** dan **Move down**), bukan menurut tanggal atau judul. |
-| **Hierarchical** | Entri bisa berada di bawah entri induk, seperti halaman di bawah halaman (untuk jejak halaman dan sub-menu; alamatnya tetap). |
-| **URL** | Letak entri di situs web, dengan `{slug}` untuk slug setiap entri: `/blog/{slug}`, atau `/{slug}` untuk halaman di tingkat teratas. Kosong: entri tidak punya halaman sendiri. |
-| **Template** | Desain yang dipakai entri, jika developer membuatnya. |
-| **Listing page URL**, **Listing page fields**, **Entries per listing page** | Halaman yang menampilkan daftar entri (seperti `/blog`), field khususnya (pengantar), dan jumlah entri per halaman. |
-| **Allow comments** | Pengunjung boleh mengomentari entrinya (membutuhkan URL). |
-| **Structured data type** | Jenis entri yang diberitahukan ke mesin pencari (artikel, halaman web, listing properti, atau orang, tempat, atau produk yang dibahas halaman…). |
-| **SEO from fields** | Field entri mana yang mengisi judul SEO, deskripsi, dan gambar berbagi yang kosong. |
+| **Blueprint lain** | Blueprint lain yang bisa dipilih sebuah entri, di Pengaturan halaman entri itu (misalnya halaman promosi di antara halaman biasa). Blueprint formulir dan set global tidak ditawarkan. |
+| **Bisa diterjemahkan** | Entri bisa punya versi di setiap bahasa. Mati: hanya dalam bahasa utama (berguna untuk konten yang tidak berbeda per bahasa). |
+| **Entri bertanggal** | Entri menampilkan tanggal dan terurut dari yang terbaru, seperti artikel. |
+| **Urutan manual** | Editor mengurutkan entri sendiri (**Urutkan** di atas daftar entri, atau panah di kolom **Urutan**), bukan menurut tanggal atau judul. |
+| **Hierarkis** | Entri bisa berada di bawah entri induk, seperti halaman di bawah halaman (untuk jejak halaman dan sub-menu; alamatnya tetap). |
+| **Setiap entri punya halaman sendiri** | Mati: entri tidak punya alamat, seperti FAQ atau anggota tim yang ditampilkan template. |
+| **URL entri** | Letak entri di situs web, dengan `{slug}` untuk slug setiap entri: `/blog/{slug}`, atau `/{slug}` untuk halaman di tingkat teratas. Kosong: `/{handle}/{slug}`. |
+| **Template entri** | Desain yang dipakai entri, jika developer membuatnya. |
+| **Punya halaman daftar**, **URL halaman daftar**, **Field halaman daftar**, **Entri per halaman** | Halaman yang menampilkan daftar entri (seperti `/blog`; kosong: `/{handle}`), field khususnya (pengantar), dan jumlah entri per halaman. |
+| **Izinkan komentar** | Pengunjung boleh mengomentari entrinya (membutuhkan URL). |
+| **Jenis structured data** | Jenis entri yang diberitahukan ke mesin pencari (artikel, halaman web, listing properti, atau orang, tempat, atau produk yang dibahas halaman…). |
 
-Menghapus koleksi tidak menghapus entrinya: entri hilang dari panel dan situs web. Filter **Deleted** di daftar menampilkan koleksi yang dihapus, dengan **Restore** untuk mengembalikannya.
+Menghapus koleksi tidak menghapus entrinya: entri hilang dari panel dan situs web. Tombol **Tempat sampah** di daftar menampilkan koleksi yang dihapus, dengan **Pulihkan** untuk mengembalikannya.
 
 Setiap koleksi mendapat izinnya sendiri (melihat, membuat, menyunting, menerbitkan, menghapus, dan mengekspor entrinya), sehingga sebuah peran bisa dibatasi hanya ke *Blog*, misalnya. Lihat [Pengguna dan peran](guide:panel/users-roles).
 
 ## Blueprint dan fieldset
 
-**Blueprint** adalah daftar field: apa yang diisi editor untuk entri sebuah koleksi, term sebuah taksonomi, global set, atau formulir. **Fieldset** adalah sekelompok field yang dipakai di beberapa blueprint (alamat, ajakan bertindak). Sunting di **Structure → Blueprints** dan **Fieldsets**.
+**Blueprint** adalah daftar field: apa yang diisi editor untuk entri sebuah koleksi, term sebuah taksonomi, set global, atau formulir. **Fieldset** adalah sekelompok field yang dipakai di beberapa blueprint (alamat, ajakan bertindak). Sunting di **Struktur → Blueprint** dan **Fieldset**.
 
 Untuk menambah field, pilih jenisnya, lalu atur:
 
 - **Label**: yang dilihat editor. **Handle** (cara template membaca field) dibuat dari label; mengganti handle nanti menyembunyikan nilai yang tersimpan dengan handle lama, jadi mintalah developer untuk mengganti nama field dengan aman. Field di tingkat teratas blueprint tidak bisa memakai handle yang dipakai konten itu sendiri, dan builder langsung memberi tahu saat Anda mengetik: `id`, `title`, `slug`, `url`, `status`, `locale`, `published_at`, `created_at`, `updated_at`, `parent`, `children`, `collection`, `blueprint`, `data`, `seo`, `author`.
-- **Instructions**: petunjuk yang tampil di bawah field.
-- **Required**: entri tidak bisa disimpan atau diterbitkan tanpanya.
-- **Per language**: **Yes, translated** (setiap bahasa punya isinya sendiri), **No, shared** (satu nilai untuk semua bahasa), atau **As the type decides** (teks diterjemahkan; angka, tanggal, saklar, dan media dipakai bersama).
-- **In other languages** (di situs dengan beberapa bahasa): label, petunjuk, dan pilihan daftar sebagaimana dibaca pengunjung di setiap bahasa lain. Formulir di situs web menampilkannya, dan pesan kesalahannya menyebut field dengan nama ini. Kosong: seperti yang ditulis di atas.
-- **Extra rules**: pemeriksaan untuk developer, satu per baris (misalnya `email`).
-- Pengaturan khusus tiap jenis: pilihan sebuah select, koleksi yang ditautkan field entries, jenis berkas yang diterima field media, jumlah maksimal…
+- **Petunjuk**: teks yang tampil di bawah field.
+- **Wajib**: entri tidak bisa disimpan atau diterbitkan tanpanya.
+- **Per bahasa**: **Ya, diterjemahkan** (setiap bahasa punya isinya sendiri), **Tidak, dipakai bersama** (satu nilai untuk semua bahasa), atau **Sesuai tipenya** (teks diterjemahkan; angka, tanggal, saklar, dan media dipakai bersama).
+- **Dalam bahasa lain** (di situs dengan beberapa bahasa): label, petunjuk, dan opsi pilihan sebagaimana dibaca pengunjung di setiap bahasa lain. Formulir di situs web menampilkannya, dan pesan kesalahannya menyebut field dengan nama ini. Kosong: seperti yang ditulis di atas.
+- **Aturan tambahan**: pemeriksaan opsional, satu per baris (misalnya `email` atau `max:100`; untuk developer: aturan validasi Laravel).
+- Pengaturan khusus tiap jenis: opsi sebuah field pilihan, koleksi yang ditautkan field entri, jenis berkas yang diterima field media, jumlah maksimal…
 
-Jenis-jenisnya: **Text**, **Textarea**, **Rich text**, **Number**, **Toggle**, **Select**, **Date**, **Link**, **Media**, **Entries**, **Terms**, **Group** (beberapa field bersama), **Repeater** (baris berisi field), **Flexible content** (blok berbagai jenis), **Fieldset** (menyertakan fieldset: field-nya ditambahkan di tempatnya dengan handle masing-masing; agar tetap di bawah satu nama, taruh di dalam **Group**), dan **File (forms)** (berkas yang dikirim pengunjung lewat formulir: satu, atau beberapa dengan **Several files**).
+Jenis-jenisnya: **Teks**, **Textarea**, **Teks kaya**, **Angka**, **Toggle**, **Pilihan**, **Tanggal**, **Tautan**, **Media**, **Entri**, **Term**, **Grup** (beberapa field bersama), **Repeater** (baris berisi field), **Konten fleksibel** (blok berbagai jenis), **Fieldset** (menyertakan fieldset: field-nya ditambahkan di tempatnya dengan handle masing-masing; agar tetap di bawah satu nama, taruh di dalam **Grup**), dan **File (formulir)** (berkas yang dikirim pengunjung lewat formulir: satu, atau beberapa dengan **Beberapa file**).
 
-Seret field ke urutannya lewat pegangannya (field di dalam group atau repeater di antara sesamanya), lalu klik **Save** (atau **Create blueprint** untuk yang baru). Blueprint yang masih dipakai tidak bisa dihapus. Begitu blueprint dipakai untuk entri atau term, global set, atau formulir, pilihan blueprint untuk jenis lain tidak lagi menawarkannya.
+Seret field ke urutannya lewat pegangannya (field di dalam grup atau repeater di antara sesamanya), lalu klik **Simpan** (atau **Buat blueprint** untuk yang baru). Blueprint yang masih dipakai tidak bisa dihapus. Begitu blueprint dipakai untuk entri atau term, set global, atau formulir, pilihan blueprint untuk jenis lain tidak lagi menawarkannya.
 
 ## Taksonomi
 
-**Structure → Taxonomies**: **Title** (dan **Title in …** untuk setiap bahasa lain, bagi pengunjung di halaman term-nya), **Handle** (bisa diubah nanti, seperti pada koleksi), **Nested terms** (term di bawah term lain, seperti subkategori), **Collections** yang entrinya dikelompokkan, **Term pages URL** (seperti `/topik/{slug}`; kosong: term tidak punya halaman), **Term fields** (blueprint untuk field term), **Template**, dan **SEO from fields**. Editor lalu menambahkan term di Content → Terms (lihat [Term](guide:website/terms)). Agar editor bisa memberi term pada entri, tambahkan field **Terms** ke blueprint koleksinya: itu sudah cukup agar daftar entri bisa disaring menurut taksonomi tersebut, tanpa mencentang koleksinya di sini.
+**Struktur → Taksonomi**: **Judul** (dan **Judul dalam …** untuk setiap bahasa lain, bagi pengunjung di halaman term-nya), **Handle** (bisa diubah nanti, seperti pada koleksi), **Term bertingkat** (term di bawah term lain, seperti subkategori), **Koleksi** yang entrinya dikelompokkan, **URL halaman term** (seperti `/topik/{slug}`; kosong: term tidak punya halaman), **Field term** (blueprint untuk field term), dan **Template halaman term**. Editor lalu menambahkan term di bagian Taksonomi pada sidebar (lihat [Term](guide:website/terms)). Agar editor bisa memberi term pada entri, tambahkan field **Term** ke blueprint koleksinya: itu sudah cukup agar daftar entri bisa disaring menurut taksonomi tersebut, tanpa mencentang koleksinya di sini.
 
-## Global set
+## Set global
 
-**Structure → Global sets**: **Title**, **Handle**, dan **Blueprint** untuk field set tersebut. Editor mengisinya di Content → Globals (lihat [Global](guide:website/globals)).
+**Konten → Global → Tambah set global**: **Judul**, **Handle**, dan **Blueprint** untuk field set tersebut (nanti, lewat **Pengaturan** set itu). Membuka sebuah set menampilkan isinya (lihat [Global](guide:website/globals)).
 
 ## Menu
 
-**Structure → Menu settings**: **Title** dan **Handle** (seperti `main` atau `footer`) yang dipakai template. Editor mengisinya di Content → Menus (lihat [Menu](guide:website/menus)).
+**Konten → Menu → Tambah menu**: **Judul** dan **Handle** (seperti `main` atau `footer`) yang dipakai template (nanti, lewat **Pengaturan** menu itu). Membuka sebuah menu menampilkan tautannya (lihat [Menu](guide:website/menus)).
 
 ## Formulir
 
-**Structure → Forms**: **Title**, **Handle** (bisa diubah nanti, seperti pada koleksi), **Blueprint** berisi field formulir (pengunjung mendapat field text, textarea, number, toggle, select, date, dan file), serta:
+**Struktur → Formulir**: **Judul**, **Handle** (bisa diubah nanti, seperti pada koleksi), **Blueprint** berisi field formulir (pengunjung mendapat field teks, textarea, angka, toggle, pilihan, tanggal, dan file), serta:
 
-- **Email to**: alamat yang menerima setiap kiriman, satu per baris; **Also email roles**: semua orang dengan peran ini juga.
-- **Thank-you message**: tampil setelah mengirim (di situs multibahasa, satu per bahasa lain; jika kosong, ucapan terima kasih bawaan situs dalam bahasa itu); atau **After sending, go to** halaman pilihan Anda.
-- **Sends per visitor a minute** dan **Require a captcha**, untuk mencegah spam.
+- **Email ke**: alamat yang menerima setiap kiriman, satu per baris; **Email juga ke peran**: semua orang dengan peran ini juga.
+- **Pesan terima kasih**: tampil setelah mengirim (di situs multibahasa, satu per bahasa lain; jika kosong, ucapan terima kasih bawaan situs dalam bahasa itu); atau **Lalu buka** halaman pilihan Anda.
+- **Kiriman per pengunjung per menit** dan **Wajibkan captcha**, untuk mencegah spam.
 
-Developer lalu memasang formulir di sebuah halaman. Isian pengunjung masuk ke Content → Submissions (lihat [Kiriman formulir](guide:website/submissions)).
+Developer lalu memasang formulir di sebuah halaman. Isian pengunjung masuk ke Konten → Kiriman (lihat [Kiriman formulir](guide:website/submissions)).
 
 ## Pengalihan
 
-**Structure → Redirects** menampilkan pengalihan yang dibuat saat alamat entri berubah, dan menerima pengalihan Anda sendiri: **From** alamat di situs (diawali `/`), **To** alamat di situs atau alamat web, **Moved for good (301)** (permanen) atau **For now (302)** (sementara). Halaman yang tayang selalu menang atas pengalihan dari alamatnya.
+**Struktur → Pengalihan** menampilkan pengalihan yang dibuat saat alamat entri berubah, dan menerima pengalihan Anda sendiri: **Dari** alamat di situs (diawali `/`), **Ke** alamat di situs atau alamat web, **Pindah permanen (301)** atau **Sementara (302)**. Halaman yang tayang selalu menang atas pengalihan dari alamatnya.
 
 > [!TECHNICAL]
 > Struktur bisa diekspor dan diimpor antarsitus (`sunrice:export-structure`, `sunrice:import-structure`), dan field bisa diganti namanya dengan aman (`sunrice:rename-field`). Lihat [Structure tools](docs:cms/structure) dan [Fields](docs:cms/fields).

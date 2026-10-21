@@ -35,8 +35,10 @@ final class SubmissionController
         $first = Form::query()->orderBy('title')->get()->first(fn (Form $form): bool => Access::submissions($request->user(), 'view', $form));
 
         return $first === null
-            ? Inertia::render('Cms/Submissions/Index', ['form' => null, 'forms' => [], 'submissions' => null, 'can' => ['delete' => false, 'export' => false]])
-            : redirect()->route('sunrice.admin.cms.submissions.index', $first->handle);
+            ? Inertia::render('Cms/Submissions/Index', ['form' => null, 'forms' => [], 'submissions' => null, 'can' => ['delete' => false, 'export' => false],
+                // No forms yet: where to make one, for those who may.
+                'createForm' => $request->user()?->can('cms.forms.create') === true ? route('sunrice.admin.cms.forms.create', [], false) : null])
+            : redirect()->route('sunrice.admin.cms.forms.submissions.index', $first->handle);
     }
 
     public function index(Request $request, Form $form): Response

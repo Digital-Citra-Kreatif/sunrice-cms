@@ -314,7 +314,7 @@ final class EntryList
     {
         $columns = [];
         foreach (self::COLUMNS as $key => $label) {
-            $columns[$key] = ['key' => $key, 'label' => $label, 'sortable' => true, 'field' => false];
+            $columns[$key] = ['key' => $key, 'label' => __($label), 'sortable' => true, 'field' => false];
         }
         foreach ($this->fields as $handle => $column) {
             $columns[self::FIELD.$handle] = ['key' => self::FIELD.$handle, 'label' => $column['label'], 'sortable' => $column['sortable'], 'field' => true];
@@ -362,23 +362,23 @@ final class EntryList
         $links = [];
         $collection = $this->collection;
         if ($collection->listing_route !== null) {
-            $links[] = ['group' => 'Listing page', 'label' => 'Edit the listing page', 'href' => route('sunrice.admin.cms.listings.edit', $collection->handle)];
+            $links[] = ['group' => __('Listing page'), 'label' => __('Edit the listing page'), 'href' => route('sunrice.admin.cms.collections.listing.edit', $collection->handle)];
             $url = $collection->listingUrl(Locales::default());
             if ($url !== null) {
-                $links[] = ['group' => 'Listing page', 'label' => 'View the listing page', 'href' => $url, 'external' => true];
+                $links[] = ['group' => __('Listing page'), 'label' => __('View the listing page'), 'href' => $url, 'external' => true];
             }
         }
         foreach ($this->taxonomies() as $taxonomy) {
-            if (Access::terms($user, $taxonomy)) {
-                $links[] = ['group' => 'Terms', 'label' => $taxonomy->title, 'href' => route('sunrice.admin.cms.terms.index', $taxonomy->handle)];
+            if (Access::terms($user, 'view', $taxonomy)) {
+                $links[] = ['group' => __('Terms'), 'label' => $taxonomy->title, 'href' => route('sunrice.admin.cms.taxonomies.terms.index', $taxonomy->handle)];
             }
         }
         if ($user?->can('cms.collections.update') === true) {
-            $links[] = ['group' => 'Structure', 'label' => 'Collection settings', 'href' => route('sunrice.admin.resources.collections.edit', $collection->id)];
+            $links[] = ['group' => __('Structure'), 'label' => __('Collection settings'), 'href' => route('sunrice.admin.cms.collections.edit', $collection->handle)];
         }
-        $blueprint = $user?->can('cms.blueprints.manage') === true ? $collection->blueprintModel() : null;
+        $blueprint = $user?->can('cms.blueprints.update') === true ? $collection->blueprintModel() : null;
         if ($blueprint !== null) {
-            $links[] = ['group' => 'Structure', 'label' => "Blueprint: {$blueprint->title}", 'href' => route('sunrice.admin.cms.blueprints.edit', $blueprint->id)];
+            $links[] = ['group' => __('Structure'), 'label' => __('Blueprint: :title', ['title' => $blueprint->title]), 'href' => route('sunrice.admin.cms.blueprints.edit', $blueprint->handle)];
         }
 
         return $links;
@@ -399,11 +399,14 @@ final class EntryList
      * null where it has no translation yet, and whether the main language
      * changed since it was translated (EntryTranslation::isOutdated()).
      *
+     * Only those it has in a collection that isn't translatable.
+     *
      * @return list<array{code: string, name: string, main: bool, status: string|null, outdated: bool}>
      */
     public static function locales(Entry $entry): array
     {
         $main = $entry->mainTranslation();
+        $codes = $entry->collection->translatable ? Locales::all() : array_values(array_filter(Locales::all(), fn (string $code): bool => $entry->translation($code) !== null));
 
         return array_map(fn (string $code): array => [
             'code' => $code,
@@ -411,7 +414,7 @@ final class EntryList
             'main' => $main?->locale === $code,
             'status' => ($translation = $entry->translation($code)) === null ? null : $translation->status(),
             'outdated' => $translation?->isOutdated() ?? false,
-        ], Locales::all());
+        ], $codes);
     }
 
     /** @param Builder<EntryTranslation> $query */
@@ -544,7 +547,7 @@ final class EntryList
             return null;
         }
         $text = match ($column['kind']) {
-            'toggle' => $value === true || $value === 1 || $value === '1' ? 'Yes' : 'No',
+            'toggle' => $value === true || $value === 1 || $value === '1' ? self::said(__('Yes'), 'Yes') : self::said(__('No'), 'No'),
             'select' => FieldText::text($value, $column['field']),
             'entries' => implode(', ', array_map(fn (mixed $id): string => is_scalar($id) ? ($titles[(int) $id] ?? '#'.$id) : '', (array) $value)),
             // Long numbers grouped in the list (18,500,000,000), as typed in the CSV.
@@ -613,7 +616,7 @@ final class EntryList
                 // As the base type, with a custom field's preset (a select's options).
                 'field' => new Field($field->handle, $base, $field->label, config: $config),
                 'kind' => $kind,
-                'label' => in_array(mb_strtolower($label), $taken, true) ? "{$label} (field)" : $label,
+                'label' => in_array(mb_strtolower($label), $taken, true) ? self::said(__(':label (field)', ['label' => $label]), "{$label} (field)") : $label,
                 'sortable' => $kind !== 'entries' && ! $multiple,
                 'translatable' => $schema->isTranslatable($field),
             ];
@@ -706,5 +709,11 @@ final class EntryList
         $walk(0, 0);
 
         return $out;
+    }
+
+    /** What __() said, or the English when it gave something else. */
+    private static function said(mixed $said, string $english): string
+    {
+        return is_string($said) ? $said : $english;
     }
 }

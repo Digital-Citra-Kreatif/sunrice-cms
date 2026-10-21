@@ -1,62 +1,55 @@
 # Pengaturan situs
 
-Situs web menambahkan empat bagian ke **Settings** di bawah Administration: **Site**, **Languages**, **Site code**, dan **Comments**. Masing-masing adalah izin tersendiri, jadi mungkin Anda hanya melihat sebagian. Bagian milik panel (**Branding**, **Security**, dan **Mail**) dijelaskan di [Pengaturan](guide:panel/settings).
+Situs web menambahkan empat bagian ke **Pengaturan** di bawah Administrasi: **Situs**, **Bahasa**, **Kode situs**, dan **Komentar**. Masing-masing adalah izin tersendiri, jadi mungkin Anda hanya melihat sebagian. Bagian milik panel (**Branding**, **Keamanan**, dan **Email**) dijelaskan di [Pengaturan](guide:panel/settings).
 
-Pengaturan langsung berlaku begitu Anda mengeklik **Save**.
+Pengaturan langsung berlaku begitu Anda mengeklik **Simpan**.
 
-## Site
+## Situs
 
-- **Homepage** (beranda): halaman yang tampil di alamat utama situs web (`/`), dalam setiap bahasa tempat entri itu terbit; ketik untuk mencari halaman yang sudah tayang. Alamat entri itu sendiri dialihkan ke sana. Editor juga bisa menekan **Make this the homepage** di kartu Status halaman yang sudah tayang.
+- **Beranda**: halaman yang tampil di alamat utama situs web (`/`), dalam setiap bahasa tempat entri itu terbit; ketik untuk mencari halaman yang sudah tayang. Alamat entri itu sendiri dialihkan ke sana. Editor juga bisa menekan **Jadikan beranda** di kartu Status halaman yang sudah tayang.
 
-**Search and sharing**, untuk halaman yang tidak mengatur sendiri (lihat [SEO](guide:website/seo)):
+**Situs**, untuk halaman yang tidak mengatur sendiri:
 
-- **Site name**: ditambahkan ke judul halaman dan tampil saat halaman dibagikan. Kosong: nama yang diatur developer.
-- **Description** dan **Share image**: dipakai jika halaman tidak punya sendiri.
-- **Title separator**: pemisah antara judul halaman dan nama situs (`|` dalam "Tentang | Acme").
-- **Add the site name to titles**: "Tentang | Acme" di hasil pencarian dan tab peramban.
-- **X (Twitter) account**: akun situs, seperti `@acme`, untuk tautan yang dibagikan.
-- **Hide the whole site from search engines**: untuk situs yang masih dibangun. Semua halaman meminta tidak diindeks dan peta situs kosong. Matikan saat situs mulai tayang.
+- **Nama situs**: ditambahkan ke judul halaman dan tampil saat halaman dibagikan. Kosong: nama yang diatur developer.
+- **Deskripsi**: dipakai jika halaman tidak punya sendiri.
 
-**Structured data**: **Add structured data to pages** (biarkan menyala kecuali ada alasan), apakah situs diterbitkan oleh organisasi atau perorangan (**Published by**), dan **Logo** organisasi (persegi atau melebar, minimal 112 piksel). Mesin pencari juga menyukai detail penerbit: **Name** (kosong: nama situs), **Kind of organization** sebagai jenis schema.org yang ditulis satu kata (*LocalBusiness*, *RealEstateAgent*, *Restaurant*…), **Phone**, **Address**, dan **Profiles elsewhere** (halaman Instagram, LinkedIn… penerbit, satu alamat per baris).
+Gambar berbagi, nama situs di judul beserta pemisahnya, akun X (Twitter), dan menyembunyikan seluruh situs dari mesin pencari ada di halaman **SEO** (di bawah Struktur pada sidebar; lihat [SEO](guide:website/seo)).
 
-## Languages
+**Structured data**: **Tambahkan structured data ke halaman** (biarkan menyala kecuali ada alasan), apakah situs diterbitkan oleh organisasi atau perorangan (**Diterbitkan oleh**), dan **Logo** organisasi (persegi atau melebar, minimal 112 piksel). Mesin pencari juga menyukai detail penerbit: **Nama** (kosong: nama situs), **Jenis organisasi** sebagai jenis schema.org yang ditulis satu kata (*LocalBusiness*, *RealEstateAgent*, *Restaurant*…), **Telepon**, **Alamat**, dan **Profil di tempat lain** (halaman Instagram, LinkedIn… penerbit, satu alamat per baris).
 
-**Content languages** berisi bahasa tempat konten ditulis, satu per baris: kode yang dipakai di alamat, titik dua, dan namanya:
+## Bahasa
 
-```
-en: English
-id: Bahasa Indonesia
-```
+**Bahasa konten** berisi bahasa tempat konten ditulis, satu baris untuk tiap bahasa: **kode** yang dipakai di alamat (`id`) dan **nama** yang dilihat editor (`Bahasa Indonesia`). **Tambah bahasa** menambah baris; mengetik kode akan menyarankan bahasa umum dan mengisi namanya. **Alamat** adalah awalan alamat halaman bahasa itu: kosongkan untuk yang biasa (bahasa utama di `/about`, yang lain di `/id/about`), atau isi sendiri, misalnya `en` agar bahasa utama juga di `/en/about`. Tanda panah mengubah urutan, dan × menghapus baris.
 
-Baris pertama adalah **bahasa utama**, di alamat biasa (`/about`); bahasa lain diawali kodenya (`/id/about`). Sebelum disimpan, kotak ini menampilkan bahasa yang dipakai situs saat disiapkan. Panel menolak daftar kosong, baris yang bukan kode bahasa, dan bahasa yang tercantum dua kali.
+Baris pertama adalah **bahasa utama** (bertanda *Utama*), di alamat biasa (`/about`); bahasa lain diawali kodenya (`/id/about`). Sebelum disimpan, daftar ini menampilkan bahasa yang dipakai situs saat disiapkan. Panel menolak daftar kosong, baris yang bukan kode bahasa, dan bahasa yang tercantum dua kali.
 
 - **Menambah bahasa** membuatnya tersedia di bilah bahasa penyunting. Tidak ada yang diterjemahkan otomatis.
 - **Menghapus bahasa** menyembunyikan kontennya (tidak ada yang dihapus); tambahkan kembali untuk memunculkan kontennya lagi.
-- **Mengganti bahasa utama** setelah ada konten: pakai **Make … the main language** di kartu **Main language** di bawah formulir. Semuanya dipindahkan dengan aman, dan alamat berubah (bahasa utama baru kehilangan kodenya, yang lama mendapatkannya; alamat lama dialihkan). Setiap entri dan term perlu terjemahan dalam bahasa utama yang baru terlebih dahulu; panel memberi tahu berapa yang belum.
+- **Mengganti bahasa utama** setelah ada konten: pakai **Jadikan … bahasa utama** di kartu **Bahasa utama** di bawah formulir. Semuanya dipindahkan dengan aman, dan alamat berubah (bahasa utama baru kehilangan kodenya, yang lama mendapatkannya; alamat lama dialihkan). Setiap entri dan term perlu terjemahan dalam bahasa utama yang baru terlebih dahulu; panel memberi tahu berapa yang belum.
 
 Lihat [Bahasa](guide:website/languages) untuk bekerja dengan terjemahan.
 
-## Site code
+## Kode situs
 
-Kode dari layanan lain yang ditambahkan ke setiap halaman situs web apa adanya: analitik, widget obrolan, tag verifikasi dari mesin pencari. Tempelkan sesuai petunjuk layanannya: **In the `<head>`**, **At the start of the `<body>`**, atau **At the end of the `<body>`**.
+Kode dari layanan lain yang ditambahkan ke setiap halaman situs web apa adanya: analitik, widget obrolan, tag verifikasi dari mesin pencari. Tempelkan sesuai petunjuk layanannya: **Di dalam `<head>`**, **Di awal `<body>`**, atau **Di akhir `<body>`**.
 
 > [!WARNING]
 > Kode di sini berjalan di peramban setiap pengunjung. Tempelkan hanya kode dari layanan yang Anda percayai, dan berikan izin ini hanya kepada orang yang Anda percayai untuk seluruh situs web. Setiap perubahan dicatat dan diemailkan kepada penerima peringatan keamanan.
 
-## Comments
+## Komentar
 
 Cara kerja komentar pengunjung pada koleksi yang mengizinkannya (lihat [Komentar](guide:website/comments)):
 
 | Pengaturan | |
 | --- | --- |
-| **New comments** | **Hold a commenter's first comment for approval** (pilihan umum: setelah Anda menyetujui satu komentar seseorang, komentar berikutnya langsung tampil), **Hold every comment for approval** (semua komentar menunggu persetujuan), atau **Publish comments at once** (langsung tayang). Komentar dari moderator selalu langsung tayang. |
-| **Only signed-in users can comment** | Pengunjung tanpa akun bisa melihat komentar, tetapi tidak melihat formulirnya. |
-| **Ask for a captcha** | Pemeriksaan "buktikan Anda manusia", jika developer sudah menyiapkannya. |
-| **Comments per visitor a minute** | Mencegah banjir komentar. |
-| **Close comments after (days)** | Jumlah hari setelah tanggal terbit entri; kosong: tidak pernah. |
-| **Reply levels shown** | Balasan yang lebih dalam dijajarkan di tingkat terakhir, agar utas tetap mudah dibaca di ponsel. |
-| **Email moderators about new comments** | Orang yang boleh memoderasi komentar, dan alamat di **Also email**. |
-| **Also email roles** | Semua orang dengan peran ini juga. |
-| **Let commenters get an email when someone replies** | Menambahkan kotak centang di formulir komentar. |
+| **Komentar baru** | **Tahan komentar pertama seseorang untuk disetujui** (pilihan umum: setelah Anda menyetujui satu komentar seseorang, komentar berikutnya langsung tampil), **Tahan setiap komentar untuk disetujui**, atau **Terbitkan komentar langsung**. Komentar dari moderator selalu langsung tayang. |
+| **Hanya pengguna yang masuk yang bisa berkomentar** | Pengunjung tanpa akun bisa melihat komentar, tetapi tidak melihat formulirnya. |
+| **Minta captcha** | Pemeriksaan "buktikan Anda manusia", jika developer sudah menyiapkannya. |
+| **Komentar per pengunjung per menit** | Mencegah banjir komentar. |
+| **Tutup komentar setelah (hari)** | Jumlah hari setelah tanggal terbit entri; kosong: tidak pernah. |
+| **Tingkat balasan yang ditampilkan** | Balasan yang lebih dalam dijajarkan di tingkat terakhir, agar utas tetap mudah dibaca di ponsel. |
+| **Email moderator tentang komentar baru** | Orang yang boleh memoderasi komentar, dan alamat di **Email juga ke**. |
+| **Email juga ke peran** | Semua orang dengan peran ini juga. |
+| **Izinkan pemberi komentar menerima email saat ada yang membalas** | Menambahkan kotak centang di formulir komentar. |
 
 Spam terhapus otomatis setelah beberapa waktu.

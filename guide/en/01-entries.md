@@ -1,6 +1,6 @@
 # Entries
 
-Entries are the website's content: pages, articles, products, events. Each entry belongs to a **collection**, and the collection's fields decide what you fill in. Open **Entries** under Content to work with them.
+Entries are the website's content: pages, articles, products, events. Each entry belongs to a **collection**, and the collection's fields decide what you fill in. Each collection has its own item under **Content** in the sidebar (**Blog**, **Pages** …): open it to work with its entries.
 
 ## The list
 
@@ -40,17 +40,18 @@ From then on, **Save draft** keeps your work (or press **Ctrl S** / **⌘ S**). 
 - **Link** fields take a web address, or another entry (choose **Entry** to follow its address even if it changes).
 - **Groups**, **repeaters** and **flexible** fields hold several fields together; repeaters and flexible fields add rows or blocks, which you drag into order by their handle. Each row or block is named by its first text; click its name to fold it away (**Collapse all** folds the whole list), and switch off **Visible on site** to keep it here but leave it out of the page.
 
-The editor's cards (groups, **Search and sharing**, and the cards on the right) fold away when you click their title. The panel remembers which ones you folded, and opens a card by itself when a field inside it has an error.
+The editor's cards (groups, **SEO**, and the cards on the right) fold away when you click their title. The panel remembers which ones you folded, and opens a card by itself when a field inside it has an error.
 
 ## Drafts and publishing
 
 Every entry has a **draft**, which you edit, and a **live** version, which visitors see. The live version changes only when you publish.
 
 - **Publish** puts the draft on the website. For an entry already live, the button says **Publish changes**; it says **Published** when there's nothing new.
-- The arrow next to it has **Publish on a date…**: choose a date and time (in your time zone) and the entry goes live then. The picker starts on tomorrow, and the time is on the 24-hour clock (type `14:30`). Until then its status is **Scheduled**, and the button says **Scheduled for …**: press it to change the date; the arrow also has **Publish now** and **Unschedule (back to draft)**. A date in the past asks first, then publishes now, with that date (to back-date a post).
+- The **Status** card beside the fields has the **Publish date**: choose a date and time (in your time zone, on the 24-hour clock: type `14:30`) and press **Schedule**; the entry goes live then, and until then its status is **Scheduled**. A date in the past publishes now, with that date (to back-date a post). On a live or scheduled entry, change the date and press **Change date** (or **Reschedule**): only the date changes, your draft isn't published; a date to come takes it off the site until then. **Unpublish** is there too.
+- The arrow next to **Publish** has **Publish on a date…** too (the picker starts on tomorrow; a date in the past asks first). While an entry is scheduled, the button says **Scheduled for …**: press it to change the date; the arrow also has **Publish now** and **Unschedule (back to draft)**.
 - **Unpublish** (same menu) takes the entry off the website; it becomes a draft again. Publishing it again keeps its original date.
 
-The **Status** card on the right says whether the entry is a draft, scheduled or published (and since when), and warns when *The draft has changes the site doesn't show yet*. In collections with dates (like a journal), it also has the entry's **Date**: change it and press **Change the date** to back-date a published post or move it, without publishing your draft; a date to come takes it off the site until then. A draft gets its date when it's published (**Publish on a date…** with an earlier date back-dates it).
+The **Status** card on the right says whether the entry is a draft, scheduled or published (and since when), and warns when *The draft has changes the site doesn't show yet*.
 
 > [!NOTE]
 > If your role can write but not publish (the *author* role, for example), you save drafts and someone else publishes them. When a draft is ready, click **Submit for review**: it's saved, everyone who can publish it gets an email, and it appears under **Waiting for review** on their dashboard. The entry shows a **Waiting for review** badge until someone publishes it.
@@ -58,7 +59,7 @@ The **Status** card on the right says whether the entry is a draft, scheduled or
 ## Seeing your work on the website
 
 - **Preview** opens the saved draft as it will look on the website, in a new tab. Save first: the preview shows what's saved, not what's on your screen. The preview link works for 30 minutes, and anyone you send it to can open it in that time; a dark ribbon at the top says it's a preview. Collections whose entries have no page of their own (testimonials, say) have no Preview.
-- **View** opens the live page.
+- **View page** opens the live page.
 - If your role may see drafts on the site, live pages with unpublished changes show you a small banner while you're signed in, with **View draft**. Visitors never see it.
 
 ## Page settings
@@ -84,8 +85,10 @@ Every publish keeps a **revision**: a copy of what was published, with the date 
 
 ## More actions
 
+The **⋯** button next to **Save draft** holds the rest:
+
 - **Duplicate** copies the entry, in every language, as a new draft titled "… (copy)". Until it's first published, renaming it renames its slug too (unless you typed a slug of your own).
-- The bin button **moves it to the trash**: it comes off the website and out of the list, in every language, and can be restored. If other content uses it, the panel names where first.
+- **Move to trash** takes it off the website and out of the list, in every language, and can be restored. If other content uses it, the panel names where first.
 - In the trash, an entry has **Restore** and **Delete for good** (everything, in every language, with its revisions; this can't be undone).
 
 ## When someone else is editing

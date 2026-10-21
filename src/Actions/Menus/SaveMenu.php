@@ -96,9 +96,9 @@ final class SaveMenu
             $rules["{$key}.labels.".Locales::default()][] = "required_with:{$key}.url";
             $rules["{$key}.query"] = ['nullable', 'string', 'max:500', function (string $attribute, mixed $value, \Closure $fail) use ($item): void {
                 if (! is_array($item) || ! is_numeric($item['collection_id'] ?? null)) {
-                    $fail('Only a link to a listing page takes filters.');
+                    $fail(__('Only a link to a listing page takes filters.'));
                 } elseif (self::queryString($value) === null) {
-                    $fail('Write the filters as on the listing page\'s address: listing_type=for-sale&city=jakarta.');
+                    $fail(__('Write the filters as on the listing page\'s address: listing_type=for-sale&city=jakarta.'));
                 }
             }];
             $rules["{$key}.new_tab"] = ['nullable', 'boolean'];

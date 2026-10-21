@@ -27,7 +27,7 @@ final class ChangePublishDate
     public function handle(EntryTranslation $translation, DateTimeInterface $date): EntryTranslation
     {
         if (! $translation->isPublished()) {
-            throw ValidationException::withMessages(['published_at' => 'Only a published entry has a date to change: publish it on a date instead.']);
+            throw ValidationException::withMessages(['published_at' => __('Only a published entry has a date to change: publish it on a date instead.')]);
         }
         $wasLive = $translation->isLive();
         $translation->published_at = Carbon::instance($date);

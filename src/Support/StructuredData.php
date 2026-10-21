@@ -57,7 +57,7 @@ final class StructuredData
     {
         $site = app(SiteSettings::class);
         $locale = $page->locale ?? app()->getLocale();
-        $home = url($locale === Locales::default() ? '/' : '/'.$locale);
+        $home = url(Locales::prefix($locale) ?: '/');
         $person = $site->publisher === 'Person';
         $type = $person ? 'Person' : (preg_match('/^[A-Z][A-Za-z]{2,59}$/', $site->publisherType) === 1 ? $site->publisherType : 'Organization');
         $name = trim($site->publisherName) !== '' ? trim($site->publisherName) : $site->name();
@@ -180,7 +180,7 @@ final class StructuredData
 
         $nodes = [$node];
         if ($crumbs !== [] && ! $page->home) {
-            $items = [[__('sunrice-cms::site.home', [], $page->locale), url($page->locale === Locales::default() ? '/' : '/'.$page->locale)], ...$crumbs];
+            $items = [[__('sunrice-cms::site.home', [], $page->locale), url(Locales::prefix($page->locale) ?: '/')], ...$crumbs];
             $list = [];
             foreach ($items as $i => [$name, $item]) {
                 $list[] = ['@type' => 'ListItem', 'position' => $i + 1, 'name' => $name, 'item' => $item];

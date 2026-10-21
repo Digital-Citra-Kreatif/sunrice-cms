@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
+use Sunrice\Cms\Admin\HandleField;
 use Sunrice\Cms\Fields\DefinitionValidator;
 use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Models\Blueprint;
@@ -37,7 +38,7 @@ final class SaveBlueprint
         $blueprint ??= new Blueprint;
         /** @var array{handle?: string, title: string} $validated */
         $validated = Validator::make($input, [
-            'handle' => $blueprint->exists ? ['prohibited'] : ['required', 'string', 'max:64', new HandleRule, Rule::unique($blueprint->getTable(), 'handle')],
+            'handle' => $blueprint->exists ? ['prohibited'] : ['required', 'string', 'max:64', new HandleRule, Rule::notIn(HandleField::RESERVED), Rule::unique($blueprint->getTable(), 'handle')],
             'title' => ['required', 'string', 'max:255'],
         ])->validate();
         $fields = $this->definitions->validate($input['fields'] ?? null, reserved: Blueprint::RESERVED);

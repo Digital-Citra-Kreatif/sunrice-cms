@@ -31,6 +31,7 @@ use Sunrice\Cms\Http\Controllers\GlobalsController;
 use Sunrice\Cms\Http\Controllers\LanguageController;
 use Sunrice\Cms\Http\Controllers\ListingController;
 use Sunrice\Cms\Http\Controllers\MenuController;
+use Sunrice\Cms\Http\Controllers\SeoController;
 use Sunrice\Cms\Http\Controllers\SubmissionController;
 use Sunrice\Cms\Http\Controllers\TermController;
 use Sunrice\Cms\Http\Middleware\AuthorizeContent;
@@ -89,7 +90,7 @@ final class CmsPlugin extends BasePlugin
         // Every screen names the languages as Settings → Languages does.
         $panel->share('cms', fn (): array => ['locales' => Locales::names()]);
         // sunrice:roles: people who write and look after the content, not the structure or the people.
-        $panel->defaultRole('editor', [Panel::ACCESS, 'sunrice.media.*', 'cms.entries.*', 'cms.terms.*', 'cms.globals.*', 'cms.menus.view', 'cms.menus.update', 'cms.comments.*', 'cms.submissions.view', 'cms.submissions.export', 'cms.homepage']);
+        $panel->defaultRole('editor', [Panel::ACCESS, 'sunrice.media.*', 'cms.entries.*', 'cms.terms.*', 'cms.globals.view', 'cms.globals.update', 'cms.menus.view', 'cms.menus.update', 'cms.comments.*', 'cms.submissions.view', 'cms.submissions.export', 'cms.homepage']);
         // Writes entries, publishes nothing, and edits only their own.
         $panel->defaultRole('author', [Panel::ACCESS, 'sunrice.media.view', 'sunrice.media.upload', 'cms.entries.view', 'cms.entries.create', 'cms.entries.update-own', 'cms.entries.delete-own', 'cms.entries.view-drafts']);
         // Writes the other languages of every entry.
@@ -106,9 +107,10 @@ final class CmsPlugin extends BasePlugin
             Permission::make('cms.entries.delete-own', 'Trash their own entries (in collections they may view)', 'Content'),
             Permission::make('cms.entries.translate', 'Edit entries\' other languages (not the main one)', 'Content'),
             Permission::make('cms.entries.view-drafts', 'See unpublished changes on the site while signed in', 'Content'),
-            Permission::make('cms.terms.manage', 'Manage terms', 'Content'),
-            Permission::make('cms.globals.view', 'View globals', 'Content'),
-            Permission::make('cms.globals.update', 'Edit globals', 'Content'),
+            Permission::make('cms.terms.view', 'View terms', 'Content'),
+            Permission::make('cms.terms.create', 'Create terms', 'Content'),
+            Permission::make('cms.terms.update', 'Edit terms', 'Content'),
+            Permission::make('cms.terms.delete', 'Trash and delete terms', 'Content'),
             Permission::make('cms.comments.view', 'View comments', 'Content'),
             Permission::make('cms.comments.moderate', 'Approve, answer and edit comments, mark spam', 'Content'),
             Permission::make('cms.comments.delete', 'Trash and delete comments', 'Content'),
@@ -116,109 +118,145 @@ final class CmsPlugin extends BasePlugin
             Permission::make('cms.submissions.export', 'Export form submissions as CSV', 'Content'),
             Permission::make('cms.submissions.delete', 'Delete form submissions', 'Content'),
             Permission::make('cms.homepage', 'Choose the homepage (from a live page\'s editor)', 'Content'),
-            Permission::make('cms.blueprints.manage', 'Manage blueprints and fieldsets', 'Content structure'),
+            Permission::make('cms.blueprints.view', 'View blueprints', 'Content structure'),
+            Permission::make('cms.blueprints.create', 'Create blueprints', 'Content structure'),
+            Permission::make('cms.blueprints.update', 'Edit blueprints', 'Content structure'),
+            Permission::make('cms.blueprints.delete', 'Delete blueprints', 'Content structure'),
+            Permission::make('cms.fieldsets.view', 'View fieldsets', 'Content structure'),
+            Permission::make('cms.fieldsets.create', 'Create fieldsets', 'Content structure'),
+            Permission::make('cms.fieldsets.update', 'Edit fieldsets', 'Content structure'),
+            Permission::make('cms.fieldsets.delete', 'Delete fieldsets', 'Content structure'),
         );
+        // Each collection under Content, each taxonomy under Taxonomies (from the cached handles).
+        $panel->navigationUsing(fn (): array => [
+            ...array_map(fn (string $handle, array $collection): NavigationItem => NavigationItem::make("cms-collection-{$handle}")
+                ->label($collection['title'])->verbatim()->url("cms/collections/{$handle}/entries")->icon($collection['listing'] ? 'newspaper' : 'file-text')
+                ->group('Content')->sort(10)->visible(fn (Authorizable $user): bool => Access::entries($user, 'view', $handle)),
+                array_keys(Support\Handles::collectionTitles()), Support\Handles::collectionTitles()),
+            ...array_map(fn (string $handle, string $title): NavigationItem => NavigationItem::make("cms-taxonomy-{$handle}")
+                ->label($title)->verbatim()->url("cms/taxonomies/{$handle}/terms")->icon('tag')
+                ->group('Taxonomies')->sort(60)->visible(fn (Authorizable $user): bool => Access::terms($user, 'view', $handle)),
+                array_keys(Support\Handles::taxonomyTitles()), Support\Handles::taxonomyTitles()),
+        ]);
         $panel->navigation(
-            NavigationItem::make('cms-entries')->label('Entries')->url('cms/entries')->icon('file-text')
-                ->group('Content')->sort(10)->visible(fn (Authorizable $user): bool => Access::entries($user, 'view')),
-            NavigationItem::make('cms-terms')->label('Terms')->url('cms/terms')->icon('tags')
-                ->group('Content')->sort(20)->visible(fn (Authorizable $user): bool => Access::terms($user)),
-            NavigationItem::make('cms-globals')->label('Globals')->url('cms/globals')->icon('globe')
-                ->group('Content')->sort(30)->permission('cms.globals.view'),
-            NavigationItem::make('cms-menus')->label('Menus')->url('cms/menus')->icon('list-tree')
-                ->group('Content')->sort(40)->permission('cms.menus.view'),
             NavigationItem::make('cms-comments')->label('Comments')->url('cms/comments')->icon('message-square')
                 ->group('Content')->sort(45)->permission('cms.comments.view'),
             NavigationItem::make('cms-submissions')->label('Submissions')->url('cms/submissions')->icon('inbox')
                 ->group('Content')->sort(50)->visible(fn (Authorizable $user): bool => Access::submissions($user, 'view')),
+            NavigationItem::make('cms-seo')->label('SEO')->url('cms/seo')->icon('search')
+                ->group('Structure')->sort(99)->permission('cms.settings.site'),
             NavigationItem::make('cms-blueprints')->label('Blueprints')->url('cms/blueprints')->icon('layout-template')
-                ->group('Structure')->sort(91)->permission('cms.blueprints.manage'),
+                ->group('Structure')->sort(91)->permission('cms.blueprints.view'),
             NavigationItem::make('cms-fieldsets')->label('Fieldsets')->url('cms/fieldsets')->icon('blocks')
-                ->group('Structure')->sort(92)->permission('cms.blueprints.manage'),
+                ->group('Structure')->sort(92)->permission('cms.fieldsets.view'),
         );
+        // Names follow the addresses: sunrice.admin.cms.{area}.{action}, and what a
+        // collection, taxonomy or form owns under it (cms.collections.entries.*).
         $panel->routes(function (): void {
-            Route::middleware('can:cms.blueprints.manage')->prefix('cms')->name('cms.')->group(function (): void {
-                Route::resource('blueprints', BlueprintController::class)->except('show');
-                Route::resource('fieldsets', FieldsetController::class)->except('show');
-            });
-            Route::post('cms/languages/{locale}/main', [LanguageController::class, 'main'])->name('cms.languages.main')
-                ->middleware('can:cms.settings.locales')->where('locale', '[A-Za-z0-9_-]{2,20}');
-            Route::prefix('cms')->name('cms.menus.')->controller(MenuController::class)->group(function (): void {
-                Route::get('menus', 'index')->name('index')->middleware('can:cms.menus.view');
-                Route::get('menus/{menu:handle}', 'edit')->name('edit')->middleware('can:cms.menus.view');
-                Route::put('menus/{menu:handle}', 'update')->name('update')->middleware('can:cms.menus.update');
-            });
-            Route::prefix('cms')->name('cms.comments.')->controller(CommentController::class)->group(function (): void {
-                Route::get('comments', 'index')->name('index')->middleware('can:cms.comments.view');
-                Route::post('comments/bulk', 'bulk')->name('bulk')->middleware('can:cms.comments.view');
-                Route::post('comments/{comment}/status', 'status')->name('status')->middleware('can:cms.comments.moderate');
-                Route::post('comments/{comment}/reply', 'reply')->name('reply')->middleware('can:cms.comments.moderate');
-                Route::put('comments/{comment}', 'update')->name('update')->middleware('can:cms.comments.moderate');
-                Route::delete('comments/{comment}', 'destroy')->name('destroy')->middleware('can:cms.comments.delete');
-                Route::post('comments/{comment}/restore', 'restore')->name('restore')->middleware('can:cms.comments.delete')->withTrashed();
-                Route::delete('comments/{comment}/force', 'forceDelete')->name('force')->middleware('can:cms.comments.delete')->withTrashed();
-            });
-            Route::prefix('cms')->name('cms.submissions.')->controller(SubmissionController::class)->group(function (): void {
-                Route::get('submissions', 'home')->name('home')->middleware(AuthorizeContent::class.':submissions,view');
-                Route::get('forms/{form:handle}/submissions', 'index')->name('index')->middleware(AuthorizeContent::class.':submissions,view');
-                Route::get('forms/{form:handle}/submissions/export', 'export')->name('export')->middleware(AuthorizeContent::class.':submissions,export');
-                Route::delete('submissions/{submission}', 'destroy')->name('destroy')->middleware(AuthorizeContent::class.':submissions,delete');
-                Route::get('submissions/{submission}/files/{field}', 'file')->name('file')->middleware(AuthorizeContent::class.':submissions,view');
-            });
-            Route::prefix('cms')->name('cms.globals.')->controller(GlobalsController::class)->group(function (): void {
-                Route::get('globals', 'index')->name('index')->middleware('can:cms.globals.view');
-                Route::get('globals/{set:handle}', 'edit')->name('edit')->middleware('can:cms.globals.view');
-                Route::put('globals/{set:handle}', 'update')->name('update')->middleware('can:cms.globals.update');
-            });
-            Route::prefix('cms')->name('cms.terms.')->controller(TermController::class)->middleware(AuthorizeContent::class.':terms')->group(function (): void {
-                Route::get('terms', 'home')->name('home');
-                Route::get('taxonomies/{taxonomy:handle}/terms', 'index')->name('index');
-                Route::post('taxonomies/{taxonomy:handle}/terms', 'store')->name('store');
-                Route::put('terms/{term}', 'update')->name('update');
-                Route::post('terms/{term}/move', 'move')->name('move');
-                Route::post('terms/reorder', 'reorder')->name('reorder');
-                Route::delete('terms/{term}', 'destroy')->name('destroy');
-                Route::post('terms/{term}/restore', 'restore')->name('restore')->withTrashed();
-                Route::delete('terms/{term}/force', 'forceDelete')->name('force-delete')->withTrashed();
-                Route::get('terms/{term}/edit', 'edit')->name('edit');
-                Route::put('terms/{term}/content', 'content')->name('content');
-            });
-            Route::prefix('cms')->name('cms.entries.')->controller(EntryController::class)->group(function (): void {
-                Route::get('entries', 'home')->name('home')->middleware(AuthorizeContent::class.':entries,view');
-                Route::get('entry-picker', 'picker')->name('picker')->middleware(AuthorizeContent::class.':entries,view');
-                Route::get('entry-search', 'search')->name('search')->middleware(AuthorizeContent::class.':entries,view');
-                Route::get('term-picker', 'termPicker')->name('term-picker')->middleware(AuthorizeContent::class.':entries,view');
-                Route::get('collections/{collection:handle}/entries', 'index')->name('index')->middleware(AuthorizeContent::class.':entries,view');
-                Route::get('collections/{collection:handle}/entries/create', 'create')->name('create')->middleware(AuthorizeContent::class.':entries,create');
-                Route::post('collections/{collection:handle}/entries', 'store')->name('store')->middleware(AuthorizeContent::class.':entries,create');
-                Route::get('entries/{entry}/edit', 'edit')->name('edit')->middleware(AuthorizeContent::class.':entries,view')->withTrashed();
-                Route::put('entries/{entry}', 'update')->name('update')->middleware(AuthorizeContent::class.':entries,update');
-                Route::post('entries/{entry}/publish', 'publish')->name('publish')->middleware(AuthorizeContent::class.':entries,publish');
-                Route::post('entries/{entry}/review', 'requestReview')->name('review')->middleware(AuthorizeContent::class.':entries,update');
-                Route::post('entries/{entry}/unpublish', 'unpublish')->name('unpublish')->middleware(AuthorizeContent::class.':entries,publish');
-                Route::post('entries/{entry}/homepage', 'homepage')->name('homepage')->middleware(['can:cms.homepage', AuthorizeContent::class.':entries,view']);
-                Route::post('entries/{entry}/date', 'date')->name('date')->middleware(AuthorizeContent::class.':entries,publish');
-                Route::delete('entries/{entry}', 'destroy')->name('destroy')->middleware(AuthorizeContent::class.':entries,delete');
-                Route::post('entries/{translation}/translate', 'translate')->name('translate')->middleware(AuthorizeContent::class.':entries,update');
-                Route::post('entries/{entry}/translations', 'addTranslation')->name('translations.store')->middleware(AuthorizeContent::class.':entries,create');
-                Route::delete('entries/{entry}/translations/{locale}', 'removeTranslation')->name('translations.destroy')->middleware(AuthorizeContent::class.':entries,delete');
-                Route::post('entries/{entry}/restore', 'restore')->name('restore')->middleware(AuthorizeContent::class.':entries,delete')->withTrashed();
-                Route::get('revisions/{revision}/compare', 'compareRevision')->name('revisions.compare')->middleware(AuthorizeContent::class.':entries,view');
-                Route::post('revisions/{revision}/restore', 'restoreRevision')->name('revisions.restore')->middleware(AuthorizeContent::class.':entries,update');
-            });
-            Route::prefix('cms')->name('cms.listings.')->controller(ListingController::class)->group(function (): void {
-                Route::get('collections/{collection:handle}/listing', 'edit')->name('edit')->middleware(AuthorizeContent::class.':entries,view');
-                Route::put('collections/{collection:handle}/listing', 'update')->name('update')->middleware(AuthorizeContent::class.':entries,update');
-            });
-            Route::prefix('cms')->name('cms.entries.')->controller(EntryManageController::class)->group(function (): void {
-                Route::post('collections/{collection:handle}/entries/bulk', 'bulk')->name('bulk')->middleware(AuthorizeContent::class.':entries,view');
-                Route::get('collections/{collection:handle}/entries/export', 'export')->name('export')->middleware(AuthorizeContent::class.':entries,export');
-                Route::post('entries/{entry}/duplicate', 'duplicate')->name('duplicate')->middleware(AuthorizeContent::class.':entries,create');
-                Route::put('entries/{entry}/settings', 'settings')->name('settings')->middleware(AuthorizeContent::class.':entries,update');
-                Route::post('entries/{entry}/move', 'move')->name('move')->middleware(AuthorizeContent::class.':entries,update');
-                Route::post('entries/reorder', 'reorder')->name('reorder')->middleware(AuthorizeContent::class.':entries,update');
-                Route::delete('entries/{entry}/force', 'forceDelete')->name('force-delete')->middleware(AuthorizeContent::class.':entries,delete')->withTrashed();
-                Route::post('entry-translations/{translation}/undo-restore', 'undoRestore')->name('undo-restore')->middleware(AuthorizeContent::class.':entries,update');
+            $guard = fn (string $area, string $action): string => AuthorizeContent::class.":{$area},{$action}";
+            Route::prefix('cms')->name('cms.')->group(function () use ($guard): void {
+                foreach (['blueprints' => BlueprintController::class, 'fieldsets' => FieldsetController::class] as $area => $controller) {
+                    $model = rtrim($area, 's');
+                    Route::name("{$area}.")->controller($controller)->group(function () use ($area, $model): void {
+                        Route::get($area, 'index')->name('index')->middleware("can:cms.{$area}.view");
+                        Route::get("{$area}/create", 'create')->name('create')->middleware("can:cms.{$area}.create");
+                        Route::post($area, 'store')->name('store')->middleware("can:cms.{$area}.create");
+                        Route::get("{$area}/{{$model}:handle}/edit", 'edit')->name('edit')->middleware("can:cms.{$area}.update");
+                        Route::put("{$area}/{{$model}:handle}", 'update')->name('update')->middleware("can:cms.{$area}.update");
+                        Route::delete("{$area}/{{$model}:handle}", 'destroy')->name('destroy')->middleware("can:cms.{$area}.delete");
+                    });
+                }
+                Route::name('seo.')->controller(SeoController::class)->middleware('can:cms.settings.site')->group(function (): void {
+                    Route::get('seo', 'edit')->name('edit');
+                    Route::put('seo', 'update')->name('update');
+                });
+                Route::post('languages/{locale}/main', [LanguageController::class, 'main'])->name('languages.main')
+                    ->middleware('can:cms.settings.locales')->where('locale', '[A-Za-z0-9_-]{2,20}');
+                // A menu's links and a global set's values; the menus and sets themselves are resources (MenuResource, GlobalSetResource).
+                Route::name('menus.links.')->controller(MenuController::class)->group(function (): void {
+                    Route::get('menus/{menu:handle}/links', 'edit')->name('edit')->middleware('can:cms.menus.view');
+                    Route::put('menus/{menu:handle}/links', 'update')->name('update')->middleware('can:cms.menus.update');
+                });
+                Route::name('globals.values.')->controller(GlobalsController::class)->group(function (): void {
+                    Route::get('globals/{set:handle}/values', 'edit')->name('edit')->middleware('can:cms.globals.view');
+                    Route::put('globals/{set:handle}/values', 'update')->name('update')->middleware('can:cms.globals.update');
+                });
+                Route::name('comments.')->controller(CommentController::class)->group(function (): void {
+                    Route::get('comments', 'index')->name('index')->middleware('can:cms.comments.view');
+                    Route::post('comments/bulk', 'bulk')->name('bulk')->middleware('can:cms.comments.view');
+                    Route::post('comments/{comment}/status', 'status')->name('status')->middleware('can:cms.comments.moderate');
+                    Route::post('comments/{comment}/reply', 'reply')->name('reply')->middleware('can:cms.comments.moderate');
+                    Route::put('comments/{comment}', 'update')->name('update')->middleware('can:cms.comments.moderate');
+                    Route::delete('comments/{comment}', 'destroy')->name('destroy')->middleware('can:cms.comments.delete');
+                    Route::post('comments/{comment}/restore', 'restore')->name('restore')->middleware('can:cms.comments.delete')->withTrashed();
+                    Route::delete('comments/{comment}/force', 'forceDelete')->name('force-delete')->middleware('can:cms.comments.delete')->withTrashed();
+                });
+                Route::controller(SubmissionController::class)->group(function () use ($guard): void {
+                    // Every form's: on to the first one's.
+                    Route::get('submissions', 'home')->name('submissions.index')->middleware($guard('submissions', 'view'));
+                    Route::get('forms/{form:handle}/submissions', 'index')->name('forms.submissions.index')->middleware($guard('submissions', 'view'));
+                    Route::get('forms/{form:handle}/submissions/export', 'export')->name('forms.submissions.export')->middleware($guard('submissions', 'export'));
+                    Route::delete('submissions/{submission}', 'destroy')->name('submissions.destroy')->middleware($guard('submissions', 'delete'));
+                    Route::get('submissions/{submission}/files/{field}', 'file')->name('submissions.file')->middleware($guard('submissions', 'view'));
+                });
+                Route::controller(TermController::class)->group(function () use ($guard): void {
+                    // Every taxonomy's: on to the first one's.
+                    Route::get('terms', 'home')->name('terms.index')->middleware($guard('terms', 'view'));
+                    Route::get('terms/picker', [EntryController::class, 'termPicker'])->name('terms.picker')->middleware($guard('entries', 'view'));
+                    Route::post('terms/reorder', 'reorder')->name('terms.reorder')->middleware($guard('terms', 'update'));
+                    Route::get('taxonomies/{taxonomy:handle}/terms', 'index')->name('taxonomies.terms.index')->middleware($guard('terms', 'view'));
+                    Route::get('taxonomies/{taxonomy:handle}/terms/create', 'create')->name('taxonomies.terms.create')->middleware($guard('terms', 'create'));
+                    Route::post('taxonomies/{taxonomy:handle}/terms', 'store')->name('taxonomies.terms.store')->middleware($guard('terms', 'create'));
+                    Route::get('taxonomies/{taxonomy:handle}/terms/{term}/edit', 'edit')->name('taxonomies.terms.edit')->middleware($guard('terms', 'view'));
+                    // A term's short address: on to the one under its taxonomy.
+                    Route::get('terms/{term}/edit', 'open')->name('terms.edit')->middleware($guard('terms', 'view'));
+                    Route::put('terms/{term}', 'update')->name('terms.update')->middleware($guard('terms', 'update'));
+                    Route::put('terms/{term}/content', 'content')->name('terms.content')->middleware($guard('terms', 'update'));
+                    Route::post('terms/{term}/move', 'move')->name('terms.move')->middleware($guard('terms', 'update'));
+                    Route::delete('terms/{term}', 'destroy')->name('terms.destroy')->middleware($guard('terms', 'delete'));
+                    Route::post('terms/{term}/restore', 'restore')->name('terms.restore')->middleware($guard('terms', 'delete'))->withTrashed();
+                    Route::delete('terms/{term}/force', 'forceDelete')->name('terms.force-delete')->middleware($guard('terms', 'delete'))->withTrashed();
+                });
+                Route::controller(EntryController::class)->group(function () use ($guard): void {
+                    // Every collection's: on to the first one's.
+                    Route::get('entries', 'home')->name('entries.index')->middleware($guard('entries', 'view'));
+                    Route::get('entries/picker', 'picker')->name('entries.picker')->middleware($guard('entries', 'view'));
+                    // The command palette's search ($panel->commandSearch()).
+                    Route::get('entries/search', 'search')->name('entries.search')->middleware($guard('entries', 'view'));
+                    Route::get('collections/{collection:handle}/entries', 'index')->name('collections.entries.index')->middleware($guard('entries', 'view'));
+                    Route::get('collections/{collection:handle}/entries/create', 'create')->name('collections.entries.create')->middleware($guard('entries', 'create'));
+                    Route::post('collections/{collection:handle}/entries', 'store')->name('collections.entries.store')->middleware($guard('entries', 'create'));
+                    Route::get('collections/{collection:handle}/entries/{entry}/edit', 'edit')->name('collections.entries.edit')->middleware($guard('entries', 'view'))->withTrashed();
+                    // An entry's short address: on to the one under its collection.
+                    Route::get('entries/{entry}/edit', 'open')->name('entries.edit')->middleware($guard('entries', 'view'))->withTrashed();
+                    Route::put('entries/{entry}', 'update')->name('entries.update')->middleware($guard('entries', 'update'));
+                    Route::post('entries/{entry}/publish', 'publish')->name('entries.publish')->middleware($guard('entries', 'publish'));
+                    Route::post('entries/{entry}/review', 'requestReview')->name('entries.review')->middleware($guard('entries', 'update'));
+                    Route::post('entries/{entry}/homepage', 'homepage')->name('entries.homepage')->middleware(['can:cms.homepage', $guard('entries', 'view')]);
+                    Route::post('entries/{entry}/date', 'date')->name('entries.date')->middleware($guard('entries', 'publish'));
+                    Route::post('entries/{entry}/unpublish', 'unpublish')->name('entries.unpublish')->middleware($guard('entries', 'publish'));
+                    Route::delete('entries/{entry}', 'destroy')->name('entries.destroy')->middleware($guard('entries', 'delete'));
+                    Route::post('entries/{entry}/restore', 'restore')->name('entries.restore')->middleware($guard('entries', 'delete'))->withTrashed();
+                    Route::post('entries/{entry}/translations', 'addTranslation')->name('entries.translations.store')->middleware($guard('entries', 'create'));
+                    Route::delete('entries/{entry}/translations/{locale}', 'removeTranslation')->name('entries.translations.destroy')->middleware($guard('entries', 'delete'));
+                    Route::post('entries/{entry}/translations/{locale}/translate', 'translate')->name('entries.translations.translate')->middleware($guard('entries', 'update'));
+                    Route::post('entries/{entry}/revisions/{revision}/restore', 'restoreRevision')->name('entries.revisions.restore')->middleware($guard('entries', 'update'));
+                    Route::get('entries/{entry}/revisions/{revision}/compare', 'compareRevision')->name('entries.revisions.compare')->middleware($guard('entries', 'view'));
+                });
+                Route::name('collections.listing.')->controller(ListingController::class)->group(function () use ($guard): void {
+                    Route::get('collections/{collection:handle}/listing/edit', 'edit')->name('edit')->middleware($guard('entries', 'view'));
+                    Route::put('collections/{collection:handle}/listing', 'update')->name('update')->middleware($guard('entries', 'update'));
+                });
+                Route::controller(EntryManageController::class)->group(function () use ($guard): void {
+                    Route::post('collections/{collection:handle}/entries/bulk', 'bulk')->name('collections.entries.bulk')->middleware($guard('entries', 'view'));
+                    Route::get('collections/{collection:handle}/entries/export', 'export')->name('collections.entries.export')->middleware($guard('entries', 'export'));
+                    Route::post('entries/reorder', 'reorder')->name('entries.reorder')->middleware($guard('entries', 'update'));
+                    Route::post('entries/{entry}/duplicate', 'duplicate')->name('entries.duplicate')->middleware($guard('entries', 'create'));
+                    Route::put('entries/{entry}/settings', 'settings')->name('entries.settings')->middleware($guard('entries', 'update'));
+                    Route::post('entries/{entry}/move', 'move')->name('entries.move')->middleware($guard('entries', 'update'));
+                    Route::delete('entries/{entry}/force', 'forceDelete')->name('entries.force-delete')->middleware($guard('entries', 'delete'))->withTrashed();
+                    Route::post('entries/{entry}/translations/{locale}/undo-restore', 'undoRestore')->name('entries.translations.undo-restore')->middleware($guard('entries', 'update'));
+                });
             });
         });
         $panel->tools(
@@ -252,7 +290,7 @@ final class CmsPlugin extends BasePlugin
         $panel->lockable('cms.global', fn (string $id, string $locale, Authorizable $user): bool => $user->can('cms.globals.update')
             && GlobalSet::query()->whereKey($id)->exists());
         $panel->lockable('cms.term', fn (string $id, string $locale, Authorizable $user): bool => ($term = Term::query()->whereHas('taxonomy')->find($id)) !== null
-            && Access::terms($user, $term->taxonomy));
+            && Access::terms($user, 'update', $term->taxonomy));
         // Deleting a user: what happens to their entries and comments (DeleteUser).
         $panel->userContent('cms.entries', 'entries',
             fn (Model $user): int => ReleaseUserContent::entries($user),
@@ -263,7 +301,7 @@ final class CmsPlugin extends BasePlugin
         // The dashboard: content per collection, recent edits, comments waiting, what's coming up, submissions.
         $panel->widgets(...DashboardWidgets::all());
         // Getting these is worth an alert: site-wide scripts, and the shape of all content.
-        $panel->privilegedPermissions('cms.settings.code', 'cms.blueprints.manage');
+        $panel->privilegedPermissions('cms.settings.code', 'cms.blueprints.create', 'cms.blueprints.update', 'cms.blueprints.delete', 'cms.fieldsets.create', 'cms.fieldsets.update', 'cms.fieldsets.delete');
         // Cmd/Ctrl+K finds entries on every panel page, not only where the CMS's bundle has loaded.
         $panel->commandSearch('cms.entries', fn (): string => route('sunrice.admin.cms.entries.search'));
         $panel->bundle(PluginBundle::make('cms')->module(self::asset('admin.js'))->style(self::asset('admin.css'))->pages('Cms/'));

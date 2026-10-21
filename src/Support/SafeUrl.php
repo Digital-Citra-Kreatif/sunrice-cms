@@ -35,7 +35,7 @@ final class SafeUrl
     {
         return function (string $attribute, mixed $value, Closure $fail): void {
             if (is_string($value) && ! self::isSafe($value)) {
-                $fail('Use a web address (https://…), a path on this site (/about), mailto: or tel:.');
+                $fail(__('Use a web address (https://…), a path on this site (/about), mailto: or tel:.'));
             }
         };
     }

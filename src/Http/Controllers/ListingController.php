@@ -30,7 +30,7 @@ final class ListingController
         $collection->load('listings');
         $schema = $collection->listingSchema();
 
-        return Inertia::render('Cms/Entries/Listing', [
+        return Inertia::render('Cms/Listing/Edit', [
             'collection' => ['handle' => $collection->handle, 'title' => $collection->title, 'url' => $collection->listingUrl($locale)],
             'fields' => $schema->toAdmin(),
             'locale' => $locale,

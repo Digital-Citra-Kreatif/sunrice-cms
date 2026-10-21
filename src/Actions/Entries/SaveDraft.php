@@ -32,7 +32,7 @@ final class SaveDraft
     {
         $expected = $input['version'] ?? $translation->version;
         if (! is_int($expected) && ! (is_string($expected) && ctype_digit($expected))) {
-            throw ValidationException::withMessages(['version' => 'The version must be a number.']);
+            throw ValidationException::withMessages(['version' => __('The version must be a number.')]);
         }
 
         // The slug check and the write in one transaction: see EntryInput::write().
@@ -84,7 +84,7 @@ final class SaveDraft
                 'updated_at' => now(),
             ] + ($mainVersion === null ? [] : ['main_version' => $mainVersion]));
             if ($saved === 0) {
-                throw ValidationException::withMessages(['version' => 'Someone else saved this entry after you opened it. Reload to see their changes.']);
+                throw ValidationException::withMessages(['version' => __('Someone else saved this entry after you opened it. Reload to see their changes.')]);
             }
 
             return $changed;

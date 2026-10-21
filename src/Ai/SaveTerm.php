@@ -21,21 +21,21 @@ final class SaveTerm extends CmsTool
 
     public function handle(Request $request): Response
     {
-        if (! Access::terms($this->user())) {
-            return $this->denied('manage terms');
+        if (! Access::terms($this->user(), 'create') && ! Access::terms($this->user(), 'update')) {
+            return $this->denied('create or edit terms');
         }
         $handle = $request->get('taxonomy');
         $taxonomy = is_string($handle) ? Taxonomy::query()->where('handle', $handle)->first() : null;
         if ($taxonomy === null) {
             return Response::error('Give the "taxonomy" handle (cms_list_terms lists them).');
         }
-        if (! Access::terms($this->user(), $taxonomy)) {
-            return $this->denied('manage the terms of '.$taxonomy->title);
-        }
         $id = $request->get('id');
         $term = is_int($id) ? Term::query()->where('taxonomy_id', $taxonomy->id)->find($id) : null;
         if ($id !== null && $term === null) {
             return Response::error('No such term in this taxonomy.');
+        }
+        if (! Access::terms($this->user(), $term === null ? 'create' : 'update', $taxonomy)) {
+            return $this->denied(($term === null ? 'create terms in ' : 'edit the terms of ').$taxonomy->title);
         }
         $input = array_intersect_key($request->all(), array_flip(['title', 'slug', 'locale', 'parent_id']));
         try {

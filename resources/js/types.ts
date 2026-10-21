@@ -33,7 +33,7 @@ export interface FieldDefinition {
     translations?: Record<string, FieldTranslation>;
     /** A flexible field's kinds of block, as the editor gets them. */
     blocks?: BlockType[];
-    /** A terms field's taxonomy (its terms load from cms/term-picker). */
+    /** A terms field's taxonomy (its terms load from cms/terms/picker). */
     taxonomy?: string | null;
     /** An entries field's collections to choose from (handles). */
     collections?: string[];

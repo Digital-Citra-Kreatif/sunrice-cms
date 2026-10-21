@@ -53,7 +53,7 @@ final class SaveTermContent
                 }
             }
             if ($translation === null) {
-                throw ValidationException::withMessages(['title' => 'Give the term a title in this language.']);
+                throw ValidationException::withMessages(['title' => __('Give the term a title in this language.')]);
             }
 
             return $this->content($term, $translation, $input, $locale);

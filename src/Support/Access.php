@@ -18,7 +18,7 @@ use Sunrice\Cms\Models\Taxonomy;
  *   cms.entries.{action}            cms.entries.{collection}.{action}     view, create, update, publish, delete, export
  *   cms.entries.update-own, .delete-own   their own entries, in collections they may view
  *   cms.entries.translate           the other languages of entries they may view, not the main one
- *   cms.terms.manage                cms.terms.{taxonomy}.manage
+ *   cms.terms.{action}              cms.terms.{taxonomy}.{action}         view, create, update, delete
  *   cms.submissions.{action}        cms.submissions.{form}.{action}       view, export, delete
  *
  *     Access::entries($user, 'publish', $collection)
@@ -28,6 +28,8 @@ use Sunrice\Cms\Models\Taxonomy;
 final class Access
 {
     public const ENTRY_ACTIONS = ['view', 'create', 'update', 'publish', 'delete', 'export'];
+
+    public const TERM_ACTIONS = ['view', 'create', 'update', 'delete'];
 
     public const SUBMISSION_ACTIONS = ['view', 'export', 'delete'];
 
@@ -68,16 +70,16 @@ final class Access
         return Collection::query()->orderBy('title')->get()->filter(fn (Collection $c): bool => self::entries($user, $action, $c))->values();
     }
 
-    /** Whether a user may manage a taxonomy's terms (with none: some taxonomy's). */
-    public static function terms(?Authorizable $user, Taxonomy|string|null $taxonomy = null): bool
+    /** Whether a user may view, create, update or delete a taxonomy's terms (with none: some taxonomy's). */
+    public static function terms(?Authorizable $user, string $action, Taxonomy|string|null $taxonomy = null): bool
     {
         if ($user === null) {
             return false;
         }
         $handle = $taxonomy instanceof Taxonomy ? $taxonomy->handle : $taxonomy;
 
-        return $user->can('cms.terms.manage')
-            || ($handle !== null ? $user->can("cms.terms.{$handle}.manage") : self::anyScoped($user, 'cms.terms.%s.manage', Handles::taxonomies()));
+        return $user->can("cms.terms.{$action}")
+            || ($handle !== null ? $user->can("cms.terms.{$handle}.{$action}") : self::anyScoped($user, "cms.terms.%s.{$action}", Handles::taxonomies()));
     }
 
     /** Whether a user may view, export or delete a form's submissions (with none: some form's). */

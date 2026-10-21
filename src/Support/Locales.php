@@ -69,17 +69,84 @@ final class Locales
         return self::names()[$locale] ?? $locale;
     }
 
-    /** What the language's addresses start with: "" for the main one, "/id" for the others. */
+    /**
+     * What the language's addresses start with: by default "" for the main
+     * one and "/id" for the others; Settings → Languages (or config
+     * sunrice-cms.locale_prefixes) can give any of them another, the main
+     * one too ("/en").
+     */
     public static function prefix(string $locale): string
     {
-        return $locale === self::default() ? '' : '/'.$locale;
+        $segment = self::segments()[$locale] ?? $locale;
+
+        return $segment === '' ? '' : '/'.$segment;
+    }
+
+    /**
+     * Each language's first address segment: '' for the one at the plain
+     * addresses (the main one, unless it has its own).
+     *
+     * @return array<string, string>
+     */
+    public static function segments(): array
+    {
+        $set = app(LocaleSettings::class)->locales() !== [] ? app(LocaleSettings::class)->prefixes() : config('sunrice-cms.locale_prefixes', []);
+
+        return self::segmentsFor(self::all(), is_array($set) ? $set : []);
+    }
+
+    /**
+     * The segments of these languages (the main one first), from the ones
+     * set: a set one as it is, else '' for the main one and the code for
+     * the others.
+     *
+     * @param  list<string>  $codes
+     * @param  array<mixed>  $set
+     * @return array<string, string>
+     */
+    public static function segmentsFor(array $codes, array $set): array
+    {
+        $segments = [];
+        foreach ($codes as $index => $code) {
+            $own = $set[$code] ?? null;
+            $segments[$code] = is_string($own) && trim($own, '/ ') !== '' ? trim($own, '/ ') : ($index === 0 ? '' : $code);
+        }
+
+        return $segments;
+    }
+
+    /**
+     * The language of a path and the path without its prefix:
+     * ['id', '/about'] for "/id/about". A path with no language's prefix
+     * belongs to the language at the plain addresses; when every language
+     * has a prefix, it's the main one's, and the third value is false.
+     *
+     * @param  array<string, string>|null  $segments  for other segments than the current ones (Locales::segmentsFor())
+     * @return array{0: string, 1: string, 2: bool}
+     */
+    public static function split(string $path, ?array $segments = null): array
+    {
+        $path = '/'.trim($path, '/');
+        $segments ??= self::segments();
+        $prefixed = array_filter($segments, fn (string $segment): bool => $segment !== '');
+        // Longest first: "/pt-br" before "/pt".
+        uasort($prefixed, fn (string $a, string $b): int => strlen($b) <=> strlen($a));
+        foreach ($prefixed as $code => $segment) {
+            if ($path === "/{$segment}" || str_starts_with($path, "/{$segment}/")) {
+                return [$code, substr($path, strlen($segment) + 1) ?: '/', true];
+            }
+        }
+        $root = array_search('', $segments, true);
+
+        return is_string($root) ? [$root, $path, true] : [array_key_first($segments) ?? self::default(), $path, false];
     }
 
     /** A language's English name from its code, when PHP's intl extension knows it; else the code. */
     public static function displayName(string $code): string
     {
         if (! class_exists(\Locale::class)) {
-            return $code;
+            // Without intl: the common languages' own names.
+            return LocaleSettings::KNOWN[$code] ?? $code;
         }
 
         return \Locale::getDisplayName(str_replace('-', '_', $code), 'en') ?: $code;

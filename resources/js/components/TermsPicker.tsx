@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Search, X } from 'lucide-react';
-import { adminUrl } from '@sunrice/admin-sdk';
+import { adminUrl, t } from '@sunrice/admin-sdk';
 import { Badge, Button, Checkbox, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Skeleton } from '@sunrice/admin-sdk/ui';
 import { termPickerQuery } from '@/lib/values.ts';
 
@@ -13,7 +13,7 @@ export const TermLabels = React.createContext<Record<string, string>>({});
 const NONE = '__none';
 
 async function fetchTerms(params: { taxonomy: string; q?: string; ids?: number[] }): Promise<{ items: TermOption[]; more: boolean }> {
-    const response = await fetch(`${adminUrl('cms/term-picker')}?${termPickerQuery(params)}`, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+    const response = await fetch(`${adminUrl('cms/terms/picker')}?${termPickerQuery(params)}`, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
     if (!response.ok) throw new Error(String(response.status));
 
     return (await response.json()) as { items: TermOption[]; more: boolean };
@@ -31,7 +31,7 @@ interface Props {
 }
 
 /**
- * A terms field: the taxonomy's terms load when it shows (cms/term-picker);
+ * A terms field: the taxonomy's terms load when it shows (cms/terms/picker);
  * a large taxonomy is searched instead of listed whole.
  */
 export function TermsPicker({ id, taxonomy, multiple, max, required, invalid, value, onChange }: Props) {
@@ -66,8 +66,8 @@ export function TermsPicker({ id, taxonomy, multiple, max, required, invalid, va
             .catch(() => setError(true));
     }, [taxonomy, unknown]);
 
-    if (!taxonomy) return <p className="cms:text-sm cms:text-muted-foreground">Choose a taxonomy for this field in its blueprint.</p>;
-    if (options === null) return error ? <p className="cms:text-sm cms:text-destructive">Terms could not be loaded. Try again.</p> : <Skeleton className="cms:h-9 cms:w-full cms:max-w-sm" />;
+    if (!taxonomy) return <p className="cms:text-sm cms:text-muted-foreground">{t('Choose a taxonomy for this field in its blueprint.')}</p>;
+    if (options === null) return error ? <p className="cms:text-sm cms:text-destructive">{t('Terms could not be loaded. Try again.')}</p> : <Skeleton className="cms:h-9 cms:w-full cms:max-w-sm" />;
 
     const name = (option: TermOption) => `${'— '.repeat(option.depth)}${option.label}`;
     const full = multiple && max !== null && ids.length >= max;
@@ -78,9 +78,9 @@ export function TermsPicker({ id, taxonomy, multiple, max, required, invalid, va
         <div className="cms:flex cms:flex-wrap cms:gap-1.5">
             {ids.map((termId) => (
                 <Badge key={termId} variant="secondary" className="cms:gap-1 cms:pr-1">
-                    {label(termId) ?? `Term #${termId}`}
+                    {label(termId) ?? t('Term #:id', { id: termId })}
                     {!(required && !multiple) && (
-                        <button type="button" className="cms:rounded-sm cms:p-0.5 cms:hover:bg-muted" aria-label={`Remove ${label(termId) ?? termId}`}
+                        <button type="button" className="cms:rounded-sm cms:p-0.5 cms:hover:bg-muted" aria-label={t('Remove :title', { title: label(termId) ?? termId })}
                             onClick={() => set(ids.filter((other) => other !== termId))}><X className="cms:size-3" /></button>
                     )}
                 </Badge>
@@ -90,7 +90,7 @@ export function TermsPicker({ id, taxonomy, multiple, max, required, invalid, va
     const searchBox = searchable && (
         <div className="cms:relative cms:max-w-sm">
             <Search className="cms:absolute cms:top-1/2 cms:left-3 cms:size-4 cms:-translate-y-1/2 cms:text-muted-foreground" />
-            <Input id={id} className="cms:pl-9" placeholder="Search terms" autoComplete="off" aria-invalid={invalid} value={search}
+            <Input id={id} className="cms:pl-9" placeholder={t('Search terms')} autoComplete="off" aria-invalid={invalid} value={search}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)} />
         </div>
     );
@@ -102,11 +102,11 @@ export function TermsPicker({ id, taxonomy, multiple, max, required, invalid, va
             <Select value={selected === undefined ? NONE : String(selected)} onValueChange={(next: string) => onChange(next === NONE ? null : Number(next))}>
                 {/* The chosen term by its title alone; the list's dashes only show its place in the tree. */}
                 <SelectTrigger id={id} className="cms:w-full cms:max-w-sm" aria-invalid={invalid}>
-                    <SelectValue>{selected === undefined ? 'None' : (label(selected) ?? `Term #${selected}`)}</SelectValue>
+                    <SelectValue>{selected === undefined ? t('None') : (label(selected) ?? t('Term #:id', { id: selected }))}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                    {!required && <SelectItem value={NONE}>None</SelectItem>}
-                    {!listed && selected !== undefined && <SelectItem value={String(selected)}>{label(selected) ?? `Term #${selected}`}</SelectItem>}
+                    {!required && <SelectItem value={NONE}>{t('None')}</SelectItem>}
+                    {!listed && selected !== undefined && <SelectItem value={String(selected)}>{label(selected) ?? t('Term #:id', { id: selected })}</SelectItem>}
                     {options.map((option) => <SelectItem key={option.id} value={String(option.id)}>{name(option)}</SelectItem>)}
                 </SelectContent>
             </Select>
@@ -118,7 +118,7 @@ export function TermsPicker({ id, taxonomy, multiple, max, required, invalid, va
             {chosen}
             {searchBox}
             {options.length === 0 ? (
-                <p className="cms:text-sm cms:text-muted-foreground">{search.trim() ? 'No terms match.' : 'Nothing to choose from yet.'}</p>
+                <p className="cms:text-sm cms:text-muted-foreground">{search.trim() ? t('No terms match.') : t('Nothing to choose from yet.')}</p>
             ) : multiple ? (
                 <div className="cms:flex cms:max-h-72 cms:flex-col cms:gap-2 cms:overflow-auto">
                     {options.map((option) => {
@@ -133,7 +133,7 @@ export function TermsPicker({ id, taxonomy, multiple, max, required, invalid, va
                     })}
                 </div>
             ) : (
-                <div role="listbox" aria-label="Terms" className="cms:flex cms:max-h-72 cms:flex-col cms:overflow-auto">
+                <div role="listbox" aria-label={t('Terms')} className="cms:flex cms:max-h-72 cms:flex-col cms:overflow-auto">
                     {options.map((option) => (
                         <Button key={option.id} type="button" variant={ids[0] === option.id ? 'secondary' : 'ghost'} size="sm" className="cms:justify-start"
                             role="option" aria-selected={ids[0] === option.id} onClick={() => onChange(option.id)}>

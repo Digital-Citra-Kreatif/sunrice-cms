@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { router } from '@inertiajs/react';
-import { adminUrl } from '@sunrice/admin-sdk';
+import { adminUrl, t } from '@sunrice/admin-sdk';
 import { Badge, Card, SortableHandle, SortableList } from '@sunrice/admin-sdk/ui';
 import { type EntryStatus, statusLabel } from '@/lib/entries.ts';
 import { childIndexes, reorderLevel, treeOrder } from '@/lib/tree.ts';
@@ -37,7 +37,7 @@ export function EntryReorderList({ collection, rows, hierarchical = false }: { c
                 return (
                     <div>
                         <div className="cms:flex cms:items-center cms:gap-2 cms:rounded-lg cms:border cms:border-border/70 cms:bg-card cms:p-2 cms:text-sm">
-                            <SortableHandle {...handle} label={`Move ${row.title}`} />
+                            <SortableHandle {...handle} label={t('Move :title', { title: row.title })} />
                             <span className="cms:min-w-0 cms:flex-1 cms:truncate cms:font-medium">{row.title}</span>
                             <Badge variant={row.status === 'published' ? 'success' : 'secondary'}>{statusLabel(row.status)}</Badge>
                         </div>
@@ -50,7 +50,7 @@ export function EntryReorderList({ collection, rows, hierarchical = false }: { c
 
     return (
         <Card className="cms:p-2">
-            {hierarchical && <p className="cms:px-1 cms:pb-1 cms:text-xs cms:text-muted-foreground">Entries move among those at their level, with what's under them. To put one under another, choose its Parent in its Page settings.</p>}
+            {hierarchical && <p className="cms:px-1 cms:pb-1 cms:text-xs cms:text-muted-foreground">{t('Entries move among those at their level, with what\'s under them. To put one under another, choose its Parent in its Page settings.')}</p>}
             {level(-1)}
         </Card>
     );

@@ -24,10 +24,10 @@ final class MoveEntry
     public function handle(Entry $entry, string $direction): void
     {
         if (! $entry->collection->ordered) {
-            throw ValidationException::withMessages(['entry' => 'This collection lists entries by date or title: turn on Manual order to move them.']);
+            throw ValidationException::withMessages(['entry' => __('This collection lists entries by date or title: turn on Manual order to move them.')]);
         }
         if (! in_array($direction, ['up', 'down'], true)) {
-            throw ValidationException::withMessages(['direction' => 'Move it up or down.']);
+            throw ValidationException::withMessages(['direction' => __('Move it up or down.')]);
         }
 
         DB::transaction(function () use ($entry, $direction): void {

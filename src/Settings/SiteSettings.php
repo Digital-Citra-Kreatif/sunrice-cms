@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Settings;
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Sunrice\Admin\Resources\Forms\Form;
 use Sunrice\Admin\Resources\Forms\MediaPicker;
 use Sunrice\Admin\Resources\Forms\Section;
@@ -12,6 +13,7 @@ use Sunrice\Admin\Resources\Forms\Textarea;
 use Sunrice\Admin\Resources\Forms\TextInput;
 use Sunrice\Admin\Resources\Forms\Toggle;
 use Sunrice\Admin\Settings\Settings;
+use Sunrice\Admin\Support\Card;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Support\Locales;
@@ -98,31 +100,33 @@ final class SiteSettings extends Settings
 
     public static function description(): string
     {
-        return 'The homepage, and what search results and shared links show.';
+        return 'The homepage, the site\'s name and description, and structured data.';
+    }
+
+    /** The rest of what search engines and shared links see is on its own page. */
+    public static function cards(Authorizable $user): array
+    {
+        return [Card::make('Search engines and sharing')
+            ->description('Hiding the site from search engines, the share image, page titles and which fields fill in each page\'s SEO.')
+            ->link('Open Settings → SEO', route('sunrice.admin.cms.seo.edit', [], false))];
     }
 
     public static function form(Form $form): Form
     {
         return $form->schema([
             Select::make('homepage')->label('Homepage')->options(fn (): array => self::homepages())->searchable()
-                ->help('The live page shown at the site\'s address (/), in each language it\'s published in. Its own address redirects there. Editors with "Choose the homepage" set it from the page\'s editor.'),
-            Section::make('Search and sharing')->description('For pages that don\'t set their own in their SEO card.')->columns(2)->schema([
-                TextInput::make('name')->label('Site name')->maxLength(100)->placeholder(self::appName()),
-                TextInput::make('twitter')->label('X (Twitter) account')->maxLength(16)->placeholder('@acme')->rules(['regex:/^@?[A-Za-z0-9_]{1,15}$/']),
+                ->help('The live page shown at / in each language it\'s published in. Its own address redirects there. Editors with "Choose the homepage" set it from the page\'s editor.'),
+            Section::make('The site')->description('Its name and what it\'s about, for search results and shared links of pages that don\'t say their own. Search engines, share image and titles: Settings → SEO.')->columns(2)->schema([
+                TextInput::make('name')->label('Site name')->maxLength(100)->placeholder(self::appName())->span(2),
                 Textarea::make('description')->label('Description')->rows(2)->maxLength(500)->span(2),
                 ...(count(Locales::all()) > 1 ? [Textarea::make('descriptions')->label('Description in other languages')->rows(2)->maxLength(3000)->span(2)
                     ->placeholder(implode("\n", array_map(fn (string $code): string => "{$code}: …", array_slice(Locales::all(), 1))))
                     ->help('One per line, with the language\'s code: "id: Rumah premium di Jakarta dan Bali". A language left out uses the description above.')] : []),
-                TextInput::make('separator')->label('Title separator')->maxLength(5)->help('Between a page\'s title and the site name.'),
-                Toggle::make('appendName')->label('Add the site name to titles')->help(self::titleExample()),
-                MediaPicker::make('image')->label('Share image')->images()->span(2),
-                Toggle::make('noindex')->label('Hide the whole site from search engines')->span(2)
-                    ->help('For a site still being built. Every page asks not to be indexed and the sitemap is empty.'),
             ]),
             Section::make('Structured data')->description('What search engines are told pages are (schema.org), for richer results: articles, breadcrumbs, the site\'s search box.')->columns(2)->schema([
                 Toggle::make('structuredData')->label('Add structured data to pages')->span(2),
                 Select::make('publisher')->label('Published by')->options(['Organization' => 'An organization', 'Person' => 'A person']),
-                MediaPicker::make('logo')->label('Logo')->images()->help('The organization\'s logo: square or wide, at least 112 pixels.'),
+                MediaPicker::make('logo')->label('Logo')->images()->help('Square or wide, at least 112 pixels.'),
                 TextInput::make('publisherName')->label('Name')->maxLength(150)->placeholder(self::appName())
                     ->help('Empty: the site name.'),
                 TextInput::make('publisherType')->label('Kind of organization')->maxLength(60)->placeholder('Organization')
@@ -137,15 +141,6 @@ final class SiteSettings extends Settings
         ]);
     }
 
-    /** The Add the site name to titles help, with the saved separator and name: "About | Lumina Estates" in search results and tabs. */
-    private static function titleExample(): string
-    {
-        $site = app(self::class);
-        $separator = trim($site->separator) !== '' ? trim($site->separator) : '|';
-
-        return "\"About {$separator} {$site->name()}\" in search results and browser tabs.";
-    }
-
     /** @return list<string> the profile addresses (sameAs), one per line */
     public function profiles(): array
     {
@@ -158,7 +153,7 @@ final class SiteSettings extends Settings
         foreach (preg_split('/\R/', is_string($value) ? $value : '') ?: [] as $line) {
             $line = trim($line);
             if ($line !== '' && (filter_var($line, FILTER_VALIDATE_URL) === false || preg_match('#^https?://#i', $line) !== 1)) {
-                $fail("\"{$line}\" isn't a web address (https://…).");
+                $fail(__('":address" isn\'t a web address (https://…).', ['address' => $line]));
 
                 return;
             }

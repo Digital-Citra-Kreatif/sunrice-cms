@@ -37,10 +37,10 @@ final class ReorderEntries
     public function handle(Collection $collection, array $ids, ?int $parentId = null): bool
     {
         if (! $collection->ordered) {
-            throw ValidationException::withMessages(['ids' => 'This collection lists entries by date or title: turn on Manual order to order them.']);
+            throw ValidationException::withMessages(['ids' => __('This collection lists entries by date or title: turn on Manual order to order them.')]);
         }
         if ($parentId !== null && ! $collection->hierarchical) {
-            throw ValidationException::withMessages(['parent_id' => 'Entries of this collection have no parents.']);
+            throw ValidationException::withMessages(['parent_id' => __('Entries of this collection have no parents.')]);
         }
         $order = self::ids($ids);
 
@@ -54,7 +54,9 @@ final class ReorderEntries
             }
             $unknown = array_diff($order, $level);
             if ($unknown !== []) {
-                throw ValidationException::withMessages(['ids' => 'Not entries of this collection'.($collection->hierarchical ? ' at this level' : '').': '.implode(', ', $unknown).'.']);
+                throw ValidationException::withMessages(['ids' => $collection->hierarchical
+                    ? __('Not entries of this collection at this level: :ids.', ['ids' => implode(', ', $unknown)])
+                    : __('Not entries of this collection: :ids.', ['ids' => implode(', ', $unknown)])]);
             }
             $new = [...$order, ...array_values(array_diff($level, $order))];
             if ($new === $level) {
@@ -88,12 +90,12 @@ final class ReorderEntries
         $valid = [];
         foreach ($ids as $id) {
             if (! is_int($id) && ! (is_string($id) && ctype_digit($id))) {
-                throw ValidationException::withMessages(['ids' => 'Give entry ids (numbers).']);
+                throw ValidationException::withMessages(['ids' => __('Give entry ids (numbers).')]);
             }
             $valid[] = (int) $id;
         }
         if ($valid === [] || count(array_unique($valid)) !== count($valid)) {
-            throw ValidationException::withMessages(['ids' => 'Give each entry id once, in the new order.']);
+            throw ValidationException::withMessages(['ids' => __('Give each entry id once, in the new order.')]);
         }
 
         return $valid;

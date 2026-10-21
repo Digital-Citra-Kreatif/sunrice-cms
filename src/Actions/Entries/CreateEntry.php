@@ -33,11 +33,11 @@ final class CreateEntry
     public function handle(Collection $collection, array $input): EntryTranslation
     {
         if ($collection->trashed()) {
-            throw ValidationException::withMessages(['collection' => "The collection \"{$collection->title}\" was deleted."]);
+            throw ValidationException::withMessages(['collection' => __('The collection ":title" was deleted.', ['title' => $collection->title])]);
         }
         $locale = $input['locale'] ?? Locales::default();
         if (! is_string($locale) || ! Locales::has($locale)) {
-            throw ValidationException::withMessages(['locale' => 'Choose one of the site\'s languages: '.implode(', ', Locales::all()).'.']);
+            throw ValidationException::withMessages(['locale' => __('Choose one of the site\'s languages: :languages.', ['languages' => implode(', ', Locales::all())])]);
         }
         $schema = $collection->schema();
         $data = EntryInput::merge($schema, $schema->defaults(), $input['data'] ?? null);

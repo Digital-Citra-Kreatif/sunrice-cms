@@ -28,7 +28,7 @@ Inside groups, repeater rows and flexible blocks, the same goes row by row: the 
 
 ## Translating with a machine
 
-If your developer has set up machine translation, the editor of a translation has a **Translate from …** button. It fills in what isn't translated yet, from the main language, into the draft. Save your own changes first (the button waits until you do), then read the result, correct it, and publish when it's right. Without it, the button shows greyed out: ask your developer to set it up.
+If your developer has set up machine translation, the editor of a translation has **Translate from …** in its **⋯** menu. It fills in what isn't translated yet, from the main language, into the draft. Save your own changes first (the button waits until you do), then read the result, correct it, and publish when it's right. Without it, a greyed-out **Translate from …** button shows instead: ask your developer to set it up.
 
 ## Pages not translated yet
 

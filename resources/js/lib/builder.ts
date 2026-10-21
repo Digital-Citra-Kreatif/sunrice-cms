@@ -1,5 +1,9 @@
 import type { Errors, FieldDefinition } from '../types.ts';
 
+/** Says a text in the user's language (the panel's t); the tests run without one. */
+type Translate = (text: string, replace?: Record<string, string>) => string;
+const english: Translate = (text, replace = {}) => text.replace(/:([A-Za-z_]+)/g, (match, name: string) => replace[name] ?? match);
+
 /** Groups and repeaters nest this deep (DefinitionValidator::MAX_DEPTH). */
 export const MAX_DEPTH = 5;
 
@@ -28,16 +32,24 @@ export function handleFromLabel(label: string): string {
     return handle;
 }
 
-/** What's typed in a handle box, kept to lowercase letters, digits and underscores ("Contact-Person" → "contact_person"), the end left as typed. */
-export function handleInput(text: string): string {
-    return text
+/**
+ * What can be typed in a handle box: lowercase letters, numbers and
+ * underscores, from a letter ("Hero Image" typed becomes "hero_image"),
+ * the end left as typed.
+ */
+export function cleanHandle(typed: string): string {
+    return typed
         .normalize('NFKD')
         .replace(/[̀-ͯ]/g, '')
         .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/[^a-z0-9_]+/g, '_')
         .replace(/^[0-9_]+/, '')
+        .replace(/_{2,}/g, '_')
         .slice(0, 64);
 }
+
+/** The same as cleanHandle ("Contact-Person" → "contact_person"). */
+export const handleInput = cleanHandle;
 
 /** A handle not yet used on this level: "text", then "text_2"… */
 export function uniqueHandle(base: string, siblings: { handle: string }[]): string {
@@ -124,13 +136,13 @@ export function hasErrors(errors: Errors, path: string): boolean {
 export type ReservedHandles = string[];
 
 /** What's wrong with a field's handle before saving: taken on its level, or kept by content for itself. */
-export function handleWarning(field: { key: string; handle: string; type: string }, siblings: { key: string; handle: string; type: string }[], reserved?: ReservedHandles): string | null {
+export function handleWarning(field: { key: string; handle: string; type: string }, siblings: { key: string; handle: string; type: string }[], reserved?: ReservedHandles, translate: Translate = english): string | null {
     if (field.type === 'fieldset') return null;
     if (reserved?.includes(field.handle)) {
-        return `"${field.handle}" is used by the content itself; choose another handle.`;
+        return translate('":handle" is used by the content itself; choose another handle.', { handle: field.handle });
     }
     if (field.handle !== '' && siblings.some((sibling) => sibling.key !== field.key && sibling.type !== 'fieldset' && sibling.handle === field.handle)) {
-        return `There is already a field "${field.handle}" here.`;
+        return translate('There is already a field ":handle" here.', { handle: field.handle });
     }
 
     return null;

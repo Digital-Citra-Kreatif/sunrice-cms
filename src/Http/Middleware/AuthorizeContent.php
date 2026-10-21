@@ -34,7 +34,7 @@ final class AuthorizeContent
         $param = fn (string $name): mixed => $route?->parameter($name);
         $allowed = match ($area) {
             'entries' => Access::entries($user, $action, ...self::entryScope($param, $request)),
-            'terms' => Access::terms($user, self::taxonomy($param)),
+            'terms' => Access::terms($user, $action, self::taxonomy($param)),
             'submissions' => Access::submissions($user, $action, self::form($param)),
             default => false,
         };
@@ -59,12 +59,16 @@ final class AuthorizeContent
             return [$translation->entry->collection, $translation->entry, $translation->locale];
         }
         $entry = $param('entry');
+        $collection = $param('collection');
         if ($entry instanceof Entry) {
+            // Its address names its collection (bound already): don't load it again.
+            if ($collection instanceof Collection && $collection->id === $entry->collection_id) {
+                $entry->setRelation('collection', $collection);
+            }
             $locale = $param('locale') ?? $request->input('locale');
 
             return [$entry->collection, $entry, is_string($locale) ? $locale : null];
         }
-        $collection = $param('collection');
 
         return [$collection instanceof Collection ? $collection : null, null, null];
     }
@@ -73,10 +77,14 @@ final class AuthorizeContent
     private static function taxonomy(Closure $param): ?Taxonomy
     {
         $term = $param('term');
+        $taxonomy = $param('taxonomy');
         if ($term instanceof Term) {
+            if ($taxonomy instanceof Taxonomy && $taxonomy->id === $term->taxonomy_id) {
+                $term->setRelation('taxonomy', $taxonomy);
+            }
+
             return $term->taxonomy;
         }
-        $taxonomy = $param('taxonomy');
 
         return $taxonomy instanceof Taxonomy ? $taxonomy : null;
     }

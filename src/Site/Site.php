@@ -166,7 +166,7 @@ final class Site
         }
         $locale ??= $translation->locale;
 
-        return url(($locale === Locales::default() ? '' : '/'.$locale).(new RoutePattern($route))->path((string) $translation->slug));
+        return url(Locales::prefix($locale).(new RoutePattern($route))->path((string) $translation->slug));
     }
 
     /**
@@ -247,7 +247,7 @@ final class Site
             return $this->url($translation);
         }
         if ($translation->entry_id === $this->homepageId() && $translation->entry->collection->route !== null) {
-            return url('/'.$locale);
+            return url(Locales::prefix($locale) ?: '/');
         }
         $path = $this->routePath($translation, $locale, $translation->slug);
 
@@ -269,9 +269,7 @@ final class Site
     public function path(EntryTranslation $translation, ?string $slug): ?string
     {
         if ($translation->entry_id === $this->homepageId() && $translation->entry->collection->route !== null && $slug !== null) {
-            $prefix = $translation->locale === Locales::default() ? '' : '/'.$translation->locale;
-
-            return $prefix === '' ? '/' : $prefix;
+            return Locales::prefix($translation->locale) ?: '/';
         }
 
         return $this->routePath($translation, $translation->locale, $slug);
@@ -289,7 +287,7 @@ final class Site
         }
         $pattern = new RoutePattern($route);
 
-        return ($locale === Locales::default() ? '' : '/'.$locale).$pattern->path($slug, $this->parameters($translation, $pattern, $locale));
+        return Locales::prefix($locale).$pattern->path($slug, $this->parameters($translation, $pattern, $locale));
     }
 
     /**
@@ -465,13 +463,9 @@ final class Site
     /** @return array{0: string, 1: string} the language and the path without its prefix */
     private function splitLocale(string $path): array
     {
-        foreach (Locales::all() as $locale) {
-            if ($locale !== Locales::default() && ($path === "/{$locale}" || str_starts_with($path, "/{$locale}/"))) {
-                return [$locale, substr($path, strlen($locale) + 1) ?: '/'];
-            }
-        }
+        [$locale, $rest] = Locales::split($path);
 
-        return [Locales::default(), $path];
+        return [$locale, $rest];
     }
 
     /** @return list<array{0: 'collection'|'taxonomy', 1: int, 2: RoutePattern}> collections' and taxonomies' patterns, most specific first */

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { IndentDecrease, IndentIncrease, Link2, List, LoaderCircle, Plus, Tag, Trash2 } from 'lucide-react';
-import { adminUrl } from '@sunrice/admin-sdk';
+import { IndentDecrease, IndentIncrease, Link2, List, LoaderCircle, Plus, Settings2, Tag, Trash2 } from 'lucide-react';
+import { adminUrl, t } from '@sunrice/admin-sdk';
 import {
     Badge, Button, Card, Checkbox, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input, Label, PageHeader,
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SortableHandle, SortableList, useBreadcrumbs, useUnsavedChanges,
@@ -21,13 +21,15 @@ interface Props {
     terms: { id: number; title: string; taxonomy: string }[];
     listings: { id: number; title: string }[];
     can: { update: boolean };
+    /** Its title and handle (the menu's resource), when the user may change them. */
+    settings?: string | null;
 }
 
 type Kind = 'entry' | 'term' | 'listing' | 'url';
 
-export default function MenuEdit({ menu, items: initial, locales, limits, terms, listings, can }: Props) {
-    const url = adminUrl(`cms/menus/${menu.handle}`);
-    useBreadcrumbs([{ label: 'Menus', href: adminUrl('cms/menus') }, { label: menu.title }]);
+export default function MenuEdit({ menu, items: initial, locales, limits, terms, listings, can, settings }: Props) {
+    const url = adminUrl(`cms/menus/${menu.handle}/links`);
+    useBreadcrumbs([{ label: t('Menus'), href: adminUrl('cms/menus') }, { label: menu.title }]);
     const [items, setItems] = React.useState<FlatItem[]>(() => flatten(initial));
     const [adding, setAdding] = React.useState<Kind | null>(null);
     // The tree is recursive; Inertia's form types stop recursing only at `any`.
@@ -60,38 +62,38 @@ export default function MenuEdit({ menu, items: initial, locales, limits, terms,
                 return (
                     <div className={`cms:rounded-lg cms:border cms:bg-card ${isOverlay ? '' : 'cms:border-border/70'}`}>
                         <div className="cms:flex cms:items-start cms:gap-2 cms:p-2">
-                            {can.update && <div className="cms:flex cms:h-10 cms:shrink-0 cms:items-center"><SortableHandle {...handle} label={`Move ${item.labels[main] || item.target?.title || item.url || 'link'}`} /></div>}
+                            {can.update && <div className="cms:flex cms:h-10 cms:shrink-0 cms:items-center"><SortableHandle {...handle} label={t('Move :title', { title: item.labels[main] || item.target?.title || item.url || t('link') })} /></div>}
                             <div className="cms:flex cms:min-w-0 cms:flex-1 cms:flex-col cms:gap-2">
                             <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
-                                <Input aria-label={`Label (${localeName(main)})`} className="cms:w-full cms:sm:max-w-xs" disabled={!can.update}
-                                    placeholder={item.target?.title ?? 'Label'} value={item.labels[main] ?? ''}
+                                <Input aria-label={t('Label (:language)', { language: localeName(main) })} className="cms:w-full cms:sm:max-w-xs" disabled={!can.update}
+                                    placeholder={item.target?.title ?? t('Label')} value={item.labels[main] ?? ''}
                                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => update(index, { labels: { ...item.labels, [main]: e.target.value } })} />
                                 <span className="cms:min-w-32 cms:flex-1 cms:truncate cms:text-sm cms:text-muted-foreground">
                                     {item.url !== null
                                         ? item.url
-                                        : <>{item.target ? `${item.target.kind}: ${item.target.title}` : 'Gone'} {(!item.target || !item.target.live) && <Badge variant="outline">Not on the site</Badge>}</>}
+                                        : <>{item.target ? `${item.target.kind}: ${item.target.title}` : t('Gone')} {(!item.target || !item.target.live) && <Badge variant="outline">{t('Not on the site')}</Badge>}</>}
                                 </span>
                                 {can.update && (
                                     <div className="cms:flex cms:items-center">
                                         <label className="cms:mr-2 cms:flex cms:items-center cms:gap-1.5 cms:text-sm">
-                                            <Checkbox checked={item.new_tab} onCheckedChange={(checked: boolean) => update(index, { new_tab: checked })} /> New tab
+                                            <Checkbox checked={item.new_tab} onCheckedChange={(checked: boolean) => update(index, { new_tab: checked })} /> {t('New tab')}
                                         </label>
-                                        <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-label="Out a level" disabled={item.depth === 0} onClick={() => change(outdent(items, index))}><IndentDecrease /></Button>
-                                        <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-label="In a level" onClick={() => change(indent(items, index, limits.depth))}><IndentIncrease /></Button>
-                                        <Button type="button" variant="ghost" size="icon" className="cms:size-8 cms:text-destructive" aria-label="Remove, with what's under it" onClick={() => change(removeItem(items, index))}><Trash2 /></Button>
+                                        <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-label={t('Out a level')} disabled={item.depth === 0} onClick={() => change(outdent(items, index))}><IndentDecrease /></Button>
+                                        <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-label={t('In a level')} onClick={() => change(indent(items, index, limits.depth))}><IndentIncrease /></Button>
+                                        <Button type="button" variant="ghost" size="icon" className="cms:size-8 cms:text-destructive" aria-label={t('Remove, with what\'s under it')} onClick={() => change(removeItem(items, index))}><Trash2 /></Button>
                                     </div>
                                 )}
                             </div>
                             {item.collection_id !== null && (
-                                <Input aria-label="Filters" className="cms:w-full cms:sm:max-w-md cms:font-mono" disabled={!can.update}
-                                    placeholder="Filters (optional): listing_type=for-sale" value={item.query ?? ''}
+                                <Input aria-label={t('Filters')} className="cms:w-full cms:sm:max-w-md cms:font-mono" disabled={!can.update}
+                                    placeholder={t('Filters (optional): :example', { example: 'listing_type=for-sale' })} value={item.query ?? ''}
                                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => update(index, { query: e.target.value })} />
                             )}
                             {locales.length > 1 && (
                                 <div className="cms:flex cms:flex-wrap cms:gap-2">
                                     {locales.slice(1).map((code) => (
-                                        <Input key={code} aria-label={`Label (${localeName(code)})`} className="cms:w-full cms:sm:max-w-xs" disabled={!can.update}
-                                            placeholder={`${localeName(code)}: as ${localeName(main)}`} value={item.labels[code] ?? ''}
+                                        <Input key={code} aria-label={t('Label (:language)', { language: localeName(code) })} className="cms:w-full cms:sm:max-w-xs" disabled={!can.update}
+                                            placeholder={t(':language: as :main', { language: localeName(code), main: localeName(main) })} value={item.labels[code] ?? ''}
                                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => update(index, { labels: { ...item.labels, [code]: e.target.value } })} />
                                     ))}
                                 </div>
@@ -106,30 +108,31 @@ export default function MenuEdit({ menu, items: initial, locales, limits, terms,
     );
 
     return (
-        <form onSubmit={save} className="cms:flex cms:max-w-4xl cms:flex-col cms:gap-6">
+        <form onSubmit={save} className="cms:flex cms:max-w-5xl cms:flex-col cms:gap-6">
             <Head title={menu.title} />
             <PageHeader
                 title={menu.title}
-                back={{ href: adminUrl('cms/menus'), label: 'Back to menus' }}
+                back={{ href: adminUrl('cms/menus'), label: t('Back to menus') }}
                 actions={can.update && (
                     <>
-                        <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('entry')}><Plus /> Entry</Button>
-                        {terms.length > 0 && <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('term')}><Tag /> Term</Button>}
-                        {listings.length > 0 && <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('listing')}><List /> Listing</Button>}
-                        <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('url')}><Link2 /> Link</Button>
-                        <Button type="submit" disabled={form.processing}>{form.processing && <LoaderCircle className="cms:animate-spin" />} Save</Button>
+                        {settings && <Button type="button" variant="ghost" asChild><Link href={settings}><Settings2 /> {t('Settings')}</Link></Button>}
+                        <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('entry')}><Plus /> {t('Entry')}</Button>
+                        {terms.length > 0 && <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('term')}><Tag /> {t('Term')}</Button>}
+                        {listings.length > 0 && <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('listing')}><List /> {t('Listing')}</Button>}
+                        <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('url')}><Link2 /> {t('Link')}</Button>
+                        <Button type="submit" disabled={form.processing}>{form.processing && <LoaderCircle className="cms:animate-spin" />} {t('Save')}</Button>
                     </>
                 )}
             >
-                {dirty && <span className="cms:text-sm cms:text-muted-foreground">Unsaved changes</span>}
+                {dirty && <span className="cms:text-sm cms:text-muted-foreground">{t('Unsaved changes')}</span>}
             </PageHeader>
             <FieldError message={errors.items} />
             {Object.keys(errors).some((key) => key.startsWith('items.')) && (
-                <p role="alert" className="cms:text-sm cms:text-destructive">Some links need fixing: {Object.values(errors).filter(Boolean)[0]}</p>
+                <p role="alert" className="cms:text-sm cms:text-destructive">{t('Some links need fixing: :error', { error: Object.values(errors).filter(Boolean)[0] })}</p>
             )}
 
             <Card className="cms:p-2">
-                {items.length === 0 ? <p className="cms:p-4 cms:text-center cms:text-muted-foreground">No links yet. Add an entry or a link.</p> : level(-1)}
+                {items.length === 0 ? <p className="cms:p-4 cms:text-center cms:text-muted-foreground">{t('No links yet. Add an entry or a link.')}</p> : level(-1)}
             </Card>
 
             <AddDialog kind={adding} terms={terms} listings={listings} onClose={() => setAdding(null)} onAdd={(item) => { change([...items, item]); setAdding(null); }} main={main} />
@@ -143,16 +146,16 @@ function strip({ target: _target, children, ...node }: MenuNode): Omit<MenuNode,
 }
 
 /** A menu links to pages that exist: said when the search finds none. */
-const MENU_ENTRY_HINT = 'A menu links to entries that already exist: create the page first (Content → Entries), then add it here, or add a web address instead.';
+const menuEntryHint = (): string => t('A menu links to entries that already exist: create the page first (Content → Entries), then add it here, or add a web address instead.');
 
-const TITLES: Record<Kind, string> = { entry: 'Link to an entry', term: 'Link to a term\'s page', listing: 'Link to a listing page', url: 'Link to an address' };
+const titles = (): Record<Kind, string> => ({ entry: t('Link to an entry'), term: t('Link to a term\'s page'), listing: t('Link to a listing page'), url: t('Link to an address') });
 
-const DESCRIPTIONS: Record<Kind, string> = {
-    entry: 'It follows the entry: its title (unless you give a label) and its address in each language. It shows only while the entry is on the site.',
-    term: 'The page listing the term\'s entries, in each language. Its title is the label unless you give one.',
-    listing: 'The collection\'s listing page, in each language, optionally with filters. The collection\'s title is the label unless you give one.',
-    url: 'A web address, a path on this site (/contact), mailto: or tel:.',
-};
+const descriptions = (): Record<Kind, string> => ({
+    entry: t('It follows the entry: its title (unless you give a label) and its address in each language. It shows only while the entry is on the site.'),
+    term: t('The page listing the term\'s entries, in each language. Its title is the label unless you give one.'),
+    listing: t('The collection\'s listing page, in each language, optionally with filters. The collection\'s title is the label unless you give one.'),
+    url: t('A web address, a path on this site (/contact), mailto: or tel:.'),
+});
 
 function AddDialog({ kind, terms, listings, onClose, onAdd, main }: {
     kind: Kind | null;
@@ -173,15 +176,15 @@ function AddDialog({ kind, terms, listings, onClose, onAdd, main }: {
 
     const add = async () => {
         if (kind === 'entry' && entryId !== null) {
-            const response = await fetch(`${adminUrl('cms/entry-picker')}?${pickerQuery({ ids: [entryId], collections: [] })}`, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+            const response = await fetch(`${adminUrl('cms/entries/picker')}?${pickerQuery({ ids: [entryId], collections: [] })}`, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
             const found = response.ok ? ((await response.json()) as { items: { title: string; collection: string; status: string }[] }).items[0] : undefined;
             onAdd(newItem({ entry_id: entryId, target: found ? { title: found.title, kind: found.collection, live: found.status === 'published' } : null, labels }));
         } else if (kind === 'term' && choice !== '') {
-            const term = terms.find((t) => String(t.id) === choice);
+            const term = terms.find((each) => String(each.id) === choice);
             onAdd(newItem({ term_id: Number(choice), target: term ? { title: term.title, kind: term.taxonomy, live: true } : null, labels }));
         } else if (kind === 'listing' && choice !== '') {
             const listing = listings.find((l) => String(l.id) === choice);
-            onAdd(newItem({ collection_id: Number(choice), target: listing ? { title: listing.title, kind: 'Listing page', live: true } : null, labels, query: query.trim().replace(/^\?/, '') || null }));
+            onAdd(newItem({ collection_id: Number(choice), target: listing ? { title: listing.title, kind: t('Listing page'), live: true } : null, labels, query: query.trim().replace(/^\?/, '') || null }));
         } else if (kind === 'url' && address.trim() !== '' && safe && label.trim() !== '') {
             onAdd(newItem({ url: address.trim(), labels }));
         }
@@ -192,22 +195,22 @@ function AddDialog({ kind, terms, listings, onClose, onAdd, main }: {
         <Dialog open={kind !== null} onOpenChange={(open: boolean) => !open && onClose()}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>{kind ? TITLES[kind] : ''}</DialogTitle>
-                    <DialogDescription>{kind ? DESCRIPTIONS[kind] : ''}</DialogDescription>
+                    <DialogTitle>{kind ? titles()[kind] : ''}</DialogTitle>
+                    <DialogDescription>{kind ? descriptions()[kind] : ''}</DialogDescription>
                 </DialogHeader>
                 <div className="cms:flex cms:flex-col cms:gap-3">
                     {kind === 'entry' && (
                         <EntriesPicker id="menu-entry" value={entryId} multiple={false} max={null} collections={[]} invalid={false}
-                            emptyHint={MENU_ENTRY_HINT} onChange={(value) => setEntryId(typeof value === 'number' ? value : null)} />
+                            emptyHint={menuEntryHint()} onChange={(value) => setEntryId(typeof value === 'number' ? value : null)} />
                     )}
                     {(kind === 'term' || kind === 'listing') && (
                         <div className="cms:flex cms:flex-col cms:gap-2">
-                            <Label htmlFor="menu-target">{kind === 'term' ? 'Term' : 'Collection'}</Label>
+                            <Label htmlFor="menu-target">{kind === 'term' ? t('Term') : t('Collection')}</Label>
                             <Select value={choice} onValueChange={setChoice}>
-                                <SelectTrigger id="menu-target"><SelectValue placeholder="Choose…" /></SelectTrigger>
+                                <SelectTrigger id="menu-target"><SelectValue placeholder={t('Choose…')} /></SelectTrigger>
                                 <SelectContent>
                                     {kind === 'term'
-                                        ? terms.map((t) => <SelectItem key={t.id} value={String(t.id)}>{t.taxonomy}: {t.title}</SelectItem>)
+                                        ? terms.map((term) => <SelectItem key={term.id} value={String(term.id)}>{term.taxonomy}: {term.title}</SelectItem>)
                                         : listings.map((l) => <SelectItem key={l.id} value={String(l.id)}>{l.title}</SelectItem>)}
                                 </SelectContent>
                             </Select>
@@ -215,28 +218,28 @@ function AddDialog({ kind, terms, listings, onClose, onAdd, main }: {
                     )}
                     {kind === 'listing' && (
                         <div className="cms:flex cms:flex-col cms:gap-2">
-                            <Label htmlFor="menu-query">Filters (optional)</Label>
+                            <Label htmlFor="menu-query">{t('Filters (optional)')}</Label>
                             <Input id="menu-query" className="cms:font-mono" value={query} placeholder="listing_type=for-sale"
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)} />
-                            <p className="cms:text-sm cms:text-muted-foreground">What the listing page's filters put after the ? in its address. Each language's link gets them, and a term may be named by its slug in any language.</p>
+                            <p className="cms:text-sm cms:text-muted-foreground">{t('What the listing page\'s filters put after the ? in its address. Each language\'s link gets them, and a term may be named by its slug in any language.')}</p>
                         </div>
                     )}
                     {kind === 'url' && (
                         <div className="cms:flex cms:flex-col cms:gap-2">
-                            <Label htmlFor="menu-url">Address</Label>
-                            <Input id="menu-url" value={address} placeholder="https://… or /contact" aria-invalid={!safe}
+                            <Label htmlFor="menu-url">{t('Address')}</Label>
+                            <Input id="menu-url" value={address} placeholder={t('https://… or /contact')} aria-invalid={!safe}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddress(e.target.value)} />
-                            {!safe && <p className="cms:text-sm cms:text-destructive">This address could run code; use https://, a path, mailto: or tel:.</p>}
+                            {!safe && <p className="cms:text-sm cms:text-destructive">{t('This address could run code; use https://, a path, mailto: or tel:.')}</p>}
                         </div>
                     )}
                     <div className="cms:flex cms:flex-col cms:gap-2">
-                        <Label htmlFor="menu-label">Label{kind === 'url' ? '' : ' (optional)'}</Label>
+                        <Label htmlFor="menu-label">{kind === 'url' ? t('Label') : t('Label (optional)')}</Label>
                         <Input id="menu-label" value={label} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLabel(e.target.value)} />
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-                    <Button type="button" onClick={() => void add()} disabled={!ready}>Add</Button>
+                    <Button type="button" variant="outline" onClick={onClose}>{t('Cancel')}</Button>
+                    <Button type="button" onClick={() => void add()} disabled={!ready}>{t('Add')}</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

@@ -93,16 +93,16 @@ final class References
             $language = $row->locale === '' ? '' : ' ('.strtoupper($row->locale).')';
             $item = match ($row->source_type) {
                 ContentReference::ENTRY => ($entry = $entries->get($row->source_id)) === null ? null : [
-                    'label' => $entry->collection->title.': '.($entry->translation($row->locale)->draft_title ?? '#'.$entry->id).$language.($entry->trashed() ? ' — in the trash' : ''),
-                    'url' => Route::has('sunrice.admin.cms.entries.edit') ? route('sunrice.admin.cms.entries.edit', [$entry->id, 'locale' => $row->locale]) : null,
+                    'label' => self::trashed($entry->collection->title.': '.($entry->translation($row->locale)->draft_title ?? '#'.$entry->id).$language, $entry->trashed()),
+                    'url' => AdminUrls::entry($entry, $row->locale),
                 ],
                 ContentReference::TERM => ($term = $terms->get($row->source_id)) === null ? null : [
-                    'label' => $term->taxonomy->title.': '.$term->title($row->locale).$language.($term->trashed() ? ' — in the trash' : ''),
-                    'url' => Route::has('sunrice.admin.cms.terms.edit') ? route('sunrice.admin.cms.terms.edit', [$term->id, 'locale' => $row->locale]) : null,
+                    'label' => self::trashed($term->taxonomy->title.': '.$term->title($row->locale).$language, $term->trashed()),
+                    'url' => AdminUrls::term($term, $row->locale),
                 ],
                 ContentReference::GLOBAL => ($set = $sets->get($row->source_id)) === null ? null : [
-                    'label' => 'Globals: '.$set->title.$language,
-                    'url' => Route::has('sunrice.admin.cms.globals.edit') ? route('sunrice.admin.cms.globals.edit', [$set->handle, 'locale' => $row->locale]) : null,
+                    'label' => self::said(__('Globals: :title', ['title' => $set->title.$language]), 'Globals: '.$set->title.$language),
+                    'url' => Route::has('sunrice.admin.cms.globals.values.edit') ? route('sunrice.admin.cms.globals.values.edit', [$set->handle, 'locale' => $row->locale]) : null,
                 ],
                 default => null,
             };
@@ -135,7 +135,21 @@ final class References
         $labels = array_map(fn (array $item): string => $item['label'], array_slice($usedBy, 0, $limit));
         $more = count($usedBy) - count($labels);
 
-        return implode('; ', $labels).($more > 0 ? " and {$more} more" : '');
+        $list = implode('; ', $labels);
+
+        return $more > 0 ? self::said(__(':list and :count more', ['list' => $list, 'count' => $more]), "{$list} and {$more} more") : $list;
+    }
+
+    /** A source's label, saying when it's in the trash. */
+    private static function trashed(string $label, bool $trashed): string
+    {
+        return $trashed ? self::said(__(':label — in the trash', ['label' => $label]), "{$label} — in the trash") : $label;
+    }
+
+    /** What __() said, or the English when it gave something else. */
+    private static function said(mixed $said, string $english): string
+    {
+        return is_string($said) ? $said : $english;
     }
 
     /**

@@ -74,10 +74,10 @@ final class SaveEntrySettings
             return null;
         }
         if (strlen($template) > 100 || preg_match(self::TEMPLATE, $template) !== 1) {
-            throw ValidationException::withMessages(['template' => "Use a view name like {$example}: lowercase letters, digits, dashes, dots."]);
+            throw ValidationException::withMessages(['template' => __('Use a view name like :example: lowercase letters, digits, dashes, dots.', ['example' => $example])]);
         }
         if (! self::allowed($template)) {
-            throw ValidationException::withMessages(['template' => 'Use a view under '.implode(', ', self::prefixes()).", like {$example}."]);
+            throw ValidationException::withMessages(['template' => __('Use a view under :prefixes, like :example.', ['prefixes' => implode(', ', self::prefixes()), 'example' => $example])]);
         }
 
         return $template;
@@ -117,20 +117,20 @@ final class SaveEntrySettings
             return null;
         }
         if (! $entry->collection->hierarchical) {
-            throw ValidationException::withMessages(['parent_id' => 'Entries of this collection have no parents: turn on Hierarchical for it first.']);
+            throw ValidationException::withMessages(['parent_id' => __('Entries of this collection have no parents: turn on Hierarchical for it first.')]);
         }
         $parent = is_numeric($id) ? Entry::query()->where('collection_id', $entry->collection_id)->find((int) $id) : null;
         if ($parent === null) {
-            throw ValidationException::withMessages(['parent_id' => 'Choose an entry of the same collection.']);
+            throw ValidationException::withMessages(['parent_id' => __('Choose an entry of the same collection.')]);
         }
         // Never under itself or one of its own children, which would make a loop.
         $depth = 1;
         for ($above = $parent; $above !== null; $above = $above->parent) {
             if ($above->id === $entry->id) {
-                throw ValidationException::withMessages(['parent_id' => 'An entry can\'t be under itself or one of its own children.']);
+                throw ValidationException::withMessages(['parent_id' => __('An entry can\'t be under itself or one of its own children.')]);
             }
             if (++$depth > Entry::MAX_DEPTH) {
-                throw ValidationException::withMessages(['parent_id' => 'Entries nest at most '.Entry::MAX_DEPTH.' deep.']);
+                throw ValidationException::withMessages(['parent_id' => __('Entries nest at most :max deep.', ['max' => Entry::MAX_DEPTH])]);
             }
         }
 

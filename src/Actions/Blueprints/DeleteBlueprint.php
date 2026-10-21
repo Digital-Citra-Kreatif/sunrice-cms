@@ -28,7 +28,7 @@ final class DeleteBlueprint
         $users = $this->usedBy($blueprint);
         if ($users !== []) {
             throw ValidationException::withMessages([
-                'blueprint' => "\"{$blueprint->title}\" is used by ".implode(', ', $users).'. Choose another blueprint there first.',
+                'blueprint' => __('":title" is used by :users. Choose another blueprint there first.', ['title' => $blueprint->title, 'users' => implode(', ', $users)]),
             ]);
         }
         $blueprint->delete();
@@ -48,20 +48,20 @@ final class DeleteBlueprint
         $users = [];
         foreach (Collection::query()->where(fn ($query) => $query->where('blueprint', $handle)->orWhere('listing_blueprint', $handle))->orderBy('title')->get() as $collection) {
             if ($collection->blueprint === $handle) {
-                $users[] = "the collection \"{$collection->title}\"";
+                $users[] = __('the collection ":title"', ['title' => $collection->title]);
             }
             if ($collection->listing_blueprint === $handle) {
-                $users[] = "the listing page of \"{$collection->title}\"";
+                $users[] = __('the listing page of ":title"', ['title' => $collection->title]);
             }
         }
         foreach (Taxonomy::query()->where('blueprint', $handle)->orderBy('title')->get() as $taxonomy) {
-            $users[] = "the taxonomy \"{$taxonomy->title}\"";
+            $users[] = __('the taxonomy ":title"', ['title' => $taxonomy->title]);
         }
         foreach (GlobalSet::query()->where('blueprint', $handle)->orderBy('title')->get() as $set) {
-            $users[] = "the global set \"{$set->title}\"";
+            $users[] = __('the global set ":title"', ['title' => $set->title]);
         }
         foreach (Form::query()->where('blueprint', $handle)->orderBy('title')->get() as $form) {
-            $users[] = "the form \"{$form->title}\"";
+            $users[] = __('the form ":title"', ['title' => $form->title]);
         }
 
         return $users;

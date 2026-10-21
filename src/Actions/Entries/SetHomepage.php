@@ -24,10 +24,10 @@ final class SetHomepage
     public function handle(Entry $entry): void
     {
         if ($entry->trashed() || $entry->collection->route === null) {
-            throw ValidationException::withMessages(['homepage' => 'Only a page (an entry of a collection with a URL) can be the homepage.']);
+            throw ValidationException::withMessages(['homepage' => __('Only a page (an entry of a collection with a URL) can be the homepage.')]);
         }
         if ($entry->mainTranslation()?->isLive() !== true) {
-            throw ValidationException::withMessages(['homepage' => 'Publish it first: the homepage must be live.']);
+            throw ValidationException::withMessages(['homepage' => __('Publish it first: the homepage must be live.')]);
         }
         $this->save->handle(app(SiteSettings::class), ['homepage' => $entry->id]);
     }

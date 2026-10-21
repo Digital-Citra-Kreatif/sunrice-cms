@@ -25,8 +25,9 @@ final class HandleRule implements ValidationRule
             return;
         }
         $suggestion = is_string($value) ? self::suggest($value) : '';
-        $fail('Use lowercase letters, digits and underscores, starting with a letter'
-            .($suggestion !== '' ? ": try \"{$suggestion}\"." : '.'));
+        $fail($suggestion !== ''
+            ? __('Use lowercase letters, digits and underscores, starting with a letter: try ":handle".', ['handle' => $suggestion])
+            : __('Use lowercase letters, digits and underscores, starting with a letter.'));
     }
 
     /** The handle a text suggests: "Contact person" or "contact-person" → "contact_person"; "" when none. */

@@ -89,17 +89,20 @@ final class SwitchMainLanguage
         $report = $this->report($to);
         $from = Locales::default();
         if (! $copyMissing && ($report['missing_entries'] > 0 || $report['missing_terms'] > 0)) {
-            throw ValidationException::withMessages(['locale' => "{$report['missing_entries']} entries and {$report['missing_terms']} terms have no ".Locales::name($to)." translation. Translate them first, or copy the {$from} ones into it (--copy-missing)."]);
+            throw ValidationException::withMessages(['locale' => __(':entries entries and :terms terms have no :language translation. Translate them first, or copy the :from ones into it (--copy-missing).', ['entries' => $report['missing_entries'], 'terms' => $report['missing_terms'], 'language' => Locales::name($to), 'from' => $from])]);
         }
 
         $locales = Locales::names();
+        $prefixes = app(LocaleSettings::class)->locales() !== [] ? app(LocaleSettings::class)->prefixes() : [];
+        // The addresses' first segments before and after: set ones stay, the default ones follow the main language.
+        $this->segments = [Locales::segments(), Locales::segmentsFor(array_keys([$to => $locales[$to]] + $locales), $prefixes)];
         $before = app(LocaleSettings::class)->languages;
         $this->counts = ['entries' => 0, 'copied_entries' => 0, 'terms' => 0, 'copied_terms' => 0, 'globals' => 0, 'listings' => 0, 'menu_items' => 0, 'redirects' => 0];
 
         try {
-            DB::transaction(function () use ($from, $to, $locales): void {
+            DB::transaction(function () use ($from, $to, $locales, $prefixes): void {
                 // First, so what's saved below (search text) reads the new main language.
-                $this->settings->handle(app(LocaleSettings::class), ['languages' => LocaleSettings::lines([$to => $locales[$to]] + $locales)]);
+                $this->settings->handle(app(LocaleSettings::class), ['languages' => LocaleSettings::lines([$to => $locales[$to]] + $locales, $prefixes)]);
                 $this->entries($from, $to);
                 $this->terms($from, $to);
                 $this->counts['globals'] = $this->values(GlobalValue::query()->where('locale', $from)->with('globalSet')->get()->all(), $to,
@@ -134,10 +137,10 @@ final class SwitchMainLanguage
     private function check(string $to): string
     {
         if (! Locales::has($to)) {
-            throw ValidationException::withMessages(['locale' => "\"{$to}\" isn't one of the site's languages (".implode(', ', Locales::all()).'). Add it in Settings → Languages first.']);
+            throw ValidationException::withMessages(['locale' => __('":code" isn\'t one of the site\'s languages (:languages). Add it in Settings → Languages first.', ['code' => $to, 'languages' => implode(', ', Locales::all())])]);
         }
         if ($to === Locales::default()) {
-            throw ValidationException::withMessages(['locale' => Locales::name($to)." ({$to}) is the main language already."]);
+            throw ValidationException::withMessages(['locale' => __(':name (:code) is the main language already.', ['name' => Locales::name($to), 'code' => $to])]);
         }
 
         return Locales::default();
@@ -333,6 +336,9 @@ final class SwitchMainLanguage
         }
     }
 
+    /** @var array{0: array<string, string>, 1: array<string, string>} the languages' address segments before and after */
+    private array $segments = [[], []];
+
     /**
      * Rewrites redirects for the new addresses (/id/x → /x, /x → /en/x),
      * then sends the old main language's pages' old addresses to their new
@@ -341,21 +347,15 @@ final class SwitchMainLanguage
     private function redirects(string $from, string $to): int
     {
         $count = 0;
-        $prefixes = array_values(array_diff(Locales::all(), [$from, $to]));
-        $move = function (string $path) use ($from, $to, $prefixes): string {
+        [$old, $new] = $this->segments;
+        $move = function (string $path) use ($old, $new): string {
             if (! str_starts_with($path, '/')) {
                 return $path; // a web address elsewhere
             }
-            if ($path === "/{$to}" || str_starts_with($path, "/{$to}/")) {
-                return substr($path, strlen($to) + 1) ?: '/';
-            }
-            foreach ($prefixes as $prefix) {
-                if ($path === "/{$prefix}" || str_starts_with($path, "/{$prefix}/")) {
-                    return $path;
-                }
-            }
+            [$locale, $rest] = Locales::split($path, $old);
+            $segment = $new[$locale] ?? $locale;
 
-            return $path === '/' ? "/{$from}" : "/{$from}{$path}";
+            return $segment === '' ? $rest : '/'.$segment.($rest === '/' ? '' : $rest);
         };
         $taken = [];
         foreach (Redirect::query()->orderBy('id')->get() as $redirect) {
@@ -375,6 +375,10 @@ final class SwitchMainLanguage
             $redirect->save();
         }
 
+        // The old main language's pages: from its old prefix (none, by default) to its new one.
+        if (self::at($old, $from, '/x') === self::at($new, $from, '/x')) {
+            return $count;
+        }
         $homepage = app(SiteSettings::class)->homepage;
         $pages = EntryTranslation::query()->live()->where('locale', $from)->with('entry.collection', 'entry.translations')->get();
         foreach ($pages as $page) {
@@ -387,7 +391,7 @@ final class SwitchMainLanguage
             if ($there !== null && $there->isLive() && $there->slug === $page->slug) {
                 continue;
             }
-            $count += $this->moved($path, "/{$from}{$path}");
+            $count += $this->moved(self::at($old, $from, $path), self::at($new, $from, $path));
         }
         $terms = TermTranslation::query()->where('locale', $from)->with('term.taxonomy', 'term.translations')->get();
         foreach ($terms as $term) {
@@ -396,10 +400,22 @@ final class SwitchMainLanguage
                 continue;
             }
             $path = (new RoutePattern($route))->path($term->slug);
-            $count += $this->moved($path, "/{$from}{$path}");
+            $count += $this->moved(self::at($old, $from, $path), self::at($new, $from, $path));
         }
 
         return $count;
+    }
+
+    /**
+     * A language's address of a path, by its segment.
+     *
+     * @param  array<string, string>  $segments
+     */
+    private static function at(array $segments, string $locale, string $path): string
+    {
+        $segment = $segments[$locale] ?? $locale;
+
+        return $segment === '' ? $path : "/{$segment}{$path}";
     }
 
     /** A redirect from an old address to a new one, with redirects to the old one sent straight there. */

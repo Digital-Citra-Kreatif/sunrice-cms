@@ -4,6 +4,7 @@ import {
     Badge, Button, Checkbox, DatePicker, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input, Label, MediaPickerInput,
     moveItem, RichTextEditor, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Skeleton, SortableHandle, type SortableHandleProps, SortableList, Switch, Textarea,
 } from '@sunrice/admin-sdk/ui';
+import { t } from '@sunrice/admin-sdk';
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
 import { TermsPicker } from '@/components/TermsPicker.tsx';
 import { errorsAt } from '@/lib/builder.ts';
@@ -99,7 +100,7 @@ function Control({ field, value, onChange, errors, id, content }: Props) {
             return null;
         case 'file':
             // Visitors send files with forms; entries use a media field.
-            return <p className="cms:text-sm cms:text-muted-foreground">Visitors attach a file here when they send a form.</p>;
+            return <p className="cms:text-sm cms:text-muted-foreground">{t('Visitors attach a file here when they send a form.')}</p>;
         case 'textarea':
             return <Textarea id={id} aria-invalid={invalid} value={typeof value === 'string' ? value : ''} rows={numberConfig(field, 'rows') ?? 4}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)} />;
@@ -182,7 +183,7 @@ export function Fields({ fields, value, onChange, errors, id, content, bare = fa
         <div className={bare ? 'cms:flex cms:flex-col cms:gap-6' : 'cms:flex cms:flex-col cms:gap-4 cms:rounded-lg cms:border cms:p-4'}>
             {fields.filter((child) => isShown(child, value)).map((child) => child.shared ? (
                 // Greyed out; the form says once, at the top, where to edit shared fields.
-                <fieldset key={child.handle} disabled className="cms:flex cms:flex-col cms:gap-1 cms:opacity-60" title="Shared by all languages: edit it in the main language">
+                <fieldset key={child.handle} disabled className="cms:flex cms:flex-col cms:gap-1 cms:opacity-60" title={t('Shared by all languages: edit it in the main language.')}>
                     <FieldInput id={`${id}-${child.handle}`} field={child} value={value[child.handle]} content={content} errors={{}} onChange={() => {}} />
                 </fieldset>
             ) : (
@@ -199,7 +200,7 @@ function SingleSelect({ options, value, onChange, id, empty }: { options: Option
         <Select value={value ?? NONE} onValueChange={(next: string) => onChange(next === NONE ? null : next)}>
             <SelectTrigger id={id} className="cms:w-full cms:max-w-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
-                {empty && <SelectItem value={NONE}>None</SelectItem>}
+                {empty && <SelectItem value={NONE}>{t('None')}</SelectItem>}
                 {options.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
             </SelectContent>
         </Select>
@@ -207,7 +208,7 @@ function SingleSelect({ options, value, onChange, id, empty }: { options: Option
 }
 
 function MultiSelect({ options, value, onChange, empty, inTickOrder = false }: { options: Option[]; value: string[]; onChange: (value: unknown) => void; empty?: string; inTickOrder?: boolean }) {
-    if (options.length === 0) return <p className="cms:text-sm cms:text-muted-foreground">{empty ?? 'Nothing to choose from yet.'}</p>;
+    if (options.length === 0) return <p className="cms:text-sm cms:text-muted-foreground">{empty ?? t('Nothing to choose from yet.')}</p>;
 
     return (
         <div className="cms:flex cms:flex-col cms:gap-2">
@@ -243,26 +244,26 @@ function LinkInput({ label, value, onChange, errors, id, collections }: {
 
     return (
         <div className="cms:flex cms:flex-col cms:gap-2">
-            <div role="radiogroup" aria-label={`${label}: link to`} className="cms:inline-flex cms:w-fit cms:rounded-md cms:border cms:p-0.5">
+            <div role="radiogroup" aria-label={t(':field: link to', { field: label })} className="cms:inline-flex cms:w-fit cms:rounded-md cms:border cms:p-0.5">
                 {(['url', 'entry'] as const).map((option) => (
                     <Button key={option} type="button" size="sm" role="radio" aria-checked={type === option} variant={type === option ? 'secondary' : 'ghost'}
                         onClick={() => set({ type: option, url: option === 'url' ? value.url : undefined, entry_id: option === 'entry' ? value.entry_id : undefined })}>
-                        {option === 'url' ? 'Address' : 'Entry'}
+                        {option === 'url' ? t('Address') : t('Entry')}
                     </Button>
                 ))}
             </div>
             <div className="cms:grid cms:gap-2 cms:md:grid-cols-[2fr_1fr_auto] cms:md:items-start">
                 {type === 'url'
-                    ? <Input id={id} aria-label={`${label}: address`} placeholder="https://… or /about" value={typeof value.url === 'string' ? value.url : ''}
+                    ? <Input id={id} aria-label={t(':field: address', { field: label })} placeholder={t('https://… or /about')} value={typeof value.url === 'string' ? value.url : ''}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => set({ url: e.target.value })} aria-invalid={errors.url !== undefined} />
                     : <EntriesPicker id={id} invalid={errors.entry_id !== undefined} multiple={false} max={null} collections={collections}
                         value={typeof value.entry_id === 'number' ? value.entry_id : null}
                         onChange={(next) => set({ entry_id: typeof next === 'number' ? next : undefined })} />}
-                <Input aria-label={`${label}: link text`} placeholder={type === 'entry' ? 'Link text (the entry\'s title)' : 'Link text'} value={typeof value.label === 'string' ? value.label : ''}
+                <Input aria-label={t(':field: link text', { field: label })} placeholder={type === 'entry' ? t('Link text (the entry\'s title)') : t('Link text')} value={typeof value.label === 'string' ? value.label : ''}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => set({ label: e.target.value })} />
                 <label className="cms:flex cms:h-9 cms:items-center cms:gap-2 cms:text-sm">
                     <Checkbox checked={value.new_tab === true} onCheckedChange={(checked: boolean) => set({ new_tab: checked })} />
-                    New tab
+                    {t('New tab')}
                 </label>
                 <div className="cms:md:col-span-3"><FieldError message={errors.url ?? errors.entry_id ?? errors.label ?? errors.type} /></div>
             </div>
@@ -316,7 +317,7 @@ function FoldAll({ keys, folding }: { keys: string[]; folding: ReturnType<typeof
 
     return (
         <Button type="button" variant="ghost" size="sm" onClick={() => folding.setAll(keys, open)}>
-            {open ? <ChevronsDownUp /> : <ChevronsUpDown />} {open ? 'Collapse all' : 'Expand all'}
+            {open ? <ChevronsDownUp /> : <ChevronsUpDown />} {open ? t('Collapse all') : t('Expand all')}
         </Button>
     );
 }
@@ -327,7 +328,7 @@ function Rows({ field, value, onChange, errors, id, content = false }: Omit<Prop
     const keys = useItemKeys(rows.length);
     const set = (index: number, row: Record<string, unknown>) => onChange(rows.map((r, i) => (i === index ? row : r)));
     const remove = (index: number) => { keys.remove(index); onChange(rows.filter((_, i) => i !== index)); };
-    const noun = (field.label || 'row').toLowerCase().replace(/s$/, '');
+    const noun = field.label ? field.label.toLowerCase().replace(/s$/, '') : t('row');
     const Noun = noun.charAt(0).toUpperCase() + noun.slice(1);
     const items = rows.map((row, index) => ({ row, index, key: keys.keys[index] ?? String(index) }));
     const folding = useCollapsed();
@@ -338,7 +339,7 @@ function Rows({ field, value, onChange, errors, id, content = false }: Omit<Prop
                 onReorder={(next, from, to) => { keys.move(from, to); onChange(next.map((item) => item.row)); }}>
                 {({ row, index, key }, { handle }) => isCompact(field, content) ? (
                     <div className="cms:flex cms:items-start cms:gap-2">
-                        <SortableHandle {...handle} label={`Move ${noun} ${index + 1}`} className="cms:mt-1" />
+                        <SortableHandle {...handle} label={t('Move :item :number', { item: noun, number: index + 1 })} className="cms:mt-1" />
                         {columns.map((column) => (
                             <div key={column.handle} className="cms:flex cms:flex-1 cms:flex-col cms:gap-1">
                                 <Input aria-label={column.label || column.handle} placeholder={column.label || column.handle}
@@ -347,7 +348,7 @@ function Rows({ field, value, onChange, errors, id, content = false }: Omit<Prop
                                 <FieldError message={errors[`${index}.${column.handle}`]} />
                             </div>
                         ))}
-                        <Button type="button" variant="ghost" size="icon" aria-label={`Remove ${noun} ${index + 1}`} onClick={() => remove(index)}>
+                        <Button type="button" variant="ghost" size="icon" aria-label={t('Remove :item :number', { item: noun, number: index + 1 })} onClick={() => remove(index)}>
                             <Trash2 />
                         </Button>
                     </div>
@@ -368,7 +369,7 @@ function Rows({ field, value, onChange, errors, id, content = false }: Omit<Prop
             </SortableList>
             <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
                 <Button type="button" variant="outline" size="sm" onClick={() => onChange([...rows, content ? newRow() : {}])}>
-                    <Plus /> Add {noun}
+                    <Plus /> {t('Add :item', { item: noun })}
                 </Button>
                 {!isCompact(field, content) && <FoldAll keys={items.map((item) => item.key)} folding={folding} />}
             </div>
@@ -388,10 +389,10 @@ function Blocks({ field, value, onChange, errors, id }: Omit<Props, 'value'> & {
     return (
         <div className="cms:flex cms:flex-col cms:gap-3">
             <SortableList items={items} getId={(item) => item.key} className="cms:gap-3"
-                getLabel={(item) => `${types.find((t) => t.type === item.block.type)?.label ?? String(item.block.type)} block`}
+                getLabel={(item) => t(':type block', { type: types.find((each) => each.type === item.block.type)?.label ?? String(item.block.type) })}
                 onReorder={(next, from, to) => { keys.move(from, to); onChange(next.map((item) => item.block)); }}>
                 {({ block, index, key }, { handle }) => {
-                    const type = types.find((t) => t.type === block.type);
+                    const type = types.find((each) => each.type === block.type);
                     const blockErrors = errorsAt(errors, `${index}.values`);
                     const collapsed = folding.isCollapsed(key, Object.keys(blockErrors).length > 0 || errors[`${index}.type`] !== undefined);
                     return (
@@ -404,7 +405,7 @@ function Blocks({ field, value, onChange, errors, id }: Omit<Props, 'value'> & {
                                     <Fields fields={type.fields} value={asRecord(block.values)} onChange={(values) => set(index, { ...block, values })}
                                         errors={blockErrors} id={`${id}-${index}`} content />
                                 ) : (
-                                    <p className="cms:rounded-lg cms:border cms:p-4 cms:text-sm cms:text-muted-foreground">This kind of block no longer exists. Its values are kept.</p>
+                                    <p className="cms:rounded-lg cms:border cms:p-4 cms:text-sm cms:text-muted-foreground">{t('This kind of block no longer exists. Its values are kept.')}</p>
                                 )}
                             </div>
                             <FieldError message={errors[`${index}.type`]} />
@@ -415,7 +416,7 @@ function Blocks({ field, value, onChange, errors, id }: Omit<Props, 'value'> & {
             <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button type="button" variant="outline" size="sm" disabled={types.length === 0}><Plus /> Add block</Button>
+                        <Button type="button" variant="outline" size="sm" disabled={types.length === 0}><Plus /> {t('Add block')}</Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
                         {types.map((type) => (
@@ -443,22 +444,22 @@ function ItemBar({ label, summary, badge = false, handle, onRemove, collapsed, o
 
     return (
         <div className="cms:flex cms:items-center cms:gap-2">
-            <SortableHandle {...handle} label={`Move ${name}`} />
+            <SortableHandle {...handle} label={t('Move :title', { title: name })} />
             <button type="button" onClick={onToggle} aria-expanded={!collapsed} aria-controls={controls}
                 className="cms:flex cms:min-w-0 cms:flex-1 cms:items-center cms:gap-2 cms:rounded-md cms:text-left cms:outline-none cms:focus-visible:ring-2 cms:focus-visible:ring-ring">
                 <Chevron className="cms:size-4 cms:shrink-0 cms:text-muted-foreground" aria-hidden />
                 {badge ? <Badge variant="secondary">{label}</Badge> : <span className="cms:shrink-0 cms:text-sm cms:font-medium">{label}</span>}
                 {summary && <span className="cms:truncate cms:text-sm cms:text-muted-foreground">{summary}</span>}
-                <span className="cms:sr-only">{collapsed ? '(collapsed)' : ''}</span>
+                <span className="cms:sr-only">{collapsed ? t('(collapsed)') : ''}</span>
             </button>
             {hidden !== undefined && (
-                <label className="cms:flex cms:shrink-0 cms:items-center cms:gap-2 cms:text-sm cms:text-muted-foreground" title="Off: kept here, but left out of the page">
-                    <Switch checked={!hidden} onCheckedChange={(shown: boolean) => onHidden(!shown)} aria-label={`${name}: visible on site`} />
-                    Visible on site
+                <label className="cms:flex cms:shrink-0 cms:items-center cms:gap-2 cms:text-sm cms:text-muted-foreground" title={t('Off: kept here, but left out of the page')}>
+                    <Switch checked={!hidden} onCheckedChange={(shown: boolean) => onHidden(!shown)} aria-label={t(':title: visible on site', { title: name })} />
+                    {t('Visible on site')}
                 </label>
             )}
             <Button type="button" variant="ghost" size="icon" className="cms:size-8 cms:shrink-0 cms:text-destructive"
-                aria-label={`Remove ${name}`} onClick={onRemove}><Trash2 /></Button>
+                aria-label={t('Remove :title', { title: name })} onClick={onRemove}><Trash2 /></Button>
         </div>
     );
 }

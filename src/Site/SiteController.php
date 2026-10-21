@@ -9,7 +9,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use Illuminate\View\ViewException;
 use Sunrice\Admin\Panel;
@@ -22,6 +21,7 @@ use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Query\EntryPaginator;
 use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Support\Access;
+use Sunrice\Cms\Support\AdminUrls;
 use Sunrice\Cms\Support\Locales;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
@@ -35,6 +35,11 @@ final class SiteController
 {
     public function show(Request $request, Site $site): Response|RedirectResponse
     {
+        // Every language has its own prefix (the main one too, /en): a plain address goes to the main language's.
+        [, $rest, $matched] = Locales::split($request->path());
+        if (! $matched) {
+            return redirect()->to(self::withQuery(url(Locales::prefix(Locales::default()).($rest === '/' ? '' : $rest)), $request), 301);
+        }
         // The search page (/search, /id/search) before any page at that address.
         if (Search::enabled() && ($locale = $site->searchLocale($request->path())) !== null) {
             return app(SearchController::class)($request, app(Search::class), $locale);
@@ -54,8 +59,8 @@ final class SiteController
         $path = '/'.trim($request->path(), '/');
         if ($translation !== null && $translation->locale !== $locale) {
             // The homepage in a language it isn't translated into is at /{locale}.
-            if ($site->isHomepage($translation) && $path !== '/'.$locale) {
-                return redirect()->to(self::withQuery(url('/'.$locale), $request), 301);
+            if ($site->isHomepage($translation) && $path !== (Locales::prefix($locale) ?: '/')) {
+                return redirect()->to(self::withQuery(url(Locales::prefix($locale) ?: '/'), $request), 301);
             }
         } elseif ($translation !== null && ($own = $site->ownPath($translation)) !== null && ($served = $site->path($translation, $translation->slug)) !== $own
             && $path === $own) {
@@ -103,7 +108,7 @@ final class SiteController
             'preview' => $preview,
             'liveUrl' => $live,
             'draftUrl' => $live === null ? null : $live.'?draft',
-            'editUrl' => Route::has('sunrice.admin.cms.entries.edit') ? route('sunrice.admin.cms.entries.edit', [$translation->entry_id, 'locale' => $translation->locale]) : null,
+            'editUrl' => AdminUrls::entry($translation->entry, $translation->locale),
         ])->render();
         $content = (string) $response->getContent();
         $content = preg_match('/<body\b[^>]*>/i', $content) === 1

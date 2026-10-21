@@ -35,19 +35,19 @@ final class FieldsetController
 
     public function create(BuilderData $builder): Response
     {
-        return Inertia::render('Cms/Blueprints/Form', ['kind' => 'fieldset', 'blueprint' => null, ...$builder->toArray()]);
+        return Inertia::render('Cms/Fieldsets/Edit', ['kind' => 'fieldset', 'blueprint' => null, ...$builder->toArray()]);
     }
 
     public function store(Request $request, SaveFieldset $save): RedirectResponse
     {
         $fieldset = $save->handle($request->only(['handle', 'title', 'fields']));
 
-        return redirect()->route('sunrice.admin.cms.fieldsets.edit', $fieldset)->with('success', "Fieldset \"{$fieldset->title}\" created.");
+        return redirect()->route('sunrice.admin.cms.fieldsets.edit', $fieldset)->with('success', __('Fieldset ":title" created.', ['title' => $fieldset->title]));
     }
 
     public function edit(Fieldset $fieldset, BuilderData $builder, DeleteFieldset $delete): Response
     {
-        return Inertia::render('Cms/Blueprints/Form', [
+        return Inertia::render('Cms/Fieldsets/Edit', [
             'kind' => 'fieldset',
             'blueprint' => ['id' => $fieldset->id, 'handle' => $fieldset->handle, 'title' => $fieldset->title, 'fields' => $fieldset->fields],
             'usedBy' => $delete->usedBy($fieldset),
@@ -66,6 +66,6 @@ final class FieldsetController
     {
         $delete->handle($fieldset);
 
-        return redirect()->route('sunrice.admin.cms.fieldsets.index')->with('success', "Fieldset \"{$fieldset->title}\" deleted.");
+        return redirect()->route('sunrice.admin.cms.fieldsets.index')->with('success', __('Fieldset ":title" deleted.', ['title' => $fieldset->title]));
     }
 }

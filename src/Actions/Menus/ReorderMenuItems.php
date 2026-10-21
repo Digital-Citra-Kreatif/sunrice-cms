@@ -38,12 +38,12 @@ final class ReorderMenuItems
         $order = [];
         foreach ($ids as $id) {
             if (! is_int($id) && ! (is_string($id) && ctype_digit($id))) {
-                throw ValidationException::withMessages(['ids' => 'Give menu item ids (numbers).']);
+                throw ValidationException::withMessages(['ids' => __('Give menu item ids (numbers).')]);
             }
             $order[] = (int) $id;
         }
         if ($order === [] || count(array_unique($order)) !== count($order)) {
-            throw ValidationException::withMessages(['ids' => 'Give each item id once, in the new order.']);
+            throw ValidationException::withMessages(['ids' => __('Give each item id once, in the new order.')]);
         }
 
         $changed = true;
@@ -55,7 +55,7 @@ final class ReorderMenuItems
             }
             $unknown = array_diff($order, $level);
             if ($unknown !== []) {
-                throw ValidationException::withMessages(['ids' => 'Not items of this menu at this level: '.implode(', ', $unknown).'.']);
+                throw ValidationException::withMessages(['ids' => __('Not items of this menu at this level: :ids.', ['ids' => implode(', ', $unknown)])]);
             }
             $new = [...$order, ...array_values(array_diff($level, $order))];
             if ($new === $level) {

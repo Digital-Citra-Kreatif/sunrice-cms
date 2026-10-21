@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
+use Sunrice\Cms\Admin\HandleField;
 use Sunrice\Cms\Fields\DefinitionValidator;
 use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\Fieldsets;
@@ -39,7 +40,7 @@ final class SaveFieldset
         $fieldset ??= new Fieldset;
         /** @var array{handle?: string, title: string} $validated */
         $validated = Validator::make($input, [
-            'handle' => $fieldset->exists ? ['prohibited'] : ['required', 'string', 'max:64', new HandleRule, Rule::unique($fieldset->getTable(), 'handle')],
+            'handle' => $fieldset->exists ? ['prohibited'] : ['required', 'string', 'max:64', new HandleRule, Rule::notIn(HandleField::RESERVED), Rule::unique($fieldset->getTable(), 'handle')],
             'title' => ['required', 'string', 'max:255'],
         ])->validate();
         $handle = $fieldset->exists ? $fieldset->handle : ($validated['handle'] ?? '');

@@ -1,4 +1,5 @@
 import { Card, CardContent, CollapsibleCard } from '@sunrice/admin-sdk/ui';
+import { t } from '@sunrice/admin-sdk';
 import { FieldError, FieldInput, Fields, labelOf } from '@/components/FieldInput.tsx';
 import { errorsAt, hasErrors } from '@/lib/builder.ts';
 import { isShown } from '@/lib/conditions.ts';
@@ -59,7 +60,7 @@ export function FieldSections({ fields, values, onChange, errors, storageKey, sh
                             <CardContent>
                                 <fieldset disabled={disabled} className="cms:flex cms:min-w-0 cms:flex-col cms:gap-6">
                                     {section.map((field) => shared.includes(field.handle) ? (
-                                        <fieldset key={field.handle} disabled className={SHARED_FIELD} title="Shared by all languages">
+                                        <fieldset key={field.handle} disabled className={SHARED_FIELD} title={t('Shared by all languages')}>
                                             <FieldInput id={`data-${field.handle}`} field={field} content value={sharedValues[field.handle]} errors={{}} onChange={() => {}} />
                                         </fieldset>
                                     ) : (
@@ -79,7 +80,7 @@ export function FieldSections({ fields, values, onChange, errors, storageKey, sh
                     <CollapsibleCard key={section.handle} title={labelOf(section)} titleClassName="cms:text-base" description={section.instructions ?? undefined}
                         storageKey={`${storageKey}:${section.handle}`} hasErrors={!isShared && hasErrors(errors, `data.${section.handle}`)}>
                         <fieldset disabled={isShared || disabled} role="group" aria-label={labelOf(section)} className={`cms:flex cms:flex-col cms:gap-2 ${isShared ? 'cms:opacity-60' : ''}`}
-                            title={isShared ? 'Shared by all languages' : undefined}>
+                            title={isShared ? t('Shared by all languages') : undefined}>
                             <Fields bare fields={section.fields ?? []} id={`data-${section.handle}`} content errors={isShared ? {} : fieldErrors}
                                 value={value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}}
                                 onChange={(next) => onChange(section.handle, next)} />

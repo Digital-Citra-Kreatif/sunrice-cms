@@ -34,7 +34,7 @@ final class ChangeBlueprint
         $blueprint = $blueprint === null || trim($blueprint) === '' ? null : trim($blueprint);
         $collection = $entry->collection;
         if ($blueprint !== null && ! in_array($blueprint, $collection->allowedBlueprints(), true)) {
-            throw ValidationException::withMessages(['blueprint' => "The collection {$collection->title} doesn't offer that blueprint."]);
+            throw ValidationException::withMessages(['blueprint' => __('The collection :title doesn\'t offer that blueprint.', ['title' => $collection->title])]);
         }
         // The collection's own is stored as none, so the entry follows it if it changes.
         $blueprint = $blueprint === $collection->blueprint ? null : $blueprint;

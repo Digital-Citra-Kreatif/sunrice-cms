@@ -59,7 +59,7 @@ final class SubmissionReceived extends Mailable
             'rows' => array_map(fn (array $row): array => [...$row, 'file' => $row['file'] !== null ? AppUrl::url($row['file']) : null], $rows),
             'page' => $submission->referrer,
             'language' => Locales::name($submission->locale),
-            'admin' => AppUrl::route('sunrice.admin.cms.submissions.index', ['form' => $submission->form->handle]),
+            'admin' => AppUrl::route('sunrice.admin.cms.forms.submissions.index', ['form' => $submission->form->handle]),
         ]);
     }
 }

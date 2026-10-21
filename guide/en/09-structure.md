@@ -34,17 +34,18 @@ A **collection** is a kind of content: *Pages*, *Blog*, *Products*, *Events*. **
 | **Handle** | A short code used by templates, like `articles`: lowercase letters, digits and underscores. It can be changed later: roles keep their permissions, but the form warns you about templates and code that name it, which your developer must update. |
 | **Blueprint** | The fields its entries have (see below). Changing it keeps what entries already hold. |
 | **Other blueprints** | More blueprints an entry may switch to, in its Page settings (a landing page among pages, for example). |
+| **Translatable** | Entries can have a version in each language. Off: they're in the main language only (useful for things that don't change per language). |
 | **Dated entries** | Entries show a date and list newest first, like articles. |
 | **Manual order** | Editors put entries in order (**Reorder** above the entries list, or the **Move up** and **Move down** arrows) instead of by date or title. |
 | **Hierarchical** | Entries may sit under a parent entry, like pages under pages (for breadcrumbs and sub-menus; addresses stay the same). |
-| **URL** | Where entries are on the website, with `{slug}` for each entry's slug: `/blog/{slug}`, or `/{slug}` for pages at the top. Empty: entries have no page of their own. |
+| **Each entry has its own page** | Off: entries have no address, like FAQs or team members a template shows. |
+| **Entry URL** | Where entries are on the website, with `{slug}` for each entry's slug: `/blog/{slug}`, or `/{slug}` for pages at the top. Empty: `/{handle}/{slug}`. |
 | **Template** | The design entries use, if your developer made one for it. |
-| **Listing page URL**, **Listing page fields**, **Entries per listing page** | A page listing the entries (like `/blog`), its own fields (an introduction), and how many entries it shows per page. |
+| **Has a listing page**, **Listing page URL**, **Listing page fields**, **Entries per page** | A page listing the entries (like `/blog`; empty: `/{handle}`), its own fields (an introduction), and how many entries it shows per page. |
 | **Allow comments** | Visitors may comment on its entries (it needs a URL). |
 | **Structured data type** | What search engines are told its entries are (an article, a web page, a real estate listing, or a person, place or product the page is about…). |
-| **SEO from fields** | Which of the entries' fields fill in an empty SEO title, description and share image. |
 
-Deleting a collection doesn't delete its entries: they leave the panel and the website. The list's **Deleted** filter shows deleted collections, with **Restore** to bring one back.
+Deleting a collection doesn't delete its entries: they leave the panel and the website. The list's **Trash** shows deleted collections, with **Restore** to bring one back.
 
 Each collection gets its own permissions (view, create, edit, publish, delete and export its entries), so a role can be limited to the *Blog*, for example. See [Users and roles](guide:panel/users-roles).
 
@@ -68,15 +69,15 @@ Drag the fields into order by their handle (the fields inside a group or repeate
 
 ## Taxonomies
 
-**Structure → Taxonomies**: a **Title** (and a **Title in …** each other language, for visitors on its term pages), a **Handle** (changeable later, as for collections), **Nested terms** (terms under other terms, like subcategories), the **Collections** whose entries it groups, a **Term pages URL** (like `/topics/{slug}`; empty: terms have no pages), **Term fields** (a blueprint for the terms' own fields), a **Template**, and **SEO from fields**. Editors then add the terms under Content → Terms (see [Terms](guide:website/terms)). To let editors give entries terms, add a **Terms** field to the collection's blueprint: that's enough for the entries list to filter by the taxonomy too, without ticking the collection here.
+**Structure → Taxonomies**: a **Title** (and a **Title in …** each other language, for visitors on its term pages), a **Handle** (changeable later, as for collections), **Nested terms** (terms under other terms, like subcategories), the **Collections** whose entries it groups, a **Term pages URL** (like `/topics/{slug}`; empty: terms have no pages), **Term fields** (a blueprint for the terms' own fields), and a **Template**. Editors then add the terms under Taxonomies in the sidebar (see [Terms](guide:website/terms)). To let editors give entries terms, add a **Terms** field to the collection's blueprint: that's enough for the entries list to filter by the taxonomy too, without ticking the collection here.
 
 ## Global sets
 
-**Structure → Global sets**: a **Title**, a **Handle** and a **Blueprint** for the set's fields. Editors fill them in under Content → Globals (see [Globals](guide:website/globals)).
+**Content → Globals → New global set**: a **Title**, a **Handle** and a **Blueprint** for the set's fields (later, the set's **Settings**). Opening a set shows its values (see [Globals](guide:website/globals)).
 
 ## Menus
 
-**Structure → Menu settings**: a **Title** and a **Handle** (like `main` or `footer`) that templates use. Editors fill them in under Content → Menus (see [Menus](guide:website/menus)).
+**Content → Menus → New menu**: a **Title** and a **Handle** (like `main` or `footer`) that templates use (later, the menu's **Settings**). Opening a menu shows its links (see [Menus](guide:website/menus)).
 
 ## Forms
 

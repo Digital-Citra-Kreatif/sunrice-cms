@@ -69,7 +69,7 @@ final class StructureImporter
     public const SECTIONS = ['fieldsets', 'blueprints', 'collections', 'taxonomies', 'globals', 'forms', 'terms', 'entries', 'menus', 'redirects'];
 
     /** A collection's settings in the file. */
-    public const COLLECTION = ['handle', 'title', 'blueprint', 'blueprints', 'dated', 'ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template', 'translations', ...self::SEO_FIELDS];
+    public const COLLECTION = ['handle', 'title', 'blueprint', 'blueprints', 'dated', 'translatable', 'ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template', 'translations', ...self::SEO_FIELDS];
 
     public const TAXONOMY = ['handle', 'title', 'hierarchical', 'route', 'blueprint', 'template', 'translations', ...self::SEO_FIELDS];
 
@@ -249,14 +249,14 @@ final class StructureImporter
     /** @param array<mixed> $item */
     private function collection(array $item): void
     {
-        $item = self::withoutNulls($item, ['dated', 'ordered', 'hierarchical', 'comments', 'per_page']);
+        $item = self::withoutNulls($item, ['dated', 'translatable', 'ordered', 'hierarchical', 'comments', 'per_page']);
         $existing = Collection::query()->where('handle', $item['handle'] ?? null)->first();
         $id = $existing->id ?? 0;
         $validated = Validator::make($item, [
             'handle' => self::HANDLE,
             'blueprint' => ['nullable', 'string', Rule::exists((new Blueprint)->getTable(), 'handle')],
             'listing_blueprint' => ['nullable', 'string', Rule::exists((new Blueprint)->getTable(), 'handle')],
-            'dated' => ['sometimes', 'boolean'], 'ordered' => ['sometimes', 'boolean'], 'hierarchical' => ['sometimes', 'boolean'], 'comments' => ['sometimes', 'boolean'],
+            'dated' => ['sometimes', 'boolean'], 'translatable' => ['sometimes', 'boolean'], 'ordered' => ['sometimes', 'boolean'], 'hierarchical' => ['sometimes', 'boolean'], 'comments' => ['sometimes', 'boolean'],
             'route' => ['nullable', 'string', 'max:255', Rule::unique((new Collection)->getTable(), 'route')->ignore($id), self::routeRule()],
             'listing_route' => ['nullable', 'string', 'max:255', 'regex:#^(/[a-z0-9\-_]+)+$#', Rule::unique((new Collection)->getTable(), 'listing_route')->ignore($id)],
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
@@ -266,7 +266,7 @@ final class StructureImporter
             ...self::TRANSLATIONS,
         ])->validate();
         $before = $existing?->only(self::COLLECTION);
-        $collection = app(SaveCollection::class)->handle(array_intersect_key($item, array_flip(['title', 'blueprint', 'blueprints', 'dated'])) + ($existing === null ? ['handle' => $item['handle']] : []), $existing);
+        $collection = app(SaveCollection::class)->handle(array_intersect_key($item, array_flip(['title', 'blueprint', 'blueprints', 'dated', 'translatable'])) + ($existing === null ? ['handle' => $item['handle']] : []), $existing);
         $collection->forceFill(array_intersect_key($validated, array_flip(['ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template', 'translations', ...self::SEO_FIELDS])))->save();
         $this->report->add('collection', $collection->handle, $this->status($before, $collection->only(self::COLLECTION)));
     }

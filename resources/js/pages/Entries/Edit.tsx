@@ -1,18 +1,19 @@
 import * as React from 'react';
 import { Deferred, Head, router, useForm, usePage } from '@inertiajs/react';
-import { CalendarClock, Check, ChevronDown, Copy, ExternalLink, Eye, Languages, LoaderCircle, Plus, RotateCcw, Send, Trash2, Undo2 } from 'lucide-react';
-import { adminUrl } from '@sunrice/admin-sdk';
+import { CalendarClock, Check, ChevronDown, Copy, ExternalLink, Eye, Languages, LoaderCircle, MoreHorizontal, Plus, RotateCcw, Send, Trash2, Undo2 } from 'lucide-react';
+import { adminUrl, t } from '@sunrice/admin-sdk';
 import {
     Badge, Button, Card, CardContent, CollapsibleCard, DatePicker, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, Input, KeptEditsNotice, Label, PageHeader,
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Skeleton, Switch, useBreadcrumbs, useEditLock, useUnsavedChanges, ViewingNotice,
 } from '@sunrice/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
+import { TemplateHelp } from '@/components/TemplateHelp.tsx';
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
 import { EntryComments, type EntryCommentsSummary } from '@/components/EntryComments.tsx';
 import { FieldSections } from '@/components/FieldSections.tsx';
 import { TermLabels } from '@/components/TermsPicker.tsx';
-import { SEO_FIELDS } from '@/lib/seo.ts';
+import { seoFields } from '@/lib/seo.ts';
 import { FieldError, Fields } from '@/components/FieldInput.tsx';
 import { errorKeysAt, errorsAt, hasErrors } from '@/lib/builder.ts';
 import { type EntryLocale, type EntryStatus, followingSlug, formatDate, localeName, localInputValue, scheduleStart, statusLabel } from '@/lib/entries.ts';
@@ -80,7 +81,9 @@ type Revision = { id: number; title: string; createdAt: string | null; author: s
 function usedBySentence(usedBy: UsedBy[]): string {
     if (usedBy.length === 0) return '';
     const shown = usedBy.slice(0, 5).map((use) => use.label).join('; ');
-    return ` It's used by ${shown}${usedBy.length > 5 ? ` and ${usedBy.length - 5} more` : ''}: those links will show nothing.`;
+    return ` ${usedBy.length > 5
+        ? t('It\'s used by :list and :count more: those links will show nothing.', { list: shown, count: usedBy.length - 5 })
+        : t('It\'s used by :list: those links will show nothing.', { list: shown })}`;
 }
 /** With the page settings (every language's), saved with the draft. */
 type FormData = {
@@ -104,7 +107,7 @@ export default function EntryEditorPage(props: Props) {
 function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, comments, termLabels, usedBy = [], undoRestore = null, machineTranslate = null, machineTranslateMissing = false, settings, blueprints = [], homepage, can }: Props) {
     const list = adminUrl(`cms/collections/${collection.handle}/entries`);
     const url = entry ? adminUrl(`cms/entries/${entry.id}`) : list;
-    const heading = entry ? values.title : 'New entry';
+    const heading = entry ? values.title : t('New entry');
     useBreadcrumbs([{ label: collection.title, href: list }, { label: heading }]);
     const [confirm, confirmDialog] = useConfirm();
     const [scheduling, setScheduling] = React.useState(false);
@@ -151,7 +154,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
         form.put(url, { preserveScroll: true });
     };
     const lock = useEditLock({
-        type: 'cms.entry', id: entry?.id, locale: entry?.locale, enabled: entry !== null && editable, noun: 'entry', leaveTo: list,
+        type: 'cms.entry', id: entry?.id, locale: entry?.locale, enabled: entry !== null && editable, noun: t('entry'), leaveTo: list,
         getUnsaved: () => (form.isDirty ? { title: form.data.title, slug: form.data.slug, data: form.data.data, seo: form.data.seo } : null),
     });
     const writable = editable && !lock.readOnly;
@@ -190,95 +193,103 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
 
             <PageHeader
                 title={heading}
-                back={{ href: list, label: `Back to ${collection.title}` }}
+                back={{ href: list, label: t('Back to :title', { title: collection.title }) }}
                 actions={
                     <>
                         {entry && !entry.trashed && collection.pages !== false && (
                             <Button type="button" variant="ghost" asChild>
                                 <a href={entry.previewUrl} target="_blank" rel="noopener noreferrer"
-                                    title={form.isDirty ? 'Shows the saved draft: save first to see your changes.' : 'Shows the saved draft.'}>
-                                    <Eye /> Preview
+                                    title={form.isDirty ? t('Shows the saved draft: save first to see your changes.') : t('Shows the saved draft.')}>
+                                    <Eye /> {t('Preview')}
                                 </a>
                             </Button>
                         )}
                         {entry?.url && (
                             <Button type="button" variant="ghost" asChild>
-                                <a href={entry.url} target="_blank" rel="noopener noreferrer"><ExternalLink /> View</a>
+                                <a href={entry.url} target="_blank" rel="noopener noreferrer"><ExternalLink /> {t('View page')}</a>
                             </Button>
                         )}
                         {entry?.trashed && can.delete && (
                             <Button type="button" variant="outline" onClick={() => router.post(`${url}/restore`, {}, { preserveScroll: true })}>
-                                <RotateCcw /> Restore
+                                <RotateCcw /> {t('Restore')}
                             </Button>
                         )}
                         {entry?.trashed && can.delete && (
                             <Button type="button" variant="outline" className="cms:text-destructive"
-                                onClick={() => confirm(`Delete "${values.title}" for good, in every language, with its revisions? This can't be undone.${usedBySentence(usedBy)}`,
+                                onClick={() => confirm(t('Delete ":title" for good, in every language, with its revisions? This can\'t be undone.', { title: values.title }) + usedBySentence(usedBy),
                                     () => router.delete(`${url}/force`, { data: usedBy.length > 0 ? { force: 1 } : {} }))}>
-                                <Trash2 /> Delete for good
+                                <Trash2 /> {t('Delete for good')}
                             </Button>
                         )}
-                        {entry && !entry.trashed && can.create && (
-                            <Button type="button" variant="ghost" title="Copy every language as a new draft" onClick={() => router.post(`${url}/duplicate`)}>
-                                <Copy /> Duplicate
-                            </Button>
-                        )}
-                        {entry && !entry.trashed && can.delete && !lock.readOnly && (
-                            <Button type="button" variant="outline" size="icon" className="cms:text-destructive" aria-label="Move to the trash"
-                                onClick={() => confirm(`Move "${values.title}" to the trash? It comes off the site; you can restore it.${usedBySentence(usedBy)}`, () => router.delete(url), 'Move to trash')}>
-                                <Trash2 />
-                            </Button>
-                        )}
-                        {entry && writable && machineTranslate !== null && (
-                            <Button type="button" variant="outline" disabled={form.processing || form.isDirty} title={form.isDirty ? 'Save your changes first' : 'Fill in what isn\'t translated yet, into the draft'}
-                                onClick={() => router.post(adminUrl(`cms/entries/${machineTranslate}/translate`), { version: entry.version }, { preserveScroll: true })}>
-                                <Languages /> Translate from {locales.find((l) => l.main)?.name ?? (mainLocale ? localeName(mainLocale) : 'the main language')}
-                            </Button>
+                        {entry && !entry.trashed && (can.create || (can.delete && !lock.readOnly) || (writable && machineTranslate !== null)) && (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button type="button" variant="outline" size="icon" aria-label={t('More actions')}><MoreHorizontal /></Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="cms:min-w-52">
+                                    {writable && machineTranslate !== null && (
+                                        <DropdownMenuItem disabled={form.processing || form.isDirty} title={form.isDirty ? undefined : t('Fill in what isn\'t translated yet, into the draft')}
+                                            onSelect={() => router.post(adminUrl(`cms/entries/${entry.id}/translations/${entry.locale}/translate`), { version: entry.version }, { preserveScroll: true })}>
+                                            <Languages /> {form.isDirty ? t('Save to translate') : t('Translate from :language', { language: locales.find((l) => l.main)?.name ?? (mainLocale ? localeName(mainLocale) : t('the main language')) })}
+                                        </DropdownMenuItem>
+                                    )}
+                                    {can.create && <DropdownMenuItem title={t('Copy every language as a new draft')} onSelect={() => router.post(`${url}/duplicate`)}><Copy /> {t('Duplicate')}</DropdownMenuItem>}
+                                    {can.delete && !lock.readOnly && (
+                                        <>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem className="cms:text-destructive"
+                                                onSelect={() => confirm(t('Move ":title" to the trash? It comes off the site; you can restore it.', { title: values.title }) + usedBySentence(usedBy), () => router.delete(url), t('Move to trash'))}>
+                                                <Trash2 /> {t('Move to trash')}
+                                            </DropdownMenuItem>
+                                        </>
+                                    )}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         )}
                         {entry && writable && machineTranslateMissing && (
-                            <span title="Machine translation isn't set up on this site: ask your developer (SUNRICE_TRANSLATE_DRIVER, see Help → Developer docs → Machine translation).">
+                            <span title={t('Machine translation isn\'t set up on this site: ask your developer (SUNRICE_TRANSLATE_DRIVER, see Help → Developer docs → Machine translation).')}>
                                 <Button type="button" variant="outline" disabled aria-describedby="machine-translate-missing">
-                                    <Languages /> Translate from {locales.find((l) => l.main)?.name ?? (mainLocale ? localeName(mainLocale) : 'the main language')}
+                                    <Languages /> {t('Translate from :language', { language: locales.find((l) => l.main)?.name ?? (mainLocale ? localeName(mainLocale) : t('the main language')) })}
                                 </Button>
-                                <span id="machine-translate-missing" className="cms:sr-only">Machine translation isn't set up on this site: ask your developer.</span>
+                                <span id="machine-translate-missing" className="cms:sr-only">{t('Machine translation isn\'t set up on this site: ask your developer.')}</span>
                             </span>
                         )}
                         {writable && (
                             <Button type="submit" variant={entry ? 'outline' : 'default'} disabled={form.processing}>
                                 {form.processing && <LoaderCircle className="cms:animate-spin" />}
-                                {entry ? 'Save draft' : 'Create draft'}
+                                {entry ? t('Save draft') : t('Create draft')}
                             </Button>
                         )}
                         {entry && !entry.trashed && writable && !can.publish && (entry.status === 'draft' || entry.hasUnpublishedChanges || form.isDirty) && (
                             <Button type="button" disabled={form.processing} onClick={requestReview}
-                                title={entry.review ? 'Already sent; sending again tells them again' : 'Ask those who can publish to review it'}>
-                                <Send /> {entry.review ? 'Send for review again' : 'Submit for review'}
+                                title={entry.review ? t('Already sent; sending again tells them again') : t('Ask those who can publish to review it')}>
+                                <Send /> {entry.review ? t('Send for review again') : t('Submit for review')}
                             </Button>
                         )}
                         {entry && !entry.trashed && can.publish && !lock.readOnly && (
                             <div className="cms:flex">
                                 {scheduled && upToDate ? (
-                                    <Button type="button" variant="outline" className="cms:rounded-r-none" disabled={form.processing} title="Change the date" onClick={() => setScheduling(true)}>
-                                        <CalendarClock /> Scheduled for {formatDate(entry.publishedAt)}
+                                    <Button type="button" variant="outline" className="cms:rounded-r-none" disabled={form.processing} title={t('Change the date')} onClick={() => setScheduling(true)}>
+                                        <CalendarClock /> {t('Scheduled for :date', { date: formatDate(entry.publishedAt) })}
                                     </Button>
                                 ) : (
                                     <Button type="button" variant={upToDate ? 'outline' : 'default'} className="cms:rounded-r-none cms:disabled:opacity-100" disabled={form.processing || upToDate} onClick={() => publish()}>
                                         {upToDate && <Check className="cms:text-emerald-600 cms:dark:text-emerald-400" />}
-                                        {entry.status === 'draft' ? 'Publish' : upToDate ? 'Published' : 'Publish changes'}
+                                        {entry.status === 'draft' ? t('Publish') : upToDate ? t('Published') : t('Publish changes')}
                                     </Button>
                                 )}
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button type="button" size="icon" variant={upToDate ? 'outline' : 'default'} className={upToDate ? 'cms:-ml-px cms:rounded-l-none' : 'cms:rounded-l-none cms:border-l cms:border-primary-foreground/20'} aria-label="More publishing options"><ChevronDown /></Button>
+                                        <Button type="button" size="icon" variant={upToDate ? 'outline' : 'default'} className={upToDate ? 'cms:-ml-px cms:rounded-l-none' : 'cms:rounded-l-none cms:border-l cms:border-primary-foreground/20'} aria-label={t('More publishing options')}><ChevronDown /></Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onSelect={() => setScheduling(true)}><CalendarClock /> {scheduled ? 'Change the date…' : 'Publish on a date…'}</DropdownMenuItem>
-                                        {scheduled && <DropdownMenuItem onSelect={() => publish(new Date().toISOString())}>Publish now</DropdownMenuItem>}
+                                        <DropdownMenuItem onSelect={() => setScheduling(true)}><CalendarClock /> {scheduled ? t('Change the date…') : t('Publish on a date…')}</DropdownMenuItem>
+                                        {scheduled && <DropdownMenuItem onSelect={() => publish(new Date().toISOString())}>{t('Publish now')}</DropdownMenuItem>}
                                         {entry.status !== 'draft' && (
                                             <>
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem onSelect={() => router.post(`${url}/unpublish`, locale, { preserveScroll: true })}>
-                                                    {scheduled ? 'Unschedule (back to draft)' : 'Unpublish'}
+                                                    {scheduled ? t('Unschedule (back to draft)') : t('Unpublish')}
                                                 </DropdownMenuItem>
                                             </>
                                         )}
@@ -289,17 +300,17 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                     </>
                 }
             >
-                {entry && <Badge variant={entry.status === 'published' ? 'success' : 'secondary'}>{entry.trashed ? 'In the trash' : statusLabel(entry.status)}</Badge>}
+                {entry && <Badge variant={entry.status === 'published' ? 'success' : 'secondary'}>{entry.trashed ? t('In the trash') : statusLabel(entry.status)}</Badge>}
                 {entry?.review && !entry.trashed && (
-                    <Badge variant="warning" title={`${entry.review.by ? `${entry.review.by} sent it` : 'Sent'} on ${formatDate(entry.review.requestedAt)}`}>Waiting for review</Badge>
+                    <Badge variant="warning" title={entry.review.by ? t(':name sent it on :date', { name: entry.review.by, date: formatDate(entry.review.requestedAt) }) : t('Sent on :date', { date: formatDate(entry.review.requestedAt) })}>{t('Waiting for review')}</Badge>
                 )}
-                {form.isDirty && <span className="cms:text-sm cms:text-muted-foreground">Unsaved changes</span>}
+                {form.isDirty && <span className="cms:text-sm cms:text-muted-foreground">{t('Unsaved changes')}</span>}
             </PageHeader>
 
             {entry && locales.length > 1 && (
-                <LanguageBar entryUrl={url} current={entry.locale} locales={locales} canAdd={can.create && !entry.trashed}
+                <LanguageBar entryUrl={url} editUrl={`${list}/${entry.id}/edit`} current={entry.locale} locales={locales} canAdd={can.create && !entry.trashed}
                     canRemove={can.delete && !entry.isMain && !entry.trashed}
-                    onRemove={() => confirm(`Remove the ${localeName(entry.locale)} translation of "${values.title}"? Its revisions go with it.`,
+                    onRemove={() => confirm(t('Remove the :language translation of ":title"? Its revisions go with it.', { language: localeName(entry.locale), title: values.title }),
                         () => router.delete(`${url}/translations/${entry.locale}`))} />
             )}
 
@@ -309,10 +320,10 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                 <div role="alert" className="cms:flex cms:flex-wrap cms:items-center cms:justify-between cms:gap-3 cms:rounded-lg cms:border cms:border-destructive cms:p-3 cms:text-sm cms:text-destructive">
                     <span>{errors.version}</span>
                     <span className="cms:flex cms:gap-2">
-                        <Button type="button" variant="outline" size="sm" onClick={() => router.reload()}>Load theirs</Button>
+                        <Button type="button" variant="outline" size="sm" onClick={() => router.reload()}>{t('Load theirs')}</Button>
                         <Button type="button" variant="destructive" size="sm" disabled={form.processing}
-                            onClick={() => confirm('Save your version over theirs? Their changes are replaced (their earlier published versions stay in the revisions).', saveMine)}>
-                            Save mine anyway
+                            onClick={() => confirm(t('Save your version over theirs? Their changes are replaced (their earlier published versions stay in the revisions).'), saveMine)}>
+                            {t('Save mine anyway')}
                         </Button>
                     </span>
                 </div>
@@ -327,7 +338,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                         <CardContent>
                             <fieldset disabled={!writable} className="cms:grid cms:gap-4 cms:md:grid-cols-[2fr_1fr]">
                                 <div className="cms:flex cms:flex-col cms:gap-2">
-                                    <Label htmlFor="title">Title</Label>
+                                    <Label htmlFor="title">{t('Title')}</Label>
                                     <Input id="title" value={form.data.title} aria-invalid={errors.title !== undefined}
                                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                             const title = e.target.value;
@@ -338,8 +349,8 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                                     <FieldError message={errors.title} />
                                 </div>
                                 <div className="cms:flex cms:flex-col cms:gap-2">
-                                    <Label htmlFor="slug">Slug</Label>
-                                    <Input id="slug" className="cms:font-mono" value={form.data.slug} placeholder="Made from the title" aria-invalid={errors.slug !== undefined}
+                                    <Label htmlFor="slug">{t('Slug')}</Label>
+                                    <Input id="slug" className="cms:font-mono" value={form.data.slug} placeholder={t('Made from the title')} aria-invalid={errors.slug !== undefined}
                                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => { form.setData('slug', e.target.value); clearErrorsAt('slug'); }} />
                                     <FieldError message={errors.slug} />
                                 </div>
@@ -350,13 +361,13 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                     <TermLabels.Provider value={Array.isArray(termLabels) || !termLabels ? {} : termLabels}>
                         <FieldSections disabled={!writable} fields={fields} values={form.data.data} errors={errors} storageKey={`cms:entry:${collection.handle}`}
                             shared={shared} sharedValues={sharedValues}
-                            sharedNote={`Shared by all languages: the greyed-out fields are edited in ${mainLocale ? localeName(mainLocale) : 'the main language'}.`}
+                            sharedNote={mainLocale ? t('Shared by all languages: the greyed-out fields are edited in :language.', { language: localeName(mainLocale) }) : t('Shared by all languages: the greyed-out fields are edited in the main language.')}
                             onChange={(handle, value) => { form.setData('data', { ...form.data.data, [handle]: value }); clearErrorsAt(`data.${handle}`); }} />
                     </TermLabels.Provider>
 
-                    <CollapsibleCard title="Search and sharing" titleClassName="cms:text-base" storageKey="cms:entry:seo" hasErrors={hasErrors(errors, 'seo')}>
+                    <CollapsibleCard title={t('SEO')} description={t('How this entry appears in search results and shared links.')} titleClassName="cms:text-base" storageKey="cms:entry:seo" hasErrors={hasErrors(errors, 'seo')}>
                         <fieldset disabled={!writable} className="cms:min-w-0">
-                            <Fields bare id="seo" fields={SEO_FIELDS} value={form.data.seo} errors={errorsAt(errors, 'seo')}
+                            <Fields bare id="seo" fields={seoFields()} value={form.data.seo} errors={errorsAt(errors, 'seo')}
                                 onChange={(seo) => { form.setData('seo', seo); clearErrorsAt('seo'); }} />
                         </fieldset>
                     </CollapsibleCard>
@@ -373,32 +384,44 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                 )}
                 {entry && (
                     <aside className="cms:flex cms:flex-col cms:gap-4">
-                        <CollapsibleCard title="Status" titleClassName="cms:text-base" storageKey="cms:entry:status" contentClassName="cms:flex cms:flex-col cms:gap-1 cms:text-sm">
-                            <p>{statusLabel(entry.status)}{entry.status !== 'draft' && entry.publishedAt ? ` · ${formatDate(entry.publishedAt)}` : ''}</p>
+                        <CollapsibleCard title={t('Status')} titleClassName="cms:text-base" storageKey="cms:entry:status" contentClassName="cms:flex cms:flex-col cms:gap-3 cms:text-sm">
+                            <dl className="cms:flex cms:flex-col cms:gap-2">
+                                <div className="cms:flex cms:items-center cms:justify-between cms:gap-3">
+                                    <dt className="cms:text-muted-foreground">{t('Status')}</dt>
+                                    <dd><Badge variant={entry.status === 'published' ? 'success' : 'secondary'}>{entry.trashed ? t('In the trash') : statusLabel(entry.status)}</Badge></dd>
+                                </div>
+                                {entry.status !== 'draft' && entry.publishedAt && (
+                                    <div className="cms:flex cms:items-baseline cms:justify-between cms:gap-3">
+                                        <dt className="cms:text-muted-foreground">{entry.status === 'scheduled' ? t('Goes live') : t('Published')}</dt>
+                                        <dd className="cms:text-right cms:tabular-nums">{formatDate(entry.publishedAt)}</dd>
+                                    </div>
+                                )}
+                            </dl>
                             {entry.review && (
                                 <p className="cms:text-muted-foreground">
-                                    Sent for review{entry.review.by ? ` by ${entry.review.by}` : ''} · {formatDate(entry.review.requestedAt)}.{can.publish ? ' Publishing it answers the request.' : ''}
+                                    {entry.review.by ? t('Sent for review by :name · :date.', { name: entry.review.by, date: formatDate(entry.review.requestedAt) }) : t('Sent for review · :date.', { date: formatDate(entry.review.requestedAt) })}
+                                    {can.publish ? ` ${t('Publishing it answers the request.')}` : ''}
                                 </p>
                             )}
-                            {entry.status !== 'draft' && entry.hasUnpublishedChanges && <p className="cms:text-muted-foreground">The draft has changes the site doesn't show yet.</p>}
-                            {homepage?.is && <p className="cms:text-muted-foreground">This is the site's homepage.</p>}
+                            {!entry.trashed && can.publish && !lock.readOnly && (
+                                <PublishDate key={entry.publishedAt ?? 'none'} status={entry.status} publishedAt={entry.publishedAt} processing={form.processing}
+                                    onPublish={(iso) => publish(iso)} onUnpublish={() => router.post(`${url}/unpublish`, locale, { preserveScroll: true })}
+                                    onChangeDate={(iso) => router.post(`${url}/date`, { ...locale, published_at: iso }, { preserveScroll: true })} />
+                            )}
+                            {entry.status !== 'draft' && entry.hasUnpublishedChanges && <p className="cms:text-muted-foreground">{t('The draft has changes the site doesn\'t show yet.')}</p>}
+                            {homepage?.is && <p className="cms:text-muted-foreground">{t('This is the site\'s homepage.')}</p>}
                             {homepage && !homepage.is && homepage.can && entry.status === 'published' && !entry.trashed && (
                                 <Button type="button" variant="outline" size="sm" className="cms:mt-1 cms:self-start"
                                     onClick={() => router.post(`${url}/homepage`, {}, { preserveScroll: true })}>
-                                    Make this the homepage
+                                    {t('Make this the homepage')}
                                 </Button>
                             )}
-                            {collection.dated && can.publish && !entry.trashed && !lock.readOnly && (
-                                entry.status === 'draft'
-                                    ? <p className="cms:text-muted-foreground">To give it an earlier date, use Publish ▾ → Publish on a date… with that date.</p>
-                                    : <PublishDate entryUrl={url} locale={entry.locale} publishedAt={entry.publishedAt} />
-                            )}
                             {locales.find((l) => l.code === entry.locale)?.outdated && (
-                                <p className="cms:text-amber-700 cms:dark:text-amber-400">The {mainLocale ? localeName(mainLocale) : 'main'} version changed since this translation was last saved.</p>
+                                <p className="cms:text-amber-700 cms:dark:text-amber-400">{mainLocale ? t('The :language version changed since this translation was last saved.', { language: localeName(mainLocale) }) : t('The main version changed since this translation was last saved.')}</p>
                             )}
                         </CollapsibleCard>
-                        <CollapsibleCard title="Used by" titleClassName="cms:text-base" storageKey="cms:entry:used-by" contentClassName="cms:flex cms:flex-col cms:gap-1 cms:text-sm">
-                            {usedBy.length === 0 && <p className="cms:text-muted-foreground">No other content links here.</p>}
+                        <CollapsibleCard title={t('Used by')} titleClassName="cms:text-base" storageKey="cms:entry:used-by" contentClassName="cms:flex cms:flex-col cms:gap-1 cms:text-sm">
+                            {usedBy.length === 0 && <p className="cms:text-muted-foreground">{t('No other content links here.')}</p>}
                             {usedBy.map((use) => (
                                 <div key={`${use.label}:${use.field}`} className="cms:min-w-0">
                                     {use.url ? <a href={use.url} className="cms:block cms:truncate cms:underline-offset-4 cms:hover:underline">{use.label}</a> : <span className="cms:block cms:truncate">{use.label}</span>}
@@ -409,15 +432,15 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                         {settings && <PageSettings entryUrl={url} collection={collection} settings={settings} blueprints={blueprints} disabled={!writable}
                             values={form.data} errors={errors} onChange={setSettings} draftDirty={form.isDirty} />}
                         {comments !== null && collection.comments && <EntryComments entryId={entry.id} comments={comments} />}
-                        <CollapsibleCard title="Revisions" titleClassName="cms:text-base" storageKey="cms:entry:revisions" contentClassName="cms:flex cms:flex-col cms:gap-2 cms:text-sm">
+                        <CollapsibleCard title={t('Revisions')} titleClassName="cms:text-base" storageKey="cms:entry:revisions" contentClassName="cms:flex cms:flex-col cms:gap-2 cms:text-sm">
                             {undoRestore !== null && can.update && (
-                                <Button type="button" variant="outline" size="sm" onClick={() => router.post(adminUrl(`cms/entry-translations/${undoRestore}/undo-restore`), {}, { preserveScroll: true })}>
-                                    <Undo2 /> Undo the restore
+                                <Button type="button" variant="outline" size="sm" onClick={() => router.post(adminUrl(`cms/entries/${entry.id}/translations/${entry.locale}/undo-restore`), {}, { preserveScroll: true })}>
+                                    <Undo2 /> {t('Undo the restore')}
                                 </Button>
                             )}
                             <Deferred data="revisions" fallback={<div className="cms:flex cms:flex-col cms:gap-2"><Skeleton className="cms:h-8" /><Skeleton className="cms:h-8" /></div>}>
                                 <>
-                                    {(revisions ?? []).length === 0 && <p className="cms:text-muted-foreground">Each publish keeps one.</p>}
+                                    {(revisions ?? []).length === 0 && <p className="cms:text-muted-foreground">{t('Each publish keeps one.')}</p>}
                                     {(revisions ?? []).map((revision) => (
                                         <div key={revision.id} className="cms:flex cms:flex-col cms:gap-1 cms:border-b cms:border-border/60 cms:pb-2 cms:last:border-b-0 cms:last:pb-0">
                                             <div className="cms:min-w-0">
@@ -426,15 +449,15 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                                                     {formatDate(revision.createdAt)}{revision.author ? ` · ${revision.author}` : ''}
                                                 </div>
                                                 <div className="cms:text-xs cms:text-muted-foreground">
-                                                    {revision.changed === null ? 'First kept version' : revision.changed.length === 0 ? 'No field changed' : `Changed: ${revision.changed.join(', ')}`}
+                                                    {revision.changed === null ? t('First kept version') : revision.changed.length === 0 ? t('No field changed') : t('Changed: :fields', { fields: revision.changed.join(', ') })}
                                                 </div>
                                             </div>
                                             <div className="cms:flex cms:gap-1">
-                                                <Button type="button" variant="ghost" size="sm" onClick={() => setComparing(revision)}>Compare</Button>
+                                                <Button type="button" variant="ghost" size="sm" onClick={() => setComparing(revision)}>{t('Compare')}</Button>
                                                 {can.update && !entry.trashed && (
                                                     <Button type="button" variant="ghost" size="sm"
-                                                        onClick={() => router.post(adminUrl(`cms/revisions/${revision.id}/restore`), {}, { preserveScroll: true })}>
-                                                        Restore
+                                                        onClick={() => router.post(adminUrl(`cms/entries/${entry.id}/revisions/${revision.id}/restore`), {}, { preserveScroll: true })}>
+                                                        {t('Restore')}
                                                     </Button>
                                                 )}
                                             </div>
@@ -447,44 +470,91 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                 )}
             </div>
 
-            <CompareDialog revision={comparing} onClose={() => setComparing(null)} dirty={form.isDirty} />
+            <CompareDialog entryId={entry?.id ?? 0} revision={comparing} onClose={() => setComparing(null)} dirty={form.isDirty} />
             <ScheduleDialog open={scheduling} onClose={() => setScheduling(false)} processing={form.processing} rescheduling={scheduled}
                 current={entry?.publishedAt ?? null} onSchedule={(iso) => publish(iso)} />
         </form>
     );
 }
 
-function LanguageBar({ entryUrl, current, locales, canAdd, canRemove, onRemove }: {
-    entryUrl: string; current: string; locales: EntryLocale[]; canAdd: boolean; canRemove: boolean; onRemove: () => void;
+function LanguageBar({ entryUrl, editUrl, current, locales, canAdd, canRemove, onRemove }: {
+    entryUrl: string; editUrl: string; current: string; locales: EntryLocale[]; canAdd: boolean; canRemove: boolean; onRemove: () => void;
 }) {
+    const present = locales.filter((l) => l.status !== null);
+    const missing = locales.filter((l) => l.status === null);
+
     return (
-        <nav aria-label="Languages" className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
-            {locales.map((l) => {
-                const name = `${l.name ?? localeName(l.code)}${l.main ? ' (main)' : ''}`;
-                if (l.status === null) {
-                    return canAdd ? (
-                        <Button key={l.code} type="button" variant="outline" size="sm" className="cms:border-dashed"
-                            onClick={() => router.post(`${entryUrl}/translations`, { locale: l.code })}>
-                            <Plus /> {name}
-                        </Button>
-                    ) : null;
-                }
-                return (
-                    <Button key={l.code} type="button" size="sm" variant={l.code === current ? 'secondary' : 'ghost'} aria-current={l.code === current ? 'page' : undefined}
-                        onClick={() => l.code !== current && router.get(`${entryUrl}/edit`, { locale: l.code })}>
-                        {name}
-                        <Badge variant={l.status === 'published' ? 'success' : 'outline'} className="cms:ml-1">{statusLabel(l.status)}</Badge>
-                        {l.outdated && (
-                            <Badge variant="outline" className="cms:border-amber-500/60 cms:text-amber-700 cms:dark:text-amber-400"
-                                title="The main language changed since this translation was last saved.">Outdated</Badge>
-                        )}
-                    </Button>
-                );
-            })}
+        <nav aria-label={t('Languages')} className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
+            {/* The languages it has, by code: a dot for live, amber when outdated. */}
+            <div className="cms:inline-flex cms:items-center cms:gap-0.5 cms:rounded-md cms:bg-muted cms:p-0.5">
+                {present.map((l) => {
+                    const active = l.code === current;
+                    const name = l.main ? t(':language (main)', { language: l.name ?? localeName(l.code) }) : (l.name ?? localeName(l.code));
+                    const status = l.status ? statusLabel(l.status) : '';
+                    const title = l.outdated
+                        ? t(':language: :status, outdated (the main language changed since)', { language: name, status })
+                        : t(':language: :status', { language: name, status });
+                    return (
+                        <button key={l.code} type="button" title={title} aria-label={title} aria-current={active ? 'page' : undefined}
+                            onClick={() => !active && router.get(editUrl, { locale: l.code })}
+                            className={`cms:relative cms:inline-flex cms:h-7 cms:min-w-10 cms:items-center cms:justify-center cms:gap-1.5 cms:rounded cms:px-2.5 cms:text-xs cms:font-semibold cms:tracking-wide cms:uppercase cms:transition-colors ${active ? 'cms:bg-card cms:text-foreground cms:shadow-xs' : 'cms:text-muted-foreground cms:hover:text-foreground'}`}>
+                            {l.code}
+                            {(l.outdated || l.status === 'published') && (
+                                <span aria-hidden className={`cms:size-1.5 cms:rounded-full ${l.outdated ? 'cms:bg-amber-500' : 'cms:bg-emerald-500'}`} />
+                            )}
+                        </button>
+                    );
+                })}
+            </div>
+            {canAdd && missing.map((l) => (
+                <Button key={l.code} type="button" variant="outline" size="sm" className="cms:h-8 cms:border-dashed cms:text-xs cms:uppercase"
+                    title={t('Add :language', { language: l.name ?? localeName(l.code) })} onClick={() => router.post(`${entryUrl}/translations`, { locale: l.code })}>
+                    <Plus /> {l.code}
+                </Button>
+            ))}
             {canRemove && (
-                <Button type="button" variant="ghost" size="sm" className="cms:ml-auto cms:text-destructive" onClick={onRemove}>Remove this language</Button>
+                <Button type="button" variant="ghost" size="sm" className="cms:ml-auto cms:text-destructive" onClick={onRemove}>{t('Remove this language')}</Button>
             )}
         </nav>
+    );
+}
+
+/**
+ * The date an entry shows as published, to set or change: a draft is
+ * published with it (a future one schedules it); a published or scheduled
+ * entry's date changes alone, its draft left as it is (a date to come
+ * takes it off the site until then).
+ */
+function PublishDate({ status, publishedAt, processing, onPublish, onUnpublish, onChangeDate }: {
+    status: EntryStatus; publishedAt: string | null; processing: boolean; onPublish: (iso: string | null) => void; onUnpublish: () => void; onChangeDate: (iso: string) => void;
+}) {
+    const [value, setValue] = React.useState(publishedAt ? localInputValue(new Date(publishedAt)) : '');
+    const chosen = value === '' ? null : new Date(value);
+    const future = chosen !== null && chosen.getTime() > Date.now();
+    // To the minute, as the input shows it.
+    const minute = (date: Date | null) => (date === null ? null : Math.floor(date.getTime() / 60_000));
+    const changed = minute(chosen) !== minute(publishedAt ? new Date(publishedAt) : null);
+    const label = status === 'draft'
+        ? (future ? t('Schedule') : t('Publish'))
+        : (future ? (status === 'scheduled' ? t('Reschedule') : t('Schedule')) : t('Change date'));
+
+    return (
+        <div className="cms:flex cms:flex-col cms:gap-2 cms:border-t cms:border-border/60 cms:pt-3">
+            <Label htmlFor="entry-published-at">{t('Publish date')}</Label>
+            <DatePicker id="entry-published-at" withTime className="cms:max-w-none" value={value || null} onChange={(next) => setValue(next ?? '')} />
+            <p className="cms:text-xs cms:text-muted-foreground">
+                {status === 'draft' ? t('Empty: now. A date in the future schedules it.') : t('The date shown as published; the draft stays as it is. A date in the future takes it off the site until then.')}
+            </p>
+            <div className="cms:flex cms:flex-wrap cms:gap-2">
+                {(status === 'draft' || changed) && (
+                    <Button type="button" size="sm" disabled={processing}
+                        onClick={() => (status === 'draft' ? onPublish(chosen?.toISOString() ?? null) : onChangeDate((chosen ?? new Date()).toISOString()))}>
+                        <CalendarClock /> {label}
+                    </Button>
+                )}
+                {status !== 'draft' && <Button type="button" size="sm" variant="outline" disabled={processing} onClick={onUnpublish}>{t('Unpublish')}</Button>}
+            </div>
+        </div>
     );
 }
 
@@ -503,23 +573,23 @@ function ScheduleDialog({ open, onClose, onSchedule, current, processing, resche
         <Dialog open={open} onOpenChange={(next: boolean) => !next && onClose()}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>{rescheduling ? 'Change the publish date' : 'Publish on a date'}</DialogTitle>
-                    <DialogDescription>The entry goes live then.</DialogDescription>
+                    <DialogTitle>{rescheduling ? t('Change the publish date') : t('Publish on a date')}</DialogTitle>
+                    <DialogDescription>{t('The entry goes live then.')}</DialogDescription>
                 </DialogHeader>
                 <div className="cms:flex cms:flex-col cms:gap-2">
-                    <Label htmlFor="published-at">Date and time</Label>
+                    <Label htmlFor="published-at">{t('Date and time')}</Label>
                     <DatePicker id="published-at" withTime required className="cms:max-w-none" value={value || null} onChange={(next) => setValue(next ?? '')} />
-                    <p className="cms:text-sm cms:text-muted-foreground">In your time zone.</p>
+                    <p className="cms:text-sm cms:text-muted-foreground">{t('In your time zone.')}</p>
                     {past && (
                         <p role="alert" className="cms:text-sm cms:text-amber-700 cms:dark:text-amber-400">
-                            This date has passed: the entry goes live now, dated {formatDate(chosen.toISOString())}.
+                            {t('This date has passed: the entry goes live now, dated :date.', { date: formatDate(chosen.toISOString()) })}
                         </p>
                     )}
                 </div>
                 <DialogFooter>
-                    <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+                    <Button type="button" variant="outline" onClick={onClose}>{t('Cancel')}</Button>
                     <Button type="button" disabled={chosen === null || processing} onClick={() => chosen && onSchedule(chosen.toISOString())}>
-                        {past ? 'Publish now, back-dated' : rescheduling ? 'Change the date' : 'Schedule'}
+                        {past ? t('Publish now, back-dated') : rescheduling ? t('Change the date') : t('Schedule')}
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -528,7 +598,7 @@ function ScheduleDialog({ open, onClose, onSchedule, current, processing, resche
 }
 
 /** A revision beside the saved draft: the fields where they differ, as text. */
-function CompareDialog({ revision, onClose, dirty }: { revision: Revision | null; onClose: () => void; dirty: boolean }) {
+function CompareDialog({ entryId, revision, onClose, dirty }: { entryId: number; revision: Revision | null; onClose: () => void; dirty: boolean }) {
     const [fields, setFields] = React.useState<{ label: string; revision: string; draft: string }[] | null>(null);
     const [failed, setFailed] = React.useState(false);
     React.useEffect(() => {
@@ -536,26 +606,26 @@ function CompareDialog({ revision, onClose, dirty }: { revision: Revision | null
         setFailed(false);
         if (!revision) return;
         let current = true;
-        fetch(adminUrl(`cms/revisions/${revision.id}/compare`), { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
+        fetch(adminUrl(`cms/entries/${entryId}/revisions/${revision.id}/compare`), { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
             .then((response) => (response.ok ? response.json() : Promise.reject(new Error(String(response.status)))))
             .then((body: { fields: { label: string; revision: string; draft: string }[] }) => { if (current) setFields(body.fields); })
             .catch(() => { if (current) setFailed(true); });
         return () => { current = false; };
-    }, [revision]);
+    }, [revision, entryId]);
 
     return (
         <Dialog open={revision !== null} onOpenChange={(next: boolean) => !next && onClose()}>
             <DialogContent className="cms:max-h-[85vh] cms:overflow-y-auto cms:sm:max-w-2xl">
                 <DialogHeader>
-                    <DialogTitle>Compare with the draft</DialogTitle>
+                    <DialogTitle>{t('Compare with the draft')}</DialogTitle>
                     <DialogDescription>
-                        {revision ? `The version published ${formatDate(revision.createdAt)}${revision.author ? ` by ${revision.author}` : ''}, beside the saved draft.` : ''}
-                        {dirty ? ' Your unsaved changes aren\'t included.' : ''}
+                        {revision ? (revision.author ? t('The version published :date by :name, beside the saved draft.', { date: formatDate(revision.createdAt), name: revision.author }) : t('The version published :date, beside the saved draft.', { date: formatDate(revision.createdAt) })) : ''}
+                        {dirty ? ` ${t('Your unsaved changes aren\'t included.')}` : ''}
                     </DialogDescription>
                 </DialogHeader>
-                {failed && <p className="cms:text-sm cms:text-destructive">The comparison could not be loaded. Try again.</p>}
+                {failed && <p className="cms:text-sm cms:text-destructive">{t('The comparison could not be loaded. Try again.')}</p>}
                 {!failed && fields === null && <div className="cms:flex cms:flex-col cms:gap-2"><Skeleton className="cms:h-12" /><Skeleton className="cms:h-12" /></div>}
-                {fields?.length === 0 && <p className="cms:text-sm cms:text-muted-foreground">The draft is the same as this version.</p>}
+                {fields?.length === 0 && <p className="cms:text-sm cms:text-muted-foreground">{t('The draft is the same as this version.')}</p>}
                 {fields && fields.length > 0 && (
                     <dl className="cms:flex cms:flex-col cms:gap-4 cms:text-sm">
                         {fields.map((field) => (
@@ -574,43 +644,17 @@ function CompareDialog({ revision, onClose, dirty }: { revision: Revision | null
                     </dl>
                 )}
                 <DialogFooter>
-                    <Button type="button" variant="outline" onClick={onClose}>Close</Button>
+                    <Button type="button" variant="outline" onClick={onClose}>{t('Close')}</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
     );
 }
 
-/** A published entry's date, changed without publishing its draft (a date to come schedules it). */
-function PublishDate({ entryUrl, locale, publishedAt }: { entryUrl: string; locale: string; publishedAt: string | null }) {
-    const saved = publishedAt ? localInputValue(new Date(publishedAt)) : '';
-    const [value, setValue] = React.useState(saved);
-    const [processing, setProcessing] = React.useState(false);
-    React.useEffect(() => setValue(saved), [saved]);
-
-    return (
-        <div className="cms:mt-2 cms:flex cms:flex-col cms:gap-2">
-            <Label htmlFor="entry-date">Date</Label>
-            <DatePicker id="entry-date" withTime required className="cms:max-w-none" value={value || null} onChange={(next) => setValue(next ?? '')} />
-            {value !== saved && value !== '' && (
-                <div className="cms:flex cms:gap-2">
-                    <Button type="button" size="sm" disabled={processing}
-                        onClick={() => router.post(`${entryUrl}/date`, { locale, published_at: new Date(value).toISOString() },
-                            { preserveScroll: true, onStart: () => setProcessing(true), onFinish: () => setProcessing(false) })}>
-                        Change the date
-                    </Button>
-                    <Button type="button" size="sm" variant="ghost" onClick={() => setValue(saved)}>Cancel</Button>
-                </div>
-            )}
-            <p className="cms:text-xs cms:text-muted-foreground">Changes only the date; a date to come takes it off the site until then.</p>
-        </div>
-    );
-}
-
 function ParentField({ collection, value, error, onChange }: { collection: Props['collection']; value: number | null; error?: string; onChange: (id: number | null) => void }) {
     return (
         <div className="cms:flex cms:flex-col cms:gap-2">
-            <Label htmlFor="parent">Parent</Label>
+            <Label htmlFor="parent">{t('Parent')}</Label>
             <EntriesPicker id="parent" multiple={false} max={1} collections={[collection.handle]} invalid={error !== undefined}
                 value={value} onChange={(next) => onChange(typeof next === 'number' ? next : null)} />
             <FieldError message={error} />
@@ -640,12 +684,12 @@ function PageSettings({ entryUrl, collection, settings, blueprints, disabled, va
     const hasErrors = ['parent_id', 'template', 'comments_closed'].some((key) => errors[key] !== undefined) || blueprintError !== undefined;
 
     return (
-        <CollapsibleCard title="Page settings" titleClassName="cms:text-base" storageKey="cms:entry:page-settings" hasErrors={hasErrors}>
+        <CollapsibleCard title={t('Page settings')} titleClassName="cms:text-base" storageKey="cms:entry:page-settings" hasErrors={hasErrors}>
             <fieldset disabled={disabled} className="cms:flex cms:flex-col cms:gap-4 cms:text-sm">
                 {collection.hierarchical && <ParentField collection={collection} value={values.parent_id} error={errors.parent_id} onChange={(parent_id) => onChange({ parent_id })} />}
                 {blueprints.length > 1 && (
                     <div className="cms:flex cms:flex-col cms:gap-2">
-                        <Label htmlFor="blueprint">Blueprint</Label>
+                        <Label htmlFor="blueprint">{t('Blueprint')}</Label>
                         <Select value={blueprintForm.data.blueprint} onValueChange={(handle: string) => blueprintForm.setData('blueprint', handle)}>
                             <SelectTrigger id="blueprint" aria-invalid={blueprintError !== undefined}><SelectValue /></SelectTrigger>
                             <SelectContent>
@@ -654,26 +698,27 @@ function PageSettings({ entryUrl, collection, settings, blueprints, disabled, va
                         </Select>
                         {blueprintForm.data.blueprint !== savedBlueprint && (
                             <>
-                                <p className="cms:text-muted-foreground">The fields change in every language; values of fields both blueprints have are kept. The editor reloads.</p>
-                                <Button type="button" size="sm" disabled={blueprintForm.processing || draftDirty} title={draftDirty ? 'Save your draft first' : undefined}
+                                <p className="cms:text-muted-foreground">{t('The fields change in every language; values of fields both blueprints have are kept. The editor reloads.')}</p>
+                                <Button type="button" size="sm" disabled={blueprintForm.processing || draftDirty} title={draftDirty ? t('Save your draft first') : undefined}
                                     // A new blueprint means new fields and versions: the editor starts afresh.
-                                    onClick={() => blueprintForm.put(`${entryUrl}/settings`, { preserveScroll: true })}>Change blueprint</Button>
+                                    onClick={() => blueprintForm.put(`${entryUrl}/settings`, { preserveScroll: true })}>{t('Change blueprint')}</Button>
                             </>
                         )}
                         <FieldError message={blueprintError} />
                     </div>
                 )}
                 <div className="cms:flex cms:flex-col cms:gap-2">
-                    <Label htmlFor="template">Template</Label>
-                    <Input id="template" className="cms:font-mono" placeholder="The collection's" value={values.template}
+                    <Label htmlFor="template">{t('Template')}</Label>
+                    <Input id="template" className="cms:font-mono" placeholder={`cms.${collection.handle}-landing`} value={values.template}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ template: e.target.value })} aria-invalid={errors.template !== undefined} />
+                    <TemplateHelp example={`cms.${collection.handle}-landing`} fallbacks={[t('the collection\'s template, if set'), `cms.${collection.handle}`, 'cms.entry']} />
                     <FieldError message={errors.template} />
                 </div>
                 {collection.comments && (
                     <div className="cms:flex cms:items-center cms:gap-3">
                         <Switch id="comments-open" checked={!values.comments_closed} onCheckedChange={(open: boolean) => onChange({ comments_closed: !open })} />
-                        <Label htmlFor="comments-open">Accept new comments</Label>
-                        <a href={adminUrl(`cms/comments?entry=${entryUrl.split('/').slice(-1)[0]}`)} className="cms:ml-auto cms:text-muted-foreground cms:underline-offset-4 hover:cms:underline">Comments</a>
+                        <Label htmlFor="comments-open">{t('Accept new comments')}</Label>
+                        <a href={adminUrl(`cms/comments?entry=${entryUrl.split('/').slice(-1)[0]}`)} className="cms:ml-auto cms:text-muted-foreground cms:underline-offset-4 hover:cms:underline">{t('Comments')}</a>
                     </div>
                 )}
             </fieldset>

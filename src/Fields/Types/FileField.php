@@ -66,11 +66,11 @@ final class FileField extends FieldType
         $types = self::types($field);
         $rules = ['file', 'max:'.self::ownMaxKb($field), function (string $attribute, mixed $value, Closure $fail): void {
             if ($value instanceof UploadedFile && array_intersect(self::extensions($value), self::BLOCKED) !== []) {
-                $fail('Files of this type can\'t be sent.');
+                $fail(__('Files of this type can\'t be sent.'));
             } elseif ($value instanceof UploadedFile && in_array(strtolower($value->getClientOriginalExtension()), FileContent::IMAGE_EXTENSIONS, true)
                 && (FileContent::containsPhp($value) || ! FileContent::matchesExtension($value))) {
                 // Named as an image: it must be one, without code hidden in it (a JPEG followed by PHP).
-                $fail('This isn\'t a valid image.');
+                $fail(__('This isn\'t a valid image.'));
             }
         }];
         if ($types !== []) {

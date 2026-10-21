@@ -29,7 +29,7 @@ final class DeleteTerm
     {
         $usedBy = References::usedBy(Reference::TERM, $term->id);
         if (! $force && $usedBy !== []) {
-            throw ValidationException::withMessages(['term' => 'This term is used by '.References::sentence($usedBy).'. Delete it anyway to leave those fields without it.']);
+            throw ValidationException::withMessages(['term' => __('This term is used by :uses. Delete it anyway to leave those fields without it.', ['uses' => References::sentence($usedBy)])]);
         }
         $title = $term->title();
         DB::transaction(function () use ($term): void {

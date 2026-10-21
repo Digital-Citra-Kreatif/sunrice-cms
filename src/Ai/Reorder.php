@@ -51,7 +51,7 @@ final class Reorder extends CmsTool
             if ($taxonomy === null) {
                 return Response::error('No such taxonomy. cms_list_terms lists them.');
             }
-            if (! Access::terms($this->user(), $taxonomy)) {
+            if (! Access::terms($this->user(), 'update', $taxonomy)) {
                 return $this->denied('order the terms of '.$taxonomy->title);
             }
             $changed = app(ReorderTerms::class)->handle($taxonomy, $args['ids'], $parent);

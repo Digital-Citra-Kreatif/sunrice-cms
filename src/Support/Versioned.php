@@ -52,7 +52,7 @@ final class Versioned
         $expected ??= is_int($version) ? $version : 1;
         $saved = $model->newQuery()->whereKey($model->getKey())->where('version', $expected)->update($attributes + ['version' => $expected + 1]);
         if ($saved === 0) {
-            throw ValidationException::withMessages(['version' => self::CONFLICT]);
+            throw ValidationException::withMessages(['version' => __(self::CONFLICT)]);
         }
         $model->refresh();
         // A query update fires no model events: the site's cache still hears of it.

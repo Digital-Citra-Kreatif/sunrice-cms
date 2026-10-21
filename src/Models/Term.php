@@ -30,6 +30,7 @@ use Sunrice\Cms\Support\Locales;
  * @property-read Term|null $parent
  * @property-read Collection<int, Term> $children
  * @property-read Collection<int, TermTranslation> $translations
+ * @property-read int|null $entries_count with withCount('entries')
  *
  * @api
  */

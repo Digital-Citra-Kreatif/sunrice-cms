@@ -22,7 +22,7 @@ final class ListTerms extends CmsTool
 
     public function handle(Request $request): Response
     {
-        if (! Access::terms($this->user()) && ! $this->may('view')) {
+        if (! Access::terms($this->user(), 'view') && ! $this->may('view')) {
             return $this->denied('view terms');
         }
         $handle = $request->get('taxonomy');

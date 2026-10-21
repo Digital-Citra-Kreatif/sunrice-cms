@@ -4,9 +4,9 @@ A **menu** (main, footer…) holds nested links: to an **entry**, which follows 
 
 ## Setting up and editing
 
-Under **Structure → Menu settings** (permissions `cms.menus.view`, `.create`, `.update`, `.delete`): a title and a handle that templates use (made from the title as you type it; it can be changed later, with a warning: templates that name it need the new one too).
+Under **Content → Menus** (`/admin/cms/menus`, permissions `cms.menus.view`, `.create`, `.update`, `.delete`): the menus, each with a title and a handle that templates use (made from the title as you type it; it can be changed later on the menu's **Settings**, `/admin/cms/menus/{handle}/edit`, with a warning: templates that name it need the new one too).
 
-Under **Content → Menus** (`cms.menus.view` to see, `cms.menus.update` to save): add entries and links, give them labels in each language, open them in a new tab, nest them (three levels) with the indent and outdent buttons, drag them into order among the links of their level by their handle (or with the keyboard: focus the handle, space, arrows, space), and remove them; a link takes what's under it along. The menu is saved as a whole.
+Opening a menu shows its links (`/admin/cms/menus/{handle}/links`, `cms.menus.view` to see, `cms.menus.update` to save): add entries and links, give them labels in each language, open them in a new tab, nest them (three levels) with the indent and outdent buttons, drag them into order among the links of their level by their handle (or with the keyboard: focus the handle, space, arrows, space), and remove them; a link takes what's under it along. The menu is saved as a whole.
 
 An entry's label is optional: without one, the menu shows the entry's title. An address needs a label in the main language; other languages fall back to it. Addresses that could run code (`javascript:`, `data:`…) are refused.
 

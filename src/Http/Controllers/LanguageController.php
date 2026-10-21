@@ -27,6 +27,6 @@ final class LanguageController
             return back()->with('error', str_replace(' (--copy-missing)', ' (php artisan sunrice:switch-main-language --copy-missing)', $message));
         }
 
-        return back()->with('success', Locales::name($locale).' is the main language now.');
+        return back()->with('success', __(':language is the main language now.', ['language' => Locales::name($locale)]));
     }
 }

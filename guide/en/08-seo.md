@@ -4,32 +4,34 @@
 
 ## An entry's search and sharing details
 
-Every entry has a **Search and sharing** card below its fields, per language. It's saved with the draft and goes live when you publish.
+Every entry has an **SEO** card below its fields, per language. It's saved with the draft and goes live when you publish.
 
 | Field | What it does |
 | --- | --- |
-| **SEO title** | The title in search results and the browser tab. Empty: the entry's title. The site name is added after it ("About | Acme") unless that's turned off. |
-| **Description** | A sentence or two shown under the title in search results and in shared links. Write it for people: what will they find on the page? |
-| **Share image** | The picture shown when the page is shared on social media or in chat apps. |
-| **Hide from search engines** | Asks search engines not to list this page, and leaves it out of the sitemap. Visitors can still open it. |
-| **Canonical address** | Only for a page that copies one elsewhere: that page's full address. Leave it empty almost always. |
+| **Meta title** | The title in search results and the browser tab. Empty: the entry's title. The site name is added after it ("About | Acme") unless that's turned off. |
+| **Meta description** | A sentence or two shown under the title in search results and in shared links. Write it for people: what will they find on the page? |
+| **Open Graph image** | The picture shown when the page is shared on social media or in chat apps. |
+| **Hide from search engines (noindex)** | Asks search engines not to list this page, and leaves it out of the sitemap. Visitors can still open it. |
+| **Canonical URL** | Only for a page that copies one elsewhere: that page's full address. Leave it empty almost always. |
 
-Fields left empty may be filled from the entry's own fields, if a site manager set that up for the collection (*SEO from fields*: a summary as the description, the main image as the share image). Otherwise the site's defaults apply.
+Fields left empty may be filled from the entry's own fields, if a site manager set that up on the **SEO** page (**Fields used for SEO**: a summary as the description, the main image as the share image). Otherwise the site's defaults apply.
 
 > [!TIP]
 > Keep SEO titles under about 60 characters and descriptions under about 155, so search engines don't cut them off.
 
 ## Term pages and listing pages
 
-A term's own page and a collection's listing page have the same **Search and sharing** card: on the term's page (from the terms list) and on the listing page (from **Listing page** above the entries list). Both are live as soon as you save.
+A term's own page and a collection's listing page have the same **SEO** card: on the term's page (from the terms list) and on the listing page (from **Listing page** above the entries list). Both are live as soon as you save.
 
 ## The site's defaults
 
-**Settings → Site** holds what pages don't set themselves: the **Site name**, a **Description**, a **Share image**, the **Title separator** (the `|` in "About | Acme"), whether to **Add the site name to titles**, and the site's **X (Twitter) account**. The homepage's title is the site name. See [The website's settings](guide:website/settings#site).
+**Settings → Site** holds the **Site name** and a **Description**, used by pages that don't have their own. The homepage's title is the site name. See [The website's settings](guide:website/settings#site).
 
-**Hide the whole site from search engines** is for a copy of the site that isn't public yet (a staging site). It hides every page and empties the sitemap. Make sure it's off on the real website.
+The **SEO** page (under Structure in the sidebar) holds the rest, in **Search engines and sharing**: the **Default share image**, whether to **Add the site name to page titles** and the **Separator** between them (the `|` in "About | Acme"), and the site's **X (Twitter) account**. Below it, **Fields used for SEO** says, for each collection and taxonomy, which of their fields fill in an empty meta title, description or share image.
 
-**Structured data** (in the same section) describes your pages to search engines in a form they read directly: your organisation or your name, your logo, articles and breadcrumbs. Leave it on unless your developer says otherwise.
+**Hide the whole site from search engines** (on the same page) is for a copy of the site that isn't public yet (a staging site). It hides every page and empties the sitemap. Make sure it's off on the real website.
+
+**Structured data** (in Settings → Site) describes your pages to search engines in a form they read directly: your organisation or your name, your logo, articles and breadcrumbs. Leave it on unless your developer says otherwise.
 
 ## Images
 

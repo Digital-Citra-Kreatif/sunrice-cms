@@ -33,10 +33,10 @@ final class RequestReview
     {
         $entry = $translation->entry;
         if ($entry->trashed()) {
-            throw ValidationException::withMessages(['entry' => 'This entry is in the trash; restore it first.']);
+            throw ValidationException::withMessages(['entry' => __('This entry is in the trash; restore it first.')]);
         }
         if (! $translation->hasUnpublishedChanges() && $translation->isPublished()) {
-            throw ValidationException::withMessages(['entry' => 'Nothing to review: the site already shows this version.']);
+            throw ValidationException::withMessages(['entry' => __('Nothing to review: the site already shows this version.')]);
         }
         $id = $user instanceof Model ? $user->getKey() : null;
         $translation->forceFill(['review_requested_at' => now(), 'review_requested_by' => is_int($id) ? $id : null])->save();

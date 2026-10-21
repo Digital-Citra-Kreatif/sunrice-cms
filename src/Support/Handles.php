@@ -11,24 +11,37 @@ use Sunrice\Cms\Models\Taxonomy;
 use Throwable;
 
 /**
- * The handles of every collection, taxonomy and form, read on every admin
- * page (the sidebar asks Access whether a user may see some collection's
- * entries), cached until one is created, changed or deleted.
+ * The handles of every collection, taxonomy and form, and the titles of
+ * the collections and taxonomies, read on every admin page (the sidebar
+ * lists them and asks Access who may see each), cached until one is
+ * created, changed or deleted.
  *
  * @internal
  */
 final class Handles
 {
-    private const KEY = 'sunrice-cms:handles';
+    private const KEY = 'sunrice-cms:handles:v2';
 
     /** @return list<string> */
     public static function collections(): array
     {
-        return self::all()['collections'];
+        return array_keys(self::all()['collections']);
     }
 
     /** @return list<string> */
     public static function taxonomies(): array
+    {
+        return array_keys(self::all()['taxonomies']);
+    }
+
+    /** @return array<string, array{title: string, listing: bool}> handle => its title, and whether it has a listing page; by title */
+    public static function collectionTitles(): array
+    {
+        return self::all()['collections'];
+    }
+
+    /** @return array<string, string> handle => title, by title */
+    public static function taxonomyTitles(): array
     {
         return self::all()['taxonomies'];
     }
@@ -44,13 +57,15 @@ final class Handles
         Cache::forget(self::KEY);
     }
 
-    /** @return array{collections: list<string>, taxonomies: list<string>, forms: list<string>} */
+    /** @return array{collections: array<string, array{title: string, listing: bool}>, taxonomies: array<string, string>, forms: list<string>} */
     private static function all(): array
     {
         try {
             return Cache::remember(self::KEY, SiteCache::ttl(), fn (): array => [
-                'collections' => self::pluck(Collection::query()->pluck('handle')->all()),
-                'taxonomies' => self::pluck(Taxonomy::query()->pluck('handle')->all()),
+                'collections' => Collection::query()->orderBy('title')->get(['handle', 'title', 'listing_route'])
+                    ->mapWithKeys(fn (Collection $c): array => [$c->handle => ['title' => $c->title, 'listing' => $c->listing_route !== null]])->all(),
+                'taxonomies' => Taxonomy::query()->orderBy('title')->get(['handle', 'title'])
+                    ->mapWithKeys(fn (Taxonomy $t): array => [$t->handle => $t->title])->all(),
                 'forms' => self::pluck(Form::query()->pluck('handle')->all()),
             ]);
         } catch (Throwable) {

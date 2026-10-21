@@ -46,6 +46,7 @@ use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Support\Access;
+use Sunrice\Cms\Support\AdminUrls;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\References;
 use Sunrice\Cms\Support\Seo;
@@ -66,7 +67,7 @@ final class EntryController
 
         return $first === null
             ? Inertia::render('Cms/Entries/Index', ['collection' => null, 'collections' => [], 'entries' => null, 'query' => null])
-            : redirect()->route('sunrice.admin.cms.entries.index', $first->handle);
+            : redirect()->route('sunrice.admin.cms.collections.entries.index', $first->handle);
     }
 
     public function index(Request $request, Collection $collection, Preferences $preferences): Response
@@ -149,6 +150,7 @@ final class EntryController
                 'id' => $translation->entry_id,
                 'title' => in_array($translation->collection_id, $own, true) ? $translation->draft_title : (string) $translation->title,
                 'collection' => $translation->entry->collection->title,
+                'collectionHandle' => $translation->entry->collection->handle,
                 'status' => $translation->status(),
             ], $items),
             'unavailable' => $asked === [] ? [] : Collection::query()->whereIn('handle', array_diff($asked, $pickable))->orderBy('title')->pluck('title')->all(),
@@ -233,12 +235,20 @@ final class EntryController
             'description' => implode(' · ', array_filter([
                 $translation->entry->collection->title,
                 $translation->locale === $main ? null : strtoupper($translation->locale),
-                $translation->status() === 'published' ? null : $translation->status(),
+                $translation->status() === 'published' ? null : self::said($translation->status()),
             ])),
-            'group' => 'Entries',
+            'group' => self::said('Entries'),
             'icon' => 'file-text',
-            'url' => route('sunrice.admin.cms.entries.edit', ['entry' => $translation->entry_id, ...($translation->locale === $main ? [] : ['locale' => $translation->locale])]),
+            'url' => route('sunrice.admin.cms.collections.entries.edit', ['collection' => $translation->entry->collection->handle, 'entry' => $translation->entry_id, ...($translation->locale === $main ? [] : ['locale' => $translation->locale])]),
         ])->all()]);
+    }
+
+    /** A word in the panel's language. */
+    private static function said(string $text): string
+    {
+        $said = __($text);
+
+        return is_string($said) ? $said : $text;
     }
 
     /**
@@ -270,7 +280,7 @@ final class EntryController
     {
         $schema = $collection->schema();
 
-        return Inertia::render('Cms/Entries/Editor', [
+        return Inertia::render('Cms/Entries/Edit', [
             'collection' => self::collection($collection),
             'fields' => $schema->toAdmin(),
             'entry' => null,
@@ -284,18 +294,31 @@ final class EntryController
     {
         $translation = $create->handle($collection, $request->only(['title', 'slug', 'data', 'seo', 'parent_id']));
 
-        return redirect()->route('sunrice.admin.cms.entries.edit', $translation->entry_id)->with('success', "\"{$translation->draft_title}\" created as a draft.");
+        return redirect()->to((string) AdminUrls::entry($translation->entry))->with('success', __('":title" created as a draft.', ['title' => $translation->draft_title]));
     }
 
-    public function edit(Request $request, Entry $entry): Response
+    /** An entry's old short address: to the one under its collection. */
+    public function open(Request $request, Entry $entry): RedirectResponse
     {
+        $locale = $request->query('locale');
+
+        return redirect()->to((string) AdminUrls::entry($entry, is_string($locale) ? $locale : null));
+    }
+
+    public function edit(Request $request, Collection $collection, Entry $entry): Response|RedirectResponse
+    {
+        // Under another collection (or its old handle): to its own.
+        if ($entry->collection_id !== $collection->id) {
+            return $this->open($request, $entry);
+        }
+        $entry->setRelation('collection', $collection);
         $translation = self::translation($entry, $request->query('locale'));
         $collection = $entry->collection;
         $main = $entry->mainTranslation();
         $schema = $entry->schema();
         $shared = $translation->isMain() ? [] : $schema->shared();
 
-        return Inertia::render('Cms/Entries/Editor', [
+        return Inertia::render('Cms/Entries/Edit', [
             'collection' => self::collection($collection),
             'fields' => $translation->isMain() ? $schema->toAdmin() : self::markShared($schema->toAdmin()),
             'locales' => EntryList::locales($entry),
@@ -435,10 +458,10 @@ final class EntryController
     /** A published entry's date, moved ("published_at"), its draft left alone. */
     public function date(Request $request, Entry $entry, ChangePublishDate $change): RedirectResponse
     {
-        $date = self::publishAt($request) ?? throw ValidationException::withMessages(['published_at' => 'Choose a date and time.']);
+        $date = self::publishAt($request) ?? throw ValidationException::withMessages(['published_at' => __('Choose a date and time.')]);
         $translation = $change->handle(self::translation($entry, $request->input('locale')), $date);
 
-        return back()->with('success', $translation->isLive() ? 'Date changed.' : 'Scheduled for '.$translation->published_at?->toDayDateTimeString().'.');
+        return back()->with('success', $translation->isLive() ? 'Date changed.' : __('Scheduled for :date.', ['date' => (string) $translation->published_at?->toDayDateTimeString()]));
     }
 
     public function requestReview(Request $request, Entry $entry, RequestReview $review): RedirectResponse
@@ -460,7 +483,7 @@ final class EntryController
     {
         $trash->handle($entry);
 
-        return redirect()->route('sunrice.admin.cms.entries.index', $entry->collection->handle)->with('success', 'Moved to the trash.')
+        return redirect()->route('sunrice.admin.cms.collections.entries.index', $entry->collection->handle)->with('success', 'Moved to the trash.')
             ->with('success_action', ['label' => 'Undo', 'url' => route('sunrice.admin.cms.entries.restore', $entry)]);
     }
 
@@ -476,27 +499,28 @@ final class EntryController
         $locale = $request->input('locale');
         $translation = $create->handle($entry, is_string($locale) ? $locale : '');
 
-        return redirect()->route('sunrice.admin.cms.entries.edit', [$entry->id, 'locale' => $translation->locale])
+        return redirect()->to((string) AdminUrls::entry($entry, $translation->locale))
             ->with('success', 'Added as a draft, copied from the main language. Translate it, then publish.');
     }
 
     /** Machine-translates what this language hasn't translated yet from the main one, into its draft. */
-    public function translate(Request $request, EntryTranslation $translation, TranslatorFactory $translators, MachineTranslateEntry $machine): RedirectResponse
+    public function translate(Request $request, Entry $entry, string $locale, TranslatorFactory $translators, MachineTranslateEntry $machine): RedirectResponse
     {
+        $translation = self::translationOf($entry, $locale);
         abort_unless($translators->configured() && ! $translation->entry->trashed(), 404);
         $version = $request->input('version');
         try {
             $stats = $machine->handle($translation, is_int($version) || is_string($version) ? $version : null);
         } catch (\RuntimeException $e) {
-            return back()->with('error', 'The translation service failed: '.$e->getMessage());
+            return back()->with('error', __('The translation service failed: :message', ['message' => $e->getMessage()]));
         }
         if ($stats->errors !== []) {
-            return back()->with('error', 'Not translated: '.implode(' ', $stats->errors));
+            return back()->with('error', __('Not translated: :errors', ['errors' => implode(' ', $stats->errors)]));
         }
 
         return back()->with('success', $stats->translated === 0
             ? 'Everything is translated already.'
-            : "Translated {$stats->translated} texts into the draft. Check them, then publish.");
+            : __('Translated :count texts into the draft. Check them, then publish.', ['count' => $stats->translated]));
     }
 
     public function removeTranslation(Entry $entry, string $locale, DeleteTranslation $delete): RedirectResponse
@@ -504,18 +528,21 @@ final class EntryController
         $entry->loadMissing('translations');
         $delete->handle($entry->translation($locale) ?? abort(404));
 
-        return redirect()->route('sunrice.admin.cms.entries.edit', $entry->id)->with('success', 'The translation was removed.');
+        return redirect()->to((string) AdminUrls::entry($entry))->with('success', 'The translation was removed.');
     }
 
     /** A revision compared with the draft: the fields that differ, as text. */
-    public function compareRevision(Revision $revision): JsonResponse
+    public function compareRevision(Entry $entry, Revision $revision): JsonResponse
     {
+        abort_unless($revision->translation->entry_id === $entry->id, 404);
+
         return response()->json(['fields' => RevisionList::compare($revision)]);
     }
 
-    public function restoreRevision(Request $request, Revision $revision, RestoreRevision $restore): RedirectResponse
+    public function restoreRevision(Request $request, Entry $entry, Revision $revision, RestoreRevision $restore): RedirectResponse
     {
         $translation = $revision->translation;
+        abort_unless($translation->entry_id === $entry->id, 404);
         abort_if($translation->entry->collection->trashed(), 404);
         // The draft it replaces, so the restore can be undone (this session).
         $request->session()->put(EntryManageController::undoKey($translation), [
@@ -591,7 +618,7 @@ final class EntryController
 
     private static function published(EntryTranslation $translation): string
     {
-        return $translation->isLive() ? 'Published.' : 'Scheduled for '.$translation->published_at?->toDayDateTimeString().'.';
+        return $translation->isLive() ? 'Published.' : __('Scheduled for :date.', ['date' => $translation->published_at?->toDayDateTimeString()]);
     }
 
     /** @return array{handle: string, title: string, dated: bool, hierarchical: bool, ordered: bool, listing: bool} */
@@ -637,5 +664,14 @@ final class EntryController
         }
 
         return $can;
+    }
+
+    /** One language of an entry, from its address (entries/{entry}/translations/{locale}/…). */
+    public static function translationOf(Entry $entry, string $locale): EntryTranslation
+    {
+        $translation = $entry->translations()->where('locale', $locale)->first();
+        abort_if($translation === null, 404);
+
+        return $translation;
     }
 }

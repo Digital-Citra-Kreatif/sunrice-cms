@@ -47,10 +47,16 @@ final class FieldText
 
         return match (true) {
             $value === null => '',
-            is_bool($value) => $value ? 'Yes' : 'No',
+            is_bool($value) => self::said($value ? __('Yes') : __('No'), $value ? 'Yes' : 'No'),
             is_scalar($value) => (string) $value,
             is_array($value) && array_is_list($value) && array_filter($value, is_scalar(...)) === $value => implode(', ', array_map(strval(...), $value)),
             default => (string) json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
         };
+    }
+
+    /** What __() said, or the English when it gave something else. */
+    private static function said(mixed $said, string $english): string
+    {
+        return is_string($said) ? $said : $english;
     }
 }

@@ -82,6 +82,8 @@ final class CmsServiceProvider extends ServiceProvider
         $this->loadViewsFrom(dirname(__DIR__).'/resources/views', 'sunrice-cms');
         // What visitors read (sunrice-cms::site.*); with another loader than Laravel's, Indonesian for its own lines too.
         $this->loadTranslationsFrom(dirname(__DIR__).'/resources/lang', 'sunrice-cms');
+        // The CMS's admin words in other languages (lang/{code}.json, English text as keys).
+        $this->loadJsonTranslationsFrom(dirname(__DIR__).'/lang');
         $this->callAfterResolving('translator', function (mixed $translator): void {
             if ($translator instanceof Translator) {
                 Support\CoreTranslations::register($translator);

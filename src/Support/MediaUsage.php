@@ -25,7 +25,7 @@ final class MediaUsage
         $collection = $entry->collection;
         $schema = $entry->schema();
         $ids = [...self::ids($schema, $translation->draft_data), ...self::ids($schema, $translation->data ?? [])];
-        $url = Route::has('sunrice.admin.cms.entries.edit') ? route('sunrice.admin.cms.entries.edit', [$entry->id, 'locale' => $translation->locale]) : null;
+        $url = AdminUrls::entry($entry, $translation->locale);
         app(MediaUsages::class)->sync('cms.entry', (string) $entry->id, $ids,
             "{$collection->title}: {$translation->draft_title} (".strtoupper($translation->locale).')', $url, $translation->locale);
     }
@@ -33,7 +33,7 @@ final class MediaUsage
     public static function global(GlobalValue $value): void
     {
         $set = $value->globalSet;
-        $url = Route::has('sunrice.admin.cms.globals.edit') ? route('sunrice.admin.cms.globals.edit', [$set->handle, 'locale' => $value->locale]) : null;
+        $url = Route::has('sunrice.admin.cms.globals.values.edit') ? route('sunrice.admin.cms.globals.values.edit', [$set->handle, 'locale' => $value->locale]) : null;
         app(MediaUsages::class)->sync('cms.global', (string) $set->id, self::ids($set->schema(), $value->data),
             "Globals: {$set->title} (".strtoupper($value->locale).')', $url, $value->locale);
     }

@@ -19,7 +19,7 @@ Manage them in the admin under **Structure → Collections** (permissions `cms.c
 | `listing_blueprint`, `per_page` | The listing page's own fields (an intro…), edited from the entries list, and how many entries it shows per page (10). `SaveListing` saves the fields (and the listing page's own SEO, `$seo`) per language and, given the `version` the editor opened (`CollectionListing::$version`), refuses a save over someone else's newer one. |
 | `ordered` | **Manual order**: editors put entries in order in the list (**Reorder**, then drag; a hierarchical collection shows its tree, and an entry moves among its siblings with its children), instead of by date or title. |
 | `hierarchical` | Entries may have a **parent** entry, like pages under pages, for breadcrumbs and sub-menus. URLs stay flat: *Team* under *About* is still `/team`. |
-| `seo_title_field`, `seo_description_field`, `seo_image_field` | **SEO from fields**: from the fields of its own blueprints, a text field for the SEO title, a text or textarea field for the description and a media field for the share image, used where an entry's SEO card is empty. See [SEO](site.md#seo). |
+| `seo_title_field`, `seo_description_field`, `seo_image_field` | Chosen in **Settings → SEO**, from the fields of its own blueprints: a text field for the SEO title, a text or textarea field for the description and a media field for the share image, used where an entry's SEO card is empty. See [SEO](site.md#seo). |
 
 ```php
 use Sunrice\Cms\Actions\Collections\SaveCollection;
@@ -27,7 +27,7 @@ use Sunrice\Cms\Actions\Collections\SaveCollection;
 $articles = app(SaveCollection::class)->handle(['handle' => 'articles', 'title' => 'Articles', 'blueprint' => 'article', 'dated' => true]);
 ```
 
-Deleting a collection (`DeleteCollection`) doesn't erase its entries: they leave the admin and the site. The list's **Deleted** filter shows deleted collections with a **Restore** action, and `sunrice:orphans --purge` deletes them for good, freeing their handles ([leftovers](structure.md#leftovers)). To rename a field without losing its values, use `sunrice:rename-field` ([renaming a field](structure.md#renaming-a-field)).
+Deleting a collection (`DeleteCollection`) doesn't erase its entries: they leave the admin and the site. The list's **Trash** (`?status=trashed`) shows deleted collections with **Restore**, and `sunrice:orphans --purge` deletes them for good, freeing their handles ([leftovers](structure.md#leftovers)). To rename a field without losing its values, use `sunrice:rename-field` ([renaming a field](structure.md#renaming-a-field)).
 
 ### Per-entry blueprints
 
@@ -80,7 +80,7 @@ In the editor:
 - Group fields, **Search and sharing** and the sidebar's cards (status, page settings, comments, revisions) fold away; each remembers being open or closed in the browser, and opens by itself when a field inside has an error.
 - Repeater rows, flexible blocks and an entries field's chosen entries are dragged into order by their handle (or with the keyboard: focus the handle, space, arrows, space).
 - **Comments** (when the collection takes comments and the person has `cms.comments.view`): the counts by status and the latest five, with **Approve**, **Spam** and **Reply** for those with `cms.comments.moderate`, and a link to the [comments page](comments.md) showing only this entry's (`?entry=`).
-- The revisions and comments load just after the page shows (Inertia's deferred props), and a terms field's terms load when it shows (`cms/term-picker`), so a large entry opens fast.
+- The revisions and comments load just after the page shows (Inertia's deferred props), and a terms field's terms load when it shows (`cms/terms/picker`), so a large entry opens fast.
 
 **Reordering** in code: `ReorderEntries::handle($collection, $ids, $parentId)` puts one level of an ordered collection's entries (those under `$parentId` in a hierarchical one, null for the top level; else all of them) in the order given, the rest of the level after them as they were; the level is numbered again in one transaction, and the change is logged (`reordered`) and clears the site's cache. It returns whether the order changed: given the order the level already has, nothing is written or logged. Its route is `POST cms/entries/reorder` (`collection`, `ids`, `parent_id`), behind `cms.entries.update` for that collection. `MoveEntry` still moves one entry a place up or down.
 
@@ -95,7 +95,7 @@ Each collection's list (`EntryController::index`, built by `Sunrice\Cms\Admin\En
 | Parameter | |
 | --- | --- |
 | `search` | Titles and slugs containing the text (any case); `#12` finds the entry with id 12. |
-| `status` | `draft`, `published`, `scheduled` (published with a date to come) or `trashed` (the trash; `trashed=1` works too). None: everything but the trash. |
+| `status` | `draft`, `published`, `scheduled` (published with a date to come) or `trashed` (the trash). None: everything but the trash. |
 | `author` | Entries a user created (the filter offers everyone who wrote in the collection). |
 | `terms[topics]` | Entries with that term (id) of a taxonomy attached to the collection, one per taxonomy. |
 | `locale` | The language listed (its titles, slugs and statuses); the main one by default. Entries without that language aren't listed. |
@@ -110,12 +110,14 @@ Tick entries to publish, unpublish or trash them together (in the trash: restore
 
 ## Languages
 
-The languages content is written in are set in **Settings → Languages** (`Sunrice\Cms\Settings\LocaleSettings`, permission `cms.settings.locales`): one per line, its code and its name, the main one first:
+The languages content is written in are set in **Settings → Languages** (`Sunrice\Cms\Settings\LocaleSettings`, permission `cms.settings.locales`): a row per language, its code and its name, the main one first (with **Add a language**, which suggests common ones, and arrows to reorder). They're kept as lines, so in code and over the AI tools it's the same text:
 
 ```
 en: English
-id: Bahasa Indonesia
+id: Bahasa Indonesia | indonesia
 ```
+
+The part after `|` is the language's **address**, what its pages' addresses start with: left out, the main language is at the plain addresses (`/about`) and the others under their code (`/id/tentang`). Any of them can have its own, the main one too (`en: English | en` puts it at `/en/about`); each must be different. When every language has one, a plain address (`/about`) redirects to the main language's (`/en/about`). Without Settings, config `sunrice-cms.locale_prefixes` sets them. In code: `Locales::prefix('id')` (`/indonesia`), `Locales::segments()` and `Locales::split($path)`.
 
 Until they're saved there, `config/sunrice-cms.php` decides: `locales` (or `SUNRICE_LOCALES=id,en`), the first being the main one, and `locale_names` (`['id' => 'Bahasa Indonesia']`; others are named in English when PHP's intl extension is installed, else by their code). Without either, it's the app's locale. The main language's addresses are plain (`/about`), the others' start with their code (`/id/about`).
 

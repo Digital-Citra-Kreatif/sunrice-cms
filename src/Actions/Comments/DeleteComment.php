@@ -22,7 +22,7 @@ final class DeleteComment
     public function handle(Comment $comment): void
     {
         if (! $comment->trashed()) {
-            throw ValidationException::withMessages(['comment' => 'Move the comment to the trash first.']);
+            throw ValidationException::withMessages(['comment' => __('Move the comment to the trash first.')]);
         }
         // Explicitly, not by the foreign key: not every connection enforces it.
         Comment::query()->withTrashed()->where('parent_id', $comment->id)->update(['parent_id' => $comment->parent_id]);

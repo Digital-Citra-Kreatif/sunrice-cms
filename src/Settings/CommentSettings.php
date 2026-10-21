@@ -74,28 +74,28 @@ final class CommentSettings extends Settings
                 self::HOLD_NONE => 'Publish comments at once',
             ])->help('Comments by people who may moderate them are always published.'),
             Toggle::make('signedInOnly')->label('Only signed-in users can comment'),
-            Toggle::make('captcha')->label('Ask for a captcha')->help('Uses the captcha keys set for forms (SUNRICE_CAPTCHA_*).'),
+            Toggle::make('captcha')->label('Ask for a captcha')->help('Uses the forms\' captcha keys.'),
             NumberInput::make('perMinute')->label('Comments per visitor a minute')->integer()->min(1)->max(100)->required(),
             NumberInput::make('closeAfterDays')->label('Close comments after (days)')->integer()->min(1)->max(36500)
-                ->help('Days after an entry\'s publish date. Empty: never.'),
+                ->help('Counted from the publish date. Empty: never.'),
             NumberInput::make('depth')->label('Reply levels shown')->integer()->min(1)->max(10)->required()
-                ->help('Deeper replies line up at the last level, so threads stay readable on phones.'),
+                ->help('Deeper replies show at the last level.'),
             Toggle::make('notifyModerators')->label('Email moderators about new comments')
-                ->help('People who may moderate comments, and the addresses below.'),
+                ->help('Moderators, and the addresses below.'),
             Textarea::make('notifyEmails')->label('Also email')->rows(2)->maxLength(1000)->placeholder('editor@example.com')
                 ->rules(['nullable', function (string $attribute, mixed $value, \Closure $fail): void {
                     foreach (self::lines($value) as $address) {
                         if (filter_var($address, FILTER_VALIDATE_EMAIL) === false) {
-                            $fail('"'.$address.'" isn\'t an email address.');
+                            $fail(__('":address" isn\'t an email address.', ['address' => $address]));
 
                             return;
                         }
                     }
                 }]),
-            CheckboxList::make('notifyRoles')->label('Also email roles')->options(fn (): array => RoleMembers::options())
+            CheckboxList::make('notifyRoles')->label('Also email roles')->verbatim()->options(fn (): array => RoleMembers::options())
                 ->help('Everyone with these roles, besides the moderators and addresses above.'),
             Toggle::make('replyNotifications')->label('Let commenters get an email when someone replies')
-                ->help('With comments published at once, only signed-in users get them (a guest could type anyone\'s address).'),
+                ->help('If comments go live without review, only signed-in users get these.'),
         ]);
     }
 

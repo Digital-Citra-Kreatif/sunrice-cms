@@ -4,8 +4,9 @@ import {
     Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input, Label,
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SortableHandle, SortableList, Switch, Textarea,
 } from '@sunrice/admin-sdk/ui';
+import { t } from '@sunrice/admin-sdk';
 import { FieldError, FieldInput } from '@/components/FieldInput.tsx';
-import { type BuilderField, errorsAt, errorsUnder, handleInput, handleWarning, hasErrors, MAX_DEPTH, newField, relabel, type ReservedHandles } from '@/lib/builder.ts';
+import { type BuilderField, cleanHandle, errorsAt, errorsUnder, handleWarning, hasErrors, MAX_DEPTH, newField, relabel, type ReservedHandles } from '@/lib/builder.ts';
 import { OPERATORS } from '@/lib/conditions.ts';
 import type { Errors, FieldCondition, FieldTranslation, FieldTypeInfo, LocaleInfo } from '@/types.ts';
 
@@ -42,17 +43,17 @@ export function FieldBuilder({ fields, onChange, types, errors, depth = 1, idPre
 
     return (
         <div className="cms:flex cms:flex-col cms:gap-2">
-            {fields.length === 0 && <p className="cms:rounded-lg cms:border cms:border-dashed cms:p-4 cms:text-sm cms:text-muted-foreground">No fields yet.</p>}
+            {fields.length === 0 && <p className="cms:rounded-lg cms:border cms:border-dashed cms:p-4 cms:text-sm cms:text-muted-foreground">{t('No fields yet.')}</p>}
             {fields.length > 1 && (
                 <div className="cms:flex cms:justify-end">
                     {open.size > 0
-                        ? <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(new Set())}>Close all</Button>
-                        : <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(new Set(fields.map((field) => field.key)))}>Open all</Button>}
+                        ? <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(new Set())}>{t('Close all')}</Button>
+                        : <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(new Set(fields.map((field) => field.key)))}>{t('Open all')}</Button>}
                 </div>
             )}
             <SortableList items={fields} getId={(field) => field.key} getLabel={(field) => field.label || field.handle} onReorder={(next) => onChange(next)}>
                 {(field, { index, handle, isOverlay }) => {
-                    const type = types.find((t) => t.type === field.type);
+                    const type = types.find((each) => each.type === field.type);
                     const invalid = hasErrors(errors, String(index)) || handleWarning(field, fields, reserved) !== null;
                     const expanded = !isOverlay && (open.has(field.key) || invalid);
                     const id = `${idPrefix}-${field.key}`;
@@ -60,21 +61,21 @@ export function FieldBuilder({ fields, onChange, types, errors, depth = 1, idPre
                     return (
                         <div className={`cms:rounded-lg cms:border cms:bg-card ${invalid ? 'cms:border-destructive' : ''}`}>
                             <div className="cms:flex cms:items-center cms:gap-2 cms:p-2">
-                                <SortableHandle {...handle} label={`Move ${field.label || field.handle}`} />
+                                <SortableHandle {...handle} label={t('Move :title', { title: field.label || field.handle })} />
                                 <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-expanded={expanded} aria-controls={id}
-                                    aria-label={`${expanded ? 'Close' : 'Open'} ${field.label || field.handle}`} onClick={() => toggle(field.key)}>
+                                    aria-label={expanded ? t('Close :title', { title: field.label || field.handle }) : t('Open :title', { title: field.label || field.handle })} onClick={() => toggle(field.key)}>
                                     {expanded ? <ChevronDown /> : <ChevronRight />}
                                 </Button>
                                 <button type="button" className="cms:flex cms:min-w-0 cms:flex-1 cms:items-center cms:gap-2 cms:text-left" onClick={() => toggle(field.key)}>
                                     <span className="cms:truncate cms:font-medium">{field.label || field.handle}</span>
                                     <code className="cms:truncate cms:text-xs cms:text-muted-foreground">{field.handle}</code>
                                 </button>
-                                {field.required && <Badge variant="outline">Required</Badge>}
+                                {field.required && <Badge variant="outline">{t('Required')}</Badge>}
                                 <Badge variant="secondary">{type?.label ?? field.type}</Badge>
                                 {type?.hasChildren && field.fields.length > 0 && !expanded && (
-                                    <span className="cms:text-xs cms:text-muted-foreground">{field.fields.length} inside</span>
+                                    <span className="cms:text-xs cms:text-muted-foreground">{t(':count inside', { count: field.fields.length })}</span>
                                 )}
-                                <Button type="button" variant="ghost" size="icon" className="cms:size-8 cms:text-destructive" aria-label={`Remove ${field.label || field.handle}`}
+                                <Button type="button" variant="ghost" size="icon" className="cms:size-8 cms:text-destructive" aria-label={t('Remove :title', { title: field.label || field.handle })}
                                     onClick={() => onChange(fields.filter((_, i) => i !== index))}><Trash2 /></Button>
                             </div>
                             {expanded && (
@@ -88,7 +89,7 @@ export function FieldBuilder({ fields, onChange, types, errors, depth = 1, idPre
             <div>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button type="button" variant="outline" size="sm"><Plus /> Add field</Button>
+                        <Button type="button" variant="outline" size="sm"><Plus /> {t('Add field')}</Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
                         {types.filter((type) => !type.hasChildren || depth < MAX_DEPTH).map((type) => (
@@ -118,7 +119,7 @@ const PER_LANGUAGE = { default: '__default', yes: 'yes', no: 'no' };
 
 function FieldSettings({ id, field, type, siblings, onChange, types, errors, depth, reserved, locales }: SettingsProps) {
     const config = field.config ?? {};
-    const warning = handleWarning(field, siblings, reserved);
+    const warning = handleWarning(field, siblings, reserved, t);
 
     // A fieldset include: only which fieldset. Its fields land here with their own handles; its handle and settings aren't used.
     if (field.type === 'fieldset') {
@@ -126,9 +127,9 @@ function FieldSettings({ id, field, type, siblings, onChange, types, errors, dep
             <div id={id} className="cms:flex cms:flex-col cms:gap-4 cms:border-t cms:p-4">
                 <div className="cms:grid cms:gap-4 cms:md:grid-cols-2">
                     <div className="cms:flex cms:flex-col cms:gap-2">
-                        <Label htmlFor={`${id}-label`}>Label</Label>
+                        <Label htmlFor={`${id}-label`}>{t('Label')}</Label>
                         <Input id={`${id}-label`} value={field.label ?? ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(relabel(field, e.target.value, siblings))} />
-                        <p className="cms:text-sm cms:text-muted-foreground">Only shown here, in the builder.</p>
+                        <p className="cms:text-sm cms:text-muted-foreground">{t('Only shown here, in the builder.')}</p>
                     </div>
                     {type?.settings.map((setting) => (
                         <FieldInput key={setting.handle} id={`${id}-config-${setting.handle}`} field={setting} value={config[setting.handle]}
@@ -143,43 +144,43 @@ function FieldSettings({ id, field, type, siblings, onChange, types, errors, dep
 
     return (
         <div id={id} className="cms:flex cms:flex-col cms:gap-4 cms:border-t cms:p-4">
-            {!type && <p className="cms:text-sm cms:text-destructive">The field type "{field.type}" isn't registered. Its data is kept; register the type or remove the field.</p>}
+            {!type && <p className="cms:text-sm cms:text-destructive">{t('The field type ":type" isn\'t registered. Its data is kept; register the type or remove the field.', { type: field.type })}</p>}
             <div className="cms:grid cms:gap-4 cms:md:grid-cols-2">
                 <div className="cms:flex cms:flex-col cms:gap-2">
-                    <Label htmlFor={`${id}-label`}>Label</Label>
+                    <Label htmlFor={`${id}-label`}>{t('Label')}</Label>
                     <Input id={`${id}-label`} value={field.label ?? ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(relabel(field, e.target.value, siblings))} />
                     <FieldError message={errors.label} />
                 </div>
                 <div className="cms:flex cms:flex-col cms:gap-2">
-                    <Label htmlFor={`${id}-handle`}>Handle</Label>
+                    <Label htmlFor={`${id}-handle`}>{t('Handle')}</Label>
                     <Input id={`${id}-handle`} className="cms:font-mono" value={field.handle}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...field, handle: handleInput(e.target.value), handleTouched: true })} />
-                    <p className="cms:text-sm cms:text-muted-foreground">How templates read it. Renaming it hides values saved under the old one.</p>
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...field, handle: cleanHandle(e.target.value), handleTouched: true })} />
+                    <p className="cms:text-sm cms:text-muted-foreground">{t('How templates read it. Renaming it hides values saved under the old one.')}</p>
                     <FieldError message={errors.handle ?? warning ?? undefined} />
                 </div>
             </div>
             <div className="cms:flex cms:flex-col cms:gap-2">
-                <Label htmlFor={`${id}-instructions`}>Instructions</Label>
-                <Input id={`${id}-instructions`} value={field.instructions ?? ''} placeholder="Shown under the field to editors"
+                <Label htmlFor={`${id}-instructions`}>{t('Instructions')}</Label>
+                <Input id={`${id}-instructions`} value={field.instructions ?? ''} placeholder={t('Shown under the field to editors')}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...field, instructions: e.target.value || null })} />
                 <FieldError message={errors.instructions} />
             </div>
             <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-6">
                 <div className="cms:flex cms:items-center cms:gap-3">
                     <Switch id={`${id}-required`} checked={field.required === true} onCheckedChange={(required: boolean) => onChange({ ...field, required })} />
-                    <Label htmlFor={`${id}-required`}>Required</Label>
+                    <Label htmlFor={`${id}-required`}>{t('Required')}</Label>
                 </div>
                 <div className="cms:flex cms:items-center cms:gap-3">
-                    <Label htmlFor={`${id}-translatable`}>Per language</Label>
+                    <Label htmlFor={`${id}-translatable`}>{t('Per language')}</Label>
                     <Select
                         value={field.translatable === true ? PER_LANGUAGE.yes : field.translatable === false ? PER_LANGUAGE.no : PER_LANGUAGE.default}
                         onValueChange={(value: string) => onChange({ ...field, translatable: value === PER_LANGUAGE.yes ? true : value === PER_LANGUAGE.no ? false : null })}
                     >
                         <SelectTrigger id={`${id}-translatable`} className="cms:w-48"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value={PER_LANGUAGE.default}>As the type decides</SelectItem>
-                            <SelectItem value={PER_LANGUAGE.yes}>Yes, translated</SelectItem>
-                            <SelectItem value={PER_LANGUAGE.no}>No, shared</SelectItem>
+                            <SelectItem value={PER_LANGUAGE.default}>{t('As the type decides')}</SelectItem>
+                            <SelectItem value={PER_LANGUAGE.yes}>{t('Yes, translated')}</SelectItem>
+                            <SelectItem value={PER_LANGUAGE.no}>{t('No, shared')}</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -200,17 +201,17 @@ function FieldSettings({ id, field, type, siblings, onChange, types, errors, dep
             )}
 
             <div className="cms:flex cms:flex-col cms:gap-2">
-                <Label htmlFor={`${id}-validation`}>Extra rules</Label>
+                <Label htmlFor={`${id}-validation`}>{t('Extra rules')}</Label>
                 <Textarea id={`${id}-validation`} rows={2} className="cms:font-mono"
                     value={(field.validation ?? []).join('\n')}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange({ ...field, validation: e.target.value.split('\n') })} />
-                <p className="cms:text-sm cms:text-muted-foreground">Optional checks, one per line, such as <code>email</code> or <code>max:100</code> (for developers: Laravel validation rules).</p>
+                <p className="cms:text-sm cms:text-muted-foreground">{withCode(t('Optional checks, one per line, such as :email or :max (for developers: Laravel validation rules).'), { email: 'email', max: 'max:100' })}</p>
                 <FieldError message={errors.validation ?? Object.entries(errors).find(([key]) => key.startsWith('validation.'))?.[1]} />
             </div>
 
             {type?.hasChildren && (
                 <div className="cms:flex cms:flex-col cms:gap-2">
-                    <Label>Fields inside</Label>
+                    <Label>{t('Fields inside')}</Label>
                     <FieldBuilder fields={field.fields} onChange={(fields) => onChange({ ...field, fields })} types={types}
                         errors={errorsUnder(errors, 'fields')} depth={depth + 1} idPrefix={id} locales={locales} />
                     <FieldError message={errors.fields} />
@@ -235,8 +236,8 @@ function TranslationSettings({ id, field, locales, onChange, errors }: { id: str
 
     return (
         <details className="cms:rounded-lg cms:border cms:p-3" open={Object.keys(translations).length > 0 || message !== undefined}>
-            <summary className="cms:cursor-pointer cms:text-sm cms:font-medium">In other languages</summary>
-            <p className="cms:mt-2 cms:text-sm cms:text-muted-foreground">What visitors read in each language, as forms show it. Empty: as above.</p>
+            <summary className="cms:cursor-pointer cms:text-sm cms:font-medium">{t('In other languages')}</summary>
+            <p className="cms:mt-2 cms:text-sm cms:text-muted-foreground">{t('What visitors read in each language, as forms show it. Empty: as above.')}</p>
             <div className="cms:mt-3 cms:flex cms:flex-col cms:gap-4">
                 {locales.map(({ code, name }) => (
                     <div key={code} className="cms:grid cms:gap-3 cms:md:grid-cols-2">
@@ -275,6 +276,20 @@ function TranslationSettings({ id, field, locales, onChange, errors }: { id: str
 
 const ALWAYS = '__always';
 
+/** An operator's words (OPERATORS keeps the English for the tests). */
+function operatorLabel(operator: FieldCondition['operator']): string {
+    switch (operator) {
+        case 'equals':
+            return t('is');
+        case 'not_equals':
+            return t('is not');
+        case 'filled':
+            return t('is filled in');
+        default:
+            return t('is empty');
+    }
+}
+
 /** "Show only when …": another field on this level, how to compare, and with what. */
 function ConditionSettings({ id, field, siblings, onChange, errors }: { id: string; field: BuilderField; siblings: BuilderField[]; onChange: (field: BuilderField) => void; errors: Errors }) {
     const others = siblings.filter((sibling) => sibling.key !== field.key && sibling.handle !== '');
@@ -287,32 +302,40 @@ function ConditionSettings({ id, field, siblings, onChange, errors }: { id: stri
 
     return (
         <div className="cms:flex cms:flex-col cms:gap-2">
-            <Label htmlFor={`${id}-condition`}>Show</Label>
+            <Label htmlFor={`${id}-condition`}>{t('Show')}</Label>
             <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
                 <Select value={condition?.field ?? ALWAYS} onValueChange={(value: string) => set(value === ALWAYS ? null : { field: value })}>
                     <SelectTrigger id={`${id}-condition`} className="cms:w-56"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                        <SelectItem value={ALWAYS}>Always</SelectItem>
-                        {others.map((other) => <SelectItem key={other.key} value={other.handle}>When {other.label || other.handle}</SelectItem>)}
+                        <SelectItem value={ALWAYS}>{t('Always')}</SelectItem>
+                        {others.map((other) => <SelectItem key={other.key} value={other.handle}>{t('When :field', { field: other.label || other.handle })}</SelectItem>)}
                     </SelectContent>
                 </Select>
                 {condition && (
                     <>
                         <Select value={operator.value} onValueChange={(value: string) => set({ operator: value as FieldCondition['operator'] })}>
-                            <SelectTrigger aria-label="How to compare" className="cms:w-36"><SelectValue /></SelectTrigger>
+                            <SelectTrigger aria-label={t('How to compare')} className="cms:w-36"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                                {OPERATORS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                                {OPERATORS.map((o) => <SelectItem key={o.value} value={o.value}>{operatorLabel(o.value)}</SelectItem>)}
                             </SelectContent>
                         </Select>
                         {operator.needsValue && (
-                            <Input aria-label="Value" className="cms:w-48" placeholder="a value, or true / false" value={String(condition.value ?? '')}
+                            <Input aria-label={t('Value')} className="cms:w-48" placeholder={t('a value, or true / false')} value={String(condition.value ?? '')}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => set({ value: e.target.value })} />
                         )}
                     </>
                 )}
             </div>
-            <p className="cms:text-sm cms:text-muted-foreground">A hidden field isn't required, and keeps what it had.</p>
+            <p className="cms:text-sm cms:text-muted-foreground">{t('A hidden field isn\'t required, and keeps what it had.')}</p>
             <FieldError message={errors.field ?? errors.operator ?? errors.value ?? errors[''] } />
         </div>
     );
+}
+
+/** A translated sentence with :placeholders shown as code. */
+function withCode(text: string, codes: Record<string, string>): React.ReactNode {
+    return text.split(/(:[a-z_]+)/).map((part, i) => {
+        const code = codes[part.slice(1)];
+        return part.startsWith(':') && code !== undefined ? <code key={i}>{code}</code> : part;
+    });
 }

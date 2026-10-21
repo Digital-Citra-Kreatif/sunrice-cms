@@ -40,8 +40,9 @@ final class ReviewRequested extends Mailable
         return new Content(view: 'sunrice-cms::mail.review-requested', with: [
             'title' => $this->translation->draft_title,
             'collection' => $this->translation->entry->collection->title,
-            'requester' => is_string($name) && $name !== '' ? $name : 'Someone',
-            'url' => AppUrl::route('sunrice.admin.cms.entries.edit', [
+            'requester' => is_string($name) && $name !== '' ? $name : __('Someone'),
+            'url' => AppUrl::route('sunrice.admin.cms.collections.entries.edit', [
+                'collection' => $this->translation->entry->collection->handle,
                 'entry' => $this->translation->entry_id,
                 ...($this->translation->locale === Locales::default() ? [] : ['locale' => $this->translation->locale]),
             ]),

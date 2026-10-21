@@ -75,7 +75,9 @@ final class MediaField extends FieldType
             new Field('max', 'number', 'At most', instructions: 'With several files.', config: ['min' => 1, 'step' => 1]),
             new Field('types', 'select', 'Kinds of file', instructions: 'None chosen: any file.', config: [
                 'multiple' => true,
-                'options' => array_map(fn (string $type): array => ['value' => $type, 'label' => ucfirst($type).'s'], Media::TYPES),
+                'options' => array_map(fn (string $type): array => ['value' => $type, 'label' => [
+                    'image' => __('Images'), 'video' => __('Videos'), 'audio' => __('Audios'), 'document' => __('Documents'),
+                ][$type]], Media::TYPES),
             ]),
         ];
     }
