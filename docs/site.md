@@ -286,7 +286,8 @@ For a part of a template without PHP, `<x-sunrice-cms::entries>` and `<x-sunrice
 | --- | --- |
 | `taxonomy` | Its handle (required). |
 | `collection` | Count only that collection's entries in `entries_count`. |
-| `hide-empty` | Leave out terms without live entries. |
+| `hide-empty` | Leave out terms without live entries. With `tree`, a term with entries keeps its parents. |
+| `include-children` | `entries_count` also counts the entries of the terms under each term (each entry once), as a filter by the term finds them. |
 | `tree` | Only the top-level terms, each with `children` (to any depth). |
 | `parent` | The terms directly under a term (its slug, in any language, or id); `top`: the top-level ones. |
 | `order-by` | `manual` (the editors' order, default), `title`, `entries` (by `entries_count`), `created_at`; `-title` for the other way round. |
@@ -375,7 +376,7 @@ Without a slot it prints a plain, accessible form (labels for every input, field
 | Type | Reads | Filters |
 | --- | --- | --- |
 | `search` | `?q=words` | `search()`: title and field text. |
-| `terms` | `?topic[]=slug` (`multiple: false`: `?topic=slug`) | Entries with any of the terms, or the terms under them (`whereTerm(..., includeChildren: true)`). Options: the taxonomy's terms (`taxonomy`, default the name) by slug in the page's language, each with `count` and `depth`; `hide_empty` leaves out terms without entries. |
+| `terms` | `?topic[]=slug` (`multiple: false`: `?topic=slug`) | Entries with any of the terms, or the terms under them (`whereTerm(..., includeChildren: true)`). Options: the taxonomy's terms (`taxonomy`, default the name) by slug in the page's language, each with `count` and `depth`; counts include the entries of the terms under each one, as the filter finds them; `hide_empty` leaves out terms without entries, but never the parents of a term that has some. |
 | `select` | `?color=red` (`multiple: true`: `?color[]=red&color[]=blue`) | The field equals one of the values; a select field with several choices holds any of them. Options: `options` given (value => label, or `[value, label]` rows), else the field's own; without either, any value. |
 | `range` | `?price_min=10&price_max=100` | Number fields between the two (either may be left out). |
 | `date_range` | `?made_from=2026-01-01&made_to=2026-01-31` | Date fields from the start of one day to the end of the other. |
