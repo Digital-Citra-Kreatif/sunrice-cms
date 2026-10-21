@@ -121,7 +121,7 @@ function Control({ field, value, onChange, errors, id, content }: Props) {
                 collections={field.collections ?? []} onChange={onChange}
                 value={typeof value === 'number' || (Array.isArray(value) && value.every((v) => typeof v === 'number')) ? value as number | number[] : null} />;
         case 'link':
-            return <LinkInput value={asRecord(value)} onChange={onChange} errors={errors} id={id} collections={field.collections ?? []} />;
+            return <LinkInput label={labelOf(field)} value={asRecord(value)} onChange={onChange} errors={errors} id={id} collections={field.collections ?? []} />;
         case 'media':
             return <MediaPickerInput id={id} invalid={invalid} disabled={false} multiple={field.config?.multiple === true}
                 max={numberConfig(field, 'max') ?? null} types={Array.isArray(field.config?.types) ? field.config.types as string[] : []}
@@ -203,8 +203,9 @@ function MultiSelect({ options, value, onChange }: { options: Option[]; value: s
     );
 }
 
-function LinkInput({ value, onChange, errors, id, collections }: {
-    value: Record<string, unknown>; onChange: (value: unknown) => void; errors: Errors; id: string; collections: string[];
+function LinkInput({ label, value, onChange, errors, id, collections }: {
+    /** The field's label: the inputs are named after it ("Map link: address"), not just "Address". */
+    label: string; value: Record<string, unknown>; onChange: (value: unknown) => void; errors: Errors; id: string; collections: string[];
 }) {
     const type = value.type === 'entry' ? 'entry' : 'url';
     const set = (changes: Record<string, unknown>) => {
@@ -216,7 +217,7 @@ function LinkInput({ value, onChange, errors, id, collections }: {
 
     return (
         <div className="cms:flex cms:flex-col cms:gap-2">
-            <div role="radiogroup" aria-label="Link to" className="cms:inline-flex cms:w-fit cms:rounded-md cms:border cms:p-0.5">
+            <div role="radiogroup" aria-label={`${label}: link to`} className="cms:inline-flex cms:w-fit cms:rounded-md cms:border cms:p-0.5">
                 {(['url', 'entry'] as const).map((option) => (
                     <Button key={option} type="button" size="sm" role="radio" aria-checked={type === option} variant={type === option ? 'secondary' : 'ghost'}
                         onClick={() => set({ type: option, url: option === 'url' ? value.url : undefined, entry_id: option === 'entry' ? value.entry_id : undefined })}>
@@ -226,12 +227,12 @@ function LinkInput({ value, onChange, errors, id, collections }: {
             </div>
             <div className="cms:grid cms:gap-2 cms:md:grid-cols-[2fr_1fr_auto] cms:md:items-start">
                 {type === 'url'
-                    ? <Input id={id} aria-label="Address" placeholder="https://… or /about" value={typeof value.url === 'string' ? value.url : ''}
+                    ? <Input id={id} aria-label={`${label}: address`} placeholder="https://… or /about" value={typeof value.url === 'string' ? value.url : ''}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => set({ url: e.target.value })} aria-invalid={errors.url !== undefined} />
                     : <EntriesPicker id={id} invalid={errors.entry_id !== undefined} multiple={false} max={null} collections={collections}
                         value={typeof value.entry_id === 'number' ? value.entry_id : null}
                         onChange={(next) => set({ entry_id: typeof next === 'number' ? next : undefined })} />}
-                <Input aria-label="Link text" placeholder={type === 'entry' ? 'Link text (the entry\'s title)' : 'Link text'} value={typeof value.label === 'string' ? value.label : ''}
+                <Input aria-label={`${label}: link text`} placeholder={type === 'entry' ? 'Link text (the entry\'s title)' : 'Link text'} value={typeof value.label === 'string' ? value.label : ''}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => set({ label: e.target.value })} />
                 <label className="cms:flex cms:h-9 cms:items-center cms:gap-2 cms:text-sm">
                     <Checkbox checked={value.new_tab === true} onCheckedChange={(checked: boolean) => set({ new_tab: checked })} />
@@ -275,7 +276,7 @@ function Rows({ field, value, onChange, errors, id, content = false }: Omit<Prop
 
     return (
         <div className="cms:flex cms:flex-col cms:gap-2">
-            <SortableList items={items} getId={(item) => item.key}
+            <SortableList items={items} getId={(item) => item.key} getLabel={(item) => `${noun} ${item.index + 1}`}
                 onReorder={(next, from, to) => { keys.move(from, to); onChange(next.map((item) => item.row)); }}>
                 {({ row, index }, { handle }) => isCompact(field, content) ? (
                     <div className="cms:flex cms:items-start cms:gap-2">
@@ -320,6 +321,7 @@ function Blocks({ field, value, onChange, errors, id }: Omit<Props, 'value'> & {
     return (
         <div className="cms:flex cms:flex-col cms:gap-3">
             <SortableList items={items} getId={(item) => item.key} className="cms:gap-3"
+                getLabel={(item) => `${types.find((t) => t.type === item.block.type)?.label ?? String(item.block.type)} block`}
                 onReorder={(next, from, to) => { keys.move(from, to); onChange(next.map((item) => item.block)); }}>
                 {({ block, index }, { handle }) => {
                     const type = types.find((t) => t.type === block.type);

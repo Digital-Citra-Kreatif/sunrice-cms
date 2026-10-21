@@ -38,7 +38,7 @@ export function FieldBuilder({ fields, onChange, types, errors, depth = 1, idPre
     return (
         <div className="cms:flex cms:flex-col cms:gap-2">
             {fields.length === 0 && <p className="cms:rounded-lg cms:border cms:border-dashed cms:p-4 cms:text-sm cms:text-muted-foreground">No fields yet.</p>}
-            <SortableList items={fields} getId={(field) => field.key} onReorder={(next) => onChange(next)}>
+            <SortableList items={fields} getId={(field) => field.key} getLabel={(field) => field.label || field.handle} onReorder={(next) => onChange(next)}>
                 {(field, { index, handle, isOverlay }) => {
                     const type = types.find((t) => t.type === field.type);
                     const expanded = !isOverlay && (open.has(field.key) || hasErrors(errors, String(index)));

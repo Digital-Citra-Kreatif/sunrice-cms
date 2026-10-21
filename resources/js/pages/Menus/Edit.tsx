@@ -52,7 +52,8 @@ export default function MenuEdit({ menu, items: initial, locales, limits, terms,
 
     /** The items directly under the one at `parent` (-1: the top), dragged into order among themselves, each with its own children. */
     const level = (parent: number): React.ReactNode => (
-        <SortableList items={childIndexes(items, parent)} getId={(index) => items[index]!.key} disabled={!can.update}
+        <SortableList items={childIndexes(items, parent)} getId={(index) => items[index]!.key}
+            getLabel={(index) => items[index]!.labels[main] || items[index]!.target?.title || items[index]!.url || 'link'} disabled={!can.update}
             onReorder={(order) => change(reorderLevel(items, parent, order))} className={parent < 0 ? 'cms:gap-1' : 'cms:mt-1 cms:gap-1 cms:pl-6'}>
             {(index, { handle, isOverlay }) => {
                 const item = items[index]!;

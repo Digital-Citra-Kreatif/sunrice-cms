@@ -63,7 +63,7 @@ export function EntriesPicker({ id, value, multiple, max, collections, invalid, 
     return (
         <div className="cms:flex cms:flex-col cms:gap-2">
             {ids.length > 0 && (
-                <SortableList items={ids} getId={(entryId) => entryId} onReorder={(next) => set(next)} disabled={!multiple} className="cms:gap-1">
+                <SortableList items={ids} getId={(entryId) => entryId} getLabel={(entryId) => known[entryId]?.title ?? `Entry #${entryId}`} onReorder={(next) => set(next)} disabled={!multiple} className="cms:gap-1">
                     {(entryId, { handle }) => {
                         const item = known[entryId];
                         return (

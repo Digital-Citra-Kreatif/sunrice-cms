@@ -28,7 +28,7 @@ export function EntryReorderList({ collection, rows }: { collection: string; row
 
     return (
         <Card className="cms:p-2">
-            <SortableList items={order} getId={(row) => row.id} onReorder={(next, _from, to) => save(next, to)} className="cms:gap-1">
+            <SortableList items={order} getId={(row) => row.id} getLabel={(row) => row.title} onReorder={(next, _from, to) => save(next, to)} className="cms:gap-1">
                 {(row, { handle }) => (
                     <div className="cms:flex cms:items-center cms:gap-2 cms:rounded-lg cms:border cms:border-border/70 cms:bg-card cms:p-2 cms:text-sm">
                         <SortableHandle {...handle} label={`Move ${row.title}`} />

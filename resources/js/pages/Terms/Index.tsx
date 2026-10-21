@@ -70,7 +70,7 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
 
     /** The terms directly under the one at `parent` (-1: the top), dragged into order among themselves, each with the terms under it. */
     const level = (parent: number): React.ReactNode => (
-        <SortableList items={childIndexes(rows, parent)} getId={(index) => rows[index]!.id} disabled={trashed} onReorder={(order) => reorder(parent, order)}
+        <SortableList items={childIndexes(rows, parent)} getId={(index) => rows[index]!.id} getLabel={(index) => rows[index]!.title ?? rows[index]!.fallback} disabled={trashed} onReorder={(order) => reorder(parent, order)}
             className={parent < 0 ? 'cms:gap-1' : 'cms:mt-1 cms:gap-1 cms:pl-6'}>
             {(index, { handle, isOverlay }) => {
                 const term = rows[index]!;
