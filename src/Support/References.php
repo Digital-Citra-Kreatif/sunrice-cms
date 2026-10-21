@@ -7,7 +7,10 @@ namespace Sunrice\Cms\Support;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
+use Sunrice\Cms\Fields\Field;
+use Sunrice\Cms\Fields\Fieldsets;
 use Sunrice\Cms\Fields\Reference;
+use Sunrice\Cms\Fields\Schema;
 use Sunrice\Cms\Models\ContentReference;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
@@ -107,7 +110,14 @@ final class References
                 default => null,
             };
             if ($item !== null) {
-                $used[$row->target_id][$key] = $item + ['field' => $row->field, 'fieldLabel' => self::fieldLabel($row->field)];
+                // The field by its label in the source's blueprint ("Author", not "Author Agent").
+                $schema = match ($row->source_type) {
+                    ContentReference::ENTRY => $entries->get($row->source_id)?->schema(),
+                    ContentReference::TERM => $terms->get($row->source_id)?->taxonomy->schema(),
+                    ContentReference::GLOBAL => $sets->get($row->source_id)?->schema(),
+                    default => null,
+                };
+                $used[$row->target_id][$key] = $item + ['field' => $row->field, 'fieldLabel' => self::fieldLabel($row->field, $schema)];
             }
         }
 
@@ -116,13 +126,71 @@ final class References
 
     /**
      * A reference's field path in words, for editors: "sections.2.values.properties"
-     * is "Sections › Properties" (row numbers and a block's "values" left out).
+     * is "Sections › Properties" (row numbers and a block's "values" left out),
+     * each field by its label in the source's schema when given (inside a
+     * flexible field, the first of its kinds of block that has the field),
+     * else its handle made readable.
      */
-    public static function fieldLabel(string $path): string
+    public static function fieldLabel(string $path, ?Schema $schema = null): string
     {
-        $words = array_map(Str::headline(...), array_values(array_filter(explode('.', $path), fn (string $part): bool => $part !== '' && $part !== 'values' && ! ctype_digit($part))));
+        $words = [];
+        /** @var list<Schema> $level where the next handle is looked for */
+        $level = $schema === null ? [] : [$schema];
+        foreach (explode('.', $path) as $part) {
+            if ($part === '' || ctype_digit($part) || ($part === 'values' && count($level) !== 1)) {
+                continue;
+            }
+            $found = null;
+            foreach ($level as $candidate) {
+                if (($field = self::fieldIn($candidate, $part)) !== null) {
+                    $found = [$field, $candidate];
+                    break;
+                }
+            }
+            if ($found === null) {
+                if ($part === 'values') {
+                    continue;
+                }
+                $words[] = Str::headline($part);
+                $level = [];
+
+                continue;
+            }
+            [$field, $in] = $found;
+            $words[] = FieldText::label($field);
+            $level = match (true) {
+                $field->type === 'flexible' => self::blockSchemas($field, $in->depth()),
+                $field->fields !== [] => [Schema::children($field, $in->depth())],
+                default => [],
+            };
+        }
 
         return implode(' › ', $words);
+    }
+
+    private static function fieldIn(Schema $schema, string $handle): ?Field
+    {
+        foreach ($schema->fields() as $field) {
+            if ($field->handle === $handle) {
+                return $field;
+            }
+        }
+
+        return null;
+    }
+
+    /** @return list<Schema> a flexible field's kinds of block */
+    private static function blockSchemas(Field $field, int $depth): array
+    {
+        $schemas = [];
+        foreach ($field->configStrings('blocks') as $handle) {
+            $fields = app(Fieldsets::class)->fields($handle);
+            if ($fields !== null && $depth < Schema::MAX_DEPTH) {
+                $schemas[] = Schema::make($fields, $depth + 1);
+            }
+        }
+
+        return $schemas;
     }
 
     /**
