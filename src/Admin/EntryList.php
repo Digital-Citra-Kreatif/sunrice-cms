@@ -15,7 +15,9 @@ use Sunrice\Admin\Panel;
 use Sunrice\Admin\Preferences\Preferences;
 use Sunrice\Cms\Fields\CustomField;
 use Sunrice\Cms\Fields\Field;
+use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Fields\Schema;
+use Sunrice\Cms\Fields\Types\Link;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
@@ -217,7 +219,9 @@ final class EntryList
 
     /**
      * Writes the list as CSV rows: the columns, the author, and every
-     * top-level field (field columns as the list shows them, uncut).
+     * top-level field (field columns as the list shows them, uncut; links
+     * as their address, rich text as plain text). A field whose label is
+     * a column's or another field's is headed "Label (field)".
      *
      * @param  Closure(list<bool|float|int|string|null>): void  $write
      */
@@ -231,13 +235,34 @@ final class EntryList
             }
         }
         $fields = array_values($fields);
-        $write(['ID', 'Title', 'Slug', 'Status', 'Published', 'URL', 'Updated', 'Author', ...array_map(FieldText::label(...), $fields)]);
+        $columns = ['ID', 'Title', 'Slug', 'Status', 'Published', 'URL', 'Updated', 'Author'];
+        $taken = array_map(mb_strtolower(...), $columns);
+        $labels = [];
+        foreach ($fields as $field) {
+            $label = FieldText::label($field);
+            $labels[] = in_array(mb_strtolower($label), $taken, true) ? "{$label} (field)" : $label;
+            $taken[] = mb_strtolower($label);
+        }
+        $write([...$columns, ...$labels]);
         $authors = $this->authorNames();
-        $this->query()->chunk(500, function ($translations) use ($fields, $authors, $write): void {
+        // Entry links' addresses, as the site has them in the list's language.
+        $context = new HydrationContext($this->locale);
+        $this->query()->chunk(500, function ($translations) use ($fields, $authors, $write, $context): void {
             $list = array_values($translations->all());
             $titles = $this->entryTitles($list, $this->fields);
+            $linked = [];
             foreach ($list as $translation) {
                 $translation->entry->setRelation('collection', $this->collection);
+                $schema = $translation->entry->schema();
+                foreach ($translation->completeData(true) as $handle => $value) {
+                    $mine = $schema->field((string) $handle);
+                    if ($mine !== null && self::baseType($schema, $mine) === 'link' && is_array($value) && is_int($value['entry_id'] ?? null)) {
+                        $linked[] = $value['entry_id'];
+                    }
+                }
+            }
+            $context->preloadEntries($linked);
+            foreach ($list as $translation) {
                 $data = $translation->completeData(true);
                 $own = $translation->entry->schema();
                 $author = $translation->entry->author_id;
@@ -247,10 +272,28 @@ final class EntryList
                     $translation->updated_at?->toDateTimeString(), $author === null ? null : ($authors['u'.$author] ?? null),
                     ...array_map(fn (Field $field): ?string => ($mine = $own->field($field->handle)) === null ? '' : (isset($this->fields[$field->handle])
                         ? $this->cell($data[$field->handle] ?? null, $this->fields[$field->handle], $titles, false)
-                        : FieldText::text($data[$field->handle] ?? null, $mine)), $fields),
+                        : self::exportText($data[$field->handle] ?? null, $mine, self::baseType($own, $mine), $context)), $fields),
                 ]);
             }
         });
+    }
+
+    /** A field's type, a custom field's base type. */
+    private static function baseType(Schema $schema, Field $field): string
+    {
+        $type = $schema->type($field);
+
+        return $type instanceof CustomField ? $type->baseType() : $type->type();
+    }
+
+    /** A value in the CSV: a link's address, rich text without its tags, the rest as FieldText has it. */
+    private static function exportText(mixed $value, Field $field, string $base, HydrationContext $context): string
+    {
+        return match ($base) {
+            'link' => (string) ((new Link)->hydrate($value, $field, $context)['url'] ?? ''),
+            'rich_text' => is_string($value) ? Str::squish(html_entity_decode(strip_tags(str_replace(['<br>', '<br/>', '<br />', '</p>', '</li>', '</h2>', '</h3>'], ' ', $value)), ENT_QUOTES | ENT_HTML5)) : '',
+            default => FieldText::text($value, $field),
+        };
     }
 
     /**
