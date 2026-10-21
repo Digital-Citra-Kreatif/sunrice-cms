@@ -15,7 +15,7 @@ import { TermLabels } from '@/components/TermsPicker.tsx';
 import { SEO_FIELDS } from '@/lib/seo.ts';
 import { FieldError, Fields } from '@/components/FieldInput.tsx';
 import { errorKeysAt, errorsAt, hasErrors } from '@/lib/builder.ts';
-import { type EntryLocale, type EntryStatus, formatDate, localeName, localInputValue, statusLabel } from '@/lib/entries.ts';
+import { type EntryLocale, type EntryStatus, followingSlug, formatDate, localeName, localInputValue, statusLabel } from '@/lib/entries.ts';
 import type { FieldDefinition } from '@/types.ts';
 
 interface Props {
@@ -285,7 +285,12 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                                 <div className="cms:flex cms:flex-col cms:gap-2">
                                     <Label htmlFor="title">Title</Label>
                                     <Input id="title" value={form.data.title} aria-invalid={errors.title !== undefined}
-                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => { form.setData('title', e.target.value); clearErrorsAt('title'); }} />
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                            const title = e.target.value;
+                                            // A slug made from the title (a duplicate's "-copy") follows it until first published.
+                                            form.setData((data) => ({ ...data, title, slug: followingSlug(data.slug, data.title, title, entry !== null && entry.publishedAt === null && entry.status === 'draft') }));
+                                            clearErrorsAt('title');
+                                        }} />
                                     <FieldError message={errors.title} />
                                 </div>
                                 <div className="cms:flex cms:flex-col cms:gap-2">
@@ -301,7 +306,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                     <TermLabels.Provider value={Array.isArray(termLabels) || !termLabels ? {} : termLabels}>
                         <FieldSections disabled={!writable} fields={fields} values={form.data.data} errors={errors} storageKey={`cms:entry:${collection.handle}`}
                             shared={shared} sharedValues={sharedValues}
-                            sharedNote={`Shared by all languages: edit it in ${mainLocale ? localeName(mainLocale) : 'the main language'}.`}
+                            sharedNote={`Shared by all languages: the greyed-out fields are edited in ${mainLocale ? localeName(mainLocale) : 'the main language'}.`}
                             onChange={(handle, value) => { form.setData('data', { ...form.data.data, [handle]: value }); clearErrorsAt(`data.${handle}`); }} />
                     </TermLabels.Provider>
 

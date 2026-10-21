@@ -20,7 +20,7 @@ Each translation is saved, published, scheduled and unpublished on its own. Publ
 
 Some fields are **translated**: each language has its own (titles, text, rich text, links). Others are **shared**: one value for every language (a price, a date, a photo, a yes/no switch). The blueprint decides which.
 
-Shared fields are edited in the main language. In the other languages they're shown greyed out with the main language's value, and the note *Shared by all languages: edit it in …*. Change the price once, in the main language, and it's the price everywhere.
+Shared fields are edited in the main language. In the other languages they're shown greyed out with the main language's value, under one note at the top: *Shared by all languages: the greyed-out fields are edited in …*. Change the price once, in the main language, and it's the price everywhere.
 
 Inside groups, repeater rows and flexible blocks, the same goes row by row: the text is per language, and shared values come from the matching row in the main language.
 

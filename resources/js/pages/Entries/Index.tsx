@@ -234,7 +234,7 @@ function EntryList({
                 ))}
                 {filters.locales.length > 1 && (
                     <Select value={query.locale} onValueChange={(locale: string) => visit({ locale })}>
-                        <SelectTrigger className="cms:w-40" aria-label="Language"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="cms:w-auto cms:min-w-40 cms:max-w-72" aria-label="Language"><SelectValue /></SelectTrigger>
                         <SelectContent>
                             {filters.locales.map((code) => <SelectItem key={code} value={code}>{localeName(code)}{code === mainLocale ? ' (main)' : ''}</SelectItem>)}
                         </SelectContent>
@@ -385,7 +385,7 @@ function EntryList({
 function FilterSelect({ label, value, options, onChange }: { label: string; value: string; options: Option[]; onChange: (value: string) => void }) {
     return (
         <Select value={value === '' ? ALL : value} onValueChange={(next: string) => onChange(next === ALL ? '' : next)}>
-            <SelectTrigger className="cms:w-40" aria-label={label}><SelectValue placeholder={label} /></SelectTrigger>
+            <SelectTrigger className="cms:w-auto cms:min-w-40 cms:max-w-72" title={label} aria-label={label}><SelectValue placeholder={label} /></SelectTrigger>
             <SelectContent>
                 <SelectItem value={ALL}>{label}: all</SelectItem>
                 {options.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}

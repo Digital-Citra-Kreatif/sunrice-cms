@@ -105,7 +105,7 @@ function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared,
                     <KeptEditsNotice kept={lock.kept} disabled={!writable} onLoad={(id: number) => void loadKept(id)} onDiscard={(id: number) => void lock.discardKept(id)} />
                     <VersionConflict message={errors.version} processing={form.processing} onSaveMine={saveMine} />
                     <FieldSections disabled={!writable} fields={fields} values={form.data.data} errors={errors} storageKey={`cms:term:${taxonomy.handle}`}
-                        shared={shared} sharedValues={sharedValues} sharedNote={`Shared by all languages: edit it in ${localeName(locales[0] ?? 'en')}.`}
+                        shared={shared} sharedValues={sharedValues} sharedNote={`Shared by all languages: the greyed-out fields are edited in ${localeName(locales[0] ?? 'en')}.`}
                         onChange={(handle, value) => { form.setData('data', { ...form.data.data, [handle]: value }); clearErrorsAt(`data.${handle}`); }} />
                     <CollapsibleCard title="Search and sharing" titleClassName="cms:text-base" storageKey="cms:term:seo" hasErrors={hasErrors(errors, 'seo')}>
                         <fieldset disabled={!writable} className="cms:min-w-0">

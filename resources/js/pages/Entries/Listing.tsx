@@ -4,12 +4,14 @@ import { ExternalLink, LoaderCircle } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
 import { Button, Card, CardContent, CollapsibleCard, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs, useUnsavedChanges } from '@sunrice/admin-sdk/ui';
 import { FieldInput, Fields } from '@/components/FieldInput.tsx';
+import { SHARED_FIELD } from '@/components/FieldSections.tsx';
 import { VersionConflict } from '@/components/VersionConflict.tsx';
 import { errorKeysAt, errorsAt, hasErrors } from '@/lib/builder.ts';
 import { localeName } from '@/lib/entries.ts';
 import { SEO_FIELDS } from '@/lib/seo.ts';
 import type { FieldDefinition } from '@/types.ts';
 import { isShown } from '@/lib/conditions.ts';
+import { hasSharedFields } from '@/lib/values.ts';
 
 // Field values are any JSON; see the entry editor for why `any`.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -92,10 +94,14 @@ function ListingEdit({ collection, fields, locale, locales, shared, values, seo,
                 ) : (
                     <Card>
                         <CardContent className="cms:flex cms:flex-col cms:gap-6">
+                            {(shared.length > 0 || hasSharedFields(fields)) && (
+                                <p role="note" className="cms:rounded-lg cms:border cms:border-dashed cms:px-3 cms:py-2 cms:text-sm cms:text-muted-foreground">
+                                    Shared by all languages: the greyed-out fields are edited in {mainLocale ? localeName(mainLocale) : 'the main language'}.
+                                </p>
+                            )}
                             {fields.filter((field) => isShown(field, { ...values, ...form.data.data })).map((field) => shared.includes(field.handle) ? (
-                                <fieldset key={field.handle} disabled className="cms:flex cms:flex-col cms:gap-1">
+                                <fieldset key={field.handle} disabled className={SHARED_FIELD} title="Shared by all languages">
                                     <FieldInput id={`data-${field.handle}`} field={field} content value={values[field.handle]} errors={{}} onChange={() => {}} />
-                                    <p className="cms:text-sm cms:text-muted-foreground">Shared by all languages: edit it in {mainLocale ? localeName(mainLocale) : 'the main language'}.</p>
                                 </fieldset>
                             ) : (
                                 <FieldInput key={field.handle} id={`data-${field.handle}`} field={field} content value={form.data.data[field.handle]}

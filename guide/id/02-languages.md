@@ -20,7 +20,7 @@ Setiap terjemahan disimpan, diterbitkan, dijadwalkan, dan ditarik dari situs sec
 
 Sebagian field **diterjemahkan**: setiap bahasa punya isinya sendiri (judul, teks, rich text, tautan). Sebagian lagi **dipakai bersama**: satu nilai untuk semua bahasa (harga, tanggal, foto, saklar ya/tidak). Blueprint yang menentukan mana yang mana.
 
-Field bersama disunting di bahasa utama. Di bahasa lain, field itu tampil abu-abu dengan nilai dari bahasa utama, dan catatan *Shared by all languages: edit it in …*. Ubah harga sekali saja, di bahasa utama, dan harga itu berlaku di semua bahasa.
+Field bersama disunting di bahasa utama. Di bahasa lain, field itu tampil abu-abu dengan nilai dari bahasa utama, dengan satu catatan di atas: *Shared by all languages: the greyed-out fields are edited in …*. Ubah harga sekali saja, di bahasa utama, dan harga itu berlaku di semua bahasa.
 
 Di dalam group, baris repeater, dan blok flexible, aturannya sama per baris: teksnya per bahasa, dan nilai bersama diambil dari baris yang sesuai di bahasa utama.
 

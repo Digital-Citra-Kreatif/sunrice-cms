@@ -95,7 +95,7 @@ function GlobalsEdit({ set, fields, locale, locales, shared, values, version, ca
                     <KeptEditsNotice kept={lock.kept} disabled={!writable} onLoad={(id: number) => void loadKept(id)} onDiscard={(id: number) => void lock.discardKept(id)} />
                     <FieldSections disabled={!writable} fields={fields} values={form.data.data} errors={errors} storageKey={`cms:global:${set.handle}`}
                         shared={shared} sharedValues={values}
-                        sharedNote={`Shared by all languages: edit it in ${mainLocale ? localeName(mainLocale) : 'the main language'}.`}
+                        sharedNote={`Shared by all languages: the greyed-out fields are edited in ${mainLocale ? localeName(mainLocale) : 'the main language'}.`}
                         onChange={(handle, value) => { form.setData('data', { ...form.data.data, [handle]: value }); clearErrorsAt(`data.${handle}`); }} />
                 </div>
             )}

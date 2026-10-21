@@ -84,7 +84,7 @@ Every publish keeps a **revision**: a copy of what was published, with the date.
 
 ## More actions
 
-- **Duplicate** copies the entry, in every language, as a new draft titled "… (copy)".
+- **Duplicate** copies the entry, in every language, as a new draft titled "… (copy)". Until it's first published, renaming it renames its slug too (unless you typed a slug of your own).
 - The bin button **moves it to the trash**: it comes off the website and out of the list, in every language, and can be restored. If other content uses it, the panel names where first.
 - In the trash, an entry has **Restore** and **Delete for good** (everything, in every language, with its revisions; this can't be undone).
 

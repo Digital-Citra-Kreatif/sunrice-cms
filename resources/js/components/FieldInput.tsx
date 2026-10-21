@@ -180,9 +180,9 @@ export function Fields({ fields, value, onChange, errors, id, content, bare = fa
     return (
         <div className={bare ? 'cms:flex cms:flex-col cms:gap-6' : 'cms:flex cms:flex-col cms:gap-4 cms:rounded-lg cms:border cms:p-4'}>
             {fields.filter((child) => isShown(child, value)).map((child) => child.shared ? (
-                <fieldset key={child.handle} disabled className="cms:flex cms:flex-col cms:gap-1">
+                // Greyed out; the form says once, at the top, where to edit shared fields.
+                <fieldset key={child.handle} disabled className="cms:flex cms:flex-col cms:gap-1 cms:opacity-60" title="Shared by all languages: edit it in the main language">
                     <FieldInput id={`${id}-${child.handle}`} field={child} value={value[child.handle]} content={content} errors={{}} onChange={() => {}} />
-                    <p className="cms:text-sm cms:text-muted-foreground">Shared by all languages: edit it in the main language.</p>
                 </fieldset>
             ) : (
                 <FieldInput key={child.handle} id={`${id}-${child.handle}`} field={child} value={value[child.handle]} content={content}

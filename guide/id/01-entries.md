@@ -84,7 +84,7 @@ Setiap penerbitan menyimpan sebuah **revisi**: salinan dari yang diterbitkan, be
 
 ## Tindakan lain
 
-- **Duplicate** menyalin entri, dalam semua bahasa, sebagai draf baru berjudul "… (copy)".
+- **Duplicate** menyalin entri, dalam semua bahasa, sebagai draf baru berjudul "… (copy)". Selama belum pernah diterbitkan, mengganti judulnya ikut mengganti slug-nya (kecuali Anda mengetik slug sendiri).
 - Tombol tempat sampah **memindahkan entri ke tempat sampah**: entri hilang dari situs web dan dari daftar, dalam semua bahasa, dan bisa dipulihkan. Jika dipakai konten lain, panel menyebutkan di mana terlebih dahulu.
 - Di tempat sampah, entri memiliki **Restore** dan **Delete for good** (menghapus semuanya, dalam semua bahasa, beserta revisinya; tidak bisa dibatalkan).
 
