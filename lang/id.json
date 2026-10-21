@@ -941,5 +941,8 @@
     "A number": "Sebuah angka",
     "The text to compare with": "Teks pembanding",
     "Visibility": "Kapan tampil",
-    "Only when": "Hanya jika"
+    "Only when": "Hanya jika",
+    "Basics": "Dasar",
+    "Limits and defaults": "Batas dan nilai awal",
+    "Advanced": "Lanjutan"
 }

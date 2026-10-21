@@ -53,7 +53,7 @@ Setiap koleksi mendapat izinnya sendiri (melihat, membuat, menyunting, menerbitk
 
 **Blueprint** adalah daftar field: apa yang diisi editor untuk entri sebuah koleksi, term sebuah taksonomi, set global, atau formulir. **Fieldset** adalah sekelompok field yang dipakai di beberapa blueprint (alamat, ajakan bertindak). Sunting di **Struktur → Blueprint** dan **Fieldset**.
 
-Untuk menambah field, pilih jenisnya, lalu atur:
+Untuk menambah field, pilih jenisnya, lalu atur (pengaturannya dikelompokkan sebagai **Dasar**, **Opsi**, **Batas dan nilai awal**, **Kapan tampil**, dan **Lanjutan**):
 
 - **Label**: yang dilihat editor. **Handle** (cara template membaca field) dibuat dari label; mengganti handle nanti menyembunyikan nilai yang tersimpan dengan handle lama, jadi mintalah developer untuk mengganti nama field dengan aman. Field di tingkat teratas blueprint tidak bisa memakai handle yang dipakai konten itu sendiri, dan builder langsung memberi tahu saat Anda mengetik: `id`, `title`, `slug`, `url`, `status`, `locale`, `published_at`, `created_at`, `updated_at`, `parent`, `children`, `collection`, `blueprint`, `data`, `seo`, `author`.
 - **Petunjuk**: teks yang tampil di bawah field.
@@ -61,7 +61,7 @@ Untuk menambah field, pilih jenisnya, lalu atur:
 - **Dapat diterjemahkan**: nyala, setiap bahasa punya nilainya sendiri; mati, satu nilai dipakai bersama semua bahasa. Awalnya mengikuti tipenya (nyala untuk teks, mati untuk angka, tanggal, saklar, dan media). Di baris field, penanda **Bersama** menunjukkan field yang tidak diterjemahkan.
 - **Dalam bahasa lain** (di situs dengan beberapa bahasa): label, petunjuk, dan opsi pilihan sebagaimana dibaca pengunjung di setiap bahasa lain. Formulir di situs web menampilkannya, dan pesan kesalahannya menyebut field dengan nama ini. Kosong: seperti yang ditulis di atas.
 - **Kapan tampil**: field bisa tampil hanya pada saat tertentu. **Tambah syarat**, lalu pilih field lain, cara membandingkan, dan nilainya (opsi daftar pilihan itu sendiri, *aktif* atau *nonaktif* untuk saklar, sebuah term atau entri): *Hanya jika Layout adalah Video*. Dengan dua syarat atau lebih, pilih **Semua ini** atau **Salah satu ini**. Field yang tersembunyi tidak wajib diisi dan tetap menyimpan isinya.
-- **Aturan tambahan**: pemeriksaan opsional, satu per baris (misalnya `email` atau `max:100`; untuk developer: aturan validasi Laravel).
+- **Aturan tambahan** (di **Lanjutan**): pemeriksaan opsional, satu per baris (misalnya `email` atau `max:100`; untuk developer: aturan validasi Laravel).
 - Pengaturan khusus tiap jenis: opsi sebuah field pilihan, koleksi yang ditautkan field entri, jenis berkas yang diterima field media, jumlah maksimal…
 
 Jenis-jenisnya: **Teks**, **Textarea**, **Teks kaya**, **Angka**, **Toggle**, **Pilihan**, **Tanggal**, **Tautan**, **Media**, **Entri**, **Term**, **Grup** (beberapa field bersama), **Repeater** (baris berisi field), **Konten fleksibel** (blok berbagai jenis), **Fieldset** (menyertakan fieldset: field-nya ditambahkan di tempatnya dengan handle masing-masing; agar tetap di bawah satu nama, taruh di dalam **Grup**), dan **File (formulir)** (berkas yang dikirim pengunjung lewat formulir: satu, atau beberapa dengan **Beberapa file**).

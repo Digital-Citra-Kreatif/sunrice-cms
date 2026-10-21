@@ -10,11 +10,11 @@ import {
 import { t } from '@sunrice/admin-sdk';
 import { ChangeWarning } from '@/components/ChangeWarning.tsx';
 import { FieldError, FieldInput } from '@/components/FieldInput.tsx';
-import { type BuilderField, cleanHandle, conditionChoices, duplicateField, errorsAt, errorsUnder, handleWarning, hasErrors, isTranslatable, MAX_DEPTH, newField, relabel, renamedFrom, type ReservedHandles, setTranslatable } from '@/lib/builder.ts';
+import { type BuilderField, cleanHandle, conditionChoices, settingGroups, duplicateField, errorsAt, errorsUnder, handleWarning, hasErrors, isTranslatable, MAX_DEPTH, newField, relabel, renamedFrom, type ReservedHandles, setTranslatable } from '@/lib/builder.ts';
 import { conditionFrom, conditionMatch, conditionRules, conditionValueInput, type ConditionValueInput, OPERATORS, startValue } from '@/lib/conditions.ts';
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
 import { TermsPicker } from '@/components/TermsPicker.tsx';
-import type { Errors, FieldConditionRule, FieldTranslation, FieldTypeInfo, LocaleInfo } from '@/types.ts';
+import type { Errors, FieldConditionRule, FieldDefinition, FieldTranslation, FieldTypeInfo, LocaleInfo } from '@/types.ts';
 
 interface Props {
     fields: BuilderField[];
@@ -199,74 +199,91 @@ function FieldSettings({ id, field, type, siblings, onChange, types, errors, dep
         );
     }
 
+    const groups = settingGroups(type?.settings ?? []);
+    const setting = (each: FieldDefinition, fill = false) => (
+        <FieldInput key={each.handle} id={`${id}-config-${each.handle}`} field={each} value={config[each.handle]} fill={fill}
+            errors={errorsAt(errors, `config.${each.handle}`)}
+            onChange={(value) => onChange({ ...field, config: { ...config, [each.handle]: value } })} />
+    );
+    const validationError = errors.validation ?? Object.entries(errors).find(([key]) => key.startsWith('validation.'))?.[1];
+
     return (
-        <div id={id} className="cms:flex cms:flex-col cms:gap-4 cms:border-t cms:p-4">
+        <div id={id} className="cms:flex cms:flex-col cms:gap-5 cms:border-t cms:p-4">
             {!type && <p className="cms:text-sm cms:text-destructive">{t('The field type ":type" isn\'t registered. Its data is kept; register the type or remove the field.', { type: field.type })}</p>}
-            <div className="cms:grid cms:gap-4 cms:md:grid-cols-2">
-                <div className="cms:flex cms:flex-col cms:gap-2">
-                    <Label htmlFor={`${id}-label`}>{t('Label')}</Label>
-                    <Input id={`${id}-label`} value={field.label ?? ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(relabel(field, e.target.value, siblings))} />
-                    <FieldError message={errors.label} />
-                </div>
-                <div className="cms:flex cms:flex-col cms:gap-2">
-                    <Label htmlFor={`${id}-handle`}>{t('Handle')}</Label>
-                    <Input id={`${id}-handle`} className="cms:font-mono" value={field.handle}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...field, handle: cleanHandle(e.target.value), handleTouched: true })} />
-                    {renamedFrom(field) === null && <p className="cms:text-sm cms:text-muted-foreground">{t('How templates read it. Renaming it hides values saved under the old one.')}</p>}
-                    <div aria-live="polite">
-                        {renamedFrom(field) !== null && (
-                            <ChangeWarning>
-                                {withCode(t('Content saved under :old won\'t show under :new, and templates reading :old get nothing. To rename it with its content: put back :old, save, then run :command.'),
-                                    { old: renamedFrom(field) ?? '', new: field.handle || '…', command: 'php artisan sunrice:rename-field' })}
-                            </ChangeWarning>
-                        )}
+            <SettingsSection title={t('Basics')}>
+                <div className="cms:grid cms:items-start cms:gap-4 cms:md:grid-cols-2">
+                    <div className="cms:flex cms:min-w-0 cms:flex-col cms:gap-2">
+                        <Label htmlFor={`${id}-label`}>{t('Label')}</Label>
+                        <Input id={`${id}-label`} value={field.label ?? ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(relabel(field, e.target.value, siblings))} />
+                        <FieldError message={errors.label} />
                     </div>
-                    <FieldError message={errors.handle ?? warning ?? undefined} />
+                    <div className="cms:flex cms:min-w-0 cms:flex-col cms:gap-2">
+                        <Label htmlFor={`${id}-handle`}>{t('Handle')}</Label>
+                        <Input id={`${id}-handle`} className="cms:font-mono" value={field.handle}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...field, handle: cleanHandle(e.target.value), handleTouched: true })} />
+                        {renamedFrom(field) === null && <p className="cms:text-sm cms:text-muted-foreground">{t('How templates read it. Renaming it hides values saved under the old one.')}</p>}
+                        <div aria-live="polite">
+                            {renamedFrom(field) !== null && (
+                                <ChangeWarning>
+                                    {withCode(t('Content saved under :old won\'t show under :new, and templates reading :old get nothing. To rename it with its content: put back :old, save, then run :command.'),
+                                        { old: renamedFrom(field) ?? '', new: field.handle || '…', command: 'php artisan sunrice:rename-field' })}
+                                </ChangeWarning>
+                            )}
+                        </div>
+                        <FieldError message={errors.handle ?? warning ?? undefined} />
+                    </div>
                 </div>
-            </div>
-            <div className="cms:flex cms:flex-col cms:gap-2">
-                <Label htmlFor={`${id}-instructions`}>{t('Instructions')}</Label>
-                <Input id={`${id}-instructions`} value={field.instructions ?? ''} placeholder={t('Shown under the field to editors')}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...field, instructions: e.target.value || null })} />
-                <FieldError message={errors.instructions} />
-            </div>
-            <div className="cms:flex cms:flex-wrap cms:items-start cms:gap-x-8 cms:gap-y-3">
-                <div className="cms:flex cms:items-center cms:gap-3">
-                    <Switch id={`${id}-required`} checked={field.required === true} onCheckedChange={(required: boolean) => onChange({ ...field, required })} />
-                    <Label htmlFor={`${id}-required`}>{t('Required')}</Label>
+                <div className="cms:flex cms:flex-col cms:gap-2">
+                    <Label htmlFor={`${id}-instructions`}>{t('Instructions')}</Label>
+                    <Input id={`${id}-instructions`} value={field.instructions ?? ''} placeholder={t('Shown under the field to editors')}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...field, instructions: e.target.value || null })} />
+                    <FieldError message={errors.instructions} />
                 </div>
-                <div className="cms:flex cms:min-w-0 cms:flex-col cms:gap-1">
-                <div className="cms:flex cms:items-center cms:gap-3">
-                    <Switch id={`${id}-translatable`} checked={isTranslatable(field, type?.translatable ?? false)} aria-describedby={`${id}-translatable-help`}
-                        onCheckedChange={(on: boolean) => onChange(setTranslatable(field, on, type?.translatable ?? false))} />
-                    <Label htmlFor={`${id}-translatable`}>{t('Translatable')}</Label>
+                <div className="cms:grid cms:items-start cms:gap-4 cms:md:grid-cols-2">
+                    <div className="cms:flex cms:h-9 cms:items-center cms:gap-3 cms:md:h-auto">
+                        <Switch id={`${id}-required`} checked={field.required === true} onCheckedChange={(required: boolean) => onChange({ ...field, required })} />
+                        <Label htmlFor={`${id}-required`}>{t('Required')}</Label>
+                    </div>
+                    <div className="cms:flex cms:min-w-0 cms:flex-col cms:gap-1">
+                        <div className="cms:flex cms:items-center cms:gap-3">
+                            <Switch id={`${id}-translatable`} checked={isTranslatable(field, type?.translatable ?? false)} aria-describedby={`${id}-translatable-help`}
+                                onCheckedChange={(on: boolean) => onChange(setTranslatable(field, on, type?.translatable ?? false))} />
+                            <Label htmlFor={`${id}-translatable`}>{t('Translatable')}</Label>
+                        </div>
+                        <p id={`${id}-translatable-help`} className="cms:text-sm cms:text-muted-foreground">{t('Each language gets its own value. Off: one value shared by every language.')}</p>
+                    </div>
                 </div>
-                <p id={`${id}-translatable-help`} className="cms:text-sm cms:text-muted-foreground">{t('Each language gets its own value. Off: one value shared by every language.')}</p>
-                </div>
-            </div>
+            </SettingsSection>
+
+            {groups.options.length > 0 && (
+                <SettingsSection title={t('Options')}>
+                    {groups.options.map((each) => setting(each, true))}
+                </SettingsSection>
+            )}
+
+            {groups.limits.length > 0 && (
+                <SettingsSection title={t('Limits and defaults')}>
+                    <div className="cms:grid cms:grid-cols-1 cms:items-start cms:gap-4 cms:min-[420px]:grid-cols-2 cms:lg:grid-cols-4">
+                        {groups.limits.map((each) => <div key={each.handle} className="cms:min-w-0">{setting(each, true)}</div>)}
+                    </div>
+                </SettingsSection>
+            )}
 
             <ConditionSettings id={id} field={field} siblings={siblings} onChange={onChange} errors={errorsUnder(errors, 'condition')} />
 
             {locales.length > 0 && <TranslationSettings id={id} field={field} locales={locales} onChange={onChange} errors={errorsUnder(errors, 'translations')} />}
 
-            {(type?.settings.length ?? 0) > 0 && (
-                <div className="cms:grid cms:gap-4 cms:md:grid-cols-2">
-                    {type?.settings.map((setting) => (
-                        <FieldInput key={setting.handle} id={`${id}-config-${setting.handle}`} field={setting} value={config[setting.handle]}
-                            errors={errorsAt(errors, `config.${setting.handle}`)}
-                            onChange={(value) => onChange({ ...field, config: { ...config, [setting.handle]: value } })} />
-                    ))}
+            <details className="cms:group cms:rounded-lg cms:border cms:p-3" open={(field.validation ?? []).some((rule) => rule.trim() !== '') || validationError !== undefined}>
+                <summary className="cms:cursor-pointer cms:text-sm cms:font-medium">{t('Advanced')}</summary>
+                <div className="cms:mt-3 cms:flex cms:flex-col cms:gap-2">
+                    <Label htmlFor={`${id}-validation`}>{t('Extra rules')}</Label>
+                    <Textarea id={`${id}-validation`} rows={2} className="cms:min-h-0 cms:font-mono"
+                        value={(field.validation ?? []).join('\n')}
+                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange({ ...field, validation: e.target.value.split('\n') })} />
+                    <p className="cms:text-sm cms:text-muted-foreground">{withCode(t('Optional checks, one per line, such as :email or :max (for developers: Laravel validation rules).'), { email: 'email', max: 'max:100' })}</p>
+                    <FieldError message={validationError} />
                 </div>
-            )}
-
-            <div className="cms:flex cms:flex-col cms:gap-2">
-                <Label htmlFor={`${id}-validation`}>{t('Extra rules')}</Label>
-                <Textarea id={`${id}-validation`} rows={2} className="cms:font-mono"
-                    value={(field.validation ?? []).join('\n')}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange({ ...field, validation: e.target.value.split('\n') })} />
-                <p className="cms:text-sm cms:text-muted-foreground">{withCode(t('Optional checks, one per line, such as :email or :max (for developers: Laravel validation rules).'), { email: 'email', max: 'max:100' })}</p>
-                <FieldError message={errors.validation ?? Object.entries(errors).find(([key]) => key.startsWith('validation.'))?.[1]} />
-            </div>
+            </details>
 
             {type?.hasChildren && (
                 <div className="cms:flex cms:flex-col cms:gap-2">
@@ -278,6 +295,18 @@ function FieldSettings({ id, field, type, siblings, onChange, types, errors, dep
             )}
             <FieldError message={errors.type} />
         </div>
+    );
+}
+
+/** A titled part of a field's settings (Basics, Options, Limits and defaults, Visibility), each the same way. */
+function SettingsSection({ title, children }: { title: string; children: React.ReactNode }) {
+    const id = React.useId();
+
+    return (
+        <section aria-labelledby={id} className="cms:flex cms:flex-col cms:gap-4">
+            <h4 id={id} className="cms:text-xs cms:font-semibold cms:uppercase cms:tracking-wide cms:text-muted-foreground">{title}</h4>
+            {children}
+        </section>
     );
 }
 
@@ -372,8 +401,7 @@ function ConditionSettings({ id, field, siblings, onChange, errors }: { id: stri
     if (others.length === 0 && rules.length === 0) return null;
 
     return (
-        <div role="group" aria-labelledby={`${id}-visibility`} className="cms:flex cms:flex-col cms:gap-3">
-            <p id={`${id}-visibility`} className="cms:text-sm cms:font-medium">{t('Visibility')}</p>
+        <SettingsSection title={t('Visibility')}>
             {rules.length === 0 ? (
                 <p className="cms:text-sm cms:text-muted-foreground">{t('Always shown.')}</p>
             ) : (
@@ -438,7 +466,7 @@ function ConditionSettings({ id, field, siblings, onChange, errors }: { id: stri
             )}
             {rules.length > 0 && <p className="cms:text-sm cms:text-muted-foreground">{t('A hidden field isn\'t required, and keeps what it had.')}</p>}
             <FieldError message={errors[''] ?? errors.rules ?? errors.match} />
-        </div>
+        </SettingsSection>
     );
 }
 

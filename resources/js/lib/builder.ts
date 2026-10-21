@@ -217,3 +217,13 @@ export function duplicateField(fields: BuilderField[], index: number, reserved: 
 
     return { fields: [...fields.slice(0, index + 1), copy, ...fields.slice(index + 1)], copy };
 }
+
+/**
+ * A type's settings in the builder's sections: "Options" (choices, lists, switches and long texts, full
+ * width) and "Limits and defaults" (numbers and short texts, side by side on one compact row).
+ */
+export function settingGroups(settings: FieldDefinition[]): { options: FieldDefinition[]; limits: FieldDefinition[] } {
+    const compact = (setting: FieldDefinition) => setting.type === 'number' || (setting.type === 'text' && (setting.instructions ?? '').length <= 60);
+
+    return { options: settings.filter((setting) => !compact(setting)), limits: settings.filter(compact) };
+}

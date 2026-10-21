@@ -44,6 +44,8 @@ interface Props {
     id: string;
     /** Content (an entry), not settings: rows and blocks get their key and Show switch. */
     content?: boolean;
+    /** A number fills its place (the builder's compact rows) instead of keeping its own width. */
+    fill?: boolean;
 }
 
 /** Types whose inputs are a list or a set of inputs: labelled as a group. */
@@ -58,7 +60,7 @@ export function labelOf(field: FieldDefinition): string {
     return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
-export function FieldInput({ field, value, onChange, errors, id, content = false }: Props) {
+export function FieldInput({ field, value, onChange, errors, id, content = false, fill = false }: Props) {
     const label = labelOf(field);
     const group = GROUPS.includes(field.type) || (['select', 'terms'].includes(field.type) && field.config?.multiple === true);
     // The message under a group of inputs (ticked choices, a group's fields) is tied to the group.
@@ -75,7 +77,7 @@ export function FieldInput({ field, value, onChange, errors, id, content = false
             ) : (
                 <Label id={`${id}-label`} htmlFor={group ? undefined : id}>{label}{field.required && <span className="cms:text-destructive"> *</span>}</Label>
             )}
-            <Control field={field} value={value} onChange={onChange} errors={errors} id={id} content={content} />
+            <Control field={field} value={value} onChange={onChange} errors={errors} id={id} content={content} fill={fill} />
             {['text', 'textarea'].includes(field.type) && numberConfig(field, 'max') !== undefined && (
                 <CharacterCount length={typeof value === 'string' ? [...value].length : 0} max={numberConfig(field, 'max') ?? 0} />
             )}
@@ -96,7 +98,7 @@ function CharacterCount({ length, max }: { length: number; max: number }) {
     );
 }
 
-function Control({ field, value, onChange, errors, id, content }: Props) {
+function Control({ field, value, onChange, errors, id, content, fill = false }: Props) {
     const invalid = errors[''] !== undefined;
     switch (field.type) {
         case 'toggle':
@@ -115,7 +117,7 @@ function Control({ field, value, onChange, errors, id, content }: Props) {
             return (
                 <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-3">
                     <Input
-                        id={id} type="number" className="cms:max-w-48" aria-invalid={invalid} aria-describedby={echo ? `${id}-grouped` : undefined}
+                        id={id} type="number" className={fill ? 'cms:w-full' : 'cms:max-w-48'} placeholder={stringConfig(field, 'placeholder')} aria-invalid={invalid} aria-describedby={echo ? `${id}-grouped` : undefined}
                         value={typeof value === 'number' ? String(value) : typeof value === 'string' ? value : ''}
                         min={numberConfig(field, 'min')} max={numberConfig(field, 'max')} step={numberConfig(field, 'step') ?? 'any'}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value === '' ? null : Number(e.target.value))}
