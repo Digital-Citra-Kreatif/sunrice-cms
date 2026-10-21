@@ -983,5 +983,11 @@
     "The first that exists, under resources/views:": "Yang pertama ada, di resources/views:",
     "Empty: the first template that exists. An entry can choose its own in its Page settings.": "Kosong: template pertama yang ada. Entri bisa memilih sendiri di Pengaturan halaman-nya.",
     "Empty: the first template that exists. A term can choose its own on its page.": "Kosong: template pertama yang ada. Term bisa memilih sendiri di halamannya.",
-    "Like /blog. Empty: /{handle}.": "Seperti /blog. Kosong: /{handle}."
+    "Like /blog. Empty: /{handle}.": "Seperti /blog. Kosong: /{handle}.",
+    ":language: not translated yet": ":language: belum diterjemahkan",
+    "Drag terms to set their order; a term's parent is set in its editor (Under).": "Seret term untuk mengatur urutannya; induk term diatur di penyuntingnya (Di bawah).",
+    "In :language. Translate it here afterwards: switch the language and give it a title there.": "Dalam :language. Terjemahkan di sini setelahnya: ganti bahasa dan beri judul di sana.",
+    "Editing: :language": "Menyunting: :language",
+    "Editing: :language — switch to edit :others": "Menyunting: :language — beralih untuk menyunting :others",
+    "Editing: :language, not translated yet": "Menyunting: :language, belum diterjemahkan"
 }
