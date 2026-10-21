@@ -56,7 +56,7 @@ final class CollectionResource extends Resource
         return $form->schema([
             TextInput::make('title')->required(),
             ...HandleField::make('collection', 'Lowercase letters, digits and underscores, like "articles".',
-                'Careful: templates and code that name it (the cms.{handle} view, Cms::entries(\'…\'), entries fields limited to it) need the new handle too. Roles keep their permissions for it.'),
+                'Careful: the site\'s templates and code may use the handle, so ask your developer to change them too (for developers: the cms.{handle} view, Cms::entries(\'…\'), entries fields limited to it). Roles keep their permissions for it.'),
             Select::make('blueprint')
                 ->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
                 ->help('The fields its entries have. Changing it keeps what entries already hold.'),
@@ -64,14 +64,14 @@ final class CollectionResource extends Resource
                 ->options(fn (): array => Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
                 ->help('Blueprints an entry may switch to instead, in its Page settings (fields both have keep their values).'),
             Toggle::make('dated')->label('Dated entries')->help('Entries show a date and list newest first, like articles.'),
-            Toggle::make('ordered')->label('Manual order')->help('Editors put entries in order (Move up, Move down), instead of by date or title.'),
+            Toggle::make('ordered')->label('Manual order')->help('Editors put entries in order (Reorder above the entries list, or the Move up and Move down arrows), instead of by date or title.'),
             Toggle::make('hierarchical')->label('Hierarchical')->help('Entries may have a parent entry, like pages under pages (for breadcrumbs and sub-menus; their URLs stay the same).'),
             TextInput::make('route')->label('URL')->placeholder('/blog/{slug}')->unique()
                 ->rules([new RoutePatternRule])
                 ->help('Where entries are on the site. Empty: they have no page of their own. A related entry\'s slug goes in with its field: /projects/{project}/{slug}.'),
             TextInput::make('listing_route')->label('Listing page URL')->placeholder('/blog')->unique()->maxLength(255)
                 ->rules(['regex:#^(/[a-z0-9\-_]+)+$#'])
-                ->help('A page listing the entries, like /blog (template cms.{handle}-listing, else cms.listing). Empty: none.'),
+                ->help('A page listing the entries, like /blog. Empty: none. For developers: its template is cms.{handle}-listing, else cms.listing.'),
             Select::make('listing_blueprint')->label('Listing page fields')
                 ->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
                 ->help('Fields of the listing page itself, like an intro, edited from the entries list.'),
@@ -81,7 +81,7 @@ final class CollectionResource extends Resource
                 ->help('What search engines are told its entries are. Empty: Article when entries are dated, else Web page.'),
             TextInput::make('template')->placeholder('cms.article')
                 ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
-                ->help('The Blade view for its entries. Empty: cms.{handle}, else cms.entry.'),
+                ->help('The design its entries are shown with, if your developer made more than one. Empty: the usual one. For developers: a Blade view; empty is cms.{handle}, else cms.entry.'),
             SeoMapping::section('an entry\'s'),
         ]);
     }

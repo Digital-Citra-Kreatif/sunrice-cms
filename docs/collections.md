@@ -58,7 +58,7 @@ Editors write entries under **Content → Entries**: a list per collection (see 
 | `cms.entries.delete` | Move entries to the trash, restore them and delete them for good, also several at once. |
 | `cms.entries.export` | Download a collection's entries as CSV (with `view`). |
 | `cms.entries.update-own`, `.delete-own` | The same, for entries they created, in collections they may view. |
-| `cms.entries.translate` | Save drafts of entries' other languages (not the main one), in collections they may view. Not what every language shares: Page settings (parent, template, blueprint, comments) and the order of entries need `cms.entries.update` (or `update-own`). |
+| `cms.entries.translate` | Save drafts of entries' other languages (not the main one), in collections they may view: to keep a translator to some collections, give them those collections' **View** (`cms.entries.{collection}.view`) instead of `cms.entries.view`. Not what every language shares: Page settings (parent, template, blueprint, comments) and the order of entries need `cms.entries.update` (or `update-own`). |
 | `cms.homepage` | Make a live page the site's homepage from its editor (`SetHomepage`); Settings → Site (`cms.settings.site`) sets it too. |
 | `cms.entries.view-drafts` | While signed in, see on the site that a live page has unpublished changes, and open them (`?draft`), in collections they may view. See [draft viewing](site.md#drafts-on-the-site). |
 
@@ -146,7 +146,7 @@ Shared fields inside a translated group, repeater or flexible block are shared t
 
 ## Switching the main language
 
-Once there's content, the main language is changed with a command, which moves what's stored so nothing is lost:
+Once there's content, the main language is changed from Settings → Languages (the **Main language** card's buttons, `POST admin/cms/languages/{locale}/main`, `sunrice.admin.cms.languages.main`, behind `cms.settings.locales`; it refuses while entries or terms lack the new language) or with a command, which can also copy what's missing; either moves what's stored so nothing is lost:
 
 ```bash
 php artisan sunrice:switch-main-language id --dry-run       # what would change
@@ -221,8 +221,9 @@ The CMS adds these widgets to the panel's [dashboard](../../admin/docs/panel.md#
 | Widget | Shows | Who sees it |
 | --- | --- | --- |
 | `cms.collections` (Content) | Each collection's entries in the main language: live, drafts and scheduled, linking to its list. | Users who may view some collection's entries. |
+| `cms.setup` (Getting the site ready) | What's left to set up a new site: the first entries, the homepage, menus without links; gone once done. | `cms.settings.site` |
 | `cms.review` (Waiting for review) | Drafts sent for review (**Submit for review**), oldest first, with who sent them and how many wait. | Users who may publish in some collection; each sees the collections they may publish in. |
-| `cms.recent-edits` (Recently edited) | The last eight entry translations edited, any language, with their status. | The same. |
+| `cms.recent-edits` (Recently edited entries) | The last eight entry translations edited, any language, with their status. | Users who may view some collection's entries. |
 | `cms.comments` (Comments waiting) | How many comments wait for moderation, and the latest five. | `cms.comments.view` |
 | `cms.scheduled` (Coming up) | The next eight entries scheduled to go live. | Users who may view some collection's entries. |
 | `cms.submissions` (Latest submissions) | The last eight submissions of the forms the user may read, each summed up by its first text field. | `cms.submissions.view`, or a form's own. |

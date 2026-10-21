@@ -44,9 +44,21 @@ final class StructuredData
         $site = app(SiteSettings::class);
         $locale = $page->locale ?? app()->getLocale();
         $home = url($locale === Locales::default() ? '/' : '/'.$locale);
-        $publisher = ['@type' => $site->publisher === 'Person' ? 'Person' : 'Organization', '@id' => url('/').'#publisher', 'name' => $site->name(), 'url' => url('/')];
-        if ($publisher['@type'] === 'Organization' && $site->logo !== null && ($logo = Media::query()->find($site->logo)?->url()) !== null) {
+        $person = $site->publisher === 'Person';
+        $type = $person ? 'Person' : (preg_match('/^[A-Z][A-Za-z]{2,59}$/', $site->publisherType) === 1 ? $site->publisherType : 'Organization');
+        $name = trim($site->publisherName) !== '' ? trim($site->publisherName) : $site->name();
+        $publisher = ['@type' => $type, '@id' => url('/').'#publisher', 'name' => $name, 'url' => url('/')];
+        if (! $person && $site->logo !== null && ($logo = Media::query()->find($site->logo)?->url()) !== null) {
             $publisher['logo'] = ['@type' => 'ImageObject', 'url' => $logo];
+        }
+        if (trim($site->telephone) !== '') {
+            $publisher['telephone'] = trim($site->telephone);
+        }
+        if (trim($site->address) !== '') {
+            $publisher['address'] = implode(', ', array_filter(array_map(trim(...), preg_split('/\R/', $site->address) ?: [])));
+        }
+        if ($site->profiles() !== []) {
+            $publisher['sameAs'] = $site->profiles();
         }
         $website = ['@type' => 'WebSite', '@id' => url('/').'#website', 'url' => $home, 'name' => $site->name(), 'inLanguage' => self::language($locale), 'publisher' => ['@id' => $publisher['@id']]];
         if (trim($site->description) !== '') {

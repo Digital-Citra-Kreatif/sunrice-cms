@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Sunrice\Cms\Settings;
 
 use Closure;
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Sunrice\Admin\Resources\Forms\Form;
 use Sunrice\Admin\Resources\Forms\Textarea;
 use Sunrice\Admin\Settings\Settings;
+use Sunrice\Admin\Support\Card;
 use Sunrice\Cms\Models\CollectionListing;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\GlobalValue;
@@ -21,9 +23,10 @@ use Sunrice\Cms\Support\Locales;
  *     en: English
  *     id: Bahasa Indonesia
  *
- * Empty (until saved): config sunrice-cms.locales. Locales reads it. The
- * main language can't be changed or dropped here while content is
- * written in it: `php artisan sunrice:switch-main-language` moves it.
+ * Empty (until saved): config sunrice-cms.locales, which the form shows
+ * to edit. Locales reads it. The main language can't be changed or
+ * dropped here while content is written in it: the Main language card's
+ * buttons (or `php artisan sunrice:switch-main-language`) move it.
  *
  * @api
  */
@@ -55,10 +58,28 @@ final class LocaleSettings extends Settings
         $current = implode("\n", array_map(fn (string $code, string $name): string => "{$code}: {$name}", array_keys(Locales::names()), Locales::names()));
 
         return $form->schema([
+            // Until saved here, the languages in use (config) are shown, to edit.
             Textarea::make('languages')->label('Content languages')->rows(5)->maxLength(2000)->required()
-                ->placeholder($current)->rules([fn (string $attribute, mixed $value, Closure $fail) => self::check($value, $fail)])
-                ->help('One per line: its code (as in addresses, /id/…) and its name, "id: Bahasa Indonesia". The first is the main language, at the plain addresses; the others get their own. To change the main language once there is content, run php artisan sunrice:switch-main-language.'),
+                ->default($current)->rules([fn (string $attribute, mixed $value, Closure $fail) => self::check($value, $fail)])
+                ->help('One per line: its code (as in addresses, /id/…), a colon and its name, "id: Bahasa Indonesia". The first is the main language, at the plain addresses; the others get their own. Once there is content, change the main language with the buttons below.'),
         ]);
+    }
+
+    /** The main language, and a button to make each other language the main one (SwitchMainLanguage). */
+    public static function cards(Authorizable $user): array
+    {
+        $main = Locales::default();
+        $card = Card::make('Main language')
+            ->description('The main language is at the plain addresses (/about) and holds the values all languages share. Switching moves those values, gives the old main language its own addresses (/'.$main.'/about, redirected from the old ones) and lists the new one first. Every entry and term needs a translation in the new main language first.')
+            ->rows(['Main language' => Locales::name($main)." ({$main})"]);
+        foreach (Locales::names() as $code => $name) {
+            if ($code !== $main) {
+                $card->button("Make {$name} the main language", route('sunrice.admin.cms.languages.main', $code, false),
+                    "Make {$name} the main language? Addresses change: {$name} pages lose their /{$code} prefix and ".Locales::name($main)." pages get /{$main}. This can take a while on a big site.");
+            }
+        }
+
+        return [$card];
     }
 
     /**

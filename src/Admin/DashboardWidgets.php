@@ -13,14 +13,17 @@ use Illuminate\Support\Str;
 use Sunrice\Admin\Dashboard\Widget;
 use Sunrice\Admin\Panel;
 use Sunrice\Cms\Models\Comment;
+use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
+use Sunrice\Cms\Models\Menu;
 use Sunrice\Cms\Models\Submission;
+use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\Handles;
 use Sunrice\Cms\Support\Locales;
 
 /**
- * The CMS's dashboard widgets: entries per collection, recent edits,
+ * The CMS's dashboard widgets: what's left to set up, entries per collection, recent edits,
  * what's scheduled, comments waiting and the latest submissions. Each
  * reads only what the user may see (Support\Access), in one query (the
  * comments widget a second one for signed-in authors' names).
@@ -34,7 +37,37 @@ final class DashboardWidgets
     /** @return list<Widget> */
     public static function all(): array
     {
-        return [self::collections(), self::review(), self::recentEdits(), self::comments(), self::scheduled(), self::submissions()];
+        return [self::setup(), self::collections(), self::review(), self::recentEdits(), self::comments(), self::scheduled(), self::submissions()];
+    }
+
+    /**
+     * What's left to set up a new site, for site managers (cms.settings.site),
+     * shown until it's done: the first entries, the homepage, menus without
+     * links. Three small queries, only for them.
+     */
+    public static function setup(): Widget
+    {
+        return Widget::list('cms.setup')->title('Getting the site ready')->description('Still to do before the site goes live')
+            ->icon('clipboard-list')->sort(5)->span(2)->permission('cms.settings.site')
+            ->visible(fn (): bool => self::setupSteps() !== [])
+            ->data(fn (): array => ['rows' => self::setupSteps()]);
+    }
+
+    /** @return list<array{title: string, meta: string, url: string}> */
+    private static function setupSteps(): array
+    {
+        $steps = [];
+        if (! Entry::query()->exists()) {
+            $steps[] = ['title' => 'Write the first entries', 'meta' => 'Pages, posts… in the collections under Entries.', 'url' => 'cms/entries'];
+        }
+        if (app(SiteSettings::class)->homepage === null) {
+            $steps[] = ['title' => 'Choose the homepage', 'meta' => 'The entry shown at the site\'s address: Settings → Site.', 'url' => 'settings/site'];
+        }
+        foreach (Menu::query()->whereDoesntHave('items')->orderBy('title')->limit(5)->get(['handle', 'title']) as $menu) {
+            $steps[] = ['title' => "Add links to the {$menu->title} menu", 'meta' => 'It has no links yet, so the site shows nothing there.', 'url' => "cms/menus/{$menu->handle}"];
+        }
+
+        return $steps;
     }
 
     public static function collections(): Widget
@@ -82,8 +115,8 @@ final class DashboardWidgets
 
     public static function recentEdits(): Widget
     {
-        return Widget::list('cms.recent-edits')->title('Recently edited')->icon('history')->sort(20)->span(2)
-            ->empty('Nothing has been edited yet.')
+        return Widget::list('cms.recent-edits')->title('Recently edited entries')->icon('history')->sort(20)->span(2)
+            ->empty('No entries have been edited yet.')
             ->visible(fn (Authorizable $user): bool => Access::entries($user, 'view'))
             ->data(fn (Authorizable $user): array => ['rows' => self::translations($user)
                 ->orderByDesc('sunrice_entry_translations.updated_at')->orderByDesc('sunrice_entry_translations.id')

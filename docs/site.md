@@ -52,10 +52,12 @@ Views get:
 | --- | --- |
 | `$entry` | the `EntryTranslation` (`$entry->title`, `->slug`, `->published_at`, `->url()`, `->entry->collection`) |
 | `$title` | the title (the draft's in a preview) |
-| `$values` | the fields as templates get them (see [fields](fields.md#field-types)) |
+| `$values` | the fields as templates get them (see [fields](fields.md#field-types)), by handle; a field never filled in may be missing, so read it with `$values['intro'] ?? null` |
+| `$richText` | the handles of its rich text fields, the only HTML a template may print as is |
 | `$collection` | the `Collection` |
 | `$locale` | the language; the app's locale is set to it too |
-| `$preview` | whether this is a preview of the draft |
+| `$preview` | whether this is a preview of the draft (from the editor, or `?draft`) |
+| `$draft` | whether this is the newer draft seen with `?draft` by someone signed in ([drafts on the site](#drafts-on-the-site)) |
 | `$fallback` | whether this is the main language's content in another language ([untranslated pages](#untranslated-pages)) |
 | `$contentLocale` | the language the entry's content is in: the main language's on an untranslated page, else `$locale` |
 
@@ -116,7 +118,7 @@ Past the first page of a listing, term or search page, the canonical and `hrefla
 
 The seo component also prints structured data (schema.org, as JSON-LD), so search engines know what pages are and can show richer results:
 
-- every page: the **WebSite**, with its search box (a SearchAction, when the search page is on), and who publishes it (an **Organization** with its logo, or a **Person**: Settings → Site);
+- every page: the **WebSite**, with its search box (a SearchAction, when the search page is on), and who publishes it (Settings → Site → Structured data): an **Organization**, or the more specific type given as **Kind of organization** (`LocalBusiness`, `RealEstateAgent` …), with its logo, or a **Person**; with its **Name** (else the site name), phone, address (as text) and profiles elsewhere (`sameAs`, one URL per line; `SiteSettings::profiles()`);
 - entries: an **Article** (dated collections) or a **WebPage**, or the collection's **Structured data type** (Structure → Collections: Article, Blog post, News article, Web page, About page, Contact page). Articles get a headline, publish and change dates, the share image, author and publisher;
 - **BreadcrumbList**: Home, the collection's listing page, parent entries, the page;
 - listing and term pages: a **CollectionPage**; the search page: a **SearchResultsPage**.
@@ -198,7 +200,7 @@ A collection with a **listing page URL** (`listing_route`, like `/blog`) gets a 
 | --- | --- |
 | `$collection` | the `Collection` (`->listingUrl($locale)`) |
 | `$entries` | a paginator of `EntryTranslation`s (`{{ $entries->links() }}`; an `Illuminate\Contracts\Pagination\LengthAwarePaginator`), queried only when the template first uses it, so a template that lists entries its own way (an [entry filter](#filtering-entries), `Cms::entries()`) costs nothing for it; a page past the last is a 404 |
-| `$values`, `$richText` | the listing page's fields, as for entries |
+| `$values`, `$richText` | the listing page's fields, as for entries: only those of the collection's listing blueprint, and empty without one, so read them with `$values['intro'] ?? null` |
 | `$title`, `$locale`, `$url` | the collection's title, the language and the page's URL |
 
 Listing URLs are fixed, so they're matched before any `{slug}` pattern; they're in the sitemap.

@@ -2,6 +2,27 @@
 
 **Structure** is where site managers decide what content the website has and how it's organised. Editors rarely need it. Changes here affect everyone's work, so plan them with your team, and with your developer when a change needs a new design (a template).
 
+## Setting up a new site, in order
+
+Some settings point at other things, so they can only be chosen once those exist. Building a site from nothing, this order saves you failed saves:
+
+1. **Fieldsets** of plain fields (an address, a call to action), and **blueprints** with plain fields only (text, media, dates…): nothing that points at a collection or a taxonomy yet.
+2. **Taxonomies** (*Topics*, *Locations*), without their collections for now.
+3. **Collections**, each with its blueprint.
+4. Back to the **blueprints** (and fieldsets): add the **Entries** fields, which link to collections, and the **Terms** fields, which link to taxonomies.
+5. Back to the **taxonomies**: tick the **Collections** whose entries they group.
+6. **Global sets**, **menu settings** and **forms**; then the content, and the homepage in Settings → Site.
+
+On the dashboard, **Getting the site ready** lists what's still missing.
+
+### Handles
+
+A **handle** (of a field, a collection, a taxonomy…) is how templates name it: lowercase letters, digits and underscores, starting with a letter. `contact_person` works; `contact-person` (a hyphen) and `ContactPerson` don't. The panel makes one from the title or label as you type.
+
+Every entry has these already, so no field may use them as its handle: `id`, `title`, `slug`, `url`, `status`, `locale`, `published_at`, `created_at`, `updated_at`, `parent`, `children`, `collection`, `blueprint`, `data`, `seo`, `author`.
+
+A **Fieldset** field puts the fieldset's fields where it sits, as if they were the blueprint's own: their handles count as the blueprint's (two fields can't share one), and the Fieldset field's own handle isn't used by anything.
+
 ## Collections
 
 A **collection** is a kind of content: *Pages*, *Blog*, *Products*, *Events*. **Structure → Collections** lists them; **New collection** adds one.
@@ -13,7 +34,7 @@ A **collection** is a kind of content: *Pages*, *Blog*, *Products*, *Events*. **
 | **Blueprint** | The fields its entries have (see below). Changing it keeps what entries already hold. |
 | **Other blueprints** | More blueprints an entry may switch to, in its Page settings (a landing page among pages, for example). |
 | **Dated entries** | Entries show a date and list newest first, like articles. |
-| **Manual order** | Editors put entries in order (**Reorder** in the list) instead of by date or title. |
+| **Manual order** | Editors put entries in order (**Reorder** above the entries list, or the **Move up** and **Move down** arrows) instead of by date or title. |
 | **Hierarchical** | Entries may sit under a parent entry, like pages under pages (for breadcrumbs and sub-menus; addresses stay the same). |
 | **URL** | Where entries are on the website, with `{slug}` for each entry's slug: `/blog/{slug}`, or `/{slug}` for pages at the top. Empty: entries have no page of their own. |
 | **Template** | The design entries use, if your developer made one for it. |

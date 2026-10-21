@@ -58,6 +58,20 @@ final class SiteSettings extends Settings
     /** The organization's logo (media id), for structured data. */
     public ?int $logo = null;
 
+    /** The publisher's name in structured data; empty: the site name. */
+    public string $publisherName = '';
+
+    /** A more specific schema.org type for an organization: "RealEstateAgent", "Restaurant"; empty: Organization. */
+    public string $publisherType = '';
+
+    public string $telephone = '';
+
+    /** The publisher's postal address, as text (lines become ", "). */
+    public string $address = '';
+
+    /** The publisher's profiles elsewhere (schema.org sameAs), one URL per line. */
+    public string $sameAs = '';
+
     public static function key(): string
     {
         return 'site';
@@ -78,7 +92,7 @@ final class SiteSettings extends Settings
                 TextInput::make('twitter')->label('X (Twitter) account')->maxLength(16)->placeholder('@acme')->rules(['regex:/^@?[A-Za-z0-9_]{1,15}$/']),
                 Textarea::make('description')->label('Description')->rows(2)->maxLength(500)->span(2),
                 TextInput::make('separator')->label('Title separator')->maxLength(5)->help('Between a page\'s title and the site name.'),
-                Toggle::make('appendName')->label('Add the site name to titles')->help('"About | Acme" in search results and tabs.'),
+                Toggle::make('appendName')->label('Add the site name to titles')->help(self::titleExample()),
                 MediaPicker::make('image')->label('Share image')->images()->span(2),
                 Toggle::make('noindex')->label('Hide the whole site from search engines')->span(2)
                     ->help('For a site still being built. Every page asks not to be indexed and the sitemap is empty.'),
@@ -87,8 +101,46 @@ final class SiteSettings extends Settings
                 Toggle::make('structuredData')->label('Add structured data to pages')->span(2),
                 Select::make('publisher')->label('Published by')->options(['Organization' => 'An organization', 'Person' => 'A person']),
                 MediaPicker::make('logo')->label('Logo')->images()->help('The organization\'s logo: square or wide, at least 112 pixels.'),
+                TextInput::make('publisherName')->label('Name')->maxLength(150)->placeholder(self::appName())
+                    ->help('Empty: the site name.'),
+                TextInput::make('publisherType')->label('Kind of organization')->maxLength(60)->placeholder('Organization')
+                    ->rules(['regex:/^[A-Z][A-Za-z]{2,59}$/'])
+                    ->help('A schema.org type, written as one word: LocalBusiness, RealEstateAgent, Restaurant, Store… Not for a person.'),
+                TextInput::make('telephone')->label('Phone')->maxLength(40)->placeholder('+62 21 555 0100'),
+                Textarea::make('address')->label('Address')->rows(2)->maxLength(300),
+                Textarea::make('sameAs')->label('Profiles elsewhere')->rows(3)->maxLength(2000)->span(2)
+                    ->rules([fn (string $attribute, mixed $value, \Closure $fail) => self::checkProfiles($value, $fail)])
+                    ->help('One address per line: the publisher\'s pages on Instagram, LinkedIn, Wikipedia…'),
             ]),
         ]);
+    }
+
+    /** The Add the site name to titles help, with the saved separator and name: "About | Lumina Estates" in search results and tabs. */
+    private static function titleExample(): string
+    {
+        $site = app(self::class);
+        $separator = trim($site->separator) !== '' ? trim($site->separator) : '|';
+
+        return "\"About {$separator} {$site->name()}\" in search results and browser tabs.";
+    }
+
+    /** @return list<string> the profile addresses (sameAs), one per line */
+    public function profiles(): array
+    {
+        return array_values(array_filter(array_map(trim(...), preg_split('/\R/', $this->sameAs) ?: []), fn (string $line) => $line !== ''));
+    }
+
+    /** @param \Closure(string): mixed $fail */
+    public static function checkProfiles(mixed $value, \Closure $fail): void
+    {
+        foreach (preg_split('/\R/', is_string($value) ? $value : '') ?: [] as $line) {
+            $line = trim($line);
+            if ($line !== '' && (filter_var($line, FILTER_VALIDATE_URL) === false || preg_match('#^https?://#i', $line) !== 1)) {
+                $fail("\"{$line}\" isn't a web address (https://…).");
+
+                return;
+            }
+        }
     }
 
     /** The site's name: as set, else the app's. */
