@@ -33,25 +33,34 @@ final class VisitorTexts
     /**
      * The texts, in sections, with their translation in `$locale`.
      *
-     * @return list<array{key: string, title: string, texts: list<array{key: string, label: string, source: string, value: string, multiline: bool}>}>
+     * @return list<array{key: string, title: string, hint: string|null, texts: list<array{key: string, label: string, source: string, value: string, multiline: bool, url: string|null}>}>
      */
     public static function sections(string $locale): array
     {
         $sections = [];
         $site = app(SiteSettings::class);
-        $sections[] = ['key' => 'site', 'title' => self::say('The site'), 'texts' => [
-            self::text('site|description', self::say('Description'), $site->description, self::siteDescription($site, $locale), true),
+        $sections[] = ['key' => 'site', 'title' => self::say('Site description'), 'texts' => [
+            self::text('site|description', self::say('What pages say about the site when they don\'t say their own'), $site->description, self::siteDescription($site, $locale), true, url(Locales::prefix($locale) ?: '/')),
         ]];
 
+        // Only titles visitors read: collections with a listing page, taxonomies with term pages.
+        $collections = Collection::query()->whereNotNull('listing_route')->orderBy('title')->get();
         $titles = [];
-        foreach (Collection::query()->orderBy('title')->get() as $collection) {
-            $titles[] = self::text("collection|{$collection->id}|title", self::say('Collection: :title', ['title' => $collection->title]), $collection->title, self::own($collection->translations, $locale, 'title'));
-        }
-        foreach (Taxonomy::query()->orderBy('title')->get() as $taxonomy) {
-            $titles[] = self::text("taxonomy|{$taxonomy->id}|title", self::say('Taxonomy: :title', ['title' => $taxonomy->title]), $taxonomy->title, self::own($taxonomy->translations, $locale, 'title'));
+        foreach ($collections as $collection) {
+            $titles[] = self::text("collection|{$collection->id}|title", self::same($collections->pluck('title')->values()->all(), $collection->title, $collection->handle),
+                $collection->title, self::own($collection->translations, $locale, 'title'), false, $collection->listingUrl($locale));
         }
         if ($titles !== []) {
-            $sections[] = ['key' => 'titles', 'title' => self::say('Titles of listing pages'), 'texts' => $titles];
+            $sections[] = ['key' => 'titles', 'title' => self::say('Listing page titles'), 'texts' => $titles];
+        }
+        $taxonomies = Taxonomy::query()->whereNotNull('route')->orderBy('title')->get();
+        $titles = [];
+        foreach ($taxonomies as $taxonomy) {
+            $titles[] = self::text("taxonomy|{$taxonomy->id}|title", self::same($taxonomies->pluck('title')->values()->all(), $taxonomy->title, $taxonomy->handle),
+                $taxonomy->title, self::own($taxonomy->translations, $locale, 'title'));
+        }
+        if ($titles !== []) {
+            $sections[] = ['key' => 'term-titles', 'title' => self::say('Term page titles'), 'texts' => $titles];
         }
 
         $forms = Form::query()->orderBy('title')->get();
@@ -65,7 +74,7 @@ final class VisitorTexts
                 $shown[$blueprint->id] = true;
                 array_push($texts, ...self::fieldTexts($blueprint, $blueprint->fields, '', $locale));
             }
-            $sections[] = ['key' => "form-{$form->id}", 'title' => self::say('Form: :title', ['title' => $form->title]), 'texts' => $texts];
+            $sections[] = ['key' => "form-{$form->id}", 'title' => self::say('Forms: :title', ['title' => $form->title]), 'hint' => self::sameHandle($forms->pluck('title')->values()->all(), $form->title, $form->handle), 'texts' => $texts];
         }
 
         $menus = Menu::query()->orderBy('title')->with(['items.entry.translations', 'items.term.translations', 'items.collection'])->get();
@@ -77,11 +86,17 @@ final class VisitorTexts
             }
             $texts = self::menuTexts($children, 0, [], $locale);
             if ($texts !== []) {
-                $sections[] = ['key' => "menu-{$menu->id}", 'title' => self::say('Menu: :title', ['title' => $menu->title]), 'texts' => $texts];
+                $sections[] = ['key' => "menu-{$menu->id}", 'title' => self::say('Menus: :title', ['title' => $menu->title]), 'hint' => self::sameHandle($menus->pluck('title')->values()->all(), $menu->title, $menu->handle), 'texts' => $texts];
             }
         }
 
-        return $sections;
+        // A text with nothing in the main language has nothing to translate.
+        foreach ($sections as $index => $section) {
+            $sections[$index]['texts'] = array_values(array_filter($section['texts'], fn (array $text): bool => trim($text['source']) !== ''));
+            $sections[$index]['hint'] ??= null;
+        }
+
+        return array_values(array_filter($sections, fn (array $section): bool => $section['texts'] !== []));
     }
 
     /**
@@ -89,7 +104,7 @@ final class VisitorTexts
      * included fields are its own: they aren't listed).
      *
      * @param  list<array<string, mixed>>  $fields
-     * @return list<array{key: string, label: string, source: string, value: string, multiline: bool}>
+     * @return list<array{key: string, label: string, source: string, value: string, multiline: bool, url: string|null}>
      */
     private static function fieldTexts(Blueprint $blueprint, array $fields, string $prefix, string $locale): array
     {
@@ -147,7 +162,7 @@ final class VisitorTexts
      *
      * @param  array<int, list<MenuItem>>  $children  the links by their parent's id (0: the top)
      * @param  list<string>  $trail  the labels of the links above
-     * @return list<array{key: string, label: string, source: string, value: string, multiline: bool}>
+     * @return list<array{key: string, label: string, source: string, value: string, multiline: bool, url: string|null}>
      */
     private static function menuTexts(array $children, int $parent, array $trail, string $locale): array
     {
@@ -198,10 +213,30 @@ final class VisitorTexts
         return self::string(($translations ?? [])[$locale][$attribute] ?? null);
     }
 
-    /** @return array{key: string, label: string, source: string, value: string, multiline: bool} */
-    private static function text(string $key, string $label, string $source, string $value, bool $multiline = false): array
+    /**
+     * A text: `label` says where it shows (the main language's text is `source`), `url` where visitors see it, when there's a page.
+     *
+     * @return array{key: string, label: string, source: string, value: string, multiline: bool, url: string|null}
+     */
+    private static function text(string $key, string $label, string $source, string $value, bool $multiline = false, ?string $url = null): array
     {
-        return ['key' => $key, 'label' => $label, 'source' => $source, 'value' => $value, 'multiline' => $multiline];
+        return ['key' => $key, 'label' => $label, 'source' => $source, 'value' => $value, 'multiline' => $multiline, 'url' => $url];
+    }
+
+    /**
+     * What tells a title apart: its handle, when another has the same title ("test · test_2"); else nothing.
+     *
+     * @param  array<mixed>  $titles
+     */
+    private static function same(array $titles, string $title, string $handle): string
+    {
+        return self::sameHandle($titles, $title, $handle) ?? '';
+    }
+
+    /** @param array<mixed> $titles */
+    private static function sameHandle(array $titles, string $title, string $handle): ?string
+    {
+        return count(array_keys($titles, $title, true)) > 1 ? $handle : null;
     }
 
     private static function string(mixed $value): string
