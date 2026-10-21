@@ -11,6 +11,7 @@ use Illuminate\Support\Carbon;
 use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Fields\Schema;
 use Sunrice\Cms\Support\Locales;
+use Sunrice\Cms\Support\SiteRecords;
 
 /**
  * Site-wide values (contact details, social links, footer text), filled in
@@ -43,7 +44,7 @@ class GlobalSet extends Model
 
     public function schema(): Schema
     {
-        return $this->schema ??= ($this->blueprint === null ? null : Blueprint::query()->where('handle', $this->blueprint)->first()?->schema()) ?? Schema::make([]);
+        return $this->schema ??= SiteRecords::blueprint($this->blueprint)?->schema() ?? Schema::make([]);
     }
 
     /** The fields editable in a language: all in the main one, the translated ones in the others. */

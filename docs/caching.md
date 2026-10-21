@@ -20,11 +20,11 @@ Event::listen(ContentChanged::class, fn () => Http::post('https://api.example.co
 
 ## The site's cache
 
-The site keeps what it reads on every page in the cache: which page is at an address, the collections' and taxonomies' URL patterns, listing pages, menus and the sitemap. Everything is kept under a **content version** per area, and a change starts a new version of the areas it touches, so nothing old is read again, on any cache store and without tags. Only plain values are kept, never models. The areas (`SiteCache::PAGES`, `ROUTES`, `MENUS`, `SITEMAP`):
+The site keeps what it reads on every page in the cache: which page is at an address, the collections' and taxonomies' URL patterns, listing pages, menus, the sitemap, and the global sets, fieldsets, forms and blueprints templates use (so `Cms::global()` and a newsletter form on every page cost no queries). Everything is kept under a **content version** per area, and a change starts a new version of the areas it touches, so nothing old is read again, on any cache store and without tags. Only plain values are kept, never models. The areas (`SiteCache::PAGES`, `ROUTES`, `MENUS`, `SITEMAP`):
 
 | Area | What's in it | New version when |
 | --- | --- | --- |
-| `pages` | Whole pages, the site's share image, anything templates render | Any change: every change below too, plus global sets, blueprints, fieldsets, forms, media files (even alt text), Site code, and approved comments while whole pages are kept |
+| `pages` | Whole pages, the site's share image, global sets, fieldsets, forms and blueprints (as plain attributes), anything templates render | Any change: every change below too, plus global sets, blueprints, fieldsets, forms, media files (even alt text), Site code, and approved comments while whole pages are kept |
 | `routes` | Which page is at an address, URL patterns, listing routes | Entries going live, off or moving, terms, collections, taxonomies, redirects, Settings → Site |
 | `menus` | Menus | Menus and their items, entries, terms, collections, taxonomies |
 | `sitemap` | The sitemap's files | Entries, terms, collections, taxonomies |

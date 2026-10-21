@@ -14,6 +14,7 @@ use Sunrice\Admin\Security\Captcha;
 use Sunrice\Cms\Models\Form as FormModel;
 use Sunrice\Cms\Site\FormController;
 use Sunrice\Cms\Support\Locales;
+use Sunrice\Cms\Support\SiteRecords;
 
 /**
  * A form for visitors. Empty, it prints the form's fields itself:
@@ -52,7 +53,8 @@ final class Form extends Component
 
     public function __construct(string $handle, public ?string $submit = null, public bool $replace = false)
     {
-        $this->form = FormModel::query()->where('handle', $handle)->first();
+        // From the site cache: no queries until the form changes.
+        $this->form = SiteRecords::one('form:'.$handle, FormModel::class, fn (): ?FormModel => FormModel::query()->where('handle', $handle)->first());
         $this->id = 'form-'.$handle;
         $this->locale = Locales::current();
     }

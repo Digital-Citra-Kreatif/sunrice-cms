@@ -99,6 +99,17 @@ final class ContentWatch
         });
     }
 
+    /**
+     * A record changed with a query, which fires no model events
+     * (Versioned::update()): what its saved event would have said.
+     */
+    public static function updated(Model $model): void
+    {
+        if (array_key_exists($model::class, self::MODELS)) {
+            self::changed($model, self::MODELS[$model::class]);
+        }
+    }
+
     /** @param  list<string>  $areas */
     private static function changed(Model $model, array $areas = []): void
     {

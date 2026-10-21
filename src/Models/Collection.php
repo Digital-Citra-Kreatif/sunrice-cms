@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Sunrice\Cms\Fields\Schema;
 use Sunrice\Cms\Support\Locales;
+use Sunrice\Cms\Support\SiteRecords;
 
 /**
  * A kind of content (pages, articles, products), whose entries are filled
@@ -124,7 +125,7 @@ class Collection extends Model
     /** The fields of its entries (none without a blueprint), loaded once. */
     public function schema(): Schema
     {
-        return $this->schema ??= $this->blueprintModel()?->schema() ?? Schema::make([]);
+        return $this->schema ??= SiteRecords::blueprint($this->blueprint)?->schema() ?? Schema::make([]);
     }
 
     /**
@@ -150,7 +151,7 @@ class Collection extends Model
             return $this->schema();
         }
 
-        return $this->schemas[$blueprint] ??= Blueprint::query()->where('handle', $blueprint)->first()?->schema() ?? Schema::make([]);
+        return $this->schemas[$blueprint] ??= SiteRecords::blueprint($blueprint)?->schema() ?? Schema::make([]);
     }
 
     /**
