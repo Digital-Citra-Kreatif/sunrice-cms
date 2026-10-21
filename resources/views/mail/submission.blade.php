@@ -6,7 +6,11 @@
         @foreach ($rows as $row)
             <tr>
                 <th align="left" valign="top" style="border-bottom: 1px solid #ddd;">{{ $row['label'] }}</th>
+                @if ($row['files'] !== [])
+                <td style="border-bottom: 1px solid #ddd;">@foreach ($row['files'] as $one)<a href="{{ $one['url'] }}">{{ $one['name'] }}</a>@if ($one['size']) ({{ $one['size'] }})@endif @if (! $loop->last)<br>@endif @endforeach</td>
+                @else
                 <td style="border-bottom: 1px solid #ddd; white-space: pre-wrap;">@if ($row['file'])<a href="{{ $row['file'] }}">{{ $row['value'] }}</a>@else{{ $row['value'] }}@endif</td>
+                @endif
             </tr>
         @endforeach
     </table>

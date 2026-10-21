@@ -48,8 +48,14 @@ final class SubmissionReceived extends Mailable
             }
             $file = $submission->data[$row['handle']] ?? null;
             if (is_array($file) && is_int($file['size'] ?? null)) {
-                $row['value'] .= ' ('.FileField::size(max(1, intdiv($file['size'], 1024))).')';
+                $row['value'] .= ' ('.self::size($file['size']).')';
             }
+            // Several files: each with its size and its link in the admin.
+            $row['files'] = array_map(function (array $one, int $index) use ($file): array {
+                $size = is_array($file) && is_array($file[$index] ?? null) && is_int($file[$index]['size'] ?? null) ? $file[$index]['size'] : null;
+
+                return ['name' => $one['name'], 'size' => $size === null ? null : self::size($size), 'url' => AppUrl::url($one['url'])];
+            }, $row['files'], array_keys($row['files']));
             $rows[] = $row;
         }
 
@@ -61,5 +67,11 @@ final class SubmissionReceived extends Mailable
             'language' => Locales::name($submission->locale),
             'admin' => AppUrl::route('sunrice.admin.cms.forms.submissions.index', ['form' => $submission->form->handle]),
         ]);
+    }
+
+    /** A file's size in bytes as people read it ("820 KB"). */
+    private static function size(int $bytes): string
+    {
+        return FileField::size(max(1, intdiv($bytes, 1024)));
     }
 }
