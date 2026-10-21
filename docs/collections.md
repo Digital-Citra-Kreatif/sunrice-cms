@@ -179,6 +179,7 @@ app(UnpublishEntry::class)->handle($translation);
 - Both validate the title, the slug and the blueprint's fields, and ignore handles the blueprint doesn't have. The slug check and the write run in one transaction (`EntryInput::write()`), locking the translations the check looks at where the database can; a slug another save took in between is refused with a validation error on `slug`, never a database error.
 - `PublishEntry` checks the draft again (the blueprint may have changed), copies it to the live version, counts the `version` up (an editor opened before the publish can't save over it unknowingly) and keeps a revision. The entry is live from its date: now when first published, the original date when published again, or the date you pass, which may be in the future.
 - `UnpublishEntry` takes it off the site; publishing again keeps its date.
+- `RequestReview` is **Submit for review** in the editor, offered to those who may edit an entry but not publish it (the default `author` role): it records when and by whom on the translation (`review_requested_at`, `review_requested_by`), emails everyone who may publish in the collection (`cms.entries.publish` or `cms.entries.{collection}.publish`; not the requester), logs `review requested`, and refuses an entry in the trash or one whose draft the site already shows. The editor shows **Waiting for review**, and the dashboard's `cms.review` widget lists the waiting drafts to those who may publish them. Publishing clears the request (route `POST admin/cms/entries/{entry}/review`, `sunrice.admin.cms.entries.review`, behind `update`).
 - Each fires an event (`EntryPublished`, `EntryUnpublished`, `EntryTrashed`, `EntryRestored`, `EntryDeleted`); one published for a later date is announced again when its time comes. See [Caching, events and scheduled publishing](caching.md).
 
 | On the translation | |
@@ -218,9 +219,10 @@ The CMS adds these widgets to the panel's [dashboard](../../admin/docs/panel.md#
 | Widget | Shows | Who sees it |
 | --- | --- | --- |
 | `cms.collections` (Content) | Each collection's entries in the main language: live, drafts and scheduled, linking to its list. | Users who may view some collection's entries. |
+| `cms.review` (Waiting for review) | Drafts sent for review (**Submit for review**), oldest first, with who sent them and how many wait. | Users who may publish in some collection; each sees the collections they may publish in. |
 | `cms.recent-edits` (Recently edited) | The last eight entry translations edited, any language, with their status. | The same. |
 | `cms.comments` (Comments waiting) | How many comments wait for moderation, and the latest five. | `cms.comments.view` |
 | `cms.scheduled` (Coming up) | The next eight entries scheduled to go live. | Users who may view some collection's entries. |
 | `cms.submissions` (Latest submissions) | The last eight submissions of the forms the user may read, each summed up by its first text field. | `cms.submissions.view`, or a form's own. |
 
-Each reads its data in one query (the comments widget a second one for signed-in commenters' names), after the page has painted. Entries in the trash and deleted collections are left out.
+Each reads its data in one query (the comments widget a second one for signed-in commenters' names, the review widget a count and the requesters' names), after the page has painted. Entries in the trash and deleted collections are left out.

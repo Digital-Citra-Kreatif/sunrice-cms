@@ -53,7 +53,7 @@ Setiap entri memiliki **draf**, yang Anda sunting, dan versi **tayang**, yang di
 Kartu **Status** di kanan menunjukkan apakah entri masih draf, terjadwal, atau terbit (dan sejak kapan), dan memberi peringatan jika *The draft has changes the site doesn't show yet* (draf berisi perubahan yang belum tampil di situs).
 
 > [!NOTE]
-> Jika peran Anda bisa menulis tetapi tidak bisa menerbitkan (misalnya peran *author*), Anda menyimpan draf dan orang lain yang menerbitkannya.
+> Jika peran Anda bisa menulis tetapi tidak bisa menerbitkan (misalnya peran *author*), Anda menyimpan draf dan orang lain yang menerbitkannya. Saat draf siap, klik **Submit for review** (ajukan untuk ditinjau): draf disimpan, semua orang yang bisa menerbitkannya menerima email, dan draf muncul di **Waiting for review** pada dasbor mereka. Entri menampilkan lencana **Waiting for review** sampai ada yang menerbitkannya.
 
 ## Melihat hasil kerja Anda di situs
 

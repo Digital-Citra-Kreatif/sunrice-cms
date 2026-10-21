@@ -185,6 +185,7 @@ final class CmsPlugin extends BasePlugin
                 Route::get('entries/{entry}/edit', 'edit')->name('edit')->middleware(AuthorizeContent::class.':entries,view')->withTrashed();
                 Route::put('entries/{entry}', 'update')->name('update')->middleware(AuthorizeContent::class.':entries,update');
                 Route::post('entries/{entry}/publish', 'publish')->name('publish')->middleware(AuthorizeContent::class.':entries,publish');
+                Route::post('entries/{entry}/review', 'requestReview')->name('review')->middleware(AuthorizeContent::class.':entries,update');
                 Route::post('entries/{entry}/unpublish', 'unpublish')->name('unpublish')->middleware(AuthorizeContent::class.':entries,publish');
                 Route::delete('entries/{entry}', 'destroy')->name('destroy')->middleware(AuthorizeContent::class.':entries,delete');
                 Route::post('entries/{translation}/translate', 'translate')->name('translate')->middleware(AuthorizeContent::class.':entries,update');

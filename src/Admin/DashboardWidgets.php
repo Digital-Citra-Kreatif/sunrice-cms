@@ -11,6 +11,7 @@ use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Sunrice\Admin\Dashboard\Widget;
+use Sunrice\Admin\Panel;
 use Sunrice\Cms\Models\Comment;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Submission;
@@ -33,7 +34,7 @@ final class DashboardWidgets
     /** @return list<Widget> */
     public static function all(): array
     {
-        return [self::collections(), self::recentEdits(), self::comments(), self::scheduled(), self::submissions()];
+        return [self::collections(), self::review(), self::recentEdits(), self::comments(), self::scheduled(), self::submissions()];
     }
 
     public static function collections(): Widget
@@ -87,6 +88,35 @@ final class DashboardWidgets
             ->data(fn (Authorizable $user): array => ['rows' => self::translations($user)
                 ->orderByDesc('sunrice_entry_translations.updated_at')->orderByDesc('sunrice_entry_translations.id')
                 ->get()->map(fn (EntryTranslation $translation): array => self::entryRow($translation, $translation->updated_at?->toIso8601String()))->all()]);
+    }
+
+    /** Drafts sent for review (RequestReview), for those who may publish them: oldest request first. */
+    public static function review(): Widget
+    {
+        return Widget::list('cms.review')->title('Waiting for review')->description('Sent by their authors to be published')->icon('clipboard-list')->sort(15)
+            ->empty('Nothing is waiting for review.')
+            ->visible(fn (Authorizable $user): bool => Access::entries($user, 'publish'))
+            ->data(function (Authorizable $user): array {
+                $handles = array_values(array_filter(Handles::collections(), fn (string $handle): bool => Access::entries($user, 'publish', $handle)));
+                $waiting = self::translations($user)
+                    ->whereIn('sunrice_collections.handle', $handles === [] ? [''] : $handles)
+                    ->whereNotNull('sunrice_entry_translations.review_requested_at');
+                $count = (clone $waiting)->count(); // One row: the limit leaves the count whole.
+                $translations = $waiting
+                    ->addSelect('sunrice_entry_translations.review_requested_at', 'sunrice_entry_translations.review_requested_by')
+                    ->orderBy('sunrice_entry_translations.review_requested_at')->orderBy('sunrice_entry_translations.id')
+                    ->get();
+                // The requesters' names, in one query.
+                $ids = $translations->pluck('review_requested_by')->filter()->unique()->values()->all();
+                $names = $ids === [] ? collect() : app(Panel::class)->getUserModel()::query()->whereKey($ids)->pluck('name', 'id');
+
+                return ['count' => $count, 'rows' => $translations->map(function (EntryTranslation $translation) use ($names): array {
+                    $row = self::entryRow($translation, $translation->review_requested_at?->toIso8601String());
+                    $name = $names->get($translation->review_requested_by ?? 0);
+
+                    return [...$row, 'meta' => $row['meta'].(is_string($name) ? " · from {$name}" : ''), 'badge' => 'Review', 'tone' => 'warning'];
+                })->all()];
+            });
     }
 
     public static function scheduled(): Widget

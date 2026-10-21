@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Deferred, Head, router, useForm } from '@inertiajs/react';
-import { CalendarClock, Check, ChevronDown, Copy, ExternalLink, Eye, Languages, LoaderCircle, Plus, RotateCcw, Trash2, Undo2 } from 'lucide-react';
+import { CalendarClock, Check, ChevronDown, Copy, ExternalLink, Eye, Languages, LoaderCircle, Plus, RotateCcw, Send, Trash2, Undo2 } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
     Badge, Button, Card, CardContent, CollapsibleCard, DatePicker, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -38,6 +38,8 @@ interface Props {
         publishedAt: string | null;
         hasUnpublishedChanges: boolean;
         trashed: boolean;
+        /** Sent for review ("Submit for review"): when, and by whom. */
+        review?: { requestedAt: string; by: string | null } | null;
         version: number;
         /** The live page, when published and the collection has a URL. */
         url: string | null;
@@ -135,6 +137,17 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
     };
     useUnsavedChanges(form.isDirty && !lock.takenOver, writable ? () => form.processing || save() : undefined);
 
+    // Those who may edit but not publish ask for a review: of what's in the form, saved first.
+    const requestReview = () => {
+        const send = () => router.post(`${url}/review`, locale, { preserveScroll: true });
+        if (form.isDirty) {
+            form.transform((data) => ({ ...data, publish: false, published_at: null }));
+            form.put(url, { preserveScroll: true, onSuccess: send });
+        } else {
+            send();
+        }
+    };
+
     // Publishing what's in the form: saved first when one may edit, else the saved draft.
     const publish = (publishedAt: string | null = null) => {
         if (can.update) {
@@ -198,9 +211,15 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                             </Button>
                         )}
                         {writable && (
-                            <Button type="submit" variant={entry && can.publish ? 'outline' : 'default'} disabled={form.processing}>
+                            <Button type="submit" variant={entry ? 'outline' : 'default'} disabled={form.processing}>
                                 {form.processing && <LoaderCircle className="cms:animate-spin" />}
                                 {entry ? 'Save draft' : 'Create draft'}
+                            </Button>
+                        )}
+                        {entry && !entry.trashed && writable && !can.publish && (entry.status === 'draft' || entry.hasUnpublishedChanges || form.isDirty) && (
+                            <Button type="button" disabled={form.processing} onClick={requestReview}
+                                title={entry.review ? 'Already sent; sending again tells them again' : 'Ask those who can publish to review it'}>
+                                <Send /> {entry.review ? 'Send for review again' : 'Submit for review'}
                             </Button>
                         )}
                         {entry && !entry.trashed && can.publish && !lock.readOnly && (
@@ -229,6 +248,9 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                 }
             >
                 {entry && <Badge variant={entry.status === 'published' ? 'success' : 'secondary'}>{entry.trashed ? 'In the trash' : statusLabel(entry.status)}</Badge>}
+                {entry?.review && !entry.trashed && (
+                    <Badge variant="warning" title={`${entry.review.by ? `${entry.review.by} sent it` : 'Sent'} on ${formatDate(entry.review.requestedAt)}`}>Waiting for review</Badge>
+                )}
                 {form.isDirty && <span className="cms:text-sm cms:text-muted-foreground">Unsaved changes</span>}
             </PageHeader>
 
@@ -295,6 +317,11 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                     <aside className="cms:flex cms:flex-col cms:gap-4">
                         <CollapsibleCard title="Status" titleClassName="cms:text-base" storageKey="cms:entry:status" contentClassName="cms:flex cms:flex-col cms:gap-1 cms:text-sm">
                             <p>{statusLabel(entry.status)}{entry.status !== 'draft' && entry.publishedAt ? ` · ${formatDate(entry.publishedAt)}` : ''}</p>
+                            {entry.review && (
+                                <p className="cms:text-muted-foreground">
+                                    Sent for review{entry.review.by ? ` by ${entry.review.by}` : ''} · {formatDate(entry.review.requestedAt)}.{can.publish ? ' Publishing it answers the request.' : ''}
+                                </p>
+                            )}
                             {entry.status !== 'draft' && entry.hasUnpublishedChanges && <p className="cms:text-muted-foreground">The draft has changes the site doesn't show yet.</p>}
                             {locales.find((l) => l.code === entry.locale)?.outdated && (
                                 <p className="cms:text-amber-700 cms:dark:text-amber-400">The {mainLocale ? localeName(mainLocale) : 'main'} version changed since this translation was last saved.</p>

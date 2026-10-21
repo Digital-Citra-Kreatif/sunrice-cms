@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Http\Controllers;
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -13,12 +14,14 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Sunrice\Admin\Panel;
 use Sunrice\Admin\Preferences\Preferences;
 use Sunrice\Cms\Actions\Entries\CreateEntry;
 use Sunrice\Cms\Actions\Entries\CreateTranslation;
 use Sunrice\Cms\Actions\Entries\DeleteTranslation;
 use Sunrice\Cms\Actions\Entries\MachineTranslateEntry;
 use Sunrice\Cms\Actions\Entries\PublishEntry;
+use Sunrice\Cms\Actions\Entries\RequestReview;
 use Sunrice\Cms\Actions\Entries\RestoreEntry;
 use Sunrice\Cms\Actions\Entries\RestoreRevision;
 use Sunrice\Cms\Actions\Entries\SaveDraft;
@@ -238,6 +241,11 @@ final class EntryController
                 'publishedAt' => $translation->published_at?->toIso8601String(),
                 'hasUnpublishedChanges' => $translation->hasUnpublishedChanges(),
                 'trashed' => $entry->trashed(),
+                // "Submit for review": when, and who asked.
+                'review' => $translation->review_requested_at === null ? null : [
+                    'requestedAt' => $translation->review_requested_at->toIso8601String(),
+                    'by' => $translation->review_requested_by === null ? null : self::userName($translation->review_requested_by),
+                ],
                 'version' => $translation->version,
                 // The live page, and a signed link to preview the draft (30 minutes).
                 'url' => $translation->isLive() && ! $entry->trashed() ? $translation->url() : null,
@@ -330,6 +338,14 @@ final class EntryController
         $translation = $publish->handle(self::translation($entry, $request->input('locale')), self::publishAt($request));
 
         return back()->with('success', self::published($translation));
+    }
+
+    public function requestReview(Request $request, Entry $entry, RequestReview $review): RedirectResponse
+    {
+        $user = $request->user();
+        $review->handle(self::translation($entry, $request->input('locale')), $user instanceof Authorizable ? $user : null);
+
+        return back()->with('success', 'Sent for review. Those who can publish it have been told.');
     }
 
     public function unpublish(Request $request, Entry $entry, UnpublishEntry $unpublish): RedirectResponse
@@ -493,6 +509,14 @@ final class EntryController
         $titles = Blueprint::query()->whereIn('handle', $handles)->pluck('title', 'handle');
 
         return array_map(fn (string $handle): array => ['handle' => $handle, 'title' => is_string($titles[$handle] ?? null) ? $titles[$handle] : $handle], $handles);
+    }
+
+    /** A user's name, for "asked by" lines; null when they're gone. */
+    private static function userName(int $id): ?string
+    {
+        $name = app(Panel::class)->getUserModel()::query()->whereKey($id)->value('name');
+
+        return is_string($name) ? $name : null;
     }
 
     /** @return array<string, bool> what the user may do here: in the collection, with the entry in this language */
