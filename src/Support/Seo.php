@@ -255,6 +255,9 @@ final class Seo
     public static function forPage(?Page $page, ?string $title = null): array
     {
         return match (true) {
+            // An error page (404 and the like), even one raised after a page was found (a listing past its last
+            // page): not a page to index, nor the address's canonical, with no alternates.
+            self::isErrorPage() => self::tags(['noindex' => true], $title ?? '', false, null, [], app()->getLocale(), 'website', $title !== null),
             // The main language's page shown in another language: canonical to the main page, no hreflang links.
             $page?->entry !== null && $page->fallback => ['alternates' => []] + self::for($page->entry, $page->preview),
             $page?->entry !== null => self::for($page->entry, $page->preview),
@@ -263,8 +266,6 @@ final class Seo
             $page?->collection !== null => self::forListing($page->collection, $page->locale, $page->pageNumber),
             // Search results aren't pages to index.
             $page?->type === Page::SEARCH => self::tags(['noindex' => true], $title ?? 'Search', false, null, [], $page->locale, 'website', $title !== null),
-            // An error page (404 and the like): not a page to index, nor the address's canonical.
-            self::errorPage() => self::tags(['noindex' => true], $title ?? '', false, null, [], app()->getLocale(), 'website', $title !== null),
             default => self::tags([], $title ?? '', false, url()->current(), [], app()->getLocale(), 'website', $title !== null),
         };
     }
@@ -280,7 +281,12 @@ final class Seo
         request()->attributes->set('sunrice-cms.error-page', true);
     }
 
-    private static function errorPage(): bool
+    /**
+     * Whether the request shows an error page (see markErrorPage()).
+     *
+     * @internal
+     */
+    public static function isErrorPage(): bool
     {
         return request()->attributes->get('sunrice-cms.error-page') === true;
     }
