@@ -15,7 +15,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property string $from_path a path on the site, like /blog/old-title
  * @property string $to_url a path or a web address
- * @property int $status 301 (moved for good) or 302 (for now)
+ * @property int $status 301 (permanent) or 302 (temporary)
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  *

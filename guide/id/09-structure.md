@@ -91,7 +91,7 @@ Developer lalu memasang formulir di sebuah halaman. Isian pengunjung masuk ke Ko
 
 ## Pengalihan
 
-**Struktur → Pengalihan** menampilkan pengalihan yang dibuat saat alamat entri berubah, dan menerima pengalihan Anda sendiri: **Dari** alamat di situs (diawali `/`), **Ke** alamat di situs atau alamat web, **Pindah permanen (301)** atau **Sementara (302)**. Halaman yang tayang selalu menang atas pengalihan dari alamatnya.
+**Struktur → Pengalihan** menampilkan pengalihan yang dibuat saat alamat entri berubah, dan menerima pengalihan Anda sendiri: **Dari** alamat di situs (diawali `/`), **Ke** alamat di situs atau alamat web, dan **Jenis**: **Permanen (301)** atau **Sementara (302)**. Halaman yang tayang selalu menang atas pengalihan dari alamatnya.
 
 > [!TECHNICAL]
 > Struktur bisa diekspor dan diimpor antarsitus (`sunrice:export-structure`, `sunrice:import-structure`), dan field bisa diganti namanya dengan aman (`sunrice:rename-field`). Lihat [Structure tools](docs:cms/structure) dan [Fields](docs:cms/fields).

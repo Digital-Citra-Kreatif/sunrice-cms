@@ -24,6 +24,9 @@ final class RedirectResource extends Resource
 {
     protected static string $model = Redirect::class;
 
+    /** The redirect types, by HTTP status. */
+    private const TYPES = [301 => 'Permanent (301)', 302 => 'Temporary (302)'];
+
     public static function navigationGroup(): string
     {
         return 'Structure';
@@ -48,7 +51,7 @@ final class RedirectResource extends Resource
             TextInput::make('to_url')->label('To')->required()->maxLength(2048)->placeholder('/new-page')
                 ->rules([SafeUrl::rule()])
                 ->help('A path on this site, or a web address.'),
-            Select::make('status')->options(['301' => 'Moved for good (301)', '302' => 'For now (302)'])->required()->default('301'),
+            Select::make('status')->label('Type')->options(self::TYPES)->required()->default('301'),
         ]);
     }
 
@@ -58,7 +61,7 @@ final class RedirectResource extends Resource
             ->columns([
                 Column::make('from_path')->label('From')->searchable()->sortable(),
                 Column::make('to_url')->label('To')->searchable(),
-                Column::make('status'),
+                Column::make('status')->label('Type')->format(fn (string|int|float|bool|null $status): string => __(self::TYPES[(int) $status] ?? (string) $status)),
                 Column::make('updated_at')->label('Updated')->date('d/m/Y')->sortable(),
             ])
             ->defaultSort('from_path');

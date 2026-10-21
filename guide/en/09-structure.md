@@ -91,7 +91,7 @@ Your developer then puts the form on a page. What visitors send arrives under Co
 
 ## Redirects
 
-**Structure → Redirects** lists the redirects made when entries changed address, and takes your own: **From** a path on the site (starting with `/`), **To** a path or a web address, **Moved for good (301)** or **For now (302)**. A live page always wins over a redirect from its address.
+**Structure → Redirects** lists the redirects made when entries changed address, and takes your own: **From** a path on the site (starting with `/`), **To** a path or a web address, and the **Type**: **Permanent (301)** or **Temporary (302)**. A live page always wins over a redirect from its address.
 
 > [!TECHNICAL]
 > Structure can be exported and imported between sites (`sunrice:export-structure`, `sunrice:import-structure`), and fields renamed safely (`sunrice:rename-field`). See [Structure tools](docs:cms/structure) and [Fields](docs:cms/fields).
