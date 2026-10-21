@@ -5,7 +5,7 @@ import { adminUrl, t } from '@sunrice/admin-sdk';
 import {
     Button, Card, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DropdownMenu, DropdownMenuContent, DropdownMenuItem,
     DropdownMenuSeparator, DropdownMenuTrigger, Input, Label, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-    SortableHandle, type SortableHandleProps, SortableList, useBreadcrumbs,
+    SortableHandle, type SortableHandleProps, SortableList, TrashHint, useBreadcrumbs,
 } from '@sunrice/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { FieldError } from '@/components/FieldInput.tsx';
@@ -44,6 +44,8 @@ interface Props {
     } | null;
     /** Showing the trash. */
     trashed?: boolean;
+    /** Outside the trash, how many terms are in it. */
+    trashedCount?: number;
     taxonomies: { handle: string; title: string }[];
     terms: TermRow[];
     locales: string[];
@@ -59,7 +61,7 @@ function usedBySentence(usedBy: string[] = []): string {
     return ` ${usedBy.length > 5 ? t('It\'s used by :list and :count more.', { list, count: usedBy.length - 5 }) : t('It\'s used by :list.', { list })}`;
 }
 
-export default function TermsIndex({ taxonomy, taxonomies, terms, locales, locale, trashed = false }: Props) {
+export default function TermsIndex({ taxonomy, taxonomies, terms, locales, locale, trashed = false, trashedCount = 0 }: Props) {
     useBreadcrumbs([{ label: taxonomy ? taxonomy.title : t('Terms') }]);
     const [confirm, confirmDialog] = useConfirm();
     // The term being renamed.
@@ -209,7 +211,8 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
                 </div>
                 {rows.length === 0 ? (
                     <div className="cms:flex cms:flex-col cms:items-center cms:gap-3 cms:border-t cms:border-border/60 cms:p-10 cms:text-center cms:text-muted-foreground">
-                        {trashed ? t('The trash is empty.') : <>{t('No terms yet.')}<Button size="sm" asChild><Link href={`${base}/create?locale=${encodeURIComponent(locale)}`}><Plus /> {t('New term')}</Link></Button></>}
+                        {trashed ? t('The trash is empty.') : <>{t('No terms yet.')}<Button size="sm" asChild><Link href={`${base}/create?locale=${encodeURIComponent(locale)}`}><Plus /> {t('New term')}</Link></Button>
+                            <TrashHint count={trashedCount} onShow={() => router.get(base, { locale, status: 'trashed' })} /></>}
                     </div>
                 ) : found ? (
                     found.length === 0

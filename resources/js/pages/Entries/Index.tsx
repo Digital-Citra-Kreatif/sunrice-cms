@@ -9,7 +9,7 @@ import { adminUrl, t } from '@sunrice/admin-sdk';
 import {
     Badge, Button, Card, Checkbox, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel,
     DropdownMenuSeparator, DropdownMenuTrigger, Input, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table,
-    TableBody, TableCell, TableHead, TableHeader, TableRow, useBreadcrumbs, useTablePreferences,
+    TableBody, TableCell, TableHead, TableHeader, TableRow, TrashHint, useBreadcrumbs, useTablePreferences,
 } from '@sunrice/admin-sdk/ui';
 import { type EntryLocale, type EntryStatus, formatDate, localeName, statusLabel } from '@/lib/entries.ts';
 import {
@@ -75,6 +75,8 @@ interface Props {
     manualOrder?: boolean;
     perPageOptions?: number[];
     preferencesKey?: string;
+    /** Outside the trash, how many entries are in it. */
+    trashedCount?: number;
     can?: { create: boolean; update?: boolean; publish?: boolean; delete?: boolean; export?: boolean };
 }
 
@@ -104,7 +106,7 @@ export default function EntriesIndex(props: Props) {
 
 function EntryList({
     collection, collections, entries, query, columns = [], filters = { authors: [], taxonomies: [], locales: [] }, links = [],
-    manualOrder = false, perPageOptions = [10, 25, 50, 100], preferencesKey, can,
+    manualOrder = false, perPageOptions = [10, 25, 50, 100], preferencesKey, trashedCount = 0, can,
 }: Props & { collection: NonNullable<Props['collection']>; entries: NonNullable<Props['entries']>; query: EntryListQuery }) {
     const base = adminUrl(`cms/collections/${collection.handle}/entries`);
     const mainLocale = filters.locales[0] ?? query.locale;
@@ -281,6 +283,7 @@ function EntryList({
                             <TableRow className="cms:hover:bg-transparent">
                                 <TableCell colSpan={span} className="cms:h-32 cms:text-center cms:text-muted-foreground">
                                     <EmptyState trashed={trashed} filtered={activeFilters(trashed ? { ...query, status: '' } : query) > 0} canCreate={!!can?.create} createUrl={`${base}/create`} onClear={clearFilters} />
+                                    {!trashed && <div className="cms:mt-2"><TrashHint count={trashedCount} onShow={() => visit({ status: 'trashed' })} /></div>}
                                 </TableCell>
                             </TableRow>
                         )}

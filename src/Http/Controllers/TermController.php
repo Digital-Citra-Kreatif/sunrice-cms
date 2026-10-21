@@ -65,6 +65,8 @@ final class TermController
                 'collections' => $taxonomy->collections()->orderBy('title')->get(['sunrice_collections.handle', 'sunrice_collections.title'])
                     ->map(fn (Collection $collection): array => ['title' => $collection->title, 'url' => route('sunrice.admin.cms.collections.entries.index', $collection->handle)])->all()],
             'trashed' => $trashed,
+            // Outside the trash, how many are in it, for an empty list to say so.
+            'trashedCount' => $trashed ? 0 : Term::onlyTrashed()->where('taxonomy_id', $taxonomy->id)->count(),
             'taxonomies' => Taxonomy::query()->orderBy('title')->get()->filter(fn (Taxonomy $t): bool => Access::terms($request->user(), 'view', $t))->values()->map(fn (Taxonomy $t): array => ['handle' => $t->handle, 'title' => $t->title])->all(),
             'locales' => Locales::all(),
             'locale' => $locale,

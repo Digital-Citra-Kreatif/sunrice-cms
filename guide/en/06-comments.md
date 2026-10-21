@@ -6,7 +6,7 @@ Comments are switched on per collection by a site manager (Structure → Collect
 
 ## Moderating
 
-The tabs sort comments by state: **All** (waiting and approved), **Pending** (waiting for approval), **Approved**, **Spam** and **Trash**. Search the text, the name or the email, or filter by collection or by entry. Each comment shows its entry, the comment it answers (if it's a reply) and its language.
+The tabs sort comments by state: **All** (waiting and approved: everything but spam and the trash), **Pending** (waiting for approval), **Approved**, **Spam** and **Trash**. When a tab is empty but the trash isn't, it says so ("1 is in the trash."), with **Show the trash**; the entries, terms and other lists with a trash do the same. Search the text, the name or the email, or filter by collection or by entry. Each comment shows its entry, the comment it answers (if it's a reply) and its language.
 
 For each comment:
 

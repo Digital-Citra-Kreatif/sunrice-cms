@@ -6,7 +6,7 @@ Komentar dinyalakan per koleksi oleh pengelola situs (Struktur → Koleksi, *Izi
 
 ## Memoderasi
 
-Tab mengelompokkan komentar berdasarkan statusnya: **Semua** (menunggu dan disetujui), **Menunggu** (menunggu persetujuan), **Disetujui**, **Spam**, dan **Tempat sampah**. Cari berdasarkan teks, nama, atau email, atau saring per koleksi atau per entri. Setiap komentar menampilkan entrinya, komentar yang dibalasnya (jika berupa balasan), dan bahasanya.
+Tab mengelompokkan komentar berdasarkan statusnya: **Semua** (menunggu dan disetujui: semuanya kecuali spam dan tempat sampah), **Menunggu** (menunggu persetujuan), **Disetujui**, **Spam**, dan **Tempat sampah**. Jika sebuah tab kosong tetapi tempat sampah tidak, tab itu mengatakannya ("1 ada di tempat sampah."), dengan **Lihat tempat sampah**; daftar entri, term, dan daftar lain yang punya tempat sampah melakukan hal yang sama. Cari berdasarkan teks, nama, atau email, atau saring per koleksi atau per entri. Setiap komentar menampilkan entrinya, komentar yang dibalasnya (jika berupa balasan), dan bahasanya.
 
 Untuk setiap komentar:
 

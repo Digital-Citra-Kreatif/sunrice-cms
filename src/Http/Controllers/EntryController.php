@@ -96,6 +96,8 @@ final class EntryController
             'filters' => $list->filterOptions(),
             'links' => $list->links(),
             'manualOrder' => $list->inManualOrder(),
+            // Outside the trash, how many are in it, for an empty list to say so.
+            'trashedCount' => $list->state()['status'] === 'trashed' ? 0 : Entry::onlyTrashed()->where('collection_id', $collection->id)->count(),
             'perPageOptions' => EntryList::PER_PAGE,
             'preferencesKey' => EntryList::preferenceKey($collection),
             'can' => self::can($request, $collection),

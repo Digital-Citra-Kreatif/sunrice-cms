@@ -4,7 +4,7 @@ import { Check, ChevronLeft, ChevronRight, ExternalLink, MessageSquare, MessageS
 import { adminUrl, t } from '@sunrice/admin-sdk';
 import {
     Badge, Button, Card, Checkbox, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input, PageHeader, Select,
-    SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsList, TabsTrigger, Textarea, useBreadcrumbs,
+    SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsList, TabsTrigger, Textarea, TrashHint, useBreadcrumbs,
 } from '@sunrice/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { FieldError } from '@/components/FieldInput.tsx';
@@ -104,7 +104,7 @@ export default function CommentsIndex({ tab, counts, filters, collections, comme
 
             <Tabs value={tab} onValueChange={(value: string) => visit({ status: value as Tab })}>
                 <TabsList className="cms:h-auto cms:flex-wrap cms:justify-start">
-                    {tabs().map((each) => <TabsTrigger key={each.value} value={each.value}>{each.label} <span className="cms:ml-1 cms:text-muted-foreground">{counts[each.value]}</span></TabsTrigger>)}
+                    {tabs().map((each) => <TabsTrigger key={each.value} value={each.value} title={each.value === 'all' ? t('Everything but the trash') : undefined}>{each.label} <span className="cms:ml-1 cms:text-muted-foreground">{counts[each.value]}</span></TabsTrigger>)}
                 </TabsList>
             </Tabs>
 
@@ -132,6 +132,7 @@ export default function CommentsIndex({ tab, counts, filters, collections, comme
                 <div className="cms:flex cms:flex-col cms:items-center cms:gap-3 cms:rounded-xl cms:border cms:border-dashed cms:px-6 cms:py-16 cms:text-center">
                     <span className="cms:grid cms:size-10 cms:place-items-center cms:rounded-full cms:bg-muted cms:text-muted-foreground"><MessageSquare className="cms:size-4" /></span>
                     <p className="cms:text-sm cms:text-muted-foreground">{filters.search ? t('No comments match.') : t('No comments here.')}</p>
+                    {tab !== 'trashed' && <TrashHint count={counts.trashed ?? 0} onShow={() => visit({ status: 'trashed' })} />}
                 </div>
             ) : (
                 <Card className="cms:divide-y cms:p-0">
