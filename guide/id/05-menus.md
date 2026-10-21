@@ -20,7 +20,7 @@ Tombol di atas daftar menambahkan tautan ke:
 - **Label**: teks yang tampil, per bahasa. Untuk entri, term, dan halaman daftar, label boleh kosong (judulnya yang dipakai); **Link** membutuhkan label dalam bahasa utama, dan bahasa lain memakainya jika belum punya label sendiri.
 - **New tab**: membuka tautan di tab peramban baru. Gunakan untuk tautan ke situs web lain.
 - Seret tautan lewat pegangannya untuk mengubah posisinya di antara tautan setingkat (atau dengan papan ketik: fokus ke pegangan, tekan Spasi, pindahkan dengan tombol panah, tekan Spasi lagi).
-- **In a level** menempatkan tautan di bawah tautan di atasnya (sub-menu); **Out a level** mengembalikannya. Menu bisa sampai tiga tingkat.
+- **In a level** menempatkan tautan di bawah tautan di atasnya (sub-menu); **Out a level** mengeluarkannya (beserta isinya) dari sub-menu, tepat setelah sub-menu itu; tautan lain tetap di tempatnya. Menu bisa sampai tiga tingkat.
 - **Remove, with what's under it** menghapus tautan beserta sub-tautannya.
 
 Tautan ke entri yang tidak tayang di situs (draf, terjadwal, di tempat sampah) ditandai **Not on the site**: tetap ada di menu, tetapi pengunjung tidak melihatnya sampai entri tayang.
