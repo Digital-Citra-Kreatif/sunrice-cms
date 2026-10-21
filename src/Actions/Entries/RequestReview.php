@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
+use Sunrice\Admin\Actions\Permissions\SyncPermissions;
 use Sunrice\Admin\Activity\ActivityLog;
 use Sunrice\Admin\Panel;
 use Sunrice\Cms\Mail\ReviewRequested;
@@ -59,12 +60,18 @@ final class RequestReview
     {
         $collection = $translation->entry->collection;
         $addresses = [];
-        foreach (['cms.entries.publish', "cms.entries.{$collection->handle}.publish"] as $permission) {
+        // Users with the permission, directly or through a role (spatie/laravel-permission's scopes), and
+        // super admins, who may do everything without being given it (often a small site's only publisher).
+        $finders = [
+            fn (): mixed => app(Panel::class)->getUserModel()::query()->__call('permission', ['cms.entries.publish']),
+            fn (): mixed => app(Panel::class)->getUserModel()::query()->__call('permission', ["cms.entries.{$collection->handle}.publish"]),
+            fn (): mixed => app(Panel::class)->getUserModel()::query()->__call('role', [SyncPermissions::superAdminRole()]),
+        ];
+        foreach ($finders as $find) {
             try {
-                // Users with the permission, directly or through a role (spatie/laravel-permission's scope).
-                $users = app(Panel::class)->getUserModel()::query()->__call('permission', [$permission]);
+                $users = $find();
             } catch (Throwable) {
-                continue; // Nobody has this permission yet.
+                continue; // Nobody has this permission (or role) yet.
             }
             foreach ($users instanceof Builder ? $users->get() : [] as $user) {
                 $address = $user->getAttribute('email');

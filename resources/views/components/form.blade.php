@@ -49,8 +49,8 @@
             <div>
                 @if ($field->type === 'toggle')
                     <input type="hidden" name="data[{{ $field->handle }}]" value="0">
-                    <input type="checkbox" id="{{ $inputId }}" name="data[{{ $field->handle }}]" value="1" @checked((bool) $value) @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif @if ($fieldError) aria-invalid="true" @endif>
-                    <label for="{{ $inputId }}">{{ $label }}</label>
+                    <input type="checkbox" id="{{ $inputId }}" name="data[{{ $field->handle }}]" value="1" @checked((bool) $value) @required($field->required) @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif @if ($fieldError) aria-invalid="true" @endif>
+                    <label for="{{ $inputId }}">{{ $label }}@if ($field->required) <span aria-hidden="true">*</span>@endif</label>
                 @else
                     <label for="{{ $inputId }}">{{ $label }}@if ($field->required) <span aria-hidden="true">*</span>@endif</label>
                     @if ($field->type === 'textarea')

@@ -20,7 +20,7 @@ use Sunrice\Admin\Support\Card;
 use Sunrice\Cms\Actions\Cache\PreloadCache;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Site\PageCache;
-use Sunrice\Cms\Site\PageCacheHasher;
+use Sunrice\Cms\Site\PageCacheQuery;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\SiteCache;
 
@@ -73,8 +73,8 @@ final class CacheSettings extends Settings
     /** Query parameters that make a kept page of their own, one per line, besides `sunrice-cms.cache.query`. */
     public string $query = '';
 
-    /** What other query parameters do: IGNORE or SKIP. */
-    public string $otherQuery = self::IGNORE;
+    /** What other query parameters do: SKIP (the default: a filter not listed above still works) or IGNORE. */
+    public string $otherQuery = self::SKIP;
 
     /** Parameters ignored even with SKIP, one per line; `*` for any characters ("utm_*"). */
     public string $ignore = self::TRACKING;
@@ -136,9 +136,9 @@ final class CacheSettings extends Settings
                         ? 'Parameters templates read (a filter, a sort, a tab). ?page= always counts.'
                         : __('Parameters templates read (a filter, a sort, a tab). ?page= always counts, and so do :names (set up by the developer).', ['names' => implode(', ', self::configuredQuery())])),
                 Select::make('otherQuery')->label('Any other parameter')->required()->disabled($off)->options([
-                    self::IGNORE => 'Ignore it: visitors get the kept page',
                     self::SKIP => 'Skip the cache: the page is rendered afresh and not kept',
-                ])->help('Ignoring is faster. Skip the cache when templates read parameters that aren\'t listed above.'),
+                    self::IGNORE => 'Ignore it: visitors get the kept page',
+                ])->help('Skipping keeps filters and sorts working even when they aren\'t listed above. Ignore only when no template reads other parameters: an address with one gets the page without it.'),
                 ListInput::make('ignore')->label('Parameters always ignored')->addLabel('Add parameter')->max(50)->maxLength(2000)->placeholder('utm_*')->disabled($off)
                     ->showWhen('otherQuery', self::SKIP)
                     ->rules([self::listRule(fn (string $name): ?string => self::parameterProblem($name, true))])
@@ -363,7 +363,7 @@ final class CacheSettings extends Settings
     /** @return list<string> */
     private static function configuredQuery(): array
     {
-        return array_values(array_diff(PageCacheHasher::configuredQuery(), PageCacheHasher::QUERY));
+        return array_values(array_diff(PageCacheQuery::configuredQuery(), PageCacheQuery::QUERY));
     }
 
     private static function storeName(mixed $store): string

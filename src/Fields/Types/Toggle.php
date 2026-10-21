@@ -7,7 +7,7 @@ namespace Sunrice\Cms\Fields\Types;
 use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\FieldType;
 
-/** On or off. Settings: default. */
+/** On or off; a required one must be on (a form's consent box). Settings: default. */
 final class Toggle extends FieldType
 {
     public function type(): string
@@ -17,7 +17,8 @@ final class Toggle extends FieldType
 
     public function rules(Field $field): array
     {
-        return ['boolean'];
+        // "Required" can only mean ticked: off is a value too.
+        return $field->required ? ['accepted'] : ['boolean'];
     }
 
     public function defaultValue(Field $field): mixed

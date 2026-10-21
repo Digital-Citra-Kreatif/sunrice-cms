@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Sunrice\Cms\Structure;
 
 use Closure;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use InvalidArgumentException;
 use Spatie\Permission\PermissionRegistrar;
 use Sunrice\Cms\Actions\Blueprints\SaveBlueprint;
 use Sunrice\Cms\Actions\Collections\SaveCollection;
@@ -49,6 +51,7 @@ use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\SafeUrl;
 use Sunrice\Cms\Support\Seo;
 use Sunrice\Cms\Support\StructuredData;
+use Throwable;
 
 /**
  * Creates or updates, by handle, the structure a file describes (the
@@ -180,7 +183,7 @@ final class StructureImporter
             $this->each('menu', $section('menus'), fn (array $item) => $this->menu($item));
             $this->each('redirect', $section('redirects'), fn (array $item) => $this->redirect($item));
             $dryRun ? DB::rollBack() : DB::commit();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             DB::rollBack();
             $this->forget();
 
@@ -539,11 +542,11 @@ final class StructureImporter
                 $saved = app(SaveDraft::class)->handle(app(CreateTranslation::class)->handle($entry, $locale), $input);
             }
             if (($translation['published'] ?? false) === true) {
-                $publish[] = $saved;
+                $publish[] = [$saved, self::publishDate($translation)];
             }
         }
-        foreach ($publish as $translation) {
-            app(PublishEntry::class)->handle($translation->fresh() ?? $translation);
+        foreach ($publish as [$translation, $at]) {
+            app(PublishEntry::class)->handle($translation->fresh() ?? $translation, $at);
         }
         if ($entry !== null) {
             $created[$label] = $entry;
@@ -577,10 +580,30 @@ final class StructureImporter
             }
             $saved = app(SaveDraft::class)->handle($saved, ['title' => $translation['title'] ?? null, 'slug' => $translation['slug'] ?? null, ...self::content($this->resolved($translation['data'], $notes))]);
             if (($translation['published'] ?? false) === true) {
-                app(PublishEntry::class)->handle($saved->fresh() ?? $saved);
+                app(PublishEntry::class)->handle($saved->fresh() ?? $saved, self::publishDate($translation));
             }
         }
         $entry->unsetRelation('translations');
+    }
+
+    /**
+     * A translation's `published_at` in the file (a post's date, or the one it's scheduled for); null: published now.
+     *
+     * @param  array<mixed>  $translation
+     *
+     * @throws ValidationException when it isn't a date
+     */
+    private static function publishDate(array $translation): ?Carbon
+    {
+        $at = $translation['published_at'] ?? null;
+        if ($at === null || $at === '') {
+            return null;
+        }
+        try {
+            return is_string($at) ? Carbon::parse($at) : throw new InvalidArgumentException;
+        } catch (Throwable) {
+            throw ValidationException::withMessages(['published_at' => 'published_at must be a date, like 2026-10-21T09:00:00+07:00.']);
+        }
     }
 
     /**

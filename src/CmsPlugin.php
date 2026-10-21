@@ -92,8 +92,9 @@ final class CmsPlugin extends BasePlugin
         $panel->contentLocales(fn (): array => Locales::names());
         // Every screen names the languages as Settings → Languages does.
         $panel->share('cms', fn (): array => ['locales' => Locales::names()]);
-        // sunrice:roles: people who write and look after the content, not the structure or the people.
-        $panel->defaultRole('editor', [Panel::ACCESS, 'sunrice.media.*', 'cms.entries.*', 'cms.terms.*', 'cms.globals.view', 'cms.globals.update', 'cms.menus.view', 'cms.menus.update', 'cms.comments.*', 'cms.submissions.view', 'cms.submissions.export', 'cms.homepage']);
+        // sunrice:roles: people who write and look after the content, not the structure or the people,
+        // nor form submissions (visitors' personal details): those are given per form.
+        $panel->defaultRole('editor', [Panel::ACCESS, 'sunrice.media.*', 'cms.entries.*', 'cms.terms.*', 'cms.globals.view', 'cms.globals.update', 'cms.menus.view', 'cms.menus.update', 'cms.comments.*', 'cms.homepage']);
         // Writes entries, publishes nothing, and edits only their own.
         $panel->defaultRole('author', [Panel::ACCESS, 'sunrice.media.view', 'sunrice.media.upload', 'cms.entries.view', 'cms.entries.create', 'cms.entries.update-own', 'cms.entries.delete-own', 'cms.entries.view-drafts']);
         // Writes the other languages of every entry.

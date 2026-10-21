@@ -35,7 +35,7 @@ abstract class PageNumberWatch extends AbstractPaginator
                 $request = app('request');
                 if ($pageName === 'page') {
                     $request->attributes->set(PageCache::PAGINATED, true);
-                } elseif (PageCacheHasher::plainPageNumber($request->query($pageName))) {
+                } elseif (PageCacheQuery::plainPageNumber($request->query($pageName))) {
                     // Another page name in cache.query ("listings"): read, so it may tell kept pages apart.
                     app(PageCache::class)->read($pageName, $request);
                 }

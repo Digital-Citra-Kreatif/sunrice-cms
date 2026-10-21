@@ -36,7 +36,7 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 | `textarea` | a string | the string | `rows`, `max` |
 | `rich_text` | HTML, cleaned on save | the HTML | |
 | `number` | a number | the number | `min`, `max`, `step` (1 for whole numbers), `default` |
-| `toggle` | true or false | the boolean | `default` |
+| `toggle` | true or false | the boolean | `default`; a required toggle must be on (a form's consent box: `accepted`) |
 | `select` | a value, or a list with `multiple` | the same | `options` (`[{value, label}]`), `multiple`, `default` |
 | `date` | `2026-10-19`, or `2026-10-19T14:30:00` with `time` | a Carbon | `time`; `future` (*Today or later only*: earlier days are refused with `sunrice-cms::site.forms.today_or_later`, "The Preferred date must be today or a later date.", and a form's date input gets `min`) |
 | `link` | `{type: url, url, label, new_tab}` or `{type: entry, entry_id, label, new_tab}` | `{type, url, label, title, new_tab}`, or null | `collections` (entry links; none: any) |

@@ -1132,5 +1132,6 @@
     "the collection \":title\" (one of its other blueprints)": "koleksi \":title\" (salah satu blueprint lainnya)",
     "{1} an entry of \":title\"|[2,*] :count entries of \":title\"": "{1} sebuah entri di \":title\"|[2,*] :count entri di \":title\"",
     "Entries nest at most :max deep, counting the ones under this entry.": "Entri bersarang paling dalam :max tingkat, termasuk entri di bawah entri ini.",
-    "Put the * after a / (like /journal/*).": "Letakkan * setelah / (seperti /journal/*)."
+    "Put the * after a / (like /journal/*).": "Letakkan * setelah / (seperti /journal/*).",
+    "Skipping keeps filters and sorts working even when they aren't listed above. Ignore only when no template reads other parameters: an address with one gets the page without it.": "Melewati cache membuat filter dan urutan tetap berfungsi walau tidak tercantum di atas. Abaikan hanya bila tidak ada templat yang membaca parameter lain: alamat dengan parameter itu mendapat halaman tanpanya."
 }

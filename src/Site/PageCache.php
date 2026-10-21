@@ -147,7 +147,7 @@ final class PageCache
             }
         }
         // ?page=abc reads as page 1: kept apart it would be a copy, kept as page 1 a wrong page for some paginator.
-        if ($request->query->has('page') && ! PageCacheHasher::plainPageNumber($request->query('page'))) {
+        if ($request->query->has('page') && ! PageCacheQuery::plainPageNumber($request->query('page'))) {
             return false;
         }
         if ($this->excluded($request) || $this->otherQuery($request)) {
@@ -171,8 +171,8 @@ final class PageCache
         // A `cache.query` parameter the page didn't read (or read a value it doesn't have): as many copies as values.
         return $page?->type !== Page::SEARCH && $page?->preview !== true
             && $request->attributes->get(self::DONT_KEEP) !== true
-            && (PageCacheHasher::pageNumber($request) === null || $request->attributes->get(self::PAGINATED) === true)
-            && $this->unread($request) === []
+            && (PageCacheQuery::pageNumber($request) === null || $request->attributes->get(self::PAGINATED) === true)
+            && $this->unread($request) === [] && $this->readUnkept($request) === []
             && ! app(CacheSettings::class)->excludesCollection($page?->collection?->handle)
             && $this->lifetime($request, $page) !== 0 && ! $this->skipped($request, $page);
     }
@@ -184,7 +184,7 @@ final class PageCache
         if (! $settings->skipsOtherQuery()) {
             return false;
         }
-        $known = PageCacheHasher::query();
+        $known = PageCacheQuery::query();
         foreach (array_keys($request->query->all()) as $name) {
             if (! in_array((string) $name, $known, true) && ! $settings->ignores((string) $name)) {
                 return true;
@@ -223,8 +223,25 @@ final class PageCache
         $read = $request->attributes->get(self::READ, []);
         $read = is_array($read) ? $read : [];
 
-        return array_values(array_filter(PageCacheHasher::query(), fn (string $name): bool => $name !== 'page'
-            && PageCacheHasher::given($request->query($name)) && ! in_array($name, $read, true)));
+        return array_values(array_filter(PageCacheQuery::query(), fn (string $name): bool => $name !== 'page'
+            && PageCacheQuery::given($request->query($name)) && ! in_array($name, $read, true)));
+    }
+
+    /**
+     * The parameters the page read (read()) that have a value in the
+     * address but don't tell kept pages apart: kept, the filtered page
+     * would be served for the address without them (an entry filter whose
+     * parameter isn't in Settings → Cache's list, with "Ignore it").
+     *
+     * @return list<string>
+     */
+    public function readUnkept(Request $request): array
+    {
+        $read = $request->attributes->get(self::READ, []);
+        $keyed = PageCacheQuery::query();
+
+        return array_values(array_unique(array_filter(is_array($read) ? $read : [], fn (mixed $name): bool => is_string($name)
+            && ! in_array($name, $keyed, true) && PageCacheQuery::given($request->query($name)))));
     }
 
     /**

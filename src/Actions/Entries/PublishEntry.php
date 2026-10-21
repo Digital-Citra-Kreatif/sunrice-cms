@@ -50,15 +50,22 @@ final class PublishEntry
 
         // The slug check and the write in one transaction: see EntryInput::write().
         $values = EntryInput::write(function () use ($translation, $publishAt, $site, $oldPath, $oldSlug): array {
+            // As SaveDraft does: validated with the main language's shared values in rows and blocks, which ownData() drops again.
+            $data = $translation->draft_data;
+            $main = $translation->entry->mainTranslation();
+            if ($main !== null && ! $main->is($translation)) {
+                $data = $translation->entry->schema()->withShared($data, $main->draft_data);
+            }
             $values = EntryInput::validate(
                 $translation->editableSchema(),
                 $translation->draft_title,
                 $translation->draft_slug,
-                $translation->draft_data,
+                $data,
                 $translation->collection_id,
                 $translation->locale,
                 $translation->id,
             );
+            $values['data'] = $translation->ownData($values['data']);
             $translation->fill([
                 'status' => EntryTranslation::PUBLISHED,
                 'title' => $values['title'],

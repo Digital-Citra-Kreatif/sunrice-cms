@@ -126,6 +126,8 @@ final class StructureExporter
                     ...($entry->blueprint === null ? [] : ['blueprint' => $entry->blueprint]),
                     'translations' => (object) $entry->translations->sortBy('locale')->mapWithKeys(fn (EntryTranslation $t): array => [$t->locale => [
                         'title' => $t->draft_title, 'slug' => $t->draft_slug, 'data' => $this->references->portable($entry->schema(), $t->draft_data), 'published' => $t->isPublished(),
+                        // Its date (a post's, or the one it's scheduled for), so a moved site keeps them.
+                        ...($t->isPublished() && $t->published_at !== null ? ['published_at' => $t->published_at->toIso8601String()] : []),
                     ]])->all(),
                 ];
             });

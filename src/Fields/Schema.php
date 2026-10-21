@@ -261,11 +261,11 @@ final class Schema
 
     /**
      * @param  list<mixed>  $rules
-     * @return list<mixed> the rules with "required" (and its variants) made "nullable"
+     * @return list<mixed> the rules with "required" (and its variants) made "nullable", and a required toggle's "accepted" "boolean"
      */
     private static function optional(array $rules): array
     {
-        return array_map(fn (mixed $rule): mixed => is_string($rule) && str_starts_with($rule, 'required') ? 'nullable' : $rule, $rules);
+        return array_map(fn (mixed $rule): mixed => is_string($rule) && str_starts_with($rule, 'required') ? 'nullable' : ($rule === 'accepted' ? 'boolean' : $rule), $rules);
     }
 
     /**
