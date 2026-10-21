@@ -696,10 +696,10 @@ function CompareDialog({ entryId, revision, onClose, dirty }: { entryId: number;
                                 <dt className="cms:font-medium">{field.label}</dt>
                                 <dd className="cms:grid cms:gap-2 cms:sm:grid-cols-2">
                                     <div className="cms:rounded-md cms:border cms:border-destructive/30 cms:bg-destructive/5 cms:p-2 cms:break-words cms:whitespace-pre-wrap">
-                                        <span className="cms:block cms:text-xs cms:text-muted-foreground">This version</span>{field.revision || '—'}
+                                        <span className="cms:block cms:text-xs cms:text-muted-foreground">{t('This version')}</span>{field.revision || '—'}
                                     </div>
                                     <div className="cms:rounded-md cms:border cms:border-emerald-500/30 cms:bg-emerald-500/5 cms:p-2 cms:break-words cms:whitespace-pre-wrap">
-                                        <span className="cms:block cms:text-xs cms:text-muted-foreground">Draft</span>{field.draft || '—'}
+                                        <span className="cms:block cms:text-xs cms:text-muted-foreground">{t('Draft')}</span>{field.draft || '—'}
                                     </div>
                                 </dd>
                             </div>

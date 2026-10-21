@@ -923,5 +923,6 @@
     ":title duplicated as :copy, below it.": ":title diduplikat menjadi :copy, di bawahnya.",
     ":label (copy)": ":label (salinan)",
     "One value shared by every language.": "Satu nilai dipakai bersama semua bahasa.",
-    "Content saved under :old won't show under :new, and templates reading :old get nothing. To rename it with its content: put back :old, save, then run :command.": "Konten yang disimpan dengan :old tidak akan tampil dengan :new, dan template yang membaca :old tidak mendapat apa-apa. Untuk mengganti namanya beserta kontennya: kembalikan :old, simpan, lalu jalankan :command."
+    "Content saved under :old won't show under :new, and templates reading :old get nothing. To rename it with its content: put back :old, save, then run :command.": "Konten yang disimpan dengan :old tidak akan tampil dengan :new, dan template yang membaca :old tidak mendapat apa-apa. Untuk mengganti namanya beserta kontennya: kembalikan :old, simpan, lalu jalankan :command.",
+    "This version": "Versi ini"
 }

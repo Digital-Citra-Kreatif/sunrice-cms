@@ -16,7 +16,7 @@ use Sunrice\Cms\Support\FieldText;
 /**
  * Field values as text for the entries CSV (EntryList::export()): what an
  * editor reads, not how it's stored. Links are their address, terms and
- * linked entries their titles, rich text plain text with a line per
+ * linked entries their titles, media their file names (when given), rich text plain text with a line per
  * paragraph, heading or list item. Groups, repeater rows and flexible
  * blocks are "Label: value" pairs (a row or block per line), without the
  * keys Sunrice keeps for itself (_id, _key, _hidden); a row or block
@@ -31,11 +31,13 @@ final class ExportText
     /**
      * @param  array<int, string>  $entries  linked entries' titles, by id
      * @param  array<int, string>  $terms  terms' titles, by id
+     * @param  array<int, string>  $media  files' names, by id (without them, media fields give their ids)
      */
     public function __construct(
         private readonly array $entries,
         private readonly array $terms,
         private readonly HydrationContext $context,
+        private readonly array $media = [],
     ) {}
 
     public function text(mixed $value, Field $field, Schema $schema, int $depth = 0): string
@@ -48,11 +50,18 @@ final class ExportText
             'rich_text' => self::plain($value),
             'terms' => self::titles($value, $this->terms),
             'entries' => self::titles($value, $this->entries),
+            'media' => $this->media === [] ? FieldText::text($value, $field) : self::titles($value, $this->media),
             'group' => is_array($value) && $depth < self::MAX_DEPTH ? $this->row($value, Schema::children($field, $schema->depth()), $depth + 1) : '',
             'repeater' => $depth < self::MAX_DEPTH ? $this->rows($value, Schema::children($field, $schema->depth()), $depth + 1) : '',
             'flexible' => $depth < self::MAX_DEPTH ? $this->blocks($value, $schema->depth(), $depth + 1) : '',
             default => FieldText::text($value, $field),
         };
+    }
+
+    /** Files by name (one id or several), as given to the constructor. */
+    public function files(mixed $value): string
+    {
+        return self::titles($value, $this->media);
     }
 
     /** Rich text without its tags: a line per paragraph, heading, list item or line break. */
