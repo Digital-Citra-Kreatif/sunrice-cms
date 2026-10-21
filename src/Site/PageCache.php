@@ -6,12 +6,15 @@ namespace Sunrice\Cms\Site;
 
 use Closure;
 use Illuminate\Http\Request;
+use Spatie\ResponseCache\Middlewares\CacheResponse;
+use Spatie\ResponseCache\Replacers\CsrfTokenReplacer;
 use Sunrice\Admin\Panel;
+use Sunrice\Cms\Settings\CacheSettings;
 use Sunrice\Cms\Support\SiteCache;
 
 /**
- * The whole-page cache (`sunrice-cms.cache.pages`, with
- * spatie/laravel-responsecache): site pages rendered once and kept until
+ * The whole-page cache (Settings → Cache, else `sunrice-cms.cache.pages`,
+ * with spatie/laravel-responsecache): site pages rendered once and kept until
  * the content changes, for visitors who aren't signed in. Forms keep
  * working: each visitor gets their own CSRF token in a kept page.
  *
@@ -22,13 +25,16 @@ use Sunrice\Cms\Support\SiteCache;
  * page is a 404), pages that aren't a plain 200, a page whose rendering
  * called dontKeep() (an entry filter given a value it ignores or one of
  * any number or text), a `cache.query` parameter the page didn't read()
- * (an entry filter reads the values among its terms and options), and
- * what skipWhen() says:
+ * (an entry filter reads the values among its terms and options), what
+ * Settings → Cache leaves out (addresses, collections, and with "skip the
+ * cache" any query parameter that isn't listed or ignored: see
+ * CacheSettings), and what skipWhen() says:
  *
  *     app(PageCache::class)->skipWhen(fn (Request $request, ?Page $page): bool =>
  *         $request->cookies->has('cart') || $page?->collection?->handle === 'products');
  *
- * How long a page is kept: `sunrice-cms.cache.ttl` at most, shorter when
+ * How long a page is kept: Settings → Cache's minutes, else
+ * `sunrice-cms.cache.ttl`, at most, shorter when
  * lifetimeUsing() says (the shortest answer wins; 0 keeps nothing):
  *
  *     app(PageCache::class)->lifetimeUsing(fn (Request $request, ?Page $page): ?int =>
@@ -62,9 +68,41 @@ final class PageCache
     /** @var list<Closure(Request, ?Page): ?int> */
     private array $lifetimes = [];
 
+    /** Whether whole pages are kept: it can be (unavailable() is null) and Settings → Cache (else the config) says so. */
     public static function enabled(): bool
     {
+        return self::unavailable() === null && app(CacheSettings::class)->pagesOn();
+    }
+
+    /**
+     * Why whole pages can't be kept on this server, for developers, or
+     * null when they can: the site's cache is off, spatie/laravel-responsecache
+     * isn't installed or is turned off, or its CSRF token replacer is
+     * missing.
+     */
+    public static function unavailable(): ?string
+    {
+        $replacers = config('responsecache.replacers', []);
+
+        return match (true) {
+            ! SiteCache::enabled() => 'The site\'s cache is turned off (SUNRICE_CACHE=false in the app\'s .env, config sunrice-cms.cache.enabled).',
+            ! class_exists(CacheResponse::class) => 'The whole-page cache needs spatie/laravel-responsecache: composer require spatie/laravel-responsecache',
+            ! filter_var(config('responsecache.enabled', true), FILTER_VALIDATE_BOOL) => 'spatie/laravel-responsecache is turned off (RESPONSE_CACHE_ENABLED=false in the app\'s .env, config responsecache.enabled).',
+            ! is_array($replacers) || ! in_array(CsrfTokenReplacer::class, $replacers, true) => 'Kept pages need '.CsrfTokenReplacer::class.' in responsecache.replacers (config/responsecache.php), to give each visitor their own CSRF token.',
+            default => null,
+        };
+    }
+
+    /** @internal Whether `sunrice-cms.cache.pages` turns whole pages on (what boot checks, without reading settings). */
+    public static function configured(): bool
+    {
         return SiteCache::enabled() && filter_var(config('sunrice-cms.cache.pages', false), FILTER_VALIDATE_BOOL);
+    }
+
+    /** Whether Settings → Cache leaves an address out: its path matches an excluded pattern. */
+    public function excluded(Request $request): bool
+    {
+        return app(CacheSettings::class)->excludesPath($request->getPathInfo());
     }
 
     /** @param Closure(Request, ?Page): bool $skip true: don't serve this page from the cache, or keep it */
@@ -112,6 +150,9 @@ final class PageCache
         if ($request->query->has('page') && ! PageCacheHasher::plainPageNumber($request->query('page'))) {
             return false;
         }
+        if ($this->excluded($request) || $this->otherQuery($request)) {
+            return false;
+        }
         if ($request->hasSession()) {
             $session = $request->session();
             if ($session->has('errors') || $session->get('_flash.old', []) !== [] || $session->hasOldInput()) {
@@ -132,7 +173,25 @@ final class PageCache
             && $request->attributes->get(self::DONT_KEEP) !== true
             && (PageCacheHasher::pageNumber($request) === null || $request->attributes->get(self::PAGINATED) === true)
             && $this->unread($request) === []
+            && ! app(CacheSettings::class)->excludesCollection($page?->collection?->handle)
             && $this->lifetime($request, $page) !== 0 && ! $this->skipped($request, $page);
+    }
+
+    /** With "skip the cache" (Settings → Cache): a query parameter that's neither listed nor ignored. */
+    private function otherQuery(Request $request): bool
+    {
+        $settings = app(CacheSettings::class);
+        if (! $settings->skipsOtherQuery()) {
+            return false;
+        }
+        $known = PageCacheHasher::query();
+        foreach (array_keys($request->query->all()) as $name) {
+            if (! in_array((string) $name, $known, true) && ! $settings->ignores((string) $name)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

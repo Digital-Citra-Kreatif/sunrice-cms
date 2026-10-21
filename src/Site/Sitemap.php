@@ -155,6 +155,44 @@ final class Sitemap
     }
 
     /**
+     * The sitemap's pages, one language each (all, or `$locale`), as full
+     * addresses on APP_URL with their collection's handle (null for term
+     * pages): what the page cache preloads (PreloadCache). Entry pages,
+     * term pages and listing pages (their first page), but those that ask
+     * not to be indexed.
+     *
+     * @return Generator<int, array{url: string, collection: string|null}>
+     */
+    public function pages(?string $locale = null): Generator
+    {
+        $routed = Collection::query()->whereNotNull('route')->pluck('handle', 'id');
+        $translations = EntryTranslation::query()->live()->with('entry.collection')->whereIn('collection_id', $routed->keys())
+            ->when($locale !== null, fn ($q) => $q->where('locale', $locale))->lazyById(500);
+        foreach ($translations as $translation) {
+            if (! Seo::noindex($translation) && ($url = app(Site::class)->url($translation)) !== null) {
+                $handle = $routed->get($translation->collection_id);
+                yield ['url' => AppUrl::url($url), 'collection' => is_string($handle) ? $handle : null];
+            }
+        }
+        $taxonomies = Taxonomy::query()->whereNotNull('route')->pluck('id');
+        $terms = TermTranslation::query()->whereIn('taxonomy_id', $taxonomies)->whereHas('term', fn ($q) => $q->withoutTrashed())
+            ->when($locale !== null, fn ($q) => $q->where('locale', $locale))->with('term.taxonomy')->lazyById(500);
+        foreach ($terms as $term) {
+            $seo = $term->data[Seo::KEY] ?? null;
+            if (! (is_array($seo) && ($seo['noindex'] ?? false) === true) && ($url = $term->url()) !== null) {
+                yield ['url' => AppUrl::url($url), 'collection' => null];
+            }
+        }
+        foreach (Collection::query()->whereNotNull('listing_route')->orderBy('id')->get() as $collection) {
+            foreach (Locales::all() as $code) {
+                if (($locale === null || $locale === $code) && ($url = $collection->listingUrl($code)) !== null) {
+                    yield ['url' => AppUrl::url($url), 'collection' => $collection->handle];
+                }
+            }
+        }
+    }
+
+    /**
      * A page's other languages (and x-default) as hreflang links.
      *
      * @param  array<string, string>  $alternates

@@ -5,6 +5,7 @@ The CMS's Artisan commands. The panel's own (installing, roles and permissions, 
 | Command | What it does |
 | --- | --- |
 | `sunrice:publish-scheduled` | Announces entries whose scheduled publish time came: clears the site's caches and fires `EntryPublished` (`scheduled`). The scheduler runs it every minute; see [caching](caching.md). |
+| `sunrice:cache-preload [--limit=] [--locale=] [--now]` | Preloads the whole-page cache with the site's pages (the sitemap's, but those Settings → Cache leaves out), in queued jobs, or here and now with `--now`; `--limit` caps the pages, `--locale` keeps to one language. Refused while a preload runs or whole pages aren't kept. The scheduler runs it hourly or daily when Settings → Cache says so; see [preloading](caching.md#preloading). |
 | `sunrice:rename-field {definition} {old} {new} [--dry-run]` | Renames a blueprint's or fieldset's field (`fieldset:cta`, dot paths like `hero.title`) and moves the values stored under it. See [renaming a field](structure.md#renaming-a-field). |
 | `sunrice:references [--dry-run]` | Rebuilds which entries and terms content points at (entries, terms, global sets; drafts and live versions) and which media files it uses, from what is stored, in chunks; reports the counts. See [references](structure.md#references). |
 | `sunrice:export-structure {file} [--entries]` | Writes fieldsets, blueprints, collections (with listing pages), taxonomies, global sets, forms, menus and redirects as JSON; `--entries` adds terms, entries and global values. |

@@ -70,6 +70,8 @@ final class CmsServiceProvider extends ServiceProvider
         $this->app->scoped(Support\SiteCache::class);
         // Read by Locales all the time: once per request.
         $this->app->scoped(Settings\LocaleSettings::class);
+        // Read by the page cache on every request, and by SiteCache::ttl().
+        $this->app->scoped(Settings\CacheSettings::class);
         $this->app->singleton(Site\PageCache::class);
         $this->app->singleton(Site\SiteHooks::class);
         // Indonesian for Laravel's own lines the app hasn't got, read as they're needed.
@@ -143,6 +145,18 @@ final class CmsServiceProvider extends ServiceProvider
                 app(Support\SiteCache::class)->changed('languages');
             }
         });
+        // Settings → Cache: read again, and nothing kept before is read again (ContentWatch).
+        Event::listen(SettingsSaved::class, function (SettingsSaved $event): void {
+            if ($event->section === Settings\CacheSettings::key()) {
+                app()->forgetInstance(Settings\CacheSettings::class);
+            }
+        });
+        // Settings → Cache → Preload after content changes (not after clearing: ClearCache says).
+        Event::listen(Events\ContentChanged::class, function (Events\ContentChanged $event): void {
+            if ($event->what !== Actions\Cache\ClearCache::CHANGE && app(Settings\CacheSettings::class)->preloadAfterChanges) {
+                app(Actions\Cache\PreloadCache::class)->soon();
+            }
+        });
         // Code on every page is a way in: changing it is a security event, and alerts.
         Event::listen(SettingsSaved::class, function (SettingsSaved $event): void {
             if ($event->section === Settings\CodeSettings::key() && $event->changed !== []) {
@@ -155,10 +169,13 @@ final class CmsServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 Console\PublishScheduledCommand::class, Console\RenameFieldCommand::class, Console\ExportStructureCommand::class, Console\ImportStructureCommand::class,
-                Console\OrphansCommand::class, Console\ReferencesCommand::class, Console\DemoContentCommand::class, Console\SwitchMainLanguageCommand::class, Console\TranslateCommand::class,
+                Console\OrphansCommand::class, Console\ReferencesCommand::class, Console\DemoContentCommand::class, Console\SwitchMainLanguageCommand::class, Console\TranslateCommand::class, Console\CachePreloadCommand::class,
             ]);
             $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
                 $schedule->command('sunrice:publish-scheduled')->everyMinute()->withoutOverlapping();
+                // Settings → Cache → Preload on a schedule (read when the scheduler runs).
+                $schedule->command('sunrice:cache-preload')->hourly()->when(fn (): bool => app(Settings\CacheSettings::class)->preloadSchedule === Settings\CacheSettings::HOURLY);
+                $schedule->command('sunrice:cache-preload')->daily()->when(fn (): bool => app(Settings\CacheSettings::class)->preloadSchedule === Settings\CacheSettings::DAILY);
                 // Old form submissions and their files (sunrice-cms.forms.prune_after_days).
                 $schedule->command('model:prune', ['--model' => [Models\Submission::class, Models\Comment::class]])->daily();
             });
@@ -178,7 +195,7 @@ final class CmsServiceProvider extends ServiceProvider
     private function pageCache(): void
     {
         if (! class_exists(CacheResponse::class)) {
-            if (Site\PageCache::enabled()) {
+            if (Site\PageCache::configured()) {
                 throw new RuntimeException('sunrice-cms.cache.pages needs spatie/laravel-responsecache: composer require spatie/laravel-responsecache');
             }
 
@@ -201,7 +218,7 @@ final class CmsServiceProvider extends ServiceProvider
         if (is_array($replacers) && ! in_array(Site\HoneypotReplacer::class, $replacers, true)) {
             config(['responsecache.replacers' => [...$replacers, Site\HoneypotReplacer::class]]);
         }
-        if (Site\PageCache::enabled() && (! is_array($replacers) || ! in_array(CsrfTokenReplacer::class, $replacers, true))) {
+        if (Site\PageCache::configured() && (! is_array($replacers) || ! in_array(CsrfTokenReplacer::class, $replacers, true))) {
             throw new PanelMisconfigured('sunrice-cms.cache.pages needs '.CsrfTokenReplacer::class.' in responsecache.replacers (config/responsecache.php): kept pages must give each visitor their own CSRF token.');
         }
     }

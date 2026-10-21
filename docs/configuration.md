@@ -37,9 +37,11 @@ See [Languages](collections.md#languages).
 | --- | --- | --- | --- |
 | `cache.enabled` | `true` | `SUNRICE_CACHE` | Keep what the site reads often (which page is at an address, URL patterns, menus, the sitemap) until the content changes. |
 | `cache.store` | `null` | `SUNRICE_CACHE_STORE` | The cache store; `null` for the app's default. Use a shared one with several servers. |
-| `cache.ttl` | `3600` | — | Seconds anything is kept at most. |
-| `cache.pages` | `false` | `SUNRICE_PAGE_CACHE` | Keep whole pages for visitors who aren't signed in (needs `spatie/laravel-responsecache`). Turn it on only when templates show nothing personal. |
-| `cache.query` | `[]` | — | Query parameters that make a kept page different, besides `page` and `q`. |
+| `cache.ttl` | `3600` | — | Seconds anything is kept at most. Settings → Cache's *Keep the site's data for* wins when set. |
+| `cache.pages` | `false` | `SUNRICE_PAGE_CACHE` | Keep whole pages for visitors who aren't signed in (needs `spatie/laravel-responsecache`). Turn it on only when templates show nothing personal. Settings → Cache can turn it on or off over this. |
+| `cache.query` | `[]` | — | Query parameters that make a kept page different, besides `page`. Settings → Cache adds to them. |
+| `cache.preload.batch` | `25` | — | Pages each queued preload job requests ([preloading](caching.md#preloading)). |
+| `cache.preload.delay` | `100` | — | Milliseconds between two preloaded pages. |
 
 See [Caching, events and scheduled publishing](caching.md).
 

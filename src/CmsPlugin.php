@@ -23,6 +23,7 @@ use Sunrice\Cms\Admin\TaxonomyResource;
 use Sunrice\Cms\Fields\FieldType;
 use Sunrice\Cms\Fields\FieldTypes;
 use Sunrice\Cms\Http\Controllers\BlueprintController;
+use Sunrice\Cms\Http\Controllers\CacheController;
 use Sunrice\Cms\Http\Controllers\CommentController;
 use Sunrice\Cms\Http\Controllers\EntryController;
 use Sunrice\Cms\Http\Controllers\EntryManageController;
@@ -39,6 +40,7 @@ use Sunrice\Cms\Http\Middleware\AuthorizeContent;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\GlobalSet;
 use Sunrice\Cms\Models\Term;
+use Sunrice\Cms\Settings\CacheSettings;
 use Sunrice\Cms\Settings\CodeSettings;
 use Sunrice\Cms\Settings\CommentSettings;
 use Sunrice\Cms\Settings\LocaleSettings;
@@ -83,7 +85,7 @@ final class CmsPlugin extends BasePlugin
 
     public function register(Panel $panel): void
     {
-        $panel->settings(SiteSettings::class, LocaleSettings::class, CodeSettings::class, CommentSettings::class);
+        $panel->settings(SiteSettings::class, LocaleSettings::class, CodeSettings::class, CommentSettings::class, CacheSettings::class);
         // Each permission for one collection, taxonomy or form too (see Support\Access).
         $panel->permissionsUsing(fn (): array => Support\ScopedPermissions::all());
         // Media files take alt text and captions in each content language.
@@ -174,6 +176,12 @@ final class CmsPlugin extends BasePlugin
                 Route::name('seo.')->controller(SeoController::class)->middleware('can:cms.settings.site')->group(function (): void {
                     Route::get('seo', 'edit')->name('edit');
                     Route::put('seo', 'update')->name('update');
+                });
+                // Settings → Cache's buttons.
+                Route::name('cache.')->controller(CacheController::class)->middleware('can:cms.settings.cache')->group(function (): void {
+                    Route::post('cache/clear-pages', 'clearPages')->name('clear-pages');
+                    Route::post('cache/clear', 'clear')->name('clear');
+                    Route::post('cache/preload', 'preload')->name('preload');
                 });
                 Route::post('languages/{locale}/main', [LanguageController::class, 'main'])->name('languages.main')
                     ->middleware('can:cms.settings.locales')->where('locale', '[A-Za-z0-9_-]{2,20}');

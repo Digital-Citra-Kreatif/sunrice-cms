@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Event;
 use Sunrice\Admin\Events\SettingsSaved;
 use Sunrice\Admin\Media\Media;
 use Sunrice\Cms\Models;
+use Sunrice\Cms\Settings\CacheSettings;
 use Sunrice\Cms\Settings\CodeSettings;
 use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Site\PageCache;
@@ -91,7 +92,7 @@ final class ContentWatch
             });
         }
         Event::listen(SettingsSaved::class, function (SettingsSaved $event): void {
-            if ($event->section === SiteSettings::key()) {
+            if ($event->section === SiteSettings::key() || $event->section === CacheSettings::key()) {
                 app(SiteCache::class)->changed("settings {$event->section}");
             } elseif ($event->section === CodeSettings::key()) {
                 app(SiteCache::class)->changed("settings {$event->section}", SiteCache::PAGES);

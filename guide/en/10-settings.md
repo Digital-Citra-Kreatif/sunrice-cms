@@ -1,6 +1,6 @@
 # The website's settings
 
-The website adds four sections to **Settings** under Administration: **Site**, **Languages**, **Site code** and **Comments**. Each is a separate permission, so you may see only some of them. The panel's own sections (**Branding**, **Security** and **Mail**) are explained in [Settings](guide:panel/settings).
+The website adds five sections to **Settings** under Administration: **Site**, **Languages**, **Site code**, **Comments** and **Cache**. Each is a separate permission, so you may see only some of them. The panel's own sections (**Branding**, **Security** and **Mail**) are explained in [Settings](guide:panel/settings).
 
 Settings are live as soon as you click **Save**.
 
@@ -54,6 +54,49 @@ How visitors' comments work on collections that allow them (see [Comments](guide
 | **Let commenters get an email when someone replies** | Adds a box to the comment form. |
 
 Spam is deleted automatically after a while.
+
+## Cache
+
+The website keeps what it shows often so pages load fast. A change to the content shows at once anyway: you rarely need this section. With **Whole-page cache** on, pages are rendered once and kept for visitors who aren't signed in (you always see pages fresh while signed in).
+
+**Whole pages**:
+
+- **Whole-page cache**: **As set up by the developer** (it says whether that's on or off), **Keep whole pages** or **Don't keep whole pages**. Turn it off if pages show something different to each visitor, like a cart or "Hi, Ana".
+- **Keep pages for (minutes)**: the longest a page is kept. Empty: as long as the site's data.
+
+**Pages never kept**, always rendered afresh:
+
+- **Addresses**: **Add address** for each, starting with `/`. A `*` stands for anything: `/contact` is that page, `/account/*` every page under `/account`, `/search*` every address starting with `/search`. An address counts in every language (`/contact` is `/id/contact` too).
+- **Collections**: tick a collection to never keep its pages and its listing page.
+
+**Query strings** are what comes after `?` in an address, like `?sort=price` from a filter or `?utm_source=newsletter` from a newsletter link:
+
+- **Parameters that make a page of their own**: parameters that change what a page shows (a filter, a sort, a tab), so each value is kept apart. Your developer may have set some already; the help names them.
+- **Any other parameter**: **Ignore it** (the usual choice: visitors get the kept page) or **Skip the cache** (the page is rendered afresh and not kept), for pages that read parameters you can't list.
+- **Parameters always ignored** (with **Skip the cache**): tracking parameters from newsletters and ads, which never skip the cache. `utm_*` stands for `utm_source`, `utm_medium`…
+
+**Preloading** asks for the site's pages before visitors do, so even the first visitor gets a kept page. It runs in the background, a few pages at a time:
+
+- **Preload after clearing the cache**: after either Clear button below.
+- **Preload after content changes**: a minute after the last change. On a big site that's edited often, leave it off.
+- **Preload on a schedule**: **Never**, **Every hour** or **Every day**.
+
+**Site data**: **Keep the site's data for (minutes)**: which page is at an address, menus and the sitemap. Empty: as your developer set it.
+
+Saving applies at once: everything kept before is read afresh.
+
+The **Cache** card under the form shows whether whole pages are kept, where things are kept, and when the caches were last cleared and by whom. Its buttons ask first:
+
+- **Preload cache**: starts preloading now. While it runs, the card says how far it got and the button is gone until it's done; afterwards it shows how many pages were kept and how many failed.
+- **Clear page cache**: visitors get freshly rendered pages. Use it after a developer changed templates, if pages look old.
+- **Clear all site caches**: pages, addresses, menus and the sitemap are read afresh.
+
+The site is a little slower for a moment after clearing. Both are recorded in the activity log.
+
+If the whole-page cache isn't available on your server, its settings are greyed out and the card says so: ask your developer.
+
+> [!TECHNICAL]
+> Settings here win over `config/sunrice-cms.php` (`cache.pages`, `cache.ttl`, `cache.query`); the store stays in the config. Whole pages need `spatie/laravel-responsecache` (`composer require spatie/laravel-responsecache`). From the command line: `php artisan responsecache:clear` and `php artisan sunrice:cache-preload`. Preloading runs in queued jobs, so it needs a queue worker (`php artisan queue:work`); a schedule needs Laravel's scheduler in cron. See [Caching](docs:cms/caching#cache-settings).
 
 ## Captcha
 
