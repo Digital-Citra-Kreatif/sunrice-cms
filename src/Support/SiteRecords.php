@@ -45,7 +45,10 @@ final class SiteRecords
             return $rows;
         });
 
-        return $class::hydrate(is_array($rows) ? array_values(array_filter($rows, is_array(...))) : []);
+        /** @var Collection<int, TModel> $models */
+        $models = $class::hydrate($rows);
+
+        return $models;
     }
 
     /**
