@@ -55,7 +55,9 @@ use Sunrice\Cms\Support\StructuredData;
  * DefinitionValidator).
  *
  * Content is only ever added: an entry or term that exists (by slug in
- * the main language) and global values already saved are left alone. An
+ * the main language), global values already saved and a menu's links are
+ * left alone (a menu that exists gets the file's links it lacks added;
+ * with $replaceMenus its links become the file's). An
  * update that would remove fields of a fieldset or blueprint is refused
  * unless $force. Any invalid item stops the import and nothing is saved;
  * a dry run saves nothing either and reports what would happen.
@@ -97,12 +99,14 @@ final class StructureImporter
 
     private bool $force = false;
 
+    private bool $replaceMenus = false;
+
     /**
      * @param  array<mixed>  $structure
      *
      * @throws StructureImportFailed
      */
-    public function import(array $structure, bool $dryRun = false, bool $force = false): ImportReport
+    public function import(array $structure, bool $dryRun = false, bool $force = false, bool $replaceMenus = false): ImportReport
     {
         $unknown = array_diff(array_keys($structure), ['sunrice', ...self::SECTIONS]);
         if ($unknown !== []) {
@@ -113,6 +117,7 @@ final class StructureImporter
         }
         $this->report = new ImportReport($dryRun);
         $this->force = $force;
+        $this->replaceMenus = $replaceMenus;
         $section = fn (string $name): array => array_values(array_filter(is_array($structure[$name] ?? null) ? $structure[$name] : [], 'is_array'));
 
         DB::beginTransaction();
@@ -464,20 +469,164 @@ final class StructureImporter
         app(SaveEntrySettings::class)->handle($entry, ['parent_id' => $parent, 'template' => $item['template'] ?? null]);
     }
 
-    /** @param array<mixed> $item */
+    /**
+     * A menu that isn't there is created with the file's links. A menu's
+     * links are content: those of a menu that exists are kept, and the
+     * file's links it doesn't have yet are added among them (next to the
+     * ones they follow in the file); with $replaceMenus the menu's links
+     * become the file's instead. The notes say which links are added or
+     * removed, in a dry run too.
+     *
+     * @param  array<mixed>  $item
+     */
     private function menu(array $item): void
     {
         $validated = Validator::make($item, ['handle' => self::HANDLE, 'title' => ['required', 'string', 'max:255'], 'items' => ['sometimes', 'array']])->validate();
         $existing = Menu::query()->where('handle', $validated['handle'])->first();
         $notes = [];
-        $items = $this->menuItems(is_array($item['items'] ?? null) ? $item['items'] : [], $notes);
+        $items = self::normalizeItems($this->menuItems(is_array($item['items'] ?? null) ? $item['items'] : [], $notes));
         $before = $existing === null ? null : [$existing->title, self::tree($existing->items()->orderBy('sort_order')->get()->all(), null)];
         $menu = $existing ?? new Menu;
         $menu->fill(['handle' => $validated['handle'], 'title' => $validated['title']])->save();
-        if ($before === null || $before[1] != self::normalizeItems($items)) {
-            app(SaveMenu::class)->handle($menu, $items);
+        if ($before === null) {
+            $save = $items;
+        } elseif ($this->replaceMenus) {
+            $save = $items;
+            $kept = array_count_values(array_map(self::linkKey(...), self::flatten($items)));
+            foreach (self::flatten($before[1]) as $link) {
+                $key = self::linkKey($link);
+                if (($kept[$key] ?? 0) > 0) {
+                    $kept[$key]--;
+                } else {
+                    $notes[] = 'Removes the link to '.self::describeLink($link).'.';
+                }
+            }
+            $added = [];
+            self::mergeLinks($before[1], $items, $added);
+            foreach ($added as $link) {
+                $notes[] = 'Adds a link to '.self::describeLink($link).'.';
+            }
+        } else {
+            $added = [];
+            $save = self::mergeLinks($before[1], $items, $added);
+            foreach ($added as $link) {
+                $notes[] = 'Adds a link to '.self::describeLink($link).'.';
+            }
+        }
+        if ($before === null || $before[1] != $save) {
+            app(SaveMenu::class)->handle($menu, $save);
         }
         $this->report->add('menu', $menu->handle, $this->status($before, [$menu->title, self::tree($menu->items()->orderBy('sort_order')->get()->all(), null)]), $notes);
+    }
+
+    /**
+     * The menu's links with the file's added: a link the menu has (same
+     * target) is kept as it is, with the file's links under it merged into
+     * its own; one it hasn't is put after the link it follows in the file.
+     *
+     * @param  list<array<mixed>>  $links
+     * @param  list<array<mixed>>  $incoming
+     * @param  list<array<mixed>>  $added  the links added, children included
+     * @return list<array<mixed>>
+     */
+    private static function mergeLinks(array $links, array $incoming, array &$added): array
+    {
+        $used = [];
+        $after = -1;
+        foreach ($incoming as $link) {
+            $key = self::linkKey($link);
+            $match = null;
+            foreach ($links as $index => $own) {
+                if (! isset($used[$index]) && self::linkKey($own) === $key) {
+                    $match = $index;
+                    break;
+                }
+            }
+            if ($match !== null) {
+                $links[$match]['children'] = self::mergeLinks(self::children($links[$match]), self::children($link), $added);
+                $used[$match] = true;
+                $after = $match;
+
+                continue;
+            }
+            $at = $after + 1;
+            array_splice($links, $at, 0, [$link]);
+            $shifted = [];
+            foreach (array_keys($used) as $index) {
+                $shifted[$index >= $at ? $index + 1 : $index] = true;
+            }
+            $used = $shifted + [$at => true];
+            $after = $at;
+            foreach (self::flatten([$link]) as $new) {
+                $added[] = $new;
+            }
+        }
+
+        return $links;
+    }
+
+    /**
+     * What a link points at, to tell links apart: the same entry, term,
+     * listing page (with the same filters) or address.
+     *
+     * @param  array<mixed>  $link
+     */
+    private static function linkKey(array $link): string
+    {
+        $id = fn (string $key): string => is_numeric($link[$key] ?? null) ? (string) $link[$key] : '';
+
+        return match (true) {
+            $id('entry_id') !== '' => 'entry:'.$id('entry_id'),
+            $id('term_id') !== '' => 'term:'.$id('term_id'),
+            $id('collection_id') !== '' => 'collection:'.$id('collection_id').'?'.self::text($link['query'] ?? null),
+            default => 'url:'.trim(self::text($link['url'] ?? null)),
+        };
+    }
+
+    /**
+     * @param  array<mixed>  $link
+     * @return list<array<mixed>>
+     */
+    private static function children(array $link): array
+    {
+        return is_array($link['children'] ?? null) ? array_values(array_filter($link['children'], 'is_array')) : [];
+    }
+
+    /**
+     * The links and those under them, in order.
+     *
+     * @param  list<array<mixed>>  $links
+     * @return list<array<mixed>>
+     */
+    private static function flatten(array $links): array
+    {
+        $flat = [];
+        foreach ($links as $link) {
+            $flat[] = $link;
+            foreach (self::flatten(self::children($link)) as $child) {
+                $flat[] = $child;
+            }
+        }
+
+        return $flat;
+    }
+
+    /**
+     * A link as the file names it: "pages/about", "topics/news", a
+     * collection's handle or the address.
+     *
+     * @param  array<mixed>  $link
+     */
+    private static function describeLink(array $link): string
+    {
+        $described = match (true) {
+            is_numeric($link['entry_id'] ?? null) => ($entry = Entry::withTrashed()->with('collection')->find((int) $link['entry_id'])) === null ? null : $entry->collection->handle.'/'.($entry->translation(Locales::default())->draft_slug ?? $entry->id),
+            is_numeric($link['term_id'] ?? null) => ($term = Term::withTrashed()->with('taxonomy')->find((int) $link['term_id'])) === null ? null : $term->taxonomy->handle.'/'.self::text($term->translations()->where('locale', Locales::default())->value('slug') ?? (string) $term->id),
+            is_numeric($link['collection_id'] ?? null) => Collection::withTrashed()->whereKey((int) $link['collection_id'])->value('handle'),
+            default => trim(self::text($link['url'] ?? null)),
+        };
+
+        return is_string($described) && $described !== '' ? $described : '?';
     }
 
     /**

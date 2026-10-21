@@ -101,12 +101,15 @@ The file is JSON with a section per kind, each item by handle, and records point
 
 Every setting of a collection, taxonomy, global set and form is in the file, "SEO from fields" (`seo_title_field`, `seo_description_field`, `seo_image_field`) and a form's `notify_roles` included (`StructureImporter::COLLECTION`, `TAXONOMY`, `GLOBAL_SET` and `FORM` list them).
 
+Menu links point at entries and terms by collection or taxonomy and slug in the main language (`"entry": "pages/about"`), those in the trash included, so they're found on another site by slug; links whose entry or term was deleted for good are left out. A structure file written before the pages existed has no links to them, and importing it leaves a menu's links to them alone.
+
 `terms`, `entries` and the globals' `values` come with `--entries` (entries as their drafts, and whether each language is published). Ids inside field values (media, entries, terms) are written as they are, so they mean the same only on the same site or one filled in the same order.
 
 Importing goes through the same actions and checks as the admin: field definitions through `DefinitionValidator`, collections through `SaveCollection`, listing pages through `SaveListing`, entries through `CreateEntry`, `SaveDraft` and `PublishEntry`, menus through `SaveMenu`. Each item is created, or updated when its handle exists:
 
 - an update of a fieldset or blueprint that would remove fields is **refused** (its line says which) unless `--force`: rename fields with `sunrice:rename-field` first, so their values move along;
 - content is only added: an entry or term that exists (by its slug in the main language) and global values already saved are left alone, and a menu link to an entry or term that isn't there is left out (and noted);
+- menus' links are content too: a menu that isn't there is created with the file's links, but a menu that exists keeps its links (those editors added, moved or relabelled included): only the file's links it doesn't have yet (the same entry, term, listing page with the same filters, or address) are added, each after the link it follows in the file, and its line notes "Adds a link to pages/about." `--replace-menus` (`import(..., replaceMenus: true)`) makes existing menus' links the file's instead, and notes each link it removes ("Removes the link to pages/about."): try it with `--dry-run` first;
 - any invalid item stops the import, and nothing at all is saved; a dry run saves nothing either.
 
 Running the same file again changes nothing. In code:
@@ -115,7 +118,7 @@ Running the same file again changes nothing. In code:
 use Sunrice\Cms\Structure\{ImportReport, StructureExporter, StructureImporter, StructureImportFailed};
 
 $structure = app(StructureExporter::class)->export(content: false);
-$report = app(StructureImporter::class)->import($structure, dryRun: true, force: false);
+$report = app(StructureImporter::class)->import($structure, dryRun: true, force: false, replaceMenus: false);
 
 $report->items();                        // [['type' => 'blueprint', 'handle' => 'page', 'status' => 'updated', 'notes' => []], ...]
 $report->status('collection', 'blog');   // ImportReport::CREATED, UPDATED, UNCHANGED or REFUSED
