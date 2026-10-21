@@ -2,6 +2,7 @@ import { Card, CardContent, CollapsibleCard } from '@sunrice/admin-sdk/ui';
 import { FieldError, FieldInput, Fields, labelOf } from '@/components/FieldInput.tsx';
 import { errorsAt, hasErrors } from '@/lib/builder.ts';
 import { isShown } from '@/lib/conditions.ts';
+import { hasSharedFields } from '@/lib/values.ts';
 import type { Errors, FieldDefinition } from '@/types.ts';
 
 // Field values are any JSON; see the entry editor for why `any`.
@@ -29,6 +30,9 @@ interface Props {
  * its own that folds away (remembered, and opened on an error inside).
  * A field whose condition isn't met is left out.
  */
+/** How a field shared by all languages looks in another language: read-only and greyed out. */
+export const SHARED_FIELD = 'cms:flex cms:flex-col cms:gap-1 cms:opacity-60';
+
 export function FieldSections({ fields, values, onChange, errors, storageKey, shared = [], sharedValues = {}, sharedNote, disabled = false }: Props) {
     // Runs of plain fields, and groups on their own.
     const sections: (FieldDefinition | FieldDefinition[])[] = [];
@@ -40,10 +44,14 @@ export function FieldSections({ fields, values, onChange, errors, storageKey, sh
         else if (Array.isArray(last)) last.push(field);
         else sections.push([field]);
     }
-    const note = sharedNote ? <p className="cms:text-sm cms:text-muted-foreground">{sharedNote}</p> : null;
+    // Once at the top, not under every shared field: those are greyed out.
+    const note = sharedNote && (shared.length > 0 || hasSharedFields(fields))
+        ? <p role="note" className="cms:rounded-lg cms:border cms:border-dashed cms:px-3 cms:py-2 cms:text-sm cms:text-muted-foreground">{sharedNote}</p>
+        : null;
 
     return (
         <>
+            {note}
             {sections.map((section) => {
                 if (Array.isArray(section)) {
                     return (
@@ -51,9 +59,8 @@ export function FieldSections({ fields, values, onChange, errors, storageKey, sh
                             <CardContent>
                                 <fieldset disabled={disabled} className="cms:flex cms:min-w-0 cms:flex-col cms:gap-6">
                                     {section.map((field) => shared.includes(field.handle) ? (
-                                        <fieldset key={field.handle} disabled className="cms:flex cms:flex-col cms:gap-1">
+                                        <fieldset key={field.handle} disabled className={SHARED_FIELD} title="Shared by all languages">
                                             <FieldInput id={`data-${field.handle}`} field={field} content value={sharedValues[field.handle]} errors={{}} onChange={() => {}} />
-                                            {note}
                                         </fieldset>
                                     ) : (
                                         <FieldInput key={field.handle} id={`data-${field.handle}`} field={field} content value={values[field.handle]}
@@ -71,11 +78,11 @@ export function FieldSections({ fields, values, onChange, errors, storageKey, sh
                 return (
                     <CollapsibleCard key={section.handle} title={labelOf(section)} titleClassName="cms:text-base" description={section.instructions ?? undefined}
                         storageKey={`${storageKey}:${section.handle}`} hasErrors={!isShared && hasErrors(errors, `data.${section.handle}`)}>
-                        <fieldset disabled={isShared || disabled} role="group" aria-label={labelOf(section)} className="cms:flex cms:flex-col cms:gap-2">
+                        <fieldset disabled={isShared || disabled} role="group" aria-label={labelOf(section)} className={`cms:flex cms:flex-col cms:gap-2 ${isShared ? 'cms:opacity-60' : ''}`}
+                            title={isShared ? 'Shared by all languages' : undefined}>
                             <Fields bare fields={section.fields ?? []} id={`data-${section.handle}`} content errors={isShared ? {} : fieldErrors}
                                 value={value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}}
                                 onChange={(next) => onChange(section.handle, next)} />
-                            {isShared && note}
                             <FieldError message={isShared ? undefined : fieldErrors['']} />
                         </fieldset>
                     </CollapsibleCard>

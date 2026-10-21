@@ -16,6 +16,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Sunrice\Admin\Panel;
 use Sunrice\Admin\Preferences\Preferences;
 use Sunrice\Cms\Actions\Entries\ChangePublishDate;
 use Sunrice\Cms\Actions\Entries\CreateEntry;
@@ -23,6 +24,7 @@ use Sunrice\Cms\Actions\Entries\CreateTranslation;
 use Sunrice\Cms\Actions\Entries\DeleteTranslation;
 use Sunrice\Cms\Actions\Entries\MachineTranslateEntry;
 use Sunrice\Cms\Actions\Entries\PublishEntry;
+use Sunrice\Cms\Actions\Entries\RequestReview;
 use Sunrice\Cms\Actions\Entries\RestoreEntry;
 use Sunrice\Cms\Actions\Entries\RestoreRevision;
 use Sunrice\Cms\Actions\Entries\SaveDraft;
@@ -198,6 +200,48 @@ final class EntryController
     }
 
     /**
+     * The command palette's entry search ($panel->commandSearch('cms.entries')):
+     * entries whose title in any language contains "q", among those the
+     * person may view, most recently edited first. A match in another
+     * language opens the editor in that language.
+     */
+    public function search(Request $request): JsonResponse
+    {
+        /** @var array{q?: string|null} $input */
+        $input = $request->validate(['q' => ['nullable', 'string', 'max:200']]);
+        $search = trim($input['q'] ?? '');
+        if ($search === '') {
+            return response()->json(['items' => []]);
+        }
+        $main = Locales::default();
+        $found = EntryTranslation::query()
+            ->with('entry.collection')
+            ->whereIn('collection_id', Access::collections($request->user())->pluck('id'))
+            ->whereHas('entry', fn ($entry) => $entry->withoutTrashed()->whereHas('collection', fn ($collection) => $collection->withoutTrashed()))
+            ->whereLike('draft_title', '%'.addcslashes($search, '%_\\').'%')
+            ->orderByRaw('case when locale = ? then 0 else 1 end', [$main])
+            ->orderByDesc('updated_at')
+            ->limit(40)
+            ->get()
+            // One line per entry: its main language when that matches, else the first language that does.
+            ->unique('entry_id')
+            ->take(10);
+
+        return response()->json(['items' => $found->values()->map(fn (EntryTranslation $translation): array => [
+            'id' => $translation->entry_id,
+            'label' => $translation->draft_title,
+            'description' => implode(' · ', array_filter([
+                $translation->entry->collection->title,
+                $translation->locale === $main ? null : strtoupper($translation->locale),
+                $translation->status() === 'published' ? null : $translation->status(),
+            ])),
+            'group' => 'Entries',
+            'icon' => 'file-text',
+            'url' => route('sunrice.admin.cms.entries.edit', ['entry' => $translation->entry_id, ...($translation->locale === $main ? [] : ['locale' => $translation->locale])]),
+        ])->all()]);
+    }
+
+    /**
      * For terms fields: a taxonomy's terms in tree order (or those whose
      * title matches "q"), or some by id ("ids"), main-language titles.
      */
@@ -266,6 +310,11 @@ final class EntryController
                 'publishedAt' => $translation->published_at?->toIso8601String(),
                 'hasUnpublishedChanges' => $translation->hasUnpublishedChanges(),
                 'trashed' => $entry->trashed(),
+                // "Submit for review": when, and who asked.
+                'review' => $translation->review_requested_at === null ? null : [
+                    'requestedAt' => $translation->review_requested_at->toIso8601String(),
+                    'by' => $translation->review_requested_by === null ? null : self::userName($translation->review_requested_by),
+                ],
                 'version' => $translation->version,
                 // The live page, and a signed link to preview the draft (30 minutes).
                 'url' => $translation->isLive() && ! $entry->trashed() ? $translation->url() : null,
@@ -390,6 +439,14 @@ final class EntryController
         return back()->with('success', $translation->isLive() ? 'Date changed.' : 'Scheduled for '.$translation->published_at?->toDayDateTimeString().'.');
     }
 
+    public function requestReview(Request $request, Entry $entry, RequestReview $review): RedirectResponse
+    {
+        $user = $request->user();
+        $review->handle(self::translation($entry, $request->input('locale')), $user instanceof Authorizable ? $user : null);
+
+        return back()->with('success', 'Sent for review. Those who can publish it have been told.');
+    }
+
     public function unpublish(Request $request, Entry $entry, UnpublishEntry $unpublish): RedirectResponse
     {
         $unpublish->handle(self::translation($entry, $request->input('locale')));
@@ -401,7 +458,8 @@ final class EntryController
     {
         $trash->handle($entry);
 
-        return redirect()->route('sunrice.admin.cms.entries.index', $entry->collection->handle)->with('success', 'Moved to the trash.');
+        return redirect()->route('sunrice.admin.cms.entries.index', $entry->collection->handle)->with('success', 'Moved to the trash.')
+            ->with('success_action', ['label' => 'Undo', 'url' => route('sunrice.admin.cms.entries.restore', $entry)]);
     }
 
     public function restore(Entry $entry, RestoreEntry $restore): RedirectResponse
@@ -538,7 +596,9 @@ final class EntryController
     private static function collection(Collection $collection): array
     {
         return ['handle' => $collection->handle, 'title' => $collection->title, 'dated' => $collection->dated, 'hierarchical' => $collection->hierarchical, 'comments' => $collection->comments,
-            'ordered' => $collection->ordered, 'listing' => $collection->listing_route !== null];
+            'ordered' => $collection->ordered, 'listing' => $collection->listing_route !== null,
+            // Its entries have pages on the site (a route), so a preview shows something.
+            'pages' => $collection->route !== null];
     }
 
     /**
@@ -556,6 +616,14 @@ final class EntryController
         $titles = Blueprint::query()->whereIn('handle', $handles)->pluck('title', 'handle');
 
         return array_map(fn (string $handle): array => ['handle' => $handle, 'title' => is_string($titles[$handle] ?? null) ? $titles[$handle] : $handle], $handles);
+    }
+
+    /** A user's name, for "asked by" lines; null when they're gone. */
+    private static function userName(int $id): ?string
+    {
+        $name = app(Panel::class)->getUserModel()::query()->whereKey($id)->value('name');
+
+        return is_string($name) ? $name : null;
     }
 
     /** @return array<string, bool> what the user may do here: in the collection, with the entry in this language */

@@ -17,7 +17,7 @@ Filter tersimpan di alamat halaman, jadi Anda bisa menyimpan tampilan sebagai ma
 
 ### Beberapa sekaligus
 
-Centang beberapa entri (atau kotak di atas untuk seluruh halaman) untuk **Publish** (terbitkan), **Unpublish** (tarik dari situs), atau **Move to the trash** (pindahkan ke tempat sampah) sekaligus. Di tempat sampah: **Restore** (pulihkan) atau **Delete for good** (hapus selamanya). Entri yang tidak boleh Anda ubah, atau yang belum bisa diterbitkan (misalnya ada field wajib yang kosong), dilewati, dan panel menyebutkan jumlahnya.
+Centang beberapa entri (atau kotak di atas untuk seluruh halaman) untuk **Publish** (terbitkan), **Unpublish** (tarik dari situs), atau **Move to the trash** (pindahkan ke tempat sampah) sekaligus. Tepat setelah membuang, pesannya punya tombol **Undo** (batalkan). Di tempat sampah, baris bertanda **Trashed** dan masing-masing punya tombol **Restore** (pulihkan); yang dicentang bisa dipulihkan atau **Delete for good** (hapus selamanya) sekaligus. Entri yang tidak boleh Anda ubah, atau yang belum bisa diterbitkan (misalnya ada field wajib yang kosong), dilewati, dan panel menyebutkan jumlahnya.
 
 ### Mengurutkan entri
 
@@ -38,7 +38,7 @@ Selanjutnya, **Save draft** menyimpan pekerjaan Anda (atau tekan **Ctrl S** / **
 - Field **Media** memilih gambar atau berkas dari [pustaka media](guide:panel/media), atau mengunggah yang baru.
 - Field **Entries** dan **Terms** menautkan ke entri lain atau ke kategori dan tag; cari berdasarkan judul.
 - Field **Link** menerima alamat web, atau entri lain (pilih **Entry** agar mengikuti alamat entri itu meskipun berubah).
-- Field **Group**, **Repeater**, dan **Flexible** menampung beberapa field sekaligus; repeater dan flexible menambahkan baris atau blok, yang Anda seret ke urutannya lewat pegangannya.
+- Field **Group**, **Repeater**, dan **Flexible** menampung beberapa field sekaligus; repeater dan flexible menambahkan baris atau blok, yang Anda seret ke urutannya lewat pegangannya. Setiap baris atau blok diberi nama dari teks pertamanya; klik namanya untuk melipatnya (**Collapse all** melipat seluruh daftar), dan matikan **Visible on site** untuk menyimpannya di sini tanpa menampilkannya di halaman.
 
 Kartu-kartu di penyunting (group, **Search and sharing**, dan kartu di kanan) bisa dilipat dengan mengeklik judulnya. Panel mengingat kartu mana yang Anda lipat, dan membuka sendiri kartu yang field di dalamnya bermasalah.
 
@@ -53,11 +53,11 @@ Setiap entri memiliki **draf**, yang Anda sunting, dan versi **tayang**, yang di
 Kartu **Status** di kanan menunjukkan apakah entri masih draf, terjadwal, atau terbit (dan sejak kapan), dan memberi peringatan jika *The draft has changes the site doesn't show yet* (draf berisi perubahan yang belum tampil di situs). Di koleksi bertanggal (seperti jurnal), kartu ini juga memuat **Date** entri: ubah lalu tekan **Change the date** untuk memundurkan atau memindahkan tanggal tulisan yang sudah terbit, tanpa menerbitkan draf Anda; tanggal yang akan datang menarik entri dari situs sampai waktunya. Draf mendapat tanggalnya saat diterbitkan (**Publish on a date…** dengan tanggal lebih awal memundurkannya).
 
 > [!NOTE]
-> Jika peran Anda bisa menulis tetapi tidak bisa menerbitkan (misalnya peran *author*), Anda menyimpan draf dan orang lain yang menerbitkannya.
+> Jika peran Anda bisa menulis tetapi tidak bisa menerbitkan (misalnya peran *author*), Anda menyimpan draf dan orang lain yang menerbitkannya. Saat draf siap, klik **Submit for review** (ajukan untuk ditinjau): draf disimpan, semua orang yang bisa menerbitkannya menerima email, dan draf muncul di **Waiting for review** pada dasbor mereka. Entri menampilkan lencana **Waiting for review** sampai ada yang menerbitkannya.
 
 ## Melihat hasil kerja Anda di situs
 
-- **Preview** membuka draf yang tersimpan seperti tampilannya nanti di situs, di tab baru. Simpan dulu: pratinjau menampilkan yang tersimpan, bukan yang ada di layar Anda. Tautan pratinjau berlaku 30 menit, dan siapa pun yang Anda kirimi bisa membukanya selama itu.
+- **Preview** membuka draf yang tersimpan seperti tampilannya nanti di situs, di tab baru. Simpan dulu: pratinjau menampilkan yang tersimpan, bukan yang ada di layar Anda. Tautan pratinjau berlaku 30 menit, dan siapa pun yang Anda kirimi bisa membukanya selama itu; pita gelap di bagian atas menandai bahwa itu pratinjau. Koleksi yang entrinya tidak punya halaman sendiri (misalnya testimoni) tidak punya Preview.
 - **View** membuka halaman yang tayang.
 - Jika peran Anda boleh melihat draf di situs, halaman tayang yang punya perubahan belum terbit menampilkan spanduk kecil selama Anda masuk, dengan **View draft**. Pengunjung tidak pernah melihatnya.
 
@@ -84,7 +84,7 @@ Setiap penerbitan menyimpan sebuah **revisi**: salinan dari yang diterbitkan, be
 
 ## Tindakan lain
 
-- **Duplicate** menyalin entri, dalam semua bahasa, sebagai draf baru berjudul "… (copy)".
+- **Duplicate** menyalin entri, dalam semua bahasa, sebagai draf baru berjudul "… (copy)". Selama belum pernah diterbitkan, mengganti judulnya ikut mengganti slug-nya (kecuali Anda mengetik slug sendiri).
 - Tombol tempat sampah **memindahkan entri ke tempat sampah**: entri hilang dari situs web dan dari daftar, dalam semua bahasa, dan bisa dipulihkan. Jika dipakai konten lain, panel menyebutkan di mana terlebih dahulu.
 - Di tempat sampah, entri memiliki **Restore** dan **Delete for good** (menghapus semuanya, dalam semua bahasa, beserta revisinya; tidak bisa dibatalkan).
 

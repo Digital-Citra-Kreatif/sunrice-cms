@@ -53,3 +53,18 @@ export interface EntryLocale {
     /** The main language changed since this translation was last saved. */
     outdated?: boolean;
 }
+
+/** A slug made from a title, as the server makes it ("Villa Arunika (copy)" → "villa-arunika-copy"). */
+export function slugFrom(title: string): string {
+    return title.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+/**
+ * The slug after the title changes: a slug that was made from the old
+ * title (a duplicate's "-copy") follows the new one, while the entry has
+ * never been published (a live address doesn't move by itself); a slug
+ * typed by hand stays.
+ */
+export function followingSlug(slug: string, oldTitle: string, newTitle: string, neverPublished: boolean): string {
+    return neverPublished && slug !== '' && slug === slugFrom(oldTitle) ? slugFrom(newTitle) : slug;
+}

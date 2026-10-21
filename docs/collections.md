@@ -106,7 +106,7 @@ Besides the title, the **Columns** menu shows the slug, the status (with a badge
 
 **Go to** links to what an editor tends to need next, where they may go: the listing page (edit and view), the collection's taxonomies' terms (`cms.terms.*`), the collection's settings (`cms.collections.update`) and its blueprint (`cms.blueprints.manage`). In a collection with manual order, Move up and Move down appear while the list is in that order, unfiltered.
 
-Tick entries to publish, unpublish or trash them together (in the trash: restore or delete for good); entries one may not act on, or that can't be published as they are, are skipped and counted. **Export CSV** (`cms.entries.export`) downloads the list as it is filtered, searched, sorted and in its language (every page): the ID, title, slug, status, publish date, URL, last change and author, and a column per top-level field of every blueprint the collection offers (field columns as the list shows them; each entry fills its own blueprint's); it's an `exported` security event.
+Tick entries to publish, unpublish or trash them together (in the trash: restore or delete for good); entries one may not act on, or that can't be published as they are, are skipped and counted. **Export CSV** (`cms.entries.export`) downloads the list as it is filtered, searched, sorted and in its language (every page): the ID, title, slug, status, publish date, URL, last change and author, and a column per top-level field of every blueprint the collection offers (field columns as the list shows them; links as their address, an entry link's as the site has it in the list's language; rich text as plain text; a field whose label is a column's or another field's is headed "Label (field)"; each entry fills its own blueprint's); it's an `exported` security event.
 
 ## Languages
 
@@ -181,6 +181,7 @@ app(UnpublishEntry::class)->handle($translation);
 - `PublishEntry` checks the draft again (the blueprint may have changed), copies it to the live version, counts the `version` up (an editor opened before the publish can't save over it unknowingly) and keeps a revision. The entry is live from its date: now when first published, the original date when published again (now, for one that was scheduled for later and unpublished), or the date you pass, which may be in the future.
 - `UnpublishEntry` takes it off the site; publishing again keeps its date.
 - `ChangePublishDate::handle($translation, $date)` moves a published translation's date and leaves the draft alone: a past date keeps it live with that date, a date to come schedules it (fires `EntryUnpublished` when it leaves the site, `EntryPublished` when it goes live). In the editor of a dated collection it's the Status card's **Date** (`POST cms/entries/{entry}/date`, `published_at` and `locale`, behind `cms.entries.publish`).
+- `RequestReview` is **Submit for review** in the editor, offered to those who may edit an entry but not publish it (the default `author` role): it records when and by whom on the translation (`review_requested_at`, `review_requested_by`), emails everyone who may publish in the collection (`cms.entries.publish` or `cms.entries.{collection}.publish`; not the requester), logs `review requested`, and refuses an entry in the trash or one whose draft the site already shows. The editor shows **Waiting for review**, and the dashboard's `cms.review` widget lists the waiting drafts to those who may publish them. Publishing clears the request (route `POST admin/cms/entries/{entry}/review`, `sunrice.admin.cms.entries.review`, behind `update`).
 - Each fires an event (`EntryPublished`, `EntryUnpublished`, `EntryTrashed`, `EntryRestored`, `EntryDeleted`); one published for a later date is announced again when its time comes. See [Caching, events and scheduled publishing](caching.md).
 
 | On the translation | |
@@ -220,9 +221,10 @@ The CMS adds these widgets to the panel's [dashboard](../../admin/docs/panel.md#
 | Widget | Shows | Who sees it |
 | --- | --- | --- |
 | `cms.collections` (Content) | Each collection's entries in the main language: live, drafts and scheduled, linking to its list. | Users who may view some collection's entries. |
+| `cms.review` (Waiting for review) | Drafts sent for review (**Submit for review**), oldest first, with who sent them and how many wait. | Users who may publish in some collection; each sees the collections they may publish in. |
 | `cms.recent-edits` (Recently edited) | The last eight entry translations edited, any language, with their status. | The same. |
 | `cms.comments` (Comments waiting) | How many comments wait for moderation, and the latest five. | `cms.comments.view` |
 | `cms.scheduled` (Coming up) | The next eight entries scheduled to go live. | Users who may view some collection's entries. |
 | `cms.submissions` (Latest submissions) | The last eight submissions of the forms the user may read, each summed up by its first text field. | `cms.submissions.view`, or a form's own. |
 
-Each reads its data in one query (the comments widget a second one for signed-in commenters' names), after the page has painted. Entries in the trash and deleted collections are left out.
+Each reads its data in one query (the comments widget a second one for signed-in commenters' names, the review widget a count and the requesters' names), after the page has painted. Entries in the trash and deleted collections are left out.

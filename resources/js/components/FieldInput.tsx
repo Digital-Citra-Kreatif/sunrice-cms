@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, Plus, Trash2 } from 'lucide-react';
 import {
     Badge, Button, Checkbox, DatePicker, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input, Label, MediaPickerInput,
     moveItem, RichTextEditor, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Skeleton, SortableHandle, type SortableHandleProps, SortableList, Switch, Textarea,
@@ -8,7 +8,7 @@ import { EntriesPicker } from '@/components/EntriesPicker.tsx';
 import { TermsPicker } from '@/components/TermsPicker.tsx';
 import { errorsAt } from '@/lib/builder.ts';
 import { isShown } from '@/lib/conditions.ts';
-import { asRecord, dateInputValue, dateValueFromInput, newBlock, newRow, syncKeys } from '@/lib/values.ts';
+import { asRecord, dateInputValue, dateValueFromInput, groupedNumber, itemSummary, offersEmptyChoice, newBlock, newRow, syncKeys } from '@/lib/values.ts';
 import type { Errors, FieldDefinition, Option } from '@/types.ts';
 
 /** Radix's Select can't hold an empty value, so "none" is this. */
@@ -72,9 +72,23 @@ export function FieldInput({ field, value, onChange, errors, id, content = false
                 <Label id={`${id}-label`} htmlFor={group ? undefined : id}>{label}{field.required && <span className="cms:text-destructive"> *</span>}</Label>
             )}
             <Control field={field} value={value} onChange={onChange} errors={errors} id={id} content={content} />
+            {['text', 'textarea'].includes(field.type) && numberConfig(field, 'max') !== undefined && (
+                <CharacterCount length={typeof value === 'string' ? [...value].length : 0} max={numberConfig(field, 'max') ?? 0} />
+            )}
             {field.instructions && <p className="cms:text-sm cms:text-muted-foreground">{field.instructions}</p>}
             <FieldError message={errors['']} />
         </div>
+    );
+}
+
+/** "123 / 300" under a text with a limit, in red once over it (the server refuses more). */
+function CharacterCount({ length, max }: { length: number; max: number }) {
+    const over = length > max;
+
+    return (
+        <p className={`cms:-mt-1 cms:self-end cms:text-xs cms:tabular-nums ${over ? 'cms:font-medium cms:text-destructive' : 'cms:text-muted-foreground'}`}>
+            {length} / {max}{over && <span> · {length - max} too many</span>}
+        </p>
     );
 }
 
@@ -92,15 +106,21 @@ function Control({ field, value, onChange, errors, id, content }: Props) {
         case 'rich_text':
             // The panel's editor; its code loads when the first one shows.
             return <RichTextEditor id={id} labelledBy={`${id}-label`} invalid={invalid} value={typeof value === 'string' ? value : ''} onChange={onChange} />;
-        case 'number':
+        case 'number': {
+            const echo = groupedNumber(value);
             return (
-                <Input
-                    id={id} type="number" className="cms:max-w-48" aria-invalid={invalid}
-                    value={typeof value === 'number' ? String(value) : typeof value === 'string' ? value : ''}
-                    min={numberConfig(field, 'min')} max={numberConfig(field, 'max')} step={numberConfig(field, 'step') ?? 'any'}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value === '' ? null : Number(e.target.value))}
-                />
+                <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-3">
+                    <Input
+                        id={id} type="number" className="cms:max-w-48" aria-invalid={invalid} aria-describedby={echo ? `${id}-grouped` : undefined}
+                        value={typeof value === 'number' ? String(value) : typeof value === 'string' ? value : ''}
+                        min={numberConfig(field, 'min')} max={numberConfig(field, 'max')} step={numberConfig(field, 'step') ?? 'any'}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value === '' ? null : Number(e.target.value))}
+                    />
+                    {/* Long numbers read back grouped, so 18500000000 can't be mistaken for 1850000000. */}
+                    {echo && <span id={`${id}-grouped`} className="cms:text-sm cms:tabular-nums cms:text-muted-foreground">{echo}</span>}
+                </div>
             );
+        }
         case 'date': {
             const time = field.config?.time === true;
             return <DatePicker id={id} withTime={time} invalid={invalid} required={field.required === true} value={dateValueFromInput(dateInputValue(value, time))}
@@ -109,7 +129,8 @@ function Control({ field, value, onChange, errors, id, content }: Props) {
         case 'select':
             return field.config?.multiple === true
                 ? <MultiSelect options={optionsOf(field)} value={Array.isArray(value) ? value.map(String) : []} onChange={onChange} />
-                : <SingleSelect options={optionsOf(field)} value={typeof value === 'string' ? value : null} onChange={onChange} id={id} required={field.required === true} />;
+                : <SingleSelect options={optionsOf(field)} value={typeof value === 'string' ? value : null} onChange={onChange} id={id}
+                    empty={offersEmptyChoice(optionsOf(field), field.required === true, typeof field.config?.default === 'string' && field.config.default !== '', typeof value === 'string' && value !== '')} />;
         case 'terms': {
             const multiple = field.config?.multiple === true;
             const ids = Array.isArray(value) ? value.filter((v): v is number => typeof v === 'number') : typeof value === 'number' ? value : null;
@@ -134,8 +155,9 @@ function Control({ field, value, onChange, errors, id, content }: Props) {
         case 'flexible':
             return <Blocks field={field} value={Array.isArray(value) ? value : []} onChange={onChange} errors={errors} id={id} />;
         default:
+            // No maxLength: a pasted text that's too long would be cut silently; the counter shows it instead.
             return <Input id={id} aria-invalid={invalid} value={typeof value === 'string' ? value : ''} placeholder={stringConfig(field, 'placeholder')}
-                maxLength={numberConfig(field, 'max')} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)} />;
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)} />;
     }
 }
 
@@ -158,9 +180,9 @@ export function Fields({ fields, value, onChange, errors, id, content, bare = fa
     return (
         <div className={bare ? 'cms:flex cms:flex-col cms:gap-6' : 'cms:flex cms:flex-col cms:gap-4 cms:rounded-lg cms:border cms:p-4'}>
             {fields.filter((child) => isShown(child, value)).map((child) => child.shared ? (
-                <fieldset key={child.handle} disabled className="cms:flex cms:flex-col cms:gap-1">
+                // Greyed out; the form says once, at the top, where to edit shared fields.
+                <fieldset key={child.handle} disabled className="cms:flex cms:flex-col cms:gap-1 cms:opacity-60" title="Shared by all languages: edit it in the main language">
                     <FieldInput id={`${id}-${child.handle}`} field={child} value={value[child.handle]} content={content} errors={{}} onChange={() => {}} />
-                    <p className="cms:text-sm cms:text-muted-foreground">Shared by all languages: edit it in the main language.</p>
                 </fieldset>
             ) : (
                 <FieldInput key={child.handle} id={`${id}-${child.handle}`} field={child} value={value[child.handle]} content={content}
@@ -171,12 +193,12 @@ export function Fields({ fields, value, onChange, errors, id, content, bare = fa
     );
 }
 
-function SingleSelect({ options, value, onChange, id, required }: { options: Option[]; value: string | null; onChange: (value: unknown) => void; id: string; required: boolean }) {
+function SingleSelect({ options, value, onChange, id, empty }: { options: Option[]; value: string | null; onChange: (value: unknown) => void; id: string; empty: boolean }) {
     return (
         <Select value={value ?? NONE} onValueChange={(next: string) => onChange(next === NONE ? null : next)}>
             <SelectTrigger id={id} className="cms:w-full cms:max-w-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
-                {!required && <SelectItem value={NONE}>None</SelectItem>}
+                {empty && <SelectItem value={NONE}>None</SelectItem>}
                 {options.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
             </SelectContent>
         </Select>
@@ -264,6 +286,37 @@ function useItemKeys(count: number) {
     };
 }
 
+/**
+ * Which rows or blocks of a list are folded, by item key: long lists fold
+ * to their bars to scan and reorder. One with an error inside stays open.
+ */
+function useCollapsed() {
+    const [collapsed, setCollapsed] = React.useState<ReadonlySet<string>>(() => new Set());
+
+    return {
+        isCollapsed: (key: string, hasErrors: boolean) => !hasErrors && collapsed.has(key),
+        toggle: (key: string) => setCollapsed((current) => {
+            const next = new Set(current);
+            if (!next.delete(key)) next.add(key);
+            return next;
+        }),
+        setAll: (keys: string[], fold: boolean) => setCollapsed(fold ? new Set(keys) : new Set()),
+        anyOpen: (keys: string[]) => keys.some((key) => !collapsed.has(key)),
+    };
+}
+
+/** "Collapse all" / "Expand all" beside a list's Add button, from two items on. */
+function FoldAll({ keys, folding }: { keys: string[]; folding: ReturnType<typeof useCollapsed> }) {
+    if (keys.length < 2) return null;
+    const open = folding.anyOpen(keys);
+
+    return (
+        <Button type="button" variant="ghost" size="sm" onClick={() => folding.setAll(keys, open)}>
+            {open ? <ChevronsDownUp /> : <ChevronsUpDown />} {open ? 'Collapse all' : 'Expand all'}
+        </Button>
+    );
+}
+
 function Rows({ field, value, onChange, errors, id, content = false }: Omit<Props, 'value'> & { value: unknown[] }) {
     const columns = field.fields ?? [];
     const rows = value.map(asRecord);
@@ -273,12 +326,13 @@ function Rows({ field, value, onChange, errors, id, content = false }: Omit<Prop
     const noun = (field.label || 'row').toLowerCase().replace(/s$/, '');
     const Noun = noun.charAt(0).toUpperCase() + noun.slice(1);
     const items = rows.map((row, index) => ({ row, index, key: keys.keys[index] ?? String(index) }));
+    const folding = useCollapsed();
 
     return (
         <div className="cms:flex cms:flex-col cms:gap-2">
             <SortableList items={items} getId={(item) => item.key} getLabel={(item) => `${noun} ${item.index + 1}`}
                 onReorder={(next, from, to) => { keys.move(from, to); onChange(next.map((item) => item.row)); }}>
-                {({ row, index }, { handle }) => isCompact(field, content) ? (
+                {({ row, index, key }, { handle }) => isCompact(field, content) ? (
                     <div className="cms:flex cms:items-start cms:gap-2">
                         <SortableHandle {...handle} label={`Move ${noun} ${index + 1}`} className="cms:mt-1" />
                         {columns.map((column) => (
@@ -293,18 +347,26 @@ function Rows({ field, value, onChange, errors, id, content = false }: Omit<Prop
                             <Trash2 />
                         </Button>
                     </div>
-                ) : (
-                    <div className="cms:flex cms:flex-col cms:gap-2">
-                        <ItemBar label={`${Noun} ${index + 1}`} handle={handle} onRemove={() => remove(index)}
-                            hidden={content ? row._hidden === true : undefined} onHidden={(hidden) => set(index, { ...row, _hidden: hidden })} />
-                        <Fields fields={columns} value={row} onChange={(next) => set(index, next)} errors={errorsAt(errors, String(index))} id={`${id}-${index}`} content={content} />
-                    </div>
-                )}
+                ) : (() => {
+                    const rowErrors = errorsAt(errors, String(index));
+                    const collapsed = folding.isCollapsed(key, Object.keys(rowErrors).length > 0);
+                    return (
+                        <div className="cms:flex cms:flex-col cms:gap-2">
+                            <ItemBar label={`${Noun} ${index + 1}`} summary={itemSummary(columns, row)} handle={handle} onRemove={() => remove(index)}
+                                collapsed={collapsed} onToggle={() => folding.toggle(key)} controls={`${id}-${index}-fields`}
+                                hidden={content ? row._hidden === true : undefined} onHidden={(hidden) => set(index, { ...row, _hidden: hidden })} />
+                            <div id={`${id}-${index}-fields`} hidden={collapsed}>
+                                {!collapsed && <Fields fields={columns} value={row} onChange={(next) => set(index, next)} errors={rowErrors} id={`${id}-${index}`} content={content} />}
+                            </div>
+                        </div>
+                    );
+                })()}
             </SortableList>
-            <div>
+            <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
                 <Button type="button" variant="outline" size="sm" onClick={() => onChange([...rows, content ? newRow() : {}])}>
                     <Plus /> Add {noun}
                 </Button>
+                {!isCompact(field, content) && <FoldAll keys={items.map((item) => item.key)} folding={folding} />}
             </div>
         </div>
     );
@@ -317,30 +379,36 @@ function Blocks({ field, value, onChange, errors, id }: Omit<Props, 'value'> & {
     const set = (index: number, block: Record<string, unknown>) => onChange(blocks.map((b, i) => (i === index ? block : b)));
     const remove = (index: number) => { keys.remove(index); onChange(blocks.filter((_, i) => i !== index)); };
     const items = blocks.map((block, index) => ({ block, index, key: keys.keys[index] ?? String(index) }));
+    const folding = useCollapsed();
 
     return (
         <div className="cms:flex cms:flex-col cms:gap-3">
             <SortableList items={items} getId={(item) => item.key} className="cms:gap-3"
                 getLabel={(item) => `${types.find((t) => t.type === item.block.type)?.label ?? String(item.block.type)} block`}
                 onReorder={(next, from, to) => { keys.move(from, to); onChange(next.map((item) => item.block)); }}>
-                {({ block, index }, { handle }) => {
+                {({ block, index, key }, { handle }) => {
                     const type = types.find((t) => t.type === block.type);
+                    const blockErrors = errorsAt(errors, `${index}.values`);
+                    const collapsed = folding.isCollapsed(key, Object.keys(blockErrors).length > 0 || errors[`${index}.type`] !== undefined);
                     return (
                         <div className="cms:flex cms:flex-col cms:gap-2">
-                            <ItemBar label={type?.label ?? String(block.type)} badge handle={handle} onRemove={() => remove(index)}
+                            <ItemBar label={type?.label ?? String(block.type)} summary={type ? itemSummary(type.fields, asRecord(block.values)) : null} badge
+                                handle={handle} onRemove={() => remove(index)} collapsed={collapsed} onToggle={() => folding.toggle(key)} controls={`${id}-${index}-fields`}
                                 hidden={block.hidden === true} onHidden={(hidden) => set(index, { ...block, hidden })} />
-                            {type ? (
-                                <Fields fields={type.fields} value={asRecord(block.values)} onChange={(values) => set(index, { ...block, values })}
-                                    errors={errorsAt(errors, `${index}.values`)} id={`${id}-${index}`} content />
-                            ) : (
-                                <p className="cms:rounded-lg cms:border cms:p-4 cms:text-sm cms:text-muted-foreground">This kind of block no longer exists. Its values are kept.</p>
-                            )}
+                            <div id={`${id}-${index}-fields`} hidden={collapsed}>
+                                {collapsed ? null : type ? (
+                                    <Fields fields={type.fields} value={asRecord(block.values)} onChange={(values) => set(index, { ...block, values })}
+                                        errors={blockErrors} id={`${id}-${index}`} content />
+                                ) : (
+                                    <p className="cms:rounded-lg cms:border cms:p-4 cms:text-sm cms:text-muted-foreground">This kind of block no longer exists. Its values are kept.</p>
+                                )}
+                            </div>
                             <FieldError message={errors[`${index}.type`]} />
                         </div>
                     );
                 }}
             </SortableList>
-            <div>
+            <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button type="button" variant="outline" size="sm" disabled={types.length === 0}><Plus /> Add block</Button>
@@ -351,28 +419,42 @@ function Blocks({ field, value, onChange, errors, id }: Omit<Props, 'value'> & {
                         ))}
                     </DropdownMenuContent>
                 </DropdownMenu>
+                <FoldAll keys={items.map((item) => item.key)} folding={folding} />
             </div>
         </div>
     );
 }
 
-/** The bar above a row or block: its drag handle, name, show/hide and remove. */
-function ItemBar({ label, badge = false, handle, onRemove, hidden, onHidden }: {
-    label: string; badge?: boolean; handle: SortableHandleProps; onRemove: () => void;
+/**
+ * The bar above a row or block: its drag handle, a fold toggle with its
+ * name and what it says, whether the site shows it, and remove.
+ */
+function ItemBar({ label, summary, badge = false, handle, onRemove, collapsed, onToggle, controls, hidden, onHidden }: {
+    label: string; summary?: string | null; badge?: boolean; handle: SortableHandleProps; onRemove: () => void;
+    collapsed: boolean; onToggle: () => void; controls: string;
     hidden?: boolean; onHidden: (hidden: boolean) => void;
 }) {
+    const Chevron = collapsed ? ChevronRight : ChevronDown;
+    const name = summary ? `${label}: ${summary}` : label;
+
     return (
         <div className="cms:flex cms:items-center cms:gap-2">
-            <SortableHandle {...handle} label={`Move ${label}`} />
-            {badge ? <Badge variant="secondary">{label}</Badge> : <span className="cms:text-sm cms:font-medium">{label}</span>}
+            <SortableHandle {...handle} label={`Move ${name}`} />
+            <button type="button" onClick={onToggle} aria-expanded={!collapsed} aria-controls={controls}
+                className="cms:flex cms:min-w-0 cms:flex-1 cms:items-center cms:gap-2 cms:rounded-md cms:text-left cms:outline-none cms:focus-visible:ring-2 cms:focus-visible:ring-ring">
+                <Chevron className="cms:size-4 cms:shrink-0 cms:text-muted-foreground" aria-hidden />
+                {badge ? <Badge variant="secondary">{label}</Badge> : <span className="cms:shrink-0 cms:text-sm cms:font-medium">{label}</span>}
+                {summary && <span className="cms:truncate cms:text-sm cms:text-muted-foreground">{summary}</span>}
+                <span className="cms:sr-only">{collapsed ? '(collapsed)' : ''}</span>
+            </button>
             {hidden !== undefined && (
-                <label className="cms:ml-auto cms:flex cms:items-center cms:gap-2 cms:text-sm cms:text-muted-foreground">
-                    <Switch checked={!hidden} onCheckedChange={(shown: boolean) => onHidden(!shown)} aria-label={`Show ${label}`} />
-                    Show
+                <label className="cms:flex cms:shrink-0 cms:items-center cms:gap-2 cms:text-sm cms:text-muted-foreground" title="Off: kept here, but left out of the page">
+                    <Switch checked={!hidden} onCheckedChange={(shown: boolean) => onHidden(!shown)} aria-label={`${name}: visible on site`} />
+                    Visible on site
                 </label>
             )}
-            <Button type="button" variant="ghost" size="icon" className={`cms:size-8 cms:text-destructive ${hidden === undefined ? 'cms:ml-auto' : ''}`}
-                aria-label={`Remove ${label}`} onClick={onRemove}><Trash2 /></Button>
+            <Button type="button" variant="ghost" size="icon" className="cms:size-8 cms:shrink-0 cms:text-destructive"
+                aria-label={`Remove ${name}`} onClick={onRemove}><Trash2 /></Button>
         </div>
     );
 }

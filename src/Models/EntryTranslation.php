@@ -36,6 +36,8 @@ use Sunrice\Cms\Support\SearchText;
  * @property Carbon|null $published_at
  * @property int $version
  * @property int|null $main_version the main translation's version when this one was made or last saved (another language than the main one)
+ * @property Carbon|null $review_requested_at when it was sent for review (RequestReview); null once published
+ * @property int|null $review_requested_by who sent it for review (a user id)
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Entry $entry
@@ -71,7 +73,7 @@ class EntryTranslation extends Model
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['data' => 'array', 'draft_data' => 'array', 'published_at' => 'datetime', 'version' => 'integer', 'main_version' => 'integer'];
+        return ['data' => 'array', 'draft_data' => 'array', 'published_at' => 'datetime', 'version' => 'integer', 'main_version' => 'integer', 'review_requested_at' => 'datetime', 'review_requested_by' => 'integer'];
     }
 
     /** @return BelongsTo<Entry, $this> */

@@ -17,7 +17,7 @@ The filters stay in the page's address, so you can bookmark a view or send it to
 
 ### Several at once
 
-Tick entries (or the box at the top for the whole page) to **Publish**, **Unpublish** or **Move to the trash** them together. In the trash, **Restore** or **Delete for good**. Entries you may not change, or that can't be published as they are (a required field is empty, for example), are skipped, and the panel says how many.
+Tick entries (or the box at the top for the whole page) to **Publish**, **Unpublish** or **Move to the trash** them together. Right after trashing, the message has an **Undo** button. In the trash, rows say **Trashed** and each has a **Restore** button; ticked ones can be restored or **Deleted for good** together. Entries you may not change, or that can't be published as they are (a required field is empty, for example), are skipped, and the panel says how many.
 
 ### Putting entries in order
 
@@ -38,7 +38,7 @@ From then on, **Save draft** keeps your work (or press **Ctrl S** / **⌘ S**). 
 - **Media** fields pick images or files from the [media library](guide:panel/media), or upload new ones.
 - **Entries** and **Terms** fields link to other entries or to categories and tags; search by title.
 - **Link** fields take a web address, or another entry (choose **Entry** to follow its address even if it changes).
-- **Groups**, **repeaters** and **flexible** fields hold several fields together; repeaters and flexible fields add rows or blocks, which you drag into order by their handle.
+- **Groups**, **repeaters** and **flexible** fields hold several fields together; repeaters and flexible fields add rows or blocks, which you drag into order by their handle. Each row or block is named by its first text; click its name to fold it away (**Collapse all** folds the whole list), and switch off **Visible on site** to keep it here but leave it out of the page.
 
 The editor's cards (groups, **Search and sharing**, and the cards on the right) fold away when you click their title. The panel remembers which ones you folded, and opens a card by itself when a field inside it has an error.
 
@@ -53,11 +53,11 @@ Every entry has a **draft**, which you edit, and a **live** version, which visit
 The **Status** card on the right says whether the entry is a draft, scheduled or published (and since when), and warns when *The draft has changes the site doesn't show yet*. In collections with dates (like a journal), it also has the entry's **Date**: change it and press **Change the date** to back-date a published post or move it, without publishing your draft; a date to come takes it off the site until then. A draft gets its date when it's published (**Publish on a date…** with an earlier date back-dates it).
 
 > [!NOTE]
-> If your role can write but not publish (the *author* role, for example), you save drafts and someone else publishes them.
+> If your role can write but not publish (the *author* role, for example), you save drafts and someone else publishes them. When a draft is ready, click **Submit for review**: it's saved, everyone who can publish it gets an email, and it appears under **Waiting for review** on their dashboard. The entry shows a **Waiting for review** badge until someone publishes it.
 
 ## Seeing your work on the website
 
-- **Preview** opens the saved draft as it will look on the website, in a new tab. Save first: the preview shows what's saved, not what's on your screen. The preview link works for 30 minutes, and anyone you send it to can open it in that time.
+- **Preview** opens the saved draft as it will look on the website, in a new tab. Save first: the preview shows what's saved, not what's on your screen. The preview link works for 30 minutes, and anyone you send it to can open it in that time; a dark ribbon at the top says it's a preview. Collections whose entries have no page of their own (testimonials, say) have no Preview.
 - **View** opens the live page.
 - If your role may see drafts on the site, live pages with unpublished changes show you a small banner while you're signed in, with **View draft**. Visitors never see it.
 
@@ -84,7 +84,7 @@ Every publish keeps a **revision**: a copy of what was published, with the date 
 
 ## More actions
 
-- **Duplicate** copies the entry, in every language, as a new draft titled "… (copy)".
+- **Duplicate** copies the entry, in every language, as a new draft titled "… (copy)". Until it's first published, renaming it renames its slug too (unless you typed a slug of your own).
 - The bin button **moves it to the trash**: it comes off the website and out of the list, in every language, and can be restored. If other content uses it, the panel names where first.
 - In the trash, an entry has **Restore** and **Delete for good** (everything, in every language, with its revisions; this can't be undone).
 

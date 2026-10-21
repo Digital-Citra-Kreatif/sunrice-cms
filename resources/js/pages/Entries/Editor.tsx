@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Deferred, Head, router, useForm, usePage } from '@inertiajs/react';
-import { CalendarClock, Check, ChevronDown, Copy, ExternalLink, Eye, Languages, LoaderCircle, Plus, RotateCcw, Trash2, Undo2 } from 'lucide-react';
+import { CalendarClock, Check, ChevronDown, Copy, ExternalLink, Eye, Languages, LoaderCircle, Plus, RotateCcw, Send, Trash2, Undo2 } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
     Badge, Button, Card, CardContent, CollapsibleCard, DatePicker, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -14,12 +14,12 @@ import { FieldSections } from '@/components/FieldSections.tsx';
 import { TermLabels } from '@/components/TermsPicker.tsx';
 import { SEO_FIELDS } from '@/lib/seo.ts';
 import { FieldError, Fields } from '@/components/FieldInput.tsx';
-import { errorsAt, hasErrors } from '@/lib/builder.ts';
-import { type EntryLocale, type EntryStatus, formatDate, localeName, localInputValue, scheduleStart, statusLabel } from '@/lib/entries.ts';
+import { errorKeysAt, errorsAt, hasErrors } from '@/lib/builder.ts';
+import { type EntryLocale, type EntryStatus, followingSlug, formatDate, localeName, localInputValue, scheduleStart, statusLabel } from '@/lib/entries.ts';
 import type { FieldDefinition } from '@/types.ts';
 
 interface Props {
-    collection: { handle: string; title: string; dated: boolean; hierarchical?: boolean; ordered?: boolean; comments?: boolean };
+    collection: { handle: string; title: string; dated: boolean; hierarchical?: boolean; ordered?: boolean; comments?: boolean; pages?: boolean };
     /** Every language's: the parent entry and the entry's own Blade view. */
     settings?: { parentId: number | null; template: string | null; commentsClosed?: boolean; blueprint?: string | null };
     /** Whether it's the site's homepage, and whether the user may make it so (cms.homepage). */
@@ -40,6 +40,8 @@ interface Props {
         publishedAt: string | null;
         hasUnpublishedChanges: boolean;
         trashed: boolean;
+        /** Sent for review ("Submit for review"): when, and by whom. */
+        review?: { requestedAt: string; by: string | null } | null;
         version: number;
         /** The live page, when published and the collection has a URL. */
         url: string | null;
@@ -68,7 +70,7 @@ interface Props {
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FieldValues = Record<string, any>;
-type UsedBy = { label: string; url: string | null; field: string };
+type UsedBy = { label: string; url: string | null; field: string; fieldLabel?: string };
 /** A published version: who published it and what it changed from the one before (null: the first, or older ones were pruned). */
 type Revision = { id: number; title: string; createdAt: string | null; author: string | null; changed: string[] | null };
 
@@ -117,6 +119,11 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
     const errors = form.errors as Record<string, string | undefined>;
     // From the sidebar's own requests (the date, the homepage).
     const pageErrors = (usePage().props.errors ?? {}) as Record<string, string | undefined>;
+    // An edited value loses its error: the server's message was about what was there before.
+    const clearErrorsAt = (path: string) => {
+        const keys = errorKeysAt(errors, path);
+        if (keys.length > 0) form.clearErrors(...(keys as never[]));
+    };
     // Nothing new to publish: the live version is the draft, and the form has no changes.
     const upToDate = entry !== null && entry.status !== 'draft' && !entry.hasUnpublishedChanges && !form.isDirty;
     const editable = entry === null ? can.create : can.update && !entry.trashed;
@@ -153,6 +160,17 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
     };
     useUnsavedChanges(form.isDirty && !lock.takenOver, writable ? () => form.processing || save() : undefined);
 
+    // Those who may edit but not publish ask for a review: of what's in the form, saved first.
+    const requestReview = () => {
+        const send = () => router.post(`${url}/review`, locale, { preserveScroll: true });
+        if (form.isDirty) {
+            form.transform((data) => ({ ...data, publish: false, published_at: null }));
+            form.put(url, { preserveScroll: true, onSuccess: send });
+        } else {
+            send();
+        }
+    };
+
     // Publishing what's in the form: saved first when one may edit, else the saved draft.
     const publish = (publishedAt: string | null = null) => {
         if (can.update) {
@@ -163,7 +181,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
     };
 
     return (
-        <form onSubmit={(e) => { e.preventDefault(); save(); }} className="cms:flex cms:flex-col cms:gap-6">
+        <form noValidate onSubmit={(e) => { e.preventDefault(); save(); }} className="cms:flex cms:flex-col cms:gap-6">
             <Head title={heading} />
             {confirmDialog}
             {lock.dialogs}
@@ -173,7 +191,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                 back={{ href: list, label: `Back to ${collection.title}` }}
                 actions={
                     <>
-                        {entry && !entry.trashed && (
+                        {entry && !entry.trashed && collection.pages !== false && (
                             <Button type="button" variant="ghost" asChild>
                                 <a href={entry.previewUrl} target="_blank" rel="noopener noreferrer"
                                     title={form.isDirty ? 'Shows the saved draft: save first to see your changes.' : 'Shows the saved draft.'}>
@@ -205,7 +223,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                         )}
                         {entry && !entry.trashed && can.delete && !lock.readOnly && (
                             <Button type="button" variant="outline" size="icon" className="cms:text-destructive" aria-label="Move to the trash"
-                                onClick={() => confirm(`Move "${values.title}" to the trash? It comes off the site; you can restore it.${usedBySentence(usedBy)}`, () => router.delete(url))}>
+                                onClick={() => confirm(`Move "${values.title}" to the trash? It comes off the site; you can restore it.${usedBySentence(usedBy)}`, () => router.delete(url), 'Move to trash')}>
                                 <Trash2 />
                             </Button>
                         )}
@@ -216,9 +234,15 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                             </Button>
                         )}
                         {writable && (
-                            <Button type="submit" variant={entry && can.publish ? 'outline' : 'default'} disabled={form.processing}>
+                            <Button type="submit" variant={entry ? 'outline' : 'default'} disabled={form.processing}>
                                 {form.processing && <LoaderCircle className="cms:animate-spin" />}
                                 {entry ? 'Save draft' : 'Create draft'}
+                            </Button>
+                        )}
+                        {entry && !entry.trashed && writable && !can.publish && (entry.status === 'draft' || entry.hasUnpublishedChanges || form.isDirty) && (
+                            <Button type="button" disabled={form.processing} onClick={requestReview}
+                                title={entry.review ? 'Already sent; sending again tells them again' : 'Ask those who can publish to review it'}>
+                                <Send /> {entry.review ? 'Send for review again' : 'Submit for review'}
                             </Button>
                         )}
                         {entry && !entry.trashed && can.publish && !lock.readOnly && (
@@ -256,6 +280,9 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                 }
             >
                 {entry && <Badge variant={entry.status === 'published' ? 'success' : 'secondary'}>{entry.trashed ? 'In the trash' : statusLabel(entry.status)}</Badge>}
+                {entry?.review && !entry.trashed && (
+                    <Badge variant="warning" title={`${entry.review.by ? `${entry.review.by} sent it` : 'Sent'} on ${formatDate(entry.review.requestedAt)}`}>Waiting for review</Badge>
+                )}
                 {form.isDirty && <span className="cms:text-sm cms:text-muted-foreground">Unsaved changes</span>}
             </PageHeader>
 
@@ -266,7 +293,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                         () => router.delete(`${url}/translations/${entry.locale}`))} />
             )}
 
-            <ViewingNotice by={lock.viewingBy} />
+            <ViewingNotice by={lock.viewingBy} onTakeOver={lock.requestTakeOver} />
             <KeptEditsNotice kept={lock.kept} disabled={!writable} onLoad={(id: number) => void loadKept(id)} onDiscard={(id: number) => void lock.discardKept(id)} />
             {errors.version && (
                 <div role="alert" className="cms:flex cms:flex-wrap cms:items-center cms:justify-between cms:gap-3 cms:rounded-lg cms:border cms:border-destructive cms:p-3 cms:text-sm cms:text-destructive">
@@ -292,13 +319,18 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                                 <div className="cms:flex cms:flex-col cms:gap-2">
                                     <Label htmlFor="title">Title</Label>
                                     <Input id="title" value={form.data.title} aria-invalid={errors.title !== undefined}
-                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => form.setData('title', e.target.value)} />
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                            const title = e.target.value;
+                                            // A slug made from the title (a duplicate's "-copy") follows it until first published.
+                                            form.setData((data) => ({ ...data, title, slug: followingSlug(data.slug, data.title, title, entry !== null && entry.publishedAt === null && entry.status === 'draft') }));
+                                            clearErrorsAt('title');
+                                        }} />
                                     <FieldError message={errors.title} />
                                 </div>
                                 <div className="cms:flex cms:flex-col cms:gap-2">
                                     <Label htmlFor="slug">Slug</Label>
                                     <Input id="slug" className="cms:font-mono" value={form.data.slug} placeholder="Made from the title" aria-invalid={errors.slug !== undefined}
-                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => form.setData('slug', e.target.value)} />
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => { form.setData('slug', e.target.value); clearErrorsAt('slug'); }} />
                                     <FieldError message={errors.slug} />
                                 </div>
                             </fieldset>
@@ -308,14 +340,14 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                     <TermLabels.Provider value={Array.isArray(termLabels) || !termLabels ? {} : termLabels}>
                         <FieldSections disabled={!writable} fields={fields} values={form.data.data} errors={errors} storageKey={`cms:entry:${collection.handle}`}
                             shared={shared} sharedValues={sharedValues}
-                            sharedNote={`Shared by all languages: edit it in ${mainLocale ? localeName(mainLocale) : 'the main language'}.`}
-                            onChange={(handle, value) => form.setData('data', { ...form.data.data, [handle]: value })} />
+                            sharedNote={`Shared by all languages: the greyed-out fields are edited in ${mainLocale ? localeName(mainLocale) : 'the main language'}.`}
+                            onChange={(handle, value) => { form.setData('data', { ...form.data.data, [handle]: value }); clearErrorsAt(`data.${handle}`); }} />
                     </TermLabels.Provider>
 
                     <CollapsibleCard title="Search and sharing" titleClassName="cms:text-base" storageKey="cms:entry:seo" hasErrors={hasErrors(errors, 'seo')}>
                         <fieldset disabled={!writable} className="cms:min-w-0">
                             <Fields bare id="seo" fields={SEO_FIELDS} value={form.data.seo} errors={errorsAt(errors, 'seo')}
-                                onChange={(seo) => form.setData('seo', seo)} />
+                                onChange={(seo) => { form.setData('seo', seo); clearErrorsAt('seo'); }} />
                         </fieldset>
                     </CollapsibleCard>
                 </div>
@@ -333,6 +365,11 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                     <aside className="cms:flex cms:flex-col cms:gap-4">
                         <CollapsibleCard title="Status" titleClassName="cms:text-base" storageKey="cms:entry:status" contentClassName="cms:flex cms:flex-col cms:gap-1 cms:text-sm">
                             <p>{statusLabel(entry.status)}{entry.status !== 'draft' && entry.publishedAt ? ` · ${formatDate(entry.publishedAt)}` : ''}</p>
+                            {entry.review && (
+                                <p className="cms:text-muted-foreground">
+                                    Sent for review{entry.review.by ? ` by ${entry.review.by}` : ''} · {formatDate(entry.review.requestedAt)}.{can.publish ? ' Publishing it answers the request.' : ''}
+                                </p>
+                            )}
                             {entry.status !== 'draft' && entry.hasUnpublishedChanges && <p className="cms:text-muted-foreground">The draft has changes the site doesn't show yet.</p>}
                             {homepage?.is && <p className="cms:text-muted-foreground">This is the site's homepage.</p>}
                             {homepage && !homepage.is && homepage.can && entry.status === 'published' && !entry.trashed && (
@@ -355,7 +392,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                             {usedBy.map((use) => (
                                 <div key={`${use.label}:${use.field}`} className="cms:min-w-0">
                                     {use.url ? <a href={use.url} className="cms:block cms:truncate cms:underline-offset-4 cms:hover:underline">{use.label}</a> : <span className="cms:block cms:truncate">{use.label}</span>}
-                                    <span className="cms:font-mono cms:text-xs cms:text-muted-foreground">{use.field}</span>
+                                    <span className="cms:text-xs cms:text-muted-foreground" title={use.field}>{use.fieldLabel ?? use.field}</span>
                                 </div>
                             ))}
                         </CollapsibleCard>

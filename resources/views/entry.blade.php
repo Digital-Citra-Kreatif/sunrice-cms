@@ -10,7 +10,6 @@
 </head>
 <body class="{{ \Sunrice\Cms\Content::bodyClass() }}">
     <x-sunrice-cms::code place="body-start" />
-    @if ($preview)<p style="background:#fff3cd;padding:.5rem 1rem;border-radius:.375rem">{{ __('sunrice-cms::site.preview') }}</p>@endif
     {{-- On an untranslated page ($fallback) the content is the main language's: lang says so. --}}
     <article{{ \Sunrice\Cms\Content::page()?->langAttribute() }}><h1>{{ $title }}</h1>
     @foreach ($values as $handle => $value)

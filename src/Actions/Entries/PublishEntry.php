@@ -68,6 +68,9 @@ final class PublishEntry
                     : ($translation->published_at === null || (! $translation->isPublished() && $translation->published_at->isFuture()) ? now() : $translation->published_at),
                 // Counted up too, so an editor opened before this publish can't save over it unknowingly.
                 'version' => $translation->version + 1,
+                // Published: no longer waiting for review (RequestReview).
+                'review_requested_at' => null,
+                'review_requested_by' => null,
             ]);
             // Another language is up to date with the main one as it is now (EntryTranslation::isOutdated()).
             $mainVersion = $translation->currentMainVersion();

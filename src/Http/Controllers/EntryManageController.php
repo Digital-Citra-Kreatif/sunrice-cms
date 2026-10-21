@@ -46,11 +46,17 @@ final class EntryManageController
         $done = $bulk->handle($collection, $request->string('action')->toString(), $ids, $user instanceof Authorizable ? $user : null);
         $skipped = count($ids) - $done;
 
-        return back()->with($done > 0 ? 'success' : 'error', match (true) {
+        $response = back()->with($done > 0 ? 'success' : 'error', match (true) {
             $done === 0 => 'Nothing was changed.',
+            $request->input('action') === 'trash' && $skipped === 0 => ($done === 1 ? '1 entry' : "{$done} entries").' moved to the trash.',
             $skipped > 0 => "Done for {$done} of ".count($ids)." entries; the others can't be (not allowed, or not ready to publish).",
             default => "Done for {$done} ".($done === 1 ? 'entry' : 'entries').'.',
         });
+
+        // Trashing can be undone from the toast: the same entries, restored.
+        return $done > 0 && $request->input('action') === 'trash'
+            ? $response->with('success_action', ['label' => 'Undo', 'url' => route('sunrice.admin.cms.entries.bulk', $collection), 'data' => ['action' => 'restore', 'ids' => $ids]])
+            : $response;
     }
 
     /**

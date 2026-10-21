@@ -1,7 +1,5 @@
 import '../css/admin.css';
-import { adminUrl, definePlugin } from '@sunrice/admin-sdk';
-import { registerCommandSource } from '@sunrice/admin-sdk/ui';
-import { searchEntries } from '@/lib/command-source.ts';
+import { definePlugin } from '@sunrice/admin-sdk';
 import BlueprintForm from '@/pages/Blueprints/Form.tsx';
 import BlueprintsIndex from '@/pages/Blueprints/Index.tsx';
 import EntryEditor from '@/pages/Entries/Editor.tsx';
@@ -35,6 +33,3 @@ definePlugin({
         'Cms/Submissions/Index': SubmissionsIndex,
     },
 });
-
-// Cmd/Ctrl+K also searches entries by title, once this bundle has loaded (any CMS page).
-registerCommandSource((query, signal) => searchEntries(query, signal, adminUrl));

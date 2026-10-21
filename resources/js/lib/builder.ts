@@ -99,6 +99,11 @@ export function errorsAt(errors: Errors, path: string): Errors {
     return { ...errorsUnder(errors, path), ...(own !== undefined ? { '': own } : {}) };
 }
 
+/** The error keys at or under a path: cleared once that value is edited, so a fixed field shows no stale error. */
+export function errorKeysAt(errors: Errors, path: string): string[] {
+    return Object.keys(errors).filter((key) => key === path || key.startsWith(`${path}.`));
+}
+
 /** Whether there's any error at or under a path. */
 export function hasErrors(errors: Errors, path: string): boolean {
     return Object.keys(errors).some((key) => key === path || key.startsWith(`${path}.`));

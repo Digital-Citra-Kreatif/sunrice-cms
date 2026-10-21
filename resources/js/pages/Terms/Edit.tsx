@@ -9,7 +9,7 @@ import {
 import { FieldError, Fields } from '@/components/FieldInput.tsx';
 import { FieldSections } from '@/components/FieldSections.tsx';
 import { VersionConflict } from '@/components/VersionConflict.tsx';
-import { errorsAt, hasErrors } from '@/lib/builder.ts';
+import { errorKeysAt, errorsAt, hasErrors } from '@/lib/builder.ts';
 import { localeName } from '@/lib/entries.ts';
 import { SEO_FIELDS } from '@/lib/seo.ts';
 import type { FieldDefinition } from '@/types.ts';
@@ -33,7 +33,7 @@ interface Props {
     /** The translation's version, to refuse a save over someone else's newer one; null when not translated. */
     version: number | null;
     /** Where other content points at this term. */
-    usedBy?: { label: string; url: string | null; field: string }[];
+    usedBy?: { label: string; url: string | null; field: string; fieldLabel?: string }[];
 }
 
 export default function TermEditPage(props: Props) {
@@ -47,6 +47,10 @@ function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared,
     useBreadcrumbs([{ label: taxonomy.title, href: `${list}?locale=${locale}` }, { label: term.title }]);
     const form = useForm<{ locale: string; data: FieldValues; seo: FieldValues; template: string; version: number | null }>({ locale, data: values, seo: seo ?? {}, template: term.template ?? '', version });
     const errors = form.errors as Record<string, string | undefined>;
+    const clearErrorsAt = (path: string) => {
+        const keys = errorKeysAt(errors, path);
+        if (keys.length > 0) form.clearErrors(...(keys as never[]));
+    };
     const save = () => form.processing || form.put(url, { preserveScroll: true });
     // After "someone else saved": save over their version anyway.
     const saveMine = () => {
@@ -71,7 +75,7 @@ function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared,
     useUnsavedChanges(form.isDirty && !lock.takenOver, writable ? save : undefined);
 
     return (
-        <form onSubmit={(e) => { e.preventDefault(); save(); }} className="cms:flex cms:max-w-3xl cms:flex-col cms:gap-6">
+        <form noValidate onSubmit={(e) => { e.preventDefault(); save(); }} className="cms:flex cms:max-w-3xl cms:flex-col cms:gap-6">
             <Head title={term.title} />
             {lock.dialogs}
             <PageHeader
@@ -97,15 +101,15 @@ function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared,
                 <p className="cms:text-muted-foreground">This term has no title in {localeName(locale)} yet: give it one in the list first.</p>
             ) : (
                 <div className="cms:flex cms:min-w-0 cms:flex-col cms:gap-6">
-                    <ViewingNotice by={lock.viewingBy} />
+                    <ViewingNotice by={lock.viewingBy} onTakeOver={lock.requestTakeOver} />
                     <KeptEditsNotice kept={lock.kept} disabled={!writable} onLoad={(id: number) => void loadKept(id)} onDiscard={(id: number) => void lock.discardKept(id)} />
                     <VersionConflict message={errors.version} processing={form.processing} onSaveMine={saveMine} />
                     <FieldSections disabled={!writable} fields={fields} values={form.data.data} errors={errors} storageKey={`cms:term:${taxonomy.handle}`}
-                        shared={shared} sharedValues={sharedValues} sharedNote={`Shared by all languages: edit it in ${localeName(locales[0] ?? 'en')}.`}
-                        onChange={(handle, value) => form.setData('data', { ...form.data.data, [handle]: value })} />
+                        shared={shared} sharedValues={sharedValues} sharedNote={`Shared by all languages: the greyed-out fields are edited in ${localeName(locales[0] ?? 'en')}.`}
+                        onChange={(handle, value) => { form.setData('data', { ...form.data.data, [handle]: value }); clearErrorsAt(`data.${handle}`); }} />
                     <CollapsibleCard title="Search and sharing" titleClassName="cms:text-base" storageKey="cms:term:seo" hasErrors={hasErrors(errors, 'seo')}>
                         <fieldset disabled={!writable} className="cms:min-w-0">
-                            <Fields bare id="seo" fields={SEO_FIELDS} value={form.data.seo} errors={errorsAt(errors, 'seo')} onChange={(next) => form.setData('seo', next)} />
+                            <Fields bare id="seo" fields={SEO_FIELDS} value={form.data.seo} errors={errorsAt(errors, 'seo')} onChange={(next) => { form.setData('seo', next); clearErrorsAt('seo'); }} />
                         </fieldset>
                     </CollapsibleCard>
                     <CollapsibleCard title="Used by" titleClassName="cms:text-base" storageKey="cms:term:used-by" contentClassName="cms:flex cms:flex-col cms:gap-1 cms:text-sm">
@@ -113,7 +117,7 @@ function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared,
                         {usedBy.map((use) => (
                             <div key={`${use.label}:${use.field}`} className="cms:flex cms:items-baseline cms:gap-2">
                                 {use.url ? <a href={use.url} className="cms:truncate cms:underline-offset-4 cms:hover:underline">{use.label}</a> : <span className="cms:truncate">{use.label}</span>}
-                                <span className="cms:font-mono cms:text-xs cms:text-muted-foreground">{use.field}</span>
+                                <span className="cms:text-xs cms:text-muted-foreground" title={use.field}>{use.fieldLabel ?? use.field}</span>
                             </div>
                         ))}
                     </CollapsibleCard>

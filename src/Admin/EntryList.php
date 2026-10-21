@@ -15,7 +15,9 @@ use Sunrice\Admin\Panel;
 use Sunrice\Admin\Preferences\Preferences;
 use Sunrice\Cms\Fields\CustomField;
 use Sunrice\Cms\Fields\Field;
+use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Fields\Schema;
+use Sunrice\Cms\Fields\Types\Link;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
@@ -23,6 +25,7 @@ use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Query\JsonCast;
 use Sunrice\Cms\Query\Sql;
+use Sunrice\Cms\Site\Site;
 use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\FieldText;
 use Sunrice\Cms\Support\Locales;
@@ -97,6 +100,8 @@ final class EntryList
         $search = $request->query('search');
         $this->search = is_string($search) ? mb_substr(trim($search), 0, 200) : '';
         $status = $request->query('status');
+        // "trash" too, as people type it.
+        $status = $status === 'trash' ? 'trashed' : $status;
         $this->status = is_string($status) && in_array($status, self::STATUSES, true) ? $status : ($request->boolean('trashed') ? 'trashed' : '');
         $author = $request->query('author');
         $this->author = is_string($author) && ctype_digit($author) ? (int) $author : null;
@@ -186,7 +191,9 @@ final class EntryList
         $titles = $this->entryTitles($translations, $shown);
         $authors = in_array('author', $this->columns, true) ? $this->authorNames() : [];
 
-        return array_map(function (EntryTranslation $translation) use ($shown, $titles, $authors): array {
+        $site = app(Site::class);
+
+        return array_map(function (EntryTranslation $translation) use ($shown, $titles, $authors, $site): array {
             $translation->entry->setRelation('collection', $this->collection);
             $data = $shown === [] ? [] : $translation->completeData(true);
             $cells = [];
@@ -199,7 +206,10 @@ final class EntryList
                 'id' => $translation->entry_id,
                 'title' => $translation->draft_title,
                 'slug' => $translation->draft_slug,
+                // Its address on the site with the draft's slug (/team/anindya), or null when the collection has no pages.
+                'path' => $site->path($translation, $translation->draft_slug),
                 'status' => $translation->status(),
+                'trashed' => $translation->entry->trashed(),
                 'publishedAt' => $translation->published_at?->toIso8601String(),
                 'updatedAt' => $translation->updated_at?->toIso8601String(),
                 'createdAt' => $translation->created_at?->toIso8601String(),
@@ -214,7 +224,9 @@ final class EntryList
 
     /**
      * Writes the list as CSV rows: the columns, the author, and every
-     * top-level field (field columns as the list shows them, uncut).
+     * top-level field (field columns as the list shows them, uncut; links
+     * as their address, rich text as plain text). A field whose label is
+     * a column's or another field's is headed "Label (field)".
      *
      * @param  Closure(list<bool|float|int|string|null>): void  $write
      */
@@ -228,13 +240,34 @@ final class EntryList
             }
         }
         $fields = array_values($fields);
-        $write(['ID', 'Title', 'Slug', 'Status', 'Published', 'URL', 'Updated', 'Author', ...array_map(FieldText::label(...), $fields)]);
+        $columns = ['ID', 'Title', 'Slug', 'Status', 'Published', 'URL', 'Updated', 'Author'];
+        $taken = array_map(mb_strtolower(...), $columns);
+        $labels = [];
+        foreach ($fields as $field) {
+            $label = FieldText::label($field);
+            $labels[] = in_array(mb_strtolower($label), $taken, true) ? "{$label} (field)" : $label;
+            $taken[] = mb_strtolower($label);
+        }
+        $write([...$columns, ...$labels]);
         $authors = $this->authorNames();
-        $this->query()->chunk(500, function ($translations) use ($fields, $authors, $write): void {
+        // Entry links' addresses, as the site has them in the list's language.
+        $context = new HydrationContext($this->locale);
+        $this->query()->chunk(500, function ($translations) use ($fields, $authors, $write, $context): void {
             $list = array_values($translations->all());
             $titles = $this->entryTitles($list, $this->fields);
+            $linked = [];
             foreach ($list as $translation) {
                 $translation->entry->setRelation('collection', $this->collection);
+                $schema = $translation->entry->schema();
+                foreach ($translation->completeData(true) as $handle => $value) {
+                    $mine = $schema->field((string) $handle);
+                    if ($mine !== null && self::baseType($schema, $mine) === 'link' && is_array($value) && is_int($value['entry_id'] ?? null)) {
+                        $linked[] = $value['entry_id'];
+                    }
+                }
+            }
+            $context->preloadEntries($linked);
+            foreach ($list as $translation) {
                 $data = $translation->completeData(true);
                 $own = $translation->entry->schema();
                 $author = $translation->entry->author_id;
@@ -244,10 +277,28 @@ final class EntryList
                     $translation->updated_at?->toDateTimeString(), $author === null ? null : ($authors['u'.$author] ?? null),
                     ...array_map(fn (Field $field): ?string => ($mine = $own->field($field->handle)) === null ? '' : (isset($this->fields[$field->handle])
                         ? $this->cell($data[$field->handle] ?? null, $this->fields[$field->handle], $titles, false)
-                        : FieldText::text($data[$field->handle] ?? null, $mine)), $fields),
+                        : self::exportText($data[$field->handle] ?? null, $mine, self::baseType($own, $mine), $context)), $fields),
                 ]);
             }
         });
+    }
+
+    /** A field's type, a custom field's base type. */
+    private static function baseType(Schema $schema, Field $field): string
+    {
+        $type = $schema->type($field);
+
+        return $type instanceof CustomField ? $type->baseType() : $type->type();
+    }
+
+    /** A value in the CSV: a link's address, rich text without its tags, the rest as FieldText has it. */
+    private static function exportText(mixed $value, Field $field, string $base, HydrationContext $context): string
+    {
+        return match ($base) {
+            'link' => (string) ((new Link)->hydrate($value, $field, $context)['url'] ?? ''),
+            'rich_text' => is_string($value) ? Str::squish(html_entity_decode(strip_tags(str_replace(['<br>', '<br/>', '<br />', '</p>', '</li>', '</h2>', '</h3>'], ' ', $value)), ENT_QUOTES | ENT_HTML5)) : '',
+            default => FieldText::text($value, $field),
+        };
     }
 
     /**
@@ -492,11 +543,23 @@ final class EntryList
             'toggle' => $value === true || $value === 1 || $value === '1' ? 'Yes' : 'No',
             'select' => FieldText::text($value, $column['field']),
             'entries' => implode(', ', array_map(fn (mixed $id): string => is_scalar($id) ? ($titles[(int) $id] ?? '#'.$id) : '', (array) $value)),
-            'number', 'date' => is_scalar($value) ? (string) $value : '',
+            // Long numbers grouped in the list (18,500,000,000), as typed in the CSV.
+            'number' => is_numeric($value) && $cut ? self::grouped((string) $value) : (is_scalar($value) ? (string) $value : ''),
+            'date' => is_scalar($value) ? (string) $value : '',
             default => is_scalar($value) ? Str::squish(html_entity_decode(strip_tags(str_replace(['<br>', '<br/>', '<br />', '</p>'], ' ', (string) $value)), ENT_QUOTES | ENT_HTML5)) : FieldText::text($value),
         };
 
         return $text === '' ? null : ($cut ? Str::limit($text, self::CELL_LIMIT, '…') : $text);
+    }
+
+    /** A number with its thousands grouped ("18500000000.5" → "18,500,000,000.5"), its decimals as they are. */
+    private static function grouped(string $number): string
+    {
+        if (preg_match('/^(-?)(\d+)(\.\d+)?$/', $number, $parts) !== 1) {
+            return $number;
+        }
+
+        return $parts[1].number_format((float) $parts[2], 0, '.', ',').($parts[3] ?? '');
     }
 
     /** @return array<string, array{field: Field, kind: string, label: string, sortable: bool, translatable: bool}> the visible field columns, by handle */

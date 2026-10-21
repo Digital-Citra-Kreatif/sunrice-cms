@@ -107,7 +107,7 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
                                     )}
                                     <Button variant="ghost" size="icon" className="cms:size-8 cms:text-destructive" aria-label={`Move ${term.fallback} to the trash`}
                                         onClick={() => confirm(`Move "${term.fallback}" to the trash, with the terms under it? It comes off the site; you can restore it.${usedBySentence(term.usedBy)}`,
-                                            () => router.delete(adminUrl(`cms/terms/${term.id}`), { preserveScroll: true }))}>
+                                            () => router.delete(adminUrl(`cms/terms/${term.id}`), { preserveScroll: true }), 'Move to trash')}>
                                         <Trash2 />
                                     </Button>
                                 </div>

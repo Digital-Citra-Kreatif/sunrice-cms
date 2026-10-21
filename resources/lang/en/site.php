@@ -5,6 +5,7 @@ declare(strict_types=1);
 // What visitors read on the site: the CMS's plain views, comments and forms (sunrice-cms::site.*).
 return [
     'preview' => 'Preview of the draft',
+    'preview_note' => 'Visitors don\'t see it until it\'s published.',
     'newer' => 'Newer',
     'older' => 'Older',
     'previous' => 'Previous',

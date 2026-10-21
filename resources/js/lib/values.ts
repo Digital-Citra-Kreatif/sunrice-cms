@@ -18,9 +18,57 @@ export function dateValueFromInput(input: string): string | null {
     return input === '' ? null : input;
 }
 
+/** A long number grouped for reading ("18,500,000,000"), or null below 10,000 and for anything else. */
+export function groupedNumber(value: unknown): string | null {
+    const number = typeof value === 'number' ? value : typeof value === 'string' && value.trim() !== '' ? Number(value) : NaN;
+    if (!Number.isFinite(number) || Math.abs(number) < 10000) return null;
+
+    return new Intl.NumberFormat('en', { maximumFractionDigits: 20 }).format(number);
+}
+
+/**
+ * Whether a single select offers its own "None": not for a required field,
+ * not when an option already means none (its own "None"), and not beside
+ * a default unless the value is empty already (an older entry).
+ */
+export function offersEmptyChoice(options: readonly { value: string; label: string }[], required: boolean, hasDefault: boolean, filled: boolean): boolean {
+    if (required) return false;
+    if (options.some((option) => ['none', ''].includes(option.label.trim().toLowerCase()) || option.value.trim().toLowerCase() === 'none')) return false;
+
+    return !hasDefault || !filled;
+}
+
+interface SharedLike { shared?: boolean; fields?: SharedLike[]; blocks?: { fields: SharedLike[] }[] }
+
+/** Whether any field, at any depth, is shared with the main language (another language's rows and blocks). */
+export function hasSharedFields(fields: readonly SharedLike[]): boolean {
+    return fields.some((field) => field.shared === true || hasSharedFields(field.fields ?? []) || (field.blocks ?? []).some((block) => hasSharedFields(block.fields)));
+}
+
 /** A new repeater row: the server gives it its stable id. */
 export function newRow(): Record<string, unknown> {
     return { _hidden: false };
+}
+
+/**
+ * What a repeater row or block says, to name it in its bar ("15 m saltwater
+ * pool" rather than "Feature 2"): its first filled text field, else null.
+ * Text inside groups counts; rich text is read without its tags.
+ */
+export function itemSummary(fields: readonly { handle: string; type: string; fields?: unknown[] }[], values: Record<string, unknown>, max = 60): string | null {
+    for (const field of fields) {
+        const value = values[field.handle];
+        let text: string | null = null;
+        if (['text', 'textarea', 'email', 'url'].includes(field.type) && typeof value === 'string') text = value;
+        else if (field.type === 'rich_text' && typeof value === 'string') text = value.replace(/<[^>]*>/g, ' ');
+        else if (field.type === 'group' && Array.isArray(field.fields)) {
+            text = itemSummary(field.fields as { handle: string; type: string }[], asRecord(value), max);
+        }
+        const clean = (text ?? '').replace(/\s+/g, ' ').trim();
+        if (clean !== '') return clean.length > max ? `${clean.slice(0, max - 1).trimEnd()}…` : clean;
+    }
+
+    return null;
 }
 
 /** A new flexible block of a kind (a fieldset's handle). */

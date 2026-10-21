@@ -20,7 +20,7 @@ Each translation is saved, published, scheduled and unpublished on its own. Publ
 
 Some fields are **translated**: each language has its own (titles, text, rich text, links). Others are **shared**: one value for every language (a price, a date, a photo, a yes/no switch). The blueprint decides which.
 
-Shared fields are edited in the main language. In the other languages they're shown greyed out with the main language's value, and the note *Shared by all languages: edit it in …*. Change the price once, in the main language, and it's the price everywhere.
+Shared fields are edited in the main language. In the other languages they're shown greyed out with the main language's value, under one note at the top: *Shared by all languages: the greyed-out fields are edited in …*. Change the price once, in the main language, and it's the price everywhere.
 
 Inside groups, repeater rows and flexible blocks, the same goes row by row: the text is per language, and shared values come from the matching row in the main language.
 
@@ -34,7 +34,7 @@ When an entry has no live translation in a language, visitors to that language u
 
 ## The entries list and languages
 
-The list's **Language** menu shows the titles and statuses of one language. Entries without a translation in that language aren't listed there; switch to the main language to find them. With the **Status** column, each entry also shows a small badge per other language; an outdated translation's badge is outlined in amber.
+The list's **Language** menu shows the titles and statuses of one language. Entries without a translation in that language aren't listed there; switch to the main language to find them. With the **Status** column, each entry also shows a small badge per other language: the language code alone when that translation is published and current, else with a word beside it (**draft**, **scheduled**, **outdated** in amber, or **missing** with a dashed border).
 
 ## Keeping translations up to date
 

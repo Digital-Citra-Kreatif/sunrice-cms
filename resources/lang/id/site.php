@@ -5,6 +5,7 @@ declare(strict_types=1);
 // Yang dibaca pengunjung situs: tampilan bawaan CMS, komentar dan formulir (sunrice-cms::site.*).
 return [
     'preview' => 'Pratinjau draf',
+    'preview_note' => 'Pengunjung belum melihatnya sampai diterbitkan.',
     'newer' => 'Lebih baru',
     'older' => 'Lebih lama',
     'previous' => 'Sebelumnya',

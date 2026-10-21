@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import {
-    ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Columns3, Compass, Download, ExternalLink, LayoutList, Plus, Search, X,
+    ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Columns3, Compass, Download, ExternalLink, LayoutList, Plus, RotateCcw, Search, X,
 } from 'lucide-react';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { EntryReorderList } from '@/components/EntryReorderList.tsx';
@@ -20,7 +20,11 @@ interface Row {
     id: number;
     title: string;
     slug: string;
+    /** Its address on the site (/team/anindya), or null when the collection has no pages. */
+    path?: string | null;
     status: EntryStatus;
+    /** In the trash (the status is what it was before). */
+    trashed?: boolean;
     publishedAt: string | null;
     updatedAt: string | null;
     createdAt: string | null;
@@ -133,7 +137,8 @@ function EntryList({
     const runBulk = (action: string, label: string, danger = false) => {
         const go = () => router.post(`${base}/bulk`, { action, ids: selected }, { preserveScroll: true });
         if (danger) {
-            confirm(`${label}: ${selected.length} ${selected.length === 1 ? 'entry' : 'entries'}?${action === 'delete' ? ' This can\'t be undone.' : ''}`, go);
+            confirm(`${label}: ${selected.length} ${selected.length === 1 ? 'entry' : 'entries'}?${action === 'delete' ? ' This can\'t be undone.' : ' They come off the site; you can restore them.'}`,
+                go, action === 'trash' ? 'Move to trash' : 'Delete');
         } else {
             go();
         }
@@ -154,7 +159,9 @@ function EntryList({
     const moveable = manualOrder && !!can?.update;
     // Dragging saves the order of what's shown, the rest of its level after it: only when the whole collection is on this page.
     const draggable = moveable && entries !== null && entries.lastPage <= 1 && entries.data.length > 1;
-    const span = 1 + visible.length + (bulkActions.length > 0 ? 1 : 0) + (moveable ? 1 : 0);
+    // In the trash, each row has its own Restore (the bulk bar has it too).
+    const restorable = trashed && !!can?.delete;
+    const span = 1 + visible.length + (bulkActions.length > 0 ? 1 : 0) + (moveable ? 1 : 0) + (restorable ? 1 : 0);
     const exportQuery = entryListQueryString(params());
     const groups = [...new Set(links.map((link) => link.group))];
 
@@ -227,7 +234,7 @@ function EntryList({
                 ))}
                 {filters.locales.length > 1 && (
                     <Select value={query.locale} onValueChange={(locale: string) => visit({ locale })}>
-                        <SelectTrigger className="cms:w-40" aria-label="Language"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="cms:w-auto cms:min-w-40 cms:max-w-72" aria-label="Language"><SelectValue /></SelectTrigger>
                         <SelectContent>
                             {filters.locales.map((code) => <SelectItem key={code} value={code}>{localeName(code)}{code === mainLocale ? ' (main)' : ''}</SelectItem>)}
                         </SelectContent>
@@ -294,6 +301,7 @@ function EntryList({
                                 ? <SortableHead key={column.key} label={column.label} sortKey={column.key} sort={query.sort} onSort={(sort) => visit({ sort })} />
                                 : <TableHead key={column.key}>{column.label}</TableHead>)}
                             {moveable && <TableHead className="cms:w-px"><span className="cms:sr-only">Order</span></TableHead>}
+                            {restorable && <TableHead className="cms:w-px"><span className="cms:sr-only">Restore</span></TableHead>}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -315,9 +323,9 @@ function EntryList({
                                 <TableCell>
                                     <Link href={adminUrl(`cms/entries/${row.id}/edit${query.locale !== mainLocale ? `?locale=${encodeURIComponent(query.locale)}` : ''}`)}
                                         className="cms:font-medium cms:underline-offset-4 cms:hover:underline">{row.title}</Link>
-                                    {(!query.columns.includes('slug') || row.parent) && (
+                                    {((!query.columns.includes('slug') && row.path) || row.parent) && (
                                         <div className="cms:text-xs cms:text-muted-foreground">
-                                            {!query.columns.includes('slug') && `/${row.slug}`}{row.parent ? `${query.columns.includes('slug') ? '' : ' · '}under ${row.parent}` : ''}
+                                            {[!query.columns.includes('slug') ? row.path : null, row.parent ? `under ${row.parent}` : null].filter(Boolean).join(' · ')}
                                         </div>
                                     )}
                                 </TableCell>
@@ -334,6 +342,14 @@ function EntryList({
                                             <Button variant="ghost" size="icon" aria-label={`Move ${row.title} up`} onClick={() => router.post(adminUrl(`cms/entries/${row.id}/move`), { direction: 'up' }, { preserveScroll: true })}><ArrowUp /></Button>
                                             <Button variant="ghost" size="icon" aria-label={`Move ${row.title} down`} onClick={() => router.post(adminUrl(`cms/entries/${row.id}/move`), { direction: 'down' }, { preserveScroll: true })}><ArrowDown /></Button>
                                         </span>
+                                    </TableCell>
+                                )}
+                                {restorable && (
+                                    <TableCell className="cms:w-px">
+                                        <Button variant="outline" size="sm" aria-label={`Restore ${row.title}`}
+                                            onClick={() => router.post(adminUrl(`cms/entries/${row.id}/restore`), {}, { preserveScroll: true })}>
+                                            <RotateCcw /> Restore
+                                        </Button>
                                     </TableCell>
                                 )}
                             </TableRow>
@@ -369,7 +385,7 @@ function EntryList({
 function FilterSelect({ label, value, options, onChange }: { label: string; value: string; options: Option[]; onChange: (value: string) => void }) {
     return (
         <Select value={value === '' ? ALL : value} onValueChange={(next: string) => onChange(next === ALL ? '' : next)}>
-            <SelectTrigger className="cms:w-40" aria-label={label}><SelectValue placeholder={label} /></SelectTrigger>
+            <SelectTrigger className="cms:w-auto cms:min-w-40 cms:max-w-72" title={label} aria-label={label}><SelectValue placeholder={label} /></SelectTrigger>
             <SelectContent>
                 <SelectItem value={ALL}>{label}: all</SelectItem>
                 {options.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
@@ -395,18 +411,22 @@ function SortableHead({ label, sortKey, sort, onSort }: { label: string; sortKey
 function CellValue({ row, column, mainLocale }: { row: Row; column: Column; mainLocale: string }) {
     switch (column.key) {
         case 'slug':
-            return <>/{row.slug}</>;
+            return <span className="cms:font-mono">{row.slug}</span>;
         case 'status':
             return (
                 <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-1">
-                    <Badge variant={row.status === 'published' ? 'success' : 'secondary'}>{statusLabel(row.status)}</Badge>
-                    {row.locales.length > 1 && row.locales.filter((l) => !l.main).map((l) => (
-                        <Badge key={l.code} variant={l.status === 'published' ? 'secondary' : 'outline'}
-                            className={l.status === null ? 'cms:opacity-50' : l.outdated ? 'cms:ring-2 cms:ring-amber-500/60' : ''}
-                            title={`${localeName(l.code)}: ${l.status === null ? 'not translated' : statusLabel(l.status)}${l.outdated ? ', outdated: the main language changed since' : ''}`}>
-                            {l.code.toUpperCase()}{l.outdated && <span aria-hidden="true">·!</span>}
-                        </Badge>
-                    ))}
+                    {row.trashed
+                        ? <Badge variant="outline" className="cms:text-destructive" title={`${statusLabel(row.status)} before it was trashed`}>Trashed</Badge>
+                        : <Badge variant={row.status === 'published' ? 'success' : 'secondary'}>{statusLabel(row.status)}</Badge>}
+                    {row.locales.length > 1 && row.locales.filter((l) => !l.main).map((l) => {
+                        const badge = languageBadge(l);
+                        return (
+                            <Badge key={l.code} variant={badge.variant} className={badge.className}
+                                title={`${localeName(l.code)}: ${badge.title}`} aria-label={`${localeName(l.code)}: ${badge.title}`}>
+                                {l.code.toUpperCase()}{badge.word && <span className="cms:font-normal">{badge.word}</span>}
+                            </Badge>
+                        );
+                    })}
                 </div>
             );
         case 'author':
@@ -420,6 +440,19 @@ function CellValue({ row, column, mainLocale }: { row: Row; column: Column; main
         default:
             return <span title={row.cells[column.key] ?? undefined}>{row.cells[column.key] ?? '—'}</span>;
     }
+}
+
+/**
+ * Another language's badge in the Status column, its state in words: a
+ * plain code when published and current, else "draft", "scheduled",
+ * "outdated" or "missing" beside it (not only in a tooltip).
+ */
+function languageBadge(l: EntryLocale): { variant: 'secondary' | 'outline' | 'warning'; className: string; word: string | null; title: string } {
+    if (l.status === null) return { variant: 'outline', className: 'cms:border-dashed cms:text-muted-foreground', word: 'missing', title: 'not translated' };
+    if (l.outdated) return { variant: 'warning', className: '', word: 'outdated', title: `${statusLabel(l.status)}, outdated: the main language changed since` };
+    if (l.status === 'published') return { variant: 'secondary', className: '', word: null, title: 'Published' };
+
+    return { variant: 'outline', className: '', word: l.status === 'scheduled' ? 'scheduled' : 'draft', title: statusLabel(l.status) };
 }
 
 function EmptyState({ trashed, filtered, canCreate, createUrl, onClear }: { trashed: boolean; filtered: boolean; canCreate: boolean; createUrl: string; onClear: () => void }) {

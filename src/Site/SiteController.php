@@ -85,12 +85,13 @@ final class SiteController
     }
 
     /** The draft banner after <body>, whatever the template; and never kept by any cache. */
-    private function withDraftBanner(Response $response, EntryTranslation $translation, bool $draft): Response
+    private function withDraftBanner(Response $response, EntryTranslation $translation, bool $draft, bool $preview = false): Response
     {
-        $live = $translation->url();
+        $live = $translation->isLive() ? $translation->url() : null;
         $banner = view('sunrice-cms::draft-banner', [
             'entry' => $translation,
             'draft' => $draft,
+            'preview' => $preview,
             'liveUrl' => $live,
             'draftUrl' => $live === null ? null : $live.'?draft',
             'editUrl' => Route::has('sunrice.admin.cms.entries.edit') ? route('sunrice.admin.cms.entries.edit', [$translation->entry_id, 'locale' => $translation->locale]) : null,
@@ -116,8 +117,9 @@ final class SiteController
     {
         abort_if($translation->entry->trashed() || $translation->entry->collection->trashed(), 404);
 
-        // Not for search engines, nor for any cache: it's a draft, behind a link that expires.
-        return $this->render($translation, preview: true)->header('X-Robots-Tag', 'noindex, nofollow')->header('Cache-Control', 'private, no-store');
+        // Not for search engines, nor for any cache: it's a draft, behind a link that expires. A ribbon says so.
+        return $this->withDraftBanner($this->render($translation, preview: true), $translation, draft: true, preview: true)
+            ->header('X-Robots-Tag', 'noindex, nofollow');
     }
 
     /** An address with the request's query string carried over (?utm_source=…). */

@@ -20,7 +20,7 @@ Setiap terjemahan disimpan, diterbitkan, dijadwalkan, dan ditarik dari situs sec
 
 Sebagian field **diterjemahkan**: setiap bahasa punya isinya sendiri (judul, teks, rich text, tautan). Sebagian lagi **dipakai bersama**: satu nilai untuk semua bahasa (harga, tanggal, foto, saklar ya/tidak). Blueprint yang menentukan mana yang mana.
 
-Field bersama disunting di bahasa utama. Di bahasa lain, field itu tampil abu-abu dengan nilai dari bahasa utama, dan catatan *Shared by all languages: edit it in …*. Ubah harga sekali saja, di bahasa utama, dan harga itu berlaku di semua bahasa.
+Field bersama disunting di bahasa utama. Di bahasa lain, field itu tampil abu-abu dengan nilai dari bahasa utama, dengan satu catatan di atas: *Shared by all languages: the greyed-out fields are edited in …*. Ubah harga sekali saja, di bahasa utama, dan harga itu berlaku di semua bahasa.
 
 Di dalam group, baris repeater, dan blok flexible, aturannya sama per baris: teksnya per bahasa, dan nilai bersama diambil dari baris yang sesuai di bahasa utama.
 
@@ -34,7 +34,7 @@ Jika sebuah entri belum memiliki terjemahan yang tayang dalam suatu bahasa, peng
 
 ## Daftar entri dan bahasa
 
-Menu **Language** di daftar menampilkan judul dan status dalam satu bahasa. Entri yang belum punya terjemahan dalam bahasa itu tidak tercantum; beralihlah ke bahasa utama untuk menemukannya. Dengan kolom **Status**, setiap entri juga menampilkan lencana kecil untuk tiap bahasa lain; lencana terjemahan yang usang diberi garis jingga.
+Menu **Language** di daftar menampilkan judul dan status dalam satu bahasa. Entri yang belum punya terjemahan dalam bahasa itu tidak tercantum; beralihlah ke bahasa utama untuk menemukannya. Dengan kolom **Status**, setiap entri juga menampilkan lencana kecil untuk tiap bahasa lain: kode bahasa saja bila terjemahannya terbit dan mutakhir, selain itu dengan kata di sampingnya (**draft**, **scheduled**, **outdated** berwarna jingga, atau **missing** dengan garis putus-putus).
 
 ## Menjaga terjemahan tetap mutakhir
 
