@@ -11,6 +11,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Str;
+use Sunrice\Admin\Support\AppUrl;
 use Sunrice\Cms\Models\Submission;
 
 /**
@@ -38,7 +39,8 @@ final class SubmissionReceived extends Mailable
     {
         return new Content(view: 'sunrice-cms::mail.submission', with: [
             'form' => $this->submission->form,
-            'rows' => SubmissionRows::of($this->submission),
+            // Sent while a visitor submits: file links on APP_URL, not their Host header.
+            'rows' => array_map(fn (array $row): array => [...$row, 'file' => $row['file'] !== null ? AppUrl::url($row['file']) : null], SubmissionRows::of($this->submission)),
         ]);
     }
 }

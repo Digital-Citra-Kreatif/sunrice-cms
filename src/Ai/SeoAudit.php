@@ -18,8 +18,11 @@ use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\Seo;
 
+/**
+ * @phpstan-import-type SeoTags from Seo
+ */
 #[IsReadOnly]
-#[Description('Check live pages for SEO problems, 50 a page: meta titles (aim for 30-60 characters) and descriptions (70-160) missing or badly sized, no share image, hidden from search engines, thin content, long slugs, and languages the page isn\'t live in; plus titles used by more than one page and images without alt text, site-wide. Fix them with cms_save_entry ("seo": title, description, image) and update_media (alt).')]
+#[Description('Check live pages for SEO problems, 50 a page, as their head shows them (the SEO card, SEO from fields, Settings → Site; a template can still override them): meta titles (aim for 30-60 characters) and descriptions (70-160) missing or badly sized, no share image, hidden from search engines, thin content, long slugs, and languages the page isn\'t live in; plus titles used by more than one page and images without alt text, site-wide. Fix them with cms_save_entry ("seo": title, description, image) and update_media (alt).')]
 final class SeoAudit extends CmsTool
 {
     protected string $name = 'cms_seo_audit';
@@ -53,9 +56,10 @@ final class SeoAudit extends CmsTool
 
         $pages = [];
         foreach ($translations->items() as $translation) {
-            $issues = self::issues($translation, $locale, $siteImage, trim($site->description) !== '');
+            $tags = Seo::for($translation);
+            $issues = self::issues($translation, $tags, $locale, $siteImage, trim($site->description) !== '');
             if ($issues !== []) {
-                $pages[] = ['id' => $translation->entry_id, 'locale' => $locale, 'title' => $translation->title, 'url' => $translation->url(), 'issues' => $issues];
+                $pages[] = ['id' => $translation->entry_id, 'locale' => $locale, 'title' => $translation->title, 'meta_title' => $tags['title'], 'url' => $translation->url(), 'issues' => $issues];
             }
         }
 
@@ -79,37 +83,43 @@ final class SeoAudit extends CmsTool
         ]);
     }
 
-    /** @return list<string> */
-    private static function issues(EntryTranslation $translation, string $locale, bool $siteImage, bool $siteDescription): array
+    /**
+     * @param  SeoTags  $tags  what the page's head gets (Seo::for())
+     * @return list<string>
+     */
+    private static function issues(EntryTranslation $translation, array $tags, string $locale, bool $siteImage, bool $siteDescription): array
     {
         $data = $translation->data ?? [];
         $seo = is_array($data[Seo::KEY] ?? null) ? $data[Seo::KEY] : [];
         $issues = [];
+        // What the page's head gets: the SEO card, then the fields the collection names (SEO from
+        // fields), then Settings → Site; the title with the site's name added, the homepage's the name.
 
-        $title = is_string($seo['title'] ?? null) && trim($seo['title']) !== '' ? $seo['title'] : (string) $translation->title;
+        $title = $tags['title'];
         $length = mb_strlen($title);
         if ($length > 60) {
-            $issues[] = "The meta title is {$length} characters; keep it under 60 (seo.title).";
+            $issues[] = "The meta title \"{$title}\" is {$length} characters; keep it under 60 (seo.title).";
         } elseif ($length < 30) {
-            $issues[] = "The meta title is short ({$length} characters); 30-60 works best (seo.title).";
+            $issues[] = "The meta title \"{$title}\" is short ({$length} characters); 30-60 works best (seo.title).";
         }
-        $description = is_string($seo['description'] ?? null) ? trim($seo['description']) : '';
-        if ($description === '') {
+        $description = trim((string) $tags['description']);
+        $own = $description !== '' && $description !== Str::squish(app(SiteSettings::class)->description);
+        if (! $own) {
             $issues[] = $siteDescription ? 'No meta description of its own (the site\'s is used): write one (seo.description).' : 'No meta description (seo.description).';
         } elseif (($d = mb_strlen($description)) > 160) {
             $issues[] = "The meta description is {$d} characters; keep it under 160.";
         } elseif ($d < 70) {
             $issues[] = "The meta description is short ({$d} characters); 70-160 works best.";
         }
-        if (($seo['image'] ?? null) === null && ! $siteImage) {
-            $issues[] = 'No share image (seo.image, a media id) and none for the site.';
+        if ($tags['image'] === null) {
+            $issues[] = $siteImage ? 'No share image: the one set for the site can\'t be shown.' : 'No share image (seo.image, a media id) and none for the site.';
         }
         if (($seo['noindex'] ?? false) === true) {
             $issues[] = 'Hidden from search engines (seo.noindex).';
         }
         $words = str_word_count((string) $translation->search_text);
         if ($words < 150) {
-            $issues[] = "Thin content: about {$words} words of text.";
+            $issues[] = "Thin content: about {$words} words of text in its fields (fine for a page that is mostly a form or a listing).";
         }
         if (mb_strlen((string) $translation->slug) > 75) {
             $issues[] = 'A long slug: shorten it.';

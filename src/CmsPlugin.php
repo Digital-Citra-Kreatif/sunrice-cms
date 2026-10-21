@@ -83,7 +83,7 @@ final class CmsPlugin extends BasePlugin
         // Each permission for one collection, taxonomy or form too (see Support\Access).
         $panel->permissionsUsing(fn (): array => Support\ScopedPermissions::all());
         // sunrice:roles: people who write and look after the content, not the structure or the people.
-        $panel->defaultRole('editor', [Panel::ACCESS, 'sunrice.media.*', 'cms.entries.*', 'cms.terms.*', 'cms.globals.*', 'cms.menus.*', 'cms.comments.*', 'cms.submissions.view', 'cms.submissions.export', 'cms.homepage']);
+        $panel->defaultRole('editor', [Panel::ACCESS, 'sunrice.media.*', 'cms.entries.*', 'cms.terms.*', 'cms.globals.*', 'cms.menus.view', 'cms.menus.update', 'cms.comments.*', 'cms.submissions.view', 'cms.submissions.export', 'cms.homepage']);
         // Writes entries, publishes nothing, and edits only their own.
         $panel->defaultRole('author', [Panel::ACCESS, 'sunrice.media.view', 'sunrice.media.upload', 'cms.entries.view', 'cms.entries.create', 'cms.entries.update-own', 'cms.entries.delete-own', 'cms.entries.view-drafts']);
         // Writes the other languages of every entry.
@@ -96,8 +96,8 @@ final class CmsPlugin extends BasePlugin
             Permission::make('cms.entries.publish', 'Publish and unpublish entries', 'Content'),
             Permission::make('cms.entries.delete', 'Trash and restore entries', 'Content'),
             Permission::make('cms.entries.export', 'Export entries as CSV', 'Content'),
-            Permission::make('cms.entries.update-own', 'Edit drafts of their own entries', 'Content'),
-            Permission::make('cms.entries.delete-own', 'Trash their own entries', 'Content'),
+            Permission::make('cms.entries.update-own', 'Edit drafts of their own entries (in collections they may view)', 'Content'),
+            Permission::make('cms.entries.delete-own', 'Trash their own entries (in collections they may view)', 'Content'),
             Permission::make('cms.entries.translate', 'Edit entries\' other languages (not the main one)', 'Content'),
             Permission::make('cms.entries.view-drafts', 'See unpublished changes on the site while signed in', 'Content'),
             Permission::make('cms.terms.manage', 'Manage terms', 'Content'),

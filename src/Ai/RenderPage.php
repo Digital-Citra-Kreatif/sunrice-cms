@@ -13,6 +13,7 @@ use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 use Sunrice\Admin\Panel;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Throwable;
 
 #[IsReadOnly]
@@ -34,9 +35,11 @@ final class RenderPage extends CmsTool
         $path = '/'.ltrim((string) parse_url($args['path'], PHP_URL_PATH), '/');
         $panel = app(Panel::class);
         $mcp = config('sunrice-admin.ai.path', 'mcp');
-        foreach (['/'.trim($panel->getPath(), '/'), '/'.trim(is_string($mcp) ? $mcp : 'mcp', '/')] as $private) {
-            if (strcasecmp($path, $private) === 0 || str_starts_with(strtolower($path), strtolower($private).'/')) {
-                return Response::error('Only the site\'s public pages can be rendered, not the panel\'s.');
+        // Not the panel, nor developer tools (/_inertia/devtools, /_debugbar, Telescope…), which may be open in `local`.
+        $private = ['/'.trim($panel->getPath(), '/'), '/'.trim(is_string($mcp) ? $mcp : 'mcp', '/'), '/telescope', '/horizon', '/pulse'];
+        foreach ($private as $prefix) {
+            if (strcasecmp($path, $prefix) === 0 || str_starts_with(strtolower($path), strtolower($prefix).'/') || str_starts_with($path, '/_')) {
+                return Response::error('Only the site\'s public pages can be rendered, not the panel\'s or developer tools.');
             }
         }
 
@@ -48,9 +51,11 @@ final class RenderPage extends CmsTool
             if ($guard instanceof SessionGuard) {
                 $guard->forgetUser();
             }
-            $response = app(Kernel::class)->handle(HttpRequest::create($args['path'], 'GET'));
+            // On APP_URL, so links and canonical URLs come out as the site's, not http://localhost.
+            $root = config('app.url');
+            $response = app(Kernel::class)->handle(HttpRequest::create((is_string($root) ? rtrim($root, '/') : '').$args['path'], 'GET'));
         } catch (Throwable $e) {
-            return Response::error('Rendering failed: '.$e->getMessage());
+            return Response::error('Rendering failed: '.self::message($e));
         } finally {
             app()->instance('request', $original);
             if ($user !== null) {
@@ -65,11 +70,20 @@ final class RenderPage extends CmsTool
         return $this->json([
             'status' => $response->getStatusCode(),
             'redirect' => $response->headers->get('Location'),
-            'error' => $exception instanceof Throwable ? $exception->getMessage().' in '.str_replace(base_path().'/', '', $exception->getFile()).':'.$exception->getLine() : null,
+            // What a template threw; not for answers like 404, which the status already says.
+            'error' => $exception instanceof Throwable && ! $exception instanceof HttpExceptionInterface ? self::message($exception) : null,
             'length' => strlen($html),
             'html' => mb_substr($html, 0, $max),
             'truncated' => mb_strlen($html) > $max,
         ]);
+    }
+
+    /** The message, without the app's path (a template error names its view relative to the app). */
+    private static function message(Throwable $e): string
+    {
+        $message = str_replace(base_path().'/', '', $e->getMessage());
+
+        return $message !== '' ? $message : class_basename($e);
     }
 
     public function schema(JsonSchema $schema): array

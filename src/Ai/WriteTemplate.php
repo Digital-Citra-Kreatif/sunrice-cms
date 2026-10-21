@@ -22,6 +22,12 @@ final class WriteTemplate extends CmsTool
 {
     protected string $name = 'cms_write_template';
 
+    /** Listed only to those who may use it, where the site allows it: otherwise agents try it in vain. */
+    public function shouldRegister(): bool
+    {
+        return parent::shouldRegister() && Templates::writable($this->user());
+    }
+
     public function handle(Request $request): Response
     {
         if (! Templates::writable($this->user())) {

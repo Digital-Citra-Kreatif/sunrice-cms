@@ -36,7 +36,12 @@ final class EntriesField extends FieldType
     public function rules(Field $field): array
     {
         if (! $field->configBool('multiple')) {
-            return ['integer', $this->exists($field)];
+            // One entry's id; null or an empty list clears it.
+            return [function (string $attribute, mixed $value, \Closure $fail): void {
+                if ($value !== [] && filter_var($value, FILTER_VALIDATE_INT) === false) {
+                    $fail('The :attribute field must be an entry id (a number), or null to clear it.');
+                }
+            }, $this->exists($field)];
         }
         $max = $field->configInt('max');
 

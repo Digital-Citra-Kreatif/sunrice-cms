@@ -58,11 +58,11 @@ Editors write entries under **Content → Entries**: a list per collection (see 
 | `cms.entries.delete` | Move entries to the trash, restore them and delete them for good, also several at once. |
 | `cms.entries.export` | Download a collection's entries as CSV (with `view`). |
 | `cms.entries.update-own`, `.delete-own` | The same, for entries they created, in collections they may view. |
-| `cms.entries.translate` | Save drafts of entries' other languages (not the main one), in collections they may view. |
+| `cms.entries.translate` | Save drafts of entries' other languages (not the main one), in collections they may view. Not what every language shares: Page settings (parent, template, blueprint, comments) and the order of entries need `cms.entries.update` (or `update-own`). |
 | `cms.homepage` | Make a live page the site's homepage from its editor (`SetHomepage`); Settings → Site (`cms.settings.site`) sets it too. |
 | `cms.entries.view-drafts` | While signed in, see on the site that a live page has unpublished changes, and open them (`?draft`), in collections they may view. See [draft viewing](site.md#drafts-on-the-site). |
 
-Each of the first six also comes for one collection: `cms.entries.blog.publish` publishes only in Blog. They're created with the collection (and deleted with it), renamed with its handle, and the role editor shows them under "Entries: Blog". The same goes for terms (`cms.terms.{taxonomy}.manage`) and form submissions (`cms.submissions.{form}.view`, `.export`, `.delete`). People see only the collections, taxonomies and forms they may work in. In code: `Sunrice\Cms\Support\Access::entries($user, 'publish', $collection, $entry, $locale)`.
+Each of the first six also comes for one collection: `cms.entries.blog.publish` publishes only in Blog. They're created with the collection (and deleted with it), renamed with its handle, and the role editor shows them under "Entries: Blog". The same goes for terms (`cms.terms.{taxonomy}.manage`) and form submissions (`cms.submissions.{form}.view`, `.export`, `.delete`). People see only the collections, taxonomies and forms they may work in. `update-own` and `delete-own` have no per-collection version because they need none: they apply in the collections a person may view, so an author for the Journal alone is `cms.entries.journal.view`, `cms.entries.journal.create`, `cms.entries.update-own` and `cms.entries.delete-own` (the built-in `author` role has the global `view` and `create`: take those away and give the collection's instead). In code: `Sunrice\Cms\Support\Access::entries($user, 'publish', $collection, $entry, $locale)`.
 
 ### Renaming a handle
 
@@ -82,7 +82,7 @@ In the editor:
 - **Comments** (when the collection takes comments and the person has `cms.comments.view`): the counts by status and the latest five, with **Approve**, **Spam** and **Reply** for those with `cms.comments.moderate`, and a link to the [comments page](comments.md) showing only this entry's (`?entry=`).
 - The revisions and comments load just after the page shows (Inertia's deferred props), and a terms field's terms load when it shows (`cms/term-picker`), so a large entry opens fast.
 
-**Reordering** in code: `ReorderEntries::handle($collection, $ids, $parentId)` puts one level of an ordered collection's entries (those under `$parentId` in a hierarchical one, null for the top level; else all of them) in the order given, the rest of the level after them as they were; the level is numbered again in one transaction, and the change is logged (`reordered`) and clears the site's cache. Its route is `POST cms/entries/reorder` (`collection`, `ids`, `parent_id`), behind `cms.entries.update` for that collection. `MoveEntry` still moves one entry a place up or down.
+**Reordering** in code: `ReorderEntries::handle($collection, $ids, $parentId)` puts one level of an ordered collection's entries (those under `$parentId` in a hierarchical one, null for the top level; else all of them) in the order given, the rest of the level after them as they were; the level is numbered again in one transaction, and the change is logged (`reordered`) and clears the site's cache. It returns whether the order changed: given the order the level already has, nothing is written or logged. Its route is `POST cms/entries/reorder` (`collection`, `ids`, `parent_id`), behind `cms.entries.update` for that collection. `MoveEntry` still moves one entry a place up or down.
 
 Media fields use the media library's picker, which needs `sunrice.media.view` (and `.upload` to upload from it).
 

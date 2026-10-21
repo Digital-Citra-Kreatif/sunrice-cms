@@ -31,14 +31,15 @@ final class ReorderTerms
      *
      * @throws ValidationException
      */
-    public function handle(Taxonomy $taxonomy, array $ids, ?int $parentId = null): void
+    public function handle(Taxonomy $taxonomy, array $ids, ?int $parentId = null): bool
     {
         if ($parentId !== null && ! $taxonomy->hierarchical) {
             throw ValidationException::withMessages(['parent_id' => 'Terms of this taxonomy have no parents.']);
         }
         $order = self::ids($ids);
 
-        DB::transaction(function () use ($taxonomy, $order, $parentId): void {
+        $changed = true;
+        DB::transaction(function () use ($taxonomy, $order, $parentId, &$changed): void {
             $level = [];
             foreach (Term::query()->where('taxonomy_id', $taxonomy->id)->where('parent_id', $parentId)
                 ->orderBy('sort_order')->orderBy('id')->lockForUpdate()->pluck('id') as $id) {
@@ -48,14 +49,25 @@ final class ReorderTerms
             if ($unknown !== []) {
                 throw ValidationException::withMessages(['ids' => 'Not terms of this taxonomy at this level: '.implode(', ', $unknown).'.']);
             }
+            $new = [...$order, ...array_values(array_diff($level, $order))];
+            if ($new === $level) {
+                $changed = false;
+
+                return;
+            }
             $positions = [];
-            foreach ([...$order, ...array_diff($level, $order)] as $index => $id) {
+            foreach ($new as $index => $id) {
                 $positions[$id] = $index;
             }
             SortOrder::write((new Term)->getTable(), $positions);
         });
+        if (! $changed) {
+            return false;
+        }
         $this->activity->record('reordered', 'taxonomy', $taxonomy, $taxonomy->title, ['note' => 'terms']);
         $this->cache->changed("taxonomy {$taxonomy->handle} order", SiteCache::PAGES);
+
+        return true;
     }
 
     /**

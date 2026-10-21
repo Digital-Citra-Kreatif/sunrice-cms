@@ -122,8 +122,14 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
     const editable = entry === null ? can.create : can.update && !entry.trashed;
     const scheduled = entry?.status === 'scheduled';
 
+    // Page settings are every language's: left out for those who may not change them (translators).
+    const payload = (data: FormData) => {
+        if (settings || entry === null) return data;
+        const { parent_id: _parent, template: _template, comments_closed: _comments, ...rest } = data;
+        return rest;
+    };
     const save = (publish = false, publishedAt: string | null = null) => {
-        form.transform((data) => ({ ...data, publish, published_at: publishedAt }));
+        form.transform((data) => ({ ...payload(data), publish, published_at: publishedAt }));
         if (entry) {
             form.put(url, { preserveScroll: true, onSuccess: () => setScheduling(false) });
         } else {
@@ -132,7 +138,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
     };
     // After "someone else saved": save over their version anyway.
     const saveMine = () => {
-        form.transform((data) => ({ ...data, version: null, publish: false, published_at: null }));
+        form.transform((data) => ({ ...payload(data), version: null, publish: false, published_at: null }));
         form.put(url, { preserveScroll: true });
     };
     const lock = useEditLock({
