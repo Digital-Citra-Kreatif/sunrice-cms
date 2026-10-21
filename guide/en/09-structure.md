@@ -19,7 +19,7 @@ A **collection** is a kind of content: *Pages*, *Blog*, *Products*, *Events*. **
 | **Template** | The design entries use, if your developer made one for it. |
 | **Listing page URL**, **Listing page fields**, **Entries per listing page** | A page listing the entries (like `/blog`), its own fields (an introduction), and how many entries it shows per page. |
 | **Allow comments** | Visitors may comment on its entries (it needs a URL). |
-| **Structured data type** | What search engines are told its entries are (an article, a web page…). |
+| **Structured data type** | What search engines are told its entries are (an article, a web page, a real estate listing, or a person, place or product the page is about…). |
 | **SEO from fields** | Which of the entries' fields fill in an empty SEO title, description and share image. |
 
 Deleting a collection doesn't delete its entries: they leave the panel and the website. The list's **Deleted** filter shows deleted collections, with **Restore** to bring one back.

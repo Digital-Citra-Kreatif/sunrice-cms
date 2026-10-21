@@ -19,7 +19,7 @@
 | **Template** | Desain yang dipakai entri, jika developer membuatnya. |
 | **Listing page URL**, **Listing page fields**, **Entries per listing page** | Halaman yang menampilkan daftar entri (seperti `/blog`), field khususnya (pengantar), dan jumlah entri per halaman. |
 | **Allow comments** | Pengunjung boleh mengomentari entrinya (membutuhkan URL). |
-| **Structured data type** | Jenis entri yang diberitahukan ke mesin pencari (artikel, halaman web…). |
+| **Structured data type** | Jenis entri yang diberitahukan ke mesin pencari (artikel, halaman web, listing properti, atau orang, tempat, atau produk yang dibahas halaman…). |
 | **SEO from fields** | Field entri mana yang mengisi judul SEO, deskripsi, dan gambar berbagi yang kosong. |
 
 Menghapus koleksi tidak menghapus entrinya: entri hilang dari panel dan situs web. Filter **Deleted** di daftar menampilkan koleksi yang dihapus, dengan **Restore** untuk mengembalikannya.

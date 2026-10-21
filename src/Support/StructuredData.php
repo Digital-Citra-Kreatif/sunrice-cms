@@ -28,9 +28,19 @@ final class StructuredData
     public const ENTRY_TYPES = [
         'Article' => 'Article', 'BlogPosting' => 'Blog post', 'NewsArticle' => 'News article',
         'WebPage' => 'Web page', 'AboutPage' => 'About page', 'ContactPage' => 'Contact page',
+        'RealEstateListing' => 'Real estate listing',
+        'Person' => 'Person (a profile page)', 'Place' => 'Place', 'Product' => 'Product or offer',
     ];
 
     private const ARTICLES = ['Article', 'BlogPosting', 'NewsArticle'];
+
+    /**
+     * Types that are a thing the page is about rather than a kind of page:
+     * the page is the WebPage subtype given, with the thing as its
+     * `mainEntity` (`@id` the page's URL with #main, for a template's own
+     * node to add to).
+     */
+    private const THINGS = ['Person' => 'ProfilePage', 'Place' => 'WebPage', 'Product' => 'ItemPage'];
 
     /**
      * The `@graph` for a page (null: the app's own pages), with `$extra`
@@ -118,7 +128,17 @@ final class StructuredData
             $collection = $translation->entry->collection;
             $type = $collection->schema_type !== null && isset(self::ENTRY_TYPES[$collection->schema_type]) ? $collection->schema_type : ($collection->dated ? 'Article' : 'WebPage');
             $title = (string) $translation->title;
-            $node = ['@type' => $type, ...$node, 'name' => $title];
+            $thing = isset(self::THINGS[$type]) ? ['@type' => $type, '@id' => $url.'#main', 'name' => $title, 'url' => $url] : null;
+            $node = ['@type' => self::THINGS[$type] ?? $type, ...$node, 'name' => $title];
+            if ($thing !== null) {
+                if ($seo['description'] !== null) {
+                    $thing['description'] = $seo['description'];
+                }
+                if ($seo['image'] !== null) {
+                    $thing['image'] = $seo['image'];
+                }
+                $node['mainEntity'] = $thing;
+            }
             if (in_array($type, self::ARTICLES, true)) {
                 $node['headline'] = Str::limit($title, 107);
                 $node['mainEntityOfPage'] = $url;
