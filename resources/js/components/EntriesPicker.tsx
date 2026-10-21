@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Search, X } from 'lucide-react';
-import { adminUrl } from '@sunrice/admin-sdk';
+import { adminUrl, t } from '@sunrice/admin-sdk';
 import { Badge, Button, Input, SortableHandle, SortableList } from '@sunrice/admin-sdk/ui';
 import { pickerQuery } from '@/lib/values.ts';
 import { type EntryStatus, statusLabel } from '@/lib/entries.ts';
@@ -68,11 +68,11 @@ export function EntriesPicker({ id, value, multiple, max, collections, invalid, 
                         const item = known[entryId];
                         return (
                             <div className="cms:flex cms:items-center cms:gap-2 cms:rounded-md cms:border cms:bg-card cms:px-2 cms:py-1 cms:text-sm">
-                                {multiple && <SortableHandle {...handle} label={`Move ${item?.title ?? entryId}`} />}
-                                <span className={`cms:min-w-0 cms:flex-1 cms:truncate ${multiple ? '' : 'cms:pl-1'}`}>{item ? item.title : `Entry #${entryId}`}</span>
+                                {multiple && <SortableHandle {...handle} label={t('Move :title', { title: item?.title ?? entryId })} />}
+                                <span className={`cms:min-w-0 cms:flex-1 cms:truncate ${multiple ? '' : 'cms:pl-1'}`}>{item ? item.title : t('Entry #:id', { id: entryId })}</span>
                                 {item && <span className="cms:text-xs cms:text-muted-foreground">{item.collection}</span>}
                                 {item && <Badge variant={item.status === 'published' ? 'success' : 'secondary'}>{statusLabel(item.status)}</Badge>}
-                                <Button type="button" variant="ghost" size="icon" className="cms:size-7" aria-label={`Remove ${item?.title ?? entryId}`}
+                                <Button type="button" variant="ghost" size="icon" className="cms:size-7" aria-label={t('Remove :title', { title: item?.title ?? entryId })}
                                     onClick={() => set(ids.filter((other) => other !== entryId))}><X /></Button>
                             </div>
                         );
@@ -82,11 +82,11 @@ export function EntriesPicker({ id, value, multiple, max, collections, invalid, 
             {!full && (multiple || ids.length === 0) && (
                 <div className="cms:relative cms:max-w-md">
                     <Search className="cms:absolute cms:top-1/2 cms:left-3 cms:size-4 cms:-translate-y-1/2 cms:text-muted-foreground" />
-                    <Input id={id} className="cms:pl-9" placeholder="Search entries by title" aria-invalid={invalid} value={search} autoComplete="off"
+                    <Input id={id} className="cms:pl-9" placeholder={t('Search entries by title')} aria-invalid={invalid} value={search} autoComplete="off"
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)} />
                     {results !== null && (
-                        <ul role="listbox" aria-label="Matching entries" className="cms:absolute cms:z-10 cms:mt-1 cms:max-h-64 cms:w-full cms:overflow-auto cms:rounded-md cms:border cms:bg-card cms:p-1 cms:shadow-md">
-                            {results.filter((item) => !ids.includes(item.id)).length === 0 && <li className="cms:p-2 cms:text-sm cms:text-muted-foreground">No entries match.</li>}
+                        <ul role="listbox" aria-label={t('Matching entries')} className="cms:absolute cms:z-10 cms:mt-1 cms:max-h-64 cms:w-full cms:overflow-auto cms:rounded-md cms:border cms:bg-card cms:p-1 cms:shadow-md">
+                            {results.filter((item) => !ids.includes(item.id)).length === 0 && <li className="cms:p-2 cms:text-sm cms:text-muted-foreground">{t('No entries match.')}</li>}
                             {results.filter((item) => !ids.includes(item.id)).map((item) => (
                                 <li key={item.id} role="option" aria-selected={false}>
                                     <button type="button" className="cms:flex cms:w-full cms:items-center cms:gap-2 cms:rounded cms:px-2 cms:py-1.5 cms:text-left cms:text-sm cms:hover:bg-accent"
@@ -100,7 +100,7 @@ export function EntriesPicker({ id, value, multiple, max, collections, invalid, 
                     )}
                 </div>
             )}
-            {error && <p className="cms:text-sm cms:text-destructive">Entries could not be loaded. Try again.</p>}
+            {error && <p className="cms:text-sm cms:text-destructive">{t('Entries could not be loaded. Try again.')}</p>}
         </div>
     );
 }

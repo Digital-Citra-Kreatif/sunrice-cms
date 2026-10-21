@@ -1,5 +1,5 @@
 import { usePage } from '@inertiajs/react';
-import { adminUrl } from '@sunrice/admin-sdk';
+import { adminUrl, t } from '@sunrice/admin-sdk';
 import { FieldError } from '@/components/FieldInput.tsx';
 import { type StructureRow, StructureList } from '@/components/StructureList.tsx';
 
@@ -9,8 +9,8 @@ export default function BlueprintsIndex({ blueprints }: { blueprints: StructureR
     return (
         <>
             <FieldError message={errors.blueprint} />
-            <StructureList noun="Blueprint" base={adminUrl('cms/blueprints')} rows={blueprints}
-                intro="The fields editors fill in, for each kind of content." />
+            <StructureList kind="blueprint" base={adminUrl('cms/blueprints')} rows={blueprints}
+                intro={t('The fields editors fill in, for each kind of content.')} />
         </>
     );
 }

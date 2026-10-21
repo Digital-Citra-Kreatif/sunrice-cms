@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { router } from '@inertiajs/react';
+import { t } from '@sunrice/admin-sdk';
 import { Button } from '@sunrice/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
 
@@ -16,10 +17,10 @@ export function VersionConflict({ message, processing, onSaveMine }: { message: 
             {confirmDialog}
             <span>{message}</span>
             <span className="cms:flex cms:gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => router.reload()}>Load theirs</Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => router.reload()}>{t('Load theirs')}</Button>
                 <Button type="button" variant="destructive" size="sm" disabled={processing}
-                    onClick={() => confirm('Save your version over theirs? Their changes are replaced.', onSaveMine)}>
-                    Save mine anyway
+                    onClick={() => confirm(t('Save your version over theirs? Their changes are replaced.'), onSaveMine)}>
+                    {t('Save mine anyway')}
                 </Button>
             </span>
         </div>

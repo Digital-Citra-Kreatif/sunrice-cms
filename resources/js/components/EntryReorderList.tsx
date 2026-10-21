@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { router } from '@inertiajs/react';
-import { adminUrl } from '@sunrice/admin-sdk';
+import { adminUrl, t } from '@sunrice/admin-sdk';
 import { Badge, Card, SortableHandle, SortableList } from '@sunrice/admin-sdk/ui';
 import { type EntryStatus, statusLabel } from '@/lib/entries.ts';
 import { siblingOrder } from '@/lib/tree.ts';
@@ -31,9 +31,9 @@ export function EntryReorderList({ collection, rows }: { collection: string; row
             <SortableList items={order} getId={(row) => row.id} onReorder={(next, _from, to) => save(next, to)} className="cms:gap-1">
                 {(row, { handle }) => (
                     <div className="cms:flex cms:items-center cms:gap-2 cms:rounded-lg cms:border cms:border-border/70 cms:bg-card cms:p-2 cms:text-sm">
-                        <SortableHandle {...handle} label={`Move ${row.title}`} />
+                        <SortableHandle {...handle} label={t('Move :title', { title: row.title })} />
                         <span className="cms:min-w-0 cms:flex-1 cms:truncate cms:font-medium">{row.title}</span>
-                        {row.parent && <span className="cms:truncate cms:text-xs cms:text-muted-foreground">under {row.parent}</span>}
+                        {row.parent && <span className="cms:truncate cms:text-xs cms:text-muted-foreground">{t('under :parent', { parent: row.parent })}</span>}
                         <Badge variant={row.status === 'published' ? 'success' : 'secondary'}>{statusLabel(row.status)}</Badge>
                     </div>
                 )}
