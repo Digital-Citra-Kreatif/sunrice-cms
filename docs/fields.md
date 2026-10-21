@@ -83,8 +83,9 @@ A `fieldset` field puts the fieldset's fields in its own place, at its level and
 ## Showing a field only sometimes
 
 A field can show only when another field on its level is so: in the
-blueprint builder, **Show** → *When Layout* *is* `video`. In the
-definition:
+blueprint builder, **Show** → *When Layout* *is* `video`. The other field
+must have a value of its own: a fieldset include can't be one (its fields
+can). In the definition:
 
 ```php
 ['handle' => 'video_url', 'type' => 'text', 'required' => true,

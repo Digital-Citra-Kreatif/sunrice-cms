@@ -12,7 +12,7 @@ Set a collection's URL under Structure → Collections: a path with `{slug}` onc
 - Only live entries have pages: published, past their date, not in the trash, of a collection not deleted. Anything else is a 404.
 - The CMS's route is the app's **fallback**: your own routes (`routes/web.php`) always come first. Turn the site off with `sunrice-cms.site.enabled` (the admin and previews keep working); its middleware is `sunrice-cms.site.middleware` (`web`).
 
-`$translation->url()` gives an entry's address (null without a route). For a visitor reading another language, `Sunrice\Cms\Site\Site::urlIn($translation, $locale)` gives the page to link to: the translation's own address when it's in that language, else, for a main-language translation of an entry not live there and with the [fallback](#untranslated-pages) on, its page at that language's address (`/id/blog/hello`), else its own. `app(Site::class)->termUrlIn($termTranslation, $locale)` does the same for term pages. Entries from `Cms::entries()`, linked entries and `$entry->shownIn($locale)` already link this way.
+`$translation->url()` gives an entry's address (null without a route). For a visitor reading another language, `app(Sunrice\Cms\Site\Site::class)->urlIn($translation, $locale)` gives the page to link to: the translation's own address when it's in that language, else, for a main-language translation of an entry not live there and with the [fallback](#untranslated-pages) on, its page at that language's address (`/id/blog/hello`), else its own. `app(Site::class)->termUrlIn($termTranslation, $locale)` does the same for term pages. Entries from `Cms::entries()`, linked entries and `$entry->shownIn($locale)` already link this way.
 
 ### Untranslated pages
 
@@ -208,7 +208,7 @@ Listing URLs are fixed, so they're matched before any `{slug}` pattern; they're 
 
 ## The homepage
 
-Pick the entry shown at `/` in **Settings → Site** (`cms.settings.site`; a searchable list of live pages), or, with `cms.homepage` (*Choose the homepage*, in the editor role), with **Make this the homepage** in a live page's editor (`SetHomepage`, `POST cms/entries/{entry}/homepage`). In other languages, `/{locale}` shows its translation there. The entry's own address redirects (301) to `/`, and `$translation->url()` gives `/`. Your app's own `/` route, if it has one, wins.
+Pick the entry shown at `/` in **Settings → Site** (`cms.settings.site`; a searchable list of live pages), or, with `cms.homepage` (*Choose the homepage*, in the editor role), with **Make this the homepage** in a live page's editor, which asks first (`SetHomepage`, `POST cms/entries/{entry}/homepage`). The button is offered on pages at the root of the site (collections whose route starts with the slug, `/{slug}`) and in the collection the homepage already comes from (`SetHomepage::offers($collection)`), not on posts or products under a prefix (`/blog/{slug}`); Settings → Site can still choose any live entry with a URL. In other languages, `/{locale}` shows its translation there. The entry's own address redirects (301) to `/`, and `$translation->url()` gives `/`. Your app's own `/` route, if it has one, wins.
 
 ## Querying entries
 

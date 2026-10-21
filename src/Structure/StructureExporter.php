@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Structure;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\CollectionListing;
@@ -122,7 +124,13 @@ final class StructureExporter
     private function menus(): array
     {
         $menus = [];
-        foreach (Menu::query()->with(['items.entry.collection', 'items.entry.translations', 'items.term.taxonomy', 'items.term.translations', 'items.collection'])->orderBy('handle')->get() as $menu) {
+        // Links to what's in the trash too (or in a deleted collection): the
+        // menu keeps them, and an import finds them there by slug as well.
+        $trashed = fn (BelongsTo $query) => $query->withoutGlobalScope(SoftDeletingScope::class);
+        foreach (Menu::query()->with([
+            'items.entry' => $trashed, 'items.entry.collection' => $trashed, 'items.entry.translations',
+            'items.term' => $trashed, 'items.term.taxonomy' => $trashed, 'items.term.translations', 'items.collection' => $trashed,
+        ])->orderBy('handle')->get() as $menu) {
             $menus[] = ['handle' => $menu->handle, 'title' => $menu->title, 'items' => $this->items($menu->items->all(), null)];
         }
 
@@ -138,11 +146,15 @@ final class StructureExporter
         $tree = [];
         foreach (collect($items)->where('parent_id', $parent)->sortBy('sort_order') as $item) {
             $target = match (true) {
-                $item->entry !== null => ['entry' => $item->entry->collection->handle.'/'.self::entrySlug($item->entry)],
-                $item->term !== null => ['term' => $item->term->taxonomy->handle.'/'.self::mainSlug($item->term)],
-                $item->collection !== null => ['collection' => $item->collection->handle],
-                default => ['url' => $item->url],
+                $item->entry_id !== null => $item->entry === null ? null : ['entry' => $item->entry->collection->handle.'/'.self::entrySlug($item->entry)],
+                $item->term_id !== null => $item->term === null ? null : ['term' => $item->term->taxonomy->handle.'/'.self::mainSlug($item->term)],
+                $item->collection_id !== null => $item->collection === null ? null : ['collection' => $item->collection->handle],
+                $item->url !== null => ['url' => $item->url],
+                default => null,
             };
+            if ($target === null) {
+                continue; // what it linked to is gone
+            }
             $tree[] = [...$target, 'labels' => (object) $item->labels, 'new_tab' => $item->new_tab, ...($item->query_string !== null ? ['query' => $item->query_string] : []), 'children' => $this->items($items, $item->id)];
         }
 

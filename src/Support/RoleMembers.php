@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use LogicException;
 use Spatie\Permission\PermissionRegistrar;
 use Sunrice\Admin\Panel;
+use Sunrice\Admin\Users\RoleResource;
 
 /**
  * The panel's roles, for "also email these roles" settings, and the email
@@ -18,13 +19,13 @@ use Sunrice\Admin\Panel;
  */
 final class RoleMembers
 {
-    /** @return array<string, string> role name => name, for a CheckboxList */
+    /** @return array<string, string> role name => its name as people read it ("super-admin" => "Super admin"), for a CheckboxList */
     public static function options(): array
     {
         $roles = [];
         foreach (self::roles()->orderBy('name')->pluck('name') as $name) {
             if (is_string($name)) {
-                $roles[$name] = $name;
+                $roles[$name] = RoleResource::displayName($name);
             }
         }
 

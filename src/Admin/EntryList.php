@@ -16,8 +16,8 @@ use Sunrice\Admin\Preferences\Preferences;
 use Sunrice\Cms\Fields\CustomField;
 use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\HydrationContext;
+use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Fields\Schema;
-use Sunrice\Cms\Fields\Types\Link;
 use Sunrice\Cms\Fields\Types\TermsField;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
@@ -228,9 +228,11 @@ final class EntryList
 
     /**
      * Writes the list as CSV rows: the columns, the author, and every
-     * top-level field (field columns as the list shows them, uncut; links
-     * as their address, rich text as plain text). A field whose label is
-     * a column's or another field's is headed "Label (field)".
+     * top-level field as readable text (links as their address, terms and
+     * linked entries by title, rich text as plain text with a line per
+     * paragraph, heading or list item, groups, repeaters and blocks as
+     * "Label: value" lines without their internals). A field whose label
+     * is a column's or another field's is headed "Label (field)".
      *
      * @param  Closure(list<bool|float|int|string|null>): void  $write
      */
@@ -258,19 +260,21 @@ final class EntryList
         $context = new HydrationContext($this->locale);
         $this->query()->chunk(500, function ($translations) use ($fields, $authors, $write, $context): void {
             $list = array_values($translations->all());
-            $titles = $this->entryTitles($list, $this->fields);
-            $linked = [];
+            // What the chunk's values point at, read once: linked entries' addresses and titles, terms' titles.
+            $entryIds = [];
+            $termIds = [];
             foreach ($list as $translation) {
                 $translation->entry->setRelation('collection', $this->collection);
-                $schema = $translation->entry->schema();
-                foreach ($translation->completeData(true) as $handle => $value) {
-                    $mine = $schema->field((string) $handle);
-                    if ($mine !== null && self::baseType($schema, $mine) === 'link' && is_array($value) && is_int($value['entry_id'] ?? null)) {
-                        $linked[] = $value['entry_id'];
+                foreach ($translation->entry->schema()->references($translation->completeData(true)) as $reference) {
+                    if ($reference->type === Reference::ENTRY) {
+                        $entryIds[$reference->id] = $reference->id;
+                    } elseif ($reference->type === Reference::TERM) {
+                        $termIds[$reference->id] = $reference->id;
                     }
                 }
             }
-            $context->preloadEntries($linked);
+            $context->preloadEntries(array_values($entryIds));
+            $titles = new ExportText($this->entryTitlesById(array_values($entryIds)), $this->termTitlesById(array_values($termIds)), $context);
             foreach ($list as $translation) {
                 $data = $translation->completeData(true);
                 $own = $translation->entry->schema();
@@ -279,30 +283,49 @@ final class EntryList
                     $translation->entry_id, $translation->draft_title, $translation->draft_slug, $translation->entry->trashed() ? 'trashed' : $translation->status(),
                     $translation->published_at?->toDateTimeString(), $translation->isLive() && ! $translation->entry->trashed() ? $translation->url() : null,
                     $translation->updated_at?->toDateTimeString(), $author === null ? null : ($authors['u'.$author] ?? null),
-                    ...array_map(fn (Field $field): ?string => ($mine = $own->field($field->handle)) === null ? '' : (isset($this->fields[$field->handle])
-                        ? $this->cell($data[$field->handle] ?? null, $this->fields[$field->handle], $titles, false)
-                        : self::exportText($data[$field->handle] ?? null, $mine, self::baseType($own, $mine), $context)), $fields),
+                    ...array_map(fn (Field $field): string => ($mine = $own->field($field->handle)) === null ? '' : $titles->text($data[$field->handle] ?? null, $mine, $own), $fields),
                 ]);
             }
         });
     }
 
-    /** A field's type, a custom field's base type. */
-    private static function baseType(Schema $schema, Field $field): string
+    /**
+     * Entries' titles by id, in the list's language or else the main one.
+     *
+     * @param  list<int>  $ids
+     * @return array<int, string>
+     */
+    private function entryTitlesById(array $ids): array
     {
-        $type = $schema->type($field);
+        $titles = [];
+        foreach (array_chunk($ids, 500) as $chunk) {
+            $rows = EntryTranslation::query()->whereIn('entry_id', $chunk)->whereIn('locale', array_unique([$this->locale, Locales::default()]))->get(['entry_id', 'locale', 'draft_title']);
+            foreach ($rows as $row) {
+                if ($row->locale === $this->locale || ! isset($titles[$row->entry_id])) {
+                    $titles[$row->entry_id] = $row->draft_title;
+                }
+            }
+        }
 
-        return $type instanceof CustomField ? $type->baseType() : $type->type();
+        return $titles;
     }
 
-    /** A value in the CSV: a link's address, rich text without its tags, the rest as FieldText has it. */
-    private static function exportText(mixed $value, Field $field, string $base, HydrationContext $context): string
+    /**
+     * Terms' titles by id, in the list's language or else the main one.
+     *
+     * @param  list<int>  $ids
+     * @return array<int, string>
+     */
+    private function termTitlesById(array $ids): array
     {
-        return match ($base) {
-            'link' => (string) ((new Link)->hydrate($value, $field, $context)['url'] ?? ''),
-            'rich_text' => is_string($value) ? Str::squish(html_entity_decode(strip_tags(str_replace(['<br>', '<br/>', '<br />', '</p>', '</li>', '</h2>', '</h3>'], ' ', $value)), ENT_QUOTES | ENT_HTML5)) : '',
-            default => FieldText::text($value, $field),
-        };
+        $titles = [];
+        foreach (array_chunk($ids, 500) as $chunk) {
+            foreach (Term::withTrashed()->with('translations')->whereKey($chunk)->get() as $term) {
+                $titles[$term->id] = $term->title($this->locale);
+            }
+        }
+
+        return $titles;
     }
 
     /**

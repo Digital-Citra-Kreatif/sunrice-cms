@@ -9,7 +9,7 @@ Di situs web, bahasa utama memakai alamat biasa (`/about`) dan bahasa lain diawa
 Jika situs memiliki lebih dari satu bahasa, penyunting entri menampilkan bilah bahasa di atas field. Bahasa utama ditandai **(utama)**, dan setiap bahasa menampilkan statusnya (*Draf*, *Terjadwal*, *Terbit*).
 
 - Klik sebuah bahasa untuk menyunting terjemahan itu.
-- Bahasa dengan garis putus-putus dan tanda **+** belum memiliki terjemahan. Klik untuk menambahkannya: terjemahan dimulai sebagai draf yang disalin dari bahasa utama, siap diterjemahkan.
+- Bahasa dengan garis putus-putus dan tanda **+** belum memiliki terjemahan. Klik untuk menambahkannya: terjemahan dimulai sebagai draf yang disalin dari bahasa utama, siap diterjemahkan. Penerjemah juga bisa menambahkan bahasa, bukan hanya yang bisa membuat entri.
 - **Hapus bahasa ini** menghapus terjemahan yang sedang dibuka, beserta revisinya. Bahasa utama tidak bisa dihapus: pindahkan seluruh entri ke tempat sampah sebagai gantinya.
 
 Terjemahan yang ditandai *usang* terakhir disimpan sebelum perubahan terbaru di bahasa utama: isinya mungkin sudah tidak sesuai. Kartu **Status** entri juga memberi tahu.
@@ -48,6 +48,10 @@ Saat bahasa utama berubah, bahasa lain tidak ikut berubah, kecuali field bersama
 - **Global**: nilai setiap set per bahasa (lihat [Global](guide:website/globals)).
 - **Menu**: label per bahasa untuk setiap tautan (lihat [Menu](guide:website/menus)).
 - **Komentar** menyimpan bahasa tempat komentar itu ditulis, dan semua bahasa sebuah entri berbagi satu utas komentar.
+
+## Formulir, menu, dan judul halaman daftar
+
+**Konten → Terjemahan** mengumpulkan sisa teks yang dibaca pengunjung, dalam bahasa lain: deskripsi situs, judul halaman daftar (koleksi dan taksonomi), pesan terima kasih setiap formulir beserta label, petunjuk, dan pilihan field-nya, serta label tautan menu. Setiap baris menampilkan teks dalam bahasa utama di samping kotak untuk terjemahannya; biarkan kotak kosong agar teks bahasa utama yang tampil. Penerjemah bisa memakainya tanpa perlu bisa mengubah struktur atau pengaturan.
 
 > [!TECHNICAL]
 > Terjemahan mesin diatur dengan `sunrice-cms.translation`; seluruh koleksi bisa diterjemahkan dengan `php artisan sunrice:translate`, dan bahasa utama diganti dengan `php artisan sunrice:switch-main-language`. Lihat [Machine translation](docs:cms/translation) dan [Collections and entries](docs:cms/collections#languages).

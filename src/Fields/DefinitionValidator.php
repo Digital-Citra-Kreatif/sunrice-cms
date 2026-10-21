@@ -96,7 +96,8 @@ final class DefinitionValidator
                 }
             }];
             $own = is_array($field) ? ($field['handle'] ?? null) : null;
-            $siblings = array_values(array_filter(array_map(fn (mixed $other): mixed => is_array($other) ? ($other['handle'] ?? null) : null, $fields), fn (mixed $handle): bool => is_string($handle) && $handle !== $own));
+            // A condition looks at a sibling's value: a fieldset include has none of its own.
+            $siblings = array_values(array_filter(array_map(fn (mixed $other): mixed => is_array($other) && ($other['type'] ?? null) !== 'fieldset' ? ($other['handle'] ?? null) : null, $fields), fn (mixed $handle): bool => is_string($handle) && $handle !== $own));
             $rules["{$key}.condition"] = ['nullable', 'array:field,operator,value'];
             $rules["{$key}.condition.field"] = ["required_with:{$key}.condition", 'string', Rule::in($siblings)];
             $rules["{$key}.condition.operator"] = ["required_with:{$key}.condition", 'string', Rule::in(Field::OPERATORS)];

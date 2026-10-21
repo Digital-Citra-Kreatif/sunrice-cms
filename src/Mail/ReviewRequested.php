@@ -26,7 +26,11 @@ final class ReviewRequested extends Mailable
     use Queueable;
     use SerializesModels;
 
-    public function __construct(public EntryTranslation $translation, public ?Model $requester = null) {}
+    /**
+     * $requester is private: a public property would reach the view as
+     * well, over its "requester" (the name), and print the user record.
+     */
+    public function __construct(public EntryTranslation $translation, private ?Model $requester = null) {}
 
     public function envelope(): Envelope
     {

@@ -7,7 +7,7 @@ import {
 import { t } from '@sunrice/admin-sdk';
 import { ChangeWarning } from '@/components/ChangeWarning.tsx';
 import { FieldError, FieldInput } from '@/components/FieldInput.tsx';
-import { type BuilderField, cleanHandle, errorsAt, errorsUnder, handleWarning, hasErrors, MAX_DEPTH, newField, relabel, renamedFrom, type ReservedHandles } from '@/lib/builder.ts';
+import { type BuilderField, cleanHandle, conditionChoices, errorsAt, errorsUnder, handleWarning, hasErrors, MAX_DEPTH, newField, relabel, renamedFrom, type ReservedHandles } from '@/lib/builder.ts';
 import { OPERATORS } from '@/lib/conditions.ts';
 import type { Errors, FieldCondition, FieldTranslation, FieldTypeInfo, LocaleInfo } from '@/types.ts';
 
@@ -60,7 +60,7 @@ export function FieldBuilder({ fields, onChange, types, errors, depth = 1, idPre
                     const id = `${idPrefix}-${field.key}`;
 
                     return (
-                        <div className={`cms:rounded-lg cms:border cms:bg-card ${invalid ? 'cms:border-destructive' : ''}`}>
+                        <div data-invalid={invalid ? 'true' : undefined} className={`cms:rounded-lg cms:border cms:bg-card ${invalid ? 'cms:border-destructive' : ''}`}>
                             <div className="cms:flex cms:items-center cms:gap-2 cms:p-2">
                                 <SortableHandle {...handle} label={t('Move :title', { title: field.label || field.handle })} />
                                 <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-expanded={expanded} aria-controls={id}
@@ -300,7 +300,7 @@ function operatorLabel(operator: FieldCondition['operator']): string {
 
 /** "Show only when …": another field on this level, how to compare, and with what. */
 function ConditionSettings({ id, field, siblings, onChange, errors }: { id: string; field: BuilderField; siblings: BuilderField[]; onChange: (field: BuilderField) => void; errors: Errors }) {
-    const others = siblings.filter((sibling) => sibling.key !== field.key && sibling.handle !== '');
+    const others = conditionChoices(field, siblings);
     const condition = field.condition ?? null;
     const operator = OPERATORS.find((o) => o.value === condition?.operator) ?? OPERATORS[0]!;
     const set = (changes: Partial<FieldCondition> | null) =>

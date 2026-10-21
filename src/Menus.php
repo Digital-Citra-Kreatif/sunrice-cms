@@ -186,7 +186,11 @@ final class Menus
     /** @return array{label: string, url: string}|null */
     private function link(MenuItem $item, string $locale): ?array
     {
-        $label = $item->labels[$locale] ?? $item->labels[Locales::default()] ?? null;
+        // A label in this language wins; without one, the target's title in this language, when it has
+        // one, comes before the main language's label (a custom English "Team" isn't shown on /id when
+        // the target reads "Tim" there).
+        $own = self::text($item->labels[$locale] ?? null);
+        $main = self::text($item->labels[Locales::default()] ?? null);
         if ($item->term_id !== null) {
             // A term's page, in this language or else the main one.
             $term = $item->term;
@@ -197,7 +201,7 @@ final class Menus
             $translation?->setRelation('term', $term);
             $url = $translation === null ? null : app(Site::class)->termUrlIn($translation, $locale);
 
-            return $url === null ? null : ['label' => $label ?? $translation->title, 'url' => $url];
+            return $url === null ? null : ['label' => $own ?? ($translation->locale === $locale ? $translation->title : ($main ?? $translation->title)), 'url' => $url];
         }
         if ($item->collection_id !== null) {
             $collection = $item->collection;
@@ -207,10 +211,13 @@ final class Menus
             // Its filters, in every language (a term filter takes a slug in any language).
             $url .= $item->query_string !== null ? '?'.$item->query_string : '';
 
-            return ['label' => $label ?? $collection->titleIn($locale), 'url' => $url];
+            $translated = $collection->getAttribute('translations');
+            $hasTitle = is_array($translated) && is_array($translated[$locale] ?? null) && self::text($translated[$locale]['title'] ?? null) !== null;
+
+            return ['label' => $own ?? ($hasTitle ? $collection->titleIn($locale) : ($main ?? $collection->titleIn($locale))), 'url' => $url];
         }
         if ($item->entry_id === null) {
-            return $item->url === null ? null : ['label' => $label ?? $item->url, 'url' => $item->url];
+            return $item->url === null ? null : ['label' => $own ?? $main ?? $item->url, 'url' => $item->url];
         }
         $entry = $item->entry;
         if (! $entry instanceof Entry || $entry->trashed() || $entry->collection->trashed()) {
@@ -221,6 +228,11 @@ final class Menus
         // Not live in this language: the main language's page (at this language's address with Site::fallback()).
         $url = $translation !== null && $translation->isLive() ? app(Site::class)->urlIn($translation, $locale) : null;
 
-        return $url === null ? null : ['label' => $label ?? (string) $translation->title, 'url' => $url];
+        return $url === null ? null : ['label' => $own ?? ($translation->locale === $locale ? (string) $translation->title : ($main ?? (string) $translation->title)), 'url' => $url];
+    }
+
+    private static function text(mixed $text): ?string
+    {
+        return is_string($text) && trim($text) !== '' ? $text : null;
     }
 }

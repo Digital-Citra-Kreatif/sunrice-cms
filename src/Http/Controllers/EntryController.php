@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Http\Controllers;
 
+use Carbon\CarbonInterface;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\JsonResponse;
@@ -27,9 +28,11 @@ use Sunrice\Cms\Actions\Entries\RestoreEntry;
 use Sunrice\Cms\Actions\Entries\RestoreRevision;
 use Sunrice\Cms\Actions\Entries\SaveDraft;
 use Sunrice\Cms\Actions\Entries\SaveEntrySettings;
+use Sunrice\Cms\Actions\Entries\SendBackReview;
 use Sunrice\Cms\Actions\Entries\SetHomepage;
 use Sunrice\Cms\Actions\Entries\TrashEntry;
 use Sunrice\Cms\Actions\Entries\UnpublishEntry;
+use Sunrice\Cms\Actions\Entries\WithdrawReview;
 use Sunrice\Cms\Admin\EntryList;
 use Sunrice\Cms\Admin\RevisionList;
 use Sunrice\Cms\Fields\Reference;
@@ -335,6 +338,8 @@ final class EntryController
                 'review' => $translation->review_requested_at === null ? null : [
                     'requestedAt' => $translation->review_requested_at->toIso8601String(),
                     'by' => $translation->review_requested_by === null ? null : self::userName($translation->review_requested_by),
+                    // The one who asked may withdraw the request.
+                    'mine' => $translation->review_requested_by !== null && is_scalar($id = $request->user()?->getAuthIdentifier()) && (string) $id === (string) $translation->review_requested_by,
                 ],
                 'version' => $translation->version,
                 // The live page, and a signed link to preview the draft (30 minutes).
@@ -355,11 +360,10 @@ final class EntryController
                 : null,
             // The blueprints it may use, when there's a choice (Page settings).
             'blueprints' => self::blueprints($collection),
-            // Whether it's the site's homepage, and whether this user may make it so (a page of a collection with a URL).
-            'homepage' => [
-                'is' => app(SiteSettings::class)->homepage === $entry->id,
-                'can' => $collection->route !== null && ($request->user()?->can('cms.homepage') ?? false),
-            ],
+            // Whether it's the site's homepage, whether this user may make it so (a page
+            // of a collection whose entries can be: SetHomepage::offers()), and the
+            // current homepage's title, for the confirmation.
+            'homepage' => self::homepageState($entry, $collection, $request),
             // Loaded after the page shows (Inertia's deferred props): the sidebar's lists.
             // Who published each and what it changed from the one before.
             'revisions' => Inertia::defer(fn (): array => RevisionList::summaries($translation)),
@@ -450,6 +454,16 @@ final class EntryController
         return back()->with('success', self::published($translation));
     }
 
+    /** @return array{is: bool, can: bool, current: string|null} */
+    private static function homepageState(Entry $entry, Collection $collection, Request $request): array
+    {
+        $current = app(SiteSettings::class)->homepage;
+        $can = $current !== $entry->id && ($request->user()?->can('cms.homepage') ?? false) && SetHomepage::offers($collection);
+        $title = $can && $current !== null ? EntryTranslation::query()->where('entry_id', $current)->where('locale', Locales::default())->first() : null;
+
+        return ['is' => $current === $entry->id, 'can' => $can, 'current' => $title === null ? null : ($title->title ?? $title->draft_title)];
+    }
+
     /** The entry as the site's homepage (cms.homepage). */
     public function homepage(Entry $entry, SetHomepage $set): RedirectResponse
     {
@@ -466,11 +480,36 @@ final class EntryController
         return back()->with('success', 'Sent for review. Those who can publish it have been told.');
     }
 
+    /** "Withdraw the request": the one who sent it for review takes it back. */
+    public function withdrawReview(Request $request, Entry $entry, WithdrawReview $withdraw): RedirectResponse
+    {
+        $user = $request->user();
+        $withdraw->handle(self::translation($entry, $request->input('locale')), $user instanceof Authorizable ? $user : null);
+
+        return back()->with('success', 'Request withdrawn. It\'s a draft again, for you to keep working on.');
+    }
+
+    /** "Send back": a reviewer answers without publishing, with an optional note emailed to the one who asked. */
+    public function sendBackReview(Request $request, Entry $entry, SendBackReview $sendBack): RedirectResponse
+    {
+        $request->validate(['note' => ['nullable', 'string', 'max:'.SendBackReview::MAX_NOTE]]);
+        $user = $request->user();
+        $note = $request->input('note');
+        $sendBack->handle(self::translation($entry, $request->input('locale')), is_string($note) ? $note : null, $user instanceof Authorizable ? $user : null);
+
+        return back()->with('success', 'Sent back. The one who asked has been told.');
+    }
+
     public function unpublish(Request $request, Entry $entry, UnpublishEntry $unpublish): RedirectResponse
     {
-        $unpublish->handle(self::translation($entry, $request->input('locale')));
+        $translation = self::translation($entry, $request->input('locale'));
+        // Scheduled, it isn't on the site: "Unschedule" makes it a draft again.
+        $scheduled = $translation->status() === 'scheduled';
+        $unpublish->handle($translation);
 
-        return back()->with('success', 'Taken off the site. The draft is kept.');
+        return $scheduled
+            ? back()->with('success', 'Unscheduled. It\'s a draft again.')
+            : back()->with('success', 'Taken off the site. The draft is kept.');
     }
 
     public function destroy(Entry $entry, TrashEntry $trash): RedirectResponse
@@ -612,7 +651,17 @@ final class EntryController
 
     private static function published(EntryTranslation $translation): string
     {
-        return $translation->isLive() ? 'Published.' : __('Scheduled for :date.', ['date' => $translation->published_at?->toDayDateTimeString()]);
+        return $translation->isLive() ? 'Published.' : __('Scheduled for :date.', ['date' => self::dateTime($translation->published_at)]);
+    }
+
+    /** A date and time as the editor's header shows them: the 24-hour clock ("Nov 10, 2026, 09:30"; "10 Nov 2026, 09:30" in other languages). */
+    private static function dateTime(?CarbonInterface $date): string
+    {
+        if ($date === null) {
+            return '';
+        }
+
+        return $date->locale(app()->getLocale())->isoFormat(str_starts_with(app()->getLocale(), 'en') ? 'MMM D, YYYY, HH:mm' : 'D MMM YYYY, HH:mm');
     }
 
     /** @return array{handle: string, title: string, dated: bool, hierarchical: bool, ordered: bool, listing: bool} */
@@ -655,6 +704,11 @@ final class EntryController
         $can = [];
         foreach (['create', 'update', 'publish', 'delete', 'export'] as $ability) {
             $can[$ability] = Access::entries($request->user(), $ability, $collection, $entry, $locale);
+        }
+        // An entry's editor: whether one may add another language (translators may too), asked for one that isn't the main one.
+        if ($entry !== null) {
+            $other = array_values(array_diff(Locales::all(), [Locales::default()]))[0] ?? null;
+            $can['translate'] = $other !== null && Access::entries($request->user(), 'add-translation', $collection, $entry, $other);
         }
 
         return $can;

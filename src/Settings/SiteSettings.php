@@ -7,6 +7,7 @@ namespace Sunrice\Cms\Settings;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Sunrice\Admin\Resources\Forms\Form;
 use Sunrice\Admin\Resources\Forms\MediaPicker;
+use Sunrice\Admin\Resources\Forms\Pairs;
 use Sunrice\Admin\Resources\Forms\Section;
 use Sunrice\Admin\Resources\Forms\Select;
 use Sunrice\Admin\Resources\Forms\Textarea;
@@ -119,9 +120,10 @@ final class SiteSettings extends Settings
             Section::make('The site')->description('Its name and what it\'s about, for search results and shared links of pages that don\'t say their own. Search engines, share image and titles: Settings → SEO.')->columns(2)->schema([
                 TextInput::make('name')->label('Site name')->maxLength(100)->placeholder(self::appName())->span(2),
                 Textarea::make('description')->label('Description')->rows(2)->maxLength(500)->span(2),
-                ...(count(Locales::all()) > 1 ? [Textarea::make('descriptions')->label('Description in other languages')->rows(2)->maxLength(3000)->span(2)
-                    ->placeholder(implode("\n", array_map(fn (string $code): string => "{$code}: …", array_slice(Locales::all(), 1))))
-                    ->help('One per line, with the language\'s code: "id: Rumah premium di Jakarta dan Bali". A language left out uses the description above.')] : []),
+                // One input per other language, kept as "id: …" lines.
+                ...(count(Locales::all()) > 1 ? [Pairs::make('descriptions')->label('Description in other languages')->maxLength(3000)->span(2)
+                    ->fixed(array_slice(Locales::names(), 1, null, true))
+                    ->help('What pages in each language say about the site. Empty: the description above.')] : []),
             ]),
             Section::make('Structured data')->description('What search engines are told pages are (schema.org), for richer results: articles, breadcrumbs, the site\'s search box.')->columns(2)->schema([
                 Toggle::make('structuredData')->label('Add structured data to pages')->span(2),

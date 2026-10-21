@@ -9,7 +9,7 @@ On the website, the main language has plain addresses (`/about`) and the others 
 When the site has more than one language, the entry editor shows a bar of them above the fields. The main one says **(main)**, and each language shows its status (*Draft*, *Scheduled*, *Published*).
 
 - Click a language to edit that translation.
-- A language with a dashed outline and a **+** has no translation yet. Click it to add one: it starts as a draft copied from the main language, ready to translate.
+- A language with a dashed outline and a **+** has no translation yet. Click it to add one: it starts as a draft copied from the main language, ready to translate. Translators can add languages too, not only those who create entries.
 - **Remove this language** deletes the translation you're on, with its revisions. The main language can't be removed: move the whole entry to the trash instead.
 
 A translation marked **Outdated** was saved before the latest change to the main language: its text may no longer match. The entry's **Status** card says so too.
@@ -48,6 +48,10 @@ When the main language changes, the other languages don't change with it, apart 
 - **Globals**: each set's values per language (see [Globals](guide:website/globals)).
 - **Menus**: a label per language for each link (see [Menus](guide:website/menus)).
 - **Comments** keep the language they were written in, and all languages of an entry share one thread.
+
+## Forms, menus and listing titles
+
+**Content → Translations** gathers the rest of what visitors read, in another language: the site's description, the titles of listing pages (collections and taxonomies), each form's thank-you message and its fields' labels, help and choices, and the menus' link labels. Each line shows the text in the main language next to a box for the translation; leave a box empty to show the main language's text. Translators can use it without being able to change the structure or the settings.
 
 > [!TECHNICAL]
 > Machine translation is set up with `sunrice-cms.translation`; whole collections can be translated with `php artisan sunrice:translate`, and the main language changed with `php artisan sunrice:switch-main-language`. See [Machine translation](docs:cms/translation) and [Collections and entries](docs:cms/collections#languages).

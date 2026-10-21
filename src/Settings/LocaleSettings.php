@@ -234,7 +234,8 @@ final class LocaleSettings extends Settings
         }
         $main = Locales::default();
         if ($codes[0] !== $main && self::holdsContent($main)) {
-            $fail(__(':name (:code) is the main language and content is written in it: keep it first. To change the main language, run php artisan sunrice:switch-main-language :new.', ['name' => Locales::name($main), 'code' => $main, 'new' => $codes[0]]));
+            // The Main language card beside the form switches it (SwitchMainLanguage), once the new one is saved as a language.
+            $fail(__(':name (:code) is the main language and content is written in it: keep it first and save. Then, to make :new the main language, use its button in the Main language card beside the form.', ['name' => Locales::name($main), 'code' => $main, 'new' => Locales::names()[$codes[0]] ?? $codes[0]]));
         }
     }
 

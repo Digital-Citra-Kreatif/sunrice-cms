@@ -6,12 +6,13 @@ Settings are live as soon as you click **Save**.
 
 ## Site
 
-- **Homepage**: the page shown at the website's address (`/`), in each language it's published in; type to search the live pages. Its own address redirects there. Editors can also press **Make this the homepage** in a live page's Status card.
+- **Homepage**: the page shown at the website's address (`/`), in each language it's published in; type to search the live pages. Its own address redirects there. Editors can also press **Make this the homepage** in the Status card of a live page at the root of the website (like `/about`), and confirm.
 
 **The site**, for pages that don't say their own:
 
 - **Site name**: added to page titles and shown when pages are shared. Empty: the name your developer set.
 - **Description**: used when a page has none of its own.
+- **Description in other languages** (with more than one language): a box per language, for pages in that language. Empty: the description above.
 
 The share image, the site name in titles and its separator, the X (Twitter) account and hiding the whole site from search engines are on the **SEO** page (under Structure in the sidebar; see [SEO](guide:website/seo)).
 
