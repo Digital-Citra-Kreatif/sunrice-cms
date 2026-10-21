@@ -38,7 +38,7 @@ final class SiteController
         // Every language has its own prefix (the main one too, /en): a plain address goes to the main language's.
         [, $rest, $matched] = Locales::split($request->path());
         if (! $matched) {
-            return redirect()->to(self::withQuery(url(Locales::prefix(Locales::default()).($rest === '/' ? '' : $rest)), $request), 301);
+            return SiteRedirect::to(self::withQuery(url(Locales::prefix(Locales::default()).($rest === '/' ? '' : $rest)), $request), 301);
         }
         // The search page (/search, /id/search) before any page at that address.
         if (Search::enabled() && ($locale = $site->searchLocale($request->path())) !== null) {
@@ -60,22 +60,22 @@ final class SiteController
         if ($translation !== null && $translation->locale !== $locale) {
             // The homepage in a language it isn't translated into is at /{locale}.
             if ($site->isHomepage($translation) && $path !== (Locales::prefix($locale) ?: '/')) {
-                return redirect()->to(self::withQuery(url(Locales::prefix($locale) ?: '/'), $request), 301);
+                return SiteRedirect::to(self::withQuery(url(Locales::prefix($locale) ?: '/'), $request), 301);
             }
         } elseif ($translation !== null && ($own = $site->ownPath($translation)) !== null && ($served = $site->path($translation, $translation->slug)) !== $own
             && $path === $own) {
             // The homepage is at /: its own address goes there.
-            return redirect()->to(self::withQuery(url((string) $served), $request), 301);
+            return SiteRedirect::to(self::withQuery(url((string) $served), $request), 301);
         }
         if ($translation === null) {
             $redirect = $site->redirect($request->path());
             if ($redirect === null && ($own = $site->translatedAddress($request->path())) !== null) {
                 // The main language's slug in a language the page has its own address in.
-                return redirect()->to(self::withQuery($own, $request), 301);
+                return SiteRedirect::to(self::withQuery($own, $request), 301);
             }
             abort_if($redirect === null, 404);
 
-            return redirect()->to(self::withQuery($redirect->targetFor($request->path()), $request), $redirect->status);
+            return SiteRedirect::to(self::withQuery($redirect->targetFor($request->path()), $request), $redirect->status);
         }
 
         // Editors signed in to the panel see the unpublished changes on the page itself.

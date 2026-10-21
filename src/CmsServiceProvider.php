@@ -210,6 +210,8 @@ final class CmsServiceProvider extends ServiceProvider
     {
         $middleware = config('sunrice-cms.site.middleware', ['web']);
         $middleware = is_array($middleware) ? array_values(array_filter($middleware, is_string(...))) : ['web'];
+        // Security headers (site.headers) on every site response, kept pages too: outside the page cache.
+        $middleware[] = Site\SiteSecurityHeaders::class;
         Route::middleware([...$middleware, ProtectAgainstSpam::class, Site\RequireHoneypot::class])
             ->post('forms/{form:handle}', Site\FormController::class)->name('sunrice.cms.forms.submit');
         Route::middleware([...$middleware, ProtectAgainstSpam::class, Site\RequireHoneypot::class])

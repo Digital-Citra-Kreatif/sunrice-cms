@@ -33,6 +33,18 @@ return [
         // it) shows the main language's content at that language's address,
         // canonical to the main page. Off: a 404 there.
         'fallback' => env('SUNRICE_FALLBACK', true),
+        // Headers sent with every site response (pages, listings, terms,
+        // search, the sitemap, previews, form and comment posts); null or
+        // '' leaves one out, and a header the response already has is
+        // kept. No Content-Security-Policy unless you set one: what it
+        // must allow depends on your templates, scripts and site code.
+        'headers' => [
+            'X-Content-Type-Options' => 'nosniff',
+            'X-Frame-Options' => 'SAMEORIGIN',
+            'Referrer-Policy' => 'strict-origin-when-cross-origin',
+            'Permissions-Policy' => 'camera=(), microphone=(), geolocation=()',
+            'Content-Security-Policy' => env('SUNRICE_SITE_CSP'),
+        ],
     ],
 
     'cache' => [

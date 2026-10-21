@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sunrice\Cms\Site;
 
 use Generator;
+use Sunrice\Admin\Support\AppUrl;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Taxonomy;
@@ -18,7 +19,8 @@ use Sunrice\Cms\Support\SiteCache;
  * with its other languages, but those that ask not to be indexed, built in
  * chunks (never all at once) and kept in the cache's sitemap area, in
  * files of at most LIMIT addresses: one file when they fit, else an index
- * of /sitemap-{n}.xml files.
+ * of /sitemap-{n}.xml files. Its addresses are on APP_URL (AppUrl), never
+ * on the Host header a request named.
  *
  * @internal
  */
@@ -64,7 +66,7 @@ final class Sitemap
     {
         $xml = ['<?xml version="1.0" encoding="UTF-8"?>', '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'];
         for ($n = 1; $n <= $this->count(); $n++) {
-            $xml[] = '<sitemap><loc>'.e(route('sunrice.cms.sitemap.part', ['part' => $n])).'</loc></sitemap>';
+            $xml[] = '<sitemap><loc>'.e(AppUrl::route('sunrice.cms.sitemap.part', ['part' => $n])).'</loc></sitemap>';
         }
         $xml[] = '</sitemapindex>';
 
@@ -122,7 +124,7 @@ final class Sitemap
             if (Seo::noindex($translation) || ($url = app(Site::class)->url($translation)) === null) {
                 continue;
             }
-            $xml = '<url><loc>'.e($url).'</loc>';
+            $xml = '<url><loc>'.e(AppUrl::url($url)).'</loc>';
             if ($translation->updated_at !== null) {
                 $xml .= '<lastmod>'.$translation->updated_at->toAtomString().'</lastmod>';
             }
@@ -137,7 +139,7 @@ final class Sitemap
             if ((is_array($seo) && ($seo['noindex'] ?? false) === true) || ($url = $term->url()) === null) {
                 continue;
             }
-            $xml = '<url><loc>'.e($url).'</loc>';
+            $xml = '<url><loc>'.e(AppUrl::url($url)).'</loc>';
             if ($term->updated_at !== null) {
                 $xml .= '<lastmod>'.$term->updated_at->toAtomString().'</lastmod>';
             }
@@ -147,7 +149,7 @@ final class Sitemap
         foreach (Collection::query()->whereNotNull('listing_route')->orderBy('id')->get() as $collection) {
             $links = self::links(Seo::listingAlternates($collection));
             foreach (Locales::all() as $locale) {
-                yield '<url><loc>'.e((string) $collection->listingUrl($locale)).'</loc>'.$links.'</url>';
+                yield '<url><loc>'.e(AppUrl::url((string) $collection->listingUrl($locale))).'</loc>'.$links.'</url>';
             }
         }
     }
@@ -161,15 +163,15 @@ final class Sitemap
     {
         $xml = '';
         foreach ($alternates as $locale => $alternate) {
-            $xml .= '<xhtml:link rel="alternate" hreflang="'.e(str_replace('_', '-', $locale)).'" href="'.e($alternate).'"/>';
+            $xml .= '<xhtml:link rel="alternate" hreflang="'.e(str_replace('_', '-', $locale)).'" href="'.e(AppUrl::url($alternate)).'"/>';
         }
 
         return $xml;
     }
 
-    /** Its addresses are full URLs: per host. */
+    /** Its addresses are full URLs, on APP_URL (or, without one, the request's host): per root. */
     private function key(string $key): string
     {
-        return $this->cache->key('sitemap:'.sha1(url('/')).':'.$key, SiteCache::SITEMAP);
+        return $this->cache->key('sitemap:'.sha1(AppUrl::url(url('/'))).':'.$key, SiteCache::SITEMAP);
     }
 }
