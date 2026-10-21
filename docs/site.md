@@ -194,7 +194,7 @@ A collection with a **listing page URL** (`listing_route`, like `/blog`) gets a 
 | | |
 | --- | --- |
 | `$collection` | the `Collection` (`->listingUrl($locale)`) |
-| `$entries` | a paginator of `EntryTranslation`s (`{{ $entries->links() }}`) |
+| `$entries` | a paginator of `EntryTranslation`s (`{{ $entries->links() }}`; an `Illuminate\Contracts\Pagination\LengthAwarePaginator`), queried only when the template first uses it, so a template that lists entries its own way (an [entry filter](#filtering-entries), `Cms::entries()`) costs nothing for it; a page past the last is a 404 |
 | `$values`, `$richText` | the listing page's fields, as for entries |
 | `$title`, `$locale`, `$url` | the collection's title, the language and the page's URL |
 
