@@ -97,6 +97,8 @@ final class EntryList
         $search = $request->query('search');
         $this->search = is_string($search) ? mb_substr(trim($search), 0, 200) : '';
         $status = $request->query('status');
+        // "trash" too, as people type it.
+        $status = $status === 'trash' ? 'trashed' : $status;
         $this->status = is_string($status) && in_array($status, self::STATUSES, true) ? $status : ($request->boolean('trashed') ? 'trashed' : '');
         $author = $request->query('author');
         $this->author = is_string($author) && ctype_digit($author) ? (int) $author : null;
@@ -200,6 +202,7 @@ final class EntryList
                 'title' => $translation->draft_title,
                 'slug' => $translation->draft_slug,
                 'status' => $translation->status(),
+                'trashed' => $translation->entry->trashed(),
                 'publishedAt' => $translation->published_at?->toIso8601String(),
                 'updatedAt' => $translation->updated_at?->toIso8601String(),
                 'createdAt' => $translation->created_at?->toIso8601String(),

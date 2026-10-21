@@ -187,7 +187,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                         )}
                         {entry && !entry.trashed && can.delete && !lock.readOnly && (
                             <Button type="button" variant="outline" size="icon" className="cms:text-destructive" aria-label="Move to the trash"
-                                onClick={() => confirm(`Move "${values.title}" to the trash? It comes off the site; you can restore it.${usedBySentence(usedBy)}`, () => router.delete(url))}>
+                                onClick={() => confirm(`Move "${values.title}" to the trash? It comes off the site; you can restore it.${usedBySentence(usedBy)}`, () => router.delete(url), 'Move to trash')}>
                                 <Trash2 />
                             </Button>
                         )}

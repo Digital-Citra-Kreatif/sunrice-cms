@@ -17,7 +17,7 @@ The filters stay in the page's address, so you can bookmark a view or send it to
 
 ### Several at once
 
-Tick entries (or the box at the top for the whole page) to **Publish**, **Unpublish** or **Move to the trash** them together. In the trash, **Restore** or **Delete for good**. Entries you may not change, or that can't be published as they are (a required field is empty, for example), are skipped, and the panel says how many.
+Tick entries (or the box at the top for the whole page) to **Publish**, **Unpublish** or **Move to the trash** them together. Right after trashing, the message has an **Undo** button. In the trash, rows say **Trashed** and each has a **Restore** button; ticked ones can be restored or **Deleted for good** together. Entries you may not change, or that can't be published as they are (a required field is empty, for example), are skipped, and the panel says how many.
 
 ### Putting entries in order
 

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import {
-    ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Columns3, Compass, Download, ExternalLink, LayoutList, Plus, Search, X,
+    ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Columns3, Compass, Download, ExternalLink, LayoutList, Plus, RotateCcw, Search, X,
 } from 'lucide-react';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { EntryReorderList } from '@/components/EntryReorderList.tsx';
@@ -21,6 +21,8 @@ interface Row {
     title: string;
     slug: string;
     status: EntryStatus;
+    /** In the trash (the status is what it was before). */
+    trashed?: boolean;
     publishedAt: string | null;
     updatedAt: string | null;
     createdAt: string | null;
@@ -133,7 +135,8 @@ function EntryList({
     const runBulk = (action: string, label: string, danger = false) => {
         const go = () => router.post(`${base}/bulk`, { action, ids: selected }, { preserveScroll: true });
         if (danger) {
-            confirm(`${label}: ${selected.length} ${selected.length === 1 ? 'entry' : 'entries'}?${action === 'delete' ? ' This can\'t be undone.' : ''}`, go);
+            confirm(`${label}: ${selected.length} ${selected.length === 1 ? 'entry' : 'entries'}?${action === 'delete' ? ' This can\'t be undone.' : ' They come off the site; you can restore them.'}`,
+                go, action === 'trash' ? 'Move to trash' : 'Delete');
         } else {
             go();
         }
@@ -154,7 +157,9 @@ function EntryList({
     const moveable = manualOrder && !!can?.update;
     // Dragging saves the order of what's shown, the rest of its level after it: only when the whole collection is on this page.
     const draggable = moveable && entries !== null && entries.lastPage <= 1 && entries.data.length > 1;
-    const span = 1 + visible.length + (bulkActions.length > 0 ? 1 : 0) + (moveable ? 1 : 0);
+    // In the trash, each row has its own Restore (the bulk bar has it too).
+    const restorable = trashed && !!can?.delete;
+    const span = 1 + visible.length + (bulkActions.length > 0 ? 1 : 0) + (moveable ? 1 : 0) + (restorable ? 1 : 0);
     const exportQuery = entryListQueryString(params());
     const groups = [...new Set(links.map((link) => link.group))];
 
@@ -294,6 +299,7 @@ function EntryList({
                                 ? <SortableHead key={column.key} label={column.label} sortKey={column.key} sort={query.sort} onSort={(sort) => visit({ sort })} />
                                 : <TableHead key={column.key}>{column.label}</TableHead>)}
                             {moveable && <TableHead className="cms:w-px"><span className="cms:sr-only">Order</span></TableHead>}
+                            {restorable && <TableHead className="cms:w-px"><span className="cms:sr-only">Restore</span></TableHead>}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -334,6 +340,14 @@ function EntryList({
                                             <Button variant="ghost" size="icon" aria-label={`Move ${row.title} up`} onClick={() => router.post(adminUrl(`cms/entries/${row.id}/move`), { direction: 'up' }, { preserveScroll: true })}><ArrowUp /></Button>
                                             <Button variant="ghost" size="icon" aria-label={`Move ${row.title} down`} onClick={() => router.post(adminUrl(`cms/entries/${row.id}/move`), { direction: 'down' }, { preserveScroll: true })}><ArrowDown /></Button>
                                         </span>
+                                    </TableCell>
+                                )}
+                                {restorable && (
+                                    <TableCell className="cms:w-px">
+                                        <Button variant="outline" size="sm" aria-label={`Restore ${row.title}`}
+                                            onClick={() => router.post(adminUrl(`cms/entries/${row.id}/restore`), {}, { preserveScroll: true })}>
+                                            <RotateCcw /> Restore
+                                        </Button>
                                     </TableCell>
                                 )}
                             </TableRow>
@@ -399,7 +413,9 @@ function CellValue({ row, column, mainLocale }: { row: Row; column: Column; main
         case 'status':
             return (
                 <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-1">
-                    <Badge variant={row.status === 'published' ? 'success' : 'secondary'}>{statusLabel(row.status)}</Badge>
+                    {row.trashed
+                        ? <Badge variant="outline" className="cms:text-destructive" title={`${statusLabel(row.status)} before it was trashed`}>Trashed</Badge>
+                        : <Badge variant={row.status === 'published' ? 'success' : 'secondary'}>{statusLabel(row.status)}</Badge>}
                     {row.locales.length > 1 && row.locales.filter((l) => !l.main).map((l) => (
                         <Badge key={l.code} variant={l.status === 'published' ? 'secondary' : 'outline'}
                             className={l.status === null ? 'cms:opacity-50' : l.outdated ? 'cms:ring-2 cms:ring-amber-500/60' : ''}

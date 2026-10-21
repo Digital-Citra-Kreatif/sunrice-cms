@@ -17,7 +17,7 @@ Filter tersimpan di alamat halaman, jadi Anda bisa menyimpan tampilan sebagai ma
 
 ### Beberapa sekaligus
 
-Centang beberapa entri (atau kotak di atas untuk seluruh halaman) untuk **Publish** (terbitkan), **Unpublish** (tarik dari situs), atau **Move to the trash** (pindahkan ke tempat sampah) sekaligus. Di tempat sampah: **Restore** (pulihkan) atau **Delete for good** (hapus selamanya). Entri yang tidak boleh Anda ubah, atau yang belum bisa diterbitkan (misalnya ada field wajib yang kosong), dilewati, dan panel menyebutkan jumlahnya.
+Centang beberapa entri (atau kotak di atas untuk seluruh halaman) untuk **Publish** (terbitkan), **Unpublish** (tarik dari situs), atau **Move to the trash** (pindahkan ke tempat sampah) sekaligus. Tepat setelah membuang, pesannya punya tombol **Undo** (batalkan). Di tempat sampah, baris bertanda **Trashed** dan masing-masing punya tombol **Restore** (pulihkan); yang dicentang bisa dipulihkan atau **Delete for good** (hapus selamanya) sekaligus. Entri yang tidak boleh Anda ubah, atau yang belum bisa diterbitkan (misalnya ada field wajib yang kosong), dilewati, dan panel menyebutkan jumlahnya.
 
 ### Mengurutkan entri
 

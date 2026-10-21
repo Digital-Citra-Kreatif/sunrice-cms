@@ -343,7 +343,8 @@ final class EntryController
     {
         $trash->handle($entry);
 
-        return redirect()->route('sunrice.admin.cms.entries.index', $entry->collection->handle)->with('success', 'Moved to the trash.');
+        return redirect()->route('sunrice.admin.cms.entries.index', $entry->collection->handle)->with('success', 'Moved to the trash.')
+            ->with('success_action', ['label' => 'Undo', 'url' => route('sunrice.admin.cms.entries.restore', $entry)]);
     }
 
     public function restore(Entry $entry, RestoreEntry $restore): RedirectResponse
