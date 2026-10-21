@@ -27,6 +27,7 @@ use Sunrice\Cms\Actions\Entries\RestoreEntry;
 use Sunrice\Cms\Actions\Entries\RestoreRevision;
 use Sunrice\Cms\Actions\Entries\SaveDraft;
 use Sunrice\Cms\Actions\Entries\SaveEntrySettings;
+use Sunrice\Cms\Actions\Entries\SetHomepage;
 use Sunrice\Cms\Actions\Entries\TrashEntry;
 use Sunrice\Cms\Actions\Entries\UnpublishEntry;
 use Sunrice\Cms\Admin\EntryList;
@@ -41,6 +42,7 @@ use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Revision;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
+use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\References;
@@ -275,6 +277,11 @@ final class EntryController
             'settings' => ['parentId' => $entry->parent_id, 'template' => $entry->template, 'commentsClosed' => $entry->comments_closed, 'blueprint' => $entry->blueprintHandle()],
             // The blueprints it may use, when there's a choice (Page settings).
             'blueprints' => self::blueprints($collection),
+            // Whether it's the site's homepage, and whether this user may make it so (a page of a collection with a URL).
+            'homepage' => [
+                'is' => app(SiteSettings::class)->homepage === $entry->id,
+                'can' => $collection->route !== null && ($request->user()?->can('cms.homepage') ?? false),
+            ],
             // Loaded after the page shows (Inertia's deferred props): the sidebar's lists.
             // Who published each and what it changed from the one before.
             'revisions' => Inertia::defer(fn (): array => RevisionList::summaries($translation)),
@@ -361,6 +368,14 @@ final class EntryController
         $translation = $publish->handle(self::translation($entry, $request->input('locale')), self::publishAt($request));
 
         return back()->with('success', self::published($translation));
+    }
+
+    /** The entry as the site's homepage (cms.homepage). */
+    public function homepage(Entry $entry, SetHomepage $set): RedirectResponse
+    {
+        $set->handle($entry);
+
+        return back()->with('success', 'It\'s the homepage now.');
     }
 
     /** A published entry's date, moved ("published_at"), its draft left alone. */

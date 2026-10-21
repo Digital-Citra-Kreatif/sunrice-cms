@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Deferred, Head, router, useForm } from '@inertiajs/react';
+import { Deferred, Head, router, useForm, usePage } from '@inertiajs/react';
 import { CalendarClock, Check, ChevronDown, Copy, ExternalLink, Eye, Languages, LoaderCircle, Plus, RotateCcw, Trash2, Undo2 } from 'lucide-react';
 import { adminUrl } from '@sunrice/admin-sdk';
 import {
@@ -22,6 +22,8 @@ interface Props {
     collection: { handle: string; title: string; dated: boolean; hierarchical?: boolean; ordered?: boolean; comments?: boolean };
     /** Every language's: the parent entry and the entry's own Blade view. */
     settings?: { parentId: number | null; template: string | null; commentsClosed?: boolean; blueprint?: string | null };
+    /** Whether it's the site's homepage, and whether the user may make it so (cms.homepage). */
+    homepage?: { is: boolean; can: boolean };
     /** The blueprints the entry may use, when its collection offers more than one. */
     blueprints?: { handle: string; title: string }[];
     fields: FieldDefinition[];
@@ -95,7 +97,7 @@ export default function EntryEditorPage(props: Props) {
     return <EntryEditor key={entry ? `${entry.id}:${entry.locale}:${entry.version}:${entry.status}:${entry.trashed}:${entry.publishedAt}` : 'new'} {...props} />;
 }
 
-function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, comments, termLabels, usedBy = [], undoRestore = null, machineTranslate = null, settings, blueprints = [], can }: Props) {
+function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, comments, termLabels, usedBy = [], undoRestore = null, machineTranslate = null, settings, blueprints = [], homepage, can }: Props) {
     const list = adminUrl(`cms/collections/${collection.handle}/entries`);
     const url = entry ? adminUrl(`cms/entries/${entry.id}`) : list;
     const heading = entry ? values.title : 'New entry';
@@ -113,6 +115,8 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
     const mainLocale = locales.find((l) => l.main)?.code;
 
     const errors = form.errors as Record<string, string | undefined>;
+    // From the sidebar's own requests (the date, the homepage).
+    const pageErrors = (usePage().props.errors ?? {}) as Record<string, string | undefined>;
     // Nothing new to publish: the live version is the draft, and the form has no changes.
     const upToDate = entry !== null && entry.status !== 'draft' && !entry.hasUnpublishedChanges && !form.isDirty;
     const editable = entry === null ? can.create : can.update && !entry.trashed;
@@ -270,7 +274,9 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                     </span>
                 </div>
             )}
-            {(errors.entry || errors.published_at) && <p role="alert" className="cms:text-sm cms:text-destructive">{errors.entry ?? errors.published_at}</p>}
+            {(errors.entry || errors.published_at || pageErrors.published_at || pageErrors.homepage) && (
+                <p role="alert" className="cms:text-sm cms:text-destructive">{errors.entry ?? errors.published_at ?? pageErrors.published_at ?? pageErrors.homepage}</p>
+            )}
 
             <div className="cms:grid cms:gap-6 cms:lg:grid-cols-[minmax(0,1fr)_18rem]">
                 <div className="cms:flex cms:min-w-0 cms:flex-col cms:gap-6">
@@ -322,6 +328,13 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                         <CollapsibleCard title="Status" titleClassName="cms:text-base" storageKey="cms:entry:status" contentClassName="cms:flex cms:flex-col cms:gap-1 cms:text-sm">
                             <p>{statusLabel(entry.status)}{entry.status !== 'draft' && entry.publishedAt ? ` · ${formatDate(entry.publishedAt)}` : ''}</p>
                             {entry.status !== 'draft' && entry.hasUnpublishedChanges && <p className="cms:text-muted-foreground">The draft has changes the site doesn't show yet.</p>}
+                            {homepage?.is && <p className="cms:text-muted-foreground">This is the site's homepage.</p>}
+                            {homepage && !homepage.is && homepage.can && entry.status === 'published' && !entry.trashed && (
+                                <Button type="button" variant="outline" size="sm" className="cms:mt-1 cms:self-start"
+                                    onClick={() => router.post(`${url}/homepage`, {}, { preserveScroll: true })}>
+                                    Make this the homepage
+                                </Button>
+                            )}
                             {collection.dated && can.publish && !entry.trashed && !lock.readOnly && (
                                 entry.status === 'draft'
                                     ? <p className="cms:text-muted-foreground">To give it an earlier date, use Publish ▾ → Publish on a date… with that date.</p>

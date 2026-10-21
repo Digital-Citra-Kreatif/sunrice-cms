@@ -6,7 +6,7 @@ Pengaturan langsung berlaku begitu Anda mengeklik **Save**.
 
 ## Site
 
-- **Homepage** (beranda): entri yang tampil di alamat utama situs web (`/`), dalam setiap bahasa tempat entri itu terbit. Alamat entri itu sendiri dialihkan ke sana.
+- **Homepage** (beranda): halaman yang tampil di alamat utama situs web (`/`), dalam setiap bahasa tempat entri itu terbit; ketik untuk mencari halaman yang sudah tayang. Alamat entri itu sendiri dialihkan ke sana. Editor juga bisa menekan **Make this the homepage** di kartu Status halaman yang sudah tayang.
 
 **Search and sharing**, untuk halaman yang tidak mengatur sendiri (lihat [SEO](guide:website/seo)):
 
