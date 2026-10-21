@@ -4,7 +4,7 @@ A **taxonomy** groups entries: categories, tags, topics. Its **terms** ("News", 
 
 ## Setting up
 
-Under **Structure → Taxonomies** (permissions `cms.taxonomies.view`, `.create`, `.update`, `.delete`): a title, a handle (it can be changed later, with a warning: terms fields and templates that name it need the new one, roles keep their permissions), whether terms nest, and the collections whose entries it groups. Deleting a taxonomy keeps its terms, out of sight: the list's **Deleted** filter and **Restore** bring it back, and `sunrice:orphans --purge` deletes it for good ([leftovers](structure.md#leftovers)).
+Under **Structure → Taxonomies** (permissions `cms.taxonomies.view`, `.create`, `.update`, `.delete`): a title, a handle (it can be changed later, with a warning: terms fields and templates that name it need the new one, roles keep their permissions), whether terms nest, and the collections whose entries it groups (the entries list filters by it; a collection whose blueprints have a terms field for the taxonomy gets the filter anyway, so a terms field is enough). Deleting a taxonomy keeps its terms, out of sight: the list's **Deleted** filter and **Restore** bring it back, and `sunrice:orphans --purge` deletes it for good ([leftovers](structure.md#leftovers)).
 
 Under **Content → Terms** (`cms.terms.manage`): add, rename, nest, reorder and trash a taxonomy's terms, in each language (see [Trash](#trash)). A term not yet translated shows the main language's title. Terms are dragged into order by their handle among the terms of their level, each taking the terms under it along (moving a term to another parent is **Rename** → *Under*).
 

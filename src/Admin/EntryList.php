@@ -16,6 +16,7 @@ use Sunrice\Admin\Preferences\Preferences;
 use Sunrice\Cms\Fields\CustomField;
 use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\Schema;
+use Sunrice\Cms\Fields\Types\TermsField;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
@@ -88,6 +89,9 @@ final class EntryList
 
     /** @var array<string, string>|null user names by id, of everyone who wrote entries here */
     private ?array $authors = null;
+
+    /** @var \Illuminate\Database\Eloquent\Collection<int, Taxonomy>|null */
+    private ?\Illuminate\Database\Eloquent\Collection $taxonomies = null;
 
     public function __construct(private readonly Collection $collection, Request $request, private readonly ?Authenticatable $user, Preferences $preferences)
     {
@@ -572,10 +576,44 @@ final class EntryList
         return ['status', $this->collection->dated ? 'published_at' : 'updated_at'];
     }
 
-    /** @return \Illuminate\Database\Eloquent\Collection<int, Taxonomy> */
+    /**
+     * The taxonomies to filter by: those ticked for the collection, and
+     * those its blueprints have a terms field for (one is enough).
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, Taxonomy>
+     */
     private function taxonomies(): \Illuminate\Database\Eloquent\Collection
     {
-        return $this->collection->taxonomies;
+        if ($this->taxonomies !== null) {
+            return $this->taxonomies;
+        }
+        $handles = [];
+        foreach ($this->collection->allSchemas() as $schema) {
+            array_push($handles, ...self::termsTaxonomies($schema->fields()));
+        }
+        $attached = $this->collection->taxonomies;
+        $missing = array_values(array_diff(array_unique($handles), $attached->map(fn (Taxonomy $taxonomy): string => $taxonomy->handle)->all()));
+
+        return $this->taxonomies = $missing === [] ? $attached : $attached->merge(Taxonomy::query()->whereIn('handle', $missing)->orderBy('title')->get())->values();
+    }
+
+    /**
+     * The taxonomies the terms fields among these name, at any depth.
+     *
+     * @param  list<Field>  $fields
+     * @return list<string>
+     */
+    private static function termsTaxonomies(array $fields): array
+    {
+        $handles = [];
+        foreach ($fields as $field) {
+            if ($field->type === TermsField::TYPE && ($handle = $field->configString('taxonomy')) !== null) {
+                $handles[] = $handle;
+            }
+            array_push($handles, ...self::termsTaxonomies($field->fields));
+        }
+
+        return $handles;
     }
 
     /**

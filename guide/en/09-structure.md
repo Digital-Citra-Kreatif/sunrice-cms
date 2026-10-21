@@ -45,7 +45,7 @@ Drag the fields into order by their handle (the fields inside a group or repeate
 
 ## Taxonomies
 
-**Structure → Taxonomies**: a **Title**, a **Handle** (changeable later, as for collections), **Nested terms** (terms under other terms, like subcategories), the **Collections** whose entries it groups, a **Term pages URL** (like `/topics/{slug}`; empty: terms have no pages), **Term fields** (a blueprint for the terms' own fields), a **Template**, and **SEO from fields**. Editors then add the terms under Content → Terms (see [Terms](guide:website/terms)). To let editors give entries terms, add a **Terms** field to the collection's blueprint.
+**Structure → Taxonomies**: a **Title**, a **Handle** (changeable later, as for collections), **Nested terms** (terms under other terms, like subcategories), the **Collections** whose entries it groups, a **Term pages URL** (like `/topics/{slug}`; empty: terms have no pages), **Term fields** (a blueprint for the terms' own fields), a **Template**, and **SEO from fields**. Editors then add the terms under Content → Terms (see [Terms](guide:website/terms)). To let editors give entries terms, add a **Terms** field to the collection's blueprint: that's enough for the entries list to filter by the taxonomy too, without ticking the collection here.
 
 ## Global sets
 

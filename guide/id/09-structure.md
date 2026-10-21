@@ -45,7 +45,7 @@ Seret field ke urutannya lewat pegangannya (field di dalam group atau repeater d
 
 ## Taksonomi
 
-**Structure → Taxonomies**: **Title**, **Handle** (bisa diubah nanti, seperti pada koleksi), **Nested terms** (term di bawah term lain, seperti subkategori), **Collections** yang entrinya dikelompokkan, **Term pages URL** (seperti `/topik/{slug}`; kosong: term tidak punya halaman), **Term fields** (blueprint untuk field term), **Template**, dan **SEO from fields**. Editor lalu menambahkan term di Content → Terms (lihat [Term](guide:website/terms)). Agar editor bisa memberi term pada entri, tambahkan field **Terms** ke blueprint koleksinya.
+**Structure → Taxonomies**: **Title**, **Handle** (bisa diubah nanti, seperti pada koleksi), **Nested terms** (term di bawah term lain, seperti subkategori), **Collections** yang entrinya dikelompokkan, **Term pages URL** (seperti `/topik/{slug}`; kosong: term tidak punya halaman), **Term fields** (blueprint untuk field term), **Template**, dan **SEO from fields**. Editor lalu menambahkan term di Content → Terms (lihat [Term](guide:website/terms)). Agar editor bisa memberi term pada entri, tambahkan field **Terms** ke blueprint koleksinya: itu sudah cukup agar daftar entri bisa disaring menurut taksonomi tersebut, tanpa mencentang koleksinya di sini.
 
 ## Global set
 

@@ -58,7 +58,7 @@ final class TaxonomyResource extends Resource
                 'Careful: terms fields and templates that name it (the cms.taxonomy-{handle} view, whereTerm(\'…\')) need the new handle too. Roles keep their permissions for it.'),
             Toggle::make('hierarchical')->label('Nested terms')->help('Terms can go under other terms, like categories and subcategories.'),
             CheckboxList::make('collections')
-                ->help('The collections whose entries it groups.')
+                ->help('The collections whose entries it groups, for their entries list\'s filters. A collection whose blueprint has a Terms field for it is included anyway.')
                 ->options(fn () => Collection::query()->orderBy('title')->get()->mapWithKeys(fn (Collection $c): array => [(string) $c->id => $c->title])->all())
                 ->loadUsing(fn (Model $taxonomy): array => $taxonomy instanceof Taxonomy
                     ? $taxonomy->collections()->get(['sunrice_collections.id'])->map(fn (Collection $c): string => (string) $c->id)->all()
