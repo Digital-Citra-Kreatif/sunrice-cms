@@ -83,7 +83,8 @@ final class TermsField extends FieldType
                 'options' => Taxonomy::query()->orderBy('title')->get()->map(fn (Taxonomy $t): array => ['value' => $t->handle, 'label' => $t->title])->all(),
             ]),
             new Field('multiple', 'toggle', 'Several terms'),
-            new Field('max', 'number', 'At most', instructions: 'With several terms.', config: ['min' => 1, 'step' => 1]),
+            // Only with several terms: inline next to the switch in the builder.
+            new Field('max', 'number', 'At most', config: ['min' => 1, 'step' => 1, 'placeholder' => 'No limit'], condition: ['field' => 'multiple', 'operator' => 'filled', 'value' => null]),
         ];
     }
 

@@ -61,7 +61,7 @@ final class Select extends FieldType
                 new Field('value', 'text', 'Value', required: true),
                 new Field('label', 'text', 'Label'),
             ]),
-            new Field('multiple', 'toggle', 'Allow several'),
+            new Field('multiple', 'toggle', 'Several choices'),
             new Field('default', 'text', 'Default value'),
         ];
     }

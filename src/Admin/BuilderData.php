@@ -45,11 +45,16 @@ final class BuilderData
         ];
     }
 
-    /** A setting with its label and instructions in the user's language (they're written in English in the type). */
+    /** A setting with its label, instructions and placeholder in the user's language (they're written in English in the type). */
     private static function said(Field $field): Field
     {
+        $config = $field->config;
+        if (is_string($config['placeholder'] ?? null)) {
+            $config['placeholder'] = self::say($config['placeholder']);
+        }
+
         return new Field($field->handle, $field->type, self::say($field->label), $field->required, self::say($field->instructions),
-            $field->translatable, $field->validation, $field->config, array_map(self::said(...), $field->fields), $field->condition, $field->translations);
+            $field->translatable, $field->validation, $config, array_map(self::said(...), $field->fields), $field->condition, $field->translations);
     }
 
     private static function say(string $words): string

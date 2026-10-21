@@ -197,7 +197,7 @@ final readonly class Field
     {
         $other = $siblings[$rule['field']] ?? null;
         $filled = $other !== null && $other !== '' && $other !== false && $other !== [];
-        $equal = in_array(self::comparable($rule['value']), array_map(self::comparable(...), is_array($other) ? $other : [$other]), true);
+        $equal = in_array(self::comparable($rule['value'] ?? null), array_map(self::comparable(...), is_array($other) ? $other : [$other]), true);
 
         return match ($rule['operator']) {
             'equals' => $equal,

@@ -136,7 +136,7 @@ function Control({ field, value, onChange, errors, id, content, fill = false }: 
             return field.config?.multiple === true
                 ? <MultiSelect options={optionsOf(field)} value={Array.isArray(value) ? value.map(String) : []} onChange={onChange} invalid={invalid}
                     empty={typeof field.config?.empty === 'string' ? field.config.empty : undefined} inTickOrder={field.config?.in_tick_order === true} />
-                : <SingleSelect options={optionsOf(field)} value={typeof value === 'string' ? value : null} onChange={onChange} id={id}
+                : <SingleSelect options={optionsOf(field)} value={typeof value === 'string' ? value : null} onChange={onChange} id={id} fill={fill}
                     empty={offersEmptyChoice(optionsOf(field), field.required === true, typeof field.config?.default === 'string' && field.config.default !== '', typeof value === 'string' && value !== '')} />;
         case 'terms': {
             const multiple = field.config?.multiple === true;
@@ -200,10 +200,10 @@ export function Fields({ fields, value, onChange, errors, id, content, bare = fa
     );
 }
 
-function SingleSelect({ options, value, onChange, id, empty }: { options: Option[]; value: string | null; onChange: (value: unknown) => void; id: string; empty: boolean }) {
+function SingleSelect({ options, value, onChange, id, empty, fill = false }: { options: Option[]; value: string | null; onChange: (value: unknown) => void; id: string; empty: boolean; fill?: boolean }) {
     return (
         <Select value={value ?? NONE} onValueChange={(next: string) => onChange(next === NONE ? null : next)}>
-            <SelectTrigger id={id} className="cms:w-full cms:max-w-sm"><SelectValue /></SelectTrigger>
+            <SelectTrigger id={id} className={fill ? 'cms:w-full' : 'cms:w-full cms:max-w-sm'}><SelectValue /></SelectTrigger>
             <SelectContent>
                 {empty && <SelectItem value={NONE}>{t('None')}</SelectItem>}
                 {options.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}

@@ -257,7 +257,10 @@ function FieldSettings({ id, field, type, siblings, onChange, types, errors, dep
 
             {groups.options.length > 0 && (
                 <SettingsSection title={t('Options')}>
-                    {groups.options.map((each) => setting(each, true))}
+                    {groups.options.map((each) => (groups.dependents[each.handle]?.length ?? 0) > 0 ? (
+                        <SwitchWithDependents key={each.handle} id={id} toggle={each} dependents={groups.dependents[each.handle] ?? []} config={config} errors={errors}
+                            onChange={(changes) => onChange({ ...field, config: { ...config, ...changes } })} />
+                    ) : setting(each, true))}
                 </SettingsSection>
             )}
 
@@ -294,6 +297,51 @@ function FieldSettings({ id, field, type, siblings, onChange, types, errors, dep
                 </div>
             )}
             <FieldError message={errors.type} />
+        </div>
+    );
+}
+
+/**
+ * A switch and the settings that only apply while it's on, on one row: [Several terms] At most [No limit].
+ * They're hidden while it's off (and not kept: DefinitionValidator drops them).
+ */
+function SwitchWithDependents({ id, toggle, dependents, config, errors, onChange }: {
+    id: string; toggle: FieldDefinition; dependents: FieldDefinition[]; config: Record<string, unknown>; errors: Errors; onChange: (changes: Record<string, unknown>) => void;
+}) {
+    const on = config[toggle.handle] === true;
+    const toggleId = `${id}-config-${toggle.handle}`;
+    const messages = [toggle, ...dependents].map((each) => errorsAt(errors, `config.${each.handle}`)['']).filter((message): message is string => message !== undefined);
+
+    return (
+        <div className="cms:flex cms:flex-col cms:gap-2">
+            <div className="cms:flex cms:min-h-9 cms:flex-wrap cms:items-center cms:gap-x-6 cms:gap-y-2">
+                <div className="cms:flex cms:items-center cms:gap-3">
+                    <Switch id={toggleId} checked={on} onCheckedChange={(checked: boolean) => onChange({ [toggle.handle]: checked })} />
+                    <Label htmlFor={toggleId}>{toggle.label || toggle.handle}</Label>
+                </div>
+                {on && dependents.map((each) => {
+                    const dependentId = `${id}-config-${each.handle}`;
+                    const value = config[each.handle];
+                    return each.type === 'number' ? (
+                        <div key={each.handle} className="cms:flex cms:items-center cms:gap-2">
+                            <Label htmlFor={dependentId} className="cms:font-normal">{each.label || each.handle}</Label>
+                            <Input id={dependentId} type="number" className="cms:w-28" aria-describedby={each.instructions ? `${dependentId}-help` : undefined}
+                                placeholder={typeof each.config?.placeholder === 'string' ? each.config.placeholder : undefined}
+                                min={typeof each.config?.min === 'number' ? each.config.min : undefined} max={typeof each.config?.max === 'number' ? each.config.max : undefined}
+                                step={typeof each.config?.step === 'number' ? each.config.step : 'any'}
+                                value={typeof value === 'number' || typeof value === 'string' ? String(value) : ''}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ [each.handle]: e.target.value === '' ? null : Number(e.target.value) })} />
+                            {each.instructions && <span id={`${dependentId}-help`} className="cms:text-sm cms:text-muted-foreground">{each.instructions}</span>}
+                        </div>
+                    ) : (
+                        <div key={each.handle} className="cms:basis-full">
+                            <FieldInput id={dependentId} field={each} value={value} fill errors={errorsAt(errors, `config.${each.handle}`)} onChange={(next) => onChange({ [each.handle]: next })} />
+                        </div>
+                    );
+                })}
+            </div>
+            {toggle.instructions && <p className="cms:text-sm cms:text-muted-foreground">{toggle.instructions}</p>}
+            {messages.map((message) => <FieldError key={message} message={message} />)}
         </div>
     );
 }

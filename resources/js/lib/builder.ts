@@ -219,11 +219,31 @@ export function duplicateField(fields: BuilderField[], index: number, reserved: 
 }
 
 /**
- * A type's settings in the builder's sections: "Options" (choices, lists, switches and long texts, full
- * width) and "Limits and defaults" (numbers and short texts, side by side on one compact row).
+ * The switch a setting depends on: a setting shown only while a toggle among the settings is on
+ * ("At most" while "Several terms" is), which the builder shows inline next to that switch.
  */
-export function settingGroups(settings: FieldDefinition[]): { options: FieldDefinition[]; limits: FieldDefinition[] } {
-    const compact = (setting: FieldDefinition) => setting.type === 'number' || (setting.type === 'text' && (setting.instructions ?? '').length <= 60);
+export function dependsOn(setting: FieldDefinition, settings: FieldDefinition[]): string | null {
+    const condition = setting.condition;
+    if (!condition || 'rules' in condition) return null;
+    const on = condition.operator === 'filled' || (condition.operator === 'equals' && (condition.value === true || condition.value === 'true'));
 
-    return { options: settings.filter((setting) => !compact(setting)), limits: settings.filter(compact) };
+    return on && settings.some((other) => other.handle === condition.field && other.type === 'toggle') ? condition.field : null;
+}
+
+/**
+ * A type's settings in the builder's sections: "Options" (choices, lists, switches and long texts, full
+ * width) and "Limits and defaults" (numbers and short texts, side by side on one compact row). Settings
+ * that depend on a switch go with it instead, by its handle.
+ */
+export function settingGroups(settings: FieldDefinition[]): { options: FieldDefinition[]; limits: FieldDefinition[]; dependents: Record<string, FieldDefinition[]> } {
+    const compact = (setting: FieldDefinition) => setting.type === 'number' || (setting.type === 'text' && (setting.instructions ?? '').length <= 60);
+    const dependents: Record<string, FieldDefinition[]> = {};
+    const free: FieldDefinition[] = [];
+    for (const setting of settings) {
+        const on = dependsOn(setting, settings);
+        if (on === null) free.push(setting);
+        else (dependents[on] ??= []).push(setting);
+    }
+
+    return { options: free.filter((setting) => !compact(setting)), limits: free.filter(compact), dependents };
 }

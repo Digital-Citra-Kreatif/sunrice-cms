@@ -90,7 +90,8 @@ final class EntriesField extends FieldType
                 'empty' => 'There are no collections yet: create the one to link to first (Structure → Collections), then come back.',
             ]),
             new Field('multiple', 'toggle', 'Several entries'),
-            new Field('max', 'number', 'At most', instructions: 'With several entries.', config: ['min' => 1, 'step' => 1]),
+            // Only with several entries: inline next to the switch in the builder.
+            new Field('max', 'number', 'At most', config: ['min' => 1, 'step' => 1, 'placeholder' => 'No limit'], condition: ['field' => 'multiple', 'operator' => 'filled', 'value' => null]),
         ];
     }
 

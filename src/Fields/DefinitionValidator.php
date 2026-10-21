@@ -315,7 +315,8 @@ final class DefinitionValidator
             $settings = Schema::make($type->settings());
             $config = [];
             foreach ($settings->normalize(array_intersect_key($field->config, array_flip(array_map(fn (Field $setting): string => $setting->handle, $settings->fields())))) as $key => $value) {
-                if (is_string($key) && $value !== null && $value !== [] && $value !== false) {
+                // A setting hidden by its own switch ("At most" while "Several" is off) isn't kept.
+                if (is_string($key) && $value !== null && $value !== [] && $value !== false && $settings->field($key)?->isShownWith($field->config) !== false) {
                     $config[$key] = $settings->field($key)?->type === Types\Repeater::TYPE && is_array($value) ? self::settingRows($value) : $value;
                 }
             }

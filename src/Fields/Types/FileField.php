@@ -112,7 +112,8 @@ final class FileField extends FieldType
         return [
             new Field('types', 'text', 'Accepted file types', instructions: 'Extensions, like "pdf, jpg, png, docx". Empty: any file, but those that could run as code.'),
             new Field('multiple', 'toggle', 'Several files'),
-            new Field('max_files', 'number', 'At most (files)', instructions: 'With several files. Empty: '.self::MAX_FILES.'; at most 20.', config: ['min' => 1, 'max' => 20, 'step' => 1]),
+            // Only with several files: inline next to the switch in the builder.
+            new Field('max_files', 'number', 'At most', instructions: 'Up to 20.', config: ['min' => 1, 'max' => 20, 'step' => 1, 'placeholder' => (string) self::MAX_FILES], condition: ['field' => 'multiple', 'operator' => 'filled', 'value' => null]),
             new Field('max_kb', 'number', 'Largest file (KB)', instructions: 'Each file. Empty: 10240 (10 MB). PHP\'s own upload_max_filesize and post_max_size apply too.', config: ['min' => 1, 'step' => 1]),
         ];
     }
