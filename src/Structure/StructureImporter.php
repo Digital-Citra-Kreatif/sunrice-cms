@@ -1002,8 +1002,8 @@ final class StructureImporter
                 $structure[$section][$i] = $also === null ? $item : $also($item);
             }
         };
-        $each('collections', ['listings', 'translations']);
-        $each('taxonomies', ['translations']);
+        $each('collections', ['listings', 'translations', 'routes']);
+        $each('taxonomies', ['translations', 'routes']);
         $each('forms', ['translations']);
         $each('globals', ['values']);
         $each('terms', ['translations']);
