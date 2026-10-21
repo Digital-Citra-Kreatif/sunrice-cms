@@ -92,7 +92,7 @@ final class SiteSettings extends Settings
                 TextInput::make('twitter')->label('X (Twitter) account')->maxLength(16)->placeholder('@acme')->rules(['regex:/^@?[A-Za-z0-9_]{1,15}$/']),
                 Textarea::make('description')->label('Description')->rows(2)->maxLength(500)->span(2),
                 TextInput::make('separator')->label('Title separator')->maxLength(5)->help('Between a page\'s title and the site name.'),
-                Toggle::make('appendName')->label('Add the site name to titles')->help('"About | Acme" in search results and tabs.'),
+                Toggle::make('appendName')->label('Add the site name to titles')->help(self::titleExample()),
                 MediaPicker::make('image')->label('Share image')->images()->span(2),
                 Toggle::make('noindex')->label('Hide the whole site from search engines')->span(2)
                     ->help('For a site still being built. Every page asks not to be indexed and the sitemap is empty.'),
@@ -113,6 +113,15 @@ final class SiteSettings extends Settings
                     ->help('One address per line: the publisher\'s pages on Instagram, LinkedIn, Wikipedia…'),
             ]),
         ]);
+    }
+
+    /** The Add the site name to titles help, with the saved separator and name: "About | Lumina Estates" in search results and tabs. */
+    private static function titleExample(): string
+    {
+        $site = app(self::class);
+        $separator = trim($site->separator) !== '' ? trim($site->separator) : '|';
+
+        return "\"About {$separator} {$site->name()}\" in search results and browser tabs.";
     }
 
     /** @return list<string> the profile addresses (sameAs), one per line */

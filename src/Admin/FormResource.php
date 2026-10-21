@@ -54,8 +54,8 @@ final class FormResource extends Resource
     {
         return $form->schema([
             TextInput::make('title')->required(),
-            ...HandleField::make('form', 'How templates show it: <x-sunrice-cms::form handle="contact" />.',
-                'Careful: templates that show it (<x-sunrice-cms::form handle="…" />) need the new handle too. Roles keep their permissions for its submissions.'),
+            ...HandleField::make('form', 'The site\'s pages show the form by this name. For developers: <x-sunrice-cms::form handle="contact" />.',
+                'Careful: pages that show the form use its handle, so ask your developer to change them too. Roles keep their permissions for its submissions.'),
             Select::make('blueprint')->required()
                 ->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
                 ->help('Its fields. Visitors get the text, textarea, number, toggle, select, date and file ones.'),
@@ -93,7 +93,7 @@ final class FormResource extends Resource
                 ->disabled(! app(Captcha::class)->enabled())
                 ->help(app(Captcha::class)->enabled()
                     ? 'Visitors confirm they\'re not a robot before it\'s sent.'
-                    : 'Set SUNRICE_CAPTCHA_SITE_KEY and SUNRICE_CAPTCHA_SECRET_KEY (Cloudflare Turnstile, or reCAPTCHA or hCaptcha with SUNRICE_CAPTCHA_PROVIDER) to use it.'),
+                    : 'Needs an account with a captcha service, set up on the server by a developer. For developers: SUNRICE_CAPTCHA_SITE_KEY and SUNRICE_CAPTCHA_SECRET_KEY (Cloudflare Turnstile, or reCAPTCHA or hCaptcha with SUNRICE_CAPTCHA_PROVIDER).'),
         ]);
     }
 
