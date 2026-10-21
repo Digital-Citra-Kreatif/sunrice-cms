@@ -18,9 +18,10 @@ use Sunrice\Cms\Support\FieldText;
 final class SubmissionRows
 {
     /**
-     * With `file`, the admin's download link of a file sent.
+     * With `file`, the admin's download link of a file sent; with `files`,
+     * each of several files' name and link.
      *
-     * @return list<array{handle: string, label: string, value: string, file: string|null}>
+     * @return list<array{handle: string, label: string, value: string, file: string|null, files: list<array{name: string, url: string}>}>
      */
     public static function of(Submission $submission): array
     {
@@ -41,14 +42,23 @@ final class SubmissionRows
         return $rows;
     }
 
-    /** @return array{handle: string, label: string, value: string, file: string|null} */
+    /** @return array{handle: string, label: string, value: string, file: string|null, files: list<array{name: string, url: string}>} */
     private static function row(Submission $submission, string $handle, string $label, ?Field $field): array
     {
         $value = $submission->data[$handle] ?? null;
         $file = is_array($value) && is_string($value['path'] ?? null)
             ? route('sunrice.admin.cms.submissions.file', ['submission' => $submission->id, 'field' => $handle]) : null;
+        $files = [];
+        foreach (is_array($value) && array_is_list($value) ? $value : [] as $index => $one) {
+            if (is_array($one) && is_string($one['path'] ?? null)) {
+                $files[] = [
+                    'name' => is_string($one['name'] ?? null) ? $one['name'] : basename($one['path']),
+                    'url' => route('sunrice.admin.cms.submissions.file', ['submission' => $submission->id, 'field' => $handle, 'index' => $index]),
+                ];
+            }
+        }
 
-        return ['handle' => $handle, 'label' => $label, 'value' => self::text($value, $field), 'file' => $file];
+        return ['handle' => $handle, 'label' => $label, 'value' => self::text($value, $field), 'file' => $file, 'files' => $files];
     }
 
     public static function label(Field $field): string

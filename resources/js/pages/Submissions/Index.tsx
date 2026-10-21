@@ -13,7 +13,7 @@ interface Row {
     id: number;
     locale: string;
     createdAt: string | null;
-    rows: { handle: string; label: string; value: string; file: string | null }[];
+    rows: { handle: string; label: string; value: string; file: string | null; files?: { name: string; url: string }[] }[];
     /** Who sent it, when kept (sunrice-cms.forms.visitor_details). */
     visitor: { ip: string | null; userAgent: string | null; referrer: string | null };
 }
@@ -118,7 +118,11 @@ export default function SubmissionsIndex({ form, forms, submissions, can }: Prop
                             <div key={r.handle}>
                                 <dt className="cms:font-medium">{r.label}</dt>
                                 <dd className="cms:whitespace-pre-wrap cms:break-words cms:text-muted-foreground">
-                                    {r.file ? <a href={r.file} className="cms:underline cms:underline-offset-4 hover:cms:text-foreground" download>{r.value}</a> : (r.value || '—')}
+                                    {r.files && r.files.length > 0 ? (
+                                        <ul className="cms:flex cms:flex-col cms:gap-1">
+                                            {r.files.map((f) => <li key={f.url}><a href={f.url} className="cms:underline cms:underline-offset-4 hover:cms:text-foreground" download>{f.name}</a></li>)}
+                                        </ul>
+                                    ) : r.file ? <a href={r.file} className="cms:underline cms:underline-offset-4 hover:cms:text-foreground" download>{r.value}</a> : (r.value || '—')}
                                 </dd>
                             </div>
                         ))}

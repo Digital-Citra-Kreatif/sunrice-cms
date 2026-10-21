@@ -51,7 +51,7 @@ With a slot, the markup inside the `<form>` is yours; the component still adds t
 - `$component->captcha()`: the captcha widget and its script when the form asks for one, else null. With your own markup, print it yourself.
 - `$component->submitted()`: whether the page comes right after this form was sent back with errors. `$component->form` is the `Form` model (`->schema()->fields()` lists its fields).
 
-Fields the form's blueprint doesn't have are ignored; a toggle needs a hidden `0` before its checkbox to send "off"; a select with several choices is `data[topics][]`; a file field needs the form to send `multipart/form-data` (the component adds it when the form has one).
+Fields the form's blueprint doesn't have are ignored; a toggle needs a hidden `0` before its checkbox to send "off"; a select with several choices is `data[topics][]`, and so is a file field that takes several files (`data[photos][]` with `multiple`); a file field needs the form to send `multipart/form-data` (the component adds it when the form has one).
 
 Forms post to `POST /forms/{handle}` (route `sunrice.cms.forms.submit`), the fields as `data[handle]` (or by handle, as in older templates). After sending, visitors go back to the page they were on, with the thank-you message in the session (`session('sunrice-cms.form.contact')`); errors are in the form's own error bag (`$errors->contact`), so two forms on a page don't mix them up.
 
@@ -82,9 +82,9 @@ form.addEventListener('submit', async (event) => {
 
 ### Files
 
-A **File (forms)** field takes one file per field. Its settings: **Accepted file types** (extensions, like `pdf, jpg, docx`; checked against the name and the content) and **Largest file** (KB; empty: `sunrice-cms.forms.upload_max_kb`, 10 MB). Files that could run as code (`.php`, `.html`, `.svg`, `.js`, `.exe` …) are always refused. PHP's own `upload_max_filesize` and `post_max_size` (and your web server's body limit) apply too.
+A **File (forms)** field takes one file, or several with **Several files** (`multiple`; **At most (files)**, `max_files`, 10 unless set, at most 20; the input is `data[photos][]` with `multiple`). Its settings: **Accepted file types** (extensions, like `pdf, jpg, docx`; checked against the name and the content) and **Largest file** (KB, each file; empty: `sunrice-cms.forms.upload_max_kb`, 10 MB). Files that could run as code (`.php`, `.html`, `.svg`, `.js`, `.exe` …) are always refused. PHP's own `upload_max_filesize` and `post_max_size` (and your web server's body limit) apply too.
 
-Files are kept on the private disk `sunrice-cms.forms.upload_disk` (`local`, `SUNRICE_FORMS_DISK`) under `form-uploads/{handle}` with names of their own, never served to the public: people with `cms.submissions.view` download them from the submission. The submission keeps `{path, name, size, mime}`; the email and CSV show the name. Deleting a submission deletes its files. Entries don't use this field: use a media field.
+Files are kept on the private disk `sunrice-cms.forms.upload_disk` (`local`, `SUNRICE_FORMS_DISK`) under `form-uploads/{handle}` with names of their own, never served to the public: people with `cms.submissions.view` download them from the submission. The submission keeps `{path, name, size, mime}` (a list of them for several files); the email and CSV show the names, and the admin links each file (`?index=n` for one of several). Deleting a submission deletes its files. Entries don't use this field: use a media field.
 
 ### Captcha
 

@@ -39,7 +39,7 @@ Untuk menambah field, pilih jenisnya, lalu atur:
 - **Extra rules**: pemeriksaan untuk developer, satu per baris (misalnya `email`).
 - Pengaturan khusus tiap jenis: pilihan sebuah select, koleksi yang ditautkan field entries, jenis berkas yang diterima field media, jumlah maksimal…
 
-Jenis-jenisnya: **Text**, **Textarea**, **Rich text**, **Number**, **Toggle**, **Select**, **Date**, **Link**, **Media**, **Entries**, **Terms**, **Group** (beberapa field bersama), **Repeater** (baris berisi field), **Flexible content** (blok berbagai jenis), **Fieldset** (menyertakan fieldset: field-nya ditambahkan di tempatnya dengan handle masing-masing; agar tetap di bawah satu nama, taruh di dalam **Group**), dan **File (forms)** (berkas yang dikirim pengunjung lewat formulir).
+Jenis-jenisnya: **Text**, **Textarea**, **Rich text**, **Number**, **Toggle**, **Select**, **Date**, **Link**, **Media**, **Entries**, **Terms**, **Group** (beberapa field bersama), **Repeater** (baris berisi field), **Flexible content** (blok berbagai jenis), **Fieldset** (menyertakan fieldset: field-nya ditambahkan di tempatnya dengan handle masing-masing; agar tetap di bawah satu nama, taruh di dalam **Group**), dan **File (forms)** (berkas yang dikirim pengunjung lewat formulir: satu, atau beberapa dengan **Several files**).
 
 Seret field ke urutannya lewat pegangannya (field di dalam group atau repeater di antara sesamanya), lalu klik **Save** (atau **Create blueprint** untuk yang baru). Blueprint yang masih dipakai tidak bisa dihapus. Begitu blueprint dipakai untuk entri atau term, global set, atau formulir, pilihan blueprint untuk jenis lain tidak lagi menawarkannya.
 

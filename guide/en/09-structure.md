@@ -39,7 +39,7 @@ To add a field, choose its type, then set:
 - **Extra rules**: checks for developers, one per line (such as `email`).
 - Each type's own settings: the choices of a select, the collections an entries field links to, the types a media field accepts, how many items at most…
 
-The types: **Text**, **Textarea**, **Rich text**, **Number**, **Toggle**, **Select**, **Date**, **Link**, **Media**, **Entries**, **Terms**, **Group** (fields together), **Repeater** (rows of fields), **Flexible content** (blocks of different kinds), **Fieldset** (include a fieldset: its fields are added where it is, with their own handles; to keep them under one name, put it in a **Group**) and **File (forms)** (files visitors send with a form).
+The types: **Text**, **Textarea**, **Rich text**, **Number**, **Toggle**, **Select**, **Date**, **Link**, **Media**, **Entries**, **Terms**, **Group** (fields together), **Repeater** (rows of fields), **Flexible content** (blocks of different kinds), **Fieldset** (include a fieldset: its fields are added where it is, with their own handles; to keep them under one name, put it in a **Group**) and **File (forms)** (files visitors send with a form: one, or several with **Several files**).
 
 Drag the fields into order by their handle (the fields inside a group or repeater among themselves), then click **Save** (or **Create blueprint** for a new one). A blueprint still in use can't be deleted. Once a blueprint is used for entries or terms, a global set or a form, the other kinds of picker no longer offer it.
 

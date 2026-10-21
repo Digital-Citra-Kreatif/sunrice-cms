@@ -33,9 +33,16 @@ final class FieldText
             $value = is_array($value) ? array_map(fn (mixed $v): mixed => is_scalar($v) ? ($labels[(string) $v] ?? $v) : $v, $value) : (is_scalar($value) ? ($labels[(string) $value] ?? $value) : $value);
         }
 
-        // A file sent with a form: its name.
-        if (is_array($value) && is_string($value['path'] ?? null) && is_string($value['name'] ?? null)) {
-            return $value['name'];
+        // A file sent with a form: its name; several: their names.
+        $name = fn (mixed $file): ?string => is_array($file) && is_string($file['path'] ?? null) && is_string($file['name'] ?? null) ? $file['name'] : null;
+        if (($one = $name($value)) !== null) {
+            return $one;
+        }
+        if (is_array($value) && $value !== [] && array_is_list($value)) {
+            $names = array_map($name, $value);
+            if (! in_array(null, $names, true)) {
+                return implode(', ', $names);
+            }
         }
 
         return match (true) {
