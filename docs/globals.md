@@ -8,7 +8,7 @@ Under **Structure → Global sets** (permissions `cms.global-sets.view`, `.creat
 
 ## Editing
 
-Under **Content → Globals** (`cms.globals.view` to see, `cms.globals.update` to save): each set's fields, in each language. Fields the blueprint shares across languages are edited in the main language and shown read-only in the others, as for entries. Until a set is saved, its fields have their defaults. One person edits a set in a language at a time ([edit locks](../../admin/docs/locks.md)).
+Under **Content → Globals** (`cms.globals.view` to see, `cms.globals.update` to save): each set's fields, in each language. Fields the blueprint shares across languages are edited in the main language and shown read-only in the others, as for entries. Until a set is saved, its fields have their defaults. In another language, a translated field without a value there (the set never saved in it, or the field left empty) shows the main language's, on the site and in the editor, which says so (`GlobalSet::data()`). One person edits a set in a language at a time ([edit locks](../../admin/docs/locks.md)).
 
 In code, `SaveGlobals` saves a set's values in a language: `app(SaveGlobals::class)->handle($set, ['phone' => '…'], 'id')`. Fields left out keep their values. Pass the `version` the editor opened as the fourth argument (`GlobalValue::$version`, counted up on each save): if someone saved since, the save is refused with an error on `version` instead of overwriting their work, and the editor offers **Load theirs** or **Save mine anyway**, as for entries.
 
@@ -18,7 +18,7 @@ In code, `SaveGlobals` saves a set's values in a language: `app(SaveGlobals::cla
 use Sunrice\Cms\Globals;
 
 $contact = app(Globals::class)->get('contact');         // the current language (as Cms::global('contact'))
-$contact = app(Globals::class)->get('contact', 'id');   // Indonesian, shared fields from the main language
+$contact = app(Globals::class)->get('contact', 'id');   // Indonesian, shared fields (and those without an Indonesian value) from the main language
 $contact['phone'];
 ```
 
