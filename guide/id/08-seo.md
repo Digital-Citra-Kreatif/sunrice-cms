@@ -27,7 +27,7 @@ Halaman sebuah term dan halaman daftar sebuah koleksi memiliki kartu **SEO** yan
 
 **Pengaturan → Situs** menyimpan **Nama situs** dan **Deskripsi**, dipakai oleh halaman yang tidak punya sendiri. Judul beranda adalah nama situs. Lihat [Pengaturan situs](guide:website/settings#situs).
 
-Halaman **SEO** (di bawah Struktur pada sidebar) menyimpan sisanya, di **Mesin pencari dan berbagi**: **Gambar berbagi bawaan**, apakah nama situs ditambahkan ke judul (**Tambahkan nama situs ke judul halaman**) beserta **Pemisah** di antaranya (tanda `|` dalam "Tentang | Acme"), dan **Akun X (Twitter)** situs. Di bawahnya, **Field yang dipakai untuk SEO** menentukan, untuk tiap koleksi dan taksonomi, field mana yang mengisi judul meta, deskripsi meta, atau gambar berbagi yang kosong.
+**Pengaturan → SEO** (di sebelah Situs pada menu Pengaturan) menyimpan sisanya, di **Mesin pencari dan berbagi**: **Gambar berbagi bawaan**, apakah nama situs ditambahkan ke judul (**Tambahkan nama situs ke judul halaman**) beserta **Pemisah** di antaranya (tanda `|` dalam "Tentang | Acme"), dan **Akun X (Twitter)** situs. Di bawahnya, **Field yang dipakai untuk SEO** menentukan, untuk tiap koleksi dan taksonomi, field mana yang mengisi judul meta, deskripsi meta, atau gambar berbagi yang kosong.
 
 **Sembunyikan seluruh situs dari mesin pencari** (di halaman yang sama) untuk salinan situs yang belum publik (situs *staging*). Pengaturan ini menyembunyikan semua halaman dan mengosongkan peta situs. Pastikan mati di situs yang sebenarnya.
 

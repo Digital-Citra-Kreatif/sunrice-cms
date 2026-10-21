@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Settings;
 
-use Illuminate\Contracts\Auth\Access\Authorizable;
 use Sunrice\Admin\Resources\Forms\Form;
 use Sunrice\Admin\Resources\Forms\MediaPicker;
 use Sunrice\Admin\Resources\Forms\Pairs;
@@ -14,7 +13,6 @@ use Sunrice\Admin\Resources\Forms\Textarea;
 use Sunrice\Admin\Resources\Forms\TextInput;
 use Sunrice\Admin\Resources\Forms\Toggle;
 use Sunrice\Admin\Settings\Settings;
-use Sunrice\Admin\Support\Card;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Support\Locales;
@@ -104,20 +102,12 @@ final class SiteSettings extends Settings
         return 'The homepage, the site\'s name and description, and structured data.';
     }
 
-    /** The rest of what search engines and shared links see is on its own page. */
-    public static function cards(Authorizable $user): array
-    {
-        return [Card::make('Search engines and sharing')
-            ->description('Hiding the site from search engines, the share image, page titles and which fields fill in each page\'s SEO.')
-            ->link('Open Settings → SEO', route('sunrice.admin.cms.seo.edit', [], false))];
-    }
-
     public static function form(Form $form): Form
     {
         return $form->schema([
             Select::make('homepage')->label('Homepage')->options(fn (): array => self::homepages())->searchable()
                 ->help('The live page shown at / in each language it\'s published in. Its own address redirects there. Editors with "Choose the homepage" set it from the page\'s editor.'),
-            Section::make('The site')->description('Its name and what it\'s about, for search results and shared links of pages that don\'t say their own. Search engines, share image and titles: Settings → SEO.')->columns(2)->schema([
+            Section::make('The site')->description('Its name and what it\'s about, for search results and shared links of pages that don\'t say their own.')->columns(2)->schema([
                 TextInput::make('name')->label('Site name')->maxLength(100)->placeholder(self::appName())->span(2),
                 Textarea::make('description')->label('Description')->rows(2)->maxLength(500)->span(2),
                 // One input per other language, kept as "id: …" lines.

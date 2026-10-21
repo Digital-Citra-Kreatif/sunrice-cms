@@ -330,7 +330,6 @@
     "Held for approval.": "Ditahan untuk disetujui.",
     "Hide from search engines (noindex)": "Sembunyikan dari mesin pencari (noindex)",
     "Hide the whole site from search engines": "Sembunyikan seluruh situs dari mesin pencari",
-    "Hiding the site from search engines, the share image, page titles and which fields fill in each page's SEO.": "Menyembunyikan situs dari mesin pencari, gambar bagikan, judul halaman, dan field mana yang mengisi SEO setiap halaman.",
     "Hierarchical": "Hierarkis",
     "Hold a commenter's first comment for approval": "Tahan komentar pertama seseorang untuk disetujui",
     "Hold every comment for approval": "Tahan setiap komentar untuk disetujui",
@@ -364,7 +363,6 @@
     "It's used by :list: those links will show nothing.": "Dipakai oleh :list: tautan tersebut tidak akan menampilkan apa pun.",
     "Its fields.": "Field-nya.",
     "Its fields. Visitors see the text, textarea, number, toggle, select, date and file ones.": "Field-nya. Pengunjung melihat field teks, textarea, angka, toggle, pilihan, tanggal, dan file.",
-    "Its name and what it's about, for search results and shared links of pages that don't say their own. Search engines, share image and titles: Settings → SEO.": "Nama situs dan tentang apa situs ini, untuk hasil pencarian dan tautan yang dibagikan dari halaman yang tidak mengisinya sendiri. Mesin pencari, gambar bagikan, dan judul: Pengaturan → SEO.",
     "Its title and the slug in its address.": "Judulnya dan slug di alamatnya.",
     "Kind of organization": "Jenis organisasi",
     "Kinds of block": "Jenis blok",
@@ -546,7 +544,6 @@
     "Only signed-in users can comment": "Hanya pengguna yang masuk yang bisa berkomentar",
     "Open all": "Buka semua",
     "Open Graph image": "Gambar Open Graph",
-    "Open Settings → SEO": "Buka Pengaturan → SEO",
     "Optional checks, one per line, such as :email or :max (for developers: Laravel validation rules).": "Pemeriksaan opsional, satu per baris, seperti :email atau :max (untuk developer: aturan validasi Laravel).",
     "Options": "Opsi",
     "Order saved.": "Urutan disimpan.",
@@ -607,7 +604,6 @@
     "Rows": "Baris",
     "Save draft": "Simpan draf",
     "Save mine anyway": "Tetap simpan versi saya",
-    "Save SEO settings": "Simpan pengaturan SEO",
     "Save settings": "Simpan pengaturan",
     "Save to translate": "Simpan untuk menerjemahkan",
     "Save your draft first": "Simpan draf Anda dulu",
@@ -926,5 +922,6 @@
     "This version": "Versi ini",
     "In every language": "Di semua bahasa",
     "Every language": "Semua bahasa",
-    "Also from the same path in each language: /id/old-page goes to /id/new-page.": "Juga dari alamat yang sama di setiap bahasa: /id/halaman-lama menuju /id/halaman-baru."
+    "Also from the same path in each language: /id/old-page goes to /id/new-page.": "Juga dari alamat yang sama di setiap bahasa: /id/halaman-lama menuju /id/halaman-baru.",
+    "Its name and what it's about, for search results and shared links of pages that don't say their own.": "Nama situs dan tentang apa situs ini, untuk hasil pencarian dan tautan yang dibagikan dari halaman yang tidak mengisinya sendiri."
 }

@@ -147,8 +147,9 @@ final class CmsPlugin extends BasePlugin
                 ->group('Content')->sort(55)->visible(fn (Authorizable $user): bool => $user->can('cms.entries.translate') && count(Locales::all()) > 1),
             NavigationItem::make('cms-submissions')->label('Submissions')->url('cms/submissions')->icon('inbox')
                 ->group('Content')->sort(50)->visible(fn (Authorizable $user): bool => Access::submissions($user, 'view')),
+            // In the Settings menu, after Site.
             NavigationItem::make('cms-seo')->label('SEO')->url('cms/seo')->icon('search')
-                ->group('Structure')->sort(99)->permission('cms.settings.site'),
+                ->inSettings('site')->permission('cms.settings.site'),
             NavigationItem::make('cms-blueprints')->label('Blueprints')->url('cms/blueprints')->icon('layout-template')
                 ->group('Structure')->sort(91)->permission('cms.blueprints.view'),
             NavigationItem::make('cms-fieldsets')->label('Fieldsets')->url('cms/fieldsets')->icon('blocks')

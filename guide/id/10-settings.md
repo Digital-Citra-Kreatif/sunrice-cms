@@ -14,7 +14,7 @@ Pengaturan langsung berlaku begitu Anda mengeklik **Simpan**.
 - **Deskripsi**: dipakai jika halaman tidak punya sendiri.
 - **Deskripsi dalam bahasa lain** (jika ada lebih dari satu bahasa): satu kotak per bahasa, untuk halaman dalam bahasa itu. Kosong: deskripsi di atas.
 
-Gambar berbagi, nama situs di judul beserta pemisahnya, akun X (Twitter), dan menyembunyikan seluruh situs dari mesin pencari ada di halaman **SEO** (di bawah Struktur pada sidebar; lihat [SEO](guide:website/seo)).
+Gambar berbagi, nama situs di judul beserta pemisahnya, akun X (Twitter), dan menyembunyikan seluruh situs dari mesin pencari ada di **Pengaturan → SEO** (tepat setelah Situs pada menu Pengaturan; lihat [SEO](guide:website/seo)).
 
 **Structured data**: **Tambahkan structured data ke halaman** (biarkan menyala kecuali ada alasan), apakah situs diterbitkan oleh organisasi atau perorangan (**Diterbitkan oleh**), dan **Logo** organisasi (persegi atau melebar, minimal 112 piksel). Mesin pencari juga menyukai detail penerbit: **Nama** (kosong: nama situs), **Jenis organisasi** sebagai jenis schema.org yang ditulis satu kata (*LocalBusiness*, *RealEstateAgent*, *Restaurant*…), **Telepon**, **Alamat**, dan **Profil di tempat lain** (halaman Instagram, LinkedIn… penerbit, satu alamat per baris).
 

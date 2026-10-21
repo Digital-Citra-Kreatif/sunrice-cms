@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Http\Controllers;
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Sunrice\Admin\Panel;
 use Sunrice\Cms\Actions\Seo\SaveSeoSettings;
 use Sunrice\Cms\Admin\SeoMapping;
 use Sunrice\Cms\Models\Blueprint;
@@ -52,6 +54,7 @@ final class SeoController
             'siteName' => $site->name(),
             'collections' => $may['collection'] ? Collection::query()->orderBy('title')->get()->map($row)->all() : null,
             'taxonomies' => $may['taxonomy'] ? Taxonomy::query()->orderBy('title')->get()->map($row)->all() : null,
+            'settingsNav' => $request->user() instanceof Authorizable ? app(Panel::class)->settingsNavigation($request->user()) : [],
         ]);
     }
 
