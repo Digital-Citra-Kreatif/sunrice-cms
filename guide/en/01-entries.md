@@ -70,7 +70,7 @@ The **Page settings** card on the right applies to every language. It's saved wi
 
 - **Parent**: in collections where entries nest (like pages under pages), the entry this one sits under; you can also choose it while creating the entry. It's used for breadcrumbs and sub-menus; the web address doesn't change.
 - **Blueprint**: when the collection offers more than one set of fields (a normal page or a landing page, say), the one this entry uses. Switching keeps every value: fields both have keep theirs, and the others are kept out of sight and come back if you switch back. Save your draft first, then press **Change blueprint**: the editor reloads with the new fields.
-- **Template**: a different design for this entry alone, if your developer made one. Leave it empty for the collection's own.
+- **Template**: a different design for this entry alone, if your developer made one. Leave it empty for the collection's own. **Which file?** under it lists, for your developer, the files tried in order and marks the one in use.
 - **Accept new comments**: in collections with comments, switch it off to close this entry's comments (approved ones stay). **Comments** opens this entry's comments.
 
 ## Comments

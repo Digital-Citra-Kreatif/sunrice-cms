@@ -8,7 +8,7 @@ import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Skeleton, Switch, Textarea, useBreadcrumbs, useEditLock, useUnsavedChanges, ViewingNotice,
 } from '@sunrice/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
-import { TemplateHelp } from '@/components/TemplateHelp.tsx';
+import { TemplateHelp, type TemplateLookup } from '@/components/TemplateHelp.tsx';
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
 import { EntryComments, type EntryCommentsSummary } from '@/components/EntryComments.tsx';
 import { FieldSections } from '@/components/FieldSections.tsx';
@@ -54,6 +54,8 @@ interface Props {
     } | null;
     /** Where to add a redirect by hand, for those who may. */
     redirectsUrl?: string | null;
+    /** The views tried for its page, in order, and which exist. */
+    templates?: TemplateLookup | null;
     values: { title: string; slug: string; data: FieldValues; seo: FieldValues | null };
     /** Deferred: loaded after the page shows. */
     revisions?: Revision[];
@@ -110,7 +112,7 @@ export default function EntryEditorPage(props: Props) {
     return <EntryEditor key={entry ? `${entry.id}:${entry.locale}:${entry.version}:${entry.status}:${entry.trashed}:${entry.publishedAt}` : 'new'} {...props} />;
 }
 
-function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, comments, termLabels, usedBy = [], undoRestore = null, machineTranslate = null, machineTranslateMissing = false, settings, blueprints = [], homepage, redirectsUrl = null, can }: Props) {
+function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, comments, termLabels, usedBy = [], undoRestore = null, machineTranslate = null, machineTranslateMissing = false, settings, blueprints = [], homepage, redirectsUrl = null, templates = null, can }: Props) {
     const list = adminUrl(`cms/collections/${collection.handle}/entries`);
     const url = entry ? adminUrl(`cms/entries/${entry.id}`) : list;
     const heading = entry ? values.title : t('New entry');
@@ -458,7 +460,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                                 </div>
                             ))}
                         </CollapsibleCard>
-                        {settings && <PageSettings entryUrl={url} collection={collection} settings={settings} blueprints={blueprints} disabled={!writable}
+                        {settings && <PageSettings entryUrl={url} collection={collection} settings={settings} templates={templates} blueprints={blueprints} disabled={!writable}
                             values={form.data} errors={errors} onChange={setSettings} draftDirty={form.isDirty} />}
                         {comments !== null && collection.comments && <EntryComments entryId={entry.id} comments={comments} />}
                         <CollapsibleCard title={t('Revisions')} titleClassName="cms:text-base" storageKey="cms:entry:revisions" contentClassName="cms:flex cms:flex-col cms:gap-2 cms:text-sm">
@@ -728,7 +730,8 @@ function ParentField({ collection, value, error, onChange }: { collection: Props
  * language's), saved with the draft; and its blueprint, changed on its own
  * (the editor reloads with the new fields).
  */
-function PageSettings({ entryUrl, collection, settings, blueprints, disabled, values, errors, onChange, draftDirty }: {
+function PageSettings({ entryUrl, collection, settings, templates, blueprints, disabled, values, errors, onChange, draftDirty }: {
+    templates: TemplateLookup | null;
     entryUrl: string;
     collection: Props['collection'];
     settings: NonNullable<Props['settings']>;
@@ -772,7 +775,7 @@ function PageSettings({ entryUrl, collection, settings, blueprints, disabled, va
                     <Label htmlFor="template">{t('Template')}</Label>
                     <Input id="template" className="cms:font-mono" placeholder={`cms.${collection.handle}-landing`} value={values.template}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ template: e.target.value })} aria-invalid={errors.template !== undefined} />
-                    <TemplateHelp example={`cms.${collection.handle}-landing`} fallbacks={[t('the collection\'s template, if set'), `cms.${collection.handle}`, 'cms.entry']} />
+                    <TemplateHelp example={`cms.${collection.handle}-landing`} empty={t('Leave empty to use the collection\'s template.')} value={values.template} lookup={templates} />
                     <FieldError message={errors.template} />
                 </div>
                 {collection.comments && (

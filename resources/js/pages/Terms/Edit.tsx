@@ -9,7 +9,7 @@ import {
 import { FieldError, Fields } from '@/components/FieldInput.tsx';
 import { FieldSections } from '@/components/FieldSections.tsx';
 import { SlugNote } from '@/components/SlugNote.tsx';
-import { TemplateHelp } from '@/components/TemplateHelp.tsx';
+import { TemplateHelp, type TemplateLookup } from '@/components/TemplateHelp.tsx';
 import { VersionConflict } from '@/components/VersionConflict.tsx';
 import { errorKeysAt, errorsAt, hasErrors } from '@/lib/builder.ts';
 import { localeName, slugNote } from '@/lib/entries.ts';
@@ -31,6 +31,8 @@ interface Props {
     };
     /** Where to add a redirect by hand, for those who may. */
     redirectsUrl?: string | null;
+    /** The views tried for its page, in order, and which exist. */
+    templates?: TemplateLookup | null;
     /** Whether the term has a title in this language. */
     translated: boolean;
     fields: FieldDefinition[];
@@ -51,7 +53,7 @@ export default function TermEditPage(props: Props) {
     return <TermEdit key={`${props.locale}:${props.version}:${JSON.stringify([props.values, props.seo, props.term.template])}`} {...props} />;
 }
 
-function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared, sharedValues, values, seo, version, usedBy = [], redirectsUrl = null }: Props) {
+function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared, sharedValues, values, seo, version, usedBy = [], redirectsUrl = null, templates = null }: Props) {
     const list = adminUrl(`cms/taxonomies/${taxonomy.handle}/terms`);
     const url = adminUrl(`cms/terms/${term.id}/content`);
     useBreadcrumbs([{ label: taxonomy.title, href: `${list}?locale=${locale}` }, { label: term.title }]);
@@ -152,7 +154,7 @@ function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared,
                             <Label htmlFor="template" className="cms:sr-only">{t('Template')}</Label>
                             <Input id="template" className="cms:font-mono" placeholder={`cms.${taxonomy.handle}-special`} value={form.data.template}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => form.setData('template', e.target.value)} aria-invalid={errors.template !== undefined} />
-                            <TemplateHelp example={`cms.${taxonomy.handle}-special`} fallbacks={[t('the taxonomy\'s template, if set'), `cms.taxonomy-${taxonomy.handle}`, 'cms.term']} />
+                            <TemplateHelp example={`cms.${taxonomy.handle}-special`} empty={t('Leave empty to use the taxonomy\'s template.')} value={form.data.template} lookup={templates} />
                             <FieldError message={errors.template} />
                         </fieldset>
                     </CollapsibleCard>
