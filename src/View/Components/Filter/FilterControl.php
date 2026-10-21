@@ -14,7 +14,7 @@ final class FilterControl
 {
     public const TYPES = ['search', 'terms', 'select', 'range', 'date_range', 'toggle'];
 
-    /** @var list<array{value: string, label: string, selected: bool, count?: int, depth?: int}> a select's or terms filter's choices */
+    /** @var list<array{value: string, label: string, selected: bool, count?: int, depth?: int}> a select's or terms filter's choices, or the steps a range offers (`options`) */
     public array $options = [];
 
     /**

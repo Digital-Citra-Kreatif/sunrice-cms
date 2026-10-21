@@ -38,7 +38,9 @@ use Sunrice\Cms\View\Components\Filter\SortChoice;
  * link), `->action`, `->clearUrl()`, `->filtered()`, `->filter($name)`
  * and `->query()` (the filtered EntryQuery). Only the filters declared
  * are read from the address; values not among a filter's options are
- * ignored.
+ * ignored. A range or date range may offer `options` (the steps of a
+ * select): the page cache keeps a filtered page only for values among a
+ * filter's terms or options (any number, date or text isn't kept).
  *
  * @api
  */
@@ -104,7 +106,7 @@ final class EntryFilter extends Component
             array_push($owned, ...$filter->params);
         }
 
-        $this->sorts = self::sortChoices($sorts, $request->query($sortName));
+        $this->sorts = self::sortChoices($sorts, $request->query($sortName), $sortName);
         $sort = Arr::first($this->sorts, fn (SortChoice $choice): bool => $choice->selected);
         // None given: the collection's own order.
         Attributes::order($this->query, $sort->order ?? match (true) {
@@ -173,12 +175,19 @@ final class EntryFilter extends Component
         switch ($type) {
             case 'search':
                 $filter->value = is_string($raw) ? trim(mb_substr($raw, 0, 100)) : '';
+                if ($filter->value !== '') {
+                    // Any text: as many copies as searches.
+                    self::ignored();
+                }
                 break;
             case 'range':
             case 'date_range':
                 [$low, $high] = $type === 'range' ? ['min', 'max'] : ['from', 'to'];
                 $filter->inputs = [$low => "{$name}_{$low}", $high => "{$name}_{$high}"];
                 $filter->params = array_values($filter->inputs);
+                // The values offered (a select of steps): only they make a kept page of their own.
+                $options = self::selectOptions($definition['options'] ?? []);
+                $offered = array_column($options, 'value');
                 $value = [];
                 foreach ($filter->inputs as $key => $input) {
                     $given = request()->query($input);
@@ -187,7 +196,9 @@ final class EntryFilter extends Component
                         $type === 'date_range' && is_string($given) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $given) === 1 && strtotime($given) !== false => $given,
                         default => null,
                     };
-                    if ($value[$key] === null && $given !== null && $given !== '') {
+                    if ($value[$key] !== null && in_array($value[$key], $offered, true)) {
+                        self::read($input);
+                    } elseif ($given !== null && $given !== '') {
                         self::ignored();
                     }
                 }
@@ -195,7 +206,9 @@ final class EntryFilter extends Component
                 break;
             case 'toggle':
                 $filter->value = in_array($raw, ['1', 'true', 'on', 'yes'], true);
-                if (! $filter->value && ! in_array($raw, [null, '', '0'], true)) {
+                if ($filter->value || $raw === '0') {
+                    self::read($name);
+                } elseif (! in_array($raw, [null, ''], true)) {
                     self::ignored();
                 }
                 break;
@@ -205,6 +218,9 @@ final class EntryFilter extends Component
                 // A term's slug in another language, or its id, is the same term (a link from another language, or a menu's).
                 $raw = is_array($raw) ? array_map(fn (mixed $v): mixed => is_scalar($v) ? ($aliases[(string) $v] ?? $v) : $v, $raw) : (is_scalar($raw) ? ($aliases[(string) $raw] ?? $raw) : $raw);
                 $filter->value = self::chosen($raw, array_column($options, 'value'), $multiple);
+                if ($filter->applied()) {
+                    self::read($name);
+                }
                 break;
             default:
                 // The field as any blueprint the collection offers has it.
@@ -216,6 +232,10 @@ final class EntryFilter extends Component
                 $options = self::selectOptions($definition['options'] ?? $schemaField?->config('options') ?? []);
                 $allowed = array_column($options, 'value');
                 $filter->value = self::chosen($raw, $allowed, $multiple, $allowed === []);
+                if ($filter->applied()) {
+                    // Without options, any text: as many copies as values.
+                    $allowed === [] ? self::ignored() : self::read($name);
+                }
         }
         $chosen = is_array($filter->value) ? $filter->value : [$filter->value];
         $filter->options = array_map(fn (array $option): array => ['selected' => in_array($option['value'], $chosen, true)] + $option, $options ?? []);
@@ -342,10 +362,16 @@ final class EntryFilter extends Component
         return $multiple ? $values : ($values[0] ?? null);
     }
 
-    /** A value in the address was ignored: the page isn't kept, so made-up values can't fill the page cache. */
+    /** A value in the address was ignored, or is one of any number: the page isn't kept, so made-up values can't fill the page cache. */
     private static function ignored(): void
     {
         app(PageCache::class)->dontKeep();
+    }
+
+    /** A parameter read with a value among the filter's own: the page may be kept under it. */
+    private static function read(string $name): void
+    {
+        app(PageCache::class)->read($name);
     }
 
     /**
@@ -420,7 +446,7 @@ final class EntryFilter extends Component
      * @param  array<string, string|array{label?: string, order?: string}>  $sorts
      * @return list<SortChoice>
      */
-    private static function sortChoices(array $sorts, mixed $current): array
+    private static function sortChoices(array $sorts, mixed $current, string $sortName): array
     {
         $choices = [];
         foreach ($sorts as $value => $sort) {
@@ -434,6 +460,8 @@ final class EntryFilter extends Component
         $selected = Arr::first($choices, fn (SortChoice $choice): bool => $choice->value === $current);
         if ($selected === null && $current !== null && $current !== '') {
             self::ignored();
+        } elseif ($selected !== null) {
+            self::read($sortName);
         }
         $selected ??= $choices[0];
         $selected->selected = true;

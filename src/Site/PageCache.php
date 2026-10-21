@@ -18,9 +18,12 @@ use Sunrice\Cms\Support\SiteCache;
  * Left out: anyone signed in, a visitor with something flashed to them
  * (form errors, old input, a thank-you message), search results and any
  * address with `?q=` or `?reply_to=` (UNKEPT_QUERY), a `?page=` that isn't
- * a plain number or that the page doesn't paginate by, pages that aren't a plain 200, a page whose
- * rendering called dontKeep() (an entry filter given a value it ignores),
- * and what skipWhen() says:
+ * a plain number or that the page doesn't paginate by (one past the last
+ * page is a 404), pages that aren't a plain 200, a page whose rendering
+ * called dontKeep() (an entry filter given a value it ignores or one of
+ * any number or text), a `cache.query` parameter the page didn't read()
+ * (an entry filter reads the values among its terms and options), and
+ * what skipWhen() says:
  *
  *     app(PageCache::class)->skipWhen(fn (Request $request, ?Page $page): bool =>
  *         $request->cookies->has('cart') || $page?->collection?->handle === 'products');
@@ -49,6 +52,9 @@ final class PageCache
 
     /** @internal The request attribute set when the page asked for its page number. */
     public const PAGINATED = 'sunrice-cms.page-cache.paginated';
+
+    /** @internal The request attribute read() adds to: the `cache.query` parameters the page read. */
+    public const READ = 'sunrice-cms.page-cache.read';
 
     /** @var list<Closure(Request, ?Page): bool> */
     private array $skips = [];
@@ -121,10 +127,45 @@ final class PageCache
     {
         // Search results: as many pages as searches. Drafts and previews: never. A lifetime of 0: not at all.
         // A page number the page didn't read: as many copies as numbers.
+        // A `cache.query` parameter the page didn't read (or read a value it doesn't have): as many copies as values.
         return $page?->type !== Page::SEARCH && $page?->preview !== true
             && $request->attributes->get(self::DONT_KEEP) !== true
             && (PageCacheHasher::pageNumber($request) === null || $request->attributes->get(self::PAGINATED) === true)
+            && $this->unread($request) === []
             && $this->lifetime($request, $page) !== 0 && ! $this->skipped($request, $page);
+    }
+
+    /**
+     * Say that the page being rendered read these `cache.query` parameters
+     * and found their values among what it offers (a term, an option): a
+     * kept page is told apart by them. A page whose address has a
+     * `cache.query` parameter it didn't say it read isn't kept, so
+     * `/about?sort=zzz` or `?price_min=<any number>` can't add copies of a
+     * page to the cache store. The entry filter and paginators say it
+     * themselves; call it from your own templates for what they read:
+     *
+     *     app(PageCache::class)->read('tab');
+     */
+    public function read(string $name, ?Request $request = null): void
+    {
+        $request ??= request();
+        $read = $request->attributes->get(self::READ, []);
+        $request->attributes->set(self::READ, [...(is_array($read) ? $read : []), $name]);
+    }
+
+    /**
+     * The `cache.query` parameters with a value in the address that the
+     * page didn't read (`page` is PAGINATED's).
+     *
+     * @return list<string>
+     */
+    public function unread(Request $request): array
+    {
+        $read = $request->attributes->get(self::READ, []);
+        $read = is_array($read) ? $read : [];
+
+        return array_values(array_filter(PageCacheHasher::query(), fn (string $name): bool => $name !== 'page'
+            && PageCacheHasher::given($request->query($name)) && ! in_array($name, $read, true)));
     }
 
     /**

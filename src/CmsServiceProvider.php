@@ -113,6 +113,8 @@ final class CmsServiceProvider extends ServiceProvider
         TermTranslation::saved(fn (TermTranslation $translation) => Support\References::term($translation));
         GlobalValue::saved(fn (GlobalValue $value) => Support\References::global($value));
         $this->pageCache();
+        // ?page= past the last page of a site page's list: a 404, never a page of its own.
+        Site\PageNumberWatch::pastLast();
         // An error page (the app's errors::404 and the like): <x-sunrice-cms::seo> leaves it out of search results.
         Event::listen('composing: errors::*', fn () => Support\Seo::markErrorPage());
         // A collection, taxonomy or form came or went: so do its permissions.

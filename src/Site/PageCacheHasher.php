@@ -55,12 +55,19 @@ class PageCacheHasher extends DefaultHasher
         return is_string($page) && preg_match('/^[1-9][0-9]{0,8}$/', $page) === 1;
     }
 
+    /** @internal Whether a query parameter has a value: not missing, empty or a list of empty ones. */
+    public static function given(mixed $value): bool
+    {
+        return is_array($value) ? array_filter($value, fn (mixed $one): bool => self::given($one)) !== [] : $value !== null && $value !== '';
+    }
+
     protected function getNormalizedQueryString(Request $request): string
     {
         $kept = [];
         foreach (self::query() as $name) {
             $value = $name === 'page' ? self::pageNumber($request) : $request->query($name);
-            if ($value !== null) {
+            // An empty one (?sort=, as a form sends a blank choice) is the page without it.
+            if (self::given($value)) {
                 $kept[$name] = $value;
             }
         }

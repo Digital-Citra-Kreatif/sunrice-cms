@@ -30,8 +30,17 @@
                             <legend>{{ $control->label }}</legend>
                             @foreach ($control->inputs as $part => $input)
                                 <label for="{{ $control->id($part) }}">{{ __('sunrice-cms::site.filter.'.$part) }}</label>
+                                @if ($control->options !== [])
+                                    <select id="{{ $control->id($part) }}" name="{{ $input }}">
+                                        <option value="">{{ __('sunrice-cms::site.filter.all') }}</option>
+                                        @foreach ($control->options as $option)
+                                            <option value="{{ $option['value'] }}" @selected(is_array($control->value) && ($control->value[$part] ?? null) === $option['value'])>{{ $option['label'] }}</option>
+                                        @endforeach
+                                    </select>
+                                @else
                                 <input type="{{ $control->type === 'range' ? 'number' : 'date' }}" @if ($control->type === 'range') step="any" @endif
                                     id="{{ $control->id($part) }}" name="{{ $input }}" value="{{ is_array($control->value) ? ($control->value[$part] ?? '') : '' }}">
+                                @endif
                             @endforeach
                         </fieldset>
                         @break
