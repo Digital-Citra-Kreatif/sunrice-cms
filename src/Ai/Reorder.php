@@ -19,7 +19,7 @@ use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Support\Access;
 
-#[Description('Set the manual order of one level of entries in a collection (with Manual order on), terms in a taxonomy, or items in a menu. "in" is the collection, taxonomy or menu handle; "parent_id" the level (left out: the top level, or all entries of a collection without parents); "ids" the items in their new order: they come first, the rest of the level follows as it was. Parents don\'t change.')]
+#[Description('Set the manual order of one level of entries in a collection (with Manual order on), terms in a taxonomy, or items in a menu. "in" is the collection, taxonomy or menu handle; "parent_id" the level (left out: the top level, or all entries of a collection without parents); "ids" the items in their new order: they come first, the rest of the level follows as it was, so a short list moves just those to the front. Parents don\'t change. "changed" says whether the order was different.')]
 final class Reorder extends CmsTool
 {
     protected string $name = 'cms_reorder';
@@ -44,7 +44,7 @@ final class Reorder extends CmsTool
             if (! $this->may('update', $collection)) {
                 return $this->denied('order entries of '.$collection->title);
             }
-            app(ReorderEntries::class)->handle($collection, $args['ids'], $parent);
+            $changed = app(ReorderEntries::class)->handle($collection, $args['ids'], $parent);
             $order = Entry::query()->where('collection_id', $collection->id)->when($collection->hierarchical, fn ($q) => $q->where('parent_id', $parent))->orderBy('sort_order')->orderBy('id')->pluck('id');
         } elseif ($args['type'] === 'terms') {
             $taxonomy = Taxonomy::query()->where('handle', $args['in'])->first();
@@ -54,7 +54,7 @@ final class Reorder extends CmsTool
             if (! Access::terms($this->user(), $taxonomy)) {
                 return $this->denied('order the terms of '.$taxonomy->title);
             }
-            app(ReorderTerms::class)->handle($taxonomy, $args['ids'], $parent);
+            $changed = app(ReorderTerms::class)->handle($taxonomy, $args['ids'], $parent);
             $order = Term::query()->where('taxonomy_id', $taxonomy->id)->where('parent_id', $parent)->orderBy('sort_order')->orderBy('id')->pluck('id');
         } else {
             $menu = Menu::query()->where('handle', $args['in'])->first();
@@ -64,11 +64,12 @@ final class Reorder extends CmsTool
             if (! $this->can('cms.menus.update')) {
                 return $this->denied('edit menus');
             }
-            app(ReorderMenuItems::class)->handle($menu, $args['ids'], $parent);
+            $changed = app(ReorderMenuItems::class)->handle($menu, $args['ids'], $parent);
             $order = MenuItem::query()->where('menu_id', $menu->id)->where('parent_id', $parent)->orderBy('sort_order')->orderBy('id')->pluck('id');
         }
 
-        return $this->json(['saved' => true, 'order' => $order->all()]);
+        // "changed": false when the order was already so (nothing logged).
+        return $this->json(['saved' => true, 'changed' => $changed, 'order' => $order->all()]);
     }
 
     public function schema(JsonSchema $schema): array

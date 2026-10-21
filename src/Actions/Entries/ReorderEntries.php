@@ -30,10 +30,11 @@ final class ReorderEntries
 
     /**
      * @param  array<mixed>  $ids  entry ids in their new order
+     * @return bool whether the order changed (nothing is logged when it didn't)
      *
      * @throws ValidationException
      */
-    public function handle(Collection $collection, array $ids, ?int $parentId = null): void
+    public function handle(Collection $collection, array $ids, ?int $parentId = null): bool
     {
         if (! $collection->ordered) {
             throw ValidationException::withMessages(['ids' => 'This collection lists entries by date or title: turn on Manual order to order them.']);
@@ -43,7 +44,8 @@ final class ReorderEntries
         }
         $order = self::ids($ids);
 
-        DB::transaction(function () use ($collection, $order, $parentId): void {
+        $changed = true;
+        DB::transaction(function () use ($collection, $order, $parentId, &$changed): void {
             $level = [];
             foreach (Entry::query()->withTrashed()->where('collection_id', $collection->id)
                 ->when($collection->hierarchical, fn ($query) => $query->where('parent_id', $parentId))
@@ -54,14 +56,25 @@ final class ReorderEntries
             if ($unknown !== []) {
                 throw ValidationException::withMessages(['ids' => 'Not entries of this collection'.($collection->hierarchical ? ' at this level' : '').': '.implode(', ', $unknown).'.']);
             }
+            $new = [...$order, ...array_values(array_diff($level, $order))];
+            if ($new === $level) {
+                $changed = false;
+
+                return;
+            }
             $positions = [];
-            foreach ([...$order, ...array_diff($level, $order)] as $index => $id) {
+            foreach ($new as $index => $id) {
                 $positions[$id] = $index + 1;
             }
             SortOrder::write((new Entry)->getTable(), $positions);
         });
+        if (! $changed) {
+            return false;
+        }
         $this->activity->record('reordered', 'collection', $collection, $collection->title, ['note' => 'entries']);
         $this->cache->changed("collection {$collection->handle} order", SiteCache::PAGES);
+
+        return true;
     }
 
     /**

@@ -33,7 +33,7 @@ final class ReorderMenuItems
      *
      * @throws ValidationException
      */
-    public function handle(Menu $menu, array $ids, ?int $parentId = null): void
+    public function handle(Menu $menu, array $ids, ?int $parentId = null): bool
     {
         $order = [];
         foreach ($ids as $id) {
@@ -46,7 +46,8 @@ final class ReorderMenuItems
             throw ValidationException::withMessages(['ids' => 'Give each item id once, in the new order.']);
         }
 
-        DB::transaction(function () use ($menu, $order, $parentId): void {
+        $changed = true;
+        DB::transaction(function () use ($menu, $order, $parentId, &$changed): void {
             $level = [];
             foreach (MenuItem::query()->where('menu_id', $menu->id)->where('parent_id', $parentId)
                 ->orderBy('sort_order')->orderBy('id')->lockForUpdate()->pluck('id') as $id) {
@@ -56,15 +57,26 @@ final class ReorderMenuItems
             if ($unknown !== []) {
                 throw ValidationException::withMessages(['ids' => 'Not items of this menu at this level: '.implode(', ', $unknown).'.']);
             }
+            $new = [...$order, ...array_values(array_diff($level, $order))];
+            if ($new === $level) {
+                $changed = false;
+
+                return;
+            }
             $positions = [];
-            foreach ([...$order, ...array_diff($level, $order)] as $index => $id) {
+            foreach ($new as $index => $id) {
                 $positions[$id] = $index;
             }
             SortOrder::write((new MenuItem)->getTable(), $positions);
         });
+        if (! $changed) {
+            return false;
+        }
         $menu->unsetRelation('items');
         $this->menus->flush();
         $this->activity->record('reordered', 'menu', $menu, $menu->title, ['note' => 'items']);
         $this->cache->changed("menu {$menu->handle}", SiteCache::MENUS, SiteCache::PAGES);
+
+        return true;
     }
 }

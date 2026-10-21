@@ -44,7 +44,7 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 | `flexible` | a list of blocks | `Items` of `Block` | `blocks` (fieldset handles), `max` |
 | `fieldset` | — | — | `fieldset`: includes that fieldset's fields in its place |
 | `terms` | a term id, or a list with `multiple` | a `Term`, or a collection | `taxonomy`, `multiple`, `max` (see [taxonomies](taxonomies.md)) |
-| `entries` | an entry id, or a list with `multiple` | the linked entries' `EntryTranslation`s | `collections`, `multiple`, `max` |
+| `entries` | an entry id (`null` or `[]` clears it), or a list with `multiple` | the linked entries' `EntryTranslation`s | `collections`, `multiple`, `max` |
 
 Rich text keeps only the formatting the editor produces: no scripts, styles or event handlers, and links only to web, mail and phone addresses or paths on the site. Links are checked the same way when saved and again when shown, so a link can never run script.
 
