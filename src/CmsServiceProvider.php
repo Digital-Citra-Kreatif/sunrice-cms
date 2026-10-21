@@ -197,6 +197,10 @@ final class CmsServiceProvider extends ServiceProvider
         }
         // A kept page is served to every visitor: without the replacer, they'd all get the first one's CSRF token and no form would work.
         $replacers = config('responsecache.replacers', []);
+        // And their own honeypot fields: else the "sent too fast" check would count from when the page was kept.
+        if (is_array($replacers) && ! in_array(Site\HoneypotReplacer::class, $replacers, true)) {
+            config(['responsecache.replacers' => [...$replacers, Site\HoneypotReplacer::class]]);
+        }
         if (Site\PageCache::enabled() && (! is_array($replacers) || ! in_array(CsrfTokenReplacer::class, $replacers, true))) {
             throw new PanelMisconfigured('sunrice-cms.cache.pages needs '.CsrfTokenReplacer::class.' in responsecache.replacers (config/responsecache.php): kept pages must give each visitor their own CSRF token.');
         }

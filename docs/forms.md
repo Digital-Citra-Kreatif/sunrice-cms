@@ -102,7 +102,7 @@ Plugins use the same captcha: `app(\Sunrice\Admin\Security\Captcha::class)->widg
 
 ### Spam
 
-- Every form post must carry the honeypot fields ([spatie/laravel-honeypot](https://github.com/spatie/laravel-honeypot), which the component prints). Bots that fill in the hidden field, send too fast or leave the fields out get an empty page and nothing is kept. Configure it with the package's `honeypot` config.
+- Every form post must carry the honeypot fields ([spatie/laravel-honeypot](https://github.com/spatie/laravel-honeypot), which the component prints). Bots that fill in the hidden field, send too fast or leave the fields out get an empty page and nothing is kept. Configure it with the package's `honeypot` config. On pages kept by the [page cache](caching.md#whole-pages), each visitor gets their own honeypot fields (`Site\HoneypotReplacer`), so "too fast" counts from when the visitor got the page.
 - One visitor (IP address) may send a form 5 times a minute (`sunrice-cms.forms.per_minute`, or the form's own setting); more get `429`.
 - A [captcha](#captcha), for forms that ask for it.
 
