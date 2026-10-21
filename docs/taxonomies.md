@@ -14,7 +14,7 @@ In code: `SaveTerm` (title, slug, locale, parent_id, version), `TrashTerm`, `Res
 
 Add a **Terms** field to the blueprint, with its taxonomy, and whether it takes several terms (and at most how many). Editors pick from the taxonomy's terms; only that taxonomy's terms are accepted. Terms fields are shared by all languages.
 
-The editor doesn't carry the terms in the page: a terms field loads them when it shows, from `GET cms/terms/picker?taxonomy=…` (behind `cms.entries.view`, like the entries picker), in tree order with their depth, or those whose title matches `q`, or some by `ids[]`. A taxonomy of more than 100 terms is searched instead of listed whole. `TermsField::toAdmin()` sends the taxonomy's handle; the entry editor also sends the chosen terms' titles (`termLabels`; `TermsField::labels($ids)`).
+The editor doesn't carry the terms in the page: a terms field loads them when it shows, from `GET cms/terms/picker?taxonomy=…` (behind `cms.entries.view`; like the entries picker, it serves a taxonomy only to those who may view its terms, `cms.terms.view` or `cms.terms.{handle}.view`, or when a terms field in a blueprint of a collection they may view, create or edit entries in uses it, else `403`), in tree order with their depth, or those whose title matches `q`, or some by `ids[]`. A taxonomy of more than 100 terms is searched instead of listed whole. `TermsField::toAdmin()` sends the taxonomy's handle; the entry editor also sends the chosen terms' titles (`termLabels`; `TermsField::labels($ids)`).
 
 Templates get `Term` models (`$term->title()`, `$term->title('id')`, `$term->translation()->slug`), or a collection of them with several, in the order chosen; deleted terms are left out.
 

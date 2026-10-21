@@ -177,29 +177,67 @@ final class EntryController
     private static function linkable(mixed $user): array
     {
         $handles = [];
-        $collect = function (array $fields) use (&$collect, &$handles): void {
+        self::eachOwnField($user, ['create', 'update'], function (array $field) use (&$handles): void {
+            if (($field['type'] ?? null) === 'entries' && is_array($field['collections'] ?? null)) {
+                array_push($handles, ...array_filter($field['collections'], is_string(...)));
+            }
+        });
+
+        return array_values(array_unique($handles));
+    }
+
+    /**
+     * The taxonomies the terms fields of the collections a user may view,
+     * create or edit entries in use (any of their blueprints, nested too), by
+     * handle: the term picker serves those even without cms.terms.view, as
+     * the editor shows those fields.
+     *
+     * @return list<string>
+     */
+    private static function pickableTaxonomies(mixed $user): array
+    {
+        $handles = [];
+        self::eachOwnField($user, ['view', 'create', 'update'], function (array $field) use (&$handles): void {
+            if (($field['type'] ?? null) === 'terms' && is_string($field['taxonomy'] ?? null)) {
+                $handles[] = $field['taxonomy'];
+            }
+        });
+
+        return array_values(array_unique($handles));
+    }
+
+    /**
+     * Calls $each with every field (in groups, repeaters and blocks too) of
+     * every blueprint of the collections the user may do one of $actions in.
+     *
+     * @param  list<string>  $actions
+     * @param  callable(array<mixed>): void  $each
+     */
+    private static function eachOwnField(mixed $user, array $actions, callable $each): void
+    {
+        if (! $user instanceof Authorizable) {
+            return;
+        }
+        $walk = function (array $fields) use (&$walk, $each): void {
             foreach ($fields as $field) {
                 if (! is_array($field)) {
                     continue;
                 }
-                if (($field['type'] ?? null) === 'entries' && is_array($field['collections'] ?? null)) {
-                    array_push($handles, ...array_filter($field['collections'], is_string(...)));
-                }
+                $each($field);
                 foreach (['fields', 'blocks'] as $key) {
                     if (is_array($field[$key] ?? null)) {
-                        $collect($field[$key]);
+                        $walk($field[$key]);
                     }
                 }
             }
         };
-        $own = $user instanceof Authorizable ? Access::collections($user, 'create')->merge(Access::collections($user, 'update'))->unique('id') : [];
+        $own = Collection::query()->orderBy('title')->get()
+            ->filter(fn (Collection $collection): bool => array_any($actions, fn (string $action): bool => Access::entries($user, $action, $collection)));
         foreach ($own as $collection) {
             foreach ($collection->allSchemas() as $schema) {
-                $collect($schema->toAdmin());
+                $walk($schema->toAdmin());
             }
         }
-
-        return array_values(array_unique($handles));
     }
 
     /**
@@ -254,7 +292,9 @@ final class EntryController
 
     /**
      * For terms fields: a taxonomy's terms in tree order (or those whose
-     * title matches "q"), or some by id ("ids"), main-language titles.
+     * title matches "q"), or some by id ("ids"), main-language titles. Only
+     * a taxonomy the person may view the terms of, or one a terms field of
+     * a collection they may view, create or edit entries in uses.
      */
     public function termPicker(Request $request): JsonResponse
     {
@@ -266,6 +306,8 @@ final class EntryController
             'ids.*' => ['integer'],
         ]);
         $taxonomy = Taxonomy::query()->where('handle', $input['taxonomy'])->first() ?? abort(404);
+        // Like the entries picker: taxonomies the person may see, or that a terms field of their collections uses.
+        abort_unless(Access::terms($request->user(), 'view', $taxonomy) || in_array($taxonomy->handle, self::pickableTaxonomies($request->user()), true), 403);
         if (isset($input['ids'])) {
             $ids = array_map(intval(...), $input['ids']);
             $found = Term::query()->whereKey($ids)->where('taxonomy_id', $taxonomy->id)->pluck('id')->all();
