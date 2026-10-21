@@ -108,8 +108,14 @@ final class SwitchMainLanguage
             });
         } catch (Throwable $e) {
             // The transaction is undone; so is what the settings cache read meanwhile.
-            app(LocaleSettings::class)->fill(['languages' => $before])->save();
-            app()->forgetInstance(LocaleSettings::class);
+            try {
+                app(LocaleSettings::class)->fill(['languages' => $before])->save();
+            } catch (Throwable $restoring) {
+                // What stopped the switch is what to see, not this.
+                report($restoring);
+            } finally {
+                app()->forgetInstance(LocaleSettings::class);
+            }
 
             throw $e;
         }
