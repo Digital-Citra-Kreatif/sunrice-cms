@@ -454,6 +454,8 @@
     "Field: :label": "Field: :label",
     ":label: instructions": ":label: petunjuk",
     ":name (:code) is the main language and content is written in it: keep it first and save. Then, to make :new the main language, use its button in the Main language card beside the form.": ":name (:code) adalah bahasa utama dan sudah ada konten yang ditulis dalam bahasa itu: biarkan di urutan pertama lalu simpan. Setelah itu, untuk menjadikan :new bahasa utama, pakai tombolnya di kartu Bahasa utama di samping formulir.",
+    "Commenters prove they're not a robot, with the same captcha service as forms.": "Pemberi komentar membuktikan bahwa mereka bukan robot, dengan layanan captcha yang sama seperti formulir.",
+    "Needs an account with a captcha service, set up on the server by a developer (the same as forms'). For developers: SUNRICE_CAPTCHA_SITE_KEY and SUNRICE_CAPTCHA_SECRET_KEY.": "Perlu akun di layanan captcha, diatur di server oleh developer (sama seperti untuk formulir). Untuk developer: SUNRICE_CAPTCHA_SITE_KEY dan SUNRICE_CAPTCHA_SECRET_KEY.",
     "Translate entries, forms, menus and listing titles (not the main language)": "Terjemahkan entri, formulir, menu, dan judul halaman daftar (bukan bahasa utama)",
     ":label: choice \":option\"": ":label: pilihan \":option\"",
     "Link to :title": "Tautan ke :title",
