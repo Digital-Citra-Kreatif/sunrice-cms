@@ -33,11 +33,13 @@ final class TranslatedFields
                     $translations = $record->getAttribute('translations');
                     $translations = is_array($translations) ? $translations : [];
                     $text = is_string($value) ? trim($value) : '';
+                    $own = is_array($translations[$code] ?? null) ? $translations[$code] : [];
                     if ($text === '') {
-                        unset($translations[$code][$attribute]);
+                        unset($own[$attribute]);
                     } else {
-                        $translations[$code][$attribute] = $text;
+                        $own[$attribute] = $text;
                     }
+                    $translations[$code] = $own;
                     $translations = array_filter($translations, fn (mixed $texts): bool => is_array($texts) && $texts !== []);
                     $record->forceFill(['translations' => $translations === [] ? null : $translations])->save();
                 });

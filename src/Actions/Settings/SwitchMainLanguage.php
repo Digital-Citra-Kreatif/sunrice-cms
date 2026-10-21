@@ -327,7 +327,7 @@ final class SwitchMainLanguage
                 if (is_string($old) && trim($old) !== '') {
                     $translations[$from][$attribute] = $old;
                 }
-                $translations = array_filter($translations, fn (mixed $texts): bool => is_array($texts) && $texts !== []);
+                $translations = array_filter($translations, fn (array $texts): bool => $texts !== []);
                 $record->forceFill([$attribute => $new, 'translations' => $translations === [] ? null : $translations])->save();
             }
         }

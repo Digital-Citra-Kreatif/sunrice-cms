@@ -120,14 +120,12 @@ final class Site
             }
             if ($type === 'taxonomy') {
                 $main = $this->termQuery()->where('taxonomy_id', $id)->where('locale', Locales::default())->where('slug', $matched['slug'])->first();
-                $own = $main?->term->translations->firstWhere('locale', $locale);
-                $own?->setRelation('term', $main->term);
+                $own = $main === null ? null : $main->term->translations->firstWhere('locale', $locale)?->setRelation('term', $main->term);
 
                 return $own?->url();
             }
             $main = $this->entryQuery()->where('collection_id', $id)->where('locale', Locales::default())->where('slug', $matched['slug'])->first();
-            $own = $main?->entry->translations->firstWhere('locale', $locale);
-            $own?->setRelation('entry', $main->entry);
+            $own = $main === null ? null : $main->entry->translations->firstWhere('locale', $locale)?->setRelation('entry', $main->entry);
 
             return $own !== null && $own->isLive() ? $own->url() : null;
         }

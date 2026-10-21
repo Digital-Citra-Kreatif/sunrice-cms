@@ -9,8 +9,8 @@ use Sunrice\Admin\Media\Media;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Site\Page;
-use Sunrice\Cms\Site\Site;
 use Sunrice\Cms\Site\Search;
+use Sunrice\Cms\Site\Site;
 
 /**
  * Structured data (schema.org, as JSON-LD) for a page's head, so search

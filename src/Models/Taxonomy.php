@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Models;
 
-use Sunrice\Cms\Models\Concerns\TranslatesText;
-
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,6 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\Schema;
+use Sunrice\Cms\Models\Concerns\TranslatesText;
 
 /**
  * A way to group entries (categories, tags), with terms, optionally

@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Models;
 
-use Sunrice\Cms\Models\Concerns\TranslatesText;
-use Sunrice\Cms\Support\Locales;
-
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
@@ -14,6 +11,8 @@ use Illuminate\Support\Facades\Lang;
 use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\Schema;
 use Sunrice\Cms\Fields\Types;
+use Sunrice\Cms\Models\Concerns\TranslatesText;
+use Sunrice\Cms\Support\Locales;
 
 /**
  * A form visitors fill in on the site: its fields come from a blueprint,

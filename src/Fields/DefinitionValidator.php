@@ -6,10 +6,10 @@ namespace Sunrice\Cms\Fields;
 
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Sunrice\Cms\Settings\LocaleSettings;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Validator as ValidatorInstance;
 use Sunrice\Cms\Fields\Types\FieldsetInclude;
+use Sunrice\Cms\Settings\LocaleSettings;
 
 /**
  * Checks field definitions from the blueprint builder before they are

@@ -340,7 +340,7 @@ final class EntryFilter extends Component
      * (else the main one's); and what else names each: its slugs in the
      * other languages and its id.
      *
-     * @return array{0: list<array{value: string, label: string, count: int, depth: int}>, 1: array<string, string>}
+     * @return array{0: list<array{value: string, label: string, count: int, depth: int}>, 1: array<int|string, string>}
      */
     private static function termOptions(string $taxonomy, Collection $collection, bool $hideEmpty): array
     {
