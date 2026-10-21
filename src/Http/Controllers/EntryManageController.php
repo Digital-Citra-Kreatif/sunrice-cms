@@ -86,22 +86,35 @@ final class EntryManageController
     public function settings(Request $request, Entry $entry, SaveEntrySettings $save, ChangeBlueprint $blueprint): RedirectResponse
     {
         abort_if($entry->collection->trashed(), 404);
-        $input = $request->only(['parent_id', 'template', 'comments_closed']);
         if ($request->has('blueprint')) {
             // Every language's fields: for those who may edit the entry itself, not translators.
             abort_unless(Access::entries($request->user(), 'update', $entry->collection, $entry), 403);
             $handle = $request->input('blueprint');
             $blueprint->handle($entry, is_string($handle) ? $handle : null);
         }
+        self::saveSettings($request, $entry, $save);
+
+        return back()->with('success', 'Saved.');
+    }
+
+    /**
+     * The request's parent_id, template and comments_closed, those given,
+     * saved (also with the draft, EntryController::update()).
+     *
+     * @internal
+     */
+    public static function saveSettings(Request $request, Entry $entry, SaveEntrySettings $save): void
+    {
+        $input = $request->only(['parent_id', 'template', 'comments_closed']);
         // Picking a view is for the collection's editors (cms.entries.update), not authors of their own entries: theirs may only stay as it is.
         if (array_key_exists('template', $input) && ! Access::entries($request->user(), 'update', $entry->collection)) {
             $template = is_string($input['template']) ? trim($input['template']) : '';
             abort_unless(($template === '' ? null : $template) === $entry->template, 403);
             unset($input['template']);
         }
-        $save->handle($entry, $input);
-
-        return back()->with('success', 'Saved.');
+        if ($input !== []) {
+            $save->handle($entry, $input);
+        }
     }
 
     public function move(Request $request, Entry $entry, MoveEntry $move): RedirectResponse

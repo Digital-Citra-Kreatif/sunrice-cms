@@ -66,8 +66,20 @@ export function indent(items: FlatItem[], index: number, maxDepth: number): Flat
     return shift(items, index, 1);
 }
 
+/**
+ * Takes an item (with its children) out of its parent, placing it right
+ * after the parent's other children, which stay where they are.
+ */
 export function outdent(items: FlatItem[], index: number): FlatItem[] {
-    return (items[index]?.depth ?? 0) === 0 ? items : shift(items, index, -1);
+    const item = items[index];
+    if (!item || item.depth === 0) return items;
+    let parent = index - 1;
+    while (parent > 0 && items[parent]!.depth >= item.depth) parent--;
+    const end = subtreeEnd(items, index);
+    const parentEnd = subtreeEnd(items, parent);
+    const block = shift(items, index, -1).slice(index, end);
+
+    return [...items.slice(0, index), ...items.slice(end, parentEnd), ...block, ...items.slice(parentEnd)];
 }
 
 /** Moves an item (with its children) past its previous (-1) or next (+1) sibling. */

@@ -13,6 +13,7 @@ use Sunrice\Cms\Menus;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\Menu;
+use Sunrice\Cms\Models\MenuItem;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\SafeUrl;
@@ -55,7 +56,12 @@ final class SaveMenu
         $validator->validate();
 
         DB::transaction(function () use ($menu, $items): void {
-            $menu->items()->delete();
+            // Unhooked from their parents first, so no row is deleted by a
+            // cascade while the statement runs: MySQL's ordered delete (the
+            // relation is ordered) left all but the first branch behind.
+            $old = MenuItem::query()->where('menu_id', $menu->id);
+            (clone $old)->whereNotNull('parent_id')->update(['parent_id' => null]);
+            $old->delete();
             $this->create($menu, $items, null);
         });
         $menu->unsetRelation('items');

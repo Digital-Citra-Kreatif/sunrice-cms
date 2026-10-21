@@ -21,7 +21,7 @@ Tick entries (or the box at the top for the whole page) to **Publish**, **Unpubl
 
 ### Putting entries in order
 
-In a collection with *manual order*, click **Reorder** above the list, drag each entry into its place by its handle (or use the keyboard: focus the handle, press Space, move with the arrow keys, press Space again), and click **Done**. In a collection where entries nest, an entry moves among the entries beside it. The **Order** arrows (**Move up** and **Move down**) also move one entry a place, while the list is in its own order, without filters or search. Other collections list their entries newest first (when they have dates) or by title.
+In a collection with *manual order*, click **Reorder** above the list, drag each entry into its place by its handle (or use the keyboard: focus the handle, press Space, move with the arrow keys, press Space again), and click **Done**. In a collection where entries nest, the list shows the tree (entries indented under their parent) and an entry moves among the entries beside it, with what's under it; to put an entry under another, choose its **Parent** in its Page settings. The **Order** arrows (**Move up** and **Move down**) also move one entry a place, while the list is in its own order, without filters or search. Other collections list their entries newest first (when they have dates) or by title.
 
 ## Writing an entry
 
@@ -47,10 +47,10 @@ The editor's cards (groups, **Search and sharing**, and the cards on the right) 
 Every entry has a **draft**, which you edit, and a **live** version, which visitors see. The live version changes only when you publish.
 
 - **Publish** puts the draft on the website. For an entry already live, the button says **Publish changes**; it says **Published** when there's nothing new.
-- The arrow next to it has **Publish on a date…**: choose a date and time (in your time zone) and the entry goes live then. Until then its status is **Scheduled**. A date in the past publishes now, with that date.
+- The arrow next to it has **Publish on a date…**: choose a date and time (in your time zone) and the entry goes live then. The picker starts on tomorrow, and the time is on the 24-hour clock (type `14:30`). Until then its status is **Scheduled**, and the button says **Scheduled for …**: press it to change the date; the arrow also has **Publish now** and **Unschedule (back to draft)**. A date in the past asks first, then publishes now, with that date (to back-date a post).
 - **Unpublish** (same menu) takes the entry off the website; it becomes a draft again. Publishing it again keeps its original date.
 
-The **Status** card on the right says whether the entry is a draft, scheduled or published (and since when), and warns when *The draft has changes the site doesn't show yet*.
+The **Status** card on the right says whether the entry is a draft, scheduled or published (and since when), and warns when *The draft has changes the site doesn't show yet*. In collections with dates (like a journal), it also has the entry's **Date**: change it and press **Change the date** to back-date a published post or move it, without publishing your draft; a date to come takes it off the site until then. A draft gets its date when it's published (**Publish on a date…** with an earlier date back-dates it).
 
 > [!NOTE]
 > If your role can write but not publish (the *author* role, for example), you save drafts and someone else publishes them.
@@ -63,10 +63,10 @@ The **Status** card on the right says whether the entry is a draft, scheduled or
 
 ## Page settings
 
-The **Page settings** card on the right is saved on its own, for every language, with **Save settings**:
+The **Page settings** card on the right applies to every language. It's saved with the draft (**Save draft**, **Publish**, Ctrl+S), except the blueprint, which has its own button:
 
-- **Parent**: in collections where entries nest (like pages under pages), the entry this one sits under. It's used for breadcrumbs and sub-menus; the web address doesn't change.
-- **Blueprint**: when the collection offers more than one set of fields (a normal page or a landing page, say), the one this entry uses. Switching keeps every value: fields both have keep theirs, and the others are kept out of sight and come back if you switch back. The editor reloads with the new fields.
+- **Parent**: in collections where entries nest (like pages under pages), the entry this one sits under; you can also choose it while creating the entry. It's used for breadcrumbs and sub-menus; the web address doesn't change.
+- **Blueprint**: when the collection offers more than one set of fields (a normal page or a landing page, say), the one this entry uses. Switching keeps every value: fields both have keep theirs, and the others are kept out of sight and come back if you switch back. Save your draft first, then press **Change blueprint**: the editor reloads with the new fields.
 - **Template**: a different design for this entry alone, if your developer made one. Leave it empty for the collection's own.
 - **Accept new comments**: in collections with comments, switch it off to close this entry's comments (approved ones stay). **Comments** opens this entry's comments.
 
@@ -80,7 +80,7 @@ The **Used by** card lists the other content that links to this entry (other ent
 
 ## Revisions
 
-Every publish keeps a **revision**: a copy of what was published, with the date. The **Revisions** card lists them; **Restore** loads one into the draft, so you can check it and publish when ready. Changed your mind? **Undo the restore** puts your previous draft back (until you sign out). The latest 50 revisions of each language are kept.
+Every publish keeps a **revision**: a copy of what was published, with the date and who published it. The **Revisions** card lists them with the fields each one changed; **Compare** shows a revision beside your saved draft, field by field; **Restore** loads one into the draft, so you can check it and publish when ready. Changed your mind? **Undo the restore** puts your previous draft back (until you sign out). The latest 50 revisions of each language are kept.
 
 ## More actions
 

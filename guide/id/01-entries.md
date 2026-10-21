@@ -21,7 +21,7 @@ Centang beberapa entri (atau kotak di atas untuk seluruh halaman) untuk **Publis
 
 ### Mengurutkan entri
 
-Di koleksi dengan *urutan manual*, klik **Reorder** di atas daftar, seret setiap entri ke posisinya lewat pegangannya (atau dengan papan ketik: fokus ke pegangan, tekan Spasi, pindahkan dengan tombol panah, tekan Spasi lagi), lalu klik **Done**. Di koleksi yang entrinya bertingkat, entri berpindah di antara entri sejajarnya. Panah **Order** (**Move up** dan **Move down**) juga memindahkan satu entri satu posisi, saat daftar dalam urutannya sendiri, tanpa filter atau pencarian. Koleksi lain menampilkan entri terbaru lebih dulu (jika bertanggal) atau menurut judul.
+Di koleksi dengan *urutan manual*, klik **Reorder** di atas daftar, seret setiap entri ke posisinya lewat pegangannya (atau dengan papan ketik: fokus ke pegangan, tekan Spasi, pindahkan dengan tombol panah, tekan Spasi lagi), lalu klik **Done**. Di koleksi yang entrinya bertingkat, daftar menampilkan susunan pohonnya (entri menjorok di bawah induknya) dan entri berpindah di antara entri sejajarnya, beserta isinya; untuk menaruh entri di bawah entri lain, pilih **Parent**-nya di Page settings. Panah **Order** (**Move up** dan **Move down**) juga memindahkan satu entri satu posisi, saat daftar dalam urutannya sendiri, tanpa filter atau pencarian. Koleksi lain menampilkan entri terbaru lebih dulu (jika bertanggal) atau menurut judul.
 
 ## Menulis entri
 
@@ -47,10 +47,10 @@ Kartu-kartu di penyunting (group, **Search and sharing**, dan kartu di kanan) bi
 Setiap entri memiliki **draf**, yang Anda sunting, dan versi **tayang**, yang dilihat pengunjung. Versi tayang hanya berubah saat Anda menerbitkan.
 
 - **Publish** menayangkan draf di situs web. Untuk entri yang sudah tayang, tombolnya bertuliskan **Publish changes**; bertuliskan **Published** jika tidak ada yang baru.
-- Panah di sebelahnya berisi **Publish on a date…**: pilih tanggal dan jam (menurut zona waktu Anda) dan entri akan tayang saat itu. Sampai waktunya, statusnya **Scheduled**. Tanggal yang sudah lewat langsung menerbitkan, dengan tanggal tersebut.
+- Panah di sebelahnya berisi **Publish on a date…**: pilih tanggal dan jam (menurut zona waktu Anda) dan entri akan tayang saat itu. Pemilih tanggal dimulai dari besok, dan jamnya memakai format 24 jam (ketik `14:30`). Sampai waktunya, statusnya **Scheduled**, dan tombolnya bertuliskan **Scheduled for …**: tekan untuk mengganti tanggal; panahnya juga berisi **Publish now** dan **Unschedule (back to draft)**. Tanggal yang sudah lewat meminta konfirmasi dulu, lalu langsung menerbitkan dengan tanggal tersebut (untuk memundurkan tanggal tulisan).
 - **Unpublish** (di menu yang sama) menarik entri dari situs web; entri kembali menjadi draf. Jika diterbitkan lagi, tanggal aslinya tetap dipakai.
 
-Kartu **Status** di kanan menunjukkan apakah entri masih draf, terjadwal, atau terbit (dan sejak kapan), dan memberi peringatan jika *The draft has changes the site doesn't show yet* (draf berisi perubahan yang belum tampil di situs).
+Kartu **Status** di kanan menunjukkan apakah entri masih draf, terjadwal, atau terbit (dan sejak kapan), dan memberi peringatan jika *The draft has changes the site doesn't show yet* (draf berisi perubahan yang belum tampil di situs). Di koleksi bertanggal (seperti jurnal), kartu ini juga memuat **Date** entri: ubah lalu tekan **Change the date** untuk memundurkan atau memindahkan tanggal tulisan yang sudah terbit, tanpa menerbitkan draf Anda; tanggal yang akan datang menarik entri dari situs sampai waktunya. Draf mendapat tanggalnya saat diterbitkan (**Publish on a date…** dengan tanggal lebih awal memundurkannya).
 
 > [!NOTE]
 > Jika peran Anda bisa menulis tetapi tidak bisa menerbitkan (misalnya peran *author*), Anda menyimpan draf dan orang lain yang menerbitkannya.
@@ -63,10 +63,10 @@ Kartu **Status** di kanan menunjukkan apakah entri masih draf, terjadwal, atau t
 
 ## Pengaturan halaman
 
-Kartu **Page settings** di kanan disimpan tersendiri, untuk semua bahasa, dengan **Save settings**:
+Kartu **Page settings** di kanan berlaku untuk semua bahasa. Isinya disimpan bersama draf (**Save draft**, **Publish**, Ctrl+S), kecuali blueprint, yang punya tombolnya sendiri:
 
-- **Parent** (induk): di koleksi yang entrinya bertingkat (seperti halaman di bawah halaman), entri tempat entri ini berada. Dipakai untuk jejak halaman dan sub-menu; alamat webnya tidak berubah.
-- **Blueprint**: jika koleksi menawarkan lebih dari satu susunan field (misalnya halaman biasa atau halaman promosi), susunan yang dipakai entri ini. Menggantinya tetap menyimpan semua nilai: field yang ada di keduanya mempertahankan isinya, dan sisanya disimpan tersembunyi dan muncul lagi jika Anda kembali. Penyunting dimuat ulang dengan field yang baru.
+- **Parent** (induk): di koleksi yang entrinya bertingkat (seperti halaman di bawah halaman), entri tempat entri ini berada; bisa juga dipilih saat membuat entri. Dipakai untuk jejak halaman dan sub-menu; alamat webnya tidak berubah.
+- **Blueprint**: jika koleksi menawarkan lebih dari satu susunan field (misalnya halaman biasa atau halaman promosi), susunan yang dipakai entri ini. Menggantinya tetap menyimpan semua nilai: field yang ada di keduanya mempertahankan isinya, dan sisanya disimpan tersembunyi dan muncul lagi jika Anda kembali. Simpan draf dulu, lalu tekan **Change blueprint**: penyunting dimuat ulang dengan field yang baru.
 - **Template**: desain lain khusus untuk entri ini, jika developer membuatnya. Kosongkan untuk desain koleksi.
 - **Accept new comments**: di koleksi yang memiliki komentar, matikan untuk menutup komentar entri ini (komentar yang sudah disetujui tetap tampil). **Comments** membuka komentar entri ini.
 
@@ -80,7 +80,7 @@ Kartu **Used by** menampilkan konten lain yang menautkan ke entri ini (entri lai
 
 ## Revisi
 
-Setiap penerbitan menyimpan sebuah **revisi**: salinan dari yang diterbitkan, beserta tanggalnya. Kartu **Revisions** menampilkannya; **Restore** memuat revisi ke dalam draf, sehingga Anda bisa memeriksanya dan menerbitkan saat siap. Berubah pikiran? **Undo the restore** mengembalikan draf Anda sebelumnya (sampai Anda keluar). Disimpan 50 revisi terakhir untuk setiap bahasa.
+Setiap penerbitan menyimpan sebuah **revisi**: salinan dari yang diterbitkan, beserta tanggal dan siapa yang menerbitkannya. Kartu **Revisions** menampilkannya beserta field yang diubah tiap revisi; **Compare** menampilkan revisi di samping draf yang tersimpan, field demi field; **Restore** memuat revisi ke dalam draf, sehingga Anda bisa memeriksanya dan menerbitkan saat siap. Berubah pikiran? **Undo the restore** mengembalikan draf Anda sebelumnya (sampai Anda keluar). Disimpan 50 revisi terakhir untuk setiap bahasa.
 
 ## Tindakan lain
 

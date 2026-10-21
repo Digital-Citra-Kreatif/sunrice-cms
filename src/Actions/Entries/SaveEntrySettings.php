@@ -104,8 +104,14 @@ final class SaveEntrySettings
         return $prefixes === [] ? ['cms.'] : $prefixes;
     }
 
-    /** @throws ValidationException */
-    private static function parent(Entry $entry, mixed $id): ?Entry
+    /**
+     * The parent an entry may have, from an id as given (null when empty):
+     * an entry of its hierarchical collection, never itself or one below
+     * it, at most Entry::MAX_DEPTH deep. The entry may be new (unsaved).
+     *
+     * @throws ValidationException
+     */
+    public static function parent(Entry $entry, mixed $id): ?Entry
     {
         if ($id === null || $id === '' || $id === 0) {
             return null;

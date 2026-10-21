@@ -204,7 +204,7 @@ Listing URLs are fixed, so they're matched before any `{slug}` pattern; they're 
 
 ## The homepage
 
-Pick the entry shown at `/` in **Settings → Site** (`cms.settings.site`). In other languages, `/{locale}` shows its translation there. The entry's own address redirects (301) to `/`, and `$translation->url()` gives `/`. Your app's own `/` route, if it has one, wins.
+Pick the entry shown at `/` in **Settings → Site** (`cms.settings.site`; a searchable list of live pages), or, with `cms.homepage` (*Choose the homepage*, in the editor role), with **Make this the homepage** in a live page's editor (`SetHomepage`, `POST cms/entries/{entry}/homepage`). In other languages, `/{locale}` shows its translation there. The entry's own address redirects (301) to `/`, and `$translation->url()` gives `/`. Your app's own `/` route, if it has one, wins.
 
 ## Querying entries
 

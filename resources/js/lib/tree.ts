@@ -57,3 +57,39 @@ export function siblingOrder<T extends { id: number }>(items: readonly T[], move
 
     return items.filter((other) => parentOf(other) === parent).map((other) => other.id);
 }
+
+/**
+ * Items with parents (by id), as a flat list in any order, in tree order
+ * with depths: each level keeps the order the items came in. Items whose
+ * parent isn't in the list (or that are in a loop) go to the top level.
+ */
+export function treeOrder<T extends { id: number }>(items: readonly T[], parentOf: (item: T) => number | null | undefined): (T & Depthed)[] {
+    const ids = new Set(items.map((item) => item.id));
+    const children = new Map<number | null, T[]>();
+    for (const item of items) {
+        const parent = parentOf(item);
+        const key = parent !== null && parent !== undefined && ids.has(parent) ? parent : null;
+        children.set(key, [...(children.get(key) ?? []), item]);
+    }
+    const out: (T & Depthed)[] = [];
+    const placed = new Set<number>();
+    const walk = (parent: number | null, depth: number) => {
+        for (const item of children.get(parent) ?? []) {
+            if (placed.has(item.id)) continue;
+            placed.add(item.id);
+            out.push({ ...item, depth });
+            walk(item.id, depth + 1);
+        }
+    };
+    walk(null, 0);
+    // In a loop, none of them reaches the top: they're shown there.
+    for (const item of items) {
+        if (!placed.has(item.id)) {
+            placed.add(item.id);
+            out.push({ ...item, depth: 0 });
+            walk(item.id, 1);
+        }
+    }
+
+    return out;
+}

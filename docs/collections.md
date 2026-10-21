@@ -17,7 +17,7 @@ Manage them in the admin under **Structure → Collections** (permissions `cms.c
 | `template` | The Blade view entries render with; none: `cms.{handle}`, then `cms.entry`. |
 | `listing_route` | The URL of a page listing the entries, like `/blog`; none: no listing page. See [the site](site.md#listing-pages). |
 | `listing_blueprint`, `per_page` | The listing page's own fields (an intro…), edited from the entries list, and how many entries it shows per page (10). `SaveListing` saves the fields (and the listing page's own SEO, `$seo`) per language and, given the `version` the editor opened (`CollectionListing::$version`), refuses a save over someone else's newer one. |
-| `ordered` | **Manual order**: editors put entries in order in the list (**Reorder**, then drag; in a hierarchical collection among an entry's siblings), instead of by date or title. |
+| `ordered` | **Manual order**: editors put entries in order in the list (**Reorder**, then drag; a hierarchical collection shows its tree, and an entry moves among its siblings with its children), instead of by date or title. |
 | `hierarchical` | Entries may have a **parent** entry, like pages under pages, for breadcrumbs and sub-menus. URLs stay flat: *Team* under *About* is still `/team`. |
 | `seo_title_field`, `seo_description_field`, `seo_image_field` | **SEO from fields**: a text field for the SEO title, a text or textarea field for the description and a media field for the share image, used where an entry's SEO card is empty. See [SEO](site.md#seo). |
 
@@ -59,6 +59,7 @@ Editors write entries under **Content → Entries**: a list per collection (see 
 | `cms.entries.export` | Download a collection's entries as CSV (with `view`). |
 | `cms.entries.update-own`, `.delete-own` | The same, for entries they created, in collections they may view. |
 | `cms.entries.translate` | Save drafts of entries' other languages (not the main one), in collections they may view. |
+| `cms.homepage` | Make a live page the site's homepage from its editor (`SetHomepage`); Settings → Site (`cms.settings.site`) sets it too. |
 | `cms.entries.view-drafts` | While signed in, see on the site that a live page has unpublished changes, and open them (`?draft`), in collections they may view. See [draft viewing](site.md#drafts-on-the-site). |
 
 Each of the first six also comes for one collection: `cms.entries.blog.publish` publishes only in Blog. They're created with the collection (and deleted with it), renamed with its handle, and the role editor shows them under "Entries: Blog". The same goes for terms (`cms.terms.{taxonomy}.manage`) and form submissions (`cms.submissions.{form}.view`, `.export`, `.delete`). People see only the collections, taxonomies and forms they may work in. In code: `Sunrice\Cms\Support\Access::entries($user, 'publish', $collection, $entry, $locale)`.
@@ -72,7 +73,7 @@ Scoped permissions are named after handles, so when a collection's, taxonomy's o
 In the editor:
 
 - **Ctrl/Cmd+S** saves the draft, and leaving the page with unsaved changes asks first.
-- **Page settings**: the parent (in hierarchical collections; never the entry itself or one below it, at most 10 deep), a Blade view for this entry alone (`SaveEntrySettings`) and, when the collection offers more than one, its blueprint (`ChangeBlueprint`), for every language. Deleting an entry for good moves its children up to its parent.
+- **Page settings**: the parent (in hierarchical collections; never the entry itself or one below it, at most 10 deep; also chosen when creating, `CreateEntry`'s `parent_id`), a Blade view for this entry alone and whether it takes comments (`SaveEntrySettings`), for every language, saved with the draft (the editor's `PUT` sends `parent_id`, `template` and `comments_closed` with the fields, all or nothing); and, when the collection offers more than one, its blueprint (`ChangeBlueprint`), changed on its own. Deleting an entry for good moves its children up to its parent.
 - **Duplicate** copies every language's draft as a new draft entry ("Hello (copy)", slug `hello-copy`).
 - Only one person edits an entry in a language at a time: others are told who's editing and can view it or take over (see [edit locks](../../admin/docs/locks.md)).
 - When someone else saved since you opened the page, saving says so: **Load theirs**, or **Save mine anyway** over their version.
@@ -174,11 +175,12 @@ app(PublishEntry::class)->handle($translation, now()->addWeek());   // live from
 app(UnpublishEntry::class)->handle($translation);
 ```
 
-- `CreateEntry` takes `title`, `slug`, `data` and `locale` (the main language when left out), makes a draft and records the signed-in user as the author. Fields left out get their defaults.
+- `CreateEntry` takes `title`, `slug`, `data`, `locale` (the main language when left out) and `parent_id` (in a hierarchical collection), makes a draft and records the signed-in user as the author. Fields left out get their defaults.
 - `SaveDraft` takes any of `title`, `slug`, `data` and `version`; fields left out of `data` keep their values. Pass the `version` the editor opened: if someone saved since, the save is refused instead of overwriting their work.
 - Both validate the title, the slug and the blueprint's fields, and ignore handles the blueprint doesn't have. The slug check and the write run in one transaction (`EntryInput::write()`), locking the translations the check looks at where the database can; a slug another save took in between is refused with a validation error on `slug`, never a database error.
-- `PublishEntry` checks the draft again (the blueprint may have changed), copies it to the live version, counts the `version` up (an editor opened before the publish can't save over it unknowingly) and keeps a revision. The entry is live from its date: now when first published, the original date when published again, or the date you pass, which may be in the future.
+- `PublishEntry` checks the draft again (the blueprint may have changed), copies it to the live version, counts the `version` up (an editor opened before the publish can't save over it unknowingly) and keeps a revision. The entry is live from its date: now when first published, the original date when published again (now, for one that was scheduled for later and unpublished), or the date you pass, which may be in the future.
 - `UnpublishEntry` takes it off the site; publishing again keeps its date.
+- `ChangePublishDate::handle($translation, $date)` moves a published translation's date and leaves the draft alone: a past date keeps it live with that date, a date to come schedules it (fires `EntryUnpublished` when it leaves the site, `EntryPublished` when it goes live). In the editor of a dated collection it's the Status card's **Date** (`POST cms/entries/{entry}/date`, `published_at` and `locale`, behind `cms.entries.publish`).
 - Each fires an event (`EntryPublished`, `EntryUnpublished`, `EntryTrashed`, `EntryRestored`, `EntryDeleted`); one published for a later date is announced again when its time comes. See [Caching, events and scheduled publishing](caching.md).
 
 | On the translation | |
@@ -199,7 +201,7 @@ A slug is lowercase letters, digits and dashes. Left empty, it's made from the t
 
 ## Revisions
 
-Every publish keeps a `Revision` (title, slug, fields and who published it); the latest 50 per translation are kept (`revisions.keep`). `RestoreRevision` loads one into the draft, to publish when ready. If another entry took its slug since, the draft keeps its current slug. In the editor, **Undo the restore** puts the replaced draft back, until the session ends (`PutBackDraft`).
+Every publish keeps a `Revision` (title, slug, fields and who published it); the latest 50 per translation are kept (`revisions.keep`). `RestoreRevision` loads one into the draft, to publish when ready. If another entry took its slug since, the draft keeps its current slug. In the editor, **Undo the restore** puts the replaced draft back, until the session ends (`PutBackDraft`). The **Revisions** card shows the latest 20, each with who published it and the fields it changed from the one before, and **Compare** shows where a revision and the saved draft differ, field by field as text (`GET cms/revisions/{revision}/compare`, `sunrice.admin.cms.entries.revisions.compare`, for those who may view the entry).
 
 ## Trash
 

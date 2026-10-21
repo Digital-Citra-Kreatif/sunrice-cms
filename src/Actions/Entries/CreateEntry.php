@@ -15,8 +15,9 @@ use Sunrice\Cms\Support\Seo;
 
 /**
  * Creates an entry as a draft. Input: title, slug (made from the title
- * when empty), data (the blueprint's fields) and locale (the main
- * language when left out). The signed-in user is its author.
+ * when empty), data (the blueprint's fields), locale (the main language
+ * when left out) and parent_id (in a hierarchical collection; see
+ * SaveEntrySettings::parent()). The signed-in user is its author.
  *
  * @api
  */
@@ -48,7 +49,12 @@ final class CreateEntry
                 $values['data'][Seo::KEY] = $seo;
             }
             $id = Auth::id();
-            $entry = Entry::query()->create(['collection_id' => $collection->id, 'author_id' => is_int($id) ? $id : null, 'sort_order' => MoveEntry::last($collection->id)]);
+            $entry = new Entry(['collection_id' => $collection->id, 'author_id' => is_int($id) ? $id : null, 'sort_order' => MoveEntry::last($collection->id)]);
+            if (($input['parent_id'] ?? null) !== null) {
+                $entry->setRelation('collection', $collection);
+                $entry->parent_id = SaveEntrySettings::parent($entry, $input['parent_id'])?->id;
+            }
+            $entry->save();
 
             return $entry->translations()->create([
                 'collection_id' => $collection->id,

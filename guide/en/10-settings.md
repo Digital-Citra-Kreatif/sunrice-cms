@@ -6,7 +6,7 @@ Settings are live as soon as you click **Save**.
 
 ## Site
 
-- **Homepage**: the entry shown at the website's address (`/`), in each language it's published in. Its own address redirects there.
+- **Homepage**: the page shown at the website's address (`/`), in each language it's published in; type to search the live pages. Its own address redirects there. Editors can also press **Make this the homepage** in a live page's Status card.
 
 **Search and sharing**, for pages that don't set their own (see [SEO](guide:website/seo)):
 

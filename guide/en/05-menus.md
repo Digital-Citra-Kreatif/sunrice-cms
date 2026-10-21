@@ -20,7 +20,7 @@ The buttons above the list add a link to:
 - **Label**: the text shown, per language. For entries, terms and listing pages it's optional (the title is used); a **Link** needs a label in the main language, and other languages use it when they have none.
 - **New tab**: opens the link in a new browser tab. Keep it for links to other websites.
 - Drag a link by its handle to change its place among the links at its level (or use the keyboard: focus the handle, press Space, move with the arrow keys, press Space again).
-- **In a level** puts a link under the one above it (a sub-menu); **Out a level** brings it back. Menus go three levels deep.
+- **In a level** puts a link under the one above it (a sub-menu); **Out a level** takes it (with what's under it) out of its sub-menu, placing it right after the sub-menu; the other links stay where they are. Menus go three levels deep.
 - **Remove, with what's under it** deletes the link and its sub-links.
 
 Links to entries that aren't on the website (drafts, scheduled, in the trash) are marked **Not on the site**: they stay in the menu, but visitors don't see them until the entry is live.

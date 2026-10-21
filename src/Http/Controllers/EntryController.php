@@ -4,16 +4,20 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Http\Controllers;
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Sunrice\Admin\Preferences\Preferences;
+use Sunrice\Cms\Actions\Entries\ChangePublishDate;
 use Sunrice\Cms\Actions\Entries\CreateEntry;
 use Sunrice\Cms\Actions\Entries\CreateTranslation;
 use Sunrice\Cms\Actions\Entries\DeleteTranslation;
@@ -22,9 +26,12 @@ use Sunrice\Cms\Actions\Entries\PublishEntry;
 use Sunrice\Cms\Actions\Entries\RestoreEntry;
 use Sunrice\Cms\Actions\Entries\RestoreRevision;
 use Sunrice\Cms\Actions\Entries\SaveDraft;
+use Sunrice\Cms\Actions\Entries\SaveEntrySettings;
+use Sunrice\Cms\Actions\Entries\SetHomepage;
 use Sunrice\Cms\Actions\Entries\TrashEntry;
 use Sunrice\Cms\Actions\Entries\UnpublishEntry;
 use Sunrice\Cms\Admin\EntryList;
+use Sunrice\Cms\Admin\RevisionList;
 use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Fields\Types\TermsField;
 use Sunrice\Cms\Models\Blueprint;
@@ -35,6 +42,7 @@ use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Revision;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
+use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\References;
@@ -90,8 +98,13 @@ final class EntryController
     }
 
     /**
-     * For the entries field's picker: entries by id (in that order), or a
-     * search of titles, within some collections. Main-language titles.
+     * For entries fields, the parent and menu links: some entries by id
+     * ("ids"), or the 20 most recently edited, or a search of titles,
+     * within some collections. Main-language titles: the draft's of the
+     * collections the user may view; of collections that the entries
+     * fields of their own collections link to (linkable()) and that are
+     * asked for, live entries only, with their live titles. "unavailable": the asked-for
+     * collections they can't pick from, by title.
      */
     public function picker(Request $request): JsonResponse
     {
@@ -103,28 +116,85 @@ final class EntryController
             'collections' => ['nullable', 'array', 'max:50'],
             'collections.*' => ['string'],
         ]);
+        $asked = $input['collections'] ?? [];
+        $viewable = Access::collections($request->user());
+        // Only for fields that name their collections (not the command palette, whose results open the editor).
+        $linkable = Collection::query()->whereIn('handle', $asked === [] ? [] : array_diff(array_intersect($asked, self::linkable($request->user())), self::handles($viewable)))->get();
         $query = EntryTranslation::query()
             ->with('entry.collection')
             ->where('locale', Locales::default())
-            ->whereIn('collection_id', Access::collections($request->user())->pluck('id'))
+            ->where(fn ($q) => $q->whereIn('collection_id', $viewable->pluck('id'))
+                ->orWhere(fn ($live) => $live->whereIn('collection_id', $linkable->pluck('id'))
+                    ->where('status', EntryTranslation::PUBLISHED)->where('published_at', '<=', now())))
             ->whereHas('entry', fn ($entry) => $entry->withoutTrashed()->whereHas('collection', fn ($collection) => $collection->withoutTrashed()
-                ->when(($input['collections'] ?? []) !== [], fn ($c) => $c->whereIn('handle', $input['collections'] ?? []))));
+                ->when($asked !== [], fn ($c) => $c->whereIn('handle', $asked))));
 
         if (isset($input['ids'])) {
             $found = $query->whereIn('entry_id', $input['ids'])->get()->keyBy('entry_id');
             $items = array_values(array_filter(array_map(fn (int $id): ?EntryTranslation => $found->get($id), $input['ids'])));
         } else {
-            $search = trim($input['search'] ?? '');
-            $items = $query->when($search !== '', fn ($q) => $q->whereLike('draft_title', '%'.addcslashes($search, '%_\\').'%'))
+            $search = '%'.addcslashes(trim($input['search'] ?? ''), '%_\\').'%';
+            $items = $query->when(trim($input['search'] ?? '') !== '', fn ($q) => $q->where(fn ($q) => $q
+                ->where(fn ($own) => $own->whereIn('collection_id', $viewable->pluck('id'))->whereLike('draft_title', $search))
+                ->orWhere(fn ($live) => $live->whereIn('collection_id', $linkable->pluck('id'))->whereLike('title', $search))))
                 ->orderByDesc('updated_at')->limit(20)->get()->all();
         }
+        $own = $viewable->pluck('id')->all();
+        $pickable = [...self::handles($viewable), ...self::handles($linkable)];
 
-        return response()->json(['items' => array_map(fn (EntryTranslation $translation): array => [
-            'id' => $translation->entry_id,
-            'title' => $translation->draft_title,
-            'collection' => $translation->entry->collection->title,
-            'status' => $translation->status(),
-        ], $items)]);
+        return response()->json([
+            'items' => array_map(fn (EntryTranslation $translation): array => [
+                'id' => $translation->entry_id,
+                'title' => in_array($translation->collection_id, $own, true) ? $translation->draft_title : (string) $translation->title,
+                'collection' => $translation->entry->collection->title,
+                'status' => $translation->status(),
+            ], $items),
+            'unavailable' => $asked === [] ? [] : Collection::query()->whereIn('handle', array_diff($asked, $pickable))->orderBy('title')->pluck('title')->all(),
+        ]);
+    }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Collection<int, Collection>  $collections
+     * @return list<string>
+     */
+    private static function handles(\Illuminate\Database\Eloquent\Collection $collections): array
+    {
+        return array_values(array_map(fn (Collection $collection): string => $collection->handle, $collections->all()));
+    }
+
+    /**
+     * The collections the entries fields of a user's own collections (those
+     * they may create or edit entries in, any of their blueprints, in
+     * groups, repeaters and blocks too) link to, by handle.
+     *
+     * @return list<string>
+     */
+    private static function linkable(mixed $user): array
+    {
+        $handles = [];
+        $collect = function (array $fields) use (&$collect, &$handles): void {
+            foreach ($fields as $field) {
+                if (! is_array($field)) {
+                    continue;
+                }
+                if (($field['type'] ?? null) === 'entries' && is_array($field['collections'] ?? null)) {
+                    array_push($handles, ...array_filter($field['collections'], is_string(...)));
+                }
+                foreach (['fields', 'blocks'] as $key) {
+                    if (is_array($field[$key] ?? null)) {
+                        $collect($field[$key]);
+                    }
+                }
+            }
+        };
+        $own = $user instanceof Authorizable ? Access::collections($user, 'create')->merge(Access::collections($user, 'update'))->unique('id') : [];
+        foreach ($own as $collection) {
+            foreach ($collection->allSchemas() as $schema) {
+                $collect($schema->toAdmin());
+            }
+        }
+
+        return array_values(array_unique($handles));
     }
 
     /**
@@ -168,7 +238,7 @@ final class EntryController
 
     public function store(Request $request, Collection $collection, CreateEntry $create): RedirectResponse
     {
-        $translation = $create->handle($collection, $request->only(['title', 'slug', 'data', 'seo']));
+        $translation = $create->handle($collection, $request->only(['title', 'slug', 'data', 'seo', 'parent_id']));
 
         return redirect()->route('sunrice.admin.cms.entries.edit', $translation->entry_id)->with('success', "\"{$translation->draft_title}\" created as a draft.");
     }
@@ -207,12 +277,14 @@ final class EntryController
             'settings' => ['parentId' => $entry->parent_id, 'template' => $entry->template, 'commentsClosed' => $entry->comments_closed, 'blueprint' => $entry->blueprintHandle()],
             // The blueprints it may use, when there's a choice (Page settings).
             'blueprints' => self::blueprints($collection),
+            // Whether it's the site's homepage, and whether this user may make it so (a page of a collection with a URL).
+            'homepage' => [
+                'is' => app(SiteSettings::class)->homepage === $entry->id,
+                'can' => $collection->route !== null && ($request->user()?->can('cms.homepage') ?? false),
+            ],
             // Loaded after the page shows (Inertia's deferred props): the sidebar's lists.
-            'revisions' => Inertia::defer(fn (): array => $translation->revisions()->limit(20)->get()->map(fn (Revision $revision): array => [
-                'id' => $revision->id,
-                'title' => $revision->title,
-                'createdAt' => $revision->created_at?->toIso8601String(),
-            ])->all()),
+            // Who published each and what it changed from the one before.
+            'revisions' => Inertia::defer(fn (): array => RevisionList::summaries($translation)),
             'comments' => $collection->comments && ($request->user()?->can('cms.comments.view') ?? false)
                 ? Inertia::defer(fn (): array => self::comments($entry, $request))
                 : null,
@@ -264,8 +336,12 @@ final class EntryController
         ];
     }
 
-    /** Saves the draft; with "publish", publishes it too (needs cms.entries.publish). */
-    public function update(Request $request, Entry $entry, SaveDraft $save, PublishEntry $publish): RedirectResponse
+    /**
+     * Saves the draft with the page settings given (parent_id, template,
+     * comments_closed), all or nothing; with "publish", publishes it too
+     * (needs cms.entries.publish).
+     */
+    public function update(Request $request, Entry $entry, SaveDraft $save, PublishEntry $publish, SaveEntrySettings $settings): RedirectResponse
     {
         $publishing = $request->boolean('publish');
         if ($publishing) {
@@ -273,7 +349,11 @@ final class EntryController
             abort_unless(Access::entries($request->user(), 'publish', $entry->collection), 403);
         }
         $publishAt = $publishing ? self::publishAt($request) : null;
-        $translation = $save->handle(self::translation($entry, $request->input('locale')), $request->only(['title', 'slug', 'data', 'seo', 'version']));
+        $translation = DB::transaction(function () use ($request, $entry, $save, $settings): EntryTranslation {
+            EntryManageController::saveSettings($request, $entry, $settings);
+
+            return $save->handle(self::translation($entry, $request->input('locale')), $request->only(['title', 'slug', 'data', 'seo', 'version']));
+        });
         if ($publishing) {
             $publish->handle($translation, $publishAt);
 
@@ -288,6 +368,23 @@ final class EntryController
         $translation = $publish->handle(self::translation($entry, $request->input('locale')), self::publishAt($request));
 
         return back()->with('success', self::published($translation));
+    }
+
+    /** The entry as the site's homepage (cms.homepage). */
+    public function homepage(Entry $entry, SetHomepage $set): RedirectResponse
+    {
+        $set->handle($entry);
+
+        return back()->with('success', 'It\'s the homepage now.');
+    }
+
+    /** A published entry's date, moved ("published_at"), its draft left alone. */
+    public function date(Request $request, Entry $entry, ChangePublishDate $change): RedirectResponse
+    {
+        $date = self::publishAt($request) ?? throw ValidationException::withMessages(['published_at' => 'Choose a date and time.']);
+        $translation = $change->handle(self::translation($entry, $request->input('locale')), $date);
+
+        return back()->with('success', $translation->isLive() ? 'Date changed.' : 'Scheduled for '.$translation->published_at?->toDayDateTimeString().'.');
     }
 
     public function unpublish(Request $request, Entry $entry, UnpublishEntry $unpublish): RedirectResponse
@@ -345,6 +442,12 @@ final class EntryController
         $delete->handle($entry->translation($locale) ?? abort(404));
 
         return redirect()->route('sunrice.admin.cms.entries.edit', $entry->id)->with('success', 'The translation was removed.');
+    }
+
+    /** A revision compared with the draft: the fields that differ, as text. */
+    public function compareRevision(Revision $revision): JsonResponse
+    {
+        return response()->json(['fields' => RevisionList::compare($revision)]);
     }
 
     public function restoreRevision(Request $request, Revision $revision, RestoreRevision $restore): RedirectResponse

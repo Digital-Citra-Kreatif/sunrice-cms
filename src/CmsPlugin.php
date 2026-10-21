@@ -83,7 +83,7 @@ final class CmsPlugin extends BasePlugin
         // Each permission for one collection, taxonomy or form too (see Support\Access).
         $panel->permissionsUsing(fn (): array => Support\ScopedPermissions::all());
         // sunrice:roles: people who write and look after the content, not the structure or the people.
-        $panel->defaultRole('editor', [Panel::ACCESS, 'sunrice.media.*', 'cms.entries.*', 'cms.terms.*', 'cms.globals.*', 'cms.menus.*', 'cms.comments.*', 'cms.submissions.view', 'cms.submissions.export']);
+        $panel->defaultRole('editor', [Panel::ACCESS, 'sunrice.media.*', 'cms.entries.*', 'cms.terms.*', 'cms.globals.*', 'cms.menus.*', 'cms.comments.*', 'cms.submissions.view', 'cms.submissions.export', 'cms.homepage']);
         // Writes entries, publishes nothing, and edits only their own.
         $panel->defaultRole('author', [Panel::ACCESS, 'sunrice.media.view', 'sunrice.media.upload', 'cms.entries.view', 'cms.entries.create', 'cms.entries.update-own', 'cms.entries.delete-own', 'cms.entries.view-drafts']);
         // Writes the other languages of every entry.
@@ -109,6 +109,7 @@ final class CmsPlugin extends BasePlugin
             Permission::make('cms.submissions.view', 'View form submissions', 'Content'),
             Permission::make('cms.submissions.export', 'Export form submissions as CSV', 'Content'),
             Permission::make('cms.submissions.delete', 'Delete form submissions', 'Content'),
+            Permission::make('cms.homepage', 'Choose the homepage (from a live page\'s editor)', 'Content'),
             Permission::make('cms.blueprints.manage', 'Manage blueprints and fieldsets', 'Content structure'),
         );
         $panel->navigation(
@@ -185,11 +186,14 @@ final class CmsPlugin extends BasePlugin
                 Route::put('entries/{entry}', 'update')->name('update')->middleware(AuthorizeContent::class.':entries,update');
                 Route::post('entries/{entry}/publish', 'publish')->name('publish')->middleware(AuthorizeContent::class.':entries,publish');
                 Route::post('entries/{entry}/unpublish', 'unpublish')->name('unpublish')->middleware(AuthorizeContent::class.':entries,publish');
+                Route::post('entries/{entry}/homepage', 'homepage')->name('homepage')->middleware(['can:cms.homepage', AuthorizeContent::class.':entries,view']);
+                Route::post('entries/{entry}/date', 'date')->name('date')->middleware(AuthorizeContent::class.':entries,publish');
                 Route::delete('entries/{entry}', 'destroy')->name('destroy')->middleware(AuthorizeContent::class.':entries,delete');
                 Route::post('entries/{translation}/translate', 'translate')->name('translate')->middleware(AuthorizeContent::class.':entries,update');
                 Route::post('entries/{entry}/translations', 'addTranslation')->name('translations.store')->middleware(AuthorizeContent::class.':entries,create');
                 Route::delete('entries/{entry}/translations/{locale}', 'removeTranslation')->name('translations.destroy')->middleware(AuthorizeContent::class.':entries,delete');
                 Route::post('entries/{entry}/restore', 'restore')->name('restore')->middleware(AuthorizeContent::class.':entries,delete')->withTrashed();
+                Route::get('revisions/{revision}/compare', 'compareRevision')->name('revisions.compare')->middleware(AuthorizeContent::class.':entries,view');
                 Route::post('revisions/{revision}/restore', 'restoreRevision')->name('revisions.restore')->middleware(AuthorizeContent::class.':entries,update');
             });
             Route::prefix('cms')->name('cms.listings.')->controller(ListingController::class)->group(function (): void {
