@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Http\Controllers;
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -92,8 +93,13 @@ final class EntryController
     }
 
     /**
-     * For the entries field's picker: entries by id (in that order), or a
-     * search of titles, within some collections. Main-language titles.
+     * For entries fields, the parent and menu links: some entries by id
+     * ("ids"), or the 20 most recently edited, or a search of titles,
+     * within some collections. Main-language titles: the draft's of the
+     * collections the user may view; of collections that the entries
+     * fields of their own collections link to (linkable()) and that are
+     * asked for, live entries only, with their live titles. "unavailable": the asked-for
+     * collections they can't pick from, by title.
      */
     public function picker(Request $request): JsonResponse
     {
@@ -105,28 +111,75 @@ final class EntryController
             'collections' => ['nullable', 'array', 'max:50'],
             'collections.*' => ['string'],
         ]);
+        $asked = $input['collections'] ?? [];
+        $viewable = Access::collections($request->user());
+        // Only for fields that name their collections (not the command palette, whose results open the editor).
+        $linkable = Collection::query()->whereIn('handle', $asked === [] ? [] : array_diff(array_intersect($asked, self::linkable($request->user())), $viewable->pluck('handle')->all()))->get();
         $query = EntryTranslation::query()
             ->with('entry.collection')
             ->where('locale', Locales::default())
-            ->whereIn('collection_id', Access::collections($request->user())->pluck('id'))
+            ->where(fn ($q) => $q->whereIn('collection_id', $viewable->pluck('id'))
+                ->orWhere(fn ($live) => $live->whereIn('collection_id', $linkable->pluck('id'))->live()))
             ->whereHas('entry', fn ($entry) => $entry->withoutTrashed()->whereHas('collection', fn ($collection) => $collection->withoutTrashed()
-                ->when(($input['collections'] ?? []) !== [], fn ($c) => $c->whereIn('handle', $input['collections'] ?? []))));
+                ->when($asked !== [], fn ($c) => $c->whereIn('handle', $asked))));
 
         if (isset($input['ids'])) {
             $found = $query->whereIn('entry_id', $input['ids'])->get()->keyBy('entry_id');
             $items = array_values(array_filter(array_map(fn (int $id): ?EntryTranslation => $found->get($id), $input['ids'])));
         } else {
-            $search = trim($input['search'] ?? '');
-            $items = $query->when($search !== '', fn ($q) => $q->whereLike('draft_title', '%'.addcslashes($search, '%_\\').'%'))
+            $search = '%'.addcslashes(trim($input['search'] ?? ''), '%_\\').'%';
+            $items = $query->when(trim($input['search'] ?? '') !== '', fn ($q) => $q->where(fn ($q) => $q
+                ->where(fn ($own) => $own->whereIn('collection_id', $viewable->pluck('id'))->whereLike('draft_title', $search))
+                ->orWhere(fn ($live) => $live->whereIn('collection_id', $linkable->pluck('id'))->whereLike('title', $search))))
                 ->orderByDesc('updated_at')->limit(20)->get()->all();
         }
+        $own = $viewable->pluck('id')->all();
+        $pickable = [...$viewable->pluck('handle')->all(), ...$linkable->pluck('handle')->all()];
 
-        return response()->json(['items' => array_map(fn (EntryTranslation $translation): array => [
-            'id' => $translation->entry_id,
-            'title' => $translation->draft_title,
-            'collection' => $translation->entry->collection->title,
-            'status' => $translation->status(),
-        ], $items)]);
+        return response()->json([
+            'items' => array_map(fn (EntryTranslation $translation): array => [
+                'id' => $translation->entry_id,
+                'title' => in_array($translation->collection_id, $own, true) ? $translation->draft_title : (string) $translation->title,
+                'collection' => $translation->entry->collection->title,
+                'status' => $translation->status(),
+            ], $items),
+            'unavailable' => $asked === [] ? [] : Collection::query()->whereIn('handle', array_diff($asked, $pickable))->orderBy('title')->pluck('title')->all(),
+        ]);
+    }
+
+    /**
+     * The collections the entries fields of a user's own collections (those
+     * they may create or edit entries in, any of their blueprints, in
+     * groups, repeaters and blocks too) link to, by handle.
+     *
+     * @return list<string>
+     */
+    private static function linkable(mixed $user): array
+    {
+        $handles = [];
+        $collect = function (array $fields) use (&$collect, &$handles): void {
+            foreach ($fields as $field) {
+                if (! is_array($field)) {
+                    continue;
+                }
+                if (($field['type'] ?? null) === 'entries' && is_array($field['collections'] ?? null)) {
+                    array_push($handles, ...array_filter($field['collections'], is_string(...)));
+                }
+                foreach (['fields', 'blocks'] as $key) {
+                    if (is_array($field[$key] ?? null)) {
+                        $collect($field[$key]);
+                    }
+                }
+            }
+        };
+        $own = $user instanceof Authorizable ? Access::collections($user, 'create')->merge(Access::collections($user, 'update'))->unique('id') : [];
+        foreach ($own as $collection) {
+            foreach ($collection->allSchemas() as $schema) {
+                $collect($schema->toAdmin());
+            }
+        }
+
+        return array_values(array_unique($handles));
     }
 
     /**
