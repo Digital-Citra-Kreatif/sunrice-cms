@@ -12,7 +12,7 @@ Set a collection's URL under Structure → Collections: a path with `{slug}` onc
 - Only live entries have pages: published, past their date, not in the trash, of a collection not deleted. Anything else is a 404.
 - The CMS's route is the app's **fallback**: your own routes (`routes/web.php`) always come first. Turn the site off with `sunrice-cms.site.enabled` (the admin and previews keep working); its middleware is `sunrice-cms.site.middleware` (`web`).
 
-`$translation->url()` gives an entry's address (null without a route).
+`$translation->url()` gives an entry's address (null without a route). For a visitor reading another language, `Sunrice\Cms\Site\Site::urlIn($translation, $locale)` gives the page to link to: the translation's own address when it's in that language, else, for a main-language translation of an entry not live there and with the [fallback](#untranslated-pages) on, its page at that language's address (`/id/blog/hello`), else its own. `app(Site::class)->termUrlIn($termTranslation, $locale)` does the same for term pages. Entries from `Cms::entries()`, linked entries and `$entry->shownIn($locale)` already link this way.
 
 ### Untranslated pages
 
@@ -386,11 +386,13 @@ Only the filters declared are read, and only values among a filter's options (nu
 
 In the slot: `$component->entries` (a paginator of `EntryTranslation`s), `->filters` (`Filter\FilterControl`: `name`, `type`, `field`, `label`, `multiple`, `value`, `options` with `value`, `label`, `selected` (and `count`, `depth` for terms), `inputs` (input names: `['value' => 'topic[]']`, `['min' => 'price_min', 'max' => 'price_max']`), `id()`, `applied()`), `->filter('q')`, `->sorts` (`Filter\SortChoice`: `value`, `label`, `order`, `selected`) with `->sortName`, `->active` (`Filter\ActiveFilter`: `filter`, `label`, `value`, `removeUrl`), `->filtered()`, `->clearUrl()`, `->action` (this page), `->others` (the other query parameters) and `->query()` (the filtered `EntryQuery`, for a count or a map).
 
-In hierarchical collections, `$entry->entry->parent`, `->children` and `->ancestors()` (top-down) give breadcrumbs and sub-menus:
+In hierarchical collections, `$entry->entry->parent`, `->children` and `->ancestors()` (top-down) give breadcrumbs and sub-menus. `$entry->shownIn($locale)` is what a visitor reading a language sees of an entry: its live translation there, else (with the [main-language fallback](#untranslated-pages)) the main language's, whose `url()` is its page at that language's address; null when it isn't live:
 
 ```blade
 @foreach ($entry->entry->ancestors() as $ancestor)
-    <a href="{{ $ancestor->mainTranslation()?->url() }}">{{ $ancestor->mainTranslation()?->title }}</a> ›
+    @if ($crumb = $ancestor->shownIn($locale))
+        <a href="{{ $crumb->url() }}">{{ $crumb->title }}</a> ›
+    @endif
 @endforeach
 @foreach (Cms::entries('pages')->childrenOf($entry->entry)->ordered()->get() as $child)
     <a href="{{ $child->url() }}">{{ $child->title }}</a>
