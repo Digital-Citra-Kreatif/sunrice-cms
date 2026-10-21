@@ -35,6 +35,9 @@ final class SiteSettings extends Settings
     /** For pages without a description of their own. */
     public string $description = '';
 
+    /** The description in the other languages, one per line: "id: Rumah premium di Jakarta dan Bali". */
+    public string $descriptions = '';
+
     /** Between a page's title and the site's name: "About | Acme". */
     public string $separator = '|';
 
@@ -58,6 +61,22 @@ final class SiteSettings extends Settings
     /** The organization's logo (media id), for structured data. */
     public ?int $logo = null;
 
+    /** The description for a page in a language: its line in `descriptions`, else `description`. */
+    public function descriptionIn(?string $locale = null): string
+    {
+        $locale ??= Locales::current();
+        if ($locale !== Locales::default()) {
+            foreach (preg_split('/\R/', $this->descriptions) ?: [] as $line) {
+                [$code, $text] = array_pad(array_map(trim(...), explode(':', $line, 2)), 2, '');
+                if ($code === $locale && $text !== '') {
+                    return $text;
+                }
+            }
+        }
+
+        return $this->description;
+    }
+
     public static function key(): string
     {
         return 'site';
@@ -77,6 +96,9 @@ final class SiteSettings extends Settings
                 TextInput::make('name')->label('Site name')->maxLength(100)->placeholder(self::appName()),
                 TextInput::make('twitter')->label('X (Twitter) account')->maxLength(16)->placeholder('@acme')->rules(['regex:/^@?[A-Za-z0-9_]{1,15}$/']),
                 Textarea::make('description')->label('Description')->rows(2)->maxLength(500)->span(2),
+                ...(count(Locales::all()) > 1 ? [Textarea::make('descriptions')->label('Description in other languages')->rows(2)->maxLength(3000)->span(2)
+                    ->placeholder(implode("\n", array_map(fn (string $code): string => "{$code}: …", array_slice(Locales::all(), 1))))
+                    ->help('One per line, with the language\'s code: "id: Rumah premium di Jakarta dan Bali". A language left out uses the description above.')] : []),
                 TextInput::make('separator')->label('Title separator')->maxLength(5)->help('Between a page\'s title and the site name.'),
                 Toggle::make('appendName')->label('Add the site name to titles')->help('"About | Acme" in search results and tabs.'),
                 MediaPicker::make('image')->label('Share image')->images()->span(2),

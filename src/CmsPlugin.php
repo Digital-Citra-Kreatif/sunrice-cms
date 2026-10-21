@@ -85,6 +85,8 @@ final class CmsPlugin extends BasePlugin
         $panel->permissionsUsing(fn (): array => Support\ScopedPermissions::all());
         // Media files take alt text and captions in each content language.
         $panel->contentLocales(fn (): array => Locales::names());
+        // Every screen names the languages as Settings → Languages does.
+        $panel->share('cms', fn (): array => ['locales' => Locales::names()]);
         // sunrice:roles: people who write and look after the content, not the structure or the people.
         $panel->defaultRole('editor', [Panel::ACCESS, 'sunrice.media.*', 'cms.entries.*', 'cms.terms.*', 'cms.globals.*', 'cms.menus.*', 'cms.comments.*', 'cms.submissions.view', 'cms.submissions.export']);
         // Writes entries, publishes nothing, and edits only their own.

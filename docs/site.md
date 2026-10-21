@@ -23,7 +23,7 @@ An entry that isn't live in a language other than the main one (no translation t
 - menus, entry and term links (`$translation->url()` of a linked entry or a listed one, `$term->url()`) and `Cms::localeUrls()` link it in that language, so visitors stay in it;
 - listing pages, term pages, site search, `Cms::entries()` and the components (`<x-sunrice-cms::entries>`, `<x-sunrice-cms::entry-filter>`, the counts of `<x-sunrice-cms::terms>`) include it, in the main language: one row per entry, its translation where that's live, else the main language's, whose `url()` is its page at that language's address. `Cms::entries(...)->fallback(false)` keeps a query to what's translated.
 
-A translation's own slug works once it's live, and the main language's slug then no longer does in that language. Turn this off with `sunrice-cms.site.fallback` (`SUNRICE_FALLBACK=false`): untranslated pages are then 404s in other languages, lists and search show only what's translated, and menus and links go to the main language's page.
+A translation's own slug works once it's live, and the main language's slug then redirects (301) to it in that language (`/id/about` → `/id/tentang-kami`, `Site::translatedAddress()`); terms likewise. Turn this off with `sunrice-cms.site.fallback` (`SUNRICE_FALLBACK=false`): untranslated pages are then 404s in other languages, lists and search show only what's translated, and menus and links go to the main language's page.
 
 ### Related entries in the URL
 

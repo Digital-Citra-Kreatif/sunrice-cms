@@ -20,8 +20,17 @@ export function localInputValue(date: Date): string {
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-/** A language's name in the reader's language ("id" → "Indonesian"), or its code. */
+/** A language's name: as Settings → Languages names it, else in the reader's language ("id" → "Indonesian"), or its code. */
+/** The content languages' names as Settings → Languages gives them (shared with every admin page as `cms.locales`). */
+let names: Record<string, string> = {};
+
+export function setLocaleNames(next: Record<string, string> | null | undefined): void {
+    names = next ?? {};
+}
+
 export function localeName(code: string, inLocale?: string): string {
+    // The site's own name for it, so every screen says the same ("Bahasa Indonesia"), unless asked in another language.
+    if (inLocale === undefined && names[code]) return names[code];
     try {
         return new Intl.DisplayNames(inLocale ? [inLocale] : undefined, { type: 'language' }).of(code.replace('_', '-')) ?? code;
     } catch {

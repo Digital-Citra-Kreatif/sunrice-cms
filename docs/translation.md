@@ -13,7 +13,7 @@ SUNRICE_GEMINI_KEY=…                     # https://aistudio.google.com/apikey
 # SUNRICE_TRANSLATE_MODEL=gemini-2.5-pro  # default: gemini-2.5-flash, or google/gemini-2.5-flash on OpenRouter
 ```
 
-The rest is in `config/sunrice-cms.php` under `translation`: `batch_size` (texts per request, 40) and `timeout` (seconds per request, 120). Requests the service answers with a server error, or that don't reach it, are tried again (three tries); a refusal (a wrong key) isn't. Without a driver, there's no machine translation and no button for it.
+The rest is in `config/sunrice-cms.php` under `translation`: `batch_size` (texts per request, 40) and `timeout` (seconds per request, 120). Requests the service answers with a server error, or that don't reach it, are tried again (three tries); a refusal (a wrong key) isn't. Without a driver, there's no machine translation: the editor's **Translate from …** button shows switched off in other languages, saying it needs setting up.
 
 ## What is translated
 

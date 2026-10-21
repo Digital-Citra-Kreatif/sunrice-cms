@@ -8,6 +8,8 @@ php artisan vendor:publish --tag=sunrice-cms-config
 
 What editors change in the panel (the homepage, site name and SEO defaults, languages, site code, comments) is in **Settings**: Settings → Site, Languages, Site code and Comments override or complete what's here where they overlap (the languages, `noindex`). The panel's own file is described in [the panel's configuration](../../admin/docs/configuration.md).
 
+**Times** (comments' and submissions' dates, publish dates, scheduled publishing) are in the app's time zone, Laravel's `app.timezone` (`APP_TIMEZONE`, UTC unless set): a site for Indonesia sets `APP_TIMEZONE=Asia/Jakarta` so a comment posted at 17:55 WIB reads 17:55, not 10:55. The panel shows dates in each editor's own time zone.
+
 A dash in the *Env* column means the key has no environment variable: change it in the published file.
 
 ## Languages

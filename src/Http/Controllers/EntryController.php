@@ -227,6 +227,8 @@ final class EntryController
             'undoRestore' => $request->session()->has(EntryManageController::undoKey($translation)) ? $translation->id : null,
             // "Translate from …": another language, with machine translation set up.
             'machineTranslate' => ! $translation->isMain() && app(TranslatorFactory::class)->configured() ? $translation->id : null,
+            // Another language without it set up: say it exists, and what it needs.
+            'machineTranslateMissing' => ! $translation->isMain() && ! app(TranslatorFactory::class)->configured(),
             'can' => self::can($request, $collection, $entry, $translation->locale),
         ]);
     }

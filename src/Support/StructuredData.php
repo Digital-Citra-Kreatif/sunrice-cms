@@ -50,8 +50,8 @@ final class StructuredData
             $publisher['logo'] = ['@type' => 'ImageObject', 'url' => $logo];
         }
         $website = ['@type' => 'WebSite', '@id' => url('/').'#website', 'url' => $home, 'name' => $site->name(), 'inLanguage' => self::language($locale), 'publisher' => ['@id' => $publisher['@id']]];
-        if (trim($site->description) !== '') {
-            $website['description'] = Str::squish($site->description);
+        if (trim($site->descriptionIn($locale)) !== '') {
+            $website['description'] = Str::squish($site->descriptionIn($locale));
         }
         if (Search::enabled()) {
             $website['potentialAction'] = ['@type' => 'SearchAction', 'target' => ['@type' => 'EntryPoint', 'urlTemplate' => Search::url($locale).'?'.Search::NAME.'={search_term_string}'], 'query-input' => 'required name=search_term_string'];

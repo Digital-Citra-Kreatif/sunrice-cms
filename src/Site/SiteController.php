@@ -60,6 +60,10 @@ final class SiteController
         }
         if ($translation === null) {
             $redirect = $site->redirect($request->path());
+            if ($redirect === null && ($own = $site->translatedAddress($request->path())) !== null) {
+                // The main language's slug in a language the page has its own address in.
+                return redirect()->to(self::withQuery($own, $request), 301);
+            }
             abort_if($redirect === null, 404);
 
             return redirect()->to(self::withQuery($redirect->to_url, $request), $redirect->status);

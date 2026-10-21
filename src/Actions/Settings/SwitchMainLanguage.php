@@ -38,9 +38,9 @@ use Throwable;
  * - Entries and terms without the new main language stop the switch,
  *   unless `$copyMissing`: they get a copy of the old main language.
  * - Menu labels the new main language left empty take the old one's.
- * - Collections' and taxonomies' titles and forms' thank-you messages
- *   in the new main language become their own, and the old ones become
- *   the old main language's translations.
+ * - Collections' and taxonomies' titles, forms' thank-you messages and
+ *   the site's description in the new main language become their own,
+ *   and the old ones the old main language's translations.
  * - Addresses: the new main language's lose their prefix (/id/about →
  *   /about) and the old one's get it (/about → /en/about). Redirects are
  *   rewritten to match, and the old main language's pages redirect from
@@ -295,9 +295,26 @@ final class SwitchMainLanguage
         return $count;
     }
 
-    /** Titles and thank-you messages: the new main language's become the attribute, the old one's its translation. */
+    /** Titles, thank-you messages and the site's description: the new main language's become the text itself, the old one's its translation. */
     private function texts(string $from, string $to): void
     {
+        $site = app(SiteSettings::class);
+        $new = null;
+        $lines = [];
+        foreach (preg_split('/\R/', $site->descriptions) ?: [] as $line) {
+            [$code, $text] = array_pad(array_map(trim(...), explode(':', $line, 2)), 2, '');
+            if ($code === $to && $text !== '') {
+                $new = $text;
+            } elseif ($code !== '' && $text !== '') {
+                $lines[] = "{$code}: {$text}";
+            }
+        }
+        if ($new !== null) {
+            if (trim($site->description) !== '') {
+                $lines[] = "{$from}: ".trim($site->description);
+            }
+            $this->settings->handle($site, ['description' => $new, 'descriptions' => implode("\n", $lines)]);
+        }
         foreach ([[Collection::query()->withTrashed(), 'title'], [Taxonomy::query()->withTrashed(), 'title'], [Form::query(), 'message']] as [$query, $attribute]) {
             foreach ($query->whereNotNull('translations')->get() as $record) {
                 $translations = is_array($record->translations) ? $record->translations : [];

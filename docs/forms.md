@@ -113,7 +113,7 @@ Visitors go back to the page they were on, or to the form's **After sending, go 
 
 ## Submissions
 
-Under **Content → Submissions** (`cms.submissions.view`): each form's submissions, newest first; open one to read all of it, with who sent it (IP address, browser and the page it was sent from). **Export CSV** (`cms.submissions.export`, or `cms.submissions.{form}.export`) downloads them all, a column per field, then `IP address`, `User agent` and `Referrer`, with values spreadsheets would run as formulas escaped. Exports are recorded in the security log. `cms.submissions.delete` deletes them for good.
+Under **Content → Submissions** (`cms.submissions.view`): each form's submissions, newest first (the CSV's and the emails' dates in the app's time zone, `APP_TIMEZONE`); open one to read all of it, with who sent it (IP address, browser and the page it was sent from). **Export CSV** (`cms.submissions.export`, or `cms.submissions.{form}.export`) downloads them all, a column per field, then `IP address`, `User agent` and `Referrer`, with values spreadsheets would run as formulas escaped. Exports are recorded in the security log. `cms.submissions.delete` deletes them for good.
 
 The notification email lists the fields with their labels. It goes to the form's addresses and to everyone with one of its roles, one email each (an address that's both gets one). It's queued, so it's sent by your queue worker when the app has a queue, and right away when it doesn't.
 

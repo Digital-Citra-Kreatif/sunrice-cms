@@ -284,7 +284,7 @@ final class EntryFilter extends Component
                     foreach ($filter->inputs as $key => $input) {
                         $value = is_array($filter->value) ? ($filter->value[$key] ?? null) : null;
                         if (is_string($value)) {
-                            $active[] = new ActiveFilter($filter->name, $filter->label, __($key).' '.$value, $this->url(Arr::except($query, [$input])));
+                            $active[] = new ActiveFilter($filter->name, $filter->label, mb_strtolower(__('sunrice-cms::site.filter.'.$key)).' '.$value, $this->url(Arr::except($query, [$input])));
                         }
                     }
                     break;

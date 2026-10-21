@@ -244,7 +244,8 @@ final class Seo
     {
         $site = app(SiteSettings::class);
         $imageId = is_int($seo['image'] ?? null) ? $seo['image'] : $site->image;
-        $description = is_string($seo['description'] ?? null) ? $seo['description'] : (trim($site->description) !== '' ? Str::squish($site->description) : null);
+        $siteDescription = $site->descriptionIn($locale);
+        $description = is_string($seo['description'] ?? null) ? $seo['description'] : (trim($siteDescription) !== '' ? Str::squish($siteDescription) : null);
         $own = is_string($seo['canonical'] ?? null) && SafeUrl::isSafe($seo['canonical']) ? $seo['canonical'] : null;
 
         return [

@@ -57,6 +57,8 @@ interface Props {
     undoRestore?: number | null;
     /** This translation's id when it can be machine-translated from the main language ("Translate from …"). */
     machineTranslate?: number | null;
+    /** Another language, without machine translation set up: the button shows, off, saying what it needs. */
+    machineTranslateMissing?: boolean;
     can: { create: boolean; update: boolean; publish: boolean; delete: boolean };
 }
 
@@ -88,7 +90,7 @@ export default function EntryEditorPage(props: Props) {
     return <EntryEditor key={entry ? `${entry.id}:${entry.locale}:${entry.version}:${entry.status}:${entry.trashed}:${entry.publishedAt}` : 'new'} {...props} />;
 }
 
-function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, comments, termLabels, usedBy = [], undoRestore = null, machineTranslate = null, settings, blueprints = [], can }: Props) {
+function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, comments, termLabels, usedBy = [], undoRestore = null, machineTranslate = null, machineTranslateMissing = false, settings, blueprints = [], can }: Props) {
     const list = adminUrl(`cms/collections/${collection.handle}/entries`);
     const url = entry ? adminUrl(`cms/entries/${entry.id}`) : list;
     const heading = entry ? values.title : 'New entry';
@@ -191,6 +193,14 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                                 onClick={() => router.post(adminUrl(`cms/entries/${machineTranslate}/translate`), { version: entry.version }, { preserveScroll: true })}>
                                 <Languages /> Translate from {locales.find((l) => l.main)?.name ?? (mainLocale ? localeName(mainLocale) : 'the main language')}
                             </Button>
+                        )}
+                        {entry && writable && machineTranslateMissing && (
+                            <span title="Machine translation isn't set up on this site: ask your developer (SUNRICE_TRANSLATE_DRIVER, see Help → Developer docs → Machine translation).">
+                                <Button type="button" variant="outline" disabled aria-describedby="machine-translate-missing">
+                                    <Languages /> Translate from {locales.find((l) => l.main)?.name ?? (mainLocale ? localeName(mainLocale) : 'the main language')}
+                                </Button>
+                                <span id="machine-translate-missing" className="cms:sr-only">Machine translation isn't set up on this site: ask your developer.</span>
+                            </span>
                         )}
                         {writable && (
                             <Button type="submit" variant={entry && can.publish ? 'outline' : 'default'} disabled={form.processing}>
