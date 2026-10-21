@@ -17,7 +17,7 @@ Di dasbor, **Menyiapkan situs** menampilkan apa yang masih kurang.
 
 ### Handle
 
-**Handle** (milik field, koleksi, taksonomi…) adalah nama yang dipakai template: huruf kecil, angka, dan garis bawah, diawali huruf. `contact_person` bisa; `contact-person` (tanda hubung) dan `ContactPerson` tidak. Panel membuatnya dari judul atau label saat Anda mengetik.
+**Handle** (milik field, koleksi, taksonomi…) adalah nama yang dipakai template: huruf kecil, angka, dan garis bawah, diawali huruf. `contact_person` bisa; `contact-person` (tanda hubung) dan `ContactPerson` tidak. Panel membuatnya dari judul atau label saat Anda mengetik. Di bawahnya, baris **Untuk developer** menunjukkan cara template memakainya, dengan handle yang Anda ketik (seperti `<x-sunrice-cms::form handle="newsletter" />` untuk formulir): teruskan ke developer Anda.
 
 Setiap entri sudah memiliki yang berikut, jadi tidak ada field yang boleh memakainya sebagai handle: `id`, `title`, `slug`, `url`, `status`, `locale`, `published_at`, `created_at`, `updated_at`, `parent`, `children`, `collection`, `blueprint`, `data`, `seo`, `author`.
 

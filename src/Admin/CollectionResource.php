@@ -57,7 +57,7 @@ final class CollectionResource extends Resource
         return $form->schema([
             Section::make('General')->columns(2)->schema([
                 TextInput::make('title')->required(),
-                ...HandleField::make('collection', 'Used in templates and code, like "articles".'),
+                ...HandleField::make('collection', 'A short name for this collection, used by the site\'s templates.'),
                 ...TranslatedFields::make('title', fn (string $name, string $language) => TextInput::make($name)->label(__('Title in :language', ['language' => $language]))->maxLength(255)
                     ->placeholder('As the title')->help(__('What visitors read in :language: the listing page, breadcrumbs, menus.', ['language' => $language]))),
                 Select::make('blueprint')->verbatim()->options(BlueprintChoices::options(BlueprintChoices::CONTENT))

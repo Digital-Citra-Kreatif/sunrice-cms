@@ -947,5 +947,21 @@
     "Advanced": "Lanjutan",
     "No limit": "Tanpa batas",
     "Several choices": "Beberapa pilihan",
-    "Up to 20.": "Paling banyak 20."
+    "Up to 20.": "Paling banyak 20.",
+    "A short name for this menu, used by the site's templates.": "Nama singkat menu ini, dipakai oleh template situs.",
+    "A short name for this form, used by the site's templates.": "Nama singkat formulir ini, dipakai oleh template situs.",
+    "A short name for this taxonomy, used by the site's templates.": "Nama singkat taksonomi ini, dipakai oleh template situs.",
+    "A short name for this global set, used by the site's templates.": "Nama singkat set global ini, dipakai oleh template situs.",
+    "A short name for this collection, used by the site's templates.": "Nama singkat koleksi ini, dipakai oleh template situs.",
+    "In templates and code: `Cms::entries(':value')`, templates `cms/:value.blade.php`.": "Di template dan kode: `Cms::entries(':value')`, template `cms/:value.blade.php`.",
+    "In templates: `<x-sunrice-cms::terms taxonomy=\":value\" />`, in code `whereTerm(':value', …)`.": "Di template: `<x-sunrice-cms::terms taxonomy=\":value\" />`, di kode `whereTerm(':value', …)`.",
+    "In a template: `<x-sunrice-cms::form handle=\":value\" />`": "Di template: `<x-sunrice-cms::form handle=\":value\" />`",
+    "In templates and code: `Cms::global(':value')`": "Di template dan kode: `Cms::global(':value')`",
+    "In templates and code: `Cms::menu(':value')`": "Di template dan kode: `Cms::menu(':value')`",
+    "A short name for this fieldset, set when it was created: flexible blocks keep it with what they hold.": "Nama singkat fieldset ini, ditetapkan saat dibuat: blok fleksibel menyimpannya bersama isinya.",
+    "A short name for this fieldset. It can't change later: flexible blocks keep it with what they hold.": "Nama singkat fieldset ini. Tidak bisa diubah nanti: blok fleksibel menyimpannya bersama isinya.",
+    "A short name for this blueprint. Changing it updates the collections, taxonomies, global sets, forms and entries that use it.": "Nama singkat blueprint ini. Mengubahnya memperbarui koleksi, taksonomi, set global, formulir, dan entri yang memakainya.",
+    "A short name for this blueprint, used by the collections, taxonomies, global sets and forms that pick it.": "Nama singkat blueprint ini, dipakai oleh koleksi, taksonomi, set global, dan formulir yang memilihnya.",
+    "In a blueprint definition:": "Di definisi blueprint:",
+    "In code:": "Di kode:"
 }

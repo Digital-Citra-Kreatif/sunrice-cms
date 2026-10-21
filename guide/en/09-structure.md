@@ -17,7 +17,7 @@ On the dashboard, **Getting the site ready** lists what's still missing.
 
 ### Handles
 
-A **handle** (of a field, a collection, a taxonomy…) is how templates name it: lowercase letters, digits and underscores, starting with a letter. `contact_person` works; `contact-person` (a hyphen) and `ContactPerson` don't. The panel makes one from the title or label as you type.
+A **handle** (of a field, a collection, a taxonomy…) is how templates name it: lowercase letters, digits and underscores, starting with a letter. `contact_person` works; `contact-person` (a hyphen) and `ContactPerson` don't. The panel makes one from the title or label as you type. Under it, a line **For developers** shows how templates use it, with the handle you typed (like `<x-sunrice-cms::form handle="newsletter" />` for a form): pass it on to your developer.
 
 Every entry has these already, so no field may use them as its handle: `id`, `title`, `slug`, `url`, `status`, `locale`, `published_at`, `created_at`, `updated_at`, `parent`, `children`, `collection`, `blueprint`, `data`, `seo`, `author`.
 
