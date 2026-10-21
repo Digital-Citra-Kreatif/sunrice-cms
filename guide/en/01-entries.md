@@ -57,7 +57,7 @@ The **Status** card on the right says whether the entry is a draft, scheduled or
 
 ## Seeing your work on the website
 
-- **Preview** opens the saved draft as it will look on the website, in a new tab. Save first: the preview shows what's saved, not what's on your screen. The preview link works for 30 minutes, and anyone you send it to can open it in that time.
+- **Preview** opens the saved draft as it will look on the website, in a new tab. Save first: the preview shows what's saved, not what's on your screen. The preview link works for 30 minutes, and anyone you send it to can open it in that time; a dark ribbon at the top says it's a preview. Collections whose entries have no page of their own (testimonials, say) have no Preview.
 - **View** opens the live page.
 - If your role may see drafts on the site, live pages with unpublished changes show you a small banner while you're signed in, with **View draft**. Visitors never see it.
 

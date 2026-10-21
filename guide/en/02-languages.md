@@ -34,7 +34,7 @@ When an entry has no live translation in a language, visitors to that language u
 
 ## The entries list and languages
 
-The list's **Language** menu shows the titles and statuses of one language. Entries without a translation in that language aren't listed there; switch to the main language to find them. With the **Status** column, each entry also shows a small badge per other language; an outdated translation's badge is outlined in amber.
+The list's **Language** menu shows the titles and statuses of one language. Entries without a translation in that language aren't listed there; switch to the main language to find them. With the **Status** column, each entry also shows a small badge per other language: the language code alone when that translation is published and current, else with a word beside it (**draft**, **scheduled**, **outdated** in amber, or **missing** with a dashed border).
 
 ## Keeping translations up to date
 

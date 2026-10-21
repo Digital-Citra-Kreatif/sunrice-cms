@@ -18,6 +18,26 @@ export function dateValueFromInput(input: string): string | null {
     return input === '' ? null : input;
 }
 
+/** A long number grouped for reading ("18,500,000,000"), or null below 10,000 and for anything else. */
+export function groupedNumber(value: unknown): string | null {
+    const number = typeof value === 'number' ? value : typeof value === 'string' && value.trim() !== '' ? Number(value) : NaN;
+    if (!Number.isFinite(number) || Math.abs(number) < 10000) return null;
+
+    return new Intl.NumberFormat('en', { maximumFractionDigits: 20 }).format(number);
+}
+
+/**
+ * Whether a single select offers its own "None": not for a required field,
+ * not when an option already means none (its own "None"), and not beside
+ * a default unless the value is empty already (an older entry).
+ */
+export function offersEmptyChoice(options: readonly { value: string; label: string }[], required: boolean, hasDefault: boolean, filled: boolean): boolean {
+    if (required) return false;
+    if (options.some((option) => ['none', ''].includes(option.label.trim().toLowerCase()) || option.value.trim().toLowerCase() === 'none')) return false;
+
+    return !hasDefault || !filled;
+}
+
 /** A new repeater row: the server gives it its stable id. */
 export function newRow(): Record<string, unknown> {
     return { _hidden: false };

@@ -34,7 +34,7 @@ Jika sebuah entri belum memiliki terjemahan yang tayang dalam suatu bahasa, peng
 
 ## Daftar entri dan bahasa
 
-Menu **Language** di daftar menampilkan judul dan status dalam satu bahasa. Entri yang belum punya terjemahan dalam bahasa itu tidak tercantum; beralihlah ke bahasa utama untuk menemukannya. Dengan kolom **Status**, setiap entri juga menampilkan lencana kecil untuk tiap bahasa lain; lencana terjemahan yang usang diberi garis jingga.
+Menu **Language** di daftar menampilkan judul dan status dalam satu bahasa. Entri yang belum punya terjemahan dalam bahasa itu tidak tercantum; beralihlah ke bahasa utama untuk menemukannya. Dengan kolom **Status**, setiap entri juga menampilkan lencana kecil untuk tiap bahasa lain: kode bahasa saja bila terjemahannya terbit dan mutakhir, selain itu dengan kata di sampingnya (**draft**, **scheduled**, **outdated** berwarna jingga, atau **missing** dengan garis putus-putus).
 
 ## Menjaga terjemahan tetap mutakhir
 

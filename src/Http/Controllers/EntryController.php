@@ -491,7 +491,9 @@ final class EntryController
     private static function collection(Collection $collection): array
     {
         return ['handle' => $collection->handle, 'title' => $collection->title, 'dated' => $collection->dated, 'hierarchical' => $collection->hierarchical, 'comments' => $collection->comments,
-            'ordered' => $collection->ordered, 'listing' => $collection->listing_route !== null];
+            'ordered' => $collection->ordered, 'listing' => $collection->listing_route !== null,
+            // Its entries have pages on the site (a route), so a preview shows something.
+            'pages' => $collection->route !== null];
     }
 
     /**

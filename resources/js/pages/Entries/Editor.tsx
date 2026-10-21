@@ -19,7 +19,7 @@ import { type EntryLocale, type EntryStatus, formatDate, localeName, localInputV
 import type { FieldDefinition } from '@/types.ts';
 
 interface Props {
-    collection: { handle: string; title: string; dated: boolean; hierarchical?: boolean; ordered?: boolean; comments?: boolean };
+    collection: { handle: string; title: string; dated: boolean; hierarchical?: boolean; ordered?: boolean; comments?: boolean; pages?: boolean };
     /** Every language's: the parent entry and the entry's own Blade view. */
     settings?: { parentId: number | null; template: string | null; commentsClosed?: boolean; blueprint?: string | null };
     /** The blueprints the entry may use, when its collection offers more than one. */
@@ -68,7 +68,7 @@ interface Props {
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FieldValues = Record<string, any>;
-type UsedBy = { label: string; url: string | null; field: string };
+type UsedBy = { label: string; url: string | null; field: string; fieldLabel?: string };
 
 /** " It's used by A; B." for confirmations, or nothing. */
 function usedBySentence(usedBy: UsedBy[]): string {
@@ -168,7 +168,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                 back={{ href: list, label: `Back to ${collection.title}` }}
                 actions={
                     <>
-                        {entry && !entry.trashed && (
+                        {entry && !entry.trashed && collection.pages !== false && (
                             <Button type="button" variant="ghost" asChild>
                                 <a href={entry.previewUrl} target="_blank" rel="noopener noreferrer"
                                     title={form.isDirty ? 'Shows the saved draft: save first to see your changes.' : 'Shows the saved draft.'}>
@@ -261,7 +261,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                         () => router.delete(`${url}/translations/${entry.locale}`))} />
             )}
 
-            <ViewingNotice by={lock.viewingBy} />
+            <ViewingNotice by={lock.viewingBy} onTakeOver={lock.requestTakeOver} />
             <KeptEditsNotice kept={lock.kept} disabled={!writable} onLoad={(id: number) => void loadKept(id)} onDiscard={(id: number) => void lock.discardKept(id)} />
             {errors.version && (
                 <div role="alert" className="cms:flex cms:flex-wrap cms:items-center cms:justify-between cms:gap-3 cms:rounded-lg cms:border cms:border-destructive cms:p-3 cms:text-sm cms:text-destructive">
@@ -332,7 +332,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                             {usedBy.map((use) => (
                                 <div key={`${use.label}:${use.field}`} className="cms:min-w-0">
                                     {use.url ? <a href={use.url} className="cms:block cms:truncate cms:underline-offset-4 cms:hover:underline">{use.label}</a> : <span className="cms:block cms:truncate">{use.label}</span>}
-                                    <span className="cms:font-mono cms:text-xs cms:text-muted-foreground">{use.field}</span>
+                                    <span className="cms:text-xs cms:text-muted-foreground" title={use.field}>{use.fieldLabel ?? use.field}</span>
                                 </div>
                             ))}
                         </CollapsibleCard>

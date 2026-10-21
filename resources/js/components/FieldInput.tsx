@@ -8,7 +8,7 @@ import { EntriesPicker } from '@/components/EntriesPicker.tsx';
 import { TermsPicker } from '@/components/TermsPicker.tsx';
 import { errorsAt } from '@/lib/builder.ts';
 import { isShown } from '@/lib/conditions.ts';
-import { asRecord, dateInputValue, dateValueFromInput, itemSummary, newBlock, newRow, syncKeys } from '@/lib/values.ts';
+import { asRecord, dateInputValue, dateValueFromInput, groupedNumber, itemSummary, offersEmptyChoice, newBlock, newRow, syncKeys } from '@/lib/values.ts';
 import type { Errors, FieldDefinition, Option } from '@/types.ts';
 
 /** Radix's Select can't hold an empty value, so "none" is this. */
@@ -106,15 +106,21 @@ function Control({ field, value, onChange, errors, id, content }: Props) {
         case 'rich_text':
             // The panel's editor; its code loads when the first one shows.
             return <RichTextEditor id={id} labelledBy={`${id}-label`} invalid={invalid} value={typeof value === 'string' ? value : ''} onChange={onChange} />;
-        case 'number':
+        case 'number': {
+            const echo = groupedNumber(value);
             return (
-                <Input
-                    id={id} type="number" className="cms:max-w-48" aria-invalid={invalid}
-                    value={typeof value === 'number' ? String(value) : typeof value === 'string' ? value : ''}
-                    min={numberConfig(field, 'min')} max={numberConfig(field, 'max')} step={numberConfig(field, 'step') ?? 'any'}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value === '' ? null : Number(e.target.value))}
-                />
+                <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-3">
+                    <Input
+                        id={id} type="number" className="cms:max-w-48" aria-invalid={invalid} aria-describedby={echo ? `${id}-grouped` : undefined}
+                        value={typeof value === 'number' ? String(value) : typeof value === 'string' ? value : ''}
+                        min={numberConfig(field, 'min')} max={numberConfig(field, 'max')} step={numberConfig(field, 'step') ?? 'any'}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value === '' ? null : Number(e.target.value))}
+                    />
+                    {/* Long numbers read back grouped, so 18500000000 can't be mistaken for 1850000000. */}
+                    {echo && <span id={`${id}-grouped`} className="cms:text-sm cms:tabular-nums cms:text-muted-foreground">{echo}</span>}
+                </div>
             );
+        }
         case 'date': {
             const time = field.config?.time === true;
             return <DatePicker id={id} withTime={time} invalid={invalid} required={field.required === true} value={dateValueFromInput(dateInputValue(value, time))}
@@ -123,7 +129,8 @@ function Control({ field, value, onChange, errors, id, content }: Props) {
         case 'select':
             return field.config?.multiple === true
                 ? <MultiSelect options={optionsOf(field)} value={Array.isArray(value) ? value.map(String) : []} onChange={onChange} />
-                : <SingleSelect options={optionsOf(field)} value={typeof value === 'string' ? value : null} onChange={onChange} id={id} required={field.required === true} />;
+                : <SingleSelect options={optionsOf(field)} value={typeof value === 'string' ? value : null} onChange={onChange} id={id}
+                    empty={offersEmptyChoice(optionsOf(field), field.required === true, typeof field.config?.default === 'string' && field.config.default !== '', typeof value === 'string' && value !== '')} />;
         case 'terms': {
             const multiple = field.config?.multiple === true;
             const ids = Array.isArray(value) ? value.filter((v): v is number => typeof v === 'number') : typeof value === 'number' ? value : null;
@@ -186,12 +193,12 @@ export function Fields({ fields, value, onChange, errors, id, content, bare = fa
     );
 }
 
-function SingleSelect({ options, value, onChange, id, required }: { options: Option[]; value: string | null; onChange: (value: unknown) => void; id: string; required: boolean }) {
+function SingleSelect({ options, value, onChange, id, empty }: { options: Option[]; value: string | null; onChange: (value: unknown) => void; id: string; empty: boolean }) {
     return (
         <Select value={value ?? NONE} onValueChange={(next: string) => onChange(next === NONE ? null : next)}>
             <SelectTrigger id={id} className="cms:w-full cms:max-w-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
-                {!required && <SelectItem value={NONE}>None</SelectItem>}
+                {empty && <SelectItem value={NONE}>None</SelectItem>}
                 {options.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
             </SelectContent>
         </Select>

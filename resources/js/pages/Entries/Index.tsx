@@ -20,6 +20,8 @@ interface Row {
     id: number;
     title: string;
     slug: string;
+    /** Its address on the site (/team/anindya), or null when the collection has no pages. */
+    path?: string | null;
     status: EntryStatus;
     /** In the trash (the status is what it was before). */
     trashed?: boolean;
@@ -321,9 +323,9 @@ function EntryList({
                                 <TableCell>
                                     <Link href={adminUrl(`cms/entries/${row.id}/edit${query.locale !== mainLocale ? `?locale=${encodeURIComponent(query.locale)}` : ''}`)}
                                         className="cms:font-medium cms:underline-offset-4 cms:hover:underline">{row.title}</Link>
-                                    {(!query.columns.includes('slug') || row.parent) && (
+                                    {((!query.columns.includes('slug') && row.path) || row.parent) && (
                                         <div className="cms:text-xs cms:text-muted-foreground">
-                                            {!query.columns.includes('slug') && `/${row.slug}`}{row.parent ? `${query.columns.includes('slug') ? '' : ' · '}under ${row.parent}` : ''}
+                                            {[!query.columns.includes('slug') ? row.path : null, row.parent ? `under ${row.parent}` : null].filter(Boolean).join(' · ')}
                                         </div>
                                     )}
                                 </TableCell>
@@ -409,20 +411,22 @@ function SortableHead({ label, sortKey, sort, onSort }: { label: string; sortKey
 function CellValue({ row, column, mainLocale }: { row: Row; column: Column; mainLocale: string }) {
     switch (column.key) {
         case 'slug':
-            return <>/{row.slug}</>;
+            return <span className="cms:font-mono">{row.slug}</span>;
         case 'status':
             return (
                 <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-1">
                     {row.trashed
                         ? <Badge variant="outline" className="cms:text-destructive" title={`${statusLabel(row.status)} before it was trashed`}>Trashed</Badge>
                         : <Badge variant={row.status === 'published' ? 'success' : 'secondary'}>{statusLabel(row.status)}</Badge>}
-                    {row.locales.length > 1 && row.locales.filter((l) => !l.main).map((l) => (
-                        <Badge key={l.code} variant={l.status === 'published' ? 'secondary' : 'outline'}
-                            className={l.status === null ? 'cms:opacity-50' : l.outdated ? 'cms:ring-2 cms:ring-amber-500/60' : ''}
-                            title={`${localeName(l.code)}: ${l.status === null ? 'not translated' : statusLabel(l.status)}${l.outdated ? ', outdated: the main language changed since' : ''}`}>
-                            {l.code.toUpperCase()}{l.outdated && <span aria-hidden="true">·!</span>}
-                        </Badge>
-                    ))}
+                    {row.locales.length > 1 && row.locales.filter((l) => !l.main).map((l) => {
+                        const badge = languageBadge(l);
+                        return (
+                            <Badge key={l.code} variant={badge.variant} className={badge.className}
+                                title={`${localeName(l.code)}: ${badge.title}`} aria-label={`${localeName(l.code)}: ${badge.title}`}>
+                                {l.code.toUpperCase()}{badge.word && <span className="cms:font-normal">{badge.word}</span>}
+                            </Badge>
+                        );
+                    })}
                 </div>
             );
         case 'author':
@@ -436,6 +440,19 @@ function CellValue({ row, column, mainLocale }: { row: Row; column: Column; main
         default:
             return <span title={row.cells[column.key] ?? undefined}>{row.cells[column.key] ?? '—'}</span>;
     }
+}
+
+/**
+ * Another language's badge in the Status column, its state in words: a
+ * plain code when published and current, else "draft", "scheduled",
+ * "outdated" or "missing" beside it (not only in a tooltip).
+ */
+function languageBadge(l: EntryLocale): { variant: 'secondary' | 'outline' | 'warning'; className: string; word: string | null; title: string } {
+    if (l.status === null) return { variant: 'outline', className: 'cms:border-dashed cms:text-muted-foreground', word: 'missing', title: 'not translated' };
+    if (l.outdated) return { variant: 'warning', className: '', word: 'outdated', title: `${statusLabel(l.status)}, outdated: the main language changed since` };
+    if (l.status === 'published') return { variant: 'secondary', className: '', word: null, title: 'Published' };
+
+    return { variant: 'outline', className: '', word: l.status === 'scheduled' ? 'scheduled' : 'draft', title: statusLabel(l.status) };
 }
 
 function EmptyState({ trashed, filtered, canCreate, createUrl, onClear }: { trashed: boolean; filtered: boolean; canCreate: boolean; createUrl: string; onClear: () => void }) {

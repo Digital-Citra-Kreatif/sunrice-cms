@@ -6,6 +6,7 @@ namespace Sunrice\Cms\Support;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Models\ContentReference;
 use Sunrice\Cms\Models\Entry;
@@ -57,7 +58,7 @@ final class References
      * Where an entry or a term is used, a source and language once.
      *
      * @param  string  $type  Reference::ENTRY or Reference::TERM
-     * @return list<array{label: string, url: string|null, field: string}>
+     * @return list<array{label: string, url: string|null, field: string, fieldLabel: string}>
      */
     public static function usedBy(string $type, int $id): array
     {
@@ -68,7 +69,7 @@ final class References
      * Where each of some entries or terms is used, in one go.
      *
      * @param  list<int>  $ids
-     * @return array<int, list<array{label: string, url: string|null, field: string}>>
+     * @return array<int, list<array{label: string, url: string|null, field: string, fieldLabel: string}>>
      */
     public static function usedByMany(string $type, array $ids): array
     {
@@ -106,7 +107,7 @@ final class References
                 default => null,
             };
             if ($item !== null) {
-                $used[$row->target_id][$key] = $item + ['field' => $row->field];
+                $used[$row->target_id][$key] = $item + ['field' => $row->field, 'fieldLabel' => self::fieldLabel($row->field)];
             }
         }
 
@@ -114,9 +115,20 @@ final class References
     }
 
     /**
+     * A reference's field path in words, for editors: "sections.2.values.properties"
+     * is "Sections › Properties" (row numbers and a block's "values" left out).
+     */
+    public static function fieldLabel(string $path): string
+    {
+        $words = array_map(Str::headline(...), array_values(array_filter(explode('.', $path), fn (string $part): bool => $part !== '' && $part !== 'values' && ! ctype_digit($part))));
+
+        return implode(' › ', $words);
+    }
+
+    /**
      * Where it's used, in a line, for confirmations and refusals.
      *
-     * @param  list<array{label: string, url: string|null, field: string}>  $usedBy
+     * @param  list<array{label: string, url: string|null, field: string, fieldLabel: string}>  $usedBy
      */
     public static function sentence(array $usedBy, int $limit = 5): string
     {

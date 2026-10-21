@@ -33,7 +33,7 @@ interface Props {
     /** The translation's version, to refuse a save over someone else's newer one; null when not translated. */
     version: number | null;
     /** Where other content points at this term. */
-    usedBy?: { label: string; url: string | null; field: string }[];
+    usedBy?: { label: string; url: string | null; field: string; fieldLabel?: string }[];
 }
 
 export default function TermEditPage(props: Props) {
@@ -101,7 +101,7 @@ function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared,
                 <p className="cms:text-muted-foreground">This term has no title in {localeName(locale)} yet: give it one in the list first.</p>
             ) : (
                 <div className="cms:flex cms:min-w-0 cms:flex-col cms:gap-6">
-                    <ViewingNotice by={lock.viewingBy} />
+                    <ViewingNotice by={lock.viewingBy} onTakeOver={lock.requestTakeOver} />
                     <KeptEditsNotice kept={lock.kept} disabled={!writable} onLoad={(id: number) => void loadKept(id)} onDiscard={(id: number) => void lock.discardKept(id)} />
                     <VersionConflict message={errors.version} processing={form.processing} onSaveMine={saveMine} />
                     <FieldSections disabled={!writable} fields={fields} values={form.data.data} errors={errors} storageKey={`cms:term:${taxonomy.handle}`}
@@ -117,7 +117,7 @@ function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared,
                         {usedBy.map((use) => (
                             <div key={`${use.label}:${use.field}`} className="cms:flex cms:items-baseline cms:gap-2">
                                 {use.url ? <a href={use.url} className="cms:truncate cms:underline-offset-4 cms:hover:underline">{use.label}</a> : <span className="cms:truncate">{use.label}</span>}
-                                <span className="cms:font-mono cms:text-xs cms:text-muted-foreground">{use.field}</span>
+                                <span className="cms:text-xs cms:text-muted-foreground" title={use.field}>{use.fieldLabel ?? use.field}</span>
                             </div>
                         ))}
                     </CollapsibleCard>

@@ -90,7 +90,7 @@ function GlobalsEdit({ set, fields, locale, locales, shared, values, version, ca
                 <p className="cms:text-muted-foreground">This global set has no fields: choose a blueprint for it under Structure → Global sets.</p>
             ) : (
                 <div className="cms:flex cms:flex-col cms:gap-4">
-                    <ViewingNotice by={lock.viewingBy} />
+                    <ViewingNotice by={lock.viewingBy} onTakeOver={lock.requestTakeOver} />
                     <VersionConflict message={errors.version} processing={form.processing} onSaveMine={saveMine} />
                     <KeptEditsNotice kept={lock.kept} disabled={!writable} onLoad={(id: number) => void loadKept(id)} onDiscard={(id: number) => void lock.discardKept(id)} />
                     <FieldSections disabled={!writable} fields={fields} values={form.data.data} errors={errors} storageKey={`cms:global:${set.handle}`}

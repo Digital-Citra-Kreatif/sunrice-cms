@@ -25,6 +25,7 @@ use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Query\JsonCast;
 use Sunrice\Cms\Query\Sql;
+use Sunrice\Cms\Site\Site;
 use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\FieldText;
 use Sunrice\Cms\Support\Locales;
@@ -190,7 +191,9 @@ final class EntryList
         $titles = $this->entryTitles($translations, $shown);
         $authors = in_array('author', $this->columns, true) ? $this->authorNames() : [];
 
-        return array_map(function (EntryTranslation $translation) use ($shown, $titles, $authors): array {
+        $site = app(Site::class);
+
+        return array_map(function (EntryTranslation $translation) use ($shown, $titles, $authors, $site): array {
             $translation->entry->setRelation('collection', $this->collection);
             $data = $shown === [] ? [] : $translation->completeData(true);
             $cells = [];
@@ -203,6 +206,8 @@ final class EntryList
                 'id' => $translation->entry_id,
                 'title' => $translation->draft_title,
                 'slug' => $translation->draft_slug,
+                // Its address on the site with the draft's slug (/team/anindya), or null when the collection has no pages.
+                'path' => $site->path($translation, $translation->draft_slug),
                 'status' => $translation->status(),
                 'trashed' => $translation->entry->trashed(),
                 'publishedAt' => $translation->published_at?->toIso8601String(),
@@ -538,11 +543,23 @@ final class EntryList
             'toggle' => $value === true || $value === 1 || $value === '1' ? 'Yes' : 'No',
             'select' => FieldText::text($value, $column['field']),
             'entries' => implode(', ', array_map(fn (mixed $id): string => is_scalar($id) ? ($titles[(int) $id] ?? '#'.$id) : '', (array) $value)),
-            'number', 'date' => is_scalar($value) ? (string) $value : '',
+            // Long numbers grouped in the list (18,500,000,000), as typed in the CSV.
+            'number' => is_numeric($value) && $cut ? self::grouped((string) $value) : (is_scalar($value) ? (string) $value : ''),
+            'date' => is_scalar($value) ? (string) $value : '',
             default => is_scalar($value) ? Str::squish(html_entity_decode(strip_tags(str_replace(['<br>', '<br/>', '<br />', '</p>'], ' ', (string) $value)), ENT_QUOTES | ENT_HTML5)) : FieldText::text($value),
         };
 
         return $text === '' ? null : ($cut ? Str::limit($text, self::CELL_LIMIT, '…') : $text);
+    }
+
+    /** A number with its thousands grouped ("18500000000.5" → "18,500,000,000.5"), its decimals as they are. */
+    private static function grouped(string $number): string
+    {
+        if (preg_match('/^(-?)(\d+)(\.\d+)?$/', $number, $parts) !== 1) {
+            return $number;
+        }
+
+        return $parts[1].number_format((float) $parts[2], 0, '.', ',').($parts[3] ?? '');
     }
 
     /** @return array<string, array{field: Field, kind: string, label: string, sortable: bool, translatable: bool}> the visible field columns, by handle */
