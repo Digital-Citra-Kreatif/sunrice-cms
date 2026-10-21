@@ -29,8 +29,10 @@ use Sunrice\Cms\Support\Locales;
  * collections with their listing pages, taxonomies, global sets, forms,
  * menus and redirects, by handle. With $content, also terms, entries
  * (drafts, every language) and global values. Records point at each
- * other by handle and slug ("pages/about"), not by id; ids inside field
- * values (media, entries, terms) are kept as they are.
+ * other by handle and slug ("pages/about"), not by id, and so do field
+ * values: linked entries, terms and media files are written portably
+ * (ContentReferences: {"entry": "pages/about"}, {"term": "topics/news"},
+ * {"media": "<path>"}). The file names the site's languages (`locales`).
  *
  * @api
  */
@@ -38,11 +40,20 @@ final class StructureExporter
 {
     public const VERSION = 1;
 
+    private ContentReferences $references;
+
+    public function __construct()
+    {
+        $this->references = new ContentReferences;
+    }
+
     /** @return array<string, mixed> */
     public function export(bool $content = false): array
     {
         $structure = [
             'sunrice' => self::VERSION,
+            // The languages its texts are in, so another site can tell what it lacks.
+            'locales' => Locales::all(),
             'fieldsets' => Fieldset::query()->orderBy('handle')->get()->map(fn (Fieldset $f): array => ['handle' => $f->handle, 'title' => $f->title, 'fields' => $f->fields])->all(),
             'blueprints' => Blueprint::query()->orderBy('handle')->get()->map(fn (Blueprint $b): array => ['handle' => $b->handle, 'title' => $b->title, 'fields' => $b->fields])->all(),
             // Translations only when there are some, after the rest.
@@ -59,7 +70,7 @@ final class StructureExporter
             ])->all(),
             'globals' => GlobalSet::query()->with('values')->orderBy('handle')->get()->map(fn (GlobalSet $g): array => [
                 ...$g->only(StructureImporter::GLOBAL_SET),
-                ...($content ? ['values' => (object) $g->values->sortBy('locale')->mapWithKeys(fn (GlobalValue $v): array => [$v->locale => $v->data])->all()] : []),
+                ...($content ? ['values' => (object) $g->values->sortBy('locale')->mapWithKeys(fn (GlobalValue $v): array => [$v->locale => $this->references->portable($g->schema(), $v->data)])->all()] : []),
             ])->all(),
             'forms' => Form::query()->orderBy('handle')->get()->map(fn (Form $f): array => [...array_diff_key($f->only(StructureImporter::FORM), ['translations' => true]), ...($f->translations !== null ? ['translations' => $f->translations] : [])])->all(),
             'menus' => [],
@@ -90,7 +101,7 @@ final class StructureExporter
                         'slug' => self::mainSlug($term),
                         'parent' => $term->parent === null ? null : self::mainSlug($term->parent),
                         'template' => $term->template,
-                        'translations' => (object) $term->translations->sortBy('locale')->mapWithKeys(fn (TermTranslation $t): array => [$t->locale => ['title' => $t->title, 'slug' => $t->slug, 'data' => $t->data]])->all(),
+                        'translations' => (object) $term->translations->sortBy('locale')->mapWithKeys(fn (TermTranslation $t): array => [$t->locale => ['title' => $t->title, 'slug' => $t->slug, 'data' => $this->references->portable($term->taxonomy->schema(), $t->data)]])->all(),
                     ];
                 }
             }
@@ -112,7 +123,7 @@ final class StructureExporter
                     'template' => $entry->template,
                     ...($entry->blueprint === null ? [] : ['blueprint' => $entry->blueprint]),
                     'translations' => (object) $entry->translations->sortBy('locale')->mapWithKeys(fn (EntryTranslation $t): array => [$t->locale => [
-                        'title' => $t->draft_title, 'slug' => $t->draft_slug, 'data' => $t->draft_data, 'published' => $t->isPublished(),
+                        'title' => $t->draft_title, 'slug' => $t->draft_slug, 'data' => $this->references->portable($entry->schema(), $t->draft_data), 'published' => $t->isPublished(),
                     ]])->all(),
                 ];
             });
