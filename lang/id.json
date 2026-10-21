@@ -976,5 +976,12 @@
     "None yet: tick a collection to add one to its blueprints, or add a Terms field in a blueprint.": "Belum ada: centang koleksi untuk menambahkannya ke blueprint-nya, atau tambahkan field Term di sebuah blueprint.",
     "Listing page blueprint": "Blueprint halaman daftar",
     "None (no editable fields)": "Tidak ada (tanpa field yang bisa disunting)",
-    "Gives the listing page (:url) its own fields, such as an intro or a hero image. Editors fill them in under Entries → :collection → Listing page.": "Memberi halaman daftar (:url) field sendiri, seperti intro atau gambar utama. Editor mengisinya di Entri → :collection → Halaman daftar."
+    "Gives the listing page (:url) its own fields, such as an intro or a hero image. Editors fill them in under Entries → :collection → Listing page.": "Memberi halaman daftar (:url) field sendiri, seperti intro atau gambar utama. Editor mengisinya di Entri → :collection → Halaman daftar.",
+    "View on site": "Lihat di situs",
+    "Edit listing page": "Sunting halaman daftar",
+    "View a term page": "Lihat halaman term",
+    "The first that exists, under resources/views:": "Yang pertama ada, di resources/views:",
+    "Empty: the first template that exists. An entry can choose its own in its Page settings.": "Kosong: template pertama yang ada. Entri bisa memilih sendiri di Pengaturan halaman-nya.",
+    "Empty: the first template that exists. A term can choose its own on its page.": "Kosong: template pertama yang ada. Term bisa memilih sendiri di halamannya.",
+    "Like /blog. Empty: /{handle}.": "Seperti /blog. Kosong: /{handle}."
 }

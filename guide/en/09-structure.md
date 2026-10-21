@@ -45,6 +45,8 @@ A **collection** is a kind of content: *Pages*, *Blog*, *Products*, *Events*. **
 | **Allow comments** | Visitors may comment on its entries (it needs a URL). |
 | **Structured data type** | What search engines are told its entries are (an article, a web page, a real estate listing, or a person, place or product the page is about…). |
 
+Once saved, the form's cards link where you'd go next: **View entries** (Entry pages), **View on site** ↗ and **Edit listing page** (Listing page, the latter when it has a blueprint). Under a template setting or the listing page's URL, **Which file?** opens the list of template files tried, for your developer.
+
 Deleting a collection doesn't delete its entries: they leave the panel and the website. The list's **Trash** shows deleted collections, with **Restore** to bring one back. Deleting them for good, with their entries, is for a developer (`sunrice:orphans --purge`), so a slip in the panel can always be undone.
 
 Each collection gets its own permissions (view, create, edit, publish, delete and export its entries), so a role can be limited to the *Blog*, for example. See [Users and roles](guide:panel/users-roles).
@@ -70,7 +72,7 @@ Each field's row shows its type, label and handle, with **Duplicate** (a copy ri
 
 ## Taxonomies
 
-**Structure → Taxonomies**: a **Title** (and a **Title in …** each other language, for visitors on its term pages), a **Handle** (changeable later, as for collections), **Nested terms** (terms under other terms, like subcategories), the **Collections** whose entries it groups, **Term fields** (a blueprint for the terms' own fields), and under **Term pages**: **Terms have pages** (each term gets a page listing its entries), its **Term page URL** (like `/topics/{slug}`; empty: `/{handle}/{slug}`) and a **Template**. Editors then add the terms under Taxonomies in the sidebar (see [Terms](guide:website/terms)). Ticking a collection under **Collections** lets editors give its entries terms: its blueprints get a **Terms** field for the taxonomy (named after it) unless they have one already, and its entries list filters by the taxonomy. The card beside the form lists the blueprints that have such a field. When you untick a collection, the field stays (with the terms entries have) unless you switch on **Also remove the terms field from collections you untick**, which appears once the list changes.
+**Structure → Taxonomies**: a **Title** (and a **Title in …** each other language, for visitors on its term pages), a **Handle** (changeable later, as for collections), **Nested terms** (terms under other terms, like subcategories), the **Collections** whose entries it groups, **Term fields** (a blueprint for the terms' own fields), and under **Term pages**: **Terms have pages** (each term gets a page listing its entries), its **Term page URL** (like `/topics/{slug}`; empty: `/{handle}/{slug}`) and a **Template** (with **View a term page** ↗ once a term has one). Editors then add the terms under Taxonomies in the sidebar (see [Terms](guide:website/terms)). Ticking a collection under **Collections** lets editors give its entries terms: its blueprints get a **Terms** field for the taxonomy (named after it) unless they have one already, and its entries list filters by the taxonomy. The card beside the form lists the blueprints that have such a field. When you untick a collection, the field stays (with the terms entries have) unless you switch on **Also remove the terms field from collections you untick**, which appears once the list changes.
 
 ## Global sets
 

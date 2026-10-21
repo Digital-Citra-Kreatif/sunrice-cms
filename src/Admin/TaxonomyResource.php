@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Resources\Forms\CheckboxList;
 use Sunrice\Admin\Resources\Forms\Form;
+use Sunrice\Admin\Resources\Forms\Link;
 use Sunrice\Admin\Resources\Forms\Section;
 use Sunrice\Admin\Resources\Forms\Select;
 use Sunrice\Admin\Resources\Forms\TextInput;
@@ -23,6 +24,7 @@ use Sunrice\Cms\Actions\Taxonomies\AttachCollections;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Site\RoutePatternRule;
+use Sunrice\Cms\Support\Locales;
 
 /**
  * Structure → Taxonomies, guarded by the cms.taxonomies.* permissions.
@@ -96,18 +98,26 @@ final class TaxonomyResource extends Resource
                     ->verbatim()->options(BlueprintChoices::options(BlueprintChoices::CONTENT))
                     ->help('Extra fields for each term, like a description or an image.'),
             ]),
-            Section::make('Term pages')->description('Whether each term has a page on the site listing its entries.')->columns(2)->schema([
-                Toggle::make('pages')->label('Terms have pages')->default(true)->span(2)
-                    ->help('Off: terms only group entries, with no address of their own.')
-                    ->loadUsing(fn (Model $taxonomy): bool => $taxonomy->getAttribute('route') !== null)
-                    ->saveUsing(fn (Model $taxonomy, mixed $on) => CollectionResource::switchPage($taxonomy, 'route', $on, '/{handle}/{slug}')),
-                TextInput::make('route')->label('Term page URL')->placeholder('/{handle}/{slug}')->unique()->maxLength(255)->span(2)->showWhen('pages')
-                    ->rules([new RoutePatternRule(parameters: false)])
-                    ->help('Like /topics/{slug}. Empty: /{handle}/{slug}.'),
-                TextInput::make('template')->label('Term page template')->placeholder('cms.topic')->showWhen('pages')->span(2)
-                    ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
-                    ->help(TemplateHelp::text('cms.topic', ['cms.taxonomy-{handle}', 'cms.term'])."\n".__('A term can choose its own on its page.')),
-            ]),
+            Section::make('Term pages')->description('Whether each term has a page on the site listing its entries.')->columns(2)
+                ->links(function (?Model $taxonomy): array {
+                    $term = $taxonomy instanceof Taxonomy && $taxonomy->route !== null ? $taxonomy->terms()->with('translations')->orderBy('id')->first() : null;
+                    $url = $term?->url(Locales::default());
+
+                    return $url !== null ? [Link::make('View a term page', $url)->newTab()->showWhen('pages')] : [];
+                })
+                ->schema([
+                    Toggle::make('pages')->label('Terms have pages')->default(true)->span(2)
+                        ->help('Off: terms only group entries, with no address of their own.')
+                        ->loadUsing(fn (Model $taxonomy): bool => $taxonomy->getAttribute('route') !== null)
+                        ->saveUsing(fn (Model $taxonomy, mixed $on) => CollectionResource::switchPage($taxonomy, 'route', $on, '/{handle}/{slug}')),
+                    TextInput::make('route')->label('Term page URL')->placeholder('/{handle}/{slug}')->unique()->maxLength(255)->span(2)->showWhen('pages')
+                        ->rules([new RoutePatternRule(parameters: false)])
+                        ->help('Like /topics/{slug}. Empty: /{handle}/{slug}.'),
+                    TextInput::make('template')->label('Term page template')->placeholder('cms.topic')->showWhen('pages')->span(2)
+                        ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
+                        ->help('Empty: the first template that exists. A term can choose its own on its page.')
+                        ->helpDetails('Which file?', TemplateHelp::files(['cms.taxonomy-{handle}', 'cms.term'], 'cms.topic')),
+                ]),
         ]);
     }
 
