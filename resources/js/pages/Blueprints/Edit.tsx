@@ -68,10 +68,12 @@ export default function BlueprintForm({ kind = 'blueprint', blueprint, fieldType
             ...(blueprint ? (kind === 'blueprint' ? { title: data.title, handle: data.handle } : { title: data.title }) : data),
             fields: toDefinitions(fields, hasChildren),
         }));
+        // Refused: the cards with errors open, with the message under the setting; show the first one.
+        const onError = () => window.requestAnimationFrame(() => document.querySelector('[data-invalid="true"]')?.scrollIntoView({ block: 'center', behavior: 'smooth' }));
         if (blueprint) {
-            form.put(`${base}/${blueprint.handle}`, { preserveScroll: true, onSuccess: saved });
+            form.put(`${base}/${blueprint.handle}`, { preserveScroll: true, onSuccess: saved, onError });
         } else {
-            form.post(base, { onSuccess: saved });
+            form.post(base, { onSuccess: saved, onError });
         }
     };
     const submit = (event: React.FormEvent) => {

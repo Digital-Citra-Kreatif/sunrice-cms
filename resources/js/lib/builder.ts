@@ -149,6 +149,11 @@ export function hasErrors(errors: Errors, path: string): boolean {
     return Object.keys(errors).some((key) => key === path || key.startsWith(`${path}.`));
 }
 
+/** The fields on a level that a field's "Show when" may look at: the others with a handle and a value of their own (not a fieldset include). */
+export function conditionChoices<T extends { key: string; handle: string; type: string }>(field: { key: string }, siblings: T[]): T[] {
+    return siblings.filter((sibling) => sibling.key !== field.key && sibling.handle !== '' && sibling.type !== 'fieldset');
+}
+
 /** A blueprint's top level: the handles content keeps for itself (Blueprint::RESERVED). */
 export type ReservedHandles = string[];
 
