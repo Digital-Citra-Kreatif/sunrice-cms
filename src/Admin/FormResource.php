@@ -7,18 +7,18 @@ namespace Sunrice\Cms\Admin;
 use Illuminate\Database\Eloquent\Model;
 use Sunrice\Admin\Resources\Forms\CheckboxList;
 use Sunrice\Admin\Resources\Forms\Form;
+use Sunrice\Admin\Resources\Forms\ListInput;
 use Sunrice\Admin\Resources\Forms\NumberInput;
 use Sunrice\Admin\Resources\Forms\Section;
 use Sunrice\Admin\Resources\Forms\Select;
-use Sunrice\Admin\Resources\Forms\ListInput;
 use Sunrice\Admin\Resources\Forms\Textarea;
 use Sunrice\Admin\Resources\Forms\TextInput;
 use Sunrice\Admin\Resources\Forms\Toggle;
 use Sunrice\Admin\Resources\Resource;
 use Sunrice\Admin\Resources\Tables\Column;
 use Sunrice\Admin\Resources\Tables\Table;
-use Sunrice\Admin\Security\Captcha;
 use Sunrice\Cms\Models\Form as FormModel;
+use Sunrice\Cms\Support\CaptchaHelp;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\RoleMembers;
 use Sunrice\Cms\Support\SafeUrl;
@@ -92,11 +92,7 @@ final class FormResource extends Resource
                 NumberInput::make('per_minute')->label('Sends per visitor a minute')->integer()->min(1)->max(1000)
                     ->placeholder((string) (new FormModel)->perMinute())
                     ->help('Per visitor (IP address). Empty: the site\'s default.'),
-                Toggle::make('captcha')->label('Require a captcha')
-                    ->disabled(! app(Captcha::class)->enabled())
-                    ->help(app(Captcha::class)->enabled()
-                        ? 'Visitors prove they\'re not a robot.'
-                        : 'Needs an account with a captcha service, set up on the server by a developer. For developers: SUNRICE_CAPTCHA_SITE_KEY and SUNRICE_CAPTCHA_SECRET_KEY (Cloudflare Turnstile, or reCAPTCHA or hCaptcha with SUNRICE_CAPTCHA_PROVIDER).'),
+                CaptchaHelp::toggle(Toggle::make('captcha')->label('Require a captcha'), 'Visitors prove they\'re not a robot, with :provider.'),
             ]),
         ]);
     }

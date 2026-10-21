@@ -443,8 +443,6 @@
     "Field: :label": "Field: :label",
     ":label: instructions": ":label: petunjuk",
     ":name (:code) is the main language and content is written in it: keep it first and save. Then, to make :new the main language, use its button in the Main language card beside the form.": ":name (:code) adalah bahasa utama dan sudah ada konten yang ditulis dalam bahasa itu: biarkan di urutan pertama lalu simpan. Setelah itu, untuk menjadikan :new bahasa utama, pakai tombolnya di kartu Bahasa utama di samping formulir.",
-    "Commenters prove they're not a robot, with the same captcha service as forms.": "Pemberi komentar membuktikan bahwa mereka bukan robot, dengan layanan captcha yang sama seperti formulir.",
-    "Needs an account with a captcha service, set up on the server by a developer (the same as forms'). For developers: SUNRICE_CAPTCHA_SITE_KEY and SUNRICE_CAPTCHA_SECRET_KEY.": "Perlu akun di layanan captcha, diatur di server oleh developer (sama seperti untuk formulir). Untuk developer: SUNRICE_CAPTCHA_SITE_KEY dan SUNRICE_CAPTCHA_SECRET_KEY.",
     "Translate entries, forms, menus and listing titles (not the main language)": "Terjemahkan entri, formulir, menu, dan judul halaman daftar (bukan bahasa utama)",
     ":label: choice \":option\"": ":label: pilihan \":option\"",
     "Link to :title": "Tautan ke :title",
@@ -842,7 +840,6 @@
     "Visible on site": "Tampil di situs",
     "Visitors attach a file here when they send a form.": "Pengunjung melampirkan file di sini saat mengirim formulir.",
     "Visitors can comment on its entries.": "Pengunjung bisa berkomentar di entrinya.",
-    "Visitors prove they're not a robot.": "Pengunjung membuktikan bahwa mereka bukan robot.",
     "Waiting for review": "Menunggu tinjauan",
     "Web page": "Halaman web",
     "Website": "Situs web",
@@ -957,5 +954,10 @@
     "The first is the main language.": "Yang pertama adalah bahasa utama.",
     "As visitors read it": "Seperti yang dibaca pengunjung",
     "Start of its URLs": "Awal URL-nya",
-    "Its pages have the plain addresses (/about) and hold what all languages share. Switching gives :main its own addresses (/:main/about, redirected) and needs every entry and term translated into the new one first.": "Halamannya memakai alamat biasa (/about) dan menyimpan apa yang dipakai bersama semua bahasa. Mengganti bahasa utama memberi :main alamatnya sendiri (/:main/about, dengan pengalihan) dan mengharuskan setiap entri dan term sudah diterjemahkan ke bahasa yang baru."
+    "Its pages have the plain addresses (/about) and hold what all languages share. Switching gives :main its own addresses (/:main/about, redirected) and needs every entry and term translated into the new one first.": "Halamannya memakai alamat biasa (/about) dan menyimpan apa yang dipakai bersama semua bahasa. Mengganti bahasa utama memberi :main alamatnya sendiri (/:main/about, dengan pengalihan) dan mengharuskan setiap entri dan term sudah diterjemahkan ke bahasa yang baru.",
+    "Visitors prove they're not a robot, with :provider.": "Pengunjung membuktikan bahwa mereka bukan robot, dengan :provider.",
+    "Commenters prove they're not a robot, with :provider (as on forms).": "Pemberi komentar membuktikan bahwa mereka bukan robot, dengan :provider (seperti di formulir).",
+    "Not set up yet: ask your developer to connect a captcha service.": "Belum disiapkan: minta developer Anda menghubungkan layanan captcha.",
+    "How": "Caranya",
+    "Set these in the app's .env with the keys from Cloudflare Turnstile (free), Google reCAPTCHA v2 or hCaptcha, then clear the config cache:": "Isi ini di .env aplikasi dengan kunci dari Cloudflare Turnstile (gratis), Google reCAPTCHA v2, atau hCaptcha, lalu bersihkan cache konfigurasi:"
 }

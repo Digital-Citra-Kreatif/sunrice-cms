@@ -54,3 +54,10 @@ How visitors' comments work on collections that allow them (see [Comments](guide
 | **Let commenters get an email when someone replies** | Adds a box to the comment form. |
 
 Spam is deleted automatically after a while.
+
+## Captcha
+
+A captcha is the "prove you're human" check on forms (**Require a captcha**, in each form's **Spam protection**) and comments (**Ask for a captcha**, above). Both switches stay off and greyed out until a developer connects a captcha service to the site: an account with Cloudflare Turnstile (free), Google reCAPTCHA or hCaptcha, whose keys go in the server's settings. Once it's set up, the help under each switch names the service in use.
+
+> [!TECHNICAL]
+> In the app's `.env`: `SUNRICE_CAPTCHA_PROVIDER` (`turnstile`, `recaptcha` or `hcaptcha`), `SUNRICE_CAPTCHA_SITE_KEY` and `SUNRICE_CAPTCHA_SECRET_KEY`; then `php artisan config:clear` (or `config:cache`). See [Security](docs:panel/security#captcha).

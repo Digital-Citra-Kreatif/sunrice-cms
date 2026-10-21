@@ -10,8 +10,8 @@ use Sunrice\Admin\Resources\Forms\ListInput;
 use Sunrice\Admin\Resources\Forms\NumberInput;
 use Sunrice\Admin\Resources\Forms\Select;
 use Sunrice\Admin\Resources\Forms\Toggle;
-use Sunrice\Admin\Security\Captcha;
 use Sunrice\Admin\Settings\Settings;
+use Sunrice\Cms\Support\CaptchaHelp;
 use Sunrice\Cms\Support\RoleMembers;
 
 /**
@@ -75,11 +75,7 @@ final class CommentSettings extends Settings
                 self::HOLD_NONE => 'Publish comments at once',
             ])->help('Comments by people who may moderate them are always published.'),
             Toggle::make('signedInOnly')->label('Only signed-in users can comment'),
-            Toggle::make('captcha')->label('Ask for a captcha')
-                ->disabled(! app(Captcha::class)->enabled())
-                ->help(app(Captcha::class)->enabled()
-                    ? 'Commenters prove they\'re not a robot, with the same captcha service as forms.'
-                    : 'Needs an account with a captcha service, set up on the server by a developer (the same as forms\'). For developers: SUNRICE_CAPTCHA_SITE_KEY and SUNRICE_CAPTCHA_SECRET_KEY.'),
+            CaptchaHelp::toggle(Toggle::make('captcha')->label('Ask for a captcha'), 'Commenters prove they\'re not a robot, with :provider (as on forms).'),
             NumberInput::make('perMinute')->label('Comments per visitor a minute')->integer()->min(1)->max(100)->required(),
             NumberInput::make('closeAfterDays')->label('Close comments after (days)')->integer()->min(1)->max(36500)
                 ->help('Counted from the publish date. Empty: never.'),

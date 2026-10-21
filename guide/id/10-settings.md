@@ -54,3 +54,10 @@ Cara kerja komentar pengunjung pada koleksi yang mengizinkannya (lihat [Komentar
 | **Izinkan pemberi komentar menerima email saat ada yang membalas** | Menambahkan kotak centang di formulir komentar. |
 
 Spam terhapus otomatis setelah beberapa waktu.
+
+## Captcha
+
+Captcha adalah pemeriksaan "buktikan Anda manusia" di formulir (**Wajibkan captcha**, di **Perlindungan spam** setiap formulir) dan komentar (**Minta captcha**, di atas). Kedua tombol itu tetap mati dan berwarna abu-abu sampai developer menghubungkan layanan captcha ke situs: akun Cloudflare Turnstile (gratis), Google reCAPTCHA, atau hCaptcha, yang kuncinya dimasukkan ke pengaturan server. Setelah disiapkan, bantuan di bawah setiap tombol menyebutkan layanan yang dipakai.
+
+> [!TECHNICAL]
+> Di `.env` aplikasi: `SUNRICE_CAPTCHA_PROVIDER` (`turnstile`, `recaptcha`, atau `hcaptcha`), `SUNRICE_CAPTCHA_SITE_KEY`, dan `SUNRICE_CAPTCHA_SECRET_KEY`; lalu `php artisan config:clear` (atau `config:cache`). Lihat [Keamanan](docs:panel/security#captcha).
