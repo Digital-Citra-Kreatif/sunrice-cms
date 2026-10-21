@@ -334,6 +334,45 @@ final class SwitchMainLanguage
                 $record->forceFill([$attribute => $new, 'translations' => $translations === [] ? null : $translations])->save();
             }
         }
+        $this->patterns($from, $to);
+    }
+
+    /**
+     * URL patterns: the new main language's own become the main ones, and
+     * the old main ones the old main language's own, so no address
+     * changes but for the prefixes (HasLanguageRoutes).
+     */
+    private function patterns(string $from, string $to): void
+    {
+        $changes = [];
+        foreach ([Collection::query()->withTrashed(), Taxonomy::query()->withTrashed()] as $query) {
+            foreach ($query->whereNotNull('routes')->get() as $record) {
+                $main = [];
+                foreach ($record::routeAttributes() as $attribute) {
+                    // Read as stored: the new main language is the main one already, which has no own patterns.
+                    $own = ($record->routes ?? [])[$to][$attribute] ?? null;
+                    $old = $record->getAttribute($attribute);
+                    if (is_string($own) && $own !== '' && is_string($old) && $old !== '') {
+                        $main[$attribute] = [$old, $own];
+                    }
+                }
+                if ($main !== []) {
+                    $changes[] = [$record, $main];
+                }
+            }
+        }
+        // Listing and term page addresses are unique: out of the way first, so none clash on the way.
+        foreach ($changes as [$record, $main]) {
+            $record->newQueryWithoutScopes()->whereKey($record->getKey())->toBase()
+                ->update(array_map(fn (array $pair): string => '/~switching~'.$record->id, $main));
+        }
+        foreach ($changes as [$record, $main]) {
+            foreach ($main as $attribute => [$old, $own]) {
+                $record->setAttribute($attribute, $own);
+                $record->setOwnRoute($to, null, $attribute)->setOwnRoute($from, $old, $attribute);
+            }
+            $record->save();
+        }
     }
 
     /** @var array{0: array<string, string>, 1: array<string, string>} the languages' address segments before and after */
@@ -382,24 +421,32 @@ final class SwitchMainLanguage
         $homepage = app(SiteSettings::class)->homepage;
         $pages = EntryTranslation::query()->live()->where('locale', $from)->with('entry.collection', 'entry.translations')->get();
         foreach ($pages as $page) {
-            $route = $page->entry->collection->route;
+            $route = $page->entry->collection->routeIn($from);
             if ($route === null || $page->slug === null || $page->entry_id === $homepage) {
                 continue;
             }
             $path = (new RoutePattern($route))->path($page->slug);
             $there = $page->entry->translation($to);
-            if ($there !== null && $there->isLive() && $there->slug === $page->slug) {
+            $thereRoute = $page->entry->collection->routeIn($to);
+            // The new main language's page is at the old address now.
+            if ($there !== null && $there->isLive() && $there->slug !== null && $thereRoute !== null
+                && self::at($new, $to, (new RoutePattern($thereRoute))->path($there->slug)) === self::at($old, $from, $path)) {
                 continue;
             }
             $count += $this->moved(self::at($old, $from, $path), self::at($new, $from, $path));
         }
         $terms = TermTranslation::query()->where('locale', $from)->with('term.taxonomy', 'term.translations')->get();
         foreach ($terms as $term) {
-            $route = $term->term->taxonomy->route;
-            if ($route === null || $term->term->trashed() || $term->term->translations->contains(fn (TermTranslation $t): bool => $t->locale === $to && $t->slug === $term->slug)) {
+            $route = $term->term->taxonomy->routeIn($from);
+            $thereRoute = $term->term->taxonomy->routeIn($to);
+            if ($route === null || $term->term->trashed()) {
                 continue;
             }
             $path = (new RoutePattern($route))->path($term->slug);
+            if ($thereRoute !== null && $term->term->translations->contains(fn (TermTranslation $t): bool => $t->locale === $to
+                && self::at($new, $to, (new RoutePattern($thereRoute))->path($t->slug)) === self::at($old, $from, $path))) {
+                continue;
+            }
             $count += $this->moved(self::at($old, $from, $path), self::at($new, $from, $path));
         }
 

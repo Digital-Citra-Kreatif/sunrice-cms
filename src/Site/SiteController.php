@@ -73,6 +73,10 @@ final class SiteController
                 // The main language's slug in a language the page has its own address in.
                 return SiteRedirect::to(self::withQuery($own, $request), 301);
             }
+            if ($redirect === null && ($moved = $site->movedAddress($request->path())) !== null) {
+                // An address of a pattern the language had before (/id/books/halo, now /id/buku/halo).
+                return SiteRedirect::to(self::withQuery($moved, $request), 301);
+            }
             abort_if($redirect === null, 404);
 
             return SiteRedirect::to(self::withQuery($redirect->targetFor($request->path()), $request), $redirect->status);

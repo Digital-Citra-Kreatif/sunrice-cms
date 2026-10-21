@@ -1031,5 +1031,12 @@
     "In :language. Translate it here afterwards: switch the language and give it a title there.": "Dalam :language. Terjemahkan di sini setelahnya: ganti bahasa dan beri judul di sana.",
     "Editing: :language": "Menyunting: :language",
     "Editing: :language — switch to edit :others": "Menyunting: :language — beralih untuk menyunting :others",
-    "Editing: :language, not translated yet": "Menyunting: :language, belum diterjemahkan"
+    "Editing: :language, not translated yet": "Menyunting: :language, belum diterjemahkan",
+    "Entry URL in :language": "URL entri dalam :language",
+    "Listing page URL in :language": "URL halaman daftar dalam :language",
+    "Term page URL in :language": "URL halaman term dalam :language",
+    "Its own address in :language, like /buku/{slug}. Empty: the entry URL under :prefix.": "Alamatnya sendiri dalam :language, misalnya /buku/{slug}. Kosong: URL entri di bawah :prefix.",
+    "Its own address in :language, like /buku. Empty: the listing page URL under :prefix.": "Alamatnya sendiri dalam :language, misalnya /buku. Kosong: URL halaman daftar di bawah :prefix.",
+    "Its own address in :language, like /topik/{slug}. Empty: the term page URL under :prefix.": "Alamatnya sendiri dalam :language, misalnya /topik/{slug}. Kosong: URL halaman term di bawah :prefix.",
+    ":title has this URL in :language already.": ":title sudah memakai URL ini dalam :language."
 }

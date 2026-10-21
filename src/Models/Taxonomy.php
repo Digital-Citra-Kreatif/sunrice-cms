@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\Schema;
+use Sunrice\Cms\Models\Concerns\HasLanguageRoutes;
 use Sunrice\Cms\Models\Concerns\TranslatesText;
 use Sunrice\Cms\Support\SiteRecords;
 
@@ -24,7 +25,9 @@ use Sunrice\Cms\Support\SiteRecords;
  * @property string $title in the main language (titleIn() for the others)
  * @property array<string, array<string, string>>|null $translations what visitors read in the other languages: {"id": {"title": "Lokasi"}}
  * @property bool $hierarchical terms can have a parent
- * @property string|null $route term pages' URL pattern ("/topics/{slug}"); none: no pages
+ * @property string|null $route term pages' URL pattern ("/topics/{slug}") in the main language (routeIn() for the others); none: no pages
+ * @property array<string, array<string, string>>|null $routes the other languages' own patterns: {"id": {"route": "/topik/{slug}"}} (HasLanguageRoutes)
+ * @property array<string, array<string, list<string>>>|null $previous_routes the patterns they had before, which redirect
  * @property string|null $blueprint terms' own fields
  * @property string|null $template the Blade view term pages render with
  * @property string|null $seo_title_field a text field whose value is the SEO title when the SEO card leaves it empty
@@ -40,6 +43,7 @@ use Sunrice\Cms\Support\SiteRecords;
  */
 class Taxonomy extends Model
 {
+    use HasLanguageRoutes;
     use SoftDeletes;
     use TranslatesText;
 
@@ -63,7 +67,7 @@ class Taxonomy extends Model
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['hierarchical' => 'boolean', 'translations' => 'array'];
+        return ['hierarchical' => 'boolean', 'translations' => 'array', 'routes' => 'array', 'previous_routes' => 'array'];
     }
 
     /** @return BelongsToMany<Collection, $this> */

@@ -34,6 +34,9 @@ final class CollectionResource extends Resource
 {
     protected static string $model = Collection::class;
 
+    /** A listing page's URL: a path of lowercase segments, like /blog. */
+    public const LISTING_ROUTE = 'regex:#^(/[a-z0-9\-_]+)+$#';
+
     public static function navigationGroup(): string
     {
         return 'Structure';
@@ -82,9 +85,13 @@ final class CollectionResource extends Resource
                         ->help('Off: entries have no address, like FAQs or team members shown by a template.')
                         ->loadUsing(fn (Model $collection): bool => $collection->getAttribute('route') !== null)
                         ->saveUsing(fn (Model $collection, mixed $on) => self::switchPage($collection, 'route', $on, '/{handle}/{slug}')),
-                    TextInput::make('route')->label('Entry URL')->placeholder('/{handle}/{slug}')->unique()->span(2)->showWhen('pages')
+                    RouteInput::make('route')->language(null, 'route')->label('Entry URL')->placeholder('/{handle}/{slug}')->unique()->span(2)->showWhen('pages')
                         ->rules([new RoutePatternRule])
                         ->help('Like /blog/{slug}, or / for the site root. Empty: /{handle}/{slug}.'),
+                    ...TranslatedFields::routes('route', fn (RouteInput $input, string $code, string $language) => $input
+                        ->label(__('Entry URL in :language', ['language' => $language]))->placeholderFrom('route', '/{handle}/{slug}')->span(2)->showWhen('pages')
+                        ->rules([new RoutePatternRule])
+                        ->help(__('Its own address in :language, like /buku/{slug}. Empty: the entry URL under :prefix.', ['language' => $language, 'prefix' => Locales::prefix($code) ?: '/']))),
                     Toggle::make('hierarchical')->label('Hierarchical')->showWhen('pages')
                         ->help('Entries can sit under a parent entry, like pages under pages.'),
                     Toggle::make('comments')->label('Allow comments')->showWhen('pages')
@@ -105,10 +112,16 @@ final class CollectionResource extends Resource
                     Toggle::make('listing')->label('Has a listing page')->span(2)
                         ->loadUsing(fn (Model $collection): bool => $collection->getAttribute('listing_route') !== null)
                         ->saveUsing(fn (Model $collection, mixed $on) => self::switchPage($collection, 'listing_route', $on, '/{handle}')),
-                    TextInput::make('listing_route')->label('Listing page URL')->placeholder('/{handle}')->unique()->maxLength(255)->span(2)->showWhen('listing')
-                        ->rules(['regex:#^(/[a-z0-9\-_]+)+$#'])
+                    RouteInput::make('listing_route')->language(null, 'listing_route')->label('Listing page URL')->placeholder('/{handle}')->unique()->span(2)->showWhen('listing')
+                        ->rules([self::LISTING_ROUTE])
                         ->help('Like /blog. Empty: /{handle}.')
                         ->helpDetails('Which file?', TemplateHelp::files(['cms.{handle}-listing', 'cms.listing'])),
+                    ...TranslatedFields::routes('listing_route', fn (RouteInput $input, string $code, string $language) => $input
+                        ->label(__('Listing page URL in :language', ['language' => $language]))->placeholderFrom('listing_route', '/{handle}')->span(2)->showWhen('listing')
+                        ->rules([self::LISTING_ROUTE])
+                        ->help(__('Its own address in :language, like /buku. Empty: the listing page URL under :prefix.', ['language' => $language, 'prefix' => Locales::prefix($code) ?: '/']))
+                        ->links(fn (?Model $collection): array => $collection instanceof Collection && ($url = $collection->listingUrl($code)) !== null
+                            ? [Link::make('View on site', $url)->newTab()->showWhen('listing')] : [])),
                     Select::make('listing_blueprint')->label('Listing page blueprint')->placeholder('None (no editable fields)')->verbatim()
                         ->options(BlueprintChoices::options(BlueprintChoices::CONTENT, 'listing_blueprint'))->showWhen('listing')
                         ->help('Gives the listing page (:url) its own fields, such as an intro or a hero image. Editors fill them in under Entries → :collection → Listing page.')

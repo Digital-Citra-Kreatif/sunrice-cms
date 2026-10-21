@@ -110,9 +110,19 @@ final class TaxonomyResource extends Resource
                         ->help('Off: terms only group entries, with no address of their own.')
                         ->loadUsing(fn (Model $taxonomy): bool => $taxonomy->getAttribute('route') !== null)
                         ->saveUsing(fn (Model $taxonomy, mixed $on) => CollectionResource::switchPage($taxonomy, 'route', $on, '/{handle}/{slug}')),
-                    TextInput::make('route')->label('Term page URL')->placeholder('/{handle}/{slug}')->unique()->maxLength(255)->span(2)->showWhen('pages')
+                    RouteInput::make('route')->language(null, 'route')->label('Term page URL')->placeholder('/{handle}/{slug}')->unique()->span(2)->showWhen('pages')
                         ->rules([new RoutePatternRule(parameters: false)])
                         ->help('Like /topics/{slug}. Empty: /{handle}/{slug}.'),
+                    ...TranslatedFields::routes('route', fn (RouteInput $input, string $code, string $language) => $input
+                        ->label(__('Term page URL in :language', ['language' => $language]))->placeholderFrom('route', '/{handle}/{slug}')->span(2)->showWhen('pages')
+                        ->rules([new RoutePatternRule(parameters: false)])
+                        ->help(__('Its own address in :language, like /topik/{slug}. Empty: the term page URL under :prefix.', ['language' => $language, 'prefix' => Locales::prefix($code) ?: '/']))
+                        ->links(function (?Model $taxonomy) use ($code): array {
+                            $term = $taxonomy instanceof Taxonomy && $taxonomy->route !== null ? $taxonomy->terms()->with('translations')->orderBy('id')->first() : null;
+                            $url = $term?->url($code);
+
+                            return $url !== null ? [Link::make('View a term page', $url)->newTab()->showWhen('pages')] : [];
+                        })),
                     TextInput::make('template')->label('Term page template')->placeholder('cms.topic')->showWhen('pages')->span(2)
                         ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
                         ->help('Empty: the first template that exists. A term can choose its own on its page.')

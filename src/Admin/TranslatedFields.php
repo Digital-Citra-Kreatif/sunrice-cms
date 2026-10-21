@@ -7,6 +7,9 @@ namespace Sunrice\Cms\Admin;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Sunrice\Admin\Resources\Forms\Field;
+use Sunrice\Cms\Models\Collection;
+use Sunrice\Cms\Models\Taxonomy;
+use Sunrice\Cms\Site\UniqueRouteRule;
 use Sunrice\Cms\Support\Locales;
 
 /**
@@ -42,6 +45,30 @@ final class TranslatedFields
                     $translations[$code] = $own;
                     $translations = array_filter($translations, fn (mixed $texts): bool => is_array($texts) && $texts !== []);
                     $record->forceFill(['translations' => $translations === [] ? null : $translations])->save();
+                });
+        }
+
+        return $fields;
+    }
+
+    /**
+     * A collection's or taxonomy's own URL pattern inputs for an attribute
+     * (route, listing_route), one per language besides the main one
+     * (HasLanguageRoutes): empty, the main pattern under its prefix.
+     *
+     * @param  Closure(RouteInput, string, string): RouteInput  $make  sets up the input for a language's code and name
+     * @return list<RouteInput>
+     */
+    public static function routes(string $attribute, Closure $make): array
+    {
+        $fields = [];
+        foreach (array_slice(Locales::names(), 1, null, true) as $code => $name) {
+            $fields[] = $make(RouteInput::make(UniqueRouteRule::field($attribute, $code))->language($code, $attribute), $code, $name)
+                ->loadUsing(fn (Model $record): ?string => $record instanceof Collection || $record instanceof Taxonomy ? $record->ownRoute($code, $attribute) : null)
+                ->saveUsing(function (Model $record, mixed $value) use ($code, $attribute): void {
+                    if ($record instanceof Collection || $record instanceof Taxonomy) {
+                        $record->setOwnRoute($code, is_string($value) ? $value : null, $attribute)->save();
+                    }
                 });
         }
 

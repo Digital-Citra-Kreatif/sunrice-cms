@@ -28,7 +28,7 @@ final class ListEntries extends CmsTool
         $handle = $request->get('collection');
         if (! is_string($handle) || $handle === '') {
             return $this->json(['collections' => Collection::query()->withCount('entries')->orderBy('title')->get()->filter(fn (Collection $c): bool => $this->may('view', $c))->values()->map(fn (Collection $c): array => [
-                'handle' => $c->handle, 'title' => $c->title, 'route' => $c->route, 'dated' => $c->dated, 'blueprint' => $c->blueprint, 'entries' => $c->entries_count,
+                'handle' => $c->handle, 'title' => $c->title, 'route' => $c->route, 'routes' => $c->routes, 'dated' => $c->dated, 'blueprint' => $c->blueprint, 'entries' => $c->entries_count,
             ])->all(), 'languages' => Locales::all()]);
         }
         $collection = Collection::query()->where('handle', $handle)->first();

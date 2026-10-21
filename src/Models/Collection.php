@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Sunrice\Cms\Fields\Schema;
+use Sunrice\Cms\Models\Concerns\HasLanguageRoutes;
 use Sunrice\Cms\Models\Concerns\TranslatesText;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\SiteRecords;
@@ -27,11 +28,13 @@ use Sunrice\Cms\Support\SiteRecords;
  * @property list<string>|null $blueprints more blueprints (handles) its entries may use instead (Entry::$blueprint)
  * @property bool $dated entries show a date, and list newest first
  * @property bool $translatable entries can have a version in each language; false: the main language only
- * @property string|null $route the entries' public URL pattern ("/blog/{slug}"); none: no pages
+ * @property string|null $route the entries' public URL pattern ("/blog/{slug}") in the main language (routeIn() for the others); none: no pages
  * @property string|null $template the Blade view entries render with
  * @property bool $hierarchical entries may have a parent entry
  * @property bool $ordered entries are in the order editors put them in
- * @property string|null $listing_route the listing page's URL ("/blog"); none: no listing page
+ * @property string|null $listing_route the listing page's URL ("/blog") in the main language (routeIn($locale, 'listing_route') for the others); none: no listing page
+ * @property array<string, array<string, string>>|null $routes the other languages' own patterns: {"id": {"route": "/buku/{slug}", "listing_route": "/buku"}} (HasLanguageRoutes)
+ * @property array<string, array<string, list<string>>>|null $previous_routes the patterns they had before, which redirect
  * @property string|null $listing_blueprint the listing page's own fields
  * @property int $per_page entries per listing page
  * @property bool $comments visitors may comment on its entries
@@ -47,6 +50,7 @@ use Sunrice\Cms\Support\SiteRecords;
  */
 class Collection extends Model
 {
+    use HasLanguageRoutes;
     use SoftDeletes;
     use TranslatesText;
 
@@ -64,7 +68,13 @@ class Collection extends Model
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['dated' => 'boolean', 'translatable' => 'boolean', 'comments' => 'boolean', 'hierarchical' => 'boolean', 'ordered' => 'boolean', 'per_page' => 'integer', 'blueprints' => 'array', 'translations' => 'array'];
+        return ['dated' => 'boolean', 'translatable' => 'boolean', 'comments' => 'boolean', 'hierarchical' => 'boolean', 'ordered' => 'boolean', 'per_page' => 'integer', 'blueprints' => 'array', 'translations' => 'array', 'routes' => 'array', 'previous_routes' => 'array'];
+    }
+
+    /** @return list<string> */
+    public static function routeAttributes(): array
+    {
+        return ['route', 'listing_route'];
     }
 
     /** @return HasMany<CollectionListing, $this> */
@@ -97,21 +107,19 @@ class Collection extends Model
         return $data;
     }
 
-    /** The listing page's URL in a language, or null without one. */
     /** Its title in a language (null: the page's), as visitors read it: listing pages, breadcrumbs, menus. */
     public function titleIn(?string $locale = null): string
     {
         return $this->translated('title', $locale);
     }
 
+    /** The listing page's URL in a language (null: the page's), with that language's pattern; null without one. */
     public function listingUrl(?string $locale = null): ?string
     {
-        if ($this->listing_route === null) {
-            return null;
-        }
         $locale ??= Locales::current();
+        $route = $this->routeIn($locale, 'listing_route');
 
-        return url(Locales::prefix($locale).$this->listing_route);
+        return $route === null ? null : url(Locales::prefix($locale).$route);
     }
 
     /** @return HasMany<Entry, $this> */
