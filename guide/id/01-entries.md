@@ -26,7 +26,7 @@ Di koleksi dengan *urutan manual*, klik **Urutkan** di atas daftar, seret setiap
 ## Menulis entri
 
 1. Klik **Entri baru**.
-2. Ketik **Judul**. **Slug**, bagian alamat web entri (`/blog/tulisan-pertama-saya`), dibuat dari judul jika dibiarkan kosong; hanya huruf kecil, angka, dan tanda hubung.
+2. Ketik **Judul**. **Slug**, bagian alamat web entri (`/blog/tulisan-pertama-saya`), dibuat dari judul jika dibiarkan kosong; hanya huruf kecil, angka, dan tanda hubung. Mengubah slug entri yang pernah diterbitkan memindahkan alamatnya: catatan di bawah isian memberi tahu bahwa alamat lama akan dialihkan ke alamat baru setelah Anda menerbitkan (atau, untuk entri yang sudah ditarik dari situs, bahwa alamat lama tidak akan berfungsi lagi kecuali pengalihan ditambahkan).
 3. Isi field-field-nya. Field wajib ditandai; field yang keliru disebutkan namanya saat Anda menyimpan.
 4. Klik **Buat draf**.
 

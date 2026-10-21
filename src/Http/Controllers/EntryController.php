@@ -342,7 +342,12 @@ final class EntryController
                 // The live page, and a signed link to preview the draft (30 minutes).
                 'url' => $translation->isLive() && ! $entry->trashed() ? $translation->url() : null,
                 'previewUrl' => URL::temporarySignedRoute('sunrice.cms.preview', now()->addMinutes(30), ['translation' => $translation->id]),
+                // The slug in the address visitors have known (published once, a page of its own, not the homepage's /):
+                // the editor notes a new one, which publishing redirects from while the entry is published (PublishEntry).
+                'publishedSlug' => $translation->published_at !== null && $collection->route !== null && app(SiteSettings::class)->homepage !== $entry->id ? $translation->slug : null,
             ],
+            // Where to add a redirect by hand, for those who may.
+            'redirectsUrl' => $request->user()?->can('cms.redirects.create') === true ? route('sunrice.admin.cms.redirects.create') : null,
             // Another language's rows and blocks show the main one's shared values.
             'values' => ['title' => $translation->draft_title, 'slug' => $translation->draft_slug, 'data' => $translation->completeData(true), 'seo' => $translation->draft_data[Seo::KEY] ?? null],
             // Every language's: the parent and its own Blade view.

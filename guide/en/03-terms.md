@@ -18,7 +18,7 @@ Terms that have no title in the language shown appear in grey as *… · not tra
 
 When the taxonomy has term pages on the website (like `/topics/news`), each term's page lists its entries, and you can give it more:
 
-- its **Title** and **Slug** in the language shown: in a language the term isn't translated into yet, giving it a title there adds it (no need to rename it in the list first);
+- its **Title** and **Slug** in the language shown: in a language the term isn't translated into yet, giving it a title there adds it (no need to rename it in the list first). A new slug moves the term's page as soon as you save: a note says the old address will stop working unless a redirect is added (**Add a redirect**, if you may manage redirects);
 - its own fields: a **Description** to introduce the page, or the fields your developer gave the taxonomy (an image…);
 - **SEO**: a meta title, a meta description, an Open Graph image and *Hide from search engines (noindex)* (see [SEO](guide:website/seo));
 - a **Template**, if your developer made a special design (leave it empty for the taxonomy's own).

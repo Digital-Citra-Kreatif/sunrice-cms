@@ -79,3 +79,16 @@ export function slugFrom(title: string): string {
 export function followingSlug(slug: string, oldTitle: string, newTitle: string, neverPublished: boolean): string {
     return neverPublished && slug !== '' && slug === slugFrom(oldTitle) ? slugFrom(newTitle) : slug;
 }
+
+/**
+ * What the slug field notes about a new slug: an address visitors have
+ * known (`published`, the slug last published; null for a draft never
+ * published or a page without an address) that publishing redirects from
+ * ("redirects", while the entry is published), or that will lead nowhere
+ * ("breaks"). Null while the slug is the same, or empty (made from the title).
+ */
+export function slugNote(published: string | null | undefined, slug: string, redirects: boolean): 'redirects' | 'breaks' | null {
+    if (!published || slug.trim() === '' || slug.trim() === published) return null;
+
+    return redirects ? 'redirects' : 'breaks';
+}

@@ -192,7 +192,11 @@ final class TermController
             'taxonomy' => ['handle' => $taxonomy->handle, 'title' => $taxonomy->title],
             'term' => ['id' => $term->id, 'title' => $translation->title ?? $term->title(), 'template' => $term->template, 'url' => $translation?->url(),
                 // This language's own title and slug, edited here too (empty: not translated yet).
-                'ownTitle' => $translation?->title, 'slug' => $translation?->slug, 'mainTitle' => $main?->title],
+                'ownTitle' => $translation?->title, 'slug' => $translation?->slug, 'mainTitle' => $main?->title,
+                // Whether the term has a page of its own, whose address a new slug moves (nothing redirects from the old one).
+                'hasPage' => $taxonomy->route !== null && $translation !== null && ! $term->trashed()],
+            // Where to add a redirect by hand, for those who may.
+            'redirectsUrl' => $request->user()?->can('cms.redirects.create') === true ? route('sunrice.admin.cms.redirects.create') : null,
             'translated' => $translation !== null,
             'fields' => $schema->toAdmin(),
             'locale' => $locale,

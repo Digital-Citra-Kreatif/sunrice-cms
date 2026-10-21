@@ -12,11 +12,12 @@ import { TemplateHelp } from '@/components/TemplateHelp.tsx';
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
 import { EntryComments, type EntryCommentsSummary } from '@/components/EntryComments.tsx';
 import { FieldSections } from '@/components/FieldSections.tsx';
+import { SlugNote } from '@/components/SlugNote.tsx';
 import { TermLabels } from '@/components/TermsPicker.tsx';
 import { seoFields } from '@/lib/seo.ts';
 import { FieldError, Fields } from '@/components/FieldInput.tsx';
 import { errorKeysAt, errorsAt, hasErrors } from '@/lib/builder.ts';
-import { type EntryLocale, type EntryStatus, followingSlug, formatDate, localeName, localInputValue, scheduleStart, statusLabel } from '@/lib/entries.ts';
+import { type EntryLocale, type EntryStatus, followingSlug, formatDate, localeName, localInputValue, scheduleStart, slugNote, statusLabel } from '@/lib/entries.ts';
 import type { FieldDefinition } from '@/types.ts';
 
 interface Props {
@@ -48,7 +49,11 @@ interface Props {
         url: string | null;
         /** A signed link showing the saved draft, for a while. */
         previewUrl: string;
+        /** The slug in the address visitors have known (null: never published, no address of its own, or the homepage). */
+        publishedSlug?: string | null;
     } | null;
+    /** Where to add a redirect by hand, for those who may. */
+    redirectsUrl?: string | null;
     values: { title: string; slug: string; data: FieldValues; seo: FieldValues | null };
     /** Deferred: loaded after the page shows. */
     revisions?: Revision[];
@@ -104,7 +109,7 @@ export default function EntryEditorPage(props: Props) {
     return <EntryEditor key={entry ? `${entry.id}:${entry.locale}:${entry.version}:${entry.status}:${entry.trashed}:${entry.publishedAt}` : 'new'} {...props} />;
 }
 
-function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, comments, termLabels, usedBy = [], undoRestore = null, machineTranslate = null, machineTranslateMissing = false, settings, blueprints = [], homepage, can }: Props) {
+function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, comments, termLabels, usedBy = [], undoRestore = null, machineTranslate = null, machineTranslateMissing = false, settings, blueprints = [], homepage, redirectsUrl = null, can }: Props) {
     const list = adminUrl(`cms/collections/${collection.handle}/entries`);
     const url = entry ? adminUrl(`cms/entries/${entry.id}`) : list;
     const heading = entry ? values.title : t('New entry');
@@ -352,6 +357,8 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                                     <Label htmlFor="slug">{t('Slug')}</Label>
                                     <Input id="slug" className="cms:font-mono" value={form.data.slug} placeholder={t('Made from the title')} aria-invalid={errors.slug !== undefined}
                                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => { form.setData('slug', e.target.value); clearErrorsAt('slug'); }} />
+                                    {/* Publishing redirects from the old address while the entry is published (live or scheduled). */}
+                                    <SlugNote note={slugNote(entry?.publishedSlug, form.data.slug, entry !== null && entry.status !== 'draft')} redirectsUrl={redirectsUrl} />
                                     <FieldError message={errors.slug} />
                                 </div>
                             </fieldset>

@@ -8,10 +8,11 @@ import {
 } from '@sunrice/admin-sdk/ui';
 import { FieldError, Fields } from '@/components/FieldInput.tsx';
 import { FieldSections } from '@/components/FieldSections.tsx';
+import { SlugNote } from '@/components/SlugNote.tsx';
 import { TemplateHelp } from '@/components/TemplateHelp.tsx';
 import { VersionConflict } from '@/components/VersionConflict.tsx';
 import { errorKeysAt, errorsAt, hasErrors } from '@/lib/builder.ts';
-import { localeName } from '@/lib/entries.ts';
+import { localeName, slugNote } from '@/lib/entries.ts';
 import { seoFields } from '@/lib/seo.ts';
 import type { FieldDefinition } from '@/types.ts';
 
@@ -25,7 +26,11 @@ interface Props {
         id: number; title: string; template: string | null; url: string | null;
         /** This language's own title and slug (null: not translated yet), and the main language's title. */
         ownTitle: string | null; slug: string | null; mainTitle: string | null;
+        /** Whether it has a page of its own, whose address a new slug moves. */
+        hasPage?: boolean;
     };
+    /** Where to add a redirect by hand, for those who may. */
+    redirectsUrl?: string | null;
     /** Whether the term has a title in this language. */
     translated: boolean;
     fields: FieldDefinition[];
@@ -46,7 +51,7 @@ export default function TermEditPage(props: Props) {
     return <TermEdit key={`${props.locale}:${props.version}:${JSON.stringify([props.values, props.seo, props.term.template])}`} {...props} />;
 }
 
-function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared, sharedValues, values, seo, version, usedBy = [] }: Props) {
+function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared, sharedValues, values, seo, version, usedBy = [], redirectsUrl = null }: Props) {
     const list = adminUrl(`cms/taxonomies/${taxonomy.handle}/terms`);
     const url = adminUrl(`cms/terms/${term.id}/content`);
     useBreadcrumbs([{ label: taxonomy.title, href: `${list}?locale=${locale}` }, { label: term.title }]);
@@ -124,6 +129,8 @@ function TermEdit({ taxonomy, term, translated, fields, locale, locales, shared,
                             <Label htmlFor="term-slug">{t('Slug')}</Label>
                             <Input id="term-slug" className="cms:font-mono" value={form.data.slug} placeholder={t('Made from the title')} maxLength={200} aria-invalid={errors.slug !== undefined}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => { form.setData('slug', e.target.value); clearErrorsAt('slug'); }} />
+                            {/* A term's page moves as soon as it's saved: nothing redirects from the old address. */}
+                            <SlugNote note={slugNote(term.hasPage ? term.slug : null, form.data.slug, false)} redirectsUrl={redirectsUrl} />
                             <FieldError message={errors.slug} />
                         </div>
                     </fieldset>
