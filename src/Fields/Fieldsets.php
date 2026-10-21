@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sunrice\Cms\Fields;
 
 use Sunrice\Cms\Models\Fieldset;
+use Sunrice\Cms\Support\SiteRecords;
 
 /**
  * The fieldsets' fields by handle, loaded once per request: blueprints
@@ -36,7 +37,8 @@ final class Fieldsets
     /** @return array<string, Fieldset> */
     public function all(): array
     {
-        return $this->fieldsets ??= Fieldset::query()->orderBy('title')->get()
+        // From the site cache: no queries until a fieldset changes.
+        return $this->fieldsets ??= SiteRecords::many('fieldsets', Fieldset::class, fn () => Fieldset::query()->orderBy('title')->get())
             ->mapWithKeys(fn (Fieldset $fieldset): array => [$fieldset->handle => $fieldset])->all();
     }
 

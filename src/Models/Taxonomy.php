@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Sunrice\Cms\Fields\Schema;
+use Sunrice\Cms\Support\SiteRecords;
 
 /**
  * A way to group entries (categories, tags), with terms, optionally
@@ -67,6 +68,6 @@ class Taxonomy extends Model
     /** Terms' own fields (none without a blueprint), loaded once. */
     public function schema(): Schema
     {
-        return $this->schema ??= ($this->blueprint === null ? null : Blueprint::query()->where('handle', $this->blueprint)->first()?->schema()) ?? Schema::make([]);
+        return $this->schema ??= SiteRecords::blueprint($this->blueprint)?->schema() ?? Schema::make([]);
     }
 }

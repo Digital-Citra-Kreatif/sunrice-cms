@@ -55,5 +55,7 @@ final class Versioned
             throw ValidationException::withMessages(['version' => self::CONFLICT]);
         }
         $model->refresh();
+        // A query update fires no model events: the site's cache still hears of it.
+        ContentWatch::updated($model);
     }
 }

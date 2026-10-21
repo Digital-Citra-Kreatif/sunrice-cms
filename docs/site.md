@@ -78,6 +78,7 @@ It copies them into `resources/views/cms/`, where the rules above pick them up, 
 | `cms/listing.blade.php` | listing pages | the listing's fields, cards, pagination |
 | `cms/term.blade.php` | term pages | the term's fields and its entries |
 | `cms/search.blade.php` | the search page | the search box, results |
+| `cms/comment-unsubscribe.blade.php` | a reply email's "stop these emails" link | the confirm button, then the done message, in the layout ([Comments](comments.md)) |
 | `cms/partials/fields.blade.php` | the pages above | text, rich text, images, galleries, links and flexible blocks, by kind |
 | `cms/partials/blocks.blade.php`, `block.blade.php` | flexible blocks | `cms/blocks/{fieldset}.blade.php` per kind of block when you make one (it gets `$block`), else the block's fields |
 | `cms/partials/card.blade.php` | lists of entries | title, date, and an `image` and `excerpt` field when there are |
@@ -196,7 +197,7 @@ A collection with a **listing page URL** (`listing_route`, like `/blog`) gets a 
 | | |
 | --- | --- |
 | `$collection` | the `Collection` (`->listingUrl($locale)`) |
-| `$entries` | a paginator of `EntryTranslation`s (`{{ $entries->links() }}`) |
+| `$entries` | a paginator of `EntryTranslation`s (`{{ $entries->links() }}`; an `Illuminate\Contracts\Pagination\LengthAwarePaginator`), queried only when the template first uses it, so a template that lists entries its own way (an [entry filter](#filtering-entries), `Cms::entries()`) costs nothing for it; a page past the last is a 404 |
 | `$values`, `$richText` | the listing page's fields, as for entries |
 | `$title`, `$locale`, `$url` | the collection's title, the language and the page's URL |
 
@@ -244,7 +245,7 @@ Cms::entries('blog')->search($request->query('q', ''))->paginate(10);
 
 Field filters read the main language's published values (shared fields, like entries and terms, live there).
 
-A result's entries share one `HydrationContext`: whatever their fields point at (media, entries, terms) is loaded up front, one query per kind, so `$post->values()` in a loop costs no queries of its own.
+A result's entries share one `HydrationContext`: the first `values()` loads whatever all their fields point at (media, entries, terms), one query per kind, so `$post->values()` in a loop costs no queries of its own; the entries an entries field gives share it too (see [Using fields in code](fields.md#using-fields-in-code)). The `$entries` of listing and term pages and the search page's `$results` are hydrated the same way.
 
 ### Components
 
@@ -383,7 +384,7 @@ Without a slot it prints a plain, accessible form (labels for every input, field
 | `date_range` | `?made_from=2026-01-01&made_to=2026-01-31` | Date fields from the start of one day to the end of the other. |
 | `toggle` | `?sale=1` | The field is on. |
 
-Only the filters declared are read, and only values among a filter's options (numbers for ranges, `YYYY-MM-DD` dates); anything else is ignored, so a link can't make it query what you didn't offer. Other query string parameters are kept by the links and the form.
+Only the filters declared are read, and only values among a filter's options (numbers for ranges, `YYYY-MM-DD` dates); anything else is ignored, so a link can't make it query what you didn't offer. Other query string parameters are kept by the links and the form. With the [page cache](caching.md#whole-pages) on, add the filters' parameters (and the sort's) to `sunrice-cms.cache.query` so each result is kept apart; a page given a value the filter ignores isn't kept at all (`PageCache::dontKeep()`), so made-up values can't fill the cache store.
 
 In the slot: `$component->entries` (a paginator of `EntryTranslation`s), `->filters` (`Filter\FilterControl`: `name`, `type`, `field`, `label`, `multiple`, `value`, `options` with `value`, `label`, `selected` (and `count`, `depth` for terms), `inputs` (input names: `['value' => 'topic[]']`, `['min' => 'price_min', 'max' => 'price_max']`), `id()`, `applied()`), `->filter('q')`, `->sorts` (`Filter\SortChoice`: `value`, `label`, `order`, `selected`) with `->sortName`, `->active` (`Filter\ActiveFilter`: `filter`, `label`, `value`, `removeUrl`), `->filtered()`, `->clearUrl()`, `->action` (this page), `->others` (the other query parameters) and `->query()` (the filtered `EntryQuery`, for a count or a map).
 

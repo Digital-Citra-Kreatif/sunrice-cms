@@ -12,7 +12,9 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Str;
 use Sunrice\Admin\Support\AppUrl;
+use Sunrice\Cms\Fields\Types\FileField;
 use Sunrice\Cms\Models\Submission;
+use Sunrice\Cms\Support\Locales;
 
 /**
  * Tells a form's addresses what a visitor sent. Replies go to the
@@ -37,10 +39,27 @@ final class SubmissionReceived extends Mailable
 
     public function content(): Content
     {
+        $submission = $this->submission;
+        $rows = [];
+        foreach (SubmissionRows::of($submission) as $row) {
+            // What was left empty isn't news.
+            if ($row['value'] === '') {
+                continue;
+            }
+            $file = $submission->data[$row['handle']] ?? null;
+            if (is_array($file) && is_int($file['size'] ?? null)) {
+                $row['value'] .= ' ('.FileField::size(max(1, intdiv($file['size'], 1024))).')';
+            }
+            $rows[] = $row;
+        }
+
         return new Content(view: 'sunrice-cms::mail.submission', with: [
-            'form' => $this->submission->form,
+            'form' => $submission->form,
             // Sent while a visitor submits: file links on APP_URL, not their Host header.
-            'rows' => array_map(fn (array $row): array => [...$row, 'file' => $row['file'] !== null ? AppUrl::url($row['file']) : null], SubmissionRows::of($this->submission)),
+            'rows' => array_map(fn (array $row): array => [...$row, 'file' => $row['file'] !== null ? AppUrl::url($row['file']) : null], $rows),
+            'page' => $submission->referrer,
+            'language' => Locales::name($submission->locale),
+            'admin' => AppUrl::route('sunrice.admin.cms.submissions.index', ['form' => $submission->form->handle]),
         ]);
     }
 }

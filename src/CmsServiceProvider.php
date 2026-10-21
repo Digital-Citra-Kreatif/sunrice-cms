@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms;
 
-use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Translation\Translator;
@@ -140,15 +138,6 @@ final class CmsServiceProvider extends ServiceProvider
                 Support\SiteCode::changed($event->changed);
             }
         });
-        RateLimiter::for('sunrice-comments', fn (Request $request): Limit => Limit::perMinute(max(1, app(Settings\CommentSettings::class)->perMinute))->by('sunrice-comments|'.$request->ip()));
-        // Per visitor (IP address) and form, at the form's own limit.
-        RateLimiter::for('sunrice-forms', function (Request $request): Limit {
-            $form = $request->route('form');
-            $form = is_string($form) ? Models\Form::query()->where('handle', $form)->first() : ($form instanceof Models\Form ? $form : null);
-            $perMinute = $form?->perMinute() ?? (new Models\Form)->perMinute();
-
-            return Limit::perMinute($perMinute)->by('sunrice-forms|'.($form->handle ?? '').'|'.$request->ip());
-        });
         if (! $this->app->routesAreCached()) {
             $this->siteRoutes();
         }
@@ -184,6 +173,8 @@ final class CmsServiceProvider extends ServiceProvider
 
             return;
         }
+        // Which pages paginate: only they are kept apart by ?page=.
+        Site\PageNumberWatch::register();
         if (config('responsecache.cache_profile', CacheAllSuccessfulGetRequests::class) === CacheAllSuccessfulGetRequests::class) {
             config(['responsecache.cache_profile' => Site\PageCacheProfile::class]);
         }
@@ -195,6 +186,10 @@ final class CmsServiceProvider extends ServiceProvider
         }
         // A kept page is served to every visitor: without the replacer, they'd all get the first one's CSRF token and no form would work.
         $replacers = config('responsecache.replacers', []);
+        // And their own honeypot fields: else the "sent too fast" check would count from when the page was kept.
+        if (is_array($replacers) && ! in_array(Site\HoneypotReplacer::class, $replacers, true)) {
+            config(['responsecache.replacers' => [...$replacers, Site\HoneypotReplacer::class]]);
+        }
         if (Site\PageCache::enabled() && (! is_array($replacers) || ! in_array(CsrfTokenReplacer::class, $replacers, true))) {
             throw new PanelMisconfigured('sunrice-cms.cache.pages needs '.CsrfTokenReplacer::class.' in responsecache.replacers (config/responsecache.php): kept pages must give each visitor their own CSRF token.');
         }
@@ -204,11 +199,12 @@ final class CmsServiceProvider extends ServiceProvider
     {
         $middleware = config('sunrice-cms.site.middleware', ['web']);
         $middleware = is_array($middleware) ? array_values(array_filter($middleware, is_string(...))) : ['web'];
-        Route::middleware([...$middleware, 'throttle:sunrice-forms', ProtectAgainstSpam::class, Site\RequireHoneypot::class])
+        Route::middleware([...$middleware, ProtectAgainstSpam::class, Site\RequireHoneypot::class])
             ->post('forms/{form:handle}', Site\FormController::class)->name('sunrice.cms.forms.submit');
-        Route::middleware([...$middleware, 'throttle:sunrice-comments', ProtectAgainstSpam::class, Site\RequireHoneypot::class])
+        Route::middleware([...$middleware, ProtectAgainstSpam::class, Site\RequireHoneypot::class])
             ->post('comments/{entry}', [Site\CommentController::class, 'store'])->name('sunrice.cms.comments.store');
         Route::middleware([...$middleware, 'signed'])->get('comments/{comment}/unsubscribe', [Site\CommentController::class, 'unsubscribe'])->name('sunrice.cms.comments.unsubscribe');
+        Route::middleware([...$middleware, 'signed'])->post('comments/{comment}/unsubscribe', [Site\CommentController::class, 'confirmUnsubscribe'])->name('sunrice.cms.comments.unsubscribe.confirm');
         Route::middleware([...$middleware, 'signed'])->get('cms-preview/{translation}', [Site\SiteController::class, 'preview'])->name('sunrice.cms.preview');
         if (config('sunrice-cms.site.enabled', true) === true) {
             Route::middleware($middleware)->get('sitemap.xml', Site\SitemapController::class)->name('sunrice.cms.sitemap');

@@ -36,7 +36,7 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 | `number` | a number | the number | `min`, `max`, `step` (1 for whole numbers), `default` |
 | `toggle` | true or false | the boolean | `default` |
 | `select` | a value, or a list with `multiple` | the same | `options` (`[{value, label}]`), `multiple`, `default` |
-| `date` | `2026-10-19`, or `2026-10-19T14:30:00` with `time` | a Carbon | `time` |
+| `date` | `2026-10-19`, or `2026-10-19T14:30:00` with `time` | a Carbon | `time`; `future` (*Today or later only*: earlier days are refused, and a form's date input gets `min`) |
 | `link` | `{type: url, url, label, new_tab}` or `{type: entry, entry_id, label, new_tab}` | `{type, url, label, title, new_tab}`, or null | `collections` (entry links; none: any) |
 | `media` | a media id, or a list with `multiple` | a `Media` model, or a collection | `multiple`, `max`, `types` (image, video, audio, document) |
 | `group` | an object of its fields | an array | (its `fields`) |
@@ -111,7 +111,15 @@ $schema->references($data);                                  // media it uses, a
 
 `rules()` takes the input because a flexible field's rules depend on which blocks were sent.
 
-A `HydrationContext` remembers the media, entries and terms it loads, so hydrating many values with one context costs one query per kind: `$context->preload($schema->references($data))` loads everything a set of data points at up front. `Cms::entries()` does this for its whole result, and `$translation->hydrateWith($context)` makes `values()` use a context when given none.
+A `HydrationContext` remembers the media, entries and terms it loads, so hydrating many values with one context costs one query per kind: `$context->preload($schema->references($data))` loads everything a set of data points at up front. An entry's `values()` loads what all its fields point at together first (one query per kind, not per field), and `$context->share($translations)` makes a list of entries hydrate together: the first `values()` of any of them loads what all of them point at, and `$translation->hydrateWith($context)` makes `values()` use a context when given none. The entries a context loads for an entries field share it too, so `$values['agent']->values()` on every card costs nothing more either: each level of links costs one query per kind.
+
+`Cms::entries()`, the `$entries` of listing and term pages, `$results` on the search page and the entry page's `$values` all do this. For entries you load yourself:
+
+```php
+$cards = EntryTranslation::query()->live()->whereIn('entry_id', $ids)->with('entry.collection')->get();
+(new HydrationContext(app()->getLocale()))->share($cards);
+foreach ($cards as $card) { $card->values(); } // no queries in the loop
+```
 
 ## Your own field types
 

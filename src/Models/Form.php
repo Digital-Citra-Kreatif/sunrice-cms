@@ -10,6 +10,7 @@ use Illuminate\Support\Carbon;
 use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\Schema;
 use Sunrice\Cms\Fields\Types;
+use Sunrice\Cms\Support\SiteRecords;
 
 /**
  * A form visitors fill in on the site: its fields come from a blueprint,
@@ -60,7 +61,7 @@ class Form extends Model
         if ($this->schema !== null) {
             return $this->schema;
         }
-        $schema = ($this->blueprint === null ? null : Blueprint::query()->where('handle', $this->blueprint)->first()?->schema()) ?? Schema::make([]);
+        $schema = SiteRecords::blueprint($this->blueprint)?->schema() ?? Schema::make([]);
         $hidden = array_values(array_map(fn (Field $field): string => $field->handle,
             array_filter($schema->fields(), fn (Field $field): bool => ! in_array($field->type, self::PUBLIC_TYPES, true))));
 

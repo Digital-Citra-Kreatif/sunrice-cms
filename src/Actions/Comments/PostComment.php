@@ -6,6 +6,7 @@ namespace Sunrice\Cms\Actions\Comments;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Mail;
@@ -31,6 +32,9 @@ use Throwable;
  */
 final class PostComment
 {
+    /** Seconds after telling moderators about an entry's comment before they're told about its next one. */
+    public const TELL_EVERY = 600;
+
     public const MAX_LENGTH = 5000;
 
     public function __construct(private readonly CommentSettings $settings) {}
@@ -131,6 +135,10 @@ final class PostComment
 
     private function tellModerators(Comment $comment): void
     {
+        // One email per entry every few minutes: a burst of comments is one look in the admin, not an email each.
+        if (! Cache::add('sunrice-cms:comments:told:'.$comment->entry_id, true, self::TELL_EVERY)) {
+            return;
+        }
         $addresses = [...$this->settings->extraEmails(), ...RoleMembers::emails($this->settings->notifyRoles)];
         try {
             // Users with the permission, directly or through a role (spatie/laravel-permission's scope).

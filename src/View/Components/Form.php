@@ -14,6 +14,7 @@ use Sunrice\Admin\Security\Captcha;
 use Sunrice\Cms\Models\Form as FormModel;
 use Sunrice\Cms\Site\FormController;
 use Sunrice\Cms\Support\Locales;
+use Sunrice\Cms\Support\SiteRecords;
 
 /**
  * A form for visitors. Empty, it prints the form's fields itself:
@@ -52,7 +53,8 @@ final class Form extends Component
 
     public function __construct(string $handle, public ?string $submit = null, public bool $replace = false)
     {
-        $this->form = FormModel::query()->where('handle', $handle)->first();
+        // From the site cache: no queries until the form changes.
+        $this->form = SiteRecords::one('form:'.$handle, FormModel::class, fn (): ?FormModel => FormModel::query()->where('handle', $handle)->first());
         $this->id = 'form-'.$handle;
         $this->locale = Locales::current();
     }
@@ -88,6 +90,27 @@ final class Form extends Component
     public function failed(): bool
     {
         return $this->bag()->isNotEmpty();
+    }
+
+    /**
+     * This form's errors for a summary above it, the first per field: field
+     * handle (null for the captcha's and the send limit's, which have no
+     * input to link to) => message.
+     *
+     * @return list<array{0: string|null, 1: string}>
+     */
+    public function errorSummary(): array
+    {
+        $handles = $this->form === null ? [] : array_map(fn ($field): string => $field->handle, $this->form->schema()->fields());
+        $list = [];
+        foreach ($this->bag()->toArray() as $key => $messages) {
+            $message = is_array($messages) ? ($messages[0] ?? null) : null;
+            if (is_string($message) && $message !== '') {
+                $list[] = [in_array($key, $handles, true) ? (string) $key : null, $message];
+            }
+        }
+
+        return $list;
     }
 
     /**

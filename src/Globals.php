@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms;
 
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Models\GlobalSet;
+use Sunrice\Cms\Models\GlobalValue;
 use Sunrice\Cms\Support\Locales;
+use Sunrice\Cms\Support\SiteRecords;
 
 /**
  * Reads global sets' values for templates, loading them once per request:
@@ -51,7 +54,16 @@ final class Globals
     /** @return array<string, GlobalSet> */
     private function sets(): array
     {
-        return $this->sets ??= GlobalSet::query()->with('values')->get()
-            ->mapWithKeys(fn (GlobalSet $set): array => [$set->handle => $set])->all();
+        if ($this->sets !== null) {
+            return $this->sets;
+        }
+        // From the site cache: no queries until a set or its values change.
+        $sets = SiteRecords::many('global-sets', GlobalSet::class, fn () => GlobalSet::query()->get());
+        $values = SiteRecords::many('global-values', GlobalValue::class, fn () => GlobalValue::query()->get())->groupBy('global_set_id');
+        foreach ($sets as $set) {
+            $set->setRelation('values', $values->get($set->id) ?? new EloquentCollection);
+        }
+
+        return $this->sets = $sets->mapWithKeys(fn (GlobalSet $set): array => [$set->handle => $set])->all();
     }
 }

@@ -33,6 +33,7 @@ use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Support\References;
 use Sunrice\Cms\Support\SearchText;
+use Sunrice\Cms\Support\SiteCache;
 
 /**
  * Renames a field of a blueprint or a fieldset, also inside groups and
@@ -117,6 +118,8 @@ final class RenameFieldHandle
         });
         if (! $dryRun) {
             app(Globals::class)->flush();
+            // Stored values moved with query updates (no model events): everything the site keeps may read them.
+            app(SiteCache::class)->changed("{$kind} {$definition->handle} field {$from}");
             $this->activity->updated($kind, $definition, $definition->title, ["{$from} → {$handle}"]);
         }
 

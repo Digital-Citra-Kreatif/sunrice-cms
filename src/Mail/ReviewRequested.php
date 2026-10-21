@@ -11,6 +11,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Str;
+use Sunrice\Admin\Support\AppUrl;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Support\Locales;
 
@@ -40,7 +41,7 @@ final class ReviewRequested extends Mailable
             'title' => $this->translation->draft_title,
             'collection' => $this->translation->entry->collection->title,
             'requester' => is_string($name) && $name !== '' ? $name : 'Someone',
-            'url' => route('sunrice.admin.cms.entries.edit', [
+            'url' => AppUrl::route('sunrice.admin.cms.entries.edit', [
                 'entry' => $this->translation->entry_id,
                 ...($this->translation->locale === Locales::default() ? [] : ['locale' => $this->translation->locale]),
             ]),

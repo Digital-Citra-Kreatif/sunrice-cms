@@ -174,6 +174,8 @@ class EntryTranslation extends Model
     public function values(?HydrationContext $context = null): array
     {
         $context ??= $this->hydration ?? new HydrationContext($this->locale);
+        // What its fields point at, loaded one query per kind (with the other entries sharing the context).
+        $context->prepare($this);
 
         return $this->entry->schema()->hydrate($this->completeData($context->preview), $context);
     }

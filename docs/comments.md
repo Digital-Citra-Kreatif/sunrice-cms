@@ -28,7 +28,7 @@ The markup's classes: `sunrice-comments` (`#comments`), `sunrice-comments-list`,
 | New comments | Hold a commenter's first comment | Or hold every comment, or publish at once. "First" trusts a commenter once one of theirs is approved: signed-in users by their account; guests by the same name, email and address (its hash) as an approved guest comment, since an email alone proves nothing, so a different name or address is held again. Comments by people who may moderate are always published. |
 | Only signed-in users can comment | off | Guests see the thread but not the form. |
 | Ask for a captcha | off | The captcha set up for [forms](forms.md#captcha). |
-| Comments per visitor a minute | 3 | More get `429`. |
+| Comments per visitor a minute | 3 | Only comments kept count. More go back to the form with a message and what was typed (`_limit` in the `comments` bag), or `429` for JSON. |
 | Close comments after | never | Days after the entry's publish date. |
 | Reply levels shown | 3 | Deeper replies line up at the last level. |
 | Email moderators about new comments | on | Users with `cms.comments.moderate`, and the extra addresses. |
@@ -39,8 +39,8 @@ Every comment also needs the honeypot. Spam is deleted after `sunrice-cms.commen
 
 ## Emails
 
-- **To moderators**, for each new comment by someone who can't moderate, with a link to it in the admin; one email each, so addresses aren't shown to each other (form notifications go the same way).
-- **To commenters** who asked, when a reply to their comment is published (once per reply; not for replying to yourself), in the language they commented in, with a link that stops these emails for that comment.
+- **To moderators**, for a new comment by someone who can't moderate, with a link to the entry's comments in the admin; one email each, so addresses aren't shown to each other (form notifications go the same way). A burst of comments on one entry sends one email: after one, the next comes no sooner than ten minutes later (`PostComment::TELL_EVERY`), and the link shows them all.
+- **To commenters** who asked, when a reply to their comment is published (once per reply; not for replying to yourself), in the language they commented in, with a link that stops these emails for that comment. The link (signed, `sunrice.cms.comments.unsubscribe`) opens a page that asks first, with a button that POSTs to the same link (`sunrice.cms.comments.unsubscribe.confirm`), so mail scanners that open links unsubscribe nobody. The page is the site's own `cms/comment-unsubscribe.blade.php` when there is one (the starter templates have one in the site's layout; it gets `$done`, `$action`, `$title`, `$url` and `$locale`), else the CMS's plain page.
 
 Both are queued: run a queue worker.
 

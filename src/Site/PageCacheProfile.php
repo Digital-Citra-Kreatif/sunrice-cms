@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sunrice\Cms\Site;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Vite;
 use Spatie\ResponseCache\CacheProfiles\CacheAllSuccessfulGetRequests;
 use Sunrice\Cms\Support\SiteCache;
 use Symfony\Component\HttpFoundation\Response;
@@ -38,9 +39,15 @@ class PageCacheProfile extends CacheAllSuccessfulGetRequests
         return $own === null ? $lifetime : min($lifetime, $own);
     }
 
-    /** The pages' content version: pages kept before a change are never served again. */
+    /**
+     * The pages' content version, and the front end's build (Vite's
+     * manifest): pages kept before a change, or before `npm run build`
+     * renamed the CSS and JS they link, are never served again.
+     */
     public function useCacheNameSuffix(Request $request): string
     {
-        return 'v'.app(SiteCache::class)->version(SiteCache::PAGES);
+        $build = Vite::manifestHash();
+
+        return 'v'.app(SiteCache::class)->version(SiteCache::PAGES).($build === null ? '' : '-'.substr($build, 0, 12));
     }
 }
