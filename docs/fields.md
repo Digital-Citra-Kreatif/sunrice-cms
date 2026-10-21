@@ -82,22 +82,40 @@ A `fieldset` field puts the fieldset's fields in its own place, at its level and
 
 ## Showing a field only sometimes
 
-A field can show only when another field on its level is so: in the
-blueprint builder, **Show** → *When Layout* *is* `video`. The other field
-must have a value of its own: a fieldset include can't be one (its fields
-can). In the definition:
+A field can show only when other fields on its level are so: in the
+blueprint builder, under **Visibility**, **Add condition** → *Only when Layout*
+*is* *Video*. The value input fits the other field: a select's own options,
+*switched on* / *switched off* for a toggle, a term or an entry picker,
+else text. With two conditions or more, choose whether **All of these** or
+**Any of these** must be true. The other field must have a value of its
+own: a fieldset include can't be one (its fields can). In the definition,
+one rule:
 
 ```php
 ['handle' => 'video_url', 'type' => 'text', 'required' => true,
     'condition' => ['field' => 'layout', 'operator' => 'equals', 'value' => 'video']],
 ```
 
-Operators: `equals` and `not_equals` (with a value; a list field matches
-when one of its values does, a toggle with `true` or `false`), `filled`
-and `empty`. Inside groups, repeater rows and blocks, the other field is a
-sibling there. A hidden field (and everything in it) isn't required, and
-keeps what it had, still checked against its other rules; templates still
-get its value. `Field::isShownWith()` tells whether it shows.
+or several, with `match` `all` (the default) or `any`:
+
+```php
+['handle' => 'video_url', 'type' => 'text',
+    'condition' => ['match' => 'any', 'rules' => [
+        ['field' => 'layout', 'operator' => 'equals', 'value' => 'video'],
+        ['field' => 'featured', 'operator' => 'equals', 'value' => true],
+    ]]],
+```
+
+The builder saves a single condition in the first form, so definitions
+written before several existed stay as they are. Operators: `equals` and
+`not_equals` (with a value; a list field matches when one of its values
+does, a toggle with `true` or `false`, a terms or entries field with an
+id), `filled` and `empty`. Inside groups, repeater rows and blocks, the
+other fields are siblings there. A hidden field (and everything in it)
+isn't required, and keeps what it had, still checked against its other
+rules; templates still get its value. `Field::isShownWith()` tells whether
+it shows; `conditionRules()` and `conditionMatch()` read the condition in
+either form.
 
 ## Using fields in code
 

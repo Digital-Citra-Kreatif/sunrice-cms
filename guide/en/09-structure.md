@@ -60,6 +60,7 @@ To add a field, choose its type, then set:
 - **Required**: the entry can't be saved or published without it.
 - **Translatable**: on, each language gets its own value; off, one value is shared by every language. It starts as the type suggests (on for text, off for numbers, dates, switches and media). In the field's row, a **Shared** marker shows the fields that aren't translated.
 - **In other languages** (on a site with several languages): the label, instructions and a choice list's options as visitors read them in each other language. Forms on the website show these, and their error messages name the field this way. Empty: as written above.
+- **Visibility**: a field can show only sometimes. **Add condition** and pick another field, how to compare and the value (a choice list's own options, *switched on* or *switched off* for a toggle, a term or an entry): *Only when Layout is Video*. With two conditions or more, choose **All of these** or **Any of these**. A hidden field isn't required and keeps what it had.
 - **Extra rules**: checks for developers, one per line (such as `email`).
 - Each type's own settings: the choices of a select, the collections an entries field links to, the types a media field accepts, how many items at most…
 

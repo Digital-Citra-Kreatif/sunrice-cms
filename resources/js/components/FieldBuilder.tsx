@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {
     AlignLeft, Blocks, Calendar, ChevronRight, Copy, FileText, Group, Hash, Image, Link2, List, type LucideIcon, Newspaper, Paperclip, Plus, Puzzle,
-    Repeat, Shapes, Tags, ToggleLeft, Trash2, Type,
+    Repeat, Shapes, Tags, ToggleLeft, Trash2, Type, X,
 } from 'lucide-react';
 import {
     Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input, Label,
@@ -11,8 +11,10 @@ import { t } from '@sunrice/admin-sdk';
 import { ChangeWarning } from '@/components/ChangeWarning.tsx';
 import { FieldError, FieldInput } from '@/components/FieldInput.tsx';
 import { type BuilderField, cleanHandle, conditionChoices, duplicateField, errorsAt, errorsUnder, handleWarning, hasErrors, isTranslatable, MAX_DEPTH, newField, relabel, renamedFrom, type ReservedHandles, setTranslatable } from '@/lib/builder.ts';
-import { OPERATORS } from '@/lib/conditions.ts';
-import type { Errors, FieldCondition, FieldTranslation, FieldTypeInfo, LocaleInfo } from '@/types.ts';
+import { conditionFrom, conditionMatch, conditionRules, conditionValueInput, type ConditionValueInput, OPERATORS, startValue } from '@/lib/conditions.ts';
+import { EntriesPicker } from '@/components/EntriesPicker.tsx';
+import { TermsPicker } from '@/components/TermsPicker.tsx';
+import type { Errors, FieldConditionRule, FieldTranslation, FieldTypeInfo, LocaleInfo } from '@/types.ts';
 
 interface Props {
     fields: BuilderField[];
@@ -331,10 +333,8 @@ function TranslationSettings({ id, field, locales, onChange, errors }: { id: str
     );
 }
 
-const ALWAYS = '__always';
-
 /** An operator's words (OPERATORS keeps the English for the tests). */
-function operatorLabel(operator: FieldCondition['operator']): string {
+function operatorLabel(operator: FieldConditionRule['operator']): string {
     switch (operator) {
         case 'equals':
             return t('is');
@@ -347,46 +347,144 @@ function operatorLabel(operator: FieldCondition['operator']): string {
     }
 }
 
-/** "Show only when …": another field on this level, how to compare, and with what. */
+/**
+ * "Show this field": always, or when other fields on this level are so: a list of rules (field, how to
+ * compare, and with what, the value input fitting the other field), and with two or more, whether all
+ * of them must hold or any one.
+ */
 function ConditionSettings({ id, field, siblings, onChange, errors }: { id: string; field: BuilderField; siblings: BuilderField[]; onChange: (field: BuilderField) => void; errors: Errors }) {
     const others = conditionChoices(field, siblings);
-    const condition = field.condition ?? null;
-    const operator = OPERATORS.find((o) => o.value === condition?.operator) ?? OPERATORS[0]!;
-    const set = (changes: Partial<FieldCondition> | null) =>
-        onChange({ ...field, condition: changes === null ? null : { field: condition?.field ?? others[0]?.handle ?? '', operator: condition?.operator ?? 'equals', value: condition?.value ?? '', ...changes } });
+    const rules = conditionRules(field.condition);
+    const match = conditionMatch(field.condition);
+    const set = (next: FieldConditionRule[], nextMatch: 'all' | 'any' = match) => onChange({ ...field, condition: conditionFrom(next, nextMatch) });
+    const setRule = (index: number, changes: Partial<FieldConditionRule>) => set(rules.map((rule, i) => (i === index ? { ...rule, ...changes } : rule)));
+    const add = () => {
+        const other = others.find((o) => !rules.some((rule) => rule.field === o.handle)) ?? others[0];
+        if (!other) return;
+        set([...rules, { field: other.handle, operator: 'equals', value: startValue(conditionValueInput(other)) }]);
+    };
+    // Errors under one rule ("rules.1.field"), or of the only rule ("field").
+    const ruleError = (index: number): string | undefined => {
+        const own = rules.length > 1 || 'rules' in (field.condition ?? {}) ? errorsUnder(errors, `rules.${index}`) : errors;
+        return own.field ?? own.operator ?? own.value;
+    };
 
-    if (others.length === 0 && condition === null) return null;
+    if (others.length === 0 && rules.length === 0) return null;
 
     return (
-        <div className="cms:flex cms:flex-col cms:gap-2">
-            <Label htmlFor={`${id}-condition`}>{t('Show')}</Label>
-            <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
-                <Select value={condition?.field ?? ALWAYS} onValueChange={(value: string) => set(value === ALWAYS ? null : { field: value })}>
-                    <SelectTrigger id={`${id}-condition`} className="cms:w-56"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value={ALWAYS}>{t('Always')}</SelectItem>
-                        {others.map((other) => <SelectItem key={other.key} value={other.handle}>{t('When :field', { field: other.label || other.handle })}</SelectItem>)}
-                    </SelectContent>
-                </Select>
-                {condition && (
-                    <>
-                        <Select value={operator.value} onValueChange={(value: string) => set({ operator: value as FieldCondition['operator'] })}>
-                            <SelectTrigger aria-label={t('How to compare')} className="cms:w-36"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                                {OPERATORS.map((o) => <SelectItem key={o.value} value={o.value}>{operatorLabel(o.value)}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                        {operator.needsValue && (
-                            <Input aria-label={t('Value')} className="cms:w-48" placeholder={t('a value, or true / false')} value={String(condition.value ?? '')}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => set({ value: e.target.value })} />
-                        )}
-                    </>
-                )}
-            </div>
-            <p className="cms:text-sm cms:text-muted-foreground">{t('A hidden field isn\'t required, and keeps what it had.')}</p>
-            <FieldError message={errors.field ?? errors.operator ?? errors.value ?? errors[''] } />
+        <div role="group" aria-labelledby={`${id}-visibility`} className="cms:flex cms:flex-col cms:gap-3">
+            <p id={`${id}-visibility`} className="cms:text-sm cms:font-medium">{t('Visibility')}</p>
+            {rules.length === 0 ? (
+                <p className="cms:text-sm cms:text-muted-foreground">{t('Always shown.')}</p>
+            ) : (
+                <>
+                    {rules.length > 1 && (
+                        <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-2 cms:text-sm">
+                            <span id={`${id}-match-label`}>{t('Show when')}</span>
+                            <Select value={match} onValueChange={(value: string) => set(rules, value === 'any' ? 'any' : 'all')}>
+                                <SelectTrigger aria-labelledby={`${id}-match-label`} className="cms:h-8 cms:w-auto"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">{t('All of these')}</SelectItem>
+                                    <SelectItem value="any">{t('Any of these')}</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <span>{t('are true:')}</span>
+                        </div>
+                    )}
+                    <ul className="cms:flex cms:flex-col cms:gap-2">
+                        {rules.map((rule, index) => {
+                            const other = siblings.find((sibling) => sibling.handle === rule.field && sibling.key !== field.key);
+                            const operator = OPERATORS.find((o) => o.value === rule.operator) ?? OPERATORS[0]!;
+                            const input = conditionValueInput(other);
+                            const error = ruleError(index);
+                            return (
+                                <li key={index} className="cms:flex cms:flex-col cms:gap-1">
+                                    <div className="cms:flex cms:flex-wrap cms:items-start cms:gap-2">
+                                        <span className="cms:flex cms:h-9 cms:w-20 cms:shrink-0 cms:items-center cms:text-sm cms:text-muted-foreground">{index === 0 ? t('Only when') : (match === 'any' ? t('or') : t('and'))}</span>
+                                        <Select value={rule.field} onValueChange={(value: string) => {
+                                            const next = siblings.find((sibling) => sibling.handle === value);
+                                            setRule(index, { field: value, value: startValue(conditionValueInput(next)) });
+                                        }}>
+                                            <SelectTrigger id={index === 0 ? `${id}-condition` : undefined} aria-label={t('Field')} className="cms:w-48"><SelectValue placeholder={rule.field} /></SelectTrigger>
+                                            <SelectContent>
+                                                {others.map((o) => <SelectItem key={o.key} value={o.handle}>{o.label || o.handle}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                        <Select value={operator.value} onValueChange={(value: string) => setRule(index, { operator: value as FieldConditionRule['operator'] })}>
+                                            <SelectTrigger aria-label={t('How to compare')} className="cms:w-36"><SelectValue /></SelectTrigger>
+                                            <SelectContent>
+                                                {OPERATORS.map((o) => <SelectItem key={o.value} value={o.value}>{operatorLabel(o.value)}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                        {operator.needsValue && (
+                                            <div className="cms:min-w-48 cms:flex-1 cms:sm:max-w-72">
+                                                <ConditionValue id={`${id}-rule-${index}-value`} input={input} value={rule.value ?? null} invalid={error !== undefined}
+                                                    onChange={(value) => setRule(index, { value })} />
+                                            </div>
+                                        )}
+                                        <Button type="button" variant="ghost" size="icon" className="cms:ml-auto cms:size-9 cms:text-muted-foreground hover:cms:text-destructive"
+                                            aria-label={t('Remove condition :number', { number: String(index + 1) })} title={t('Remove condition')}
+                                            onClick={() => set(rules.filter((_, i) => i !== index))}><X /></Button>
+                                    </div>
+                                    <FieldError message={error} />
+                                </li>
+                            );
+                        })}
+                    </ul>
+                </>
+            )}
+            {others.length > 0 && (
+                <div><Button type="button" variant="outline" size="sm" onClick={add}><Plus /> {t('Add condition')}</Button></div>
+            )}
+            {rules.length > 0 && <p className="cms:text-sm cms:text-muted-foreground">{t('A hidden field isn\'t required, and keeps what it had.')}</p>}
+            <FieldError message={errors[''] ?? errors.rules ?? errors.match} />
         </div>
     );
+}
+
+/** A rule's value, with the input that fits the other field (conditionValueInput). */
+function ConditionValue({ id, input, value, invalid, onChange }: {
+    id: string; input: ConditionValueInput; value: string | number | boolean | null; invalid: boolean; onChange: (value: string | number | boolean | null) => void;
+}) {
+    switch (input.kind) {
+        case 'options':
+            return (
+                <Select value={typeof value === 'string' && value !== '' ? value : undefined} onValueChange={(next: string) => onChange(next)}>
+                    <SelectTrigger id={id} aria-label={t('Value')} aria-invalid={invalid} className="cms:w-full"><SelectValue placeholder={t('Choose…')} /></SelectTrigger>
+                    <SelectContent>
+                        {input.options.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+            );
+        case 'toggle':
+            return (
+                <Select value={value === false || value === 'false' ? 'false' : 'true'} onValueChange={(next: string) => onChange(next === 'true')}>
+                    <SelectTrigger id={id} aria-label={t('Value')} aria-invalid={invalid} className="cms:w-full"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="true">{t('switched on')}</SelectItem>
+                        <SelectItem value="false">{t('switched off')}</SelectItem>
+                    </SelectContent>
+                </Select>
+            );
+        case 'terms':
+            return input.taxonomy === null
+                ? <Input id={id} aria-label={t('Value')} aria-invalid={invalid} disabled placeholder={t('Choose the field\'s taxonomy first')} />
+                : <TermsPicker id={id} taxonomy={input.taxonomy} multiple={false} max={null} required={false} invalid={invalid}
+                    value={typeof value === 'number' ? value : typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : null}
+                    onChange={(next) => onChange(typeof next === 'number' ? next : null)} />;
+        case 'entries':
+            return <EntriesPicker id={id} multiple={false} max={null} collections={input.collections} invalid={invalid}
+                value={typeof value === 'number' ? value : typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : null}
+                onChange={(next) => onChange(typeof next === 'number' ? next : null)} />;
+        case 'number':
+            return <Input id={id} type="number" aria-label={t('Value')} aria-invalid={invalid} placeholder={t('A number')}
+                value={value === null || value === undefined ? '' : String(value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value === '' ? null : Number(e.target.value))} />;
+        default:
+            return <Input id={id} aria-label={t('Value')} aria-invalid={invalid} placeholder={t('The text to compare with')}
+                value={value === null || value === undefined ? '' : String(value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)} />;
+    }
 }
 
 /** A translated sentence with :placeholders shown as code. */

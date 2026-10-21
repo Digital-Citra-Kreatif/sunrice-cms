@@ -924,5 +924,22 @@
     ":label (copy)": ":label (salinan)",
     "One value shared by every language.": "Satu nilai dipakai bersama semua bahasa.",
     "Content saved under :old won't show under :new, and templates reading :old get nothing. To rename it with its content: put back :old, save, then run :command.": "Konten yang disimpan dengan :old tidak akan tampil dengan :new, dan template yang membaca :old tidak mendapat apa-apa. Untuk mengganti namanya beserta kontennya: kembalikan :old, simpan, lalu jalankan :command.",
-    "This version": "Versi ini"
+    "This version": "Versi ini",
+    "Always shown.": "Selalu ditampilkan.",
+    "Show when": "Tampilkan jika",
+    "All of these": "Semua ini",
+    "Any of these": "Salah satu ini",
+    "are true:": "terpenuhi:",
+    "Field": "Field",
+    "or": "atau",
+    "Remove condition :number": "Hapus syarat :number",
+    "Remove condition": "Hapus syarat",
+    "Add condition": "Tambah syarat",
+    "switched on": "aktif",
+    "switched off": "nonaktif",
+    "Choose the field's taxonomy first": "Pilih dulu taksonomi field itu",
+    "A number": "Sebuah angka",
+    "The text to compare with": "Teks pembanding",
+    "Visibility": "Kapan tampil",
+    "Only when": "Hanya jika"
 }

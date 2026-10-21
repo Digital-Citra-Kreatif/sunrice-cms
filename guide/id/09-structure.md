@@ -60,6 +60,7 @@ Untuk menambah field, pilih jenisnya, lalu atur:
 - **Wajib**: entri tidak bisa disimpan atau diterbitkan tanpanya.
 - **Dapat diterjemahkan**: nyala, setiap bahasa punya nilainya sendiri; mati, satu nilai dipakai bersama semua bahasa. Awalnya mengikuti tipenya (nyala untuk teks, mati untuk angka, tanggal, saklar, dan media). Di baris field, penanda **Bersama** menunjukkan field yang tidak diterjemahkan.
 - **Dalam bahasa lain** (di situs dengan beberapa bahasa): label, petunjuk, dan opsi pilihan sebagaimana dibaca pengunjung di setiap bahasa lain. Formulir di situs web menampilkannya, dan pesan kesalahannya menyebut field dengan nama ini. Kosong: seperti yang ditulis di atas.
+- **Kapan tampil**: field bisa tampil hanya pada saat tertentu. **Tambah syarat**, lalu pilih field lain, cara membandingkan, dan nilainya (opsi daftar pilihan itu sendiri, *aktif* atau *nonaktif* untuk saklar, sebuah term atau entri): *Hanya jika Layout adalah Video*. Dengan dua syarat atau lebih, pilih **Semua ini** atau **Salah satu ini**. Field yang tersembunyi tidak wajib diisi dan tetap menyimpan isinya.
 - **Aturan tambahan**: pemeriksaan opsional, satu per baris (misalnya `email` atau `max:100`; untuk developer: aturan validasi Laravel).
 - Pengaturan khusus tiap jenis: opsi sebuah field pilihan, koleksi yang ditautkan field entri, jenis berkas yang diterima field media, jumlah maksimal…
 
