@@ -46,6 +46,8 @@ export interface FieldTypeInfo {
     type: string;
     label: string;
     hasChildren: boolean;
+    /** Whether fields of this type are translated unless set otherwise (FieldType::translatableByDefault()). */
+    translatable?: boolean;
     settings: FieldDefinition[];
 }
 

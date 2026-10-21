@@ -95,7 +95,7 @@ final class CollectionResource extends Resource
                     ->saveUsing(fn (Model $collection, mixed $on) => self::switchPage($collection, 'listing_route', $on, '/{handle}')),
                 TextInput::make('listing_route')->label('Listing page URL')->placeholder('/{handle}')->unique()->maxLength(255)->span(2)->showWhen('listing')
                     ->rules(['regex:#^(/[a-z0-9\-_]+)+$#'])
-                    ->help(__('Empty: /{handle}. Its template is the first that exists of')."\n1. ".TemplateHelp::file('cms.{handle}-listing')."\n2. ".TemplateHelp::file('cms.listing')."\n3. ".__('the built-in template')),
+                    ->help(__('Empty: /{handle}. Its template is the first that exists, under resources/views:')."\n1. ".TemplateHelp::shortFile('cms.{handle}-listing')."\n2. ".TemplateHelp::shortFile('cms.listing')."\n3. ".__('the built-in template')),
                 Select::make('listing_blueprint')->label('Listing page fields')->verbatim()->options(BlueprintChoices::options(BlueprintChoices::CONTENT, 'listing_blueprint'))->showWhen('listing')
                     ->help('Fields of the listing page itself, like an intro.'),
                 NumberInput::make('per_page')->label('Entries per page')->integer()->min(1)->max(100)->default(10)->showWhen('listing'),

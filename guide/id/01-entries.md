@@ -70,7 +70,7 @@ Kartu **Pengaturan halaman** di kanan berlaku untuk semua bahasa. Isinya disimpa
 
 - **Induk**: di koleksi yang entrinya bertingkat (seperti halaman di bawah halaman), entri tempat entri ini berada; bisa juga dipilih saat membuat entri. Dipakai untuk jejak halaman dan sub-menu; alamat webnya tidak berubah.
 - **Blueprint**: jika koleksi menawarkan lebih dari satu susunan field (misalnya halaman biasa atau halaman promosi), susunan yang dipakai entri ini. Menggantinya tetap menyimpan semua nilai: field yang ada di keduanya mempertahankan isinya, dan sisanya disimpan tersembunyi dan muncul lagi jika Anda kembali. Simpan draf dulu, lalu tekan **Ganti blueprint**: penyunting dimuat ulang dengan field yang baru.
-- **Template**: desain lain khusus untuk entri ini, jika developer membuatnya. Kosongkan untuk desain koleksi.
+- **Template**: desain lain khusus untuk entri ini, jika developer membuatnya. Kosongkan untuk desain koleksi. **File yang mana?** di bawahnya menampilkan, untuk developer, file yang dicoba berurutan dan menandai yang dipakai.
 - **Terima komentar baru**: di koleksi yang memiliki komentar, matikan untuk menutup komentar entri ini (komentar yang sudah disetujui tetap tampil). **Komentar** membuka komentar entri ini.
 
 ## Komentar

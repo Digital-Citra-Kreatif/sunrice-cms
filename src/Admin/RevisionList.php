@@ -5,11 +5,16 @@ declare(strict_types=1);
 namespace Sunrice\Cms\Admin;
 
 use Illuminate\Support\Str;
+use Sunrice\Admin\Media\Media;
 use Sunrice\Admin\Panel;
-use Sunrice\Cms\Fields\Field;
+use Sunrice\Cms\Fields\HydrationContext;
+use Sunrice\Cms\Fields\Reference;
+use Sunrice\Cms\Fields\Schema;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Revision;
+use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Support\FieldText;
+use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\Seo;
 
 /**
@@ -40,15 +45,21 @@ final class RevisionList
                 'createdAt' => $revision->created_at?->toIso8601String(),
                 'author' => $revision->user_id === null ? null : ($authors[$revision->user_id] ?? null),
                 // The oldest kept: the first published (or older ones were pruned), nothing to compare with.
-                'changed' => $before === null ? null : self::changed(self::values($before), self::values($revision), $labels),
+                'changed' => $before === null ? null : self::changed(self::values($before->title, $before->slug, $before->data), self::values($revision->title, $revision->slug, $revision->data), $labels),
             ];
         }
 
         return $out;
     }
 
+    /** The SEO card's settings, compared one by one, with the editor's labels (lib/seo.ts). */
+    private const SEO = ['title' => 'Meta title', 'description' => 'Meta description', 'canonical' => 'Canonical URL', 'image' => 'Open Graph image', 'noindex' => 'Hide from search engines (noindex)'];
+
     /**
-     * The fields where a revision and the translation's draft differ, as text.
+     * The fields where a revision and the translation's draft differ, as an
+     * editor reads them: links as their address, entries and terms by title,
+     * media by file name, rows and groups as "Label: value" lines (as the
+     * CSV export), SEO setting by setting; never JSON.
      *
      * @return list<array{label: string, revision: string, draft: string}>
      */
@@ -57,21 +68,74 @@ final class RevisionList
         $translation = $revision->translation;
         $labels = self::labels($translation);
         $schema = $translation->entry->schema();
-        $old = self::values($revision);
-        $new = ['title' => $translation->draft_title, 'slug' => $translation->draft_slug] + $translation->draft_data;
+        $oldData = $revision->data;
+        $newData = $translation->draft_data;
+        $old = self::values($revision->title, $revision->slug, $oldData);
+        $new = self::values($translation->draft_title, $translation->draft_slug, $newData);
+        $keys = self::changedKeys($old, $new, $labels);
+        $words = self::words($schema, [$oldData, $newData], $translation->locale);
         $out = [];
-        foreach (self::changedKeys($old, $new, $labels) as $key) {
-            $field = in_array($key, ['title', 'slug', Seo::KEY], true) ? null : $schema->field($key);
-            $out[] = ['label' => $labels[$key], 'revision' => self::text($old[$key] ?? null, $field), 'draft' => self::text($new[$key] ?? null, $field)];
+        foreach ($keys as $key) {
+            $out[] = ['label' => $labels[$key], 'revision' => self::text($key, $old[$key] ?? null, $schema, $words), 'draft' => self::text($key, $new[$key] ?? null, $schema, $words)];
         }
 
         return $out;
     }
 
-    /** @return array<string, mixed> */
-    private static function values(Revision $revision): array
+    /**
+     * What's compared: the title, the slug, each field, and each SEO setting ("seo.title").
+     *
+     * @param  array<string, mixed>|null  $data
+     * @return array<string, mixed>
+     */
+    private static function values(?string $title, ?string $slug, ?array $data): array
     {
-        return ['title' => $revision->title, 'slug' => $revision->slug] + $revision->data;
+        $data ??= [];
+        $seo = is_array($data[Seo::KEY] ?? null) ? $data[Seo::KEY] : [];
+        unset($data[Seo::KEY]);
+        $values = ['title' => $title, 'slug' => $slug] + $data;
+        foreach (array_keys(self::SEO) as $setting) {
+            $values[Seo::KEY.'.'.$setting] = $seo[$setting] ?? null;
+        }
+
+        return $values;
+    }
+
+    /**
+     * What the values point at, read once: linked entries' and terms' titles, files' names.
+     *
+     * @param  list<array<string, mixed>|null>  $data
+     */
+    private static function words(Schema $schema, array $data, string $locale): ExportText
+    {
+        $ids = [Reference::ENTRY => [], Reference::TERM => [], Reference::MEDIA => []];
+        foreach ($data as $values) {
+            foreach ($schema->references($values ?? []) as $reference) {
+                $ids[$reference->type][$reference->id] = $reference->id;
+            }
+            $image = is_array($values[Seo::KEY] ?? null) ? ($values[Seo::KEY]['image'] ?? null) : null;
+            if (is_int($image)) {
+                $ids[Reference::MEDIA][$image] = $image;
+            }
+        }
+        $entries = [];
+        if ($ids[Reference::ENTRY] !== []) {
+            foreach (EntryTranslation::query()->whereIn('entry_id', array_values($ids[Reference::ENTRY]))->whereIn('locale', array_unique([$locale, Locales::default()]))->get(['entry_id', 'locale', 'draft_title']) as $row) {
+                if ($row->locale === $locale || ! isset($entries[$row->entry_id])) {
+                    $entries[$row->entry_id] = (string) $row->draft_title;
+                }
+            }
+        }
+        $terms = [];
+        foreach ($ids[Reference::TERM] === [] ? [] : Term::withTrashed()->with('translations')->whereKey(array_values($ids[Reference::TERM]))->get() as $term) {
+            $terms[$term->id] = $term->title($locale);
+        }
+        $media = [];
+        foreach ($ids[Reference::MEDIA] === [] ? [] : Media::withTrashed()->whereKey(array_values($ids[Reference::MEDIA]))->get(['id', 'filename']) as $file) {
+            $media[$file->id] = $file->filename;
+        }
+
+        return new ExportText($entries, $terms, new HydrationContext($locale), $media);
     }
 
     /**
@@ -81,12 +145,15 @@ final class RevisionList
      */
     private static function labels(EntryTranslation $translation): array
     {
-        $labels = ['title' => 'Title', 'slug' => 'Slug'];
+        $labels = ['title' => self::say('Title'), 'slug' => self::say('Slug')];
         foreach ($translation->entry->schema()->fields() as $field) {
             $labels[$field->handle] = FieldText::label($field);
         }
+        foreach (self::SEO as $setting => $label) {
+            $labels[Seo::KEY.'.'.$setting] = self::say($label);
+        }
 
-        return $labels + [Seo::KEY => 'Search and sharing'];
+        return $labels;
     }
 
     /**
@@ -131,11 +198,25 @@ final class RevisionList
         return (string) json_encode($value, JSON_UNESCAPED_UNICODE);
     }
 
-    private static function text(mixed $value, ?Field $field): string
+    private static function text(string $key, mixed $value, Schema $schema, ExportText $words): string
     {
-        $text = $field?->type === 'rich_text' && is_string($value) ? strip_tags($value) : FieldText::text($value, $field);
+        $text = match (true) {
+            $key === 'title' || $key === 'slug' => FieldText::text($value),
+            $key === Seo::KEY.'.noindex' => FieldText::text($value === true),
+            $key === Seo::KEY.'.image' => $words->files($value),
+            str_starts_with($key, Seo::KEY.'.') => FieldText::text($value),
+            ($field = $schema->field($key)) !== null => $words->text($value, $field, $schema),
+            default => FieldText::text($value),
+        };
 
-        return Str::limit(trim(html_entity_decode($text)), 1000);
+        return Str::limit(trim($text), 1000);
+    }
+
+    private static function say(string $words): string
+    {
+        $said = __($words);
+
+        return is_string($said) ? $said : $words;
     }
 
     /**

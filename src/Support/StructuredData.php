@@ -57,6 +57,10 @@ final class StructuredData
     {
         $site = app(SiteSettings::class);
         $locale = $page->locale ?? app()->getLocale();
+        // An error page raised after a page was found (a listing past its last page) describes no page.
+        if (Seo::isErrorPage()) {
+            $page = null;
+        }
         $home = url(Locales::prefix($locale) ?: '/');
         $person = $site->publisher === 'Person';
         $type = $person ? 'Person' : (preg_match('/^[A-Z][A-Za-z]{2,59}$/', $site->publisherType) === 1 ? $site->publisherType : 'Organization');

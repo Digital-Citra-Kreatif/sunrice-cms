@@ -35,6 +35,7 @@ use Sunrice\Cms\Actions\Entries\UnpublishEntry;
 use Sunrice\Cms\Actions\Entries\WithdrawReview;
 use Sunrice\Cms\Admin\EntryList;
 use Sunrice\Cms\Admin\RevisionList;
+use Sunrice\Cms\Admin\TemplateHelp;
 use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Fields\Types\TermsField;
 use Sunrice\Cms\Models\Blueprint;
@@ -400,6 +401,11 @@ final class EntryController
             'settings' => Access::entries($request->user(), 'update', $collection, $entry)
                 ? ['parentId' => $entry->parent_id, 'template' => $entry->template, 'commentsClosed' => $entry->comments_closed, 'blueprint' => $entry->blueprintHandle()]
                 : null,
+            // The views tried for its page, in order, and which exist (Page settings → Which file?).
+            'templates' => [
+                'own' => TemplateHelp::lookup([$entry->template])[0] ?? null,
+                'fallbacks' => TemplateHelp::lookup([$collection->template, "cms.{$collection->handle}", 'cms.entry']),
+            ],
             // The blueprints it may use, when there's a choice (Page settings).
             'blueprints' => self::blueprints($collection),
             // Whether it's the site's homepage, whether this user may make it so (a page

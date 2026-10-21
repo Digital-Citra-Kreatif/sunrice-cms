@@ -15,8 +15,8 @@ import type { Errors, FieldDefinition, Option } from '@/types.ts';
 /** Radix's Select can't hold an empty value, so "none" is this. */
 const NONE = '__none';
 
-export function FieldError({ message }: { message?: string }) {
-    return message ? <p className="cms:text-sm cms:text-destructive">{message}</p> : null;
+export function FieldError({ message, id }: { message?: string; id?: string }) {
+    return message ? <p id={id} className="cms:text-sm cms:text-destructive">{message}</p> : null;
 }
 
 /** Options as {value, label}, from either that or a list of values. */
@@ -61,9 +61,12 @@ export function labelOf(field: FieldDefinition): string {
 export function FieldInput({ field, value, onChange, errors, id, content = false }: Props) {
     const label = labelOf(field);
     const group = GROUPS.includes(field.type) || (['select', 'terms'].includes(field.type) && field.config?.multiple === true);
+    // The message under a group of inputs (ticked choices, a group's fields) is tied to the group.
+    const invalid = errors[''] !== undefined;
 
     return (
-        <div className="cms:flex cms:flex-col cms:gap-2" {...(group ? { role: 'group', 'aria-labelledby': `${id}-label` } : {})}>
+        <div className="cms:flex cms:flex-col cms:gap-2"
+            {...(group ? { role: 'group', 'aria-labelledby': `${id}-label`, ...(invalid ? { 'aria-invalid': true, 'aria-describedby': `${id}-error` } : {}) } : {})}>
             {field.type === 'toggle' ? (
                 <div className="cms:flex cms:items-center cms:gap-3">
                     <Switch id={id} checked={value === true} onCheckedChange={(checked: boolean) => onChange(checked)} />
@@ -77,7 +80,7 @@ export function FieldInput({ field, value, onChange, errors, id, content = false
                 <CharacterCount length={typeof value === 'string' ? [...value].length : 0} max={numberConfig(field, 'max') ?? 0} />
             )}
             {field.instructions && <p className="cms:text-sm cms:text-muted-foreground">{field.instructions}</p>}
-            <FieldError message={errors['']} />
+            <FieldError message={errors['']} id={`${id}-error`} />
         </div>
     );
 }
@@ -129,7 +132,7 @@ function Control({ field, value, onChange, errors, id, content }: Props) {
         }
         case 'select':
             return field.config?.multiple === true
-                ? <MultiSelect options={optionsOf(field)} value={Array.isArray(value) ? value.map(String) : []} onChange={onChange}
+                ? <MultiSelect options={optionsOf(field)} value={Array.isArray(value) ? value.map(String) : []} onChange={onChange} invalid={invalid}
                     empty={typeof field.config?.empty === 'string' ? field.config.empty : undefined} inTickOrder={field.config?.in_tick_order === true} />
                 : <SingleSelect options={optionsOf(field)} value={typeof value === 'string' ? value : null} onChange={onChange} id={id}
                     empty={offersEmptyChoice(optionsOf(field), field.required === true, typeof field.config?.default === 'string' && field.config.default !== '', typeof value === 'string' && value !== '')} />;
@@ -207,7 +210,7 @@ function SingleSelect({ options, value, onChange, id, empty }: { options: Option
     );
 }
 
-function MultiSelect({ options, value, onChange, empty, inTickOrder = false }: { options: Option[]; value: string[]; onChange: (value: unknown) => void; empty?: string; inTickOrder?: boolean }) {
+function MultiSelect({ options, value, onChange, empty, inTickOrder = false, invalid = false }: { options: Option[]; value: string[]; onChange: (value: unknown) => void; empty?: string; inTickOrder?: boolean; invalid?: boolean }) {
     if (options.length === 0) return <p className="cms:text-sm cms:text-muted-foreground">{empty ?? t('Nothing to choose from yet.')}</p>;
 
     return (
@@ -216,6 +219,7 @@ function MultiSelect({ options, value, onChange, empty, inTickOrder = false }: {
                 <label key={option.value} className="cms:flex cms:items-center cms:gap-2 cms:text-sm">
                     <Checkbox
                         checked={value.includes(option.value)}
+                        aria-invalid={invalid || undefined}
                         onCheckedChange={(checked: boolean) => onChange(checked
                             ? (inTickOrder ? [...value.filter((v) => v !== option.value), option.value] : options.map((o) => o.value).filter((v) => v === option.value || value.includes(v)))
                             : value.filter((v) => v !== option.value))}

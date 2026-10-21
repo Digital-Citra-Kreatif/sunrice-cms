@@ -32,6 +32,8 @@ final class BuilderData
                 'type' => $type->type(),
                 'label' => self::say($type->label()),
                 'hasChildren' => $type->hasChildren(),
+                // Whether its fields are translated unless they say otherwise (the builder's "Translatable" starts so).
+                'translatable' => $type->translatableByDefault(),
                 'settings' => Schema::make(array_map(self::said(...), $type->settings()))->toAdmin(),
             ], $this->types->all())),
             'fieldsets' => Fieldset::options(),

@@ -21,7 +21,8 @@ final class ImportStructureCommand extends Command
         {file : A JSON file from sunrice:export-structure}
         {--dry-run : Report what would happen without saving anything}
         {--force : Also save fieldsets and blueprints that lose fields}
-        {--replace-menus : Replace the links of menus that exist with the file\'s (by default only the missing links are added)}';
+        {--replace-menus : Replace the links of menus that exist with the file\'s (by default only the missing links are added)}
+        {--skip-other-languages : Leave out texts in languages this site doesn\'t have (by default the import stops)}';
 
     protected $description = 'Create or update collections, blueprints, taxonomies and more from a structure file';
 
@@ -42,7 +43,7 @@ final class ImportStructureCommand extends Command
         }
 
         try {
-            $report = $importer->import($structure, (bool) $this->option('dry-run'), (bool) $this->option('force'), (bool) $this->option('replace-menus'));
+            $report = $importer->import($structure, (bool) $this->option('dry-run'), (bool) $this->option('force'), (bool) $this->option('replace-menus'), (bool) $this->option('skip-other-languages'));
         } catch (StructureImportFailed $e) {
             $this->components->error($e->getMessage().' Nothing was imported.');
 

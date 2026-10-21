@@ -188,7 +188,7 @@ final class Menus
     {
         // A label in this language wins; without one, the target's title in this language, when it has
         // one, comes before the main language's label (a custom English "Team" isn't shown on /id when
-        // the target reads "Tim" there).
+        // the target reads "Tim" there), except for a listing link with filters.
         $own = self::text($item->labels[$locale] ?? null);
         $main = self::text($item->labels[Locales::default()] ?? null);
         if ($item->term_id !== null) {
@@ -212,7 +212,8 @@ final class Menus
             $url .= $item->query_string !== null ? '?'.$item->query_string : '';
 
             $translated = $collection->getAttribute('translations');
-            $hasTitle = is_array($translated) && is_array($translated[$locale] ?? null) && self::text($translated[$locale]['title'] ?? null) !== null;
+            // A link with filters ("For sale") means more than the listing's title: its main-language label comes first.
+            $hasTitle = $item->query_string === null && is_array($translated) && is_array($translated[$locale] ?? null) && self::text($translated[$locale]['title'] ?? null) !== null;
 
             return ['label' => $own ?? ($hasTitle ? $collection->titleIn($locale) : ($main ?? $collection->titleIn($locale))), 'url' => $url];
         }
@@ -225,6 +226,8 @@ final class Menus
         }
         $translation = $entry->translation($locale);
         $translation = $translation !== null && $translation->isLive() ? $translation : $entry->mainTranslation();
+        // Its entry (and the entry's collection) are loaded already: the URL needs no queries of its own.
+        $translation?->setRelation('entry', $entry);
         // Not live in this language: the main language's page (at this language's address with Site::fallback()).
         $url = $translation !== null && $translation->isLive() ? app(Site::class)->urlIn($translation, $locale) : null;
 

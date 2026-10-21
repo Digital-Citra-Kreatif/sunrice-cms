@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Fields\Types;
 
+use Closure;
 use Illuminate\Support\Carbon;
 use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\FieldType;
@@ -23,8 +24,22 @@ final class Date extends FieldType
 
     public function rules(Field $field): array
     {
-        // "Today or later" (a booking's preferred day): today in the app's time zone.
-        return $field->configBool('future') ? ['date', 'after_or_equal:today'] : ['date'];
+        if (! $field->configBool('future')) {
+            return ['date'];
+        }
+
+        // "Today or later" (a booking's preferred day): today in the app's time zone, said in the
+        // visitor's language (Laravel's after_or_equal:today puts the English "today" in its line).
+        return ['date', function (string $attribute, mixed $value, Closure $fail): void {
+            try {
+                $date = is_string($value) && $value !== '' ? Carbon::parse($value) : null;
+            } catch (Throwable) {
+                return; // not a date: the date rule says so
+            }
+            if ($date !== null && $date->lt(Carbon::today())) {
+                $fail(__('sunrice-cms::site.forms.today_or_later'));
+            }
+        }];
     }
 
     public function normalize(mixed $value, Field $field): mixed

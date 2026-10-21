@@ -15,6 +15,7 @@ use Sunrice\Cms\Actions\Terms\RestoreTerm;
 use Sunrice\Cms\Actions\Terms\SaveTerm;
 use Sunrice\Cms\Actions\Terms\SaveTermContent;
 use Sunrice\Cms\Actions\Terms\TrashTerm;
+use Sunrice\Cms\Admin\TemplateHelp;
 use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Fields\Types\TermsField;
 use Sunrice\Cms\Models\Collection;
@@ -197,6 +198,11 @@ final class TermController
                 'hasPage' => $taxonomy->route !== null && $translation !== null && ! $term->trashed()],
             // Where to add a redirect by hand, for those who may.
             'redirectsUrl' => $request->user()?->can('cms.redirects.create') === true ? route('sunrice.admin.cms.redirects.create') : null,
+            // The views tried for its page, in order, and which exist (Template → Which file?).
+            'templates' => [
+                'own' => TemplateHelp::lookup([$term->template])[0] ?? null,
+                'fallbacks' => TemplateHelp::lookup([$taxonomy->template, "cms.taxonomy-{$taxonomy->handle}", 'cms.term']),
+            ],
             'translated' => $translation !== null,
             'fields' => $schema->toAdmin(),
             'locale' => $locale,

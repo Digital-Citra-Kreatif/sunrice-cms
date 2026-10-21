@@ -57,6 +57,9 @@ return [
         'file_size' => 'Maksimal :size.',
         'too_big' => 'Berkas :attribute lebih besar dari :size, batas yang diterima situs ini.',
         'too_big_each' => 'Salah satu berkas :attribute lebih besar dari :size, batas tiap berkas yang diterima situs ini.',
+        'blocked_type' => ':attribute: berkas jenis ini tidak bisa dikirim.',
+        'blocked_type_accepted' => ':attribute: berkas jenis ini tidak bisa dikirim (diterima: :types).',
+        'today_or_later' => ':attribute harus berupa tanggal hari ini atau setelahnya.',
         'thanks' => 'Terima kasih, pesan Anda sudah kami terima.',
     ],
     'filter' => [

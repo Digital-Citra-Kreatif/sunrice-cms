@@ -70,10 +70,12 @@ final class VisitorTexts
 
         $menus = Menu::query()->orderBy('title')->with(['items.entry.translations', 'items.term.translations', 'items.collection'])->get();
         foreach ($menus as $menu) {
-            $texts = [];
+            // As the menu shows them: each link followed by those under it, named "Parent › Link to …".
+            $children = [];
             foreach ($menu->items as $item) {
-                $texts[] = self::text("menu|{$item->id}|label", self::itemTarget($item), self::itemLabel($item), self::string($item->labels[$locale] ?? null));
+                $children[$item->parent_id ?? 0][] = $item;
             }
+            $texts = self::menuTexts($children, 0, [], $locale);
             if ($texts !== []) {
                 $sections[] = ['key' => "menu-{$menu->id}", 'title' => self::say('Menu: :title', ['title' => $menu->title]), 'texts' => $texts];
             }
@@ -138,6 +140,27 @@ final class VisitorTexts
         }
 
         return '';
+    }
+
+    /**
+     * A menu's links under a parent, each followed by those under it.
+     *
+     * @param  array<int, list<MenuItem>>  $children  the links by their parent's id (0: the top)
+     * @param  list<string>  $trail  the labels of the links above
+     * @return list<array{key: string, label: string, source: string, value: string, multiline: bool}>
+     */
+    private static function menuTexts(array $children, int $parent, array $trail, string $locale): array
+    {
+        $texts = [];
+        foreach ($children[$parent] ?? [] as $item) {
+            $label = self::itemLabel($item);
+            $query = $item->query_string ?? '';
+            $target = self::itemTarget($item).($query !== '' ? ' · '.urldecode($query) : '');
+            $texts[] = self::text("menu|{$item->id}|label", implode(' › ', [...$trail, $target]), $label, self::string($item->labels[$locale] ?? null));
+            array_push($texts, ...self::menuTexts($children, $item->id, [...$trail, $label !== '' ? $label : $target], $locale));
+        }
+
+        return $texts;
     }
 
     /** What a menu item links to, in words. */

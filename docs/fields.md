@@ -19,7 +19,7 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 | `handle` | Lowercase letters, digits and underscores, starting with a letter; unique on its level (`Support\HandleRule`, whose error suggests the handle meant: `job-title` → try "job_title"; the builder turns what's typed into one as you type). A blueprint's top level can't use the handles content keeps for itself (`Blueprint::RESERVED`: `id`, `title`, `slug`, `url`, `status`, `locale`, `published_at`, `created_at`, `updated_at`, `parent`, `children`, `collection`, `blueprint`, `data`, `seo`, `author`); the builder warns as they're typed, as it does for a handle already taken on its level. |
 | `type` | A registered field type (below). |
 | `required` | The field must be filled in. |
-| `translatable` | Whether the value differs per language; `null` lets the type decide (text does, numbers don't). |
+| `translatable` | Whether the value differs per language; `null` follows the type (text does, numbers don't). The builder's *Translatable* switch starts at the type's default and stores only a different choice. |
 | `validation` | Extra Laravel rules from an allowed list (`min:3`, `regex:/…/`, `email`…; see `DefinitionValidator::RULES`). Rules that read the database aren't allowed. |
 | `config` | The type's settings. |
 | `fields` | The fields of a group or a repeater. Groups and repeaters nest up to five levels. |
@@ -38,7 +38,7 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 | `number` | a number | the number | `min`, `max`, `step` (1 for whole numbers), `default` |
 | `toggle` | true or false | the boolean | `default` |
 | `select` | a value, or a list with `multiple` | the same | `options` (`[{value, label}]`), `multiple`, `default` |
-| `date` | `2026-10-19`, or `2026-10-19T14:30:00` with `time` | a Carbon | `time`; `future` (*Today or later only*: earlier days are refused, and a form's date input gets `min`) |
+| `date` | `2026-10-19`, or `2026-10-19T14:30:00` with `time` | a Carbon | `time`; `future` (*Today or later only*: earlier days are refused with `sunrice-cms::site.forms.today_or_later`, "The Preferred date must be today or a later date.", and a form's date input gets `min`) |
 | `link` | `{type: url, url, label, new_tab}` or `{type: entry, entry_id, label, new_tab}` | `{type, url, label, title, new_tab}`, or null | `collections` (entry links; none: any) |
 | `media` | a media id, or a list with `multiple` | a `Media` model, or a collection (`$image->altIn()` and `captionIn()`: its alt text and caption in the page's language, set per language in the media library; see [media](../../admin/docs/media.md)) | `multiple`, `max`, `types` (image, video, audio, document) |
 | `group` | an object of its fields | an array | (its `fields`) |

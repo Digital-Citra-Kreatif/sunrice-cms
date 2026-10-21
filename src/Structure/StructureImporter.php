@@ -40,6 +40,7 @@ use Sunrice\Cms\Models\Redirect;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
+use Sunrice\Cms\Settings\LocaleSettings;
 use Sunrice\Cms\Site\RoutePattern;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\SafeUrl;
@@ -101,14 +102,19 @@ final class StructureImporter
 
     private bool $replaceMenus = false;
 
+    private ContentReferences $references;
+
+    /** @var array<string, true> the file's entries not imported yet, by "collection/slug" */
+    private array $toCome = [];
+
     /**
      * @param  array<mixed>  $structure
      *
      * @throws StructureImportFailed
      */
-    public function import(array $structure, bool $dryRun = false, bool $force = false, bool $replaceMenus = false): ImportReport
+    public function import(array $structure, bool $dryRun = false, bool $force = false, bool $replaceMenus = false, bool $skipOtherLanguages = false): ImportReport
     {
-        $unknown = array_diff(array_keys($structure), ['sunrice', ...self::SECTIONS]);
+        $unknown = array_diff(array_keys($structure), ['sunrice', 'locales', ...self::SECTIONS]);
         if ($unknown !== []) {
             throw new StructureImportFailed('the file', ['sections' => ['Unknown sections: '.implode(', ', array_map(strval(...), $unknown)).'.']]);
         }
@@ -116,6 +122,21 @@ final class StructureImporter
             throw new StructureImportFailed('the file', ['sunrice' => ['It was written for another version of the format ('.StructureExporter::VERSION.' is read).']]);
         }
         $this->report = new ImportReport($dryRun);
+        $this->references = new ContentReferences;
+        // Texts in languages this site doesn't have: stop before anything is saved, or leave them out when asked.
+        $others = array_values(array_diff(self::languages($structure), Locales::all()));
+        if ($others !== [] && ! $skipOtherLanguages) {
+            $names = implode(', ', array_map(fn (string $code): string => Locales::displayName($code)." ({$code})", $others));
+            $site = implode(', ', Locales::all());
+            throw new StructureImportFailed('the file', ['locales' => [
+                "It has texts in {$names}, which ".(count($others) === 1 ? "isn't one" : "aren't")." of this site's languages ({$site}). Add ".(count($others) === 1 ? 'it' : 'them')
+                .' in Settings → Languages or set SUNRICE_LOCALES='.implode(',', [...Locales::all(), ...$others]).', then import again (or run with --skip-other-languages to leave those texts out).',
+            ]]);
+        }
+        if ($others !== []) {
+            $structure = self::withoutLanguages($structure, $others);
+            $this->report->add('languages', implode(', ', $others), ImportReport::UNCHANGED, ['Left out: the texts in '.implode(', ', $others).", which this site doesn't have."]);
+        }
         $this->force = $force;
         $this->replaceMenus = $replaceMenus;
         $section = fn (string $name): array => array_values(array_filter(is_array($structure[$name] ?? null) ? $structure[$name] : [], 'is_array'));
@@ -135,11 +156,21 @@ final class StructureImporter
             $this->each('global set', $section('globals'), fn (array $item) => $this->globalSet($item));
             $this->each('form', $section('forms'), fn (array $item) => $this->form($item));
             $this->each('term', $section('terms'), fn (array $item) => $this->term($item));
+            // Entries that link to others in the file come after them; links in a loop are filled in afterwards.
+            $entries = self::linkedFirst($section('entries'));
+            $this->toCome = [];
+            foreach ($entries as $item) {
+                $this->toCome[self::text($item['collection'] ?? null).'/'.self::text($item['slug'] ?? null)] = true;
+            }
             $created = [];
-            $this->each('entry', $section('entries'), function (array $item) use (&$created): void {
-                $this->entry($item, $created);
+            $later = [];
+            $this->each('entry', $entries, function (array $item) use (&$created, &$later): void {
+                $this->entry($item, $created, $later);
             });
-            $this->each('entry', $section('entries'), fn (array $item) => $this->entrySettings($item, $created));
+            $this->each('entry', $entries, fn (array $item) => $this->entryLinks($item, $created, $later));
+            $this->each('entry', $entries, fn (array $item) => $this->entrySettings($item, $created));
+            // Global values may link to entries: after them.
+            $this->each('global set', $section('globals'), fn (array $item) => $this->globalValues($item));
             $this->each('menu', $section('menus'), fn (array $item) => $this->menu($item));
             $this->each('redirect', $section('redirects'), fn (array $item) => $this->redirect($item));
             $dryRun ? DB::rollBack() : DB::commit();
@@ -336,15 +367,55 @@ final class StructureImporter
         $before = $existing?->only(self::GLOBAL_SET);
         $set = $existing ?? new GlobalSet;
         $set->fill(array_intersect_key($validated, array_flip(self::GLOBAL_SET)))->save();
+        $this->report->add('global set', $set->handle, $this->status($before, $set->only(self::GLOBAL_SET)));
+    }
+
+    /**
+     * A global set's values, after the entries they may link to. Values
+     * are content: only where none were saved yet.
+     *
+     * @param  array<mixed>  $item
+     */
+    private function globalValues(array $item): void
+    {
+        $set = GlobalSet::query()->where('handle', $item['handle'] ?? null)->first();
+        if ($set === null) {
+            return;
+        }
         $notes = [];
-        // Values are content: only where none were saved yet.
         foreach (is_array($item['values'] ?? null) ? $item['values'] : [] as $locale => $data) {
             if (is_string($locale) && is_array($data) && ! $set->values()->where('locale', $locale)->exists()) {
-                app(SaveGlobals::class)->handle($set, $data, $locale);
+                app(SaveGlobals::class)->handle($set, $this->resolved($data, $notes), $locale);
                 $notes[] = "Values in {$locale}.";
             }
         }
-        $this->report->add('global set', $set->handle, $notes !== [] && $existing !== null ? ImportReport::UPDATED : $this->status($before, $set->only(self::GLOBAL_SET)), $notes);
+        if ($notes !== []) {
+            $this->report->add('global values', $set->handle, ImportReport::UPDATED, $notes);
+        }
+    }
+
+    /**
+     * Content values with the file's references made this site's ids; those
+     * not found here are left empty and named in $notes.
+     *
+     * @param  array<mixed>  $data
+     * @param  list<string>  $notes
+     * @param  list<string>|null  $later  entries still to come in this file (filled in after them); without, they count as not found
+     * @return array<mixed>
+     */
+    private function resolved(array $data, array &$notes, ?array &$later = null): array
+    {
+        $missing = [];
+        $toCome = [];
+        $data = $this->references->resolve($data, $missing, $toCome, $later === null ? null : fn (string $key): bool => isset($this->toCome[$key]));
+        if ($missing !== []) {
+            $notes[] = 'Left empty (not on this site): '.implode(', ', array_values(array_unique($missing))).'.';
+        }
+        if ($later !== null) {
+            array_push($later, ...$toCome);
+        }
+
+        return $data;
     }
 
     /** @param array<mixed> $item */
@@ -393,24 +464,26 @@ final class StructureImporter
         $parent = $parentSlug === null ? null : self::termId($taxonomy, $parentSlug)
             ?? throw ValidationException::withMessages(['parent' => "Its parent \"{$parentSlug}\" comes later or is missing."]);
         $term = null;
+        $notes = [];
         foreach (self::mainFirst(is_array($validated['translations']) ? $validated['translations'] : []) as $locale => $translation) {
             $term = app(SaveTerm::class)->handle($taxonomy, [
                 'title' => $translation['title'] ?? null, 'slug' => $translation['slug'] ?? null, 'locale' => $locale,
                 ...($term === null ? ['parent_id' => $parent] : []),
             ], $term);
-            $data = is_array($translation['data'] ?? null) ? $translation['data'] : [];
+            $data = $this->resolved(is_array($translation['data'] ?? null) ? $translation['data'] : [], $notes);
             if ($data !== [] || ($term->wasRecentlyCreated && ($validated['template'] ?? null) !== null)) {
                 app(SaveTermContent::class)->handle($term, [...self::content($data), 'template' => $validated['template'] ?? null], $locale);
             }
         }
-        $this->report->add('term', $label, ImportReport::CREATED);
+        $this->report->add('term', $label, ImportReport::CREATED, array_values(array_unique($notes)));
     }
 
     /**
      * @param  array<mixed>  $item
      * @param  array<string, Entry>  $created  by "collection/slug"
+     * @param  array<string, true>  $later  entries whose links to others in the file are filled in afterwards
      */
-    private function entry(array $item, array &$created): void
+    private function entry(array $item, array &$created, array &$later): void
     {
         $validated = Validator::make($item, ['collection' => ['required', 'string'], 'slug' => ['required', 'string'], 'translations' => ['required', 'array']])->validate();
         $handle = self::text($validated['collection']);
@@ -423,10 +496,13 @@ final class StructureImporter
 
             return;
         }
+        unset($this->toCome[$label]);
         $entry = null;
         $publish = [];
+        $notes = [];
+        $toCome = [];
         foreach (self::mainFirst(is_array($validated['translations']) ? $validated['translations'] : []) as $locale => $translation) {
-            $data = is_array($translation['data'] ?? null) ? $translation['data'] : [];
+            $data = $this->resolved(is_array($translation['data'] ?? null) ? $translation['data'] : [], $notes, $toCome);
             $input = ['title' => $translation['title'] ?? null, 'slug' => $translation['slug'] ?? null, ...self::content($data)];
             if ($entry === null) {
                 $saved = app(CreateEntry::class)->handle($collection, $input + ['locale' => $locale]);
@@ -449,8 +525,76 @@ final class StructureImporter
         }
         if ($entry !== null) {
             $created[$label] = $entry;
+            if ($toCome !== []) {
+                $later[$label] = true;
+            }
         }
-        $this->report->add('entry', $label, ImportReport::CREATED);
+        $this->report->add('entry', $label, ImportReport::CREATED, array_values(array_unique($notes)));
+    }
+
+    /**
+     * Fills in the links of an entry just created to entries the file had
+     * after it (a loop: two entries that link to each other).
+     *
+     * @param  array<mixed>  $item
+     * @param  array<string, Entry>  $created
+     * @param  array<string, true>  $later
+     */
+    private function entryLinks(array $item, array $created, array $later): void
+    {
+        $label = self::text($item['collection'] ?? null).'/'.self::text($item['slug'] ?? null);
+        $entry = $created[$label] ?? null;
+        if ($entry === null || ! isset($later[$label])) {
+            return;
+        }
+        $notes = [];
+        foreach (is_array($item['translations'] ?? null) ? $item['translations'] : [] as $locale => $translation) {
+            $saved = is_string($locale) ? $entry->translation($locale) : null;
+            if ($saved === null || ! is_array($translation) || ! is_array($translation['data'] ?? null)) {
+                continue;
+            }
+            $saved = app(SaveDraft::class)->handle($saved, ['title' => $translation['title'] ?? null, 'slug' => $translation['slug'] ?? null, ...self::content($this->resolved($translation['data'], $notes))]);
+            if (($translation['published'] ?? false) === true) {
+                app(PublishEntry::class)->handle($saved->fresh() ?? $saved);
+            }
+        }
+        $entry->unsetRelation('translations');
+    }
+
+    /**
+     * Entries in an order where those linked to come first, where they can
+     * (links in a loop keep the file's order and are filled in afterwards).
+     *
+     * @param  list<array<mixed>>  $items
+     * @return list<array<mixed>>
+     */
+    private static function linkedFirst(array $items): array
+    {
+        $keys = [];
+        foreach ($items as $index => $item) {
+            $keys[self::text($item['collection'] ?? null).'/'.self::text($item['slug'] ?? null)] = $index;
+        }
+        $links = [];
+        foreach ($items as $index => $item) {
+            $links[$index] = array_values(array_filter(array_map(fn (string $key): ?int => $keys[$key] ?? null, ContentReferences::entryKeys(is_array($item['translations'] ?? null) ? $item['translations'] : [])), fn (?int $to): bool => $to !== null && $to !== $index));
+        }
+        $order = [];
+        $placed = [];
+        for ($pass = 0; count($order) < count($items) && $pass <= count($items); $pass++) {
+            foreach ($items as $index => $item) {
+                if (! isset($placed[$index]) && array_diff($links[$index], array_keys($placed)) === []) {
+                    $placed[$index] = true;
+                    $order[] = $item;
+                }
+            }
+        }
+        foreach ($items as $index => $item) {
+            if (! isset($placed[$index])) {
+                $order[] = $item;
+            }
+        }
+
+        return $order;
     }
 
     /**
@@ -744,6 +888,117 @@ final class StructureImporter
         }
 
         return $sorted;
+    }
+
+    /**
+     * The languages the file has texts in: listing pages, translated titles
+     * and labels, fields' translations, menus' labels, global values, and
+     * terms' and entries' translations.
+     *
+     * @param  array<mixed>  $structure
+     * @return list<string>
+     */
+    private static function languages(array $structure): array
+    {
+        $codes = [];
+        self::localeMaps($structure, function (array $map) use (&$codes): array {
+            foreach (array_keys($map) as $code) {
+                if (is_string($code) && preg_match(LocaleSettings::CODE, $code) === 1) {
+                    $codes[$code] = true;
+                }
+            }
+
+            return $map;
+        });
+
+        return array_keys($codes);
+    }
+
+    /**
+     * The file without its texts in the given languages.
+     *
+     * @param  array<mixed>  $structure
+     * @param  list<string>  $codes
+     * @return array<mixed>
+     */
+    private static function withoutLanguages(array $structure, array $codes): array
+    {
+        return self::localeMaps($structure, fn (array $map): array => array_diff_key($map, array_flip($codes)));
+    }
+
+    /**
+     * Passes each part of the file keyed by language through $visit.
+     *
+     * @param  array<mixed>  $structure
+     * @param  Closure(array<mixed>): array<mixed>  $visit
+     * @return array<mixed>
+     */
+    private static function localeMaps(array $structure, Closure $visit): array
+    {
+        $map = fn (mixed $value): mixed => is_array($value) ? $visit($value) : $value;
+        $fields = function (mixed $list) use (&$fields, $map): mixed {
+            if (! is_array($list)) {
+                return $list;
+            }
+            foreach ($list as $i => $field) {
+                if (is_array($field)) {
+                    if (array_key_exists('translations', $field)) {
+                        $field['translations'] = $map($field['translations']);
+                    }
+                    if (array_key_exists('fields', $field)) {
+                        $field['fields'] = $fields($field['fields']);
+                    }
+                    $list[$i] = $field;
+                }
+            }
+
+            return $list;
+        };
+        $items = function (mixed $list) use (&$items, $map): mixed {
+            if (! is_array($list)) {
+                return $list;
+            }
+            foreach ($list as $i => $item) {
+                if (is_array($item)) {
+                    if (array_key_exists('labels', $item)) {
+                        $item['labels'] = $map($item['labels']);
+                    }
+                    if (array_key_exists('children', $item)) {
+                        $item['children'] = $items($item['children']);
+                    }
+                    $list[$i] = $item;
+                }
+            }
+
+            return $list;
+        };
+        $each = function (string $section, array $keys, ?Closure $also = null) use (&$structure, $map): void {
+            if (! is_array($structure[$section] ?? null)) {
+                return;
+            }
+            foreach ($structure[$section] as $i => $item) {
+                if (! is_array($item)) {
+                    continue;
+                }
+                foreach ($keys as $key) {
+                    if (is_string($key) && array_key_exists($key, $item)) {
+                        $item[$key] = $map($item[$key]);
+                    }
+                }
+                $structure[$section][$i] = $also === null ? $item : $also($item);
+            }
+        };
+        $each('collections', ['listings', 'translations']);
+        $each('taxonomies', ['translations']);
+        $each('forms', ['translations']);
+        $each('globals', ['values']);
+        $each('terms', ['translations']);
+        $each('entries', ['translations']);
+        $each('fieldsets', [], fn (array $item): array => array_key_exists('fields', $item) ? ['fields' => $fields($item['fields'])] + $item : $item);
+        $each('blueprints', [], fn (array $item): array => array_key_exists('fields', $item) ? ['fields' => $fields($item['fields'])] + $item : $item);
+        $each('menus', [], fn (array $item): array => array_key_exists('items', $item) ? ['items' => $items($item['items'])] + $item : $item);
+
+        return $structure;
     }
 
     private static function entryId(Collection $collection, string $slug): ?int
