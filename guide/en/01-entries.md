@@ -50,7 +50,7 @@ Every entry has a **draft**, which you edit, and a **live** version, which visit
 - The arrow next to it has **Publish on a date…**: choose a date and time (in your time zone) and the entry goes live then. The picker starts on tomorrow, and the time is on the 24-hour clock (type `14:30`). Until then its status is **Scheduled**, and the button says **Scheduled for …**: press it to change the date; the arrow also has **Publish now** and **Unschedule (back to draft)**. A date in the past asks first, then publishes now, with that date (to back-date a post).
 - **Unpublish** (same menu) takes the entry off the website; it becomes a draft again. Publishing it again keeps its original date.
 
-The **Status** card on the right says whether the entry is a draft, scheduled or published (and since when), and warns when *The draft has changes the site doesn't show yet*.
+The **Status** card on the right says whether the entry is a draft, scheduled or published (and since when), and warns when *The draft has changes the site doesn't show yet*. In collections with dates (like a journal), it also has the entry's **Date**: change it and press **Change the date** to back-date a published post or move it, without publishing your draft; a date to come takes it off the site until then. A draft gets its date when it's published (**Publish on a date…** with an earlier date back-dates it).
 
 > [!NOTE]
 > If your role can write but not publish (the *author* role, for example), you save drafts and someone else publishes them.

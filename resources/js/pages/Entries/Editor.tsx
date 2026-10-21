@@ -319,6 +319,11 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                         <CollapsibleCard title="Status" titleClassName="cms:text-base" storageKey="cms:entry:status" contentClassName="cms:flex cms:flex-col cms:gap-1 cms:text-sm">
                             <p>{statusLabel(entry.status)}{entry.status !== 'draft' && entry.publishedAt ? ` · ${formatDate(entry.publishedAt)}` : ''}</p>
                             {entry.status !== 'draft' && entry.hasUnpublishedChanges && <p className="cms:text-muted-foreground">The draft has changes the site doesn't show yet.</p>}
+                            {collection.dated && can.publish && !entry.trashed && !lock.readOnly && (
+                                entry.status === 'draft'
+                                    ? <p className="cms:text-muted-foreground">To give it an earlier date, use Publish ▾ → Publish on a date… with that date.</p>
+                                    : <PublishDate entryUrl={url} locale={entry.locale} publishedAt={entry.publishedAt} />
+                            )}
                             {locales.find((l) => l.code === entry.locale)?.outdated && (
                                 <p className="cms:text-amber-700 cms:dark:text-amber-400">The {mainLocale ? localeName(mainLocale) : 'main'} version changed since this translation was last saved.</p>
                             )}
@@ -441,6 +446,32 @@ function ScheduleDialog({ open, onClose, onSchedule, current, processing, resche
                 </DialogFooter>
             </DialogContent>
         </Dialog>
+    );
+}
+
+/** A published entry's date, changed without publishing its draft (a date to come schedules it). */
+function PublishDate({ entryUrl, locale, publishedAt }: { entryUrl: string; locale: string; publishedAt: string | null }) {
+    const saved = publishedAt ? localInputValue(new Date(publishedAt)) : '';
+    const [value, setValue] = React.useState(saved);
+    const [processing, setProcessing] = React.useState(false);
+    React.useEffect(() => setValue(saved), [saved]);
+
+    return (
+        <div className="cms:mt-2 cms:flex cms:flex-col cms:gap-2">
+            <Label htmlFor="entry-date">Date</Label>
+            <DatePicker id="entry-date" withTime required className="cms:max-w-none" value={value || null} onChange={(next) => setValue(next ?? '')} />
+            {value !== saved && value !== '' && (
+                <div className="cms:flex cms:gap-2">
+                    <Button type="button" size="sm" disabled={processing}
+                        onClick={() => router.post(`${entryUrl}/date`, { locale, published_at: new Date(value).toISOString() },
+                            { preserveScroll: true, onStart: () => setProcessing(true), onFinish: () => setProcessing(false) })}>
+                        Change the date
+                    </Button>
+                    <Button type="button" size="sm" variant="ghost" onClick={() => setValue(saved)}>Cancel</Button>
+                </div>
+            )}
+            <p className="cms:text-xs cms:text-muted-foreground">Changes only the date; a date to come takes it off the site until then.</p>
+        </div>
     );
 }
 

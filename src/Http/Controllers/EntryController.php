@@ -13,9 +13,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Sunrice\Admin\Preferences\Preferences;
+use Sunrice\Cms\Actions\Entries\ChangePublishDate;
 use Sunrice\Cms\Actions\Entries\CreateEntry;
 use Sunrice\Cms\Actions\Entries\CreateTranslation;
 use Sunrice\Cms\Actions\Entries\DeleteTranslation;
@@ -114,12 +116,13 @@ final class EntryController
         $asked = $input['collections'] ?? [];
         $viewable = Access::collections($request->user());
         // Only for fields that name their collections (not the command palette, whose results open the editor).
-        $linkable = Collection::query()->whereIn('handle', $asked === [] ? [] : array_diff(array_intersect($asked, self::linkable($request->user())), $viewable->pluck('handle')->all()))->get();
+        $linkable = Collection::query()->whereIn('handle', $asked === [] ? [] : array_diff(array_intersect($asked, self::linkable($request->user())), self::handles($viewable)))->get();
         $query = EntryTranslation::query()
             ->with('entry.collection')
             ->where('locale', Locales::default())
             ->where(fn ($q) => $q->whereIn('collection_id', $viewable->pluck('id'))
-                ->orWhere(fn ($live) => $live->whereIn('collection_id', $linkable->pluck('id'))->live()))
+                ->orWhere(fn ($live) => $live->whereIn('collection_id', $linkable->pluck('id'))
+                    ->where('status', EntryTranslation::PUBLISHED)->where('published_at', '<=', now())))
             ->whereHas('entry', fn ($entry) => $entry->withoutTrashed()->whereHas('collection', fn ($collection) => $collection->withoutTrashed()
                 ->when($asked !== [], fn ($c) => $c->whereIn('handle', $asked))));
 
@@ -134,7 +137,7 @@ final class EntryController
                 ->orderByDesc('updated_at')->limit(20)->get()->all();
         }
         $own = $viewable->pluck('id')->all();
-        $pickable = [...$viewable->pluck('handle')->all(), ...$linkable->pluck('handle')->all()];
+        $pickable = [...self::handles($viewable), ...self::handles($linkable)];
 
         return response()->json([
             'items' => array_map(fn (EntryTranslation $translation): array => [
@@ -145,6 +148,15 @@ final class EntryController
             ], $items),
             'unavailable' => $asked === [] ? [] : Collection::query()->whereIn('handle', array_diff($asked, $pickable))->orderBy('title')->pluck('title')->all(),
         ]);
+    }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Collection<int, Collection>  $collections
+     * @return list<string>
+     */
+    private static function handles(\Illuminate\Database\Eloquent\Collection $collections): array
+    {
+        return array_values(array_map(fn (Collection $collection): string => $collection->handle, $collections->all()));
     }
 
     /**
@@ -351,6 +363,15 @@ final class EntryController
         $translation = $publish->handle(self::translation($entry, $request->input('locale')), self::publishAt($request));
 
         return back()->with('success', self::published($translation));
+    }
+
+    /** A published entry's date, moved ("published_at"), its draft left alone. */
+    public function date(Request $request, Entry $entry, ChangePublishDate $change): RedirectResponse
+    {
+        $date = self::publishAt($request) ?? throw ValidationException::withMessages(['published_at' => 'Choose a date and time.']);
+        $translation = $change->handle(self::translation($entry, $request->input('locale')), $date);
+
+        return back()->with('success', $translation->isLive() ? 'Date changed.' : 'Scheduled for '.$translation->published_at?->toDayDateTimeString().'.');
     }
 
     public function unpublish(Request $request, Entry $entry, UnpublishEntry $unpublish): RedirectResponse
