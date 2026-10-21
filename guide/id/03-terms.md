@@ -10,7 +10,7 @@ Pilih taksonomi lewat menu di samping judul, dan bahasanya lewat **Bahasa**. Tab
 - Klik judul term untuk membuka **halaman term itu sendiri** (lihat di bawah), atau untuk mengganti namanya jika term tidak punya halaman. Ikon panah di sampingnya membuka halamannya di situs web.
 - Menu **⋯** di setiap baris: **Ganti nama** (judul dan slug dalam bahasa yang tampil, serta letaknya), **Ubah halaman**, dan **Pindahkan ke tempat sampah** (beserta term di bawahnya).
 - Seret term lewat pegangannya untuk mengubah posisinya di antara term sejajarnya; term di bawahnya ikut pindah. Untuk menempatkan term di bawah term lain, **ganti namanya** dan pilih **Di bawah**.
-- Menu **⋮** di samping **Term baru** menampilkan koleksi yang memakai taksonomi ini, serta membuka **Pengaturan taksonomi** dan **Tempat sampah**.
+- Menu **⋮** di samping **Term baru** menampilkan koleksi yang memakai taksonomi ini, serta membuka **Pengaturan taksonomi** dan, jika peran Anda boleh mengubah blueprint, **Ubah blueprint** (field term). **Tempat sampah**, di samping pencarian, menampilkan term yang dibuang.
 
 Term yang belum berjudul dalam bahasa yang tampil ditulis abu-abu sebagai *… · belum diterjemahkan*. Ganti namanya dalam bahasa itu untuk menerjemahkannya, atau beri judul di halamannya sendiri.
 

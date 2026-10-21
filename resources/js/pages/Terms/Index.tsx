@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { ExternalLink, FileText, MoreHorizontal, Pencil, Plus, RotateCcw, Search, Settings2, Trash2 } from 'lucide-react';
+import { ExternalLink, FileText, LayoutTemplate, MoreHorizontal, Pencil, Plus, RotateCcw, Search, Settings2, Trash2 } from 'lucide-react';
 import { adminUrl, t } from '@sunrice/admin-sdk';
 import {
     Button, Card, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -37,6 +37,8 @@ interface Props {
         handle: string; title: string; hierarchical: boolean; pages?: boolean;
         /** The taxonomy's settings, when the user may change them. */
         settings?: string | null;
+        /** Its terms' blueprint, when the user may edit blueprints. */
+        blueprint?: string | null;
         /** The collections whose entries it groups. */
         collections?: { title: string; url: string }[];
     } | null;
@@ -164,6 +166,7 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
                 menu={[
                     ...collections.map((c) => ({ label: c.title, href: c.url, group: t('Used by collections') })),
                     ...(taxonomy.settings ? [{ label: t('Taxonomy settings'), href: taxonomy.settings, icon: <Settings2 />, group: t('Structure') }] : []),
+                    ...(taxonomy.blueprint ? [{ label: t('Edit blueprint'), href: taxonomy.blueprint, icon: <LayoutTemplate />, group: t('Structure') }] : []),
                 ]}
             >
                 {taxonomies.length > 1 && (

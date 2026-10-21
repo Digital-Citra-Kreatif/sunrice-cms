@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Http\Controllers;
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,6 +16,7 @@ use Sunrice\Cms\Actions\Terms\RestoreTerm;
 use Sunrice\Cms\Actions\Terms\SaveTerm;
 use Sunrice\Cms\Actions\Terms\SaveTermContent;
 use Sunrice\Cms\Actions\Terms\TrashTerm;
+use Sunrice\Cms\Admin\EntryList;
 use Sunrice\Cms\Admin\TemplateHelp;
 use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Fields\Types\TermsField;
@@ -58,6 +60,8 @@ final class TermController
                 // Terms have pages, or fields of their own: edit them on their page.
                 'pages' => $taxonomy->route !== null || $taxonomy->blueprint !== null,
                 'settings' => $request->user()?->can('cms.taxonomies.update') === true ? route('sunrice.admin.cms.taxonomies.edit', $taxonomy->handle) : null,
+                // Its terms' blueprint, for those who may edit blueprints.
+                'blueprint' => EntryList::blueprintLinks($request->user() instanceof Authorizable ? $request->user() : null, array_filter([$taxonomy->blueprint]))[0]['href'] ?? null,
                 'collections' => $taxonomy->collections()->orderBy('title')->get(['sunrice_collections.handle', 'sunrice_collections.title'])
                     ->map(fn (Collection $collection): array => ['title' => $collection->title, 'url' => route('sunrice.admin.cms.collections.entries.index', $collection->handle)])->all()],
             'trashed' => $trashed,

@@ -19,6 +19,7 @@ use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Fields\Schema;
 use Sunrice\Cms\Fields\Types\TermsField;
+use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
@@ -399,9 +400,33 @@ final class EntryList
         if ($user?->can('cms.collections.update') === true) {
             $links[] = ['group' => __('Structure'), 'label' => __('Collection settings'), 'href' => route('sunrice.admin.cms.collections.edit', $collection->handle)];
         }
-        $blueprint = $user?->can('cms.blueprints.update') === true ? $collection->blueprintModel() : null;
-        if ($blueprint !== null) {
-            $links[] = ['group' => __('Structure'), 'label' => __('Blueprint: :title', ['title' => $blueprint->title]), 'href' => route('sunrice.admin.cms.blueprints.edit', $blueprint->handle)];
+        foreach (self::blueprintLinks($user, $collection->allowedBlueprints()) as $link) {
+            $links[] = ['group' => __('Structure'), ...$link];
+        }
+
+        return $links;
+    }
+
+    /**
+     * "Edit blueprint" for those who may edit blueprints: one, or with
+     * several, one each by title ("Edit blueprint: Property").
+     *
+     * @param  list<string>  $handles
+     * @return list<array{label: string, href: string}>
+     */
+    public static function blueprintLinks(?Authorizable $user, array $handles): array
+    {
+        if ($handles === [] || $user?->can('cms.blueprints.update') !== true) {
+            return [];
+        }
+        $blueprints = Blueprint::query()->whereIn('handle', $handles)->get()->keyBy('handle');
+        $links = [];
+        foreach ($handles as $handle) {
+            $blueprint = $blueprints->get($handle);
+            if ($blueprint instanceof Blueprint) {
+                $label = count($handles) > 1 ? __('Edit blueprint: :title', ['title' => $blueprint->title]) : __('Edit blueprint');
+                $links[] = ['label' => is_string($label) ? $label : 'Edit blueprint', 'href' => route('sunrice.admin.cms.blueprints.edit', $blueprint->handle)];
+            }
         }
 
         return $links;

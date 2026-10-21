@@ -10,7 +10,7 @@ Pick the taxonomy with the menu next to the title, and the language with **Langu
 - Click a term's title to open the **term's own page** (below), or to rename it when terms have no pages. The arrow next to it opens the page on the website.
 - The **⋯** menu on a row: **Rename** (its title and slug in the language shown, and where it sits), **Edit page** and **Move to trash** (with the terms under it).
 - Drag a term by its handle to change its place among its neighbours; the terms under it come along. To put a term under another one, **rename** it and choose **Under**.
-- The **⋮** menu next to **New term** lists the collections that use the taxonomy, opens the **Taxonomy settings** and the **Trash**.
+- The **⋮** menu next to **New term** lists the collections that use the taxonomy and opens the **Taxonomy settings** and, if your role may change blueprints, **Edit blueprint** (the terms' fields). **Trash**, beside the search, shows the trashed terms.
 
 Terms that have no title in the language shown appear in grey as *… · not translated*. Rename them in that language to translate them, or give them a title on their own page.
 

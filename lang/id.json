@@ -134,7 +134,6 @@
     "Blueprint \":title\" deleted.": "Blueprint \":title\" dihapus.",
     "Blueprint saved.": "Blueprint disimpan.",
     "Blueprint: :name": "Blueprint: :name",
-    "Blueprint: :title": "Blueprint: :title",
     "Blueprints": "Blueprint",
     "Blueprints an entry can switch to in its Page settings.": "Blueprint yang bisa dipilih entri di Pengaturan halamannya.",
     "Browser": "Browser",
@@ -964,5 +963,7 @@
     "Only untranslated": "Hanya yang belum diterjemahkan",
     "Everything is translated into :language.": "Semuanya sudah diterjemahkan ke :language.",
     "Nothing to translate yet.": "Belum ada yang perlu diterjemahkan.",
-    "Translate the site's own texts that aren't entries: they show on listing pages, forms and menus. Left empty, the :main text shows.": "Terjemahkan teks situs yang bukan entri: tampil di halaman daftar, formulir, dan menu. Jika kosong, teks :main yang tampil."
+    "Translate the site's own texts that aren't entries: they show on listing pages, forms and menus. Left empty, the :main text shows.": "Terjemahkan teks situs yang bukan entri: tampil di halaman daftar, formulir, dan menu. Jika kosong, teks :main yang tampil.",
+    "Edit blueprint": "Ubah blueprint",
+    "Edit blueprint: :title": "Ubah blueprint: :title"
 }

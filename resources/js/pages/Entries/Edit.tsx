@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { Deferred, Head, router, useForm, usePage } from '@inertiajs/react';
-import { CalendarClock, Check, ChevronDown, Copy, ExternalLink, Eye, Languages, LoaderCircle, MoreHorizontal, Plus, RotateCcw, Send, Trash2, Undo2 } from 'lucide-react';
+import { Deferred, Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { CalendarClock, Check, ChevronDown, Copy, ExternalLink, Eye, Languages, LayoutTemplate, LoaderCircle, MoreHorizontal, Plus, RotateCcw, Send, Trash2, Undo2 } from 'lucide-react';
 import { adminUrl, t } from '@sunrice/admin-sdk';
 import {
     Badge, Button, Card, CardContent, CollapsibleCard, DatePicker, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -28,6 +28,8 @@ interface Props {
     homepage?: { is: boolean; can: boolean; current?: string | null };
     /** The blueprints the entry may use, when its collection offers more than one. */
     blueprints?: { handle: string; title: string }[];
+    /** Its blueprint's editor, when the user may edit blueprints. */
+    blueprintUrl?: string | null;
     fields: FieldDefinition[];
     /** The site's languages and the entry's status in each (none for a new entry). */
     locales?: EntryLocale[];
@@ -112,7 +114,7 @@ export default function EntryEditorPage(props: Props) {
     return <EntryEditor key={entry ? `${entry.id}:${entry.locale}:${entry.version}:${entry.status}:${entry.trashed}:${entry.publishedAt}` : 'new'} {...props} />;
 }
 
-function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, comments, termLabels, usedBy = [], undoRestore = null, machineTranslate = null, machineTranslateMissing = false, settings, blueprints = [], homepage, redirectsUrl = null, templates = null, can }: Props) {
+function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, comments, termLabels, usedBy = [], undoRestore = null, machineTranslate = null, machineTranslateMissing = false, settings, blueprints = [], blueprintUrl = null, homepage, redirectsUrl = null, templates = null, can }: Props) {
     const list = adminUrl(`cms/collections/${collection.handle}/entries`);
     const url = entry ? adminUrl(`cms/entries/${entry.id}`) : list;
     const heading = entry ? values.title : t('New entry');
@@ -230,7 +232,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                                 <Trash2 /> {t('Permanently delete')}
                             </Button>
                         )}
-                        {entry && !entry.trashed && (can.create || (can.delete && !lock.readOnly) || (writable && machineTranslate !== null)) && (
+                        {entry && !entry.trashed && (can.create || (can.delete && !lock.readOnly) || (writable && machineTranslate !== null) || blueprintUrl) && (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button type="button" variant="outline" size="icon" aria-label={t('More actions')}><MoreHorizontal /></Button>
@@ -243,6 +245,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                                         </DropdownMenuItem>
                                     )}
                                     {can.create && <DropdownMenuItem title={t('Copy every language as a new draft')} onSelect={() => router.post(`${url}/duplicate`)}><Copy /> {t('Duplicate')}</DropdownMenuItem>}
+                                    {blueprintUrl && <DropdownMenuItem asChild><Link href={blueprintUrl}><LayoutTemplate /> {t('Edit blueprint')}</Link></DropdownMenuItem>}
                                     {can.delete && !lock.readOnly && (
                                         <>
                                             <DropdownMenuSeparator />
