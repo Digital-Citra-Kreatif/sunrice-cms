@@ -64,9 +64,10 @@ final class FileField extends FieldType
     private function fileRules(Field $field): array
     {
         $types = self::types($field);
-        $rules = ['file', 'max:'.self::ownMaxKb($field), function (string $attribute, mixed $value, Closure $fail): void {
+        $rules = ['file', 'max:'.self::ownMaxKb($field), function (string $attribute, mixed $value, Closure $fail) use ($types): void {
             if ($value instanceof UploadedFile && array_intersect(self::extensions($value), self::BLOCKED) !== []) {
-                $fail(__('Files of this type can\'t be sent.'));
+                // Named as the field (":attribute", its label), with what it takes, like the size messages.
+                $fail($types === [] ? __('sunrice-cms::site.forms.blocked_type') : __('sunrice-cms::site.forms.blocked_type_accepted', ['types' => strtoupper(implode(', ', $types))]));
             } elseif ($value instanceof UploadedFile && in_array(strtolower($value->getClientOriginalExtension()), FileContent::IMAGE_EXTENSIONS, true)
                 && (FileContent::containsPhp($value) || ! FileContent::matchesExtension($value))) {
                 // Named as an image: it must be one, without code hidden in it (a JPEG followed by PHP).

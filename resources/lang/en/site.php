@@ -57,6 +57,8 @@ return [
         'file_size' => 'Up to :size.',
         'too_big' => 'The :attribute file is larger than :size, the most this site accepts.',
         'too_big_each' => 'One of the :attribute files is larger than :size, the most this site accepts for each file.',
+        'blocked_type' => ':attribute: files of this type can\'t be sent.',
+        'blocked_type_accepted' => ':attribute: files of this type can\'t be sent (accepted: :types).',
         'thanks' => 'Thank you, we got your message.',
     ],
     'filter' => [
