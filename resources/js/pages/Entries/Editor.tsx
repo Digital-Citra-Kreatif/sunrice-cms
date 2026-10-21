@@ -14,7 +14,7 @@ import { FieldSections } from '@/components/FieldSections.tsx';
 import { TermLabels } from '@/components/TermsPicker.tsx';
 import { SEO_FIELDS } from '@/lib/seo.ts';
 import { FieldError, Fields } from '@/components/FieldInput.tsx';
-import { errorsAt, hasErrors } from '@/lib/builder.ts';
+import { errorKeysAt, errorsAt, hasErrors } from '@/lib/builder.ts';
 import { type EntryLocale, type EntryStatus, formatDate, localeName, localInputValue, statusLabel } from '@/lib/entries.ts';
 import type { FieldDefinition } from '@/types.ts';
 
@@ -101,6 +101,11 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
     const mainLocale = locales.find((l) => l.main)?.code;
 
     const errors = form.errors as Record<string, string | undefined>;
+    // An edited value loses its error: the server's message was about what was there before.
+    const clearErrorsAt = (path: string) => {
+        const keys = errorKeysAt(errors, path);
+        if (keys.length > 0) form.clearErrors(...(keys as never[]));
+    };
     // Nothing new to publish: the live version is the draft, and the form has no changes.
     const upToDate = entry !== null && entry.status !== 'draft' && !entry.hasUnpublishedChanges && !form.isDirty;
     const editable = entry === null ? can.create : can.update && !entry.trashed;
@@ -140,7 +145,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
     };
 
     return (
-        <form onSubmit={(e) => { e.preventDefault(); save(); }} className="cms:flex cms:flex-col cms:gap-6">
+        <form noValidate onSubmit={(e) => { e.preventDefault(); save(); }} className="cms:flex cms:flex-col cms:gap-6">
             <Head title={heading} />
             {confirmDialog}
             {lock.dialogs}
@@ -258,13 +263,13 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                                 <div className="cms:flex cms:flex-col cms:gap-2">
                                     <Label htmlFor="title">Title</Label>
                                     <Input id="title" value={form.data.title} aria-invalid={errors.title !== undefined}
-                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => form.setData('title', e.target.value)} />
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => { form.setData('title', e.target.value); clearErrorsAt('title'); }} />
                                     <FieldError message={errors.title} />
                                 </div>
                                 <div className="cms:flex cms:flex-col cms:gap-2">
                                     <Label htmlFor="slug">Slug</Label>
                                     <Input id="slug" className="cms:font-mono" value={form.data.slug} placeholder="Made from the title" aria-invalid={errors.slug !== undefined}
-                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => form.setData('slug', e.target.value)} />
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => { form.setData('slug', e.target.value); clearErrorsAt('slug'); }} />
                                     <FieldError message={errors.slug} />
                                 </div>
                             </fieldset>
@@ -275,13 +280,13 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                         <FieldSections disabled={!writable} fields={fields} values={form.data.data} errors={errors} storageKey={`cms:entry:${collection.handle}`}
                             shared={shared} sharedValues={sharedValues}
                             sharedNote={`Shared by all languages: edit it in ${mainLocale ? localeName(mainLocale) : 'the main language'}.`}
-                            onChange={(handle, value) => form.setData('data', { ...form.data.data, [handle]: value })} />
+                            onChange={(handle, value) => { form.setData('data', { ...form.data.data, [handle]: value }); clearErrorsAt(`data.${handle}`); }} />
                     </TermLabels.Provider>
 
                     <CollapsibleCard title="Search and sharing" titleClassName="cms:text-base" storageKey="cms:entry:seo" hasErrors={hasErrors(errors, 'seo')}>
                         <fieldset disabled={!writable} className="cms:min-w-0">
                             <Fields bare id="seo" fields={SEO_FIELDS} value={form.data.seo} errors={errorsAt(errors, 'seo')}
-                                onChange={(seo) => form.setData('seo', seo)} />
+                                onChange={(seo) => { form.setData('seo', seo); clearErrorsAt('seo'); }} />
                         </fieldset>
                     </CollapsibleCard>
                 </div>

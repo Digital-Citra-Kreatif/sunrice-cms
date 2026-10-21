@@ -5,6 +5,7 @@ import { adminUrl } from '@sunrice/admin-sdk';
 import { Button, KeptEditsNotice, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs, useEditLock, useUnsavedChanges, ViewingNotice } from '@sunrice/admin-sdk/ui';
 import { FieldSections } from '@/components/FieldSections.tsx';
 import { VersionConflict } from '@/components/VersionConflict.tsx';
+import { errorKeysAt } from '@/lib/builder.ts';
 import { localeName } from '@/lib/entries.ts';
 import type { FieldDefinition } from '@/types.ts';
 
@@ -35,6 +36,10 @@ function GlobalsEdit({ set, fields, locale, locales, shared, values, version, ca
     useBreadcrumbs([{ label: 'Globals', href: adminUrl('cms/globals') }, { label: set.title }]);
     const form = useForm<{ locale: string; data: FieldValues; version: number | null }>({ locale, data: values, version });
     const errors = form.errors as Record<string, string | undefined>;
+    const clearErrorsAt = (path: string) => {
+        const keys = errorKeysAt(errors, path);
+        if (keys.length > 0) form.clearErrors(...(keys as never[]));
+    };
     const mainLocale = locales[0];
     const lock = useEditLock({
         type: 'cms.global', id: set.id, locale, enabled: can.update, noun: 'global set', leaveTo: adminUrl('cms/globals'),
@@ -54,7 +59,7 @@ function GlobalsEdit({ set, fields, locale, locales, shared, values, version, ca
     useUnsavedChanges(form.isDirty && !lock.takenOver, writable ? save : undefined);
 
     return (
-        <form onSubmit={(e) => { e.preventDefault(); save(); }} className="cms:flex cms:max-w-3xl cms:flex-col cms:gap-6">
+        <form noValidate onSubmit={(e) => { e.preventDefault(); save(); }} className="cms:flex cms:max-w-3xl cms:flex-col cms:gap-6">
             <Head title={set.title} />
             {lock.dialogs}
             <PageHeader
@@ -91,7 +96,7 @@ function GlobalsEdit({ set, fields, locale, locales, shared, values, version, ca
                     <FieldSections disabled={!writable} fields={fields} values={form.data.data} errors={errors} storageKey={`cms:global:${set.handle}`}
                         shared={shared} sharedValues={values}
                         sharedNote={`Shared by all languages: edit it in ${mainLocale ? localeName(mainLocale) : 'the main language'}.`}
-                        onChange={(handle, value) => form.setData('data', { ...form.data.data, [handle]: value })} />
+                        onChange={(handle, value) => { form.setData('data', { ...form.data.data, [handle]: value }); clearErrorsAt(`data.${handle}`); }} />
                 </div>
             )}
         </form>

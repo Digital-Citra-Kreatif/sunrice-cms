@@ -72,9 +72,23 @@ export function FieldInput({ field, value, onChange, errors, id, content = false
                 <Label id={`${id}-label`} htmlFor={group ? undefined : id}>{label}{field.required && <span className="cms:text-destructive"> *</span>}</Label>
             )}
             <Control field={field} value={value} onChange={onChange} errors={errors} id={id} content={content} />
+            {['text', 'textarea'].includes(field.type) && numberConfig(field, 'max') !== undefined && (
+                <CharacterCount length={typeof value === 'string' ? [...value].length : 0} max={numberConfig(field, 'max') ?? 0} />
+            )}
             {field.instructions && <p className="cms:text-sm cms:text-muted-foreground">{field.instructions}</p>}
             <FieldError message={errors['']} />
         </div>
+    );
+}
+
+/** "123 / 300" under a text with a limit, in red once over it (the server refuses more). */
+function CharacterCount({ length, max }: { length: number; max: number }) {
+    const over = length > max;
+
+    return (
+        <p className={`cms:-mt-1 cms:self-end cms:text-xs cms:tabular-nums ${over ? 'cms:font-medium cms:text-destructive' : 'cms:text-muted-foreground'}`}>
+            {length} / {max}{over && <span> · {length - max} too many</span>}
+        </p>
     );
 }
 
@@ -134,8 +148,9 @@ function Control({ field, value, onChange, errors, id, content }: Props) {
         case 'flexible':
             return <Blocks field={field} value={Array.isArray(value) ? value : []} onChange={onChange} errors={errors} id={id} />;
         default:
+            // No maxLength: a pasted text that's too long would be cut silently; the counter shows it instead.
             return <Input id={id} aria-invalid={invalid} value={typeof value === 'string' ? value : ''} placeholder={stringConfig(field, 'placeholder')}
-                maxLength={numberConfig(field, 'max')} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)} />;
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)} />;
     }
 }
 

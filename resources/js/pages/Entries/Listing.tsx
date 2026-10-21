@@ -5,7 +5,7 @@ import { adminUrl } from '@sunrice/admin-sdk';
 import { Button, Card, CardContent, CollapsibleCard, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs, useUnsavedChanges } from '@sunrice/admin-sdk/ui';
 import { FieldInput, Fields } from '@/components/FieldInput.tsx';
 import { VersionConflict } from '@/components/VersionConflict.tsx';
-import { errorsAt, hasErrors } from '@/lib/builder.ts';
+import { errorKeysAt, errorsAt, hasErrors } from '@/lib/builder.ts';
 import { localeName } from '@/lib/entries.ts';
 import { SEO_FIELDS } from '@/lib/seo.ts';
 import type { FieldDefinition } from '@/types.ts';
@@ -41,6 +41,10 @@ function ListingEdit({ collection, fields, locale, locales, shared, values, seo,
     useBreadcrumbs([{ label: collection.title, href: back }, { label: 'Listing page' }]);
     const form = useForm<{ locale: string; data: FieldValues; seo: FieldValues; version: number | null }>({ locale, data: values, seo: seo ?? {}, version });
     const errors = form.errors as Record<string, string | undefined>;
+    const clearErrorsAt = (path: string) => {
+        const keys = errorKeysAt(errors, path);
+        if (keys.length > 0) form.clearErrors(...(keys as never[]));
+    };
     const mainLocale = locales[0];
     const writable = can.update;
     const save = () => form.processing || form.put(url, { preserveScroll: true });
@@ -52,7 +56,7 @@ function ListingEdit({ collection, fields, locale, locales, shared, values, seo,
     useUnsavedChanges(form.isDirty, writable ? save : undefined);
 
     return (
-        <form onSubmit={(e) => { e.preventDefault(); save(); }} className="cms:flex cms:max-w-3xl cms:flex-col cms:gap-6">
+        <form noValidate onSubmit={(e) => { e.preventDefault(); save(); }} className="cms:flex cms:max-w-3xl cms:flex-col cms:gap-6">
             <Head title={`${collection.title}: listing page`} />
             <PageHeader
                 title={`${collection.title}: listing page`}
@@ -95,7 +99,7 @@ function ListingEdit({ collection, fields, locale, locales, shared, values, seo,
                                 </fieldset>
                             ) : (
                                 <FieldInput key={field.handle} id={`data-${field.handle}`} field={field} content value={form.data.data[field.handle]}
-                                    errors={errorsAt(errors, `data.${field.handle}`)} onChange={(value) => form.setData('data', { ...form.data.data, [field.handle]: value })} />
+                                    errors={errorsAt(errors, `data.${field.handle}`)} onChange={(value) => { form.setData('data', { ...form.data.data, [field.handle]: value }); clearErrorsAt(`data.${field.handle}`); }} />
                             ))}
                         </CardContent>
                     </Card>
@@ -103,7 +107,7 @@ function ListingEdit({ collection, fields, locale, locales, shared, values, seo,
             </fieldset>
             <CollapsibleCard title="Search and sharing" titleClassName="cms:text-base" storageKey="cms:listing:seo" hasErrors={hasErrors(errors, 'seo')}>
                 <fieldset disabled={!writable} className="cms:min-w-0">
-                    <Fields bare id="seo" fields={SEO_FIELDS} value={form.data.seo} errors={errorsAt(errors, 'seo')} onChange={(next) => form.setData('seo', next)} />
+                    <Fields bare id="seo" fields={SEO_FIELDS} value={form.data.seo} errors={errorsAt(errors, 'seo')} onChange={(next) => { form.setData('seo', next); clearErrorsAt('seo'); }} />
                 </fieldset>
             </CollapsibleCard>
         </form>
