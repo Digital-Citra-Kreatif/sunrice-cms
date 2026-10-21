@@ -32,7 +32,7 @@ final class RenderPage extends CmsTool
             'path' => ['required', 'string', 'max:2000', 'regex:#^/(?!/)#'],
             'max_length' => ['nullable', 'integer', 'min:1000', 'max:500000'],
         ]);
-        $path = '/'.ltrim((string) parse_url($args['path'], PHP_URL_PATH), '/');
+        $path = self::normalize((string) parse_url($args['path'], PHP_URL_PATH));
         $panel = app(Panel::class);
         $mcp = config('sunrice-admin.ai.path', 'mcp');
         // Not the panel, nor developer tools (/_inertia/devtools, /_debugbar, Telescope…), which may be open in `local`.
@@ -76,6 +76,29 @@ final class RenderPage extends CmsTool
             'html' => mb_substr($html, 0, $max),
             'truncated' => mb_strlen($html) > $max,
         ]);
+    }
+
+    /**
+     * The path as routing will read it, to check: percent-encoding decoded
+     * ("/%61dmin" is "/admin"; again until nothing changes), backslashes
+     * and repeated slashes as one slash, "." and ".." resolved.
+     */
+    private static function normalize(string $path): string
+    {
+        for ($i = 0; $i < 5 && ($decoded = rawurldecode($path)) !== $path; $i++) {
+            $path = $decoded;
+        }
+        $segments = [];
+        foreach (explode('/', str_replace('\\', '/', $path)) as $segment) {
+            $segment = trim($segment);
+            if ($segment === '..') {
+                array_pop($segments);
+            } elseif ($segment !== '' && $segment !== '.') {
+                $segments[] = $segment;
+            }
+        }
+
+        return '/'.implode('/', $segments);
     }
 
     /** The message, without the app's path (a template error names its view relative to the app). */
