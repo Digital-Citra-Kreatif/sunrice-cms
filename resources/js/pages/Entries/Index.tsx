@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { EntryReorderList } from '@/components/EntryReorderList.tsx';
-import { adminUrl } from '@sunrice/admin-sdk';
+import { adminUrl, t } from '@sunrice/admin-sdk';
 import {
     Badge, Button, Card, Checkbox, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
     DropdownMenuSeparator, DropdownMenuTrigger, Input, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table,
@@ -75,22 +75,22 @@ interface Props {
 }
 
 const ALL = '__all';
-const STATUSES: { value: string; label: string }[] = [
-    { value: 'draft', label: 'Drafts' },
-    { value: 'published', label: 'Published' },
-    { value: 'scheduled', label: 'Scheduled' },
-    { value: 'trashed', label: 'Trash' },
+const statuses = (): { value: string; label: string }[] => [
+    { value: 'draft', label: t('Drafts') },
+    { value: 'published', label: t('Published') },
+    { value: 'scheduled', label: t('Scheduled') },
+    { value: 'trashed', label: t('Trash') },
 ];
 
 export default function EntriesIndex(props: Props) {
     const { collection, entries, query } = props;
-    useBreadcrumbs([{ label: collection ? collection.title : 'Entries' }]);
+    useBreadcrumbs([{ label: collection ? collection.title : t('Entries') }]);
 
     if (!collection || !entries || !query) {
         return (
             <div className="cms:flex cms:flex-col cms:gap-4">
-                <Head title="Entries" />
-                <PageHeader title="Entries" description="There are no collections yet. Create one under Structure → Collections, then come back to write its entries." />
+                <Head title={t('Entries')} />
+                <PageHeader title={t('Entries')} description={t('There are no collections yet. Create one under Structure → Collections, then come back to write its entries.')} />
             </div>
         );
     }
@@ -125,15 +125,16 @@ function EntryList({
     }, [search]);
 
     const bulkActions = trashed
-        ? (can?.delete ? [{ action: 'restore', label: 'Restore' }, { action: 'delete', label: 'Delete for good', danger: true }] : [])
+        ? (can?.delete ? [{ action: 'restore', label: t('Restore') }, { action: 'delete', label: t('Delete for good'), danger: true }] : [])
         : [
-            ...(can?.publish ? [{ action: 'publish', label: 'Publish' }, { action: 'unpublish', label: 'Unpublish' }] : []),
-            ...(can?.delete ? [{ action: 'trash', label: 'Move to the trash', danger: true }] : []),
+            ...(can?.publish ? [{ action: 'publish', label: t('Publish') }, { action: 'unpublish', label: t('Unpublish') }] : []),
+            ...(can?.delete ? [{ action: 'trash', label: t('Move to the trash'), danger: true }] : []),
         ];
     const runBulk = (action: string, label: string, danger = false) => {
         const go = () => router.post(`${base}/bulk`, { action, ids: selected }, { preserveScroll: true });
         if (danger) {
-            confirm(`${label}: ${selected.length} ${selected.length === 1 ? 'entry' : 'entries'}?${action === 'delete' ? ' This can\'t be undone.' : ''}`, go);
+            const question = selected.length === 1 ? t(':action: 1 entry?', { action: label }) : t(':action: :count entries?', { action: label, count: selected.length });
+            confirm(action === 'delete' ? `${question} ${t('This can\'t be undone.')}` : question, go);
         } else {
             go();
         }
@@ -169,7 +170,7 @@ function EntryList({
                         {links.length > 0 && (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="outline"><Compass /> Go to</Button>
+                                    <Button variant="outline"><Compass /> {t('Go to')}</Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="cms:min-w-56">
                                     {groups.map((group, index) => (
@@ -189,20 +190,20 @@ function EntryList({
                             </DropdownMenu>
                         )}
                         {collection.listing && !trashed && (
-                            <Button variant="outline" asChild><Link href={adminUrl(`cms/collections/${collection.handle}/listing/edit`)}><LayoutList /> Listing page</Link></Button>
+                            <Button variant="outline" asChild><Link href={adminUrl(`cms/collections/${collection.handle}/listing/edit`)}><LayoutList /> {t('Listing page')}</Link></Button>
                         )}
                         {entries.total > 0 && can?.export && (
-                            <Button variant="outline" asChild><a href={`${base}/export${exportQuery ? `?${exportQuery}` : ''}`}><Download /> Export CSV</a></Button>
+                            <Button variant="outline" asChild><a href={`${base}/export${exportQuery ? `?${exportQuery}` : ''}`}><Download /> {t('Export CSV')}</a></Button>
                         )}
                         {can?.create && !trashed && (
-                            <Button asChild><Link href={`${base}/create`}><Plus /> New entry</Link></Button>
+                            <Button asChild><Link href={`${base}/create`}><Plus /> {t('New entry')}</Link></Button>
                         )}
                     </>
                 }
             >
                 {collections.length > 1 && (
                     <Select value={collection.handle} onValueChange={(handle: string) => router.get(adminUrl(`cms/collections/${handle}/entries`))}>
-                        <SelectTrigger className="cms:w-48" aria-label="Collection"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="cms:w-48" aria-label={t('Collection')}><SelectValue /></SelectTrigger>
                         <SelectContent>
                             {collections.map((c) => <SelectItem key={c.handle} value={c.handle}>{c.title}</SelectItem>)}
                         </SelectContent>
@@ -213,12 +214,12 @@ function EntryList({
             <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
                 <div className="cms:relative cms:w-full cms:max-w-xs">
                     <Search className="cms:pointer-events-none cms:absolute cms:top-1/2 cms:left-3 cms:size-4 cms:-translate-y-1/2 cms:text-muted-foreground" />
-                    <Input className="cms:pl-9" placeholder="Search titles, slugs or #id" aria-label="Search entries" value={search}
+                    <Input className="cms:pl-9" placeholder={t('Search titles, slugs or #id')} aria-label={t('Search entries')} value={search}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)} />
                 </div>
-                <FilterSelect label="Status" value={query.status} options={STATUSES} onChange={(status) => visit({ status })} />
+                <FilterSelect label={t('Status')} value={query.status} options={statuses()} onChange={(status) => visit({ status })} />
                 {filters.authors.length > 0 && (
-                    <FilterSelect label="Author" value={query.author} options={filters.authors} onChange={(author) => visit({ author })} />
+                    <FilterSelect label={t('Author')} value={query.author} options={filters.authors} onChange={(author) => visit({ author })} />
                 )}
                 {filters.taxonomies.filter((taxonomy) => taxonomy.terms.length > 0).map((taxonomy) => (
                     <FilterSelect key={taxonomy.handle} label={taxonomy.title} value={query.terms[taxonomy.handle] ?? ''}
@@ -227,17 +228,17 @@ function EntryList({
                 ))}
                 {filters.locales.length > 1 && (
                     <Select value={query.locale} onValueChange={(locale: string) => visit({ locale })}>
-                        <SelectTrigger className="cms:w-40" aria-label="Language"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="cms:w-40" aria-label={t('Language')}><SelectValue /></SelectTrigger>
                         <SelectContent>
-                            {filters.locales.map((code) => <SelectItem key={code} value={code}>{localeName(code)}{code === mainLocale ? ' (main)' : ''}</SelectItem>)}
+                            {filters.locales.map((code) => <SelectItem key={code} value={code}>{localeName(code)}{code === mainLocale ? ` ${t('(main)')}` : ''}</SelectItem>)}
                         </SelectContent>
                     </Select>
                 )}
-                {filtered && <Button variant="ghost" size="sm" onClick={clearFilters}><X /> Clear</Button>}
+                {filtered && <Button variant="ghost" size="sm" onClick={clearFilters}><X /> {t('Clear')}</Button>}
                 <div className="cms:ml-auto cms:flex cms:flex-wrap cms:items-center cms:gap-2">
                     {selected.length > 0 && bulkActions.length > 0 && (
-                        <div role="toolbar" aria-label="Selected entries" className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
-                            <span className="cms:text-sm cms:text-muted-foreground">{selected.length} selected</span>
+                        <div role="toolbar" aria-label={t('Selected entries')} className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
+                            <span className="cms:text-sm cms:text-muted-foreground">{t(':count selected', { count: selected.length })}</span>
                             {bulkActions.map((b) => (
                                 <Button key={b.action} size="sm" variant={b.danger ? 'destructive' : 'outline'} onClick={() => runBulk(b.action, b.label, b.danger)}>{b.label}</Button>
                             ))}
@@ -245,16 +246,16 @@ function EntryList({
                     )}
                     {draggable && (
                         <Button variant={reordering ? 'secondary' : 'outline'} aria-pressed={reordering} onClick={() => setReordering(!reordering)}>
-                            <ArrowUpDown /> {reordering ? 'Done' : 'Reorder'}
+                            <ArrowUpDown /> {reordering ? t('Done') : t('Reorder')}
                         </Button>
                     )}
                     {columns.length > 0 && (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline"><Columns3 /> Columns</Button>
+                                <Button variant="outline"><Columns3 /> {t('Columns')}</Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="cms:max-h-96 cms:overflow-y-auto">
-                                <DropdownMenuLabel>Columns</DropdownMenuLabel>
+                                <DropdownMenuLabel>{t('Columns')}</DropdownMenuLabel>
                                 {columns.filter((column) => !column.field).map((column) => (
                                     <DropdownMenuCheckboxItem key={column.key} checked={query.columns.includes(column.key)}
                                         onSelect={(event: Event) => event.preventDefault()} onCheckedChange={() => void toggleColumn(column.key)}>
@@ -264,7 +265,7 @@ function EntryList({
                                 {columns.some((column) => column.field) && (
                                     <>
                                         <DropdownMenuSeparator />
-                                        <DropdownMenuLabel>Fields</DropdownMenuLabel>
+                                        <DropdownMenuLabel>{t('Fields')}</DropdownMenuLabel>
                                         {columns.filter((column) => column.field).map((column) => (
                                             <DropdownMenuCheckboxItem key={column.key} checked={query.columns.includes(column.key)}
                                                 onSelect={(event: Event) => event.preventDefault()} onCheckedChange={() => void toggleColumn(column.key)}>
@@ -285,15 +286,15 @@ function EntryList({
                         <TableRow className="cms:hover:bg-transparent">
                             {bulkActions.length > 0 && (
                                 <TableHead className="cms:w-10">
-                                    <Checkbox aria-label="Select all on this page" checked={entries.data.length > 0 && selected.length === entries.data.length}
+                                    <Checkbox aria-label={t('Select all on this page')} checked={entries.data.length > 0 && selected.length === entries.data.length}
                                         onCheckedChange={(on: boolean) => setSelected(on ? entries.data.map((r) => r.id) : [])} />
                                 </TableHead>
                             )}
-                            <SortableHead label="Title" sortKey="title" sort={query.sort} onSort={(sort) => visit({ sort })} />
+                            <SortableHead label={t('Title')} sortKey="title" sort={query.sort} onSort={(sort) => visit({ sort })} />
                             {visible.map((column) => column.sortable
                                 ? <SortableHead key={column.key} label={column.label} sortKey={column.key} sort={query.sort} onSort={(sort) => visit({ sort })} />
                                 : <TableHead key={column.key}>{column.label}</TableHead>)}
-                            {moveable && <TableHead className="cms:w-px"><span className="cms:sr-only">Order</span></TableHead>}
+                            {moveable && <TableHead className="cms:w-px"><span className="cms:sr-only">{t('Order')}</span></TableHead>}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -308,7 +309,7 @@ function EntryList({
                             <TableRow key={row.id} className="sunrice-row-in" style={{ '--i': i } as React.CSSProperties} data-state={selected.includes(row.id) ? 'selected' : undefined}>
                                 {bulkActions.length > 0 && (
                                     <TableCell>
-                                        <Checkbox aria-label={`Select ${row.title}`} checked={selected.includes(row.id)}
+                                        <Checkbox aria-label={t('Select :title', { title: row.title })} checked={selected.includes(row.id)}
                                             onCheckedChange={(on: boolean) => setSelected(on ? [...selected, row.id] : selected.filter((id) => id !== row.id))} />
                                     </TableCell>
                                 )}
@@ -317,7 +318,7 @@ function EntryList({
                                         className="cms:font-medium cms:underline-offset-4 cms:hover:underline">{row.title}</Link>
                                     {(!query.columns.includes('slug') || row.parent) && (
                                         <div className="cms:text-xs cms:text-muted-foreground">
-                                            {!query.columns.includes('slug') && `/${row.slug}`}{row.parent ? `${query.columns.includes('slug') ? '' : ' · '}under ${row.parent}` : ''}
+                                            {!query.columns.includes('slug') && `/${row.slug}`}{row.parent ? `${query.columns.includes('slug') ? '' : ' · '}${t('under :parent', { parent: row.parent })}` : ''}
                                         </div>
                                     )}
                                 </TableCell>
@@ -331,8 +332,8 @@ function EntryList({
                                 {moveable && (
                                     <TableCell className="cms:w-px">
                                         <span className="cms:flex">
-                                            <Button variant="ghost" size="icon" aria-label={`Move ${row.title} up`} onClick={() => router.post(adminUrl(`cms/entries/${row.id}/move`), { direction: 'up' }, { preserveScroll: true })}><ArrowUp /></Button>
-                                            <Button variant="ghost" size="icon" aria-label={`Move ${row.title} down`} onClick={() => router.post(adminUrl(`cms/entries/${row.id}/move`), { direction: 'down' }, { preserveScroll: true })}><ArrowDown /></Button>
+                                            <Button variant="ghost" size="icon" aria-label={t('Move :title up', { title: row.title })} onClick={() => router.post(adminUrl(`cms/entries/${row.id}/move`), { direction: 'up' }, { preserveScroll: true })}><ArrowUp /></Button>
+                                            <Button variant="ghost" size="icon" aria-label={t('Move :title down', { title: row.title })} onClick={() => router.post(adminUrl(`cms/entries/${row.id}/move`), { direction: 'down' }, { preserveScroll: true })}><ArrowDown /></Button>
                                         </span>
                                     </TableCell>
                                 )}
@@ -343,20 +344,20 @@ function EntryList({
 
                 <div className="cms:flex cms:flex-wrap cms:items-center cms:justify-between cms:gap-4 cms:border-t cms:px-6 cms:py-3 cms:text-sm cms:text-muted-foreground">
                     <div className="cms:flex cms:items-center cms:gap-4">
-                        <span>{entries.total === 0 ? 'No entries' : `${entries.from}–${entries.to} of ${entries.total}`}</span>
+                        <span>{entries.total === 0 ? t('No entries') : t(':from–:to of :total', { from: entries.from, to: entries.to, total: entries.total })}</span>
                         <Select value={String(query.perPage)} onValueChange={(value: string) => { void setPerPage(Number(value)); visit({ perPage: Number(value) }); }}>
-                            <SelectTrigger className="cms:h-8 cms:w-auto" aria-label="Entries per page"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="cms:h-8 cms:w-auto" aria-label={t('Entries per page')}><SelectValue /></SelectTrigger>
                             <SelectContent>
-                                {perPageOptions.map((option) => <SelectItem key={option} value={String(option)}>{option} per page</SelectItem>)}
+                                {perPageOptions.map((option) => <SelectItem key={option} value={String(option)}>{t(':count per page', { count: option })}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
                     {entries.lastPage > 1 && (
                         <div className="cms:flex cms:items-center cms:gap-2">
-                            <span>Page {entries.currentPage} of {entries.lastPage}</span>
-                            <Button variant="outline" size="icon" className="cms:size-8" aria-label="Previous page" disabled={!entries.prev_page_url}
+                            <span>{t('Page :page of :last', { page: entries.currentPage, last: entries.lastPage })}</span>
+                            <Button variant="outline" size="icon" className="cms:size-8" aria-label={t('Previous page')} disabled={!entries.prev_page_url}
                                 onClick={() => entries.prev_page_url && router.get(entries.prev_page_url, {}, { preserveScroll: true })}><ChevronLeft /></Button>
-                            <Button variant="outline" size="icon" className="cms:size-8" aria-label="Next page" disabled={!entries.next_page_url}
+                            <Button variant="outline" size="icon" className="cms:size-8" aria-label={t('Next page')} disabled={!entries.next_page_url}
                                 onClick={() => entries.next_page_url && router.get(entries.next_page_url, {}, { preserveScroll: true })}><ChevronRight /></Button>
                         </div>
                     )}
@@ -371,7 +372,7 @@ function FilterSelect({ label, value, options, onChange }: { label: string; valu
         <Select value={value === '' ? ALL : value} onValueChange={(next: string) => onChange(next === ALL ? '' : next)}>
             <SelectTrigger className="cms:w-40" aria-label={label}><SelectValue placeholder={label} /></SelectTrigger>
             <SelectContent>
-                <SelectItem value={ALL}>{label}: all</SelectItem>
+                <SelectItem value={ALL}>{t(':filter: all', { filter: label })}</SelectItem>
                 {options.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
             </SelectContent>
         </Select>
@@ -403,7 +404,9 @@ function CellValue({ row, column, mainLocale }: { row: Row; column: Column; main
                     {row.locales.length > 1 && row.locales.filter((l) => !l.main).map((l) => (
                         <Badge key={l.code} variant={l.status === 'published' ? 'secondary' : 'outline'}
                             className={l.status === null ? 'cms:opacity-50' : l.outdated ? 'cms:ring-2 cms:ring-amber-500/60' : ''}
-                            title={`${localeName(l.code)}: ${l.status === null ? 'not translated' : statusLabel(l.status)}${l.outdated ? ', outdated: the main language changed since' : ''}`}>
+                            title={l.outdated
+                                ? t(':language: :status, outdated: the main language changed since', { language: localeName(l.code), status: l.status === null ? t('not translated') : statusLabel(l.status) })
+                                : t(':language: :status', { language: localeName(l.code), status: l.status === null ? t('not translated') : statusLabel(l.status) })}>
                             {l.code.toUpperCase()}{l.outdated && <span aria-hidden="true">·!</span>}
                         </Badge>
                     ))}
@@ -426,17 +429,17 @@ function EmptyState({ trashed, filtered, canCreate, createUrl, onClear }: { tras
     if (filtered) {
         return (
             <div className="cms:flex cms:flex-col cms:items-center cms:gap-2">
-                <span>Nothing matches these filters.</span>
-                <Button variant="outline" size="sm" onClick={onClear}><X /> Clear filters</Button>
+                <span>{t('Nothing matches these filters.')}</span>
+                <Button variant="outline" size="sm" onClick={onClear}><X /> {t('Clear filters')}</Button>
             </div>
         );
     }
-    if (trashed) return <>The trash is empty.</>;
+    if (trashed) return <>{t('The trash is empty.')}</>;
 
     return (
         <div className="cms:flex cms:flex-col cms:items-center cms:gap-2">
-            <span>No entries yet.</span>
-            {canCreate && <Button size="sm" asChild><Link href={createUrl}><Plus /> Write the first one</Link></Button>}
+            <span>{t('No entries yet.')}</span>
+            {canCreate && <Button size="sm" asChild><Link href={createUrl}><Plus /> {t('Write the first one')}</Link></Button>}
         </div>
     );
 }

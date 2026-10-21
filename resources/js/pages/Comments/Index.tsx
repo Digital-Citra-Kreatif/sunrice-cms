@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Head, router } from '@inertiajs/react';
 import { Check, ChevronLeft, ChevronRight, ExternalLink, MessageSquare, MessageSquareReply, Search, Pencil, RotateCcw, ShieldAlert, Trash2, Undo2 } from 'lucide-react';
-import { adminUrl } from '@sunrice/admin-sdk';
+import { adminUrl, t } from '@sunrice/admin-sdk';
 import {
     Badge, Button, Card, Checkbox, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input, PageHeader, Select,
     SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsList, TabsTrigger, Textarea, useBreadcrumbs,
@@ -36,15 +36,15 @@ interface Props {
     errors?: Record<string, string>;
 }
 
-const TABS: { value: Tab; label: string }[] = [
-    { value: 'all', label: 'All' }, { value: 'pending', label: 'Pending' }, { value: 'approved', label: 'Approved' },
-    { value: 'spam', label: 'Spam' }, { value: 'trashed', label: 'Trash' },
+const tabs = (): { value: Tab; label: string }[] => [
+    { value: 'all', label: t('All') }, { value: 'pending', label: t('Pending') }, { value: 'approved', label: t('Approved') },
+    { value: 'spam', label: t('Spam') }, { value: 'trashed', label: t('Trash') },
 ];
 
-const STATUS: Record<Row['status'], string> = { pending: 'Pending', approved: 'Approved', spam: 'Spam' };
+const statusLabel = (status: Row['status']): string => ({ pending: t('Pending'), approved: t('Approved'), spam: t('Spam') })[status];
 
 export default function CommentsIndex({ tab, counts, filters, collections, comments, can, errors = {} }: Props) {
-    useBreadcrumbs([{ label: 'Comments', href: adminUrl('cms/comments') }]);
+    useBreadcrumbs([{ label: t('Comments'), href: adminUrl('cms/comments') }]);
     const [search, setSearch] = React.useState(filters.search);
     const [selected, setSelected] = React.useState<number[]>([]);
     const [editing, setEditing] = React.useState<{ row: Row; mode: 'reply' | 'edit' } | null>(null);
@@ -70,27 +70,27 @@ export default function CommentsIndex({ tab, counts, filters, collections, comme
     const setStatus = (row: Row, status: Row['status']) => post(`cms/comments/${row.id}/status`, { status });
     const bulk = (action: string) => {
         const run = () => post('cms/comments/bulk', { action, ids: selected });
-        action === 'delete' ? confirm(`Delete ${selected.length} comments for good? This can't be undone.`, run) : run();
+        action === 'delete' ? confirm(selected.length === 1 ? t('Delete 1 comment for good? This can\'t be undone.') : t('Delete :count comments for good? This can\'t be undone.', { count: selected.length }), run) : run();
     };
     const all = comments.data.length > 0 && selected.length === comments.data.length;
 
     return (
         <div className="cms:flex cms:flex-col cms:gap-6">
-            <Head title="Comments" />
+            <Head title={t('Comments')} />
             <PageHeader
-                title="Comments"
+                title={t('Comments')}
                 actions={
                     <>
                         <div className="cms:relative cms:w-full cms:sm:w-64">
                             <Search className="cms:pointer-events-none cms:absolute cms:top-1/2 cms:left-3 cms:size-4 cms:-translate-y-1/2 cms:text-muted-foreground" />
-                            <Input type="search" placeholder="Search text, name or email" aria-label="Search comments" className="cms:pl-9"
+                            <Input type="search" placeholder={t('Search text, name or email')} aria-label={t('Search comments')} className="cms:pl-9"
                                 value={search} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)} />
                         </div>
                         {collections.length > 1 && (
                             <Select value={filters.collection ?? 'all'} onValueChange={(value: string) => visit({ collection: value === 'all' ? null : value })}>
-                                <SelectTrigger className="cms:w-48" aria-label="Collection"><SelectValue /></SelectTrigger>
+                                <SelectTrigger className="cms:w-48" aria-label={t('Collection')}><SelectValue /></SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">Every collection</SelectItem>
+                                    <SelectItem value="all">{t('Every collection')}</SelectItem>
                                     {collections.map((c) => <SelectItem key={c.handle} value={c.handle}>{c.title}</SelectItem>)}
                                 </SelectContent>
                             </Select>
@@ -101,31 +101,31 @@ export default function CommentsIndex({ tab, counts, filters, collections, comme
 
             {filters.entry !== null && (
                 <p className="cms:text-sm cms:text-muted-foreground">
-                    Comments on one entry. <button type="button" className="cms:underline cms:underline-offset-4" onClick={() => router.get(adminUrl('cms/comments'))}>Show all</button>
+                    {t('Comments on one entry.')} <button type="button" className="cms:underline cms:underline-offset-4" onClick={() => router.get(adminUrl('cms/comments'))}>{t('Show all')}</button>
                 </p>
             )}
 
             <Tabs value={tab} onValueChange={(value: string) => visit({ status: value as Tab })}>
                 <TabsList className="cms:h-auto cms:flex-wrap cms:justify-start">
-                    {TABS.map((t) => <TabsTrigger key={t.value} value={t.value}>{t.label} <span className="cms:ml-1 cms:text-muted-foreground">{counts[t.value]}</span></TabsTrigger>)}
+                    {tabs().map((each) => <TabsTrigger key={each.value} value={each.value}>{each.label} <span className="cms:ml-1 cms:text-muted-foreground">{counts[each.value]}</span></TabsTrigger>)}
                 </TabsList>
             </Tabs>
 
             {selected.length > 0 && (
-                <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-2 cms:text-sm" role="toolbar" aria-label="With the selected comments">
-                    <span className="cms:text-muted-foreground">{selected.length} selected</span>
+                <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-2 cms:text-sm" role="toolbar" aria-label={t('With the selected comments')}>
+                    <span className="cms:text-muted-foreground">{t(':count selected', { count: selected.length })}</span>
                     {can.moderate && tab !== 'trashed' && (
                         <>
-                            <Button size="sm" variant="outline" onClick={() => bulk('approve')}><Check /> Approve</Button>
-                            <Button size="sm" variant="outline" onClick={() => bulk('unapprove')}><Undo2 /> Unapprove</Button>
-                            <Button size="sm" variant="outline" onClick={() => bulk('spam')}><ShieldAlert /> Spam</Button>
+                            <Button size="sm" variant="outline" onClick={() => bulk('approve')}><Check /> {t('Approve')}</Button>
+                            <Button size="sm" variant="outline" onClick={() => bulk('unapprove')}><Undo2 /> {t('Unapprove')}</Button>
+                            <Button size="sm" variant="outline" onClick={() => bulk('spam')}><ShieldAlert /> {t('Spam')}</Button>
                         </>
                     )}
-                    {can.delete && tab !== 'trashed' && <Button size="sm" variant="outline" onClick={() => bulk('trash')}><Trash2 /> Trash</Button>}
+                    {can.delete && tab !== 'trashed' && <Button size="sm" variant="outline" onClick={() => bulk('trash')}><Trash2 /> {t('Trash')}</Button>}
                     {can.delete && tab === 'trashed' && (
                         <>
-                            <Button size="sm" variant="outline" onClick={() => bulk('restore')}><RotateCcw /> Restore</Button>
-                            <Button size="sm" variant="destructive" onClick={() => bulk('delete')}><Trash2 /> Delete for good</Button>
+                            <Button size="sm" variant="outline" onClick={() => bulk('restore')}><RotateCcw /> {t('Restore')}</Button>
+                            <Button size="sm" variant="destructive" onClick={() => bulk('delete')}><Trash2 /> {t('Delete for good')}</Button>
                         </>
                     )}
                 </div>
@@ -134,51 +134,51 @@ export default function CommentsIndex({ tab, counts, filters, collections, comme
             {comments.data.length === 0 ? (
                 <div className="cms:flex cms:flex-col cms:items-center cms:gap-3 cms:rounded-xl cms:border cms:border-dashed cms:px-6 cms:py-16 cms:text-center">
                     <span className="cms:grid cms:size-10 cms:place-items-center cms:rounded-full cms:bg-muted cms:text-muted-foreground"><MessageSquare className="cms:size-4" /></span>
-                    <p className="cms:text-sm cms:text-muted-foreground">{filters.search ? 'No comments match.' : 'No comments here.'}</p>
+                    <p className="cms:text-sm cms:text-muted-foreground">{filters.search ? t('No comments match.') : t('No comments here.')}</p>
                 </div>
             ) : (
                 <Card className="cms:divide-y cms:p-0">
                     <div className="cms:flex cms:items-center cms:gap-3 cms:px-4 cms:py-2 cms:text-sm cms:text-muted-foreground">
-                        <Checkbox checked={all} aria-label="Select all" onCheckedChange={(checked: boolean) => setSelected(checked ? comments.data.map((c) => c.id) : [])} />
-                        <span>{comments.from}–{comments.to} of {comments.total}</span>
+                        <Checkbox checked={all} aria-label={t('Select all')} onCheckedChange={(checked: boolean) => setSelected(checked ? comments.data.map((c) => c.id) : [])} />
+                        <span>{t(':from–:to of :total', { from: comments.from, to: comments.to, total: comments.total })}</span>
                     </div>
                     {comments.data.map((row) => (
                         <article key={row.id} className="cms:flex cms:gap-3 cms:px-4 cms:py-4" aria-labelledby={`comment-${row.id}-author`}>
-                            <Checkbox checked={selected.includes(row.id)} aria-label={`Select ${row.author}'s comment`}
+                            <Checkbox checked={selected.includes(row.id)} aria-label={t('Select :author\'s comment', { author: row.author })}
                                 onCheckedChange={(checked: boolean) => setSelected(checked ? [...selected, row.id] : selected.filter((id) => id !== row.id))} />
                             <div className="cms:flex cms:min-w-0 cms:flex-1 cms:flex-col cms:gap-2">
                                 <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-x-3 cms:gap-y-1 cms:text-sm">
                                     <span id={`comment-${row.id}-author`} className="cms:font-medium">{row.author}</span>
                                     {row.email && <span className="cms:text-muted-foreground">{row.email}</span>}
-                                    {row.member && <Badge variant="outline">Signed in</Badge>}
-                                    {!row.trashed && <Badge variant={row.status === 'approved' ? 'success' : row.status === 'spam' ? 'destructive' : 'warning'}>{STATUS[row.status]}</Badge>}
+                                    {row.member && <Badge variant="outline">{t('Signed in')}</Badge>}
+                                    {!row.trashed && <Badge variant={row.status === 'approved' ? 'success' : row.status === 'spam' ? 'destructive' : 'warning'}>{statusLabel(row.status)}</Badge>}
                                     <span className="cms:text-muted-foreground">{row.createdAt ? formatDate(row.createdAt) : ''} · {row.locale.toUpperCase()}</span>
                                 </div>
                                 <p className="cms:text-sm cms:text-muted-foreground">
-                                    On {row.entry.url
+                                    {t('On')} {row.entry.url
                                         ? <a href={row.entry.url} target="_blank" rel="noreferrer" className="cms:underline-offset-4 hover:cms:underline">{row.entry.title} <ExternalLink className="cms:inline cms:size-3" /></a>
                                         : row.entry.title}
-                                    {row.parent && <> · replying to {row.parent.author}: “{row.parent.excerpt}”</>}
+                                    {row.parent && <> · {t('replying to :author: “:excerpt”', { author: row.parent.author, excerpt: row.parent.excerpt })}</>}
                                 </p>
                                 <p className="cms:whitespace-pre-wrap cms:break-words">{row.body}</p>
                                 <div className="cms:flex cms:flex-wrap cms:gap-1">
                                     {can.moderate && !row.trashed && (
                                         <>
-                                            {row.status !== 'approved' && <Button size="sm" variant="ghost" onClick={() => setStatus(row, 'approved')}><Check /> Approve</Button>}
-                                            {row.status === 'approved' && <Button size="sm" variant="ghost" onClick={() => setStatus(row, 'pending')}><Undo2 /> Unapprove</Button>}
-                                            {row.status !== 'spam' && <Button size="sm" variant="ghost" onClick={() => setStatus(row, 'spam')}><ShieldAlert /> Spam</Button>}
-                                            {row.status !== 'spam' && <Button size="sm" variant="ghost" onClick={() => setEditing({ row, mode: 'reply' })}><MessageSquareReply /> Reply</Button>}
-                                            <Button size="sm" variant="ghost" onClick={() => setEditing({ row, mode: 'edit' })}><Pencil /> Edit</Button>
+                                            {row.status !== 'approved' && <Button size="sm" variant="ghost" onClick={() => setStatus(row, 'approved')}><Check /> {t('Approve')}</Button>}
+                                            {row.status === 'approved' && <Button size="sm" variant="ghost" onClick={() => setStatus(row, 'pending')}><Undo2 /> {t('Unapprove')}</Button>}
+                                            {row.status !== 'spam' && <Button size="sm" variant="ghost" onClick={() => setStatus(row, 'spam')}><ShieldAlert /> {t('Spam')}</Button>}
+                                            {row.status !== 'spam' && <Button size="sm" variant="ghost" onClick={() => setEditing({ row, mode: 'reply' })}><MessageSquareReply /> {t('Reply')}</Button>}
+                                            <Button size="sm" variant="ghost" onClick={() => setEditing({ row, mode: 'edit' })}><Pencil /> {t('Edit')}</Button>
                                         </>
                                     )}
                                     {can.delete && !row.trashed && (
-                                        <Button size="sm" variant="ghost" onClick={() => router.delete(adminUrl(`cms/comments/${row.id}`), { preserveScroll: true })}><Trash2 /> Trash</Button>
+                                        <Button size="sm" variant="ghost" onClick={() => router.delete(adminUrl(`cms/comments/${row.id}`), { preserveScroll: true })}><Trash2 /> {t('Trash')}</Button>
                                     )}
                                     {can.delete && row.trashed && (
                                         <>
-                                            <Button size="sm" variant="ghost" onClick={() => post(`cms/comments/${row.id}/restore`)}><RotateCcw /> Restore</Button>
-                                            <Button size="sm" variant="ghost" onClick={() => confirm('Delete this comment for good? Replies to it stay.',
-                                                () => router.delete(adminUrl(`cms/comments/${row.id}/force`), { preserveScroll: true }))}><Trash2 /> Delete for good</Button>
+                                            <Button size="sm" variant="ghost" onClick={() => post(`cms/comments/${row.id}/restore`)}><RotateCcw /> {t('Restore')}</Button>
+                                            <Button size="sm" variant="ghost" onClick={() => confirm(t('Delete this comment for good? Replies to it stay.'),
+                                                () => router.delete(adminUrl(`cms/comments/${row.id}/force`), { preserveScroll: true }))}><Trash2 /> {t('Delete for good')}</Button>
                                         </>
                                     )}
                                 </div>
@@ -190,8 +190,8 @@ export default function CommentsIndex({ tab, counts, filters, collections, comme
 
             {(comments.prev_page_url || comments.next_page_url) && (
                 <div className="cms:flex cms:justify-end cms:gap-2">
-                    <Button variant="outline" size="sm" disabled={!comments.prev_page_url} onClick={() => comments.prev_page_url && router.get(comments.prev_page_url)}><ChevronLeft /> Newer</Button>
-                    <Button variant="outline" size="sm" disabled={!comments.next_page_url} onClick={() => comments.next_page_url && router.get(comments.next_page_url)}>Older <ChevronRight /></Button>
+                    <Button variant="outline" size="sm" disabled={!comments.prev_page_url} onClick={() => comments.prev_page_url && router.get(comments.prev_page_url)}><ChevronLeft /> {t('Newer')}</Button>
+                    <Button variant="outline" size="sm" disabled={!comments.next_page_url} onClick={() => comments.next_page_url && router.get(comments.next_page_url)}>{t('Older')} <ChevronRight /></Button>
                 </div>
             )}
 
@@ -217,18 +217,18 @@ function Compose({ row, mode, error, onClose }: { row: Row; mode: 'reply' | 'edi
         <Dialog open onOpenChange={(open: boolean) => !open && onClose()}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>{mode === 'reply' ? `Reply to ${row.author}` : `Edit ${row.author}'s comment`}</DialogTitle>
+                    <DialogTitle>{mode === 'reply' ? t('Reply to :author', { author: row.author }) : t('Edit :author\'s comment', { author: row.author })}</DialogTitle>
                     <DialogDescription>
-                        {mode === 'reply' ? (row.status === 'pending' ? 'Your reply is published at once, and approves this comment.' : 'Your reply is published at once, under your name.') : 'Fix a typo or remove a link.'}
+                        {mode === 'reply' ? (row.status === 'pending' ? t('Your reply is published at once, and approves this comment.') : t('Your reply is published at once, under your name.')) : t('Fix a typo or remove a link.')}
                     </DialogDescription>
                 </DialogHeader>
                 {mode === 'reply' && <p className="cms:max-h-32 cms:overflow-auto cms:whitespace-pre-wrap cms:text-sm cms:text-muted-foreground">{row.body}</p>}
-                <Textarea aria-label={mode === 'reply' ? 'Your reply' : 'Comment'} rows={5} value={body} aria-invalid={error !== undefined}
+                <Textarea aria-label={mode === 'reply' ? t('Your reply') : t('Comment')} rows={5} value={body} aria-invalid={error !== undefined}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setBody(e.target.value)} />
                 <FieldError message={error} />
                 <DialogFooter>
-                    <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-                    <Button type="button" disabled={body.trim() === '' || processing} onClick={save}>{mode === 'reply' ? 'Post reply' : 'Save'}</Button>
+                    <Button type="button" variant="outline" onClick={onClose}>{t('Cancel')}</Button>
+                    <Button type="button" disabled={body.trim() === '' || processing} onClick={save}>{mode === 'reply' ? t('Post reply') : t('Save')}</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

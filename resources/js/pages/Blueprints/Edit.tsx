@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import { LoaderCircle, Trash2 } from 'lucide-react';
-import { adminUrl } from '@sunrice/admin-sdk';
+import { adminUrl, t } from '@sunrice/admin-sdk';
 import { Button, Card, CardContent, Input, Label, PageHeader, useBreadcrumbs, useUnsavedChanges } from '@sunrice/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { FieldBuilder } from '@/components/FieldBuilder.tsx';
@@ -21,16 +21,16 @@ interface Props {
 }
 
 export default function BlueprintForm({ kind = 'blueprint', blueprint, fieldTypes, usedBy = [] }: Props) {
-    const noun = kind === 'fieldset' ? 'Fieldset' : 'Blueprint';
-    const base = adminUrl(kind === 'fieldset' ? 'cms/fieldsets' : 'cms/blueprints');
-    const title = blueprint ? blueprint.title : `New ${noun.toLowerCase()}`;
-    useBreadcrumbs([{ label: `${noun}s`, href: base }, { label: title }]);
+    const fieldset = kind === 'fieldset';
+    const base = adminUrl(fieldset ? 'cms/fieldsets' : 'cms/blueprints');
+    const title = blueprint ? blueprint.title : fieldset ? t('New fieldset') : t('New blueprint');
+    useBreadcrumbs([{ label: fieldset ? t('Fieldsets') : t('Blueprints'), href: base }, { label: title }]);
     const [confirm, confirmDialog] = useConfirm();
 
     const form = useForm({ title: blueprint?.title ?? '', handle: blueprint?.handle ?? '' });
     const [handleTouched, setHandleTouched] = React.useState(blueprint !== null);
     const [fields, setFields] = React.useState<BuilderField[]>(() => fromDefinitions(blueprint?.fields));
-    const hasChildren = (type: string) => fieldTypes.find((t) => t.type === type)?.hasChildren === true;
+    const hasChildren = (type: string) => fieldTypes.find((each) => each.type === type)?.hasChildren === true;
     const errors = form.errors as Record<string, string | undefined>;
 
     // The builder's fields as last saved, to tell unsaved changes.
@@ -59,7 +59,9 @@ export default function BlueprintForm({ kind = 'blueprint', blueprint, fieldType
     };
     useUnsavedChanges(dirty, save);
 
-    const remove = () => blueprint && confirm(`Delete the ${noun.toLowerCase()} "${blueprint.title}"? Content keeps its values.`,
+    const remove = () => blueprint && confirm(fieldset
+        ? t('Delete the fieldset ":title"? Content keeps its values.', { title: blueprint.title })
+        : t('Delete the blueprint ":title"? Content keeps its values.', { title: blueprint.title }),
         () => router.delete(`${base}/${blueprint.handle}`, { preserveScroll: true }));
 
     return (
@@ -69,17 +71,17 @@ export default function BlueprintForm({ kind = 'blueprint', blueprint, fieldType
 
             <PageHeader
                 title={title}
-                back={{ href: base, label: `Back to ${noun.toLowerCase()}s` }}
+                back={{ href: base, label: fieldset ? t('Back to fieldsets') : t('Back to blueprints') }}
                 actions={
                     <>
                         {blueprint && (
-                            <Button type="button" variant="outline" size="icon" className="cms:text-destructive" aria-label={`Delete ${title}`} onClick={remove}>
+                            <Button type="button" variant="outline" size="icon" className="cms:text-destructive" aria-label={t('Delete :title', { title })} onClick={remove}>
                                 <Trash2 />
                             </Button>
                         )}
                         <Button type="submit" disabled={form.processing}>
                             {form.processing && <LoaderCircle className="cms:animate-spin" />}
-                            {blueprint ? 'Save' : `Create ${noun.toLowerCase()}`}
+                            {blueprint ? t('Save') : fieldset ? t('Create fieldset') : t('Create blueprint')}
                         </Button>
                     </>
                 }
@@ -90,26 +92,26 @@ export default function BlueprintForm({ kind = 'blueprint', blueprint, fieldType
             <Card>
                 <CardContent className="cms:grid cms:gap-4 cms:md:grid-cols-2">
                     <div className="cms:flex cms:flex-col cms:gap-2">
-                        <Label htmlFor="title">Title</Label>
+                        <Label htmlFor="title">{t('Title')}</Label>
                         <Input id="title" value={form.data.title} required onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                             form.setData((data) => ({ ...data, title: e.target.value, handle: handleTouched ? data.handle : handleFromLabel(e.target.value) }));
                         }} />
                         <FieldError message={errors.title} />
                     </div>
                     <div className="cms:flex cms:flex-col cms:gap-2">
-                        <Label htmlFor="handle">Handle</Label>
+                        <Label htmlFor="handle">{t('Handle')}</Label>
                         <Input id="handle" className="cms:font-mono" value={form.data.handle} disabled={blueprint !== null} required
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setHandleTouched(true); form.setData('handle', cleanHandle(e.target.value)); }} />
-                        <p className="cms:text-sm cms:text-muted-foreground">{blueprint ? 'Set when it was created.' : 'Lowercase letters, digits and underscores. It can\'t change later.'}</p>
+                        <p className="cms:text-sm cms:text-muted-foreground">{blueprint ? t('Set when it was created.') : t('Lowercase letters, digits and underscores. It can\'t change later.')}</p>
                         <FieldError message={errors.handle} />
                     </div>
                 </CardContent>
             </Card>
 
-            {usedBy.length > 0 && <p className="cms:text-sm cms:text-muted-foreground">Used by {usedBy.join(', ')}. Changes show there at once.</p>}
+            {usedBy.length > 0 && <p className="cms:text-sm cms:text-muted-foreground">{t('Used by :list. Changes show there at once.', { list: usedBy.join(', ') })}</p>}
 
             <section className="cms:flex cms:flex-col cms:gap-3" aria-labelledby="fields-heading">
-                <h2 id="fields-heading" className="cms:text-lg cms:font-medium">Fields</h2>
+                <h2 id="fields-heading" className="cms:text-lg cms:font-medium">{t('Fields')}</h2>
                 <FieldBuilder fields={fields} onChange={setFields} types={fieldTypes} errors={errorsUnder(errors, 'fields')} />
                 <FieldError message={errors.fields} />
             </section>

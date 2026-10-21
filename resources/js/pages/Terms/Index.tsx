@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { ExternalLink, FileText, MoreHorizontal, MoreVertical, Pencil, Plus, RotateCcw, Search, Settings2, Trash2 } from 'lucide-react';
-import { adminUrl } from '@sunrice/admin-sdk';
+import { adminUrl, t } from '@sunrice/admin-sdk';
 import {
     Button, Card, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DropdownMenu, DropdownMenuContent, DropdownMenuItem,
     DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, Input, Label, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -53,11 +53,12 @@ const TOP = '__top';
 /** " It's used by A; B." for confirmations, or nothing. */
 function usedBySentence(usedBy: string[] = []): string {
     if (usedBy.length === 0) return '';
-    return ` It's used by ${usedBy.slice(0, 5).join('; ')}${usedBy.length > 5 ? ` and ${usedBy.length - 5} more` : ''}.`;
+    const list = usedBy.slice(0, 5).join('; ');
+    return ` ${usedBy.length > 5 ? t('It\'s used by :list and :count more.', { list, count: usedBy.length - 5 }) : t('It\'s used by :list.', { list })}`;
 }
 
 export default function TermsIndex({ taxonomy, taxonomies, terms, locales, locale, trashed = false }: Props) {
-    useBreadcrumbs([{ label: taxonomy ? taxonomy.title : 'Terms' }]);
+    useBreadcrumbs([{ label: taxonomy ? taxonomy.title : t('Terms') }]);
     const [confirm, confirmDialog] = useConfirm();
     // The term being renamed.
     const [editing, setEditing] = React.useState<TermRow | null>(null);
@@ -69,8 +70,8 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
     if (!taxonomy) {
         return (
             <div className="cms:flex cms:flex-col cms:gap-4">
-                <Head title="Terms" />
-                <PageHeader title="Terms" description="There are no taxonomies yet. Create one under Structure → Taxonomies (categories, tags…), then add its terms here." />
+                <Head title={t('Terms')} />
+                <PageHeader title={t('Terms')} description={t('There are no taxonomies yet. Create one under Structure → Taxonomies (categories, tags…), then add its terms here.')} />
             </div>
         );
     }
@@ -82,26 +83,26 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
         router.post(adminUrl('cms/terms/reorder'), { taxonomy: taxonomy.handle, ids, parent_id: parent < 0 ? null : rows[parent]!.id },
             { preserveScroll: true, preserveState: true, onError: () => setRows(terms) });
     };
-    const trash = (term: TermRow) => confirm(`Move "${term.fallback}" to the trash, with the terms under it? It comes off the site; you can restore it.${usedBySentence(term.usedBy)}`,
+    const trash = (term: TermRow) => confirm(t('Move ":title" to the trash, with the terms under it? It comes off the site; you can restore it.', { title: term.fallback }) + usedBySentence(term.usedBy),
         () => router.delete(adminUrl(`cms/terms/${term.id}`), { preserveScroll: true }));
     const needle = search.trim().toLowerCase();
-    const found = needle === '' ? null : rows.filter((t) => `${t.title ?? t.fallback} ${t.slug ?? ''}`.toLowerCase().includes(needle));
+    const found = needle === '' ? null : rows.filter((each) => `${each.title ?? each.fallback} ${each.slug ?? ''}`.toLowerCase().includes(needle));
     const collections = taxonomy.collections ?? [];
 
     /** One term's row: drag handle, title, slug, entries, created and its actions. */
     const row = (term: TermRow, handle: SortableHandleProps | null, depth: number) => (
         <div className={`${GRID} cms:border-t cms:border-border/60 cms:px-3 cms:py-2`}>
-            <span className="cms:flex cms:justify-center">{handle && !trashed && <SortableHandle {...handle} label={`Move ${term.fallback}`} />}</span>
+            <span className="cms:flex cms:justify-center">{handle && !trashed && <SortableHandle {...handle} label={t('Move :title', { title: term.fallback })} />}</span>
             <div className="cms:flex cms:min-w-0 cms:items-center cms:gap-2" style={{ paddingLeft: depth * 20 }}>
                 {depth > 0 && <span className="cms:text-muted-foreground" aria-hidden>└</span>}
                 {trashed ? <span className="cms:truncate cms:font-medium">{term.title ?? term.fallback}</span> : (
                     <button type="button" className="cms:truncate cms:text-left cms:font-medium cms:underline-offset-4 cms:hover:underline"
                         onClick={() => taxonomy.pages && term.title !== null ? router.get(pageUrl(term)) : setEditing(term)}>
-                        {term.title ?? <span className="cms:font-normal cms:text-muted-foreground cms:italic">{term.fallback} · not translated</span>}
+                        {term.title ?? <span className="cms:font-normal cms:text-muted-foreground cms:italic">{t(':title · not translated', { title: term.fallback })}</span>}
                     </button>
                 )}
                 {term.url && (
-                    <a href={term.url} target="_blank" rel="noopener noreferrer" className="cms:text-muted-foreground cms:hover:text-foreground" aria-label="Visit term page" title="Visit term page">
+                    <a href={term.url} target="_blank" rel="noopener noreferrer" className="cms:text-muted-foreground cms:hover:text-foreground" aria-label={t('Visit term page')} title={t('Visit term page')}>
                         <ExternalLink className="cms:size-3.5" />
                     </a>
                 )}
@@ -112,28 +113,28 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
             <div className="cms:flex cms:justify-end">
                 {trashed ? (
                     <div className="cms:flex cms:gap-1">
-                        <Button variant="outline" size="sm" onClick={() => router.post(adminUrl(`cms/terms/${term.id}/restore`), {}, { preserveScroll: true })}><RotateCcw /> Restore</Button>
+                        <Button variant="outline" size="sm" onClick={() => router.post(adminUrl(`cms/terms/${term.id}/restore`), {}, { preserveScroll: true })}><RotateCcw /> {t('Restore')}</Button>
                         <Button variant="ghost" size="sm" className="cms:text-destructive"
-                            onClick={() => confirm(`Delete "${term.fallback}" for good, in every language? Entries lose it.${usedBySentence(term.usedBy)}`,
+                            onClick={() => confirm(t('Delete ":title" for good, in every language? Entries lose it.', { title: term.fallback }) + usedBySentence(term.usedBy),
                                 () => router.delete(adminUrl(`cms/terms/${term.id}/force`), { preserveScroll: true, data: (term.usedBy ?? []).length > 0 ? { force: 1 } : {} }))}>
-                            <Trash2 /> Delete for good
+                            <Trash2 /> {t('Delete for good')}
                         </Button>
                     </div>
                 ) : (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="cms:size-8" aria-label={`Actions for ${term.fallback}`}><MoreHorizontal /></Button>
+                            <Button variant="ghost" size="icon" className="cms:size-8" aria-label={t('Actions for :title', { title: term.fallback })}><MoreHorizontal /></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem onSelect={() => setEditing(term)}><Pencil /> Rename</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => setEditing(term)}><Pencil /> {t('Rename')}</DropdownMenuItem>
                             {taxonomy.hierarchical && term.title !== null && (
-                                <DropdownMenuItem asChild><Link href={`${base}/create?locale=${encodeURIComponent(locale)}&parent=${term.id}`}><Plus /> Add a term under it</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href={`${base}/create?locale=${encodeURIComponent(locale)}&parent=${term.id}`}><Plus /> {t('Add a term under it')}</Link></DropdownMenuItem>
                             )}
                             {taxonomy.pages && term.title !== null && (
-                                <DropdownMenuItem asChild><Link href={pageUrl(term)}><FileText /> Edit page</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href={pageUrl(term)}><FileText /> {t('Edit page')}</Link></DropdownMenuItem>
                             )}
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="cms:text-destructive" onSelect={() => trash(term)}><Trash2 /> Move to trash</DropdownMenuItem>
+                            <DropdownMenuItem className="cms:text-destructive" onSelect={() => trash(term)}><Trash2 /> {t('Move to trash')}</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 )}
@@ -158,32 +159,32 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
             <Head title={taxonomy.title} />
             {confirmDialog}
             <PageHeader
-                title={trashed ? `${taxonomy.title} — trash` : taxonomy.title}
+                title={trashed ? t(':title — trash', { title: taxonomy.title }) : taxonomy.title}
                 actions={
                     <>
                         {locales.length > 1 && (
                             <Select value={locale} onValueChange={(next: string) => router.get(base, { locale: next, ...(trashed ? { status: 'trashed' } : {}) })}>
-                                <SelectTrigger className="cms:w-40" aria-label="Language"><SelectValue /></SelectTrigger>
+                                <SelectTrigger className="cms:w-40" aria-label={t('Language')}><SelectValue /></SelectTrigger>
                                 <SelectContent>{locales.map((code) => <SelectItem key={code} value={code}>{localeName(code)}</SelectItem>)}</SelectContent>
                             </Select>
                         )}
                         {trashed
-                            ? <Button variant="outline" onClick={() => router.get(base, { locale })}>Back to terms</Button>
-                            : <Button asChild><Link href={`${base}/create?locale=${encodeURIComponent(locale)}`}><Plus /> New term</Link></Button>}
+                            ? <Button variant="outline" onClick={() => router.get(base, { locale })}>{t('Back to terms')}</Button>
+                            : <Button asChild><Link href={`${base}/create?locale=${encodeURIComponent(locale)}`}><Plus /> {t('New term')}</Link></Button>}
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="icon" aria-label="More"><MoreVertical /></Button>
+                                <Button variant="outline" size="icon" aria-label={t('More')}><MoreVertical /></Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="cms:min-w-56">
                                 {collections.length > 0 && (
                                     <>
-                                        <DropdownMenuLabel>Used by collections</DropdownMenuLabel>
+                                        <DropdownMenuLabel>{t('Used by collections')}</DropdownMenuLabel>
                                         {collections.map((c) => <DropdownMenuItem key={c.url} asChild><Link href={c.url}>{c.title}</Link></DropdownMenuItem>)}
                                         <DropdownMenuSeparator />
                                     </>
                                 )}
-                                {taxonomy.settings && <DropdownMenuItem asChild><Link href={taxonomy.settings}><Settings2 /> Taxonomy settings</Link></DropdownMenuItem>}
-                                {!trashed && <DropdownMenuItem onSelect={() => router.get(base, { locale, status: 'trashed' })}><Trash2 /> Trash</DropdownMenuItem>}
+                                {taxonomy.settings && <DropdownMenuItem asChild><Link href={taxonomy.settings}><Settings2 /> {t('Taxonomy settings')}</Link></DropdownMenuItem>}
+                                {!trashed && <DropdownMenuItem onSelect={() => router.get(base, { locale, status: 'trashed' })}><Trash2 /> {t('Trash')}</DropdownMenuItem>}
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </>
@@ -191,8 +192,8 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
             >
                 {taxonomies.length > 1 && (
                     <Select value={taxonomy.handle} onValueChange={(handle: string) => router.get(adminUrl(`cms/taxonomies/${handle}/terms`))}>
-                        <SelectTrigger className="cms:w-48" aria-label="Taxonomy"><SelectValue /></SelectTrigger>
-                        <SelectContent>{taxonomies.map((t) => <SelectItem key={t.handle} value={t.handle}>{t.title}</SelectItem>)}</SelectContent>
+                        <SelectTrigger className="cms:w-48" aria-label={t('Taxonomy')}><SelectValue /></SelectTrigger>
+                        <SelectContent>{taxonomies.map((each) => <SelectItem key={each.handle} value={each.handle}>{each.title}</SelectItem>)}</SelectContent>
                     </Select>
                 )}
             </PageHeader>
@@ -200,30 +201,30 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
             <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-3">
                 <div className="cms:relative cms:w-full cms:max-w-xs">
                     <Search className="cms:pointer-events-none cms:absolute cms:top-1/2 cms:left-3 cms:size-4 cms:-translate-y-1/2 cms:text-muted-foreground" />
-                    <Input className="cms:pl-9" placeholder="Search terms…" aria-label="Search terms" value={search}
+                    <Input className="cms:pl-9" placeholder={t('Search terms…')} aria-label={t('Search terms')} value={search}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)} />
                 </div>
                 {!trashed && rows.length > 1 && !found && (
-                    <p className="cms:text-sm cms:text-muted-foreground">Drag terms to set their order{taxonomy.hierarchical ? '; a term\'s parent is set when you rename it' : ''}.</p>
+                    <p className="cms:text-sm cms:text-muted-foreground">{taxonomy.hierarchical ? t('Drag terms to set their order; a term\'s parent is set when you rename it.') : t('Drag terms to set their order.')}</p>
                 )}
             </div>
 
             <Card className="cms:gap-0 cms:overflow-hidden cms:py-0">
                 <div className={`${GRID} cms:bg-muted/60 cms:px-3 cms:py-2.5 cms:text-sm cms:font-medium cms:text-muted-foreground`}>
                     <span />
-                    <span>Title</span>
-                    <span className="cms:hidden cms:md:block">Slug</span>
-                    <span className="cms:hidden cms:md:block">Entries</span>
-                    <span className="cms:hidden cms:md:block">Created</span>
-                    <span className="cms:sr-only">Actions</span>
+                    <span>{t('Title')}</span>
+                    <span className="cms:hidden cms:md:block">{t('Slug')}</span>
+                    <span className="cms:hidden cms:md:block">{t('Entries')}</span>
+                    <span className="cms:hidden cms:md:block">{t('Created')}</span>
+                    <span className="cms:sr-only">{t('Actions')}</span>
                 </div>
                 {rows.length === 0 ? (
                     <div className="cms:flex cms:flex-col cms:items-center cms:gap-3 cms:border-t cms:border-border/60 cms:p-10 cms:text-center cms:text-muted-foreground">
-                        {trashed ? 'The trash is empty.' : <>No terms yet.<Button size="sm" asChild><Link href={`${base}/create?locale=${encodeURIComponent(locale)}`}><Plus /> New term</Link></Button></>}
+                        {trashed ? t('The trash is empty.') : <>{t('No terms yet.')}<Button size="sm" asChild><Link href={`${base}/create?locale=${encodeURIComponent(locale)}`}><Plus /> {t('New term')}</Link></Button></>}
                     </div>
                 ) : found ? (
                     found.length === 0
-                        ? <p className="cms:border-t cms:border-border/60 cms:p-8 cms:text-center cms:text-muted-foreground">No terms match “{search}”.</p>
+                        ? <p className="cms:border-t cms:border-border/60 cms:p-8 cms:text-center cms:text-muted-foreground">{t('No terms match “:search”.', { search })}</p>
                         : found.map((term) => <React.Fragment key={term.id}>{row(term, null, 0)}</React.Fragment>)
                 ) : trashed ? rows.map((term) => <React.Fragment key={term.id}>{row(term, null, 0)}</React.Fragment>) : level(-1)}
             </Card>
@@ -231,8 +232,8 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
             <Dialog open={editing !== null} onOpenChange={(open: boolean) => { if (!open) setEditing(null); }}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Rename “{editing?.fallback}”</DialogTitle>
-                        <DialogDescription>{locales.length > 1 ? `In ${localeName(locale)}.` : 'Its title and the slug in its address.'}</DialogDescription>
+                        <DialogTitle>{t('Rename “:title”', { title: editing?.fallback })}</DialogTitle>
+                        <DialogDescription>{locales.length > 1 ? t('In :language.', { language: localeName(locale) }) : t('Its title and the slug in its address.')}</DialogDescription>
                     </DialogHeader>
                     {editing !== null && (
                         <TermForm key={editing.id} term={editing} locale={locale} terms={terms} hierarchical={taxonomy.hierarchical} onDone={() => setEditing(null)} />
@@ -260,7 +261,7 @@ function TermForm({ locale, terms, hierarchical, term, onDone }: { locale: strin
     // A term can't go under itself or a term under it.
     const blocked = new Set<number>();
     blocked.add(term.id);
-    const start = terms.findIndex((t) => t.id === term.id);
+    const start = terms.findIndex((each) => each.id === term.id);
     for (let i = start + 1; i < terms.length && (terms[i]?.depth ?? 0) > term.depth; i++) blocked.add(terms[i]!.id);
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -271,27 +272,27 @@ function TermForm({ locale, terms, hierarchical, term, onDone }: { locale: strin
     return (
         <form onSubmit={submit} className="cms:flex cms:flex-col cms:gap-4">
             <div className="cms:flex cms:flex-col cms:gap-1.5">
-                <Label htmlFor={`${id}-title`}>Title</Label>
+                <Label htmlFor={`${id}-title`}>{t('Title')}</Label>
                 <Input id={`${id}-title`} value={form.data.title} placeholder={term.fallback} required autoFocus
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => form.setData('title', e.target.value)} />
                 <FieldError message={errors.title ?? errors.version} />
             </div>
             <div className="cms:flex cms:flex-col cms:gap-1.5">
-                <Label htmlFor={`${id}-slug`}>Slug</Label>
-                <Input id={`${id}-slug`} className="cms:font-mono" value={form.data.slug} placeholder="Made from the title"
+                <Label htmlFor={`${id}-slug`}>{t('Slug')}</Label>
+                <Input id={`${id}-slug`} className="cms:font-mono" value={form.data.slug} placeholder={t('Made from the title')}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => form.setData('slug', e.target.value)} />
                 <FieldError message={errors.slug} />
             </div>
             {hierarchical && (
                 <div className="cms:flex cms:flex-col cms:gap-1.5">
-                    <Label htmlFor={`${id}-parent`}>Under</Label>
+                    <Label htmlFor={`${id}-parent`}>{t('Under')}</Label>
                     <Select value={form.data.parent_id === null ? TOP : String(form.data.parent_id)}
                         onValueChange={(value: string) => form.setData('parent_id', value === TOP ? null : Number(value))}>
                         <SelectTrigger id={`${id}-parent`}><SelectValue /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value={TOP}>Top level</SelectItem>
-                            {terms.filter((t) => !blocked.has(t.id)).map((t) => (
-                                <SelectItem key={t.id} value={String(t.id)}>{'— '.repeat(t.depth)}{t.title ?? t.fallback}</SelectItem>
+                            <SelectItem value={TOP}>{t('Top level')}</SelectItem>
+                            {terms.filter((each) => !blocked.has(each.id)).map((each) => (
+                                <SelectItem key={each.id} value={String(each.id)}>{'— '.repeat(each.depth)}{each.title ?? each.fallback}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
@@ -299,8 +300,8 @@ function TermForm({ locale, terms, hierarchical, term, onDone }: { locale: strin
                 </div>
             )}
             <DialogFooter>
-                <Button type="button" variant="ghost" onClick={onDone}>Cancel</Button>
-                <Button type="submit" disabled={form.processing}>Save</Button>
+                <Button type="button" variant="ghost" onClick={onDone}>{t('Cancel')}</Button>
+                <Button type="submit" disabled={form.processing}>{t('Save')}</Button>
             </DialogFooter>
         </form>
     );
