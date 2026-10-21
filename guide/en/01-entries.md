@@ -99,7 +99,7 @@ Only one person edits an entry in a language at a time. If a colleague has it op
 
 ## Listing pages
 
-A collection may have a **listing page** that lists its entries on the website (like `/blog`). Its own words (an introduction, a heading) and its search and sharing details are edited with **Listing page** above the entries list, and saved straight away (there's no draft).
+A collection may have a **listing page** that lists its entries on the website (like `/blog`). Its own words (an introduction, a heading) and its search and sharing details are edited with **Listing page** above the entries list, and saved straight away (there's no draft). Each language has its own words: the language codes at the top show which one you're editing and which already have their own (a check), with a line such as "Editing: English (main) — switch to edit Bahasa Indonesia"; click a code to switch.
 
 > [!TECHNICAL]
 > Collections, their URLs and templates are set up under Structure. See [Collections and entries](docs:cms/collections) and [The site](docs:cms/site).

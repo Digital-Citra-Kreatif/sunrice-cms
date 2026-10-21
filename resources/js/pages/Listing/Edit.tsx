@@ -2,10 +2,11 @@ import * as React from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import { ExternalLink, LoaderCircle } from 'lucide-react';
 import { adminUrl, t } from '@sunrice/admin-sdk';
-import { Button, Card, CardContent, CollapsibleCard, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs, useUnsavedChanges } from '@sunrice/admin-sdk/ui';
+import { Button, Card, CardContent, CollapsibleCard, PageHeader, useBreadcrumbs, useUnsavedChanges } from '@sunrice/admin-sdk/ui';
 import { FieldInput, Fields } from '@/components/FieldInput.tsx';
 import { SHARED_FIELD } from '@/components/FieldSections.tsx';
 import { VersionConflict } from '@/components/VersionConflict.tsx';
+import { LanguageTabs } from '@/components/LanguageTabs.tsx';
 import { errorKeysAt, errorsAt, hasErrors } from '@/lib/builder.ts';
 import { localeName } from '@/lib/entries.ts';
 import { seoFields } from '@/lib/seo.ts';
@@ -22,6 +23,8 @@ interface Props {
     fields: FieldDefinition[];
     locale: string;
     locales: string[];
+    /** The languages with texts of their own (the main one always). */
+    translated?: string[];
     /** Fields shared by all languages: read-only outside the main one. */
     shared: string[];
     values: FieldValues;
@@ -37,7 +40,7 @@ export default function ListingPage(props: Props) {
     return <ListingEdit key={`${props.locale}:${props.version}:${JSON.stringify([props.values, props.seo])}`} {...props} />;
 }
 
-function ListingEdit({ collection, fields, locale, locales, shared, values, seo, version, can }: Props) {
+function ListingEdit({ collection, fields, locale, locales, translated = [], shared, values, seo, version, can }: Props) {
     const url = adminUrl(`cms/collections/${collection.handle}/listing`);
     const back = adminUrl(`cms/collections/${collection.handle}/entries`);
     useBreadcrumbs([{ label: collection.title, href: back }, { label: t('Listing page') }]);
@@ -65,14 +68,6 @@ function ListingEdit({ collection, fields, locale, locales, shared, values, seo,
                 back={{ href: back, label: t('Back to :title', { title: collection.title }) }}
                 actions={
                     <>
-                        {locales.length > 1 && (
-                            <Select value={locale} onValueChange={(next: string) => router.get(url, { locale: next })}>
-                                <SelectTrigger className="cms:w-48" aria-label={t('Language')}><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    {locales.map((code, i) => <SelectItem key={code} value={code}>{localeName(code)}{i === 0 ? ` ${t('(main)')}` : ''}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
-                        )}
                         {collection.url && (
                             <Button type="button" variant="ghost" asChild><a href={collection.url} target="_blank" rel="noopener noreferrer"><ExternalLink /> {t('View')}</a></Button>
                         )}
@@ -87,6 +82,8 @@ function ListingEdit({ collection, fields, locale, locales, shared, values, seo,
                 {form.isDirty && <span className="cms:text-sm cms:text-muted-foreground">{t('Unsaved changes')}</span>}
             </PageHeader>
 
+            {/* Each language has its own texts: which one is open, which have theirs, the others a click away. */}
+            <LanguageTabs current={locale} locales={locales} translated={translated} onSwitch={(next) => router.get(url, { locale: next })} />
             <fieldset disabled={!writable} className="cms:flex cms:flex-col cms:gap-6">
                 <VersionConflict message={errors.version} processing={form.processing} onSaveMine={saveMine} />
                 {fields.length === 0 ? (

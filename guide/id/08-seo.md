@@ -21,7 +21,7 @@ Field yang kosong bisa diisi dari field entri itu sendiri, jika pengelola situs 
 
 ## Halaman term dan halaman daftar
 
-Halaman sebuah term dan halaman daftar sebuah koleksi memiliki kartu **SEO** yang sama: di halaman term (dari daftar term) dan di halaman daftar (lewat **Halaman daftar** di atas daftar entri). Keduanya langsung tayang saat disimpan.
+Halaman sebuah term dan halaman daftar sebuah koleksi memiliki kartu **SEO** yang sama: di penyunting term (dari daftar term) dan di halaman daftar (lewat **Halaman daftar** di atas daftar entri). Keduanya langsung tayang saat disimpan.
 
 ## Pengaturan bawaan situs
 
