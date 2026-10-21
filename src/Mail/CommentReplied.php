@@ -10,6 +10,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\URL;
+use Sunrice\Admin\Support\AppUrl;
 use Sunrice\Cms\Models\Comment;
 
 /**
@@ -42,7 +43,7 @@ final class CommentReplied extends Mailable
         return new Content(view: 'sunrice-cms::mail.comment-replied', with: [
             'reply' => $this->reply,
             'title' => $translation->title ?? '',
-            'url' => $url !== null ? $url.'#comment-'.$this->reply->id : null,
+            'url' => $url !== null ? AppUrl::url($url).'#comment-'.$this->reply->id : null,
             'unsubscribe' => URL::signedRoute('sunrice.cms.comments.unsubscribe', ['comment' => $parent?->id]),
         ]);
     }
