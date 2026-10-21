@@ -12,7 +12,7 @@ Set a collection's URL under Structure → Collections: a path with `{slug}` onc
 - Only live entries have pages: published, past their date, not in the trash, of a collection not deleted. Anything else is a 404.
 - The CMS's route is the app's **fallback**: your own routes (`routes/web.php`) always come first. Turn the site off with `sunrice-cms.site.enabled` (the admin and previews keep working); its middleware is `sunrice-cms.site.middleware` (`web`).
 
-`$translation->url()` gives an entry's address (null without a route). For a visitor reading another language, `Sunrice\Cms\Site\Site::urlIn($translation, $locale)` gives the page to link to: the translation's own address when it's in that language, else, for a main-language translation of an entry not live there and with the [fallback](#untranslated-pages) on, its page at that language's address (`/id/blog/hello`), else its own. `app(Site::class)->termUrlIn($termTranslation, $locale)` does the same for term pages. Entries from `Cms::entries()`, linked entries and `$entry->shownIn($locale)` already link this way.
+`$translation->url()` gives an entry's address (null without a route). For a visitor reading another language, `app(Sunrice\Cms\Site\Site::class)->urlIn($translation, $locale)` gives the page to link to: the translation's own address when it's in that language, else, for a main-language translation of an entry not live there and with the [fallback](#untranslated-pages) on, its page at that language's address (`/id/blog/hello`), else its own. `app(Site::class)->termUrlIn($termTranslation, $locale)` does the same for term pages. Entries from `Cms::entries()`, linked entries and `$entry->shownIn($locale)` already link this way.
 
 ### Untranslated pages
 
