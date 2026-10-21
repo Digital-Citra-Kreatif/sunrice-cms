@@ -113,7 +113,7 @@ On the CMS's pages it reads the page shown (entry, term or listing page; or name
 
 Past the first page of a listing, term or search page, the canonical and `hreflang` URLs (and `Cms::localeUrls()`) carry the page number (`/blog?page=2`), so each page is its own, not a copy of the first.
 
-`/sitemap.xml` lists every live entry of a collection with a URL (with `lastmod` and its other languages), term pages (with `lastmod` and their other languages) and listing pages (with their other languages), but those hidden from search engines. It's built in chunks and kept in the cache until the content changes. Search engines read at most 50,000 addresses from one file, so past that `/sitemap.xml` becomes an index of `/sitemap-1.xml`, `/sitemap-2.xml`, … (route `sunrice.cms.sitemap.part`); `/sitemap-1.xml` always works.
+`/sitemap.xml` lists every live entry of a collection with a URL (with `lastmod` and its other languages), term pages (with `lastmod` and their other languages) and listing pages (with their other languages), but those hidden from search engines. It's built in chunks and kept in the cache until the content changes. Its addresses are on `APP_URL`, never on the `Host` header a request named (with no `APP_URL`, on the request's host). Search engines read at most 50,000 addresses from one file, so past that `/sitemap.xml` becomes an index of `/sitemap-1.xml`, `/sitemap-2.xml`, … (route `sunrice.cms.sitemap.part`); `/sitemap-1.xml` always works.
 
 ### Structured data
 
@@ -463,6 +463,10 @@ The entry editor's **Preview** opens the saved draft in its template through a s
 Signed-in panel users with `cms.entries.view-drafts` (and view access to the collection; the author and editor roles have it) see a small banner on a live page whose entry has a newer draft, with a **View draft** link. `?draft` renders the draft the way a preview does: the view gets `$draft = true`, `Cms::page()->draft` is set, the body class gets `is-draft`, and the response is `noindex` and `Cache-Control: no-store, private`, never kept by the page cache. The banner is `sunrice-cms::draft-banner`, inserted right after `<body>`, so it works with any template.
 
 ## Security
+
+### The Host header
+
+Whoever sends a request chooses its `Host` header, so the site never puts it in what it sends back where a cache or proxy could keep it for everyone: its redirects to its own pages (`/en/about` to `/about`, `/about/` and `/index.php/about` to `/about`, plain addresses to the main language's prefix, redirects editors made to a path) are host-relative (`Location: /about`), and the sitemap's addresses are on `APP_URL`. Pages still print links from `url()`, so also turn on Laravel's `TrustHosts` middleware (`$middleware->trustHosts()` in `bootstrap/app.php`; it trusts `APP_URL`'s host and its subdomains) or have your web server answer only your own host names. A `robots.txt` route of your own should name the sitemap with `Sunrice\Admin\Support\AppUrl::route('sunrice.cms.sitemap')`, not `url()`.
 
 ### Sending visitors back
 
