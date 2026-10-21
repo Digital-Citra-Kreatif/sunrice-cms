@@ -14,7 +14,7 @@ For each comment:
 - **Spam** moves it to the Spam tab. Spam is deleted automatically after a while.
 - **Reply** answers it, published at once under your name. Replying to a waiting comment approves it.
 - **Edit** fixes a typo or removes a link.
-- **Trash** moves it to the Trash tab, where **Restore** brings it back and **Delete for good** removes it permanently. Replies to a deleted comment stay, moved up a level.
+- **Move to trash** moves it to the Trash tab, where **Restore** brings it back and **Permanently delete** removes it; this can't be undone. Replies to a deleted comment stay, moved up a level.
 
 Tick several comments to approve, mark as spam or trash them together.
 

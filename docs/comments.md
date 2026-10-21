@@ -53,7 +53,7 @@ Both are queued: run a queue worker.
 - **Approve**, **Unapprove**, **Spam** (`cms.comments.moderate`), one by one or for the selected ones.
 - **Reply**: published at once under your name, even when the entry is closed; replying to a held comment approves it.
 - **Edit**: fix a typo or remove a link.
-- **Trash**, **Restore**, **Delete for good** (`cms.comments.delete`); replies to a deleted comment move up.
+- **Move to trash**, **Restore**, **Permanently delete** (`cms.comments.delete`); replies to a deleted comment move up.
 
 ## In code
 
@@ -65,4 +65,4 @@ $entry->comments()->approved()->count();
 $entry->acceptsComments();
 ```
 
-Also `SetCommentStatus`, `ReplyToComment`, `EditComment`, `TrashComment` (and `restore()`) and `DeleteComment`. Comments are `Sunrice\Cms\Models\Comment` (`sunrice_comments`): the entry, `parent_id`, `user_id` or the guest's `author_name` and `author_email`, `body`, `status` (`pending`, `approved`, `spam`), `locale` and `notify_replies`. Visitors' IP addresses are kept only as a keyed hash. Deleting an entry for good deletes its comments.
+Also `SetCommentStatus`, `ReplyToComment`, `EditComment`, `TrashComment` (and `restore()`) and `DeleteComment`. Comments are `Sunrice\Cms\Models\Comment` (`sunrice_comments`): the entry, `parent_id`, `user_id` or the guest's `author_name` and `author_email`, `body`, `status` (`pending`, `approved`, `spam`), `locale` and `notify_replies`. Visitors' IP addresses are kept only as a keyed hash. Deleting an entry permanently deletes its comments.

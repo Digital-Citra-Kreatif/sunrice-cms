@@ -70,7 +70,7 @@ export default function CommentsIndex({ tab, counts, filters, collections, comme
     const setStatus = (row: Row, status: Row['status']) => post(`cms/comments/${row.id}/status`, { status });
     const bulk = (action: string) => {
         const run = () => post('cms/comments/bulk', { action, ids: selected });
-        action === 'delete' ? confirm(selected.length === 1 ? t('Delete 1 comment for good? This can\'t be undone.') : t('Delete :count comments for good? This can\'t be undone.', { count: selected.length }), run) : run();
+        action === 'delete' ? confirm(selected.length === 1 ? t('Permanently delete 1 comment? This can\'t be undone.') : t('Permanently delete :count comments? This can\'t be undone.', { count: selected.length }), run) : run();
     };
     const all = comments.data.length > 0 && selected.length === comments.data.length;
 
@@ -121,11 +121,11 @@ export default function CommentsIndex({ tab, counts, filters, collections, comme
                             <Button size="sm" variant="outline" onClick={() => bulk('spam')}><ShieldAlert /> {t('Spam')}</Button>
                         </>
                     )}
-                    {can.delete && tab !== 'trashed' && <Button size="sm" variant="outline" onClick={() => bulk('trash')}><Trash2 /> {t('Trash')}</Button>}
+                    {can.delete && tab !== 'trashed' && <Button size="sm" variant="outline" onClick={() => bulk('trash')}><Trash2 /> {t('Move to trash')}</Button>}
                     {can.delete && tab === 'trashed' && (
                         <>
                             <Button size="sm" variant="outline" onClick={() => bulk('restore')}><RotateCcw /> {t('Restore')}</Button>
-                            <Button size="sm" variant="destructive" onClick={() => bulk('delete')}><Trash2 /> {t('Delete for good')}</Button>
+                            <Button size="sm" variant="destructive" onClick={() => bulk('delete')}><Trash2 /> {t('Permanently delete')}</Button>
                         </>
                     )}
                 </div>
@@ -172,13 +172,13 @@ export default function CommentsIndex({ tab, counts, filters, collections, comme
                                         </>
                                     )}
                                     {can.delete && !row.trashed && (
-                                        <Button size="sm" variant="ghost" onClick={() => router.delete(adminUrl(`cms/comments/${row.id}`), { preserveScroll: true })}><Trash2 /> {t('Trash')}</Button>
+                                        <Button size="sm" variant="ghost" onClick={() => router.delete(adminUrl(`cms/comments/${row.id}`), { preserveScroll: true })}><Trash2 /> {t('Move to trash')}</Button>
                                     )}
                                     {can.delete && row.trashed && (
                                         <>
                                             <Button size="sm" variant="ghost" onClick={() => post(`cms/comments/${row.id}/restore`)}><RotateCcw /> {t('Restore')}</Button>
-                                            <Button size="sm" variant="ghost" onClick={() => confirm(t('Delete this comment for good? Replies to it stay.'),
-                                                () => router.delete(adminUrl(`cms/comments/${row.id}/force`), { preserveScroll: true }))}><Trash2 /> {t('Delete for good')}</Button>
+                                            <Button size="sm" variant="ghost" onClick={() => confirm(t('Permanently delete this comment? Replies to it stay.'),
+                                                () => router.delete(adminUrl(`cms/comments/${row.id}/force`), { preserveScroll: true }))}><Trash2 /> {t('Permanently delete')}</Button>
                                         </>
                                     )}
                                 </div>

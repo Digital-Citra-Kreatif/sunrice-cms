@@ -45,7 +45,7 @@ A **collection** is a kind of content: *Pages*, *Blog*, *Products*, *Events*. **
 | **Allow comments** | Visitors may comment on its entries (it needs a URL). |
 | **Structured data type** | What search engines are told its entries are (an article, a web page, a real estate listing, or a person, place or product the page is about…). |
 
-Deleting a collection doesn't delete its entries: they leave the panel and the website. The list's **Trash** shows deleted collections, with **Restore** to bring one back. Deleting them for good, with their entries, is for a developer (`sunrice:orphans --purge`), so a slip in the panel can always be undone.
+Deleting a collection doesn't delete its entries: they leave the panel and the website. The list's **Trash** shows deleted collections, with **Restore** to bring one back. Deleting them permanently, with their entries, is for a developer (`sunrice:orphans --purge`), so a slip in the panel can always be undone.
 
 Each collection gets its own permissions (view, create, edit, publish, delete and export its entries), so a role can be limited to the *Blog*, for example. See [Users and roles](guide:panel/users-roles).
 

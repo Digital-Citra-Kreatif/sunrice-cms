@@ -30,7 +30,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Entries beyond the editor: bulk actions and CSV export of a collection,
- * duplicating, deleting for good, and undoing a revision restore.
+ * duplicating, permanently deleting, and undoing a revision restore.
  *
  * @internal
  */
@@ -152,13 +152,13 @@ final class EntryManageController
         return back()->with('success', 'Order saved.');
     }
 
-    /** For good; one used elsewhere only with "force" (the editor asks first). */
+    /** Permanently; one used elsewhere only with "force" (the editor asks first). */
     public function forceDelete(Request $request, Entry $entry, ForceDeleteEntry $delete): RedirectResponse
     {
         $collection = $entry->collection->handle;
         $delete->handle($entry, $request->boolean('force'));
 
-        return redirect()->route('sunrice.admin.cms.collections.entries.index', [$collection, 'status' => 'trashed'])->with('success', 'Deleted for good.');
+        return redirect()->route('sunrice.admin.cms.collections.entries.index', [$collection, 'status' => 'trashed'])->with('success', 'Permanently deleted.');
     }
 
     /** Puts back the draft a revision restore replaced, in this session. */

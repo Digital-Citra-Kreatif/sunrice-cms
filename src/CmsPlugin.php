@@ -280,7 +280,7 @@ final class CmsPlugin extends BasePlugin
             Content (the CMS): collections are kinds of content (pages, articles); each has a blueprint (its fields) and entries. An entry has a translation per language (title, slug, fields, SEO), edited as a draft and published to the site. Taxonomies hold terms; globals are site-wide values; menus are navigation; templates are Blade views.
             - Find entries with cms_list_entries (no arguments lists the collections); read one with cms_get_entry, which shows its fields.
             - Write with cms_save_entry (only what you send changes): it saves the draft; the site changes only when it's published (cms_publish_entry, or "publish": true). Ask before publishing, unpublishing, trashing or deleting.
-            - Lifecycle: cms_trash_entry, then cms_manage_entry (delete for good, duplicate, set as the homepage); cms_entry_revisions lists, shows and restores published versions.
+            - Lifecycle: cms_trash_entry, then cms_manage_entry (permanently delete, duplicate, set as the homepage); cms_entry_revisions lists, shows and restores published versions.
             - Order: cms_reorder for entries (collections with Manual order), terms and menu items.
             - Other languages: cms_translate_entry adds one, then save it with "locale". Only translatable fields have a value per language; the rest are shared with the main language. The same for terms, globals and listing pages.
             - Media fields take ids from list_media (upload_media adds files; give images alt text); terms fields ids from cms_list_terms; entries fields entry ids.

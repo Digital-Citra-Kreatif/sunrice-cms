@@ -156,7 +156,7 @@ final class DashboardWidgets
 
     public static function scheduled(): Widget
     {
-        return Widget::list('cms.scheduled')->title('Coming up')->description('Scheduled to go live')->icon('calendar')->sort(40)
+        return Widget::list('cms.scheduled')->title('Coming up')->description('Scheduled to publish')->icon('calendar')->sort(40)
             ->empty('Nothing is scheduled.')
             ->visible(fn (Authorizable $user): bool => Access::entries($user, 'view'))
             ->data(fn (Authorizable $user): array => ['rows' => self::translations($user)

@@ -14,7 +14,7 @@ use Sunrice\Cms\Actions\Entries\ForceDeleteEntry;
 use Sunrice\Cms\Actions\Entries\TrashEntry;
 use Sunrice\Cms\Settings\SiteSettings;
 
-#[Description('"delete": delete an entry in the trash for good, with its languages and revisions (cms_trash_entry moves it there). "duplicate": copy an entry, in every language, as a new draft. "set_homepage": show an entry with a page at the site\'s address (/), in Settings → Site. Ask the user first.')]
+#[Description('"delete": delete an entry in the trash permanently, with its languages and revisions (cms_trash_entry moves it there). "duplicate": copy an entry, in every language, as a new draft. "set_homepage": show an entry with a page at the site\'s address (/), in Settings → Site. Ask the user first.')]
 final class ManageEntry extends CmsTool
 {
     protected string $name = 'cms_manage_entry';
@@ -40,7 +40,7 @@ final class ManageEntry extends CmsTool
                     return $this->denied('delete this entry');
                 }
                 if (! $entry->trashed()) {
-                    return Response::error('Move the entry to the trash first (cms_trash_entry); only entries in the trash can be deleted for good.');
+                    return Response::error('Move the entry to the trash first (cms_trash_entry); only entries in the trash can be permanently deleted.');
                 }
                 $title = TrashEntry::label($entry);
                 app(ForceDeleteEntry::class)->handle($entry);

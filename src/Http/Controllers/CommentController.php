@@ -126,7 +126,7 @@ final class CommentController
     {
         $delete->handle($comment);
 
-        return back()->with('success', 'Deleted for good.');
+        return back()->with('success', 'Permanently deleted.');
     }
 
     /** Several at once: approve, unapprove, spam (moderate); trash, restore, delete (delete). */

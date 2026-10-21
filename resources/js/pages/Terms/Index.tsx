@@ -102,7 +102,7 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
                     </button>
                 )}
                 {term.url && (
-                    <a href={term.url} target="_blank" rel="noopener noreferrer" className="cms:text-muted-foreground cms:hover:text-foreground" aria-label={t('Visit term page')} title={t('Visit term page')}>
+                    <a href={term.url} target="_blank" rel="noopener noreferrer" className="cms:text-muted-foreground cms:hover:text-foreground" aria-label={t('View page')} title={t('View page')}>
                         <ExternalLink className="cms:size-3.5" />
                     </a>
                 )}
@@ -115,9 +115,9 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
                     <div className="cms:flex cms:gap-1">
                         <Button variant="outline" size="sm" onClick={() => router.post(adminUrl(`cms/terms/${term.id}/restore`), {}, { preserveScroll: true })}><RotateCcw /> {t('Restore')}</Button>
                         <Button variant="ghost" size="sm" className="cms:text-destructive"
-                            onClick={() => confirm(t('Delete ":title" for good, in every language? Entries lose it.', { title: term.fallback }) + usedBySentence(term.usedBy),
+                            onClick={() => confirm(t('Permanently delete ":title" in every language? Entries lose it.', { title: term.fallback }) + usedBySentence(term.usedBy),
                                 () => router.delete(adminUrl(`cms/terms/${term.id}/force`), { preserveScroll: true, data: (term.usedBy ?? []).length > 0 ? { force: 1 } : {} }))}>
-                            <Trash2 /> {t('Delete for good')}
+                            <Trash2 /> {t('Permanently delete')}
                         </Button>
                     </div>
                 ) : (

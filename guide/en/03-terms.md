@@ -29,7 +29,7 @@ One person edits a term's page in a language at a time: if a colleague has it op
 
 ## The trash
 
-**Trash** at the top lists trashed terms. Restore one to bring it back (a term whose parent is still in the trash goes to the top level), or delete it for good: the terms under it move up, and entries lose it. If other content links to the term, the panel names where before you delete it.
+**Trash** at the top lists trashed terms. Restore one to bring it back (a term whose parent is still in the trash goes to the top level), or delete it permanently: the terms under it move up, and entries lose it. If other content links to the term, the panel names where before you delete it.
 
 ## Giving entries their terms
 

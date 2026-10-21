@@ -129,7 +129,7 @@ function EntryList({
     }, [search]);
 
     const bulkActions = trashed
-        ? (can?.delete ? [{ action: 'restore', label: t('Restore') }, { action: 'delete', label: t('Delete for good'), danger: true }] : [])
+        ? (can?.delete ? [{ action: 'restore', label: t('Restore') }, { action: 'delete', label: t('Permanently delete'), danger: true }] : [])
         : [
             ...(can?.publish ? [{ action: 'publish', label: t('Publish') }, { action: 'unpublish', label: t('Unpublish') }] : []),
             ...(can?.delete ? [{ action: 'trash', label: t('Move to the trash'), danger: true }] : []),

@@ -156,13 +156,13 @@ final class TermController
         return back()->with('success', 'Restored.');
     }
 
-    /** For good; one used elsewhere only with "force" (the list asks first). */
+    /** Permanently; one used elsewhere only with "force" (the list asks first). */
     public function forceDelete(Request $request, Term $term, DeleteTerm $delete): RedirectResponse
     {
         abort_unless($term->trashed(), 404);
         $delete->handle($term, $request->boolean('force'));
 
-        return back()->with('success', 'Deleted for good.');
+        return back()->with('success', 'Permanently deleted.');
     }
 
     /** A term's page content in a language: fields, SEO and template. */

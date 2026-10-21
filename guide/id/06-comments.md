@@ -14,7 +14,7 @@ Untuk setiap komentar:
 - **Spam** memindahkannya ke tab Spam. Spam terhapus otomatis setelah beberapa waktu.
 - **Balas** menjawabnya, langsung tayang atas nama Anda. Membalas komentar yang sedang menunggu sekaligus menyetujuinya.
 - **Ubah** memperbaiki salah ketik atau menghapus tautan.
-- **Tempat sampah** memindahkannya ke tab Tempat sampah; di sana **Pulihkan** mengembalikannya dan **Hapus permanen** menghapusnya selamanya. Balasan untuk komentar yang dihapus tetap ada, naik satu tingkat.
+- **Pindahkan ke tempat sampah** memindahkannya ke tab Tempat sampah; di sana **Pulihkan** mengembalikannya dan **Hapus permanen** menghapusnya; ini tidak dapat dibatalkan. Balasan untuk komentar yang dihapus tetap ada, naik satu tingkat.
 
 Centang beberapa komentar untuk menyetujui, menandai sebagai spam, atau membuangnya sekaligus.
 

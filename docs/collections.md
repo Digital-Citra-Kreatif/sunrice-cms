@@ -27,7 +27,7 @@ use Sunrice\Cms\Actions\Collections\SaveCollection;
 $articles = app(SaveCollection::class)->handle(['handle' => 'articles', 'title' => 'Articles', 'blueprint' => 'article', 'dated' => true]);
 ```
 
-Deleting a collection (`DeleteCollection`) doesn't erase its entries: they leave the admin and the site. The list's **Trash** (`?status=trashed`) shows deleted collections with **Restore**, and `sunrice:orphans --purge` deletes them for good, freeing their handles ([leftovers](structure.md#leftovers)). To rename a field without losing its values, use `sunrice:rename-field` ([renaming a field](structure.md#renaming-a-field)).
+Deleting a collection (`DeleteCollection`) doesn't erase its entries: they leave the admin and the site. The list's **Trash** (`?status=trashed`) shows deleted collections with **Restore**, and `sunrice:orphans --purge` deletes them permanently, freeing their handles ([leftovers](structure.md#leftovers)). To rename a field without losing its values, use `sunrice:rename-field` ([renaming a field](structure.md#renaming-a-field)).
 
 ### Per-entry blueprints
 
@@ -55,7 +55,7 @@ Editors write entries under **Content → Entries**: a list per collection (see 
 | `cms.entries.create` | Create and duplicate entries. |
 | `cms.entries.update` | Save drafts and restore revisions. |
 | `cms.entries.publish` | Publish (now or on a date) and unpublish, also several at once. |
-| `cms.entries.delete` | Move entries to the trash, restore them and delete them for good, also several at once. |
+| `cms.entries.delete` | Move entries to the trash, restore them and delete them permanently, also several at once. |
 | `cms.entries.export` | Download a collection's entries as CSV (with `view`). |
 | `cms.entries.update-own`, `.delete-own` | The same, for entries they created, in collections they may view. |
 | `cms.entries.translate` | Add other languages to entries and save their drafts (not the main one), in collections they may view, and translate what visitors read outside entries ([Content → Translations](#what-visitors-read-outside-entries)): to keep a translator to some collections, give them those collections' **View** (`cms.entries.{collection}.view`) instead of `cms.entries.view`. Not what every language shares: Page settings (parent, template, blueprint, comments) and the order of entries need `cms.entries.update` (or `update-own`). |
@@ -73,7 +73,7 @@ Scoped permissions are named after handles, so when a collection's, taxonomy's o
 In the editor:
 
 - **Ctrl/Cmd+S** saves the draft, and leaving the page with unsaved changes asks first.
-- **Page settings**: the parent (in hierarchical collections; never the entry itself or one below it, at most 10 deep; also chosen when creating, `CreateEntry`'s `parent_id`), a Blade view for this entry alone and whether it takes comments (`SaveEntrySettings`), for every language, saved with the draft (the editor's `PUT` sends `parent_id`, `template` and `comments_closed` with the fields, all or nothing); and, when the collection offers more than one, its blueprint (`ChangeBlueprint`), changed on its own. Deleting an entry for good moves its children up to its parent.
+- **Page settings**: the parent (in hierarchical collections; never the entry itself or one below it, at most 10 deep; also chosen when creating, `CreateEntry`'s `parent_id`), a Blade view for this entry alone and whether it takes comments (`SaveEntrySettings`), for every language, saved with the draft (the editor's `PUT` sends `parent_id`, `template` and `comments_closed` with the fields, all or nothing); and, when the collection offers more than one, its blueprint (`ChangeBlueprint`), changed on its own. Deleting an entry permanently moves its children up to its parent.
 - A new slug for an entry published before gets a quiet note under the field. While the entry is published (live or scheduled), publishing redirects the old address to the new one (a `301`, `PublishEntry`), and the note says so; once it's taken off the site nothing redirects, so the note says the old address will stop working (404) unless a redirect is added, with **Add a redirect** (Structure → Redirects) for those with `cms.redirects.create`. Never for a draft that was never published, the homepage (it stays at `/`) or a collection without pages. The editor gets the slug last published as `entry.publishedSlug` and the redirect form's address as `redirectsUrl`.
 - **Duplicate** copies every language's draft as a new draft entry ("Hello (copy)", slug `hello-copy`).
 - Only one person edits an entry in a language at a time: others are told who's editing and can view it or take over (see [edit locks](../../admin/docs/locks.md)).
@@ -107,7 +107,7 @@ Besides the title, the **Columns** menu shows the slug, the status (with a badge
 
 **Go to** links to what an editor tends to need next, where they may go: the listing page (edit and view), the collection's taxonomies' terms (`cms.terms.*`), the collection's settings (`cms.collections.update`) and its blueprint (`cms.blueprints.manage`). In a collection with manual order, Move up and Move down appear while the list is in that order, unfiltered.
 
-Tick entries to publish, unpublish or trash them together (in the trash: restore or delete for good); entries one may not act on, or that can't be published as they are, are skipped and counted. **Export CSV** (`cms.entries.export`) downloads the list as it is filtered, searched, sorted and in its language (every page): the ID, title, slug, status, publish date, URL, last change and author, and a column per top-level field of every blueprint the collection offers (as editors read them: links as their address, an entry link's as the site has it in the list's language; terms and linked entries by title, in the list's language or else the main one; rich text as plain text with a line per paragraph, heading or list item; groups as "Label: value; Label: value", and repeater rows and flexible blocks one per line in the cell, rows or blocks hidden from the site marked "(hidden)", without Sunrice's own keys such as `_id`; a field whose label is a column's or another field's is headed "Label (field)"; each entry fills its own blueprint's); it's an `exported` security event.
+Tick entries to publish, unpublish or trash them together (in the trash: restore or permanently delete); entries one may not act on, or that can't be published as they are, are skipped and counted. **Export CSV** (`cms.entries.export`) downloads the list as it is filtered, searched, sorted and in its language (every page): the ID, title, slug, status, publish date, URL, last change and author, and a column per top-level field of every blueprint the collection offers (as editors read them: links as their address, an entry link's as the site has it in the list's language; terms and linked entries by title, in the list's language or else the main one; rich text as plain text with a line per paragraph, heading or list item; groups as "Label: value; Label: value", and repeater rows and flexible blocks one per line in the cell, rows or blocks hidden from the site marked "(hidden)", without Sunrice's own keys such as `_id`; a field whose label is a column's or another field's is headed "Label (field)"; each entry fills its own blueprint's); it's an `exported` security event.
 
 ## Languages
 
@@ -215,7 +215,7 @@ Every publish keeps a `Revision` (title, slug, fields and who published it); the
 
 ## Trash
 
-`TrashEntry` takes an entry, in all its languages, off the site and out of lists; `RestoreEntry` brings it back as it was. `ForceDeleteEntry` deletes a trashed entry for good, with its languages, revisions and terms; one that other content points at is refused unless `force` is passed (see [references](structure.md#references)). `DuplicateEntry` and `BulkEntries` are the list's and editor's other actions.
+`TrashEntry` takes an entry, in all its languages, off the site and out of lists; `RestoreEntry` brings it back as it was. `ForceDeleteEntry` deletes a trashed entry permanently, with its languages, revisions and terms; one that other content points at is refused unless `force` is passed (see [references](structure.md#references)). `DuplicateEntry` and `BulkEntries` are the list's and editor's other actions.
 
 ## References
 

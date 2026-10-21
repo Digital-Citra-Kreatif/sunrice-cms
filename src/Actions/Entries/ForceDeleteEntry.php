@@ -17,7 +17,7 @@ use Sunrice\Cms\Models\Revision;
 use Sunrice\Cms\Support\References;
 
 /**
- * Deletes a trashed entry for good, with its languages, revisions and
+ * Deletes a trashed entry permanently, with its languages, revisions and
  * terms. Entries must be in the trash first. One that other content
  * points at (Entry::referencedBy()) is refused unless forced; those
  * fields then show nothing for it.

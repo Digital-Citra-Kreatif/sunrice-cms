@@ -78,8 +78,8 @@ export default function MenuEdit({ menu, items: initial, locales, limits, terms,
                                         <label className="cms:mr-2 cms:flex cms:items-center cms:gap-1.5 cms:text-sm">
                                             <Checkbox checked={item.new_tab} onCheckedChange={(checked: boolean) => update(index, { new_tab: checked })} /> {t('New tab')}
                                         </label>
-                                        <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-label={t('Out a level')} disabled={item.depth === 0} onClick={() => change(outdent(items, index))}><IndentDecrease /></Button>
-                                        <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-label={t('In a level')} onClick={() => change(indent(items, index, limits.depth))}><IndentIncrease /></Button>
+                                        <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-label={t('Outdent')} disabled={item.depth === 0} onClick={() => change(outdent(items, index))}><IndentDecrease /></Button>
+                                        <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-label={t('Indent')} onClick={() => change(indent(items, index, limits.depth))}><IndentIncrease /></Button>
                                         <Button type="button" variant="ghost" size="icon" className="cms:size-8 cms:text-destructive" aria-label={t('Remove, with what\'s under it')} onClick={() => change(removeItem(items, index))}><Trash2 /></Button>
                                     </div>
                                 )}

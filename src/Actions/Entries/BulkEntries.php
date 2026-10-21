@@ -12,7 +12,7 @@ use Sunrice\Cms\Support\Access;
 
 /**
  * One action on many entries of a collection, in their main language:
- * publish, unpublish, trash, restore or delete (for good, from the
+ * publish, unpublish, trash, restore or delete (permanently, from the
  * trash). Entries the user may not act on, or that don't fit the action
  * (publishing a trashed one), are skipped.
  *

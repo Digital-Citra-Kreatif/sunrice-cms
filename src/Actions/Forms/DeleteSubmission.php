@@ -8,7 +8,7 @@ use Sunrice\Admin\Activity\ActivityLog;
 use Sunrice\Cms\Models\Submission;
 
 /**
- * Deletes a form submission for good.
+ * Deletes a form submission permanently.
  *
  * @api
  */

@@ -15,8 +15,8 @@ With the CMS, AI agents connected to the panel ([AI access](../../admin/docs/ai.
 | `cms_save_term` | `cms.terms.create` (new) or `cms.terms.update` | Add or rename a term, or give it another language. |
 | `cms_get_globals`, `cms_save_globals` | `cms.globals.view`, `.update` | Global sets' fields and values, per language. |
 | `cms_list_submissions` | `cms.submissions.view` | Forms and what visitors sent. |
-| `cms_delete_submissions` | `cms.submissions.delete` | Delete submissions for good, with their files. |
-| `cms_manage_entry` | `cms.entries.delete`, `.create`, `cms.settings.site` | Delete an entry in the trash for good (`ForceDeleteEntry`), duplicate it as a draft (`DuplicateEntry`), or make it the homepage (Settings → Site). |
+| `cms_delete_submissions` | `cms.submissions.delete` | Delete submissions permanently, with their files. |
+| `cms_manage_entry` | `cms.entries.delete`, `.create`, `cms.settings.site` | Delete an entry in the trash permanently (`ForceDeleteEntry`), duplicate it as a draft (`DuplicateEntry`), or make it the homepage (Settings → Site). |
 | `cms_entry_revisions` | `cms.entries.view` / `.update` | An entry's published versions in a language: list, show, and restore one into the draft (`RestoreRevision`). |
 | `cms_reorder` | `cms.entries.update`, `cms.terms.update`, `cms.menus.update` | The manual order of one level of entries (collections with Manual order), terms or menu items (`ReorderEntries`, `ReorderTerms`, `ReorderMenuItems`). The ids given come first and the rest of the level follows as it was, so a short list moves just those to the front; `changed` says whether the order was different (nothing is logged when not). |
 | `cms_get_listing`, `cms_save_listing` | `cms.entries.view`, `.update` | A collection's listing page fields per language (`SaveListing`, with its version check). |

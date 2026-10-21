@@ -17,7 +17,7 @@ use Sunrice\Cms\Models\Term;
 
 /**
  * sunrice:orphans: what's left over. Deleted collections and taxonomies
- * with the entries and terms they keep (--purge deletes them for good and
+ * with the entries and terms they keep (--purge deletes them permanently and
  * frees their handles), media whose file is gone, and fields pointing at
  * entries or terms that are gone.
  *
@@ -26,7 +26,7 @@ use Sunrice\Cms\Models\Term;
 final class OrphansCommand extends Command
 {
     protected $signature = 'sunrice:orphans
-        {--purge : Delete the deleted collections and taxonomies for good, with their entries and terms}
+        {--purge : Delete the deleted collections and taxonomies permanently, with their entries and terms}
         {--force : Purge without asking}';
 
     protected $description = 'List deleted collections and taxonomies, media with missing files and links to missing entries or terms';
@@ -66,7 +66,7 @@ final class OrphansCommand extends Command
 
         if (! $this->option('purge')) {
             if ($kept !== []) {
-                $this->line('Restore deleted collections and taxonomies from the Trash of their lists (Structure → Collections, Structure → Taxonomies), or run <comment>sunrice:orphans --purge</comment> to delete them for good.');
+                $this->line('Restore deleted collections and taxonomies from the Trash of their lists (Structure → Collections, Structure → Taxonomies), or run <comment>sunrice:orphans --purge</comment> to delete them permanently.');
             }
 
             return self::SUCCESS;
@@ -81,7 +81,7 @@ final class OrphansCommand extends Command
 
             return self::FAILURE;
         }
-        if (! $this->option('force') && ! $this->confirm('Delete the deleted collections and taxonomies listed, with their entries and terms, for good? This can\'t be undone.')) {
+        if (! $this->option('force') && ! $this->confirm('Permanently delete the collections and taxonomies listed, with their entries and terms? This can\'t be undone.')) {
             $this->components->warn('Nothing was deleted.');
 
             return self::FAILURE;

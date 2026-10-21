@@ -9,7 +9,7 @@ Listen to these (`Sunrice\Cms\Events`) to react to content, from the admin, AI t
 | `EntryPublished` (`$translation`, `$scheduled`) | A language of an entry was published. One published for a later date fires again with `$scheduled` true when its time comes (see [Scheduled publishing](#scheduled-publishing)). |
 | `EntryUnpublished` (`$translation`) | A language was taken off the site. |
 | `EntryTrashed`, `EntryRestored` (`$entry`) | An entry went to the trash, or came back. |
-| `EntryDeleted` (`$entry`) | An entry was deleted for good. |
+| `EntryDeleted` (`$entry`) | An entry was permanently deleted. |
 | `ContentChanged` (`$what`, like `"menu 3"`) | Anything the site shows changed: an entry going live or off, terms, menus, global sets, collections, taxonomies, blueprints, fieldsets, redirects, forms, media files, Settings → Site and Site code. Saving a draft isn't a change, and neither is a comment (they're read from the database on every render), except an approved one appearing, changing or going while whole pages are kept. |
 
 They fire after the database transaction they're part of commits. `ContentChanged` may fire several times for one save (once per record), so keep its listeners cheap, or queue them:

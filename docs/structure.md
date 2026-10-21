@@ -18,7 +18,7 @@ foreach ($entry->referencedBy() as $reference) {
 }
 ```
 
-The admin shows them as **Used by**, in the entry editor's sidebar and on a term's page, each with the field by its label in the source's blueprint ("Blocks › Homes shown"; a field no longer there by its handle in words). Moving a used entry or term to the trash names where it's used in the confirmation. Deleting one for good is refused unless forced, since those fields would then show nothing:
+The admin shows them as **Used by**, in the entry editor's sidebar and on a term's page, each with the field by its label in the source's blueprint ("Blocks › Homes shown"; a field no longer there by its handle in words). Moving a used entry or term to the trash names where it's used in the confirmation. Deleting one permanently is refused unless forced, since those fields would then show nothing:
 
 ```php
 app(ForceDeleteEntry::class)->handle($entry, force: true);
@@ -101,7 +101,7 @@ The file is JSON with a section per kind, each item by handle, and records point
 
 Every setting of a collection, taxonomy, global set and form is in the file, "SEO from fields" (`seo_title_field`, `seo_description_field`, `seo_image_field`) and a form's `notify_roles` included (`StructureImporter::COLLECTION`, `TAXONOMY`, `GLOBAL_SET` and `FORM` list them).
 
-Menu links point at entries and terms by collection or taxonomy and slug in the main language (`"entry": "pages/about"`), those in the trash included, so they're found on another site by slug; links whose entry or term was deleted for good are left out. A structure file written before the pages existed has no links to them, and importing it leaves a menu's links to them alone.
+Menu links point at entries and terms by collection or taxonomy and slug in the main language (`"entry": "pages/about"`), those in the trash included, so they're found on another site by slug; links whose entry or term was permanently deleted are left out. A structure file written before the pages existed has no links to them, and importing it leaves a menu's links to them alone.
 
 `terms`, `entries` and the globals' `values` come with `--entries` (entries as their drafts, and whether each language is published). What field values point at is written so another site finds it, at any depth (groups, repeater rows, flexible blocks, link fields, the SEO card's image): a linked entry as `{"entry": "agents/ayu-pratiwi"}` (its collection and its slug in the main language), a term as `{"term": "locations/canggu"}`, a media file as `{"media": "media/2026/10/x7…-pool.jpg"}` (its path in the library). The file also names the site's languages (`"locales": ["en", "id"]`).
 
@@ -140,7 +140,7 @@ Deleting a collection or a taxonomy keeps its entries or terms out of sight, and
 - media whose file is missing from its disk;
 - fields pointing at entries or terms that no longer exist.
 
-`sunrice:orphans --purge` deletes the deleted collections and taxonomies for good, with their entries (and those entries' languages, revisions and comments) and terms, freeing their handles; it asks first unless `--force` (without a prompt to answer, `--no-interaction`, it deletes nothing and says to add `--force`). In code, `Actions\Collections\PurgeDeleted`:
+`sunrice:orphans --purge` deletes the deleted collections and taxonomies permanently, with their entries (and those entries' languages, revisions and comments) and terms, freeing their handles; it asks first unless `--force` (without a prompt to answer, `--no-interaction`, it deletes nothing and says to add `--force`). In code, `Actions\Collections\PurgeDeleted`:
 
 ```php
 app(PurgeDeleted::class)->collection($collection);  // the entries deleted; it must be deleted first

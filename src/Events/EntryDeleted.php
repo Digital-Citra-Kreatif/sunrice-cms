@@ -8,7 +8,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Sunrice\Cms\Models\Entry;
 
 /**
- * An entry was deleted for good (the model is gone from the database).
+ * An entry was permanently deleted (the model is gone from the database).
  *
  * @api
  */

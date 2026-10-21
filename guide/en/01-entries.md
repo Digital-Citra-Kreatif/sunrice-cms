@@ -17,7 +17,7 @@ The filters stay in the page's address, so you can bookmark a view or send it to
 
 ### Several at once
 
-Tick entries (or the box at the top for the whole page) to **Publish**, **Unpublish** or **Move to the trash** them together. Right after trashing, the message has an **Undo** button. In the trash, rows say **Trashed** and each has a **Restore** button; ticked ones can be restored or **Deleted for good** together. Entries you may not change, or that can't be published as they are (a required field is empty, for example), are skipped, and the panel says how many.
+Tick entries (or the box at the top for the whole page) to **Publish**, **Unpublish** or **Move to the trash** them together. Right after trashing, the message has an **Undo** button. In the trash, rows say **Trashed** and each has a **Restore** button; ticked ones can be restored or **permanently deleted** together. Entries you may not change, or that can't be published as they are (a required field is empty, for example), are skipped, and the panel says how many.
 
 ### Putting entries in order
 
@@ -91,7 +91,7 @@ The **⋯** button next to **Save draft** holds the rest:
 
 - **Duplicate** copies the entry, in every language, as a new draft titled "… (copy)". Until it's first published, renaming it renames its slug too (unless you typed a slug of your own).
 - **Move to trash** takes it off the website and out of the list, in every language, and can be restored. If other content uses it, the panel names where first.
-- In the trash, an entry has **Restore** and **Delete for good** (everything, in every language, with its revisions; this can't be undone).
+- In the trash, an entry has **Restore** and **Permanently delete** (everything, in every language, with its revisions; this can't be undone).
 
 ## When someone else is editing
 

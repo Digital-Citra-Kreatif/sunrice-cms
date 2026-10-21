@@ -55,7 +55,7 @@ export default function SubmissionsIndex({ form, forms, submissions, can, create
     }
 
     const columns = (submissions.data[0]?.rows ?? []).slice(0, COLUMNS);
-    const remove = (row: Row) => confirm(t('Delete this submission for good? It can\'t be restored.'),
+    const remove = (row: Row) => confirm(t('Permanently delete this submission? It can\'t be restored.'),
         () => router.delete(adminUrl(`cms/submissions/${row.id}`), { preserveScroll: true, onSuccess: () => setOpen(null) }));
 
     return (

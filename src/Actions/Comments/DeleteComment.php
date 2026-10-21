@@ -9,7 +9,7 @@ use Sunrice\Admin\Activity\ActivityLog;
 use Sunrice\Cms\Models\Comment;
 
 /**
- * Deletes a comment from the trash for good; its replies move up to its
+ * Deletes a comment from the trash permanently; its replies move up to its
  * parent.
  *
  * @api

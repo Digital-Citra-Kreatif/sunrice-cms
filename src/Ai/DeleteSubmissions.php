@@ -13,7 +13,7 @@ use Sunrice\Cms\Models\Form;
 use Sunrice\Cms\Models\Submission;
 use Sunrice\Cms\Support\Access;
 
-#[Description('Delete form submissions for good, with the files sent with them (spam, or someone asking for their data to be removed): the form\'s handle and the submission ids (cms_list_submissions). Ask the user first.')]
+#[Description('Delete form submissions permanently, with the files sent with them (spam, or someone asking for their data to be removed): the form\'s handle and the submission ids (cms_list_submissions). Ask the user first.')]
 final class DeleteSubmissions extends CmsTool
 {
     protected string $name = 'cms_delete_submissions';

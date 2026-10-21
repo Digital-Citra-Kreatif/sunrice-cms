@@ -225,9 +225,9 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                         )}
                         {entry?.trashed && can.delete && (
                             <Button type="button" variant="outline" className="cms:text-destructive"
-                                onClick={() => confirm(t('Delete ":title" for good, in every language, with its revisions? This can\'t be undone.', { title: values.title }) + usedBySentence(usedBy),
+                                onClick={() => confirm(t('Permanently delete ":title" in every language, with its revisions? This can\'t be undone.', { title: values.title }) + usedBySentence(usedBy),
                                     () => router.delete(`${url}/force`, { data: usedBy.length > 0 ? { force: 1 } : {} }))}>
-                                <Trash2 /> {t('Delete for good')}
+                                <Trash2 /> {t('Permanently delete')}
                             </Button>
                         )}
                         {entry && !entry.trashed && (can.create || (can.delete && !lock.readOnly) || (writable && machineTranslate !== null)) && (
@@ -403,7 +403,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                                 </div>
                                 {entry.status !== 'draft' && entry.publishedAt && (
                                     <div className="cms:flex cms:items-baseline cms:justify-between cms:gap-3">
-                                        <dt className="cms:text-muted-foreground">{entry.status === 'scheduled' ? t('Goes live') : t('Published')}</dt>
+                                        <dt className="cms:text-muted-foreground">{entry.status === 'scheduled' ? t('Scheduled for') : t('Published')}</dt>
                                         <dd className="cms:text-right cms:tabular-nums">{formatDate(entry.publishedAt)}</dd>
                                     </div>
                                 )}
@@ -528,7 +528,7 @@ function SendBackDialog({ open, onClose, by, onSend }: { open: boolean; onClose:
                 </DialogHeader>
                 <div className="cms:flex cms:flex-col cms:gap-2">
                     <Label htmlFor="send-back-note">{t('Note (optional)')}</Label>
-                    <Textarea id="send-back-note" rows={4} maxLength={2000} value={note} placeholder={t('What to change before it can go live')}
+                    <Textarea id="send-back-note" rows={4} maxLength={2000} value={note} placeholder={t('What to change before it can be published')}
                         aria-invalid={errors.note !== undefined} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNote(e.target.value)} />
                     <FieldError message={errors.note} />
                 </div>

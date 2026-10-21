@@ -13,7 +13,7 @@ Klik tanggalnya untuk membuka sebuah kiriman:
 - bahasa halaman yang dipakainya;
 - jika situs Anda menyimpannya: **Alamat IP** pengunjung, **Browser**-nya, dan halaman tempat ia mengirim (**Dikirim dari**).
 
-**Hapus** menghapus kiriman (dan berkasnya) selamanya. **Ekspor CSV** mengunduh semua kiriman formulir itu untuk dibuka di spreadsheet; ini membutuhkan izin tersendiri, selain izin membaca.
+**Hapus** menghapus kiriman (dan berkasnya) secara permanen. **Ekspor CSV** mengunduh semua kiriman formulir itu untuk dibuka di spreadsheet; ini membutuhkan izin tersendiri, selain izin membaca.
 
 Anda hanya melihat formulir yang diizinkan peran Anda.
 
