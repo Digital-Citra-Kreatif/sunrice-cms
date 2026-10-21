@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Http\Controllers;
 
+use Carbon\CarbonInterface;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\JsonResponse;
@@ -492,9 +493,14 @@ final class EntryController
 
     public function unpublish(Request $request, Entry $entry, UnpublishEntry $unpublish): RedirectResponse
     {
-        $unpublish->handle(self::translation($entry, $request->input('locale')));
+        $translation = self::translation($entry, $request->input('locale'));
+        // Scheduled, it isn't on the site: "Unschedule" makes it a draft again.
+        $scheduled = $translation->status() === 'scheduled';
+        $unpublish->handle($translation);
 
-        return back()->with('success', 'Taken off the site. The draft is kept.');
+        return $scheduled
+            ? back()->with('success', 'Unscheduled. It\'s a draft again.')
+            : back()->with('success', 'Taken off the site. The draft is kept.');
     }
 
     public function destroy(Entry $entry, TrashEntry $trash): RedirectResponse
@@ -636,7 +642,17 @@ final class EntryController
 
     private static function published(EntryTranslation $translation): string
     {
-        return $translation->isLive() ? 'Published.' : __('Scheduled for :date.', ['date' => $translation->published_at?->toDayDateTimeString()]);
+        return $translation->isLive() ? 'Published.' : __('Scheduled for :date.', ['date' => self::dateTime($translation->published_at)]);
+    }
+
+    /** A date and time as the editor's header shows them: the 24-hour clock ("Nov 10, 2026, 09:30"; "10 Nov 2026, 09:30" in other languages). */
+    private static function dateTime(?CarbonInterface $date): string
+    {
+        if ($date === null) {
+            return '';
+        }
+
+        return $date->locale(app()->getLocale())->isoFormat(str_starts_with(app()->getLocale(), 'en') ? 'MMM D, YYYY, HH:mm' : 'D MMM YYYY, HH:mm');
     }
 
     /** @return array{handle: string, title: string, dated: bool, hierarchical: bool, ordered: bool, listing: bool} */
