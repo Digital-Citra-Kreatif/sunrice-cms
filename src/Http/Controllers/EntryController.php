@@ -27,9 +27,11 @@ use Sunrice\Cms\Actions\Entries\RestoreEntry;
 use Sunrice\Cms\Actions\Entries\RestoreRevision;
 use Sunrice\Cms\Actions\Entries\SaveDraft;
 use Sunrice\Cms\Actions\Entries\SaveEntrySettings;
+use Sunrice\Cms\Actions\Entries\SendBackReview;
 use Sunrice\Cms\Actions\Entries\SetHomepage;
 use Sunrice\Cms\Actions\Entries\TrashEntry;
 use Sunrice\Cms\Actions\Entries\UnpublishEntry;
+use Sunrice\Cms\Actions\Entries\WithdrawReview;
 use Sunrice\Cms\Admin\EntryList;
 use Sunrice\Cms\Admin\RevisionList;
 use Sunrice\Cms\Fields\Reference;
@@ -335,6 +337,8 @@ final class EntryController
                 'review' => $translation->review_requested_at === null ? null : [
                     'requestedAt' => $translation->review_requested_at->toIso8601String(),
                     'by' => $translation->review_requested_by === null ? null : self::userName($translation->review_requested_by),
+                    // The one who asked may withdraw the request.
+                    'mine' => $translation->review_requested_by !== null && is_scalar($id = $request->user()?->getAuthIdentifier()) && (string) $id === (string) $translation->review_requested_by,
                 ],
                 'version' => $translation->version,
                 // The live page, and a signed link to preview the draft (30 minutes).
@@ -464,6 +468,26 @@ final class EntryController
         $review->handle(self::translation($entry, $request->input('locale')), $user instanceof Authorizable ? $user : null);
 
         return back()->with('success', 'Sent for review. Those who can publish it have been told.');
+    }
+
+    /** "Withdraw the request": the one who sent it for review takes it back. */
+    public function withdrawReview(Request $request, Entry $entry, WithdrawReview $withdraw): RedirectResponse
+    {
+        $user = $request->user();
+        $withdraw->handle(self::translation($entry, $request->input('locale')), $user instanceof Authorizable ? $user : null);
+
+        return back()->with('success', 'Request withdrawn. It\'s a draft again, for you to keep working on.');
+    }
+
+    /** "Send back": a reviewer answers without publishing, with an optional note emailed to the one who asked. */
+    public function sendBackReview(Request $request, Entry $entry, SendBackReview $sendBack): RedirectResponse
+    {
+        $request->validate(['note' => ['nullable', 'string', 'max:'.SendBackReview::MAX_NOTE]]);
+        $user = $request->user();
+        $note = $request->input('note');
+        $sendBack->handle(self::translation($entry, $request->input('locale')), is_string($note) ? $note : null, $user instanceof Authorizable ? $user : null);
+
+        return back()->with('success', 'Sent back. The one who asked has been told.');
     }
 
     public function unpublish(Request $request, Entry $entry, UnpublishEntry $unpublish): RedirectResponse

@@ -54,7 +54,9 @@ Setiap entri memiliki **draf**, yang Anda sunting, dan versi **tayang**, yang di
 Kartu **Status** di kanan menunjukkan apakah entri masih draf, terjadwal, atau terbit (dan sejak kapan), dan memberi peringatan *Draf memiliki perubahan yang belum ditampilkan di situs.* jika draf berisi perubahan yang belum tampil di situs.
 
 > [!NOTE]
-> Jika peran Anda bisa menulis tetapi tidak bisa menerbitkan (misalnya peran *author*), Anda menyimpan draf dan orang lain yang menerbitkannya. Saat draf siap, klik **Ajukan untuk ditinjau**: draf disimpan, semua orang yang bisa menerbitkannya menerima email, dan draf muncul di **Menunggu tinjauan** pada dasbor mereka. Entri menampilkan lencana **Menunggu tinjauan** sampai ada yang menerbitkannya.
+> Jika peran Anda bisa menulis tetapi tidak bisa menerbitkan (misalnya peran *author*), Anda menyimpan draf dan orang lain yang menerbitkannya. Saat draf siap, klik **Ajukan untuk ditinjau**: draf disimpan, semua orang yang bisa menerbitkannya menerima email, dan draf muncul di **Menunggu tinjauan** pada dasbor mereka. Entri menampilkan lencana **Menunggu tinjauan** sampai ada yang menerbitkannya. Berubah pikiran? **Tarik permintaan** di kartu Status menarik kembali permintaannya.
+>
+> Jika Anda bisa menerbitkan, draf yang menunggu tinjauan Anda punya **Kembalikan…** di kartu Status: tulis apa yang perlu diubah (opsional) dan penulisnya menerimanya lewat email. Permintaannya dihapus dan drafnya tetap seperti sekarang, untuk diperbaiki lalu diajukan lagi.
 
 ## Melihat hasil kerja Anda di situs
 

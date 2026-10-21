@@ -54,7 +54,9 @@ Every entry has a **draft**, which you edit, and a **live** version, which visit
 The **Status** card on the right says whether the entry is a draft, scheduled or published (and since when), and warns when *The draft has changes the site doesn't show yet*.
 
 > [!NOTE]
-> If your role can write but not publish (the *author* role, for example), you save drafts and someone else publishes them. When a draft is ready, click **Submit for review**: it's saved, everyone who can publish it gets an email, and it appears under **Waiting for review** on their dashboard. The entry shows a **Waiting for review** badge until someone publishes it.
+> If your role can write but not publish (the *author* role, for example), you save drafts and someone else publishes them. When a draft is ready, click **Submit for review**: it's saved, everyone who can publish it gets an email, and it appears under **Waiting for review** on their dashboard. The entry shows a **Waiting for review** badge until someone publishes it. Changed your mind? **Withdraw the request** in the Status card takes it back.
+>
+> If you can publish, a draft waiting for your review has **Send back…** in its Status card: write what should change (optional) and the author gets it by email. The request is cleared and the draft stays as it is, for them to fix and submit again.
 
 ## Seeing your work on the website
 

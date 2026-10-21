@@ -5,7 +5,7 @@ import { adminUrl, t } from '@sunrice/admin-sdk';
 import {
     Badge, Button, Card, CardContent, CollapsibleCard, DatePicker, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, Input, KeptEditsNotice, Label, PageHeader,
-    Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Skeleton, Switch, useBreadcrumbs, useEditLock, useUnsavedChanges, ViewingNotice,
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Skeleton, Switch, Textarea, useBreadcrumbs, useEditLock, useUnsavedChanges, ViewingNotice,
 } from '@sunrice/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { TemplateHelp } from '@/components/TemplateHelp.tsx';
@@ -43,7 +43,7 @@ interface Props {
         hasUnpublishedChanges: boolean;
         trashed: boolean;
         /** Sent for review ("Submit for review"): when, and by whom. */
-        review?: { requestedAt: string; by: string | null } | null;
+        review?: { requestedAt: string; by: string | null; mine?: boolean } | null;
         version: number;
         /** The live page, when published and the collection has a URL. */
         url: string | null;
@@ -117,6 +117,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
     const [confirm, confirmDialog] = useConfirm();
     const [scheduling, setScheduling] = React.useState(false);
     const [comparing, setComparing] = React.useState<Revision | null>(null);
+    const [sendingBack, setSendingBack] = React.useState(false);
 
     const form = useForm<FormData>({
         ...values, seo: values.seo ?? {}, locale: entry?.locale ?? null, version: entry?.version ?? null, publish: false, published_at: null,
@@ -410,6 +411,22 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                                     {can.publish ? ` ${t('Publishing it answers the request.')}` : ''}
                                 </p>
                             )}
+                            {entry.review && !entry.trashed && (entry.review.mine || (can.publish && !lock.readOnly)) && (
+                                <div className="cms:flex cms:flex-wrap cms:gap-2">
+                                    {can.publish && !lock.readOnly && (
+                                        <Button type="button" variant="outline" size="sm" disabled={form.processing} onClick={() => setSendingBack(true)}>
+                                            <Undo2 /> {t('Send back…')}
+                                        </Button>
+                                    )}
+                                    {entry.review.mine && (
+                                        <Button type="button" variant="outline" size="sm" disabled={form.processing}
+                                            title={t('Take the request back, to keep working on it')}
+                                            onClick={() => router.post(`${url}/review/withdraw`, locale, { preserveScroll: true })}>
+                                            {t('Withdraw the request')}
+                                        </Button>
+                                    )}
+                                </div>
+                            )}
                             {!entry.trashed && can.publish && !lock.readOnly && (
                                 <PublishDate key={entry.publishedAt ?? 'none'} status={entry.status} publishedAt={entry.publishedAt} processing={form.processing}
                                     onPublish={(iso) => publish(iso)} onUnpublish={() => router.post(`${url}/unpublish`, locale, { preserveScroll: true })} />
@@ -476,10 +493,45 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                 )}
             </div>
 
+            {entry?.review && <SendBackDialog open={sendingBack} onClose={() => setSendingBack(false)} by={entry.review.by}
+                onSend={(note, done) => router.post(`${url}/review/send-back`, { ...locale, note }, { preserveScroll: true, onSuccess: () => { setSendingBack(false); done(); }, onError: done })} />}
             <CompareDialog entryId={entry?.id ?? 0} revision={comparing} onClose={() => setComparing(null)} dirty={form.isDirty} />
             <ScheduleDialog open={scheduling} onClose={() => setScheduling(false)} processing={form.processing} rescheduling={scheduled}
                 current={entry?.publishedAt ?? null} onSchedule={(iso) => publish(iso)} />
         </form>
+    );
+}
+
+/** "Send back": answer a review request without publishing, with a note for the one who asked. */
+function SendBackDialog({ open, onClose, by, onSend }: { open: boolean; onClose: () => void; by: string | null; onSend: (note: string, done: () => void) => void }) {
+    const [note, setNote] = React.useState('');
+    const [sending, setSending] = React.useState(false);
+    const errors = (usePage().props.errors ?? {}) as Record<string, string | undefined>;
+    React.useEffect(() => { if (open) setNote(''); }, [open]);
+
+    return (
+        <Dialog open={open} onOpenChange={(next: boolean) => !next && !sending && onClose()}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{t('Send back without publishing')}</DialogTitle>
+                    <DialogDescription>
+                        {by ? t(':name gets an email with your note, and the request is cleared. The draft stays as it is.', { name: by }) : t('The one who asked gets an email with your note, and the request is cleared. The draft stays as it is.')}
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="cms:flex cms:flex-col cms:gap-2">
+                    <Label htmlFor="send-back-note">{t('Note (optional)')}</Label>
+                    <Textarea id="send-back-note" rows={4} maxLength={2000} value={note} placeholder={t('What to change before it can go live')}
+                        aria-invalid={errors.note !== undefined} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNote(e.target.value)} />
+                    <FieldError message={errors.note} />
+                </div>
+                <DialogFooter>
+                    <Button type="button" variant="outline" disabled={sending} onClick={onClose}>{t('Cancel')}</Button>
+                    <Button type="button" disabled={sending} onClick={() => { setSending(true); onSend(note, () => setSending(false)); }}>
+                        {sending && <LoaderCircle className="cms:animate-spin" />} {t('Send back')}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }
 
