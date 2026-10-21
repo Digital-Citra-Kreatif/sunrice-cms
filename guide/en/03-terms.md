@@ -19,7 +19,7 @@ Terms that have no title in the language shown appear in grey as *… · not tra
 When the taxonomy has term pages on the website (like `/topics/news`), each term's page lists its entries, and you can give it more:
 
 - its own fields, if the taxonomy has any (a description, an image…);
-- **Search and sharing**: an SEO title, a description, a share image and *Hide from search engines* (see [SEO](guide:website/seo));
+- **SEO**: a meta title, a meta description, an Open Graph image and *Hide from search engines (noindex)* (see [SEO](guide:website/seo));
 - a **Template**, if your developer made a special design (leave it empty for the taxonomy's own).
 
 Choose the language at the top, edit, and click **Save**. Changes are live straight away: terms have no drafts. **View page** opens the page on the website. **Used by** lists the content that links to this term through its fields.

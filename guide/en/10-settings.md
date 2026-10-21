@@ -8,14 +8,12 @@ Settings are live as soon as you click **Save**.
 
 - **Homepage**: the entry shown at the website's address (`/`), in each language it's published in. Its own address redirects there.
 
-**Search and sharing**, for pages that don't set their own (see [SEO](guide:website/seo)):
+**The site**, for pages that don't say their own:
 
 - **Site name**: added to page titles and shown when pages are shared. Empty: the name your developer set.
-- **Description** and **Share image**: used when a page has none of its own.
-- **Title separator**: what goes between a page's title and the site name (`|` in "About | Acme").
-- **Add the site name to titles**: "About | Acme" in search results and browser tabs.
-- **X (Twitter) account**: the site's account, such as `@acme`, for shared links.
-- **Hide the whole site from search engines**: for a site still being built. Every page asks not to be indexed and the sitemap is empty. Turn it off when the site goes live.
+- **Description**: used when a page has none of its own.
+
+The share image, the site name in titles and its separator, the X (Twitter) account and hiding the whole site from search engines are on the **SEO** page (under Structure in the sidebar; see [SEO](guide:website/seo)).
 
 **Structured data**: **Add structured data to pages** (on unless you have a reason), whether the site is **Published by** an organisation or a person, and the organisation's **Logo** (square or wide, at least 112 pixels).
 

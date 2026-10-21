@@ -85,7 +85,7 @@ function GlobalsEdit({ set, fields, locale, locales, shared, values, version, ca
             </PageHeader>
 
             {fields.length === 0 ? (
-                <p className="cms:text-muted-foreground">{t('This global set has no fields: choose a blueprint for it under Structure → Global sets.')}</p>
+                <p className="cms:text-muted-foreground">{t('This global set has no fields: choose a blueprint for it in its Settings.')}</p>
             ) : (
                 <div className="cms:flex cms:flex-col cms:gap-4">
                     <ViewingNotice by={lock.viewingBy} />

@@ -1,26 +1,26 @@
 # Komentar
 
-Pengunjung bisa mengomentari entri dan saling membalas. Moderator menyetujui, menjawab, dan menghapus komentar di **Comments** di bawah Content.
+Pengunjung bisa mengomentari entri dan saling membalas. Moderator menyetujui, menjawab, dan menghapus komentar di **Komentar** di bawah Konten.
 
-Komentar dinyalakan per koleksi oleh pengelola situs (Structure → Collections, *Allow comments*), dan aturannya (siapa boleh berkomentar, apakah komentar menunggu persetujuan) ada di **Settings → Comments** (lihat [Pengaturan situs](guide:website/settings#comments)).
+Komentar dinyalakan per koleksi oleh pengelola situs (Struktur → Koleksi, *Izinkan komentar*), dan aturannya (siapa boleh berkomentar, apakah komentar menunggu persetujuan) ada di **Pengaturan → Komentar** (lihat [Pengaturan situs](guide:website/settings#komentar)).
 
 ## Memoderasi
 
-Tab mengelompokkan komentar berdasarkan statusnya: **All** (menunggu dan disetujui), **Pending** (menunggu persetujuan), **Approved** (disetujui), **Spam**, dan **Trash** (tempat sampah). Cari berdasarkan teks, nama, atau email, atau saring per koleksi atau per entri. Setiap komentar menampilkan entrinya, komentar yang dibalasnya (jika berupa balasan), dan bahasanya.
+Tab mengelompokkan komentar berdasarkan statusnya: **Semua** (menunggu dan disetujui), **Menunggu** (menunggu persetujuan), **Disetujui**, **Spam**, dan **Tempat sampah**. Cari berdasarkan teks, nama, atau email, atau saring per koleksi atau per entri. Setiap komentar menampilkan entrinya, komentar yang dibalasnya (jika berupa balasan), dan bahasanya.
 
 Untuk setiap komentar:
 
-- **Approve** menampilkannya di situs web; **Unapprove** menyembunyikannya lagi.
+- **Setujui** menampilkannya di situs web; **Batalkan persetujuan** menyembunyikannya lagi.
 - **Spam** memindahkannya ke tab Spam. Spam terhapus otomatis setelah beberapa waktu.
-- **Reply** menjawabnya, langsung tayang atas nama Anda. Membalas komentar yang sedang menunggu sekaligus menyetujuinya.
-- **Edit** memperbaiki salah ketik atau menghapus tautan.
-- **Trash** memindahkannya ke tab Trash, tempat **Restore** mengembalikannya dan **Delete for good** menghapusnya selamanya. Balasan untuk komentar yang dihapus tetap ada, naik satu tingkat.
+- **Balas** menjawabnya, langsung tayang atas nama Anda. Membalas komentar yang sedang menunggu sekaligus menyetujuinya.
+- **Ubah** memperbaiki salah ketik atau menghapus tautan.
+- **Tempat sampah** memindahkannya ke tab Tempat sampah; di sana **Pulihkan** mengembalikannya dan **Hapus permanen** menghapusnya selamanya. Balasan untuk komentar yang dihapus tetap ada, naik satu tingkat.
 
 Centang beberapa komentar untuk menyetujui, menandai sebagai spam, atau membuangnya sekaligus.
 
 ## Menutup komentar pada satu entri
 
-Di penyunting entri, **Page settings → Accept new comments** menutup atau membuka komentar entri itu. Komentar yang sudah disetujui tetap tampil; pengunjung hanya tidak bisa menambah yang baru. Tautan **Comments**-nya membuka daftar moderasi untuk entri itu. Kartu **Comments** di penyunting juga menampilkan komentar terbaru entri itu, dengan **Approve**, **Spam**, dan **Reply**. Komentar juga bisa tertutup sendiri beberapa hari setelah terbit, jika diatur di Settings → Comments.
+Di penyunting entri, **Pengaturan halaman → Terima komentar baru** menutup atau membuka komentar entri itu. Komentar yang sudah disetujui tetap tampil; pengunjung hanya tidak bisa menambah yang baru. Tautan **Komentar**-nya membuka daftar moderasi untuk entri itu. Kartu **Komentar** di penyunting juga menampilkan komentar terbaru entri itu, dengan **Setujui**, **Spam**, dan **Balas**. Komentar juga bisa tertutup sendiri beberapa hari setelah terbit, jika diatur di Pengaturan → Komentar.
 
 ## Email
 

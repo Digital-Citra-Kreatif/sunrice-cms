@@ -1,6 +1,6 @@
 # Entries
 
-Entries are the website's content: pages, articles, products, events. Each entry belongs to a **collection**, and the collection's fields decide what you fill in. Open **Entries** under Content to work with them.
+Entries are the website's content: pages, articles, products, events. Each entry belongs to a **collection**, and the collection's fields decide what you fill in. Each collection has its own item under **Content** in the sidebar (**Blog**, **Pages** …): open it to work with its entries.
 
 ## The list
 
@@ -40,7 +40,7 @@ From then on, **Save draft** keeps your work (or press **Ctrl S** / **⌘ S**). 
 - **Link** fields take a web address, or another entry (choose **Entry** to follow its address even if it changes).
 - **Groups**, **repeaters** and **flexible** fields hold several fields together; repeaters and flexible fields add rows or blocks, which you drag into order by their handle.
 
-The editor's cards (groups, **Search and sharing**, and the cards on the right) fold away when you click their title. The panel remembers which ones you folded, and opens a card by itself when a field inside it has an error.
+The editor's cards (groups, **SEO**, and the cards on the right) fold away when you click their title. The panel remembers which ones you folded, and opens a card by itself when a field inside it has an error.
 
 ## Drafts and publishing
 

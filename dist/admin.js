@@ -2935,7 +2935,7 @@ function Pa({ set: a, fields: l, locale: n, locales: c, shared: i, values: r, ve
         children: f.isDirty && /* @__PURE__ */ e.jsx("span", { className: "cms:text-sm cms:text-muted-foreground", children: t("Unsaved changes") })
       }
     ),
-    l.length === 0 ? /* @__PURE__ */ e.jsx("p", { className: "cms:text-muted-foreground", children: t("This global set has no fields: choose a blueprint for it under Structure → Global sets.") }) : /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-4", children: [
+    l.length === 0 ? /* @__PURE__ */ e.jsx("p", { className: "cms:text-muted-foreground", children: t("This global set has no fields: choose a blueprint for it in its Settings.") }) : /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-4", children: [
       /* @__PURE__ */ e.jsx(s.ViewingNotice, { by: C.viewingBy }),
       /* @__PURE__ */ e.jsx(Re, { message: o.version, processing: f.processing, onSaveMine: $ }),
       /* @__PURE__ */ e.jsx(s.KeptEditsNotice, { kept: C.kept, disabled: !b, onLoad: (y) => {
