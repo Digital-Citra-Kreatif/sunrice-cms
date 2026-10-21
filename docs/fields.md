@@ -41,7 +41,7 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 | `media` | a media id, or a list with `multiple` | a `Media` model, or a collection | `multiple`, `max`, `types` (image, video, audio, document) |
 | `group` | an object of its fields | an array | (its `fields`) |
 | `repeater` | a list of rows of its fields | `Items` of arrays | `min`, `max` (its `fields`) |
-| `flexible` | a list of blocks | `Items` of `Block` | `blocks` (fieldset handles), `max` |
+| `flexible` | a list of blocks | `Items` of `Block` | `blocks` (fieldset handles, offered in this order: the builder keeps the order they're ticked in), `max` |
 | `fieldset` | — | — | `fieldset`: includes that fieldset's fields in its place |
 | `terms` | a term id, or a list with `multiple` | a `Term`, or a collection | `taxonomy`, `multiple`, `max` (see [taxonomies](taxonomies.md)) |
 | `entries` | an entry id, or a list with `multiple` | the linked entries' `EntryTranslation`s | `collections`, `multiple`, `max` |
