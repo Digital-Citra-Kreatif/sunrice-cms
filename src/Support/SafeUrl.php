@@ -30,6 +30,61 @@ final class SafeUrl
         return ! str_starts_with($clean, '//') && ! str_contains($clean, '\\');
     }
 
+    /**
+     * Whether an address is on this site: a path (/about, not //host), or
+     * an absolute URL with the scheme, host and port of the current
+     * request or of `APP_URL`. For sending visitors "back": the Referer
+     * header (what `url()->previous()` reads first) is whatever the page
+     * that sent them said, and could be another site.
+     */
+    public static function isLocal(string $url): bool
+    {
+        if ($url === '' || preg_match('/[\x00-\x20\x7F\\\\]/', $url) === 1) {
+            return false;
+        }
+        if (str_starts_with($url, '/')) {
+            return ! str_starts_with($url, '//');
+        }
+        $origin = self::origin($url);
+        if ($origin === null) {
+            return false;
+        }
+        $appUrl = config('app.url');
+        foreach ([request()->getSchemeAndHttpHost(), is_string($appUrl) ? $appUrl : ''] as $site) {
+            if ($site !== '' && self::origin($site) === $origin) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Where to send a visitor back to: the previous page (`url()->previous()`)
+     * when it's on this site (isLocal()), else $fallback.
+     */
+    public static function previous(string $fallback = '/'): string
+    {
+        $previous = url()->previous();
+
+        return self::isLocal($previous) ? $previous : $fallback;
+    }
+
+    /** scheme://host:port of an absolute http(s) URL without user info, lower-cased, with the port always given. */
+    private static function origin(string $url): ?string
+    {
+        $parts = parse_url($url);
+        if (! is_array($parts) || ! isset($parts['scheme'], $parts['host']) || isset($parts['user']) || isset($parts['pass'])) {
+            return null;
+        }
+        $scheme = strtolower($parts['scheme']);
+        if (! in_array($scheme, ['http', 'https'], true)) {
+            return null;
+        }
+
+        return $scheme.'://'.strtolower($parts['host']).':'.($parts['port'] ?? ($scheme === 'https' ? 443 : 80));
+    }
+
     /** A validation rule for link inputs. */
     public static function rule(): Closure
     {

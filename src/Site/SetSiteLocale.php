@@ -30,16 +30,17 @@ final class SetSiteLocale
         $slash = $request->getPathInfo() !== '/' && str_ends_with($request->getPathInfo(), '/');
         if (in_array($request->method(), ['GET', 'HEAD'], true) && ($script || $slash)) {
             $query = $request->getQueryString();
-            $root = $request->getSchemeAndHttpHost().preg_replace('#/index\.php$#', '', $request->getBaseUrl());
+            // Host-relative (SiteRedirect): never to the Host header the request named.
+            $root = (string) preg_replace('#/index\.php$#', '', $request->getBaseUrl());
 
-            return redirect()->to($root.$path.($query === null || $query === '' ? '' : "?{$query}"), 301);
+            return SiteRedirect::to($root.$path.($query === null || $query === '' ? '' : "?{$query}"), 301);
         }
         // Only while the main language is at the plain addresses and no language uses its code as prefix.
         $plain = Locales::prefix($default) === '' && ! in_array($default, Locales::segments(), true);
         if ($plain && in_array($request->method(), ['GET', 'HEAD'], true) && ($path === "/{$default}" || str_starts_with($path, "/{$default}/"))) {
             $query = $request->getQueryString();
 
-            return redirect()->to(url(substr($path, strlen($default) + 1) ?: '/').($query === null || $query === '' ? '' : "?{$query}"), 301);
+            return SiteRedirect::to(url(substr($path, strlen($default) + 1) ?: '/').($query === null || $query === '' ? '' : "?{$query}"), 301);
         }
         app()->setLocale(app(Site::class)->locale($path));
 

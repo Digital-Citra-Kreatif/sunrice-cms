@@ -28,6 +28,7 @@ See [Languages](collections.md#languages).
 | `site.enabled` | `true` | — | Serve entries, listing and term pages at their URLs. The CMS's route is the app's fallback, after the app's own routes. The admin and previews work either way. |
 | `site.middleware` | `['web']` | — | Middleware for the site's pages. |
 | `site.template_prefixes` | `['cms.']` | — | What the views editors pick for an entry or a term (Page settings → Template) may start with, so no other view of the app can become a public page. |
+| `site.headers` | `nosniff`, `SAMEORIGIN` framing, `strict-origin-when-cross-origin`, a `Permissions-Policy` | `SUNRICE_SITE_CSP` (the CSP) | Security headers on every site response; null leaves one out, and a header the response already has is kept. No Content-Security-Policy unless set. See [Security headers](site.md#security-headers). |
 | `site.fallback` | `true` | `SUNRICE_FALLBACK` | Untranslated entries and terms show the main language's content at the other language's address (canonical to the main page); off, they're a 404 there. See [Untranslated pages](site.md#untranslated-pages). |
 
 ## Caching

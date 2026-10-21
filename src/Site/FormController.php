@@ -45,7 +45,8 @@ final class FormController
         app()->setLocale($locale);
         // Back to the form itself, not the top of the page: to its error summary or thank-you message, which
         // take focus as the browser goes to them (they have tabindex="-1"; autofocus is ignored with a fragment).
-        $back = url()->previous();
+        // Only to a page on this site: the Referer could name another one (an open redirect).
+        $back = SafeUrl::previous('/');
         $limit = new SendLimit('sunrice-forms|'.$form->handle.'|'.$request->ip(), $form->perMinute());
         try {
             $limit->check($locale, $form->handle);

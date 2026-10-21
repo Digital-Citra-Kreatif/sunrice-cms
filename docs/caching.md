@@ -54,7 +54,7 @@ app(\Sunrice\Cms\Support\SiteCache::class)->remember('shop:stock', fn () => $sto
 
 The admin keeps the handles of the collections, taxonomies and forms and their scoped permissions in the app's default cache (for `ttl` seconds at most), so the sidebar costs no queries; creating, changing, deleting or restoring one forgets them.
 
-Menu and sitemap entries are keyed by the site's URL (`url('/')`), since they hold full links. Set `APP_URL` and Laravel's `TrustHosts` middleware (or your web server's host check) so a request with a made-up `Host:` header can't fill the store with copies under other hosts.
+Menu entries are keyed by the site's URL (`url('/')`), since they hold full links; the sitemap's are on `APP_URL` and kept once. Set `APP_URL` and Laravel's `TrustHosts` middleware (or your web server's host check) so a request with a made-up `Host:` header can't fill the store with copies under other hosts.
 
 ## Whole pages
 
