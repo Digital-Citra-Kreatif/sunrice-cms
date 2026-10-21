@@ -6,6 +6,7 @@ namespace Sunrice\Cms\Fields\Types;
 
 use Closure;
 use Illuminate\Http\UploadedFile;
+use Sunrice\Admin\Media\FileContent;
 use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\FieldType;
 
@@ -42,6 +43,10 @@ final class FileField extends FieldType
         $rules = ['file', 'max:'.max(1, $maxKb), function (string $attribute, mixed $value, Closure $fail): void {
             if ($value instanceof UploadedFile && array_intersect(self::extensions($value), self::BLOCKED) !== []) {
                 $fail('Files of this type can\'t be sent.');
+            } elseif ($value instanceof UploadedFile && in_array(strtolower($value->getClientOriginalExtension()), FileContent::IMAGE_EXTENSIONS, true)
+                && (FileContent::containsPhp($value) || ! FileContent::matchesExtension($value))) {
+                // Named as an image: it must be one, without code hidden in it (a JPEG followed by PHP).
+                $fail('This isn\'t a valid image.');
             }
         }];
         if ($types !== []) {
