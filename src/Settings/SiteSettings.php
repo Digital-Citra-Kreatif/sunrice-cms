@@ -76,6 +76,28 @@ final class SiteSettings extends Settings
     /** The publisher's profiles elsewhere (schema.org sameAs), one URL per line. */
     public string $sameAs = '';
 
+    /**
+     * Common schema.org Organization types offered for the publisher, by
+     * group; any other schema.org type can be typed in (Other…).
+     */
+    public const ORGANIZATION_TYPES = [
+        'Organizations' => [
+            'Organization' => 'Organization', 'Corporation' => 'Corporation', 'NGO' => 'NGO (non-profit)',
+            'EducationalOrganization' => 'Educational organization', 'GovernmentOrganization' => 'Government organization',
+            'MedicalOrganization' => 'Medical organization', 'NewsMediaOrganization' => 'News media', 'OnlineBusiness' => 'Online business',
+            'SportsOrganization' => 'Sports organization', 'PerformingGroup' => 'Performing group',
+        ],
+        'Local businesses' => [
+            'LocalBusiness' => 'Local business', 'RealEstateAgent' => 'Real estate agent', 'Restaurant' => 'Restaurant',
+            'CafeOrCoffeeShop' => 'Café or coffee shop', 'BarOrPub' => 'Bar or pub', 'Bakery' => 'Bakery', 'Store' => 'Store',
+            'Hotel' => 'Hotel', 'LodgingBusiness' => 'Lodging', 'TravelAgency' => 'Travel agency', 'BeautySalon' => 'Beauty salon',
+            'HealthClub' => 'Gym or health club', 'MedicalClinic' => 'Medical clinic', 'Dentist' => 'Dentist', 'Pharmacy' => 'Pharmacy',
+            'LegalService' => 'Law firm or legal service', 'AccountingService' => 'Accounting service', 'FinancialService' => 'Financial service',
+            'InsuranceAgency' => 'Insurance agency', 'AutoRepair' => 'Car repair', 'HomeAndConstructionBusiness' => 'Home and construction',
+            'ChildCare' => 'Child care', 'EmploymentAgency' => 'Employment agency',
+        ],
+    ];
+
     /** The description for a page in a language: its line in `descriptions`, else `description`. */
     public function descriptionIn(?string $locale = null): string
     {
@@ -121,9 +143,10 @@ final class SiteSettings extends Settings
                 MediaPicker::make('logo')->label('Logo')->images()->help('Square or wide, at least 112 pixels.'),
                 TextInput::make('publisherName')->label('Name')->maxLength(150)->placeholder(self::appName())
                     ->help('Empty: the site name.'),
-                TextInput::make('publisherType')->label('Kind of organization')->maxLength(60)->placeholder('Organization')
-                    ->rules(['regex:/^[A-Z][A-Za-z]{2,59}$/'])
-                    ->help('A schema.org type, written as one word: LocalBusiness, RealEstateAgent, Restaurant, Store… Not for a person.'),
+                Select::make('publisherType')->label('Organization type')->options(self::ORGANIZATION_TYPES)->searchable()
+                    ->placeholder('Organization')
+                    ->other('Other…', ['max:60', 'regex:/^[A-Z][A-Za-z]{2,59}$/'], 'Brewery')
+                    ->help('What search engines are told the organization is. Other…: any schema.org type, written as one word.'),
                 TextInput::make('telephone')->label('Phone')->maxLength(40)->placeholder('+62 21 555 0100'),
                 Textarea::make('address')->label('Address')->rows(2)->maxLength(300),
                 Textarea::make('sameAs')->label('Profiles elsewhere')->rows(3)->maxLength(2000)->span(2)
