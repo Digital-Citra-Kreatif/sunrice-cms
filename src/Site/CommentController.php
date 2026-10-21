@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Facades\View;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Panel;
 use Sunrice\Admin\Security\Captcha;
@@ -21,7 +22,8 @@ use Sunrice\Cms\Settings\CommentSettings;
 /**
  * POST /comments/{entry}: a visitor comments. Behind the honeypot, a
  * per-address limit and, when Settings → Comments asks, the captcha.
- * GET /comments/{comment}/unsubscribe (signed): no more reply emails.
+ * GET /comments/{comment}/unsubscribe (signed) asks, and a POST to the
+ * same signed link stops reply emails.
  *
  * @internal
  */
@@ -59,13 +61,34 @@ final class CommentController
         return redirect()->to(url()->previous().($comment->isApproved() ? '#comment-'.$comment->id : '#comments'))->with(self::FLASH, $message);
     }
 
-    public function unsubscribe(Comment $comment): Response
+    /** The signed link from a reply email: asks first, so a mail scanner opening links unsubscribes nobody. */
+    public function unsubscribe(Request $request, Comment $comment): Response
+    {
+        return $this->unsubscribePage($comment, done: ! $comment->notify_replies, action: $request->fullUrl());
+    }
+
+    /** The confirm page's button (the same signed link, POSTed): no more reply emails. */
+    public function confirmUnsubscribe(Comment $comment): Response
     {
         $comment->forceFill(['notify_replies' => false])->saveQuietly();
+
+        return $this->unsubscribePage($comment, done: true, action: null);
+    }
+
+    /** The site's own `cms.comment-unsubscribe` view when it has one, else the CMS's. */
+    private function unsubscribePage(Comment $comment, bool $done, ?string $action): Response
+    {
         app()->setLocale($comment->locale);
         $translation = $comment->entry->translation($comment->locale) ?? $comment->entry->mainTranslation();
         $url = $translation !== null && $translation->isLive() && ! $comment->entry->trashed() ? $translation->url() : null;
+        $view = View::exists('cms.comment-unsubscribe') ? 'cms.comment-unsubscribe' : 'sunrice-cms::comment-unsubscribe';
 
-        return response()->view('sunrice-cms::comment-unsubscribed', ['locale' => $comment->locale, 'url' => $url])->header('X-Robots-Tag', 'noindex');
+        return response()->view($view, [
+            'locale' => $comment->locale,
+            'url' => $url,
+            'title' => $translation->title ?? '',
+            'done' => $done,
+            'action' => $done ? null : $action,
+        ])->header('X-Robots-Tag', 'noindex');
     }
 }

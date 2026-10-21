@@ -76,6 +76,7 @@ It copies them into `resources/views/cms/`, where the rules above pick them up, 
 | `cms/listing.blade.php` | listing pages | the listing's fields, cards, pagination |
 | `cms/term.blade.php` | term pages | the term's fields and its entries |
 | `cms/search.blade.php` | the search page | the search box, results |
+| `cms/comment-unsubscribe.blade.php` | a reply email's "stop these emails" link | the confirm button, then the done message, in the layout ([Comments](comments.md)) |
 | `cms/partials/fields.blade.php` | the pages above | text, rich text, images, galleries, links and flexible blocks, by kind |
 | `cms/partials/blocks.blade.php`, `block.blade.php` | flexible blocks | `cms/blocks/{fieldset}.blade.php` per kind of block when you make one (it gets `$block`), else the block's fields |
 | `cms/partials/card.blade.php` | lists of entries | title, date, and an `image` and `excerpt` field when there are |

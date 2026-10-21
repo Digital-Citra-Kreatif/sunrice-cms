@@ -204,6 +204,7 @@ final class CmsServiceProvider extends ServiceProvider
         Route::middleware([...$middleware, ProtectAgainstSpam::class, Site\RequireHoneypot::class])
             ->post('comments/{entry}', [Site\CommentController::class, 'store'])->name('sunrice.cms.comments.store');
         Route::middleware([...$middleware, 'signed'])->get('comments/{comment}/unsubscribe', [Site\CommentController::class, 'unsubscribe'])->name('sunrice.cms.comments.unsubscribe');
+        Route::middleware([...$middleware, 'signed'])->post('comments/{comment}/unsubscribe', [Site\CommentController::class, 'confirmUnsubscribe'])->name('sunrice.cms.comments.unsubscribe.confirm');
         Route::middleware([...$middleware, 'signed'])->get('cms-preview/{translation}', [Site\SiteController::class, 'preview'])->name('sunrice.cms.preview');
         if (config('sunrice-cms.site.enabled', true) === true) {
             Route::middleware($middleware)->get('sitemap.xml', Site\SitemapController::class)->name('sunrice.cms.sitemap');
