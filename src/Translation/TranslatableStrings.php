@@ -13,14 +13,15 @@ use Sunrice\Cms\Fields\Types\Repeater;
 
 /**
  * The text to translate in field data: text, textarea and rich text
- * fields that are translated, also inside groups, repeater rows and
- * flexible blocks. Fields shared by all languages are left out.
+ * fields, and links' texts (`label`, at "cta.label"), that are
+ * translated, also inside groups, repeater rows and flexible blocks.
+ * Fields shared by all languages are left out.
  *
  * @api
  */
 final class TranslatableStrings
 {
-    public const TYPES = ['text', 'textarea', 'rich_text'];
+    public const TYPES = ['text', 'textarea', 'rich_text', 'link'];
 
     /**
      * The strings of a translation, each with the source's text at the same
@@ -49,6 +50,16 @@ final class TranslatableStrings
             }
             $path = $prefix.$handle;
             $value = $target[$handle];
+            if ($field->type === 'link') {
+                // Only the link's text: where it goes stays the source's.
+                $text = is_array($from) ? ($from['label'] ?? null) : null;
+                if (is_string($text) && trim($text) !== '') {
+                    $current = is_array($value) ? ($value['label'] ?? null) : null;
+                    $strings[$path.'.label'] = ['source' => $text, 'current' => is_string($current) ? $current : null, 'rich' => false];
+                }
+
+                continue;
+            }
             if (in_array($field->type, self::TYPES, true)) {
                 if (is_string($from) && trim(strip_tags($from)) !== '') {
                     $strings[$path] = ['source' => $from, 'current' => is_string($value) ? $value : null, 'rich' => $field->type === 'rich_text'];

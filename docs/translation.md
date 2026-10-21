@@ -17,7 +17,7 @@ The rest is in `config/sunrice-cms.php` under `translation`: `batch_size` (texts
 
 ## What is translated
 
-- **Entries**: the title, text, textarea and rich text fields that are translated (not [shared](collections.md#languages)), inside groups, repeater rows and flexible blocks too (matched to the source's by id), and the SEO title and description. A missing translation is added first (as **Adding a language** does); a slug still the source's is made from the translated title. Saved through `SaveDraft`, so it's validated and rich text is cleaned like an editor's.
+- **Entries**: the title, text, textarea and rich text fields and the texts of link fields (not where they go) that are translated (not [shared](collections.md#languages)), inside groups, repeater rows and flexible blocks too (matched to the source's by id), and the SEO title and description. A missing translation is added first (as **Adding a language** does); a slug still the source's is made from the translated title. Saved through `SaveDraft`, so it's validated and rich text is cleaned like an editor's.
 - **Terms**: the title, fields and SEO description, saved as they are (`SaveTerm`, `SaveTermContent`).
 - **Globals**: their translated fields (`SaveGlobals`).
 - **Menus**: link labels.
