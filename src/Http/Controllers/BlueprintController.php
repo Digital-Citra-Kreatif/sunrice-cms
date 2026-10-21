@@ -26,8 +26,13 @@ final class BlueprintController
 {
     public function index(): Response
     {
-        // One query for which collections use what.
-        $usedBy = Collection::query()->whereNotNull('blueprint')->orderBy('title')->get(['title', 'blueprint'])->groupBy('blueprint');
+        // One query for which collections use what, for their entries or as one of their other blueprints.
+        $usedBy = [];
+        foreach (Collection::query()->orderBy('title')->get(['title', 'blueprint', 'blueprints']) as $collection) {
+            foreach (array_unique(array_filter([$collection->blueprint, ...($collection->blueprints ?? [])], 'is_string')) as $handle) {
+                $usedBy[$handle][] = $collection->title;
+            }
+        }
 
         return Inertia::render('Cms/Blueprints/Index', [
             'blueprints' => Blueprint::query()->orderBy('title')->get()->map(fn (Blueprint $blueprint): array => [
@@ -35,7 +40,7 @@ final class BlueprintController
                 'handle' => $blueprint->handle,
                 'title' => $blueprint->title,
                 'fields' => count($blueprint->fields),
-                'usedBy' => $usedBy->get($blueprint->handle)?->pluck('title')->values()->all() ?? [],
+                'usedBy' => $usedBy[$blueprint->handle] ?? [],
             ])->all(),
         ]);
     }

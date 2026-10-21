@@ -53,7 +53,7 @@ final class ContentWatch
     private const LIVE = ['status', 'title', 'slug', 'data', 'published_at'];
 
     /** What of an entry changes pages. */
-    private const ENTRY = ['parent_id', 'sort_order', 'template', 'collection_id'];
+    private const ENTRY = ['parent_id', 'sort_order', 'template', 'collection_id', 'blueprint', 'comments_closed'];
 
     public static function register(): void
     {
