@@ -233,7 +233,6 @@ final class CmsPlugin extends BasePlugin
                     Route::post('entries/{entry}/publish', 'publish')->name('entries.publish')->middleware($guard('entries', 'publish'));
                     Route::post('entries/{entry}/review', 'requestReview')->name('entries.review')->middleware($guard('entries', 'update'));
                     Route::post('entries/{entry}/homepage', 'homepage')->name('entries.homepage')->middleware(['can:cms.homepage', $guard('entries', 'view')]);
-                    Route::post('entries/{entry}/date', 'date')->name('entries.date')->middleware($guard('entries', 'publish'));
                     Route::post('entries/{entry}/unpublish', 'unpublish')->name('entries.unpublish')->middleware($guard('entries', 'publish'));
                     Route::delete('entries/{entry}', 'destroy')->name('entries.destroy')->middleware($guard('entries', 'delete'));
                     Route::post('entries/{entry}/restore', 'restore')->name('entries.restore')->middleware($guard('entries', 'delete'))->withTrashed();

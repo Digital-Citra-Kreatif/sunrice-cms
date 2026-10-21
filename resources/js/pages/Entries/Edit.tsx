@@ -412,8 +412,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                             )}
                             {!entry.trashed && can.publish && !lock.readOnly && (
                                 <PublishDate key={entry.publishedAt ?? 'none'} status={entry.status} publishedAt={entry.publishedAt} processing={form.processing}
-                                    onPublish={(iso) => publish(iso)} onUnpublish={() => router.post(`${url}/unpublish`, locale, { preserveScroll: true })}
-                                    onChangeDate={(iso) => router.post(`${url}/date`, { ...locale, published_at: iso }, { preserveScroll: true })} />
+                                    onPublish={(iso) => publish(iso)} onUnpublish={() => router.post(`${url}/unpublish`, locale, { preserveScroll: true })} />
                             )}
                             {entry.status !== 'draft' && entry.hasUnpublishedChanges && <p className="cms:text-muted-foreground">{t('The draft has changes the site doesn\'t show yet.')}</p>}
                             {homepage?.is && <p className="cms:text-muted-foreground">{t('This is the site\'s homepage.')}</p>}
@@ -527,13 +526,11 @@ function LanguageBar({ entryUrl, editUrl, current, locales, canAdd, canRemove, o
 }
 
 /**
- * The date an entry shows as published, to set or change: a draft is
- * published with it (a future one schedules it); a published or scheduled
- * entry's date changes alone, its draft left as it is (a date to come
- * takes it off the site until then).
+ * The date an entry shows as published, to set or change: a past one
+ * publishes it with that date, a future one schedules it.
  */
-function PublishDate({ status, publishedAt, processing, onPublish, onUnpublish, onChangeDate }: {
-    status: EntryStatus; publishedAt: string | null; processing: boolean; onPublish: (iso: string | null) => void; onUnpublish: () => void; onChangeDate: (iso: string) => void;
+function PublishDate({ status, publishedAt, processing, onPublish, onUnpublish }: {
+    status: EntryStatus; publishedAt: string | null; processing: boolean; onPublish: (iso: string | null) => void; onUnpublish: () => void;
 }) {
     const [value, setValue] = React.useState(publishedAt ? localInputValue(new Date(publishedAt)) : '');
     const chosen = value === '' ? null : new Date(value);
@@ -550,12 +547,11 @@ function PublishDate({ status, publishedAt, processing, onPublish, onUnpublish, 
             <Label htmlFor="entry-published-at">{t('Publish date')}</Label>
             <DatePicker id="entry-published-at" withTime className="cms:max-w-none" value={value || null} onChange={(next) => setValue(next ?? '')} />
             <p className="cms:text-xs cms:text-muted-foreground">
-                {status === 'draft' ? t('Empty: now. A date in the future schedules it.') : t('The date shown as published; the draft stays as it is. A date in the future takes it off the site until then.')}
+                {status === 'draft' ? t('Empty: now. A date in the future schedules it.') : t('The date shown as published. A date in the future takes it off the site until then.')}
             </p>
             <div className="cms:flex cms:flex-wrap cms:gap-2">
                 {(status === 'draft' || changed) && (
-                    <Button type="button" size="sm" disabled={processing}
-                        onClick={() => (status === 'draft' ? onPublish(chosen?.toISOString() ?? null) : onChangeDate((chosen ?? new Date()).toISOString()))}>
+                    <Button type="button" size="sm" disabled={processing} onClick={() => onPublish(chosen?.toISOString() ?? null)}>
                         <CalendarClock /> {label}
                     </Button>
                 )}

@@ -13,12 +13,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Sunrice\Admin\Panel;
 use Sunrice\Admin\Preferences\Preferences;
-use Sunrice\Cms\Actions\Entries\ChangePublishDate;
 use Sunrice\Cms\Actions\Entries\CreateEntry;
 use Sunrice\Cms\Actions\Entries\CreateTranslation;
 use Sunrice\Cms\Actions\Entries\DeleteTranslation;
@@ -458,15 +456,6 @@ final class EntryController
         $set->handle($entry);
 
         return back()->with('success', 'It\'s the homepage now.');
-    }
-
-    /** A published entry's date, moved ("published_at"), its draft left alone. */
-    public function date(Request $request, Entry $entry, ChangePublishDate $change): RedirectResponse
-    {
-        $date = self::publishAt($request) ?? throw ValidationException::withMessages(['published_at' => __('Choose a date and time.')]);
-        $translation = $change->handle(self::translation($entry, $request->input('locale')), $date);
-
-        return back()->with('success', $translation->isLive() ? 'Date changed.' : __('Scheduled for :date.', ['date' => (string) $translation->published_at?->toDayDateTimeString()]));
     }
 
     public function requestReview(Request $request, Entry $entry, RequestReview $review): RedirectResponse
