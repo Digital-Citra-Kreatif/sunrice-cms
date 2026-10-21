@@ -92,7 +92,7 @@ final class CommentSettings extends Settings
                         }
                     }
                 }]),
-            CheckboxList::make('notifyRoles')->label('Also email roles')->options(fn (): array => RoleMembers::options())
+            CheckboxList::make('notifyRoles')->label('Also email roles')->verbatim()->options(fn (): array => RoleMembers::options())
                 ->help('Everyone with these roles, besides the moderators and addresses above.'),
             Toggle::make('replyNotifications')->label('Let commenters get an email when someone replies')
                 ->help('If comments go live without review, only signed-in users get these.'),

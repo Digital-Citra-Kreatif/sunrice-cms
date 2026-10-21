@@ -61,9 +61,9 @@ final class CollectionResource extends Resource
             Section::make('General')->columns(2)->schema([
                 TextInput::make('title')->required(),
                 ...HandleField::make('collection', 'Used in templates and code, like "articles".', HandleField::WARNING),
-                Select::make('blueprint')->options($blueprints())
+                Select::make('blueprint')->verbatim()->options($blueprints())
                     ->help('The fields its entries have.'),
-                CheckboxList::make('blueprints')->label('Other blueprints')->options($blueprints)->span(2)
+                CheckboxList::make('blueprints')->label('Other blueprints')->verbatim()->options($blueprints)->span(2)
                     ->help('Blueprints an entry can switch to in its Page settings.'),
                 Toggle::make('translatable')->label('Translatable')->default(true)->span(2)
                     ->help('Entries can have a version in each language. Off: the main language only.'),
@@ -97,7 +97,7 @@ final class CollectionResource extends Resource
                 TextInput::make('listing_route')->label('Listing page URL')->placeholder('/{handle}')->unique()->maxLength(255)->span(2)->showWhen('listing')
                     ->rules(['regex:#^(/[a-z0-9\-_]+)+$#'])
                     ->help(__('Empty: /{handle}. Its template is the first that exists of')."\n1. ".TemplateHelp::file('cms.{handle}-listing')."\n2. ".TemplateHelp::file('cms.listing')."\n3. ".__('the built-in template')),
-                Select::make('listing_blueprint')->label('Listing page fields')->options($blueprints())->showWhen('listing')
+                Select::make('listing_blueprint')->label('Listing page fields')->verbatim()->options($blueprints())->showWhen('listing')
                     ->help('Fields of the listing page itself, like an intro.'),
                 NumberInput::make('per_page')->label('Entries per page')->integer()->min(1)->max(100)->default(10)->showWhen('listing'),
             ]),

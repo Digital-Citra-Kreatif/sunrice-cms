@@ -63,7 +63,7 @@ final class FormResource extends Resource
                 TextInput::make('title')->required(),
                 ...HandleField::make('form', 'Used in templates: <x-sunrice-cms::form handle="contact" />.', HandleField::WARNING),
                 Select::make('blueprint')->required()
-                    ->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
+                    ->verbatim()->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
                     ->help('Its fields. Visitors see the text, textarea, number, toggle, select, date and file ones.'),
             ]),
             Section::make('Notifications')->description('Who hears about each submission. Every one is kept under Content → Submissions too.')->schema([
@@ -87,7 +87,7 @@ final class FormResource extends Resource
                         $form->forceFill(['notify' => self::addresses($value) ?: null])->save();
                     }),
                 CheckboxList::make('notify_roles')->label('Also email roles')
-                    ->options(fn (): array => RoleMembers::options())
+                    ->verbatim()->options(fn (): array => RoleMembers::options())
                     ->help('Everyone with these roles also gets each submission.'),
             ]),
             Section::make('After sending')->columns(2)->schema([

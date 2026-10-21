@@ -90,7 +90,7 @@ final class GlobalSetResource extends Resource
             TextInput::make('handle')->onlyOnEdit()->disabled()
                 ->help('Used in templates.'),
             Select::make('blueprint')
-                ->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
+                ->verbatim()->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
                 ->help('Its fields.'),
         ]);
     }

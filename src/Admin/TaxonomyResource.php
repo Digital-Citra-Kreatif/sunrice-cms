@@ -62,7 +62,7 @@ final class TaxonomyResource extends Resource
                 Toggle::make('hierarchical')->label('Nested terms')->span(2)->help('Terms can sit under other terms, like subcategories.'),
                 CheckboxList::make('collections')->span(2)
                     ->help('The collections whose entries it groups.')
-                    ->options(fn () => Collection::query()->orderBy('title')->get()->mapWithKeys(fn (Collection $c): array => [(string) $c->id => $c->title])->all())
+                    ->verbatim()->options(fn () => Collection::query()->orderBy('title')->get()->mapWithKeys(fn (Collection $c): array => [(string) $c->id => $c->title])->all())
                     ->loadUsing(fn (Model $taxonomy): array => $taxonomy instanceof Taxonomy
                         ? $taxonomy->collections()->get(['sunrice_collections.id'])->map(fn (Collection $c): string => (string) $c->id)->all()
                         : [])
@@ -72,7 +72,7 @@ final class TaxonomyResource extends Resource
                         }
                     }),
                 Select::make('blueprint')->label('Term fields')->span(2)
-                    ->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
+                    ->verbatim()->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
                     ->help('Extra fields for each term, like a description or an image.'),
             ]),
             Section::make('Term pages')->description('Whether each term has a page on the site listing its entries.')->columns(2)->schema([
