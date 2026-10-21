@@ -20,7 +20,6 @@ use Sunrice\Admin\Resources\Tables\Column;
 use Sunrice\Admin\Resources\Tables\Filter;
 use Sunrice\Admin\Resources\Tables\Table;
 use Sunrice\Cms\Actions\Collections\RestoreDeleted;
-use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Site\RoutePattern;
@@ -77,7 +76,7 @@ final class TaxonomyResource extends Resource
                 }])
                 ->help('Each term gets a page listing its entries. Empty: terms have no pages.'),
             Select::make('blueprint')->label('Term fields')
-                ->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
+                ->options(BlueprintChoices::options(BlueprintChoices::CONTENT))
                 ->help('Fields of terms\' own, like a description or an image, edited on each term\'s page.'),
             TextInput::make('template')->placeholder('cms.topic')
                 ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
