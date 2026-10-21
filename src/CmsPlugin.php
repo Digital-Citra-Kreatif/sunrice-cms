@@ -303,7 +303,8 @@ final class CmsPlugin extends BasePlugin
         $panel->privilegedPermissions('cms.settings.code', 'cms.blueprints.create', 'cms.blueprints.update', 'cms.blueprints.delete', 'cms.fieldsets.create', 'cms.fieldsets.update', 'cms.fieldsets.delete');
         // Cmd/Ctrl+K finds entries on every panel page, not only where the CMS's bundle has loaded.
         $panel->commandSearch('cms.entries', fn (): string => route('sunrice.admin.cms.entries.search'));
-        $panel->bundle(PluginBundle::make('cms')->module(self::asset('admin.js'))->style(self::asset('admin.css'))->pages('Cms/'));
+        $panel->bundle(PluginBundle::make('cms')->module(self::asset('admin.js'))->style(self::asset('admin.css'))->pages('Cms/')
+            ->publishedFrom(dirname(__DIR__).'/dist', public_path(self::ASSETS)));
         if ($this->fieldTypes !== []) {
             $types = $this->fieldTypes;
             // Only when something needs field types.
