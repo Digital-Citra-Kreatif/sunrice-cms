@@ -738,8 +738,6 @@
     "The fieldset \":handle\" includes the fieldset \":fieldset\" and already has a field \":field\" in \":path\".": "Fieldset \":handle\" menyertakan fieldset \":fieldset\" dan sudah punya field \":field\" di \":path\".",
     "The fieldset \":handle\" includes the fieldset \":fieldset\" and already has a field \":field\".": "Fieldset \":handle\" menyertakan fieldset \":fieldset\" dan sudah punya field \":field\".",
     "the fieldset \":title\"": "fieldset \":title\"",
-    "The first is the main language. Address: what its URLs start with (/ for plain ones). Once there is content, change the main one with php artisan sunrice:switch-main-language.": "Yang pertama adalah bahasa utama. Alamat: awalan URL-nya (/ untuk URL biasa). Setelah ada konten, ganti bahasa utama dengan php artisan sunrice:switch-main-language.",
-    "The first is the main language. Address: what its URLs start with (/ for plain ones). Once there is content, change the main one with the buttons beside the form.": "Yang pertama adalah bahasa utama. Alamat: awalan URL-nya (/ untuk yang biasa). Setelah ada konten, ganti bahasa utama dengan tombol di samping formulir.",
     "the form \":title\"": "formulir \":title\"",
     "the global set \":title\"": "set global \":title\"",
     "The homepage, the site's name and description, and structured data.": "Beranda, nama dan deskripsi situs, serta structured data.",
@@ -749,7 +747,6 @@
     "The live page shown at / in each language it's published in. Its own address redirects there. Editors with \"Choose the homepage\" set it from the page's editor.": "Halaman tayang yang ditampilkan di / dalam setiap bahasa tempat halaman itu terbit. Alamatnya sendiri dialihkan ke sana. Editor dengan izin \"Memilih beranda\" mengaturnya dari penyunting halaman.",
     "the main language": "bahasa utama",
     "The main language can't be removed; move the entry to the trash instead.": "Bahasa utama tidak bisa dihapus; pindahkan entri ke tempat sampah saja.",
-    "The main language is at the plain addresses (/about) and holds the values all languages share. Switching moves those values, gives the old main language its own addresses (/:main/about, redirected from the old ones) and lists the new one first. Every entry and term needs a translation in the new main language first.": "Bahasa utama berada di alamat biasa (/about) dan menyimpan nilai yang dipakai bersama semua bahasa. Menggantinya memindahkan nilai-nilai itu, memberi bahasa utama lama alamatnya sendiri (/:main/about, dialihkan dari yang lama), dan menaruh yang baru di urutan pertama. Setiap entri dan term perlu terjemahan dalam bahasa utama baru lebih dulu.",
     "The main version changed since this translation was last saved.": "Versi utama berubah sejak terjemahan ini terakhir disimpan.",
     "The new handle stays where the field is: give only the new name.": "Handle baru tetap di posisi field: berikan namanya saja.",
     "The page listing the term's entries, in each language. Its title is the label unless you give one.": "Halaman yang mendaftar entri term ini, di setiap bahasa. Judulnya menjadi label kecuali Anda memberinya.",
@@ -956,5 +953,9 @@
     "Employment agency": "Agen tenaga kerja",
     "Add profile": "Tambah profil",
     "The publisher's pages on other sites: Instagram, LinkedIn, Wikipedia…": "Halaman penerbit di situs lain: Instagram, LinkedIn, Wikipedia…",
-    "Up to :max addresses.": "Maksimal :max alamat."
+    "Up to :max addresses.": "Maksimal :max alamat.",
+    "The first is the main language.": "Yang pertama adalah bahasa utama.",
+    "As visitors read it": "Seperti yang dibaca pengunjung",
+    "Start of its URLs": "Awal URL-nya",
+    "Its pages have the plain addresses (/about) and hold what all languages share. Switching gives :main its own addresses (/:main/about, redirected) and needs every entry and term translated into the new one first.": "Halamannya memakai alamat biasa (/about) dan menyimpan apa yang dipakai bersama semua bahasa. Mengganti bahasa utama memberi :main alamatnya sendiri (/:main/about, dengan pengalihan) dan mengharuskan setiap entri dan term sudah diterjemahkan ke bahasa yang baru."
 }

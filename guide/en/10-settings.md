@@ -20,7 +20,7 @@ The share image, the site name in titles and its separator, the X (Twitter) acco
 
 ## Languages
 
-**Content languages** lists the languages content is written in, a row each: the **code** used in addresses (`id`) and the **name** editors see (`Bahasa Indonesia`). **Add a language** adds a row; typing a code suggests common languages and fills in the name. **Address** is what the language's pages' addresses start with: leave it empty for the usual (the main language at `/about`, the others at `/id/about`), or type your own, such as `en` to put the main language at `/en/about` too. The arrows change the order, and × removes a row.
+**Content languages** lists the languages content is written in, a row each: the **code** used in addresses (`id`) and the **name** editors see (`Bahasa Indonesia`). **Add a language** adds a row; its code opens a list of common languages to search by code or name ("Bahasa Melayu · ms"), and choosing one fills in the name. For a language that isn't listed, type its code and choose **Use “…”**. **Address** is what the language's pages' addresses start with: leave it empty for the usual (the main language at `/about`, the others at `/id/about`), or type your own, such as `en` to put the main language at `/en/about` too. The arrows change the order, and × removes a row.
 
 Until you save it, the list shows the languages your site was set up with. The first row is the **main language** (marked *Main*), at the plain addresses (`/about`); the others get their code in front (`/id/about`). The panel refuses an empty list, a row that isn't a language code and a language listed twice.
 

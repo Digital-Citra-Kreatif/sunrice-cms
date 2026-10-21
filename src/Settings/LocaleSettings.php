@@ -68,7 +68,8 @@ final class LocaleSettings extends Settings
                 ->suggest(self::KNOWN + Locales::names())->firstBadge(__('Main'))->addLabel('Add a language')
                 ->rules([fn (string $attribute, mixed $value, Closure $fail) => self::check($value, $fail)])
                 ->extra(__('Address'), '/{key}', '/')
-                ->help('The first is the main language. Address: what its URLs start with (/ for plain ones). Once there is content, change the main one with the buttons beside the form.'),
+                ->hints('en, id, pt_BR…', 'As visitors read it', 'Start of its URLs')
+                ->help('The first is the main language.'),
         ]);
     }
 
@@ -77,7 +78,7 @@ final class LocaleSettings extends Settings
     {
         $main = Locales::default();
         $card = Card::make('Main language')
-            ->description(self::said('The main language is at the plain addresses (/about) and holds the values all languages share. Switching moves those values, gives the old main language its own addresses (/:main/about, redirected from the old ones) and lists the new one first. Every entry and term needs a translation in the new main language first.', ['main' => $main]))
+            ->description(self::said('Its pages have the plain addresses (/about) and hold what all languages share. Switching gives :main its own addresses (/:main/about, redirected) and needs every entry and term translated into the new one first.', ['main' => $main]))
             ->rows(['Main language' => Locales::name($main)." ({$main})"]);
         foreach (Locales::names() as $code => $name) {
             if ($code !== $main) {

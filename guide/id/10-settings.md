@@ -20,7 +20,7 @@ Gambar berbagi, nama situs di judul beserta pemisahnya, akun X (Twitter), dan me
 
 ## Bahasa
 
-**Bahasa konten** berisi bahasa tempat konten ditulis, satu baris untuk tiap bahasa: **kode** yang dipakai di alamat (`id`) dan **nama** yang dilihat editor (`Bahasa Indonesia`). **Tambah bahasa** menambah baris; mengetik kode akan menyarankan bahasa umum dan mengisi namanya. **Alamat** adalah awalan alamat halaman bahasa itu: kosongkan untuk yang biasa (bahasa utama di `/about`, yang lain di `/id/about`), atau isi sendiri, misalnya `en` agar bahasa utama juga di `/en/about`. Tanda panah mengubah urutan, dan × menghapus baris.
+**Bahasa konten** berisi bahasa tempat konten ditulis, satu baris untuk tiap bahasa: **kode** yang dipakai di alamat (`id`) dan **nama** yang dilihat editor (`Bahasa Indonesia`). **Tambah bahasa** menambah baris; kodenya membuka daftar bahasa umum yang bisa dicari menurut kode atau nama ("Bahasa Melayu · ms"), dan memilih salah satunya mengisi namanya. Untuk bahasa yang tidak ada di daftar, ketik kodenya lalu pilih **Pakai “…”**. **Alamat** adalah awalan alamat halaman bahasa itu: kosongkan untuk yang biasa (bahasa utama di `/about`, yang lain di `/id/about`), atau isi sendiri, misalnya `en` agar bahasa utama juga di `/en/about`. Tanda panah mengubah urutan, dan × menghapus baris.
 
 Baris pertama adalah **bahasa utama** (bertanda *Utama*), di alamat biasa (`/about`); bahasa lain diawali kodenya (`/id/about`). Sebelum disimpan, daftar ini menampilkan bahasa yang dipakai situs saat disiapkan. Panel menolak daftar kosong, baris yang bukan kode bahasa, dan bahasa yang tercantum dua kali.
 
