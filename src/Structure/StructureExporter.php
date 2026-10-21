@@ -59,14 +59,16 @@ final class StructureExporter
             // Translations only when there are some, after the rest.
             'collections' => Collection::query()->with('listings')->orderBy('handle')->get()->map(fn (Collection $c): array => [
                 // "blueprints" only when it offers more than its own.
-                ...array_diff_key($c->only(StructureImporter::COLLECTION), ['translations' => true], $c->blueprints === null ? ['blueprints' => true] : []),
+                ...array_diff_key($c->only(StructureImporter::COLLECTION), ['translations' => true, 'routes' => true], $c->blueprints === null ? ['blueprints' => true] : []),
                 'listings' => (object) $c->listings->sortBy('locale')->mapWithKeys(fn (CollectionListing $l): array => [$l->locale => $l->data])->all(),
                 ...($c->translations !== null ? ['translations' => $c->translations] : []),
+                ...($c->routes !== null ? ['routes' => $c->routes] : []),
             ])->all(),
             'taxonomies' => Taxonomy::query()->with('collections')->orderBy('handle')->get()->map(fn (Taxonomy $t): array => [
-                ...array_diff_key($t->only(StructureImporter::TAXONOMY), ['translations' => true]),
+                ...array_diff_key($t->only(StructureImporter::TAXONOMY), ['translations' => true, 'routes' => true]),
                 'collections' => $t->collections->pluck('handle')->sort()->values()->all(),
                 ...($t->translations !== null ? ['translations' => $t->translations] : []),
+                ...($t->routes !== null ? ['routes' => $t->routes] : []),
             ])->all(),
             'globals' => GlobalSet::query()->with('values')->orderBy('handle')->get()->map(fn (GlobalSet $g): array => [
                 ...$g->only(StructureImporter::GLOBAL_SET),

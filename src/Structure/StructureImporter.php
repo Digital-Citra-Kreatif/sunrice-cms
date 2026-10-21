@@ -41,7 +41,9 @@ use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Settings\LocaleSettings;
+use Sunrice\Cms\Site\RouteConflicts;
 use Sunrice\Cms\Site\RoutePattern;
+use Sunrice\Cms\Site\RoutePatternRule;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\SafeUrl;
 use Sunrice\Cms\Support\Seo;
@@ -72,9 +74,9 @@ final class StructureImporter
     public const SECTIONS = ['fieldsets', 'blueprints', 'collections', 'taxonomies', 'globals', 'forms', 'terms', 'entries', 'menus', 'redirects'];
 
     /** A collection's settings in the file. */
-    public const COLLECTION = ['handle', 'title', 'blueprint', 'blueprints', 'dated', 'translatable', 'ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template', 'translations', ...self::SEO_FIELDS];
+    public const COLLECTION = ['handle', 'title', 'blueprint', 'blueprints', 'dated', 'translatable', 'ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template', 'translations', 'routes', ...self::SEO_FIELDS];
 
-    public const TAXONOMY = ['handle', 'title', 'hierarchical', 'route', 'blueprint', 'template', 'translations', ...self::SEO_FIELDS];
+    public const TAXONOMY = ['handle', 'title', 'hierarchical', 'route', 'blueprint', 'template', 'translations', 'routes', ...self::SEO_FIELDS];
 
     /** Which fields fill in what an entry's or term's SEO card leaves empty. */
     public const SEO_FIELDS = ['seo_title_field', 'seo_description_field', 'seo_image_field'];
@@ -87,6 +89,9 @@ final class StructureImporter
         'translations.*' => ['array'],
         'translations.*.*' => ['nullable', 'string', 'max:1000'],
     ];
+
+    /** Not carried: the patterns this site's languages had before, which redirect here (HasLanguageRoutes). */
+    public const NOT_CARRIED = ['previous_routes'];
 
     public const FORM = ['handle', 'title', 'blueprint', 'notify', 'notify_roles', 'message', 'redirect_url', 'per_minute', 'captcha', 'translations'];
 
@@ -293,17 +298,21 @@ final class StructureImporter
             'blueprint' => ['nullable', 'string', Rule::exists((new Blueprint)->getTable(), 'handle')],
             'listing_blueprint' => ['nullable', 'string', Rule::exists((new Blueprint)->getTable(), 'handle')],
             'dated' => ['sometimes', 'boolean'], 'translatable' => ['sometimes', 'boolean'], 'ordered' => ['sometimes', 'boolean'], 'hierarchical' => ['sometimes', 'boolean'], 'comments' => ['sometimes', 'boolean'],
-            'route' => ['nullable', 'string', 'max:255', Rule::unique((new Collection)->getTable(), 'route')->ignore($id), self::routeRule()],
+            'route' => ['nullable', 'string', 'max:255', Rule::unique((new Collection)->getTable(), 'route')->ignore($id), new RoutePatternRule],
             'listing_route' => ['nullable', 'string', 'max:255', 'regex:#^(/[a-z0-9\-_]+)+$#', Rule::unique((new Collection)->getTable(), 'listing_route')->ignore($id)],
+            ...self::routesRules(['route' => new RoutePatternRule, 'listing_route' => 'regex:#^(/[a-z0-9\-_]+)+$#']),
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
             'schema_type' => ['nullable', 'string', Rule::in(array_keys(StructuredData::ENTRY_TYPES))],
             'template' => self::TEMPLATE,
             ...array_fill_keys(self::SEO_FIELDS, self::FIELD_HANDLE),
             ...self::TRANSLATIONS,
         ])->validate();
+        self::checkRoutes($existing ?? new Collection, $validated, ['route', 'listing_route']);
         $before = $existing?->only(self::COLLECTION);
         $collection = app(SaveCollection::class)->handle(array_intersect_key($item, array_flip(['title', 'blueprint', 'blueprints', 'dated', 'translatable'])) + ($existing === null ? ['handle' => $item['handle']] : []), $existing);
-        $collection->forceFill(array_intersect_key($validated, array_flip(['ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template', 'translations', ...self::SEO_FIELDS])))->save();
+        $collection->forceFill(array_intersect_key($validated, array_flip(['ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template', 'translations', ...self::SEO_FIELDS])));
+        self::fillRoutes($collection, $validated, ['route', 'listing_route']);
+        $collection->save();
         $this->report->add('collection', $collection->handle, $this->status($before, $collection->only(self::COLLECTION)));
     }
 
@@ -338,6 +347,7 @@ final class StructureImporter
             'title' => ['required', 'string', 'max:255'],
             'hierarchical' => ['sometimes', 'boolean'],
             'route' => ['nullable', 'string', 'max:255', Rule::unique((new Taxonomy)->getTable(), 'route')->ignore($existing->id ?? 0), self::routeRule()],
+            ...self::routesRules(['route' => self::routeRule()]),
             'blueprint' => ['nullable', 'string', Rule::exists((new Blueprint)->getTable(), 'handle')],
             'template' => self::TEMPLATE,
             ...array_fill_keys(self::SEO_FIELDS, self::FIELD_HANDLE),
@@ -347,7 +357,10 @@ final class StructureImporter
         ])->validate();
         $before = $existing === null ? null : [...$existing->only(self::TAXONOMY), 'collections' => $existing->collections()->pluck('handle')->sort()->values()->all()];
         $taxonomy = $existing ?? new Taxonomy;
-        $taxonomy->fill(array_intersect_key($validated, array_flip(self::TAXONOMY)))->save();
+        self::checkRoutes($taxonomy, $validated, ['route']);
+        $taxonomy->fill(array_intersect_key($validated, array_flip(array_diff(self::TAXONOMY, ['routes']))));
+        self::fillRoutes($taxonomy, $validated, ['route']);
+        $taxonomy->save();
         if (array_key_exists('collections', $validated)) {
             $taxonomy->collections()->sync(Collection::query()->whereIn('handle', $validated['collections'])->pluck('id')->all());
         }
@@ -1049,6 +1062,69 @@ final class StructureImporter
     private static function text(mixed $value): string
     {
         return is_string($value) ? $value : '';
+    }
+
+    /**
+     * The rules for the other languages' own patterns: {"id": {"route": "/buku/{slug}"}}.
+     *
+     * @param  array<string, mixed>  $rules  each attribute's pattern rule
+     * @return array<string, list<mixed>>
+     */
+    private static function routesRules(array $rules): array
+    {
+        $all = ['routes' => ['sometimes', 'nullable', 'array'], 'routes.*' => ['array:'.implode(',', array_keys($rules))]];
+        foreach ($rules as $attribute => $rule) {
+            $all["routes.*.{$attribute}"] = ['nullable', 'string', 'max:255', $rule];
+        }
+
+        return $all;
+    }
+
+    /**
+     * No other collection (or taxonomy) may have a pattern in a language
+     * the file gives this one there, own or main (RouteConflicts).
+     *
+     * @param  array<mixed>  $validated
+     * @param  list<string>  $attributes
+     */
+    private static function checkRoutes(Collection|Taxonomy $record, array $validated, array $attributes): void
+    {
+        $routes = is_array($validated['routes'] ?? null) ? $validated['routes'] : (array_key_exists('routes', $validated) ? [] : ($record->routes ?? []));
+        $errors = [];
+        foreach (array_slice(Locales::all(), 1) as $locale) {
+            foreach ($attributes as $attribute) {
+                $main = array_key_exists($attribute, $validated) ? $validated[$attribute] : $record->getAttribute($attribute);
+                $own = is_array($routes[$locale] ?? null) ? ($routes[$locale][$attribute] ?? null) : null;
+                $pattern = is_string($own) && $own !== '' ? $own : $main;
+                if (is_string($main) && $main !== '' && is_string($pattern) && ($other = RouteConflicts::find($record, $attribute, $locale, $pattern)) !== null) {
+                    $errors["routes.{$locale}.{$attribute}"] = "{$other} has the address {$pattern} in {$locale} already.";
+                }
+            }
+        }
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+    }
+
+    /**
+     * The file's own patterns of the other languages, when it has them.
+     *
+     * @param  array<mixed>  $validated
+     * @param  list<string>  $attributes
+     */
+    private static function fillRoutes(Collection|Taxonomy $record, array $validated, array $attributes): void
+    {
+        if (! array_key_exists('routes', $validated)) {
+            return;
+        }
+        $routes = is_array($validated['routes']) ? $validated['routes'] : [];
+        $record->routes = null;
+        foreach ($routes as $locale => $own) {
+            foreach ($attributes as $attribute) {
+                $pattern = is_array($own) ? ($own[$attribute] ?? null) : null;
+                $record->setOwnRoute((string) $locale, is_string($pattern) ? $pattern : null, $attribute);
+            }
+        }
     }
 
     private static function routeRule(): Closure
