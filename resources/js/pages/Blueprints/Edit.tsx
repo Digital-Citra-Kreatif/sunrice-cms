@@ -3,10 +3,11 @@ import { Head, router, useForm } from '@inertiajs/react';
 import { LoaderCircle, Trash2 } from 'lucide-react';
 import { adminUrl, t } from '@sunrice/admin-sdk';
 import { Button, Card, CardContent, Input, Label, PageHeader, useBreadcrumbs, useUnsavedChanges } from '@sunrice/admin-sdk/ui';
+import { ChangeWarning } from '@/components/ChangeWarning.tsx';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { FieldBuilder } from '@/components/FieldBuilder.tsx';
 import { FieldError } from '@/components/FieldInput.tsx';
-import { type BuilderField, cleanHandle, errorsUnder, fromDefinitions, handleFromLabel, toDefinitions } from '@/lib/builder.ts';
+import { type BuilderField, cleanHandle, errorsUnder, fromDefinitions, handleFromLabel, markSaved, toDefinitions } from '@/lib/builder.ts';
 import type { FieldDefinition, FieldTypeInfo, LocaleInfo, Option } from '@/types.ts';
 
 interface Props {
@@ -54,7 +55,10 @@ export default function BlueprintForm({ kind = 'blueprint', blueprint, fieldType
     const dirty = form.isDirty || JSON.stringify(fields) !== savedFields;
     const saved = () => {
         form.setDefaults();
-        setSavedFields(JSON.stringify(fields));
+        // The handles just saved are the ones content keeps values under now.
+        const next = markSaved(fields);
+        setFields(next);
+        setSavedFields(JSON.stringify(next));
     };
 
     const save = () => {
@@ -120,6 +124,13 @@ export default function BlueprintForm({ kind = 'blueprint', blueprint, fieldType
                         <Input id="handle" className="cms:font-mono" value={form.data.handle} disabled={blueprint !== null && kind === 'fieldset'} required spellCheck={false}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setHandleTouched(true); form.setData('handle', cleanHandle(e.target.value)); }} />
                         <p className="cms:text-sm cms:text-muted-foreground">{handleHelp(kind, blueprint !== null)}</p>
+                        <div aria-live="polite">
+                            {blueprint !== null && kind === 'blueprint' && form.data.handle !== '' && form.data.handle !== blueprint.handle && (
+                                <ChangeWarning id="handle-warning">
+                                    {t('Changing the handle can break code. Sunrice updates the collections, taxonomies, global sets, forms and entries that use ":old". You update code that names it (Blueprint::where(\'handle\', \':old\')) and structure exports made before.', { old: blueprint.handle })}
+                                </ChangeWarning>
+                            )}
+                        </div>
                         <FieldError message={errors.handle} />
                     </div>
                 </CardContent>

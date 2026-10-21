@@ -40,7 +40,7 @@ Media files are tracked by the panel's `MediaUsages` instead ([media](../../admi
 
 ## Renaming a field
 
-A field's handle is the key its values are stored under, so renaming it in the builder would leave the stored values behind. Rename it with the command instead:
+A field's handle is the key its values are stored under, so renaming it in the builder would leave the stored values behind (and templates reading the old handle get nothing). The builder warns under a saved field's handle once it's changed, until the blueprint is saved. Rename it with the command instead:
 
 ```bash
 php artisan sunrice:rename-field page subtitle tagline           # a blueprint's field

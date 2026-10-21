@@ -57,7 +57,7 @@ final class TaxonomyResource extends Resource
         return $form->schema([
             Section::make('General')->columns(2)->schema([
                 TextInput::make('title')->required(),
-                ...HandleField::make('taxonomy', 'Used in templates and code, like "categories".', HandleField::WARNING),
+                ...HandleField::make('taxonomy', 'Used in templates and code, like "categories".'),
                 ...TranslatedFields::make('title', fn (string $name, string $language) => TextInput::make($name)->label(__('Title in :language', ['language' => $language]))->maxLength(255)
                     ->placeholder('As the title')->help(__('What visitors read in :language on its term pages.', ['language' => $language]))),
                 Toggle::make('hierarchical')->label('Nested terms')->span(2)->help('Terms can sit under other terms, like subcategories.'),

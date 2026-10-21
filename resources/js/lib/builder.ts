@@ -13,6 +13,8 @@ export interface BuilderField extends Omit<FieldDefinition, 'fields'> {
     fields: BuilderField[];
     /** Whether the handle was typed (then the label no longer changes it). */
     handleTouched: boolean;
+    /** The handle it was saved with (none for a field added since): content keeps its values under it. */
+    savedHandle?: string;
 }
 
 let next = 0;
@@ -69,12 +71,13 @@ export function fromDefinitions(definitions: FieldDefinition[] | undefined): Bui
         key: newKey(),
         fields: fromDefinitions(fields),
         handleTouched: true,
+        savedHandle: definition.handle,
     }));
 }
 
 /** What is sent to the server: definitions without the builder's keys, children only where they belong. */
 export function toDefinitions(fields: BuilderField[], hasChildren: (type: string) => boolean): FieldDefinition[] {
-    return fields.map(({ key: _key, handleTouched: _touched, fields: children, ...definition }) => ({
+    return fields.map(({ key: _key, handleTouched: _touched, savedHandle: _saved, fields: children, ...definition }) => ({
         ...definition,
         validation: (definition.validation ?? []).map((rule) => rule.trim()).filter((rule) => rule !== ''),
         ...(hasChildren(definition.type) ? { fields: toDefinitions(children, hasChildren) } : {}),
@@ -83,6 +86,20 @@ export function toDefinitions(fields: BuilderField[], hasChildren: (type: string
 
 export function newField(type: string, label: string, siblings: BuilderField[]): BuilderField {
     return { key: newKey(), type, label, handle: uniqueHandle(label, siblings), required: false, config: {}, fields: [], handleTouched: false };
+}
+
+/**
+ * Whether a saved field's handle was changed: its values stay stored under
+ * the old one, out of sight (sunrice:rename-field moves them). A fieldset
+ * include has no handle of its own.
+ */
+export function renamedFrom(field: Pick<BuilderField, 'handle' | 'type' | 'savedHandle'>): string | null {
+    return field.type !== 'fieldset' && field.savedHandle !== undefined && field.savedHandle !== '' && field.handle !== field.savedHandle ? field.savedHandle : null;
+}
+
+/** The fields once saved: their handles now are the ones content keeps values under. */
+export function markSaved(fields: BuilderField[]): BuilderField[] {
+    return fields.map((field) => ({ ...field, savedHandle: field.handle, fields: markSaved(field.fields) }));
 }
 
 /** Moves the item at `from` one place up (-1) or down (+1); out of range does nothing. */

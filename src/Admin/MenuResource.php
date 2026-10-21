@@ -66,7 +66,7 @@ final class MenuResource extends Resource
     {
         return $form->schema([
             TextInput::make('title')->required(),
-            ...HandleField::make('menu', 'Used in templates, like "main" or "footer".', HandleField::WARNING),
+            ...HandleField::make('menu', 'Used in templates, like "main" or "footer".'),
         ]);
     }
 

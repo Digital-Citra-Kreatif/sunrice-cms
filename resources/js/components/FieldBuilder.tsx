@@ -5,8 +5,9 @@ import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SortableHandle, SortableList, Switch, Textarea,
 } from '@sunrice/admin-sdk/ui';
 import { t } from '@sunrice/admin-sdk';
+import { ChangeWarning } from '@/components/ChangeWarning.tsx';
 import { FieldError, FieldInput } from '@/components/FieldInput.tsx';
-import { type BuilderField, cleanHandle, errorsAt, errorsUnder, handleWarning, hasErrors, MAX_DEPTH, newField, relabel, type ReservedHandles } from '@/lib/builder.ts';
+import { type BuilderField, cleanHandle, errorsAt, errorsUnder, handleWarning, hasErrors, MAX_DEPTH, newField, relabel, renamedFrom, type ReservedHandles } from '@/lib/builder.ts';
 import { OPERATORS } from '@/lib/conditions.ts';
 import type { Errors, FieldCondition, FieldTranslation, FieldTypeInfo, LocaleInfo } from '@/types.ts';
 
@@ -156,6 +157,13 @@ function FieldSettings({ id, field, type, siblings, onChange, types, errors, dep
                     <Input id={`${id}-handle`} className="cms:font-mono" value={field.handle}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...field, handle: cleanHandle(e.target.value), handleTouched: true })} />
                     <p className="cms:text-sm cms:text-muted-foreground">{t('How templates read it. Renaming it hides values saved under the old one.')}</p>
+                    <div aria-live="polite">
+                        {renamedFrom(field) !== null && (
+                            <ChangeWarning>
+                                {t('Content saved under ":old" won\'t show under the new handle, and templates that read ":old" get nothing. To keep it, put back ":old", save, and run php artisan sunrice:rename-field, which renames the field and moves its values.', { old: renamedFrom(field) ?? '' })}
+                            </ChangeWarning>
+                        )}
+                    </div>
                     <FieldError message={errors.handle ?? warning ?? undefined} />
                 </div>
             </div>
