@@ -83,7 +83,7 @@ Each field's row shows its type, label and handle, with **Duplicate** (a copy ri
 
 **Structure → Forms**: a **Title**, a **Handle** (changeable later, as for collections), a **Blueprint** with the form's fields (visitors get the text, textarea, number, toggle, select, date and file ones), and:
 
-- **Email to**: addresses that receive each submission, one per line; **Also email roles**: everyone with these roles too.
+- **Email to**: addresses that receive each submission (**Add address** for each); **Also email roles**: everyone with these roles too.
 - **Thank-you message**: shown after sending (with one per other language on a multilingual site; empty there, the website's own thank-you in that language); or **After sending, go to** a page of your choice.
 - **Sends per visitor a minute** and **Require a captcha**, against spam.
 

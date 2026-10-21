@@ -83,7 +83,7 @@ Baris setiap field menampilkan tipe, label, dan handle-nya, dengan **Duplikat** 
 
 **Struktur → Formulir**: **Judul**, **Handle** (bisa diubah nanti, seperti pada koleksi), **Blueprint** berisi field formulir (pengunjung mendapat field teks, textarea, angka, toggle, pilihan, tanggal, dan file), serta:
 
-- **Email ke**: alamat yang menerima setiap kiriman, satu per baris; **Email juga ke peran**: semua orang dengan peran ini juga.
+- **Email ke**: alamat yang menerima setiap kiriman (**Tambah alamat** untuk masing-masing); **Email juga ke peran**: semua orang dengan peran ini juga.
 - **Pesan terima kasih**: tampil setelah mengirim (di situs multibahasa, satu per bahasa lain; jika kosong, ucapan terima kasih bawaan situs dalam bahasa itu); atau **Lalu buka** halaman pilihan Anda.
 - **Kiriman per pengunjung per menit** dan **Wajibkan captcha**, untuk mencegah spam.
 

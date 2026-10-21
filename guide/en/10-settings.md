@@ -16,7 +16,7 @@ Settings are live as soon as you click **Save**.
 
 The share image, the site name in titles and its separator, the X (Twitter) account and hiding the whole site from search engines are in **Settings → SEO** (right after Site in the Settings menu; see [SEO](guide:website/seo)).
 
-**Structured data**: **Add structured data to pages** (on unless you have a reason), whether the site is **Published by** an organisation or a person, and the organisation's **Logo** (square or wide, at least 112 pixels). Search engines also like the publisher's details: its **Name** (empty: the site name), the **Organization type** (search the list: *Local business*, *Real estate agent*, *Restaurant*…; or choose **Other…** and type any schema.org type as one word, like *Brewery*), **Phone**, **Address** and **Profiles elsewhere** (its Instagram, LinkedIn… pages, one address per line).
+**Structured data**: **Add structured data to pages** (on unless you have a reason), whether the site is **Published by** an organisation or a person, and the organisation's **Logo** (square or wide, at least 112 pixels). Search engines also like the publisher's details: its **Name** (empty: the site name), the **Organization type** (search the list: *Local business*, *Real estate agent*, *Restaurant*…; or choose **Other…** and type any schema.org type as one word, like *Brewery*), **Phone**, **Address** and **Profiles elsewhere** (its Instagram, LinkedIn… pages: **Add profile** for each, an address starting with https://; the site it's on shows beside it).
 
 ## Languages
 

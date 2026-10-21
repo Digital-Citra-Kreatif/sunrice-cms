@@ -16,7 +16,7 @@ Pengaturan langsung berlaku begitu Anda mengeklik **Simpan**.
 
 Gambar berbagi, nama situs di judul beserta pemisahnya, akun X (Twitter), dan menyembunyikan seluruh situs dari mesin pencari ada di **Pengaturan → SEO** (tepat setelah Situs pada menu Pengaturan; lihat [SEO](guide:website/seo)).
 
-**Structured data**: **Tambahkan structured data ke halaman** (biarkan menyala kecuali ada alasan), apakah situs diterbitkan oleh organisasi atau perorangan (**Diterbitkan oleh**), dan **Logo** organisasi (persegi atau melebar, minimal 112 piksel). Mesin pencari juga menyukai detail penerbit: **Nama** (kosong: nama situs), **Jenis organisasi** (cari di daftar: *Usaha lokal*, *Agen properti*, *Restoran*…; atau pilih **Lainnya…** dan ketik jenis schema.org apa pun sebagai satu kata, misalnya *Brewery*), **Telepon**, **Alamat**, dan **Profil di tempat lain** (halaman Instagram, LinkedIn… penerbit, satu alamat per baris).
+**Structured data**: **Tambahkan structured data ke halaman** (biarkan menyala kecuali ada alasan), apakah situs diterbitkan oleh organisasi atau perorangan (**Diterbitkan oleh**), dan **Logo** organisasi (persegi atau melebar, minimal 112 piksel). Mesin pencari juga menyukai detail penerbit: **Nama** (kosong: nama situs), **Jenis organisasi** (cari di daftar: *Usaha lokal*, *Agen properti*, *Restoran*…; atau pilih **Lainnya…** dan ketik jenis schema.org apa pun sebagai satu kata, misalnya *Brewery*), **Telepon**, **Alamat**, dan **Profil di tempat lain** (halaman Instagram, LinkedIn… penerbit: **Tambah profil** untuk masing-masing, alamat yang diawali https://; situsnya tampil di sebelahnya).
 
 ## Bahasa
 

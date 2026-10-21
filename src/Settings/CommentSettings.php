@@ -6,9 +6,9 @@ namespace Sunrice\Cms\Settings;
 
 use Sunrice\Admin\Resources\Forms\CheckboxList;
 use Sunrice\Admin\Resources\Forms\Form;
+use Sunrice\Admin\Resources\Forms\ListInput;
 use Sunrice\Admin\Resources\Forms\NumberInput;
 use Sunrice\Admin\Resources\Forms\Select;
-use Sunrice\Admin\Resources\Forms\Textarea;
 use Sunrice\Admin\Resources\Forms\Toggle;
 use Sunrice\Admin\Security\Captcha;
 use Sunrice\Admin\Settings\Settings;
@@ -87,16 +87,7 @@ final class CommentSettings extends Settings
                 ->help('Deeper replies show at the last level.'),
             Toggle::make('notifyModerators')->label('Email moderators about new comments')
                 ->help('Moderators, and the addresses below.'),
-            Textarea::make('notifyEmails')->label('Also email')->rows(2)->maxLength(1000)->placeholder('editor@example.com')
-                ->rules(['nullable', function (string $attribute, mixed $value, \Closure $fail): void {
-                    foreach (self::lines($value) as $address) {
-                        if (filter_var($address, FILTER_VALIDATE_EMAIL) === false) {
-                            $fail(__('":address" isn\'t an email address.', ['address' => $address]));
-
-                            return;
-                        }
-                    }
-                }]),
+            ListInput::make('notifyEmails')->label('Also email')->emails()->addLabel('Add address')->max(50)->maxLength(1000)->placeholder('editor@example.com'),
             CheckboxList::make('notifyRoles')->label('Also email roles')->verbatim()->options(fn (): array => RoleMembers::options())
                 ->help('Everyone with these roles, besides the moderators and addresses above.'),
             Toggle::make('replyNotifications')->label('Let commenters get an email when someone replies')

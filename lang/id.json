@@ -1,6 +1,4 @@
 {
-    "\":address\" isn't a web address (https://…).": "\":address\" bukan alamat web (https://…).",
-    "\":address\" isn't an email address.": "\":address\" bukan alamat email.",
     "\":code\" isn't one of the site's languages (:languages). Add it in Settings → Languages first.": "\":code\" bukan salah satu bahasa situs (:languages). Tambahkan dulu di Pengaturan → Bahasa.",
     "\":field\" isn't a field :owner can use for that.": "\":field\" bukan field yang bisa dipakai :owner untuk itu.",
     "\":handle\" can't be a handle: use lowercase letters, numbers and underscores, starting with a letter (like hero_image).": "\":handle\" tidak bisa menjadi handle: gunakan huruf kecil, angka, dan garis bawah, diawali huruf (seperti hero_image).",
@@ -532,8 +530,6 @@
     "On": "Pada",
     "On by default": "Aktif secara bawaan",
     "Once someone creates a form and puts it on a page, what visitors send shows up here.": "Setelah seseorang membuat formulir dan memasangnya di sebuah halaman, kiriman pengunjung akan muncul di sini.",
-    "One address per line, up to :max.": "Satu alamat per baris, maksimal :max.",
-    "One address per line: the publisher's pages on Instagram, LinkedIn, Wikipedia…": "Satu alamat per baris: halaman penerbit di Instagram, LinkedIn, Wikipedia…",
     "One per line, with the language's code: \"id: Rumah premium di Jakarta dan Bali\". A language left out uses the description above.": "Satu per baris, dengan kode bahasanya: \"id: Rumah premium di Jakarta dan Bali\". Bahasa yang tidak dicantumkan memakai deskripsi di atas.",
     "Only a link to a listing page takes filters.": "Hanya tautan ke halaman daftar yang bisa memakai filter.",
     "Only a page (an entry of a collection with a URL) can be the homepage.": "Hanya halaman (entri dari koleksi yang punya URL) yang bisa menjadi beranda.",
@@ -820,7 +816,6 @@
     "Use a view name like :example: lowercase letters, digits, dashes, dots.": "Gunakan nama view seperti :example: huruf kecil, angka, tanda hubung, titik.",
     "Use a view under :prefixes, like :example.": "Gunakan view di bawah :prefixes, seperti :example.",
     "Use a web address (https://…), a path on this site (/about), mailto: or tel:.": "Gunakan alamat web (https://…), path di situs ini (/about), mailto:, atau tel:.",
-    "Use at most :max addresses.": "Gunakan maksimal :max alamat.",
     "Use lowercase letters, digits and dashes (about-us).": "Gunakan huruf kecil, angka, dan tanda hubung (tentang-kami).",
     "Use lowercase letters, digits and underscores, starting with a letter.": "Gunakan huruf kecil, angka, dan garis bawah, diawali huruf.",
     "Use lowercase letters, digits and underscores, starting with a letter: try \":handle\".": "Gunakan huruf kecil, angka, dan garis bawah, diawali huruf: coba \":handle\".",
@@ -958,5 +953,8 @@
     "Car repair": "Bengkel mobil",
     "Home and construction": "Rumah dan konstruksi",
     "Child care": "Penitipan anak",
-    "Employment agency": "Agen tenaga kerja"
+    "Employment agency": "Agen tenaga kerja",
+    "Add profile": "Tambah profil",
+    "The publisher's pages on other sites: Instagram, LinkedIn, Wikipedia…": "Halaman penerbit di situs lain: Instagram, LinkedIn, Wikipedia…",
+    "Up to :max addresses.": "Maksimal :max alamat."
 }

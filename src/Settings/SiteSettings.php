@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sunrice\Cms\Settings;
 
 use Sunrice\Admin\Resources\Forms\Form;
+use Sunrice\Admin\Resources\Forms\ListInput;
 use Sunrice\Admin\Resources\Forms\MediaPicker;
 use Sunrice\Admin\Resources\Forms\Pairs;
 use Sunrice\Admin\Resources\Forms\Section;
@@ -149,9 +150,9 @@ final class SiteSettings extends Settings
                     ->help('What search engines are told the organization is. Other…: any schema.org type, written as one word.'),
                 TextInput::make('telephone')->label('Phone')->maxLength(40)->placeholder('+62 21 555 0100'),
                 Textarea::make('address')->label('Address')->rows(2)->maxLength(300),
-                Textarea::make('sameAs')->label('Profiles elsewhere')->rows(3)->maxLength(2000)->span(2)
-                    ->rules([fn (string $attribute, mixed $value, \Closure $fail) => self::checkProfiles($value, $fail)])
-                    ->help('One address per line: the publisher\'s pages on Instagram, LinkedIn, Wikipedia…'),
+                ListInput::make('sameAs')->label('Profiles elsewhere')->urls(httpsOnly: true)->networks()->addLabel('Add profile')
+                    ->max(20)->maxLength(2000)->span(2)
+                    ->help('The publisher\'s pages on other sites: Instagram, LinkedIn, Wikipedia…'),
             ]),
         ]);
     }
@@ -159,20 +160,7 @@ final class SiteSettings extends Settings
     /** @return list<string> the profile addresses (sameAs), one per line */
     public function profiles(): array
     {
-        return array_values(array_filter(array_map(trim(...), preg_split('/\R/', $this->sameAs) ?: []), fn (string $line) => $line !== ''));
-    }
-
-    /** @param \Closure(string): mixed $fail */
-    public static function checkProfiles(mixed $value, \Closure $fail): void
-    {
-        foreach (preg_split('/\R/', is_string($value) ? $value : '') ?: [] as $line) {
-            $line = trim($line);
-            if ($line !== '' && (filter_var($line, FILTER_VALIDATE_URL) === false || preg_match('#^https?://#i', $line) !== 1)) {
-                $fail(__('":address" isn\'t a web address (https://…).', ['address' => $line]));
-
-                return;
-            }
-        }
+        return ListInput::items($this->sameAs);
     }
 
     /** The site's name: as set, else the app's. */
