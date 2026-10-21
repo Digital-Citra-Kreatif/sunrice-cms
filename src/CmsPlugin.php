@@ -177,6 +177,7 @@ final class CmsPlugin extends BasePlugin
             Route::prefix('cms')->name('cms.entries.')->controller(EntryController::class)->group(function (): void {
                 Route::get('entries', 'home')->name('home')->middleware(AuthorizeContent::class.':entries,view');
                 Route::get('entry-picker', 'picker')->name('picker')->middleware(AuthorizeContent::class.':entries,view');
+                Route::get('entry-search', 'search')->name('search')->middleware(AuthorizeContent::class.':entries,view');
                 Route::get('term-picker', 'termPicker')->name('term-picker')->middleware(AuthorizeContent::class.':entries,view');
                 Route::get('collections/{collection:handle}/entries', 'index')->name('index')->middleware(AuthorizeContent::class.':entries,view');
                 Route::get('collections/{collection:handle}/entries/create', 'create')->name('create')->middleware(AuthorizeContent::class.':entries,create');
@@ -250,6 +251,8 @@ final class CmsPlugin extends BasePlugin
         $panel->widgets(...DashboardWidgets::all());
         // Getting these is worth an alert: site-wide scripts, and the shape of all content.
         $panel->privilegedPermissions('cms.settings.code', 'cms.blueprints.manage');
+        // Cmd/Ctrl+K finds entries on every panel page, not only where the CMS's bundle has loaded.
+        $panel->commandSearch('cms.entries', fn (): string => route('sunrice.admin.cms.entries.search'));
         $panel->bundle(PluginBundle::make('cms')->module(self::asset('admin.js'))->style(self::asset('admin.css'))->pages('Cms/'));
         if ($this->fieldTypes !== []) {
             $types = $this->fieldTypes;

@@ -128,6 +128,48 @@ final class EntryController
     }
 
     /**
+     * The command palette's entry search ($panel->commandSearch('cms.entries')):
+     * entries whose title in any language contains "q", among those the
+     * person may view, most recently edited first. A match in another
+     * language opens the editor in that language.
+     */
+    public function search(Request $request): JsonResponse
+    {
+        /** @var array{q?: string|null} $input */
+        $input = $request->validate(['q' => ['nullable', 'string', 'max:200']]);
+        $search = trim($input['q'] ?? '');
+        if ($search === '') {
+            return response()->json(['items' => []]);
+        }
+        $main = Locales::default();
+        $found = EntryTranslation::query()
+            ->with('entry.collection')
+            ->whereIn('collection_id', Access::collections($request->user())->pluck('id'))
+            ->whereHas('entry', fn ($entry) => $entry->withoutTrashed()->whereHas('collection', fn ($collection) => $collection->withoutTrashed()))
+            ->whereLike('draft_title', '%'.addcslashes($search, '%_\\').'%')
+            ->orderByRaw('case when locale = ? then 0 else 1 end', [$main])
+            ->orderByDesc('updated_at')
+            ->limit(40)
+            ->get()
+            // One line per entry: its main language when that matches, else the first language that does.
+            ->unique('entry_id')
+            ->take(10);
+
+        return response()->json(['items' => $found->values()->map(fn (EntryTranslation $translation): array => [
+            'id' => $translation->entry_id,
+            'label' => $translation->draft_title,
+            'description' => implode(' · ', array_filter([
+                $translation->entry->collection->title,
+                $translation->locale === $main ? null : strtoupper($translation->locale),
+                $translation->status() === 'published' ? null : $translation->status(),
+            ])),
+            'group' => 'Entries',
+            'icon' => 'file-text',
+            'url' => route('sunrice.admin.cms.entries.edit', ['entry' => $translation->entry_id, ...($translation->locale === $main ? [] : ['locale' => $translation->locale])]),
+        ])->all()]);
+    }
+
+    /**
      * For terms fields: a taxonomy's terms in tree order (or those whose
      * title matches "q"), or some by id ("ids"), main-language titles.
      */
