@@ -461,3 +461,19 @@ The entry editor's **Preview** opens the saved draft in its template through a s
 ### Drafts on the site
 
 Signed-in panel users with `cms.entries.view-drafts` (and view access to the collection; the author and editor roles have it) see a small banner on a live page whose entry has a newer draft, with a **View draft** link. `?draft` renders the draft the way a preview does: the view gets `$draft = true`, `Cms::page()->draft` is set, the body class gets `is-draft`, and the response is `noindex` and `Cache-Control: no-store, private`, never kept by the page cache. The banner is `sunrice-cms::draft-banner`, inserted right after `<body>`, so it works with any template.
+
+## Security
+
+### Sending visitors back
+
+Forms and comments send visitors back to the page they posted from, which Laravel reads from the `Referer` header (`url()->previous()`), and a page on another site could name itself there. They go back only to a page on this site (a path, or the scheme, host and port of the request or `APP_URL`); otherwise forms go to `/` and comments to the entry's page. Your own controllers can do the same with `Sunrice\Cms\Support\SafeUrl` (`@api`):
+
+```php
+use Sunrice\Cms\Support\SafeUrl;
+
+SafeUrl::isLocal('https://evil.example/x'); // false; '/about' and this site's own URLs are true
+return redirect()->to(SafeUrl::previous('/thanks')); // the previous page when it's on this site, else /thanks
+```
+
+`SafeUrl::isSafe($url)` is the looser check for links editors type: any http(s), `mailto:` or `tel:` address, or a path, never `javascript:`.
+

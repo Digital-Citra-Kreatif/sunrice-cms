@@ -18,6 +18,7 @@ use Sunrice\Cms\Actions\Comments\PostComment;
 use Sunrice\Cms\Models\Comment;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Settings\CommentSettings;
+use Sunrice\Cms\Support\SafeUrl;
 
 /**
  * POST /comments/{entry}: a visitor comments. Behind the honeypot, a
@@ -41,6 +42,8 @@ final class CommentController
         $locale = is_string($locale) ? $locale : app()->getLocale();
         $user = $request->user(app(Panel::class)->getGuard()) ?? $request->user();
         $limit = new SendLimit('sunrice-comments|'.$request->ip(), max(1, $settings->perMinute));
+        // Back to the page the comment was posted from when it's on this site (the Referer could name another), else the entry.
+        $back = SafeUrl::previous($entry->shownIn($locale)?->url() ?? '/');
         try {
             $limit->check($locale, self::BAG);
             if ($settings->captcha && ! $captcha->passes($request)) {
@@ -49,7 +52,7 @@ final class CommentController
             $comment = $post->handle($entry, $request->only(['body', 'parent_id', 'author_name', 'author_email', 'notify_replies']),
                 $user instanceof Model ? $user : null, $locale, $request->ip());
         } catch (ValidationException $e) {
-            throw $e->errorBag(self::BAG)->redirectTo(url()->previous().'#comment-form');
+            throw $e->errorBag(self::BAG)->redirectTo($back.'#comment-form');
         }
         $limit->sent();
         $message = Lang::get($comment->isApproved() ? 'sunrice-cms::site.comments.posted' : 'sunrice-cms::site.comments.held', [], $locale);
@@ -58,7 +61,7 @@ final class CommentController
             return response()->json(['message' => $message, 'status' => $comment->status, 'id' => $comment->id], 201);
         }
 
-        return redirect()->to(url()->previous().($comment->isApproved() ? '#comment-'.$comment->id : '#comments'))->with(self::FLASH, $message);
+        return redirect()->to($back.($comment->isApproved() ? '#comment-'.$comment->id : '#comments'))->with(self::FLASH, $message);
     }
 
     /** The signed link from a reply email: asks first, so a mail scanner opening links unsubscribes nobody. */
