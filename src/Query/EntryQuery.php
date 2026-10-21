@@ -20,6 +20,7 @@ use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
+use Sunrice\Cms\Site\Site;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\SiteCache;
 
@@ -34,7 +35,11 @@ use Sunrice\Cms\Support\SiteCache;
  *     Cms::entries('articles')->search('coffee')->paginate(10)
  *
  * Only published entries past their date, of collections not deleted
- * (preview() takes every entry's draft instead). Field filters read the
+ * (preview() takes every entry's draft instead). In another language than
+ * the main one, entries not live in it come in the main language with the
+ * main-language fallback on (`sunrice-cms.site.fallback`, as their pages
+ * are shown; fallback(false) leaves them out): one row per entry, whose
+ * url() is its page at that language's address. Field filters read the
  * main language's published values (shared fields live there); number and
  * date fields compare and sort as such, the others as text. A result's
  * entries share one HydrationContext, so their values() load each media
@@ -60,6 +65,9 @@ final class EntryQuery
 
     private bool $remember = false;
 
+    /** Whether the main language stands in for entries not live in this one (null: Site::fallback()). */
+    private ?bool $fallback = null;
+
     private ?int $limit = null;
 
     /** @var list<Closure(Builder<EntryTranslation>): mixed> in the order they were asked for */
@@ -84,6 +92,18 @@ final class EntryQuery
     public function locale(string $locale): self
     {
         $this->locale = $locale;
+
+        return $this;
+    }
+
+    /**
+     * Whether entries not live in this language come in the main language
+     * (one row per entry), as their pages are shown with the main-language
+     * fallback. Unless told, as `sunrice-cms.site.fallback` says.
+     */
+    public function fallback(bool $fallback = true): self
+    {
+        $this->fallback = $fallback;
 
         return $this;
     }
@@ -408,7 +428,7 @@ final class EntryQuery
     /** @return Builder<EntryTranslation> */
     private function builder(): Builder
     {
-        $query = EntryTranslation::query()->with(['entry.collection', 'entry.translations'])->where('locale', $this->locale);
+        $query = EntryTranslation::query()->with(['entry.collection', 'entry.translations'])->shownIn($this->locale, $this->fallback, $this->preview);
         $this->preview
             ? $query->whereHas('entry', fn (Builder $entry) => $entry->withoutTrashed()->whereHas('collection', fn (Builder $collection) => $collection->withoutTrashed()))
             : $query->live();
@@ -446,7 +466,7 @@ final class EntryQuery
     /** @param  Closure(): mixed  $make */
     private function remembered(string $what, Closure $make): mixed
     {
-        return app(SiteCache::class)->remember('entries:'.md5((string) json_encode([$this->collections, $this->locale, $this->calls, $this->limit, $what])), $make);
+        return app(SiteCache::class)->remember('entries:'.md5((string) json_encode([$this->collections, $this->locale, $this->fallback ?? Site::fallback(), $this->calls, $this->limit, $what])), $make);
     }
 
     /**

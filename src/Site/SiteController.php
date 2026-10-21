@@ -19,6 +19,7 @@ use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Support\Access;
+use Sunrice\Cms\Support\Locales;
 
 /**
  * Renders entries on the site: the fallback route (paths no app route
@@ -161,10 +162,11 @@ final class SiteController
         app()->setLocale($locale);
         $term = $translation->term;
         $taxonomy = $term->taxonomy;
-        $entries = EntryTranslation::query()->live()->with('entry.collection')->where('locale', $locale)
+        $entries = EntryTranslation::query()->live()->with(self::listed($locale))->shownIn($locale)
             ->whereHas('entry.terms', fn ($q) => $q->where('sunrice_terms.id', $term->id))
             ->orderByDesc('published_at')->orderByDesc('id')->paginate(10)->withQueryString();
         abort_if($entries->currentPage() > 1 && $entries->isEmpty(), 404);
+        self::shownAt($entries->getCollection(), $locale);
         $view = 'sunrice-cms::term';
         foreach (array_filter([self::own($term->template), $taxonomy->template, "cms.taxonomy-{$taxonomy->handle}", 'cms.term']) as $candidate) {
             if (View::exists($candidate)) {
@@ -192,13 +194,14 @@ final class SiteController
     {
         app()->setLocale($listing->locale);
         $collection = $listing->collection;
-        $entries = EntryTranslation::query()->live()->with('entry.collection')
-            ->where('collection_id', $collection->id)->where('locale', $listing->locale)
+        $entries = EntryTranslation::query()->live()->with(self::listed($listing->locale))
+            ->where('collection_id', $collection->id)->shownIn($listing->locale)
             ->when($collection->ordered,
                 fn ($q) => $q->orderBy(Entry::query()->select('sort_order')->whereColumn('sunrice_entries.id', 'sunrice_entry_translations.entry_id'))->orderBy('id'),
                 fn ($q) => $collection->dated ? $q->orderByDesc('published_at')->orderByDesc('id') : $q->orderBy('title')->orderBy('id'))
             ->paginate(max(1, min(100, $collection->per_page)))->withQueryString();
         abort_if($entries->currentPage() > 1 && $entries->isEmpty(), 404);
+        self::shownAt($entries->getCollection(), $listing->locale);
         $schema = $collection->listingSchema();
 
         // cms.{handle}-listing, else cms.listing, else the CMS's plain one.
@@ -222,6 +225,32 @@ final class SiteController
             'locale' => $listing->locale,
             'url' => $collection->listingUrl($listing->locale),
         ]));
+    }
+
+    /**
+     * What a list's entries load with: in another language than the main
+     * one, their other translations too (a main-language one standing in
+     * links to its page at this language's address: Site::urlIn()).
+     *
+     * @return list<string>
+     */
+    public static function listed(string $locale): array
+    {
+        return $locale === Locales::default() ? ['entry.collection'] : ['entry.collection', 'entry.translations'];
+    }
+
+    /**
+     * A list's entries hydrated in the page's language, sharing one context:
+     * those shown in the main language link to their page at its address.
+     *
+     * @param  iterable<EntryTranslation>  $entries
+     */
+    public static function shownAt(iterable $entries, string $locale): void
+    {
+        $context = new HydrationContext($locale);
+        foreach ($entries as $entry) {
+            $entry->hydrateWith($context);
+        }
     }
 
     /** The whole site hidden from search engines (Settings → Site): say so on every page too. */

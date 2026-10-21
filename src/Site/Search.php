@@ -15,7 +15,9 @@ use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\SiteCache;
 
 /**
- * Site search: live entries with pages of their own, in one language,
+ * Site search: live entries with pages of their own, in one language
+ * (and, with the main-language fallback, the main language's of entries
+ * not live in it, linking to their page at that language's address),
  * whose title or field text holds the words searched. Title matches
  * first, then newest first. Used by the search page (/search?q=…) and
  * <x-sunrice-cms::search>.
@@ -84,12 +86,13 @@ final class Search
         $page = Paginator::resolveCurrentPage($pageName);
 
         $found = $query === '' ? ['ids' => [], 'total' => 0] : $this->cache->remember(
-            'search:'.sha1(serialize([$locale, $query, $collections, $perPage, $page])),
+            'search:'.sha1(serialize([$locale, Site::fallback(), $query, $collections, $perPage, $page])),
             fn (): array => $this->find($query, $collections, $perPage, $locale, $page),
             ttl: self::CACHE_TTL,
         );
-        $items = $found['ids'] === [] ? new EloquentCollection : EntryTranslation::query()->whereKey($found['ids'])->with('entry.collection')->get()
+        $items = $found['ids'] === [] ? new EloquentCollection : EntryTranslation::query()->whereKey($found['ids'])->with(SiteController::listed($locale))->get()
             ->sortBy(fn (EntryTranslation $translation): int => (int) array_search($translation->id, $found['ids'], true))->values();
+        SiteController::shownAt($items, $locale);
 
         return (new Paginated($items, $found['total'], $perPage, $page, ['path' => Paginator::resolveCurrentPath(), 'pageName' => $pageName]))->withQueryString();
     }
@@ -102,7 +105,8 @@ final class Search
      */
     private function find(string $query, ?array $collections, int $perPage, string $locale, int $page): array
     {
-        $builder = EntryTranslation::query()->live()->where('locale', $locale)
+        // Entries not live in the language, in the main one (with the fallback), as their pages are shown.
+        $builder = EntryTranslation::query()->live()->shownIn($locale)
             ->whereIn('collection_id', Collection::query()->whereNotNull('route')
                 ->when($collections !== null, fn (Builder $q) => $q->whereIn('handle', $collections ?? []))->select('id'));
         $this->matching($builder, $query);

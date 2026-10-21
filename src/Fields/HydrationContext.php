@@ -134,15 +134,24 @@ final class HydrationContext
         $found = Entry::query()->with(['translations', 'collection'])->whereKey($missing)->get()->keyBy('id');
         foreach ($missing as $id) {
             $entry = $found->get($id);
-            $translation = $entry === null || $entry->collection->trashed() ? null : ($entry->translation($this->locale) ?? $entry->mainTranslation());
-            $this->entries[$id] = $translation !== null && ($this->preview || $translation->isLive()) ? $translation : null;
+            $translation = null;
+            if ($entry !== null && ! $entry->collection->trashed()) {
+                $translation = $entry->translation($this->locale);
+                // Not live in this language: the main language's stands in (as its page does).
+                if ($translation === null || ! ($this->preview || $translation->isLive())) {
+                    $translation = $entry->mainTranslation();
+                }
+            }
+            // Its url() then gives the page in this language (at its address when it stands in).
+            $this->entries[$id] = $translation !== null && ($this->preview || $translation->isLive()) ? $translation->hydrateWith($this) : null;
         }
     }
 
     /**
      * Linked entries as templates show them: each one's translation in this
-     * context's language (else its main one), live, or its draft in a
-     * preview; in the given order, skipping missing, trashed and unpublished
+     * context's language (else, when that isn't live, its main one), live,
+     * or its draft in a preview, whose url() is its page for a visitor
+     * reading this language (Site::urlIn()); in the given order, skipping missing, trashed and unpublished
      * ones. Loaded once per context.
      *
      * @param  list<int>  $ids  entry ids

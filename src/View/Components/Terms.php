@@ -26,7 +26,8 @@ use Sunrice\Cms\Support\Locales;
  *
  * In the editors' order (or `order-by`: title, entries, created_at, "-"
  * first for the other way round), each with `entries_count` (its live
- * entries in the current language, of `collection` when given). `tree`:
+ * entries in the current language, the main language's standing in as
+ * on their pages, of `collection` when given). `tree`:
  * only the top-level terms, each with `children` (to any depth).
  * `parent`: the terms directly under a term (its slug or id), or "top".
  * `limit`: at most this many. `:entry="$entry"`: only that entry's terms.
@@ -69,7 +70,7 @@ final class Terms extends Component
         $all = Term::query()->where('taxonomy_id', $taxonomyId)->with('translations')
             ->withCount(['entries' => fn (Builder $q) => $q
                 ->when($collection !== null, fn (Builder $q) => $q->where('collection_id', $collectionId ?? 0))
-                ->whereIn('sunrice_entries.id', EntryTranslation::query()->live()->where('locale', $locale)->select('entry_id'))])
+                ->whereIn('sunrice_entries.id', EntryTranslation::query()->live()->shownIn($locale)->select('entry_id'))])
             ->when($entryId !== null, fn (Builder $q) => $q->whereHas('entries', fn (Builder $e) => $e->where('sunrice_entries.id', $entryId)))
             ->orderBy('sort_order')->orderBy('id')->get()->toBase();
         $terms = $hideEmpty ? $all->filter(fn (Term $term): bool => self::count($term) > 0)->values() : $all;
