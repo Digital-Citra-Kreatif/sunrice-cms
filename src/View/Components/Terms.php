@@ -62,8 +62,8 @@ final class Terms extends Component
         bool $includeChildren = false,
     ) {
         $this->currentTermId = Page::current()?->term?->term_id;
-        $taxonomyId = Taxonomy::query()->where('handle', $taxonomy)->value('id');
-        if ($taxonomyId === null) {
+        $taxonomyModel = Taxonomy::query()->where('handle', $taxonomy)->first();
+        if ($taxonomyModel === null) {
             $this->terms = new Items;
 
             return;
@@ -75,10 +75,17 @@ final class Terms extends Component
         $entries = fn (Builder $q) => $q
             ->when($collection !== null, fn (Builder $q) => $q->where('collection_id', $collectionId ?? 0))
             ->whereIn('sunrice_entries.id', EntryTranslation::query()->live()->shownIn($locale)->select('entry_id'));
-        $all = Term::query()->where('taxonomy_id', $taxonomyId)->with('translations')
+        $all = Term::query()->where('taxonomy_id', $taxonomyModel->id)->with('translations')
             ->when(! $includeChildren, fn (Builder $q) => $q->withCount(['entries' => $entries]))
             ->when($entryId !== null, fn (Builder $q) => $q->whereHas('entries', fn (Builder $e) => $e->where('sunrice_entries.id', $entryId)))
             ->orderBy('sort_order')->orderBy('id')->get()->toBase();
+        // Linked without more queries: $term->url() reads the term and its taxonomy from each translation.
+        foreach ($all as $term) {
+            $term->setRelation('taxonomy', $taxonomyModel);
+            foreach ($term->translations as $translation) {
+                $translation->setRelation('term', $term);
+            }
+        }
         if ($includeChildren) {
             self::countWithChildren($all, $entries);
         }
