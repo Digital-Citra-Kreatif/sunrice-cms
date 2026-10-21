@@ -86,14 +86,16 @@ export default function MenuEdit({ menu, items: initial, locales, limits, terms,
                             </div>
                             {item.collection_id !== null && (
                                 <Input aria-label={t('Filters')} className="cms:w-full cms:sm:max-w-md cms:font-mono" disabled={!can.update}
-                                    placeholder={t('Filters (optional): :example', { example: 'listing_type=for-sale' })} value={item.query ?? ''}
+                                    placeholder={t('Filters (optional): :example', { example: 'filter=value' })} value={item.query ?? ''}
                                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => update(index, { query: e.target.value })} />
                             )}
                             {locales.length > 1 && (
                                 <div className="cms:flex cms:flex-wrap cms:gap-2">
                                     {locales.slice(1).map((code) => (
                                         <Input key={code} aria-label={t('Label (:language)', { language: localeName(code) })} className="cms:w-full cms:sm:max-w-xs" disabled={!can.update}
-                                            placeholder={t(':language: as :main', { language: localeName(code), main: localeName(main) })} value={item.labels[code] ?? ''}
+                                            placeholder={item.url === null
+                                                ? t(':language: its title there, else as :main', { language: localeName(code), main: localeName(main) })
+                                                : t(':language: as :main', { language: localeName(code), main: localeName(main) })} value={item.labels[code] ?? ''}
                                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => update(index, { labels: { ...item.labels, [code]: e.target.value } })} />
                                     ))}
                                 </div>
@@ -219,7 +221,7 @@ function AddDialog({ kind, terms, listings, onClose, onAdd, main }: {
                     {kind === 'listing' && (
                         <div className="cms:flex cms:flex-col cms:gap-2">
                             <Label htmlFor="menu-query">{t('Filters (optional)')}</Label>
-                            <Input id="menu-query" className="cms:font-mono" value={query} placeholder="listing_type=for-sale"
+                            <Input id="menu-query" className="cms:font-mono" value={query} placeholder="filter=value&other=value"
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)} />
                             <p className="cms:text-sm cms:text-muted-foreground">{t('What the listing page\'s filters put after the ? in its address. Each language\'s link gets them, and a term may be named by its slug in any language.')}</p>
                         </div>
