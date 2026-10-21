@@ -242,7 +242,7 @@ Cms::entries('blog')->search($request->query('q', ''))->paginate(10);
 
 Field filters read the main language's published values (shared fields, like entries and terms, live there).
 
-A result's entries share one `HydrationContext`: whatever their fields point at (media, entries, terms) is loaded up front, one query per kind, so `$post->values()` in a loop costs no queries of its own.
+A result's entries share one `HydrationContext`: the first `values()` loads whatever all their fields point at (media, entries, terms), one query per kind, so `$post->values()` in a loop costs no queries of its own; the entries an entries field gives share it too (see [Using fields in code](fields.md#using-fields-in-code)). The `$entries` of listing and term pages and the search page's `$results` are hydrated the same way.
 
 ### Components
 

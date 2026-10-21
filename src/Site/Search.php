@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Pagination\LengthAwarePaginator as Paginated;
 use Illuminate\Pagination\Paginator;
+use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Support\Locales;
@@ -90,6 +91,8 @@ final class Search
         );
         $items = $found['ids'] === [] ? new EloquentCollection : EntryTranslation::query()->whereKey($found['ids'])->with('entry.collection')->get()
             ->sortBy(fn (EntryTranslation $translation): int => (int) array_search($translation->id, $found['ids'], true))->values();
+        // Hydrated together: the first values() loads what all of them point at.
+        (new HydrationContext($locale))->share($items);
 
         return (new Paginated($items, $found['total'], $perPage, $page, ['path' => Paginator::resolveCurrentPath(), 'pageName' => $pageName]))->withQueryString();
     }

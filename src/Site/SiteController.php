@@ -164,6 +164,8 @@ final class SiteController
         $entries = EntryTranslation::query()->live()->with('entry.collection')->where('locale', $locale)
             ->whereHas('entry.terms', fn ($q) => $q->where('sunrice_terms.id', $term->id))
             ->orderByDesc('published_at')->orderByDesc('id')->paginate(10)->withQueryString();
+        // Hydrated together: the first values() loads what all of them point at.
+        (new HydrationContext($locale))->share($entries->getCollection());
         abort_if($entries->currentPage() > 1 && $entries->isEmpty(), 404);
         $view = 'sunrice-cms::term';
         foreach (array_filter([self::own($term->template), $taxonomy->template, "cms.taxonomy-{$taxonomy->handle}", 'cms.term']) as $candidate) {
@@ -199,6 +201,8 @@ final class SiteController
                 fn ($q) => $collection->dated ? $q->orderByDesc('published_at')->orderByDesc('id') : $q->orderBy('title')->orderBy('id'))
             ->paginate(max(1, min(100, $collection->per_page)))->withQueryString();
         abort_if($entries->currentPage() > 1 && $entries->isEmpty(), 404);
+        // Hydrated together: the first values() loads what all of them point at.
+        (new HydrationContext($listing->locale))->share($entries->getCollection());
         $schema = $collection->listingSchema();
 
         // cms.{handle}-listing, else cms.listing, else the CMS's plain one.

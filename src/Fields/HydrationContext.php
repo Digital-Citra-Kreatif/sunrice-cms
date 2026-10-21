@@ -4,16 +4,27 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Fields;
 
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Sunrice\Admin\Media\Media;
+use Sunrice\Cms\Models\Collection as CollectionModel;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
+use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
+use Sunrice\Cms\Models\TermTranslation;
+use WeakMap;
 
 /**
  * What hydrating values needs to know: the language and whether this is a
  * preview. It also remembers the records it loads, so a repeater of fifty
- * images costs one query, not fifty.
+ * images costs one query, not fifty, and shares itself with the entries
+ * it loads: a list of entries hydrated together (share()), and the
+ * entries their fields point at, load what all their fields point at the
+ * first time one of them is hydrated, one query per kind.
+ *
+ *     $context = new HydrationContext(app()->getLocale());
+ *     $context->share($cards);          // then $card->values() for each: no queries in the loop
  *
  * @api
  */
@@ -28,10 +39,86 @@ final class HydrationContext
     /** @var array<int, EntryTranslation|null> */
     private array $entries = [];
 
+    /** @var WeakMap<EntryTranslation, bool> entries hydrated with this context: whether what they point at is loaded */
+    private WeakMap $shared;
+
+    /** @var list<EntryTranslation> shared entries whose references aren't loaded yet */
+    private array $pending = [];
+
+    /** @var array<int, CollectionModel> collections seen, so each is read (and its fields loaded) once */
+    private array $collections = [];
+
+    /** @var array<int, Taxonomy> taxonomies seen, read once */
+    private array $taxonomies = [];
+
     public function __construct(
         public readonly string $locale,
         public readonly bool $preview = false,
-    ) {}
+    ) {
+        $this->shared = new WeakMap;
+    }
+
+    /**
+     * Hydrate these entries with this context (their values() without a
+     * context use it), so the first values() of any of them loads what
+     * all of them point at together: one query per kind, not per entry.
+     *
+     * @param  iterable<EntryTranslation>  $translations
+     */
+    public function share(iterable $translations): static
+    {
+        foreach ($translations as $translation) {
+            $translation->hydrateWith($this);
+            if ($translation->relationLoaded('entry')) {
+                $entry = $translation->entry;
+                if ($entry->relationLoaded('collection')) {
+                    $this->collections[$entry->collection_id] ??= $entry->collection;
+                }
+                // Its entry's translations know their entry (completeData() reads the main one's fields).
+                if ($entry->relationLoaded('translations')) {
+                    $entry->translations->each(fn (EntryTranslation $other) => $other->setRelation('entry', $entry));
+                }
+            }
+            if (! isset($this->shared[$translation])) {
+                $this->shared[$translation] = false;
+                $this->pending[] = $translation;
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Before an entry is hydrated: loads what it points at, with what every
+     * other shared entry not hydrated yet points at.
+     *
+     * @internal EntryTranslation::values() calls it.
+     */
+    public function prepare(EntryTranslation $translation): void
+    {
+        if (($this->shared[$translation] ?? false) === true) {
+            return;
+        }
+        $this->share([$translation]);
+        $batch = $this->pending;
+        $this->pending = [];
+        // completeData() reads each entry's main translation: their translations in one query.
+        $entries = [];
+        foreach ($batch as $shared) {
+            $entries[$shared->entry_id] = $shared->entry;
+        }
+        $entries = new EloquentCollection(array_values($entries));
+        $entries->loadMissing('translations');
+        foreach ($entries as $entry) {
+            $entry->translations->each(fn (EntryTranslation $other) => $other->setRelation('entry', $entry));
+        }
+        $references = [];
+        foreach ($batch as $shared) {
+            $this->shared[$shared] = true;
+            array_push($references, ...$shared->entry->schema()->references($shared->completeData($this->preview)));
+        }
+        $this->preload($references);
+    }
 
     /**
      * Loads what these references point at, one query per kind, so a list
@@ -90,19 +177,46 @@ final class HydrationContext
     }
 
     /**
-     * Loads these terms (with their translations) in one query, for terms().
+     * Loads these terms (with their translations, taxonomy and parent, for
+     * their title(), url() and parent's title) in one go, for terms().
      *
      * @param  list<int>  $ids
      */
     public function preloadTerms(array $ids): void
+    {
+        $this->loadTerms($ids, parents: true);
+    }
+
+    /** @param  list<int>  $ids */
+    private function loadTerms(array $ids, bool $parents): void
     {
         $missing = array_values(array_diff(array_unique($ids), array_keys($this->terms)));
         if ($missing === []) {
             return;
         }
         $found = Term::query()->with('translations')->whereKey($missing)->get()->keyBy('id');
+        $taxonomies = array_values(array_diff(array_unique($found->map(fn (Term $term): int => $term->taxonomy_id)->all()), array_keys($this->taxonomies)));
+        if ($taxonomies !== []) {
+            foreach (Taxonomy::query()->withTrashed()->whereKey($taxonomies)->get() as $taxonomy) {
+                $this->taxonomies[$taxonomy->id] = $taxonomy;
+            }
+        }
         foreach ($missing as $id) {
             $this->terms[$id] = $found->get($id);
+        }
+        // Their parents, for $term->parent->title(): one query more, not one per term.
+        if ($parents) {
+            $this->loadTerms(array_values(array_filter($found->map(fn (Term $term): ?int => $term->parent_id)->all(), is_int(...))), parents: false);
+        }
+        foreach ($found as $term) {
+            if (isset($this->taxonomies[$term->taxonomy_id])) {
+                $term->setRelation('taxonomy', $this->taxonomies[$term->taxonomy_id]);
+            }
+            if ($parents) {
+                $term->setRelation('parent', $term->parent_id === null ? null : ($this->terms[$term->parent_id] ?? null));
+            }
+            // Each translation knows its term (and so its taxonomy) without asking again.
+            $term->translations->each(fn (TermTranslation $translation) => $translation->setRelation('term', $term));
         }
     }
 
@@ -131,12 +245,33 @@ final class HydrationContext
         if ($missing === []) {
             return;
         }
-        $found = Entry::query()->with(['translations', 'collection'])->whereKey($missing)->get()->keyBy('id');
+        $found = Entry::query()->with('translations')->whereKey($missing)->get()->keyBy('id');
+        $collections = array_values(array_diff(array_unique($found->map(fn (Entry $entry): int => $entry->collection_id)->all()), array_keys($this->collections)));
+        if ($collections !== []) {
+            foreach (CollectionModel::query()->withTrashed()->whereKey($collections)->get() as $collection) {
+                $this->collections[$collection->id] = $collection;
+            }
+        }
+        foreach ($found as $key => $entry) {
+            if (isset($this->collections[$entry->collection_id])) {
+                $entry->setRelation('collection', $this->collections[$entry->collection_id]);
+            } else {
+                $found->forget($key);
+            }
+        }
+        $loaded = [];
         foreach ($missing as $id) {
             $entry = $found->get($id);
+            // Each translation knows its entry (and so its collection and fields) without asking again.
+            $entry?->translations->each(fn (EntryTranslation $translation) => $translation->setRelation('entry', $entry));
             $translation = $entry === null || $entry->collection->trashed() ? null : ($entry->translation($this->locale) ?? $entry->mainTranslation());
             $this->entries[$id] = $translation !== null && ($this->preview || $translation->isLive()) ? $translation : null;
+            if ($this->entries[$id] !== null) {
+                $loaded[] = $this->entries[$id];
+            }
         }
+        // Linked entries hydrate with this context too, and together.
+        $this->share($loaded);
     }
 
     /**

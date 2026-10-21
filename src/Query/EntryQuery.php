@@ -466,21 +466,15 @@ final class EntryQuery
     }
 
     /**
-     * One context for the whole result, with everything its fields point
-     * at loaded up front: one query per kind, not per entry.
+     * One context for the whole result: the first values() loads what all
+     * of their fields point at, one query per kind, not per entry.
      *
      * @param  Items<int, EntryTranslation>  $translations
      * @return Items<int, EntryTranslation>
      */
     private function hydrate(Items $translations): Items
     {
-        $context = new HydrationContext($this->locale, $this->preview);
-        $references = [];
-        foreach ($translations as $translation) {
-            $translation->hydrateWith($context);
-            array_push($references, ...$translation->entry->schema()->references($translation->completeData($this->preview)));
-        }
-        $context->preload($references);
+        (new HydrationContext($this->locale, $this->preview))->share($translations);
 
         return $translations;
     }
