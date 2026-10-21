@@ -6,6 +6,7 @@ namespace Sunrice\Cms\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Sunrice\Cms\Support\Locales;
 
 /**
  * An old address that moved: the site sends visitors of from_path to
@@ -16,6 +17,7 @@ use Illuminate\Support\Carbon;
  * @property string $from_path a path on the site, like /blog/old-title
  * @property string $to_url a path or a web address
  * @property int $status 301 (permanent) or 302 (temporary)
+ * @property bool $every_language also from the same path in every language's prefix (/listings and /id/listings)
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  *
@@ -27,12 +29,28 @@ class Redirect extends Model
 
     protected $guarded = [];
 
-    protected $attributes = ['status' => 301];
+    protected $attributes = ['status' => 301, 'every_language' => false];
 
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['status' => 'integer'];
+        return ['status' => 'integer', 'every_language' => 'boolean'];
+    }
+
+    /**
+     * Where a visitor of `$path` goes: to_url, or for a redirect in every
+     * language to a path, that path in the visitor's language
+     * (/listings → /properties, so /id/listings → /id/properties).
+     */
+    public function targetFor(string $path): string
+    {
+        if (! $this->every_language || ! str_starts_with($this->to_url, '/') || str_starts_with($this->to_url, '//')) {
+            return $this->to_url;
+        }
+        [$locale] = Locales::split($path);
+        [, $rest] = Locales::split($this->to_url);
+
+        return (Locales::prefix($locale).($rest === '/' ? '' : $rest)) ?: '/';
     }
 
     /** A path as stored: one leading slash, no trailing one. */

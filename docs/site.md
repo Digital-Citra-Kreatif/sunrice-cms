@@ -191,7 +191,7 @@ Hooks run in the order they were registered, on every request; keep them cheap. 
 
 ## Redirects
 
-When a published entry's address changes (a new slug), publishing it adds a permanent redirect from the old address, so links and search results keep working. Chains are flattened: every old address points straight at the newest. The query string comes along (`/old?utm_source=mail` → `/new?utm_source=mail`). Structure → Redirects (`cms.redirects.*`) lists them and takes your own, from a path on the site to a path or a web address, of the type permanent (301) or temporary (302). A live page always wins over a redirect from its address.
+When a published entry's address changes (a new slug), publishing it adds a permanent redirect from the old address, so links and search results keep working. Chains are flattened: every old address points straight at the newest. The query string comes along (`/old?utm_source=mail` → `/new?utm_source=mail`). Structure → Redirects (`cms.redirects.*`) lists them and takes your own, from a path on the site to a path or a web address, of the type permanent (301) or temporary (302). On a multilingual site, **In every language** (`every_language`, off by default) makes one apply from the same path in each language too, to its target in that language: `/listings` → `/properties` also sends `/id/listings` to `/id/properties` (a web address as target stays as it is); `Site::redirect($path)` finds it and `Redirect::targetFor($path)` gives the address. A live page always wins over a redirect from its address.
 
 ## Listing pages
 

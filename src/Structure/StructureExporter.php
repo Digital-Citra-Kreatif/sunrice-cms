@@ -74,7 +74,7 @@ final class StructureExporter
             ])->all(),
             'forms' => Form::query()->orderBy('handle')->get()->map(fn (Form $f): array => [...array_diff_key($f->only(StructureImporter::FORM), ['translations' => true]), ...($f->translations !== null ? ['translations' => $f->translations] : [])])->all(),
             'menus' => [],
-            'redirects' => Redirect::query()->orderBy('from_path')->get()->map(fn (Redirect $r): array => ['from' => $r->from_path, 'to' => $r->to_url, 'status' => $r->status])->all(),
+            'redirects' => Redirect::query()->orderBy('from_path')->get()->map(fn (Redirect $r): array => ['from' => $r->from_path, 'to' => $r->to_url, 'status' => $r->status] + ($r->every_language ? ['every_language' => true] : []))->all(),
         ];
         if ($content) {
             $structure['terms'] = $this->terms();

@@ -851,12 +851,13 @@ final class StructureImporter
             'from' => ['required', 'string', 'max:512', 'regex:#^/[^\s?\#]*$#'],
             'to' => ['required', 'string', 'max:2048', SafeUrl::rule()],
             'status' => ['sometimes', 'integer', Rule::in([301, 302])],
+            'every_language' => ['sometimes', 'boolean'],
         ])->validate();
         $existing = Redirect::query()->where('from_path', $validated['from'])->first();
-        $before = $existing?->only(['to_url', 'status']);
+        $before = $existing?->only(['to_url', 'status', 'every_language']);
         $redirect = $existing ?? new Redirect(['from_path' => $validated['from']]);
-        $redirect->fill(['to_url' => $validated['to'], 'status' => $validated['status'] ?? 301])->save();
-        $this->report->add('redirect', $redirect->from_path, $this->status($before, $redirect->only(['to_url', 'status'])));
+        $redirect->fill(['to_url' => $validated['to'], 'status' => $validated['status'] ?? 301, 'every_language' => (bool) ($validated['every_language'] ?? false)])->save();
+        $this->report->add('redirect', $redirect->from_path, $this->status($before, $redirect->only(['to_url', 'status', 'every_language'])));
     }
 
     /**

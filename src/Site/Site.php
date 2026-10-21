@@ -415,10 +415,25 @@ final class Site
         return $dependents;
     }
 
-    /** Where an old address moved, if it did. */
+    /**
+     * Where an old address moved, if it did: a redirect from this path, or
+     * one for every language from the same path in another language
+     * (/listings for /id/listings). Send visitors to its targetFor($path).
+     */
     public function redirect(string $path): ?Redirect
     {
-        return Redirect::query()->where('from_path', Redirect::normalizePath($path))->first();
+        $path = Redirect::normalizePath($path);
+        $exact = Redirect::query()->where('from_path', $path)->first();
+        if ($exact !== null) {
+            return $exact;
+        }
+        [, $rest] = Locales::split($path);
+        $candidates = array_values(array_unique(array_map(
+            fn (string $locale): string => Redirect::normalizePath(Locales::prefix($locale).$rest),
+            Locales::all(),
+        )));
+
+        return Redirect::query()->where('every_language', true)->whereIn('from_path', $candidates)->orderBy('id')->first();
     }
 
     /**
