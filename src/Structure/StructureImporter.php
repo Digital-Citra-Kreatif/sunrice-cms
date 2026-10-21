@@ -75,6 +75,13 @@ final class StructureImporter
 
     public const GLOBAL_SET = ['handle', 'title', 'blueprint'];
 
+    /** What visitors read in the other languages: {"id": {"title": "Properti"}}. */
+    private const TRANSLATIONS = [
+        'translations' => ['sometimes', 'nullable', 'array'],
+        'translations.*' => ['array'],
+        'translations.*.*' => ['nullable', 'string', 'max:1000'],
+    ];
+
     public const FORM = ['handle', 'title', 'blueprint', 'notify', 'message', 'redirect_url', 'per_minute', 'captcha'];
 
     private const HANDLE = ['required', 'string', 'max:64', 'regex:/^[a-z][a-z0-9_]*$/'];
@@ -250,10 +257,11 @@ final class StructureImporter
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
             'schema_type' => ['nullable', 'string', Rule::in(array_keys(StructuredData::ENTRY_TYPES))],
             'template' => self::TEMPLATE,
+            ...self::TRANSLATIONS,
         ])->validate();
         $before = $existing?->only(self::COLLECTION);
         $collection = app(SaveCollection::class)->handle(array_intersect_key($item, array_flip(['title', 'blueprint', 'blueprints', 'dated'])) + ($existing === null ? ['handle' => $item['handle']] : []), $existing);
-        $collection->forceFill(array_intersect_key($validated, array_flip(['ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template'])))->save();
+        $collection->forceFill(array_intersect_key($validated, array_flip(['ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template', 'translations'])))->save();
         $this->report->add('collection', $collection->handle, $this->status($before, $collection->only(self::COLLECTION)));
     }
 
@@ -292,10 +300,11 @@ final class StructureImporter
             'template' => self::TEMPLATE,
             'collections' => ['sometimes', 'array'],
             'collections.*' => ['string', Rule::exists((new Collection)->getTable(), 'handle')],
+            ...self::TRANSLATIONS,
         ])->validate();
         $before = $existing === null ? null : [...$existing->only(self::TAXONOMY), 'collections' => $existing->collections()->pluck('handle')->sort()->values()->all()];
         $taxonomy = $existing ?? new Taxonomy;
-        $taxonomy->fill(array_intersect_key($validated, array_flip(self::TAXONOMY)))->save();
+        $taxonomy->fill(array_intersect_key($validated, array_flip([...self::TAXONOMY, 'translations'])))->save();
         if (array_key_exists('collections', $validated)) {
             $taxonomy->collections()->sync(Collection::query()->whereIn('handle', $validated['collections'])->pluck('id')->all());
         }
@@ -341,10 +350,11 @@ final class StructureImporter
             'redirect_url' => ['nullable', 'string', 'max:2000', SafeUrl::rule()],
             'per_minute' => ['nullable', 'integer', 'min:1', 'max:1000'],
             'captcha' => ['sometimes', 'boolean'],
+            ...self::TRANSLATIONS,
         ])->validate();
         $before = $existing?->only(self::FORM);
         $form = $existing ?? new Form;
-        $form->forceFill(array_intersect_key($validated, array_flip(self::FORM)))->save();
+        $form->forceFill(array_intersect_key($validated, array_flip([...self::FORM, 'translations'])))->save();
         $this->report->add('form', $form->handle, $this->status($before, $form->only(self::FORM)));
     }
 

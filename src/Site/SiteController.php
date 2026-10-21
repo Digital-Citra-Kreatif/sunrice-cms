@@ -218,7 +218,7 @@ final class SiteController
 
         return $this->hidden(response()->view($view, [
             'collection' => $collection,
-            'title' => $collection->title,
+            'title' => $collection->titleIn($listing->locale),
             'entries' => $entries,
             'values' => $schema->hydrate($collection->listingData($listing->locale, $schema), new HydrationContext($listing->locale)),
             'richText' => array_values(array_map(fn (Field $field): string => $field->handle, array_filter($schema->fields(), fn (Field $field): bool => $field->type === 'rich_text'))),

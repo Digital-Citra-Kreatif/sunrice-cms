@@ -8,7 +8,8 @@
 
 | Pengaturan | |
 | --- | --- |
-| **Title** | Nama yang dilihat editor. |
+| **Title** | Nama yang dilihat editor, dan pengunjung dalam bahasa utama. |
+| **Title in …** | Di situs multibahasa, satu per bahasa lain: yang dibaca pengunjung di sana (judul halaman daftar, breadcrumb, menu). Kosong: judul di atas. |
 | **Handle** | Kode pendek yang dipakai template, seperti `articles`: huruf kecil, angka, dan garis bawah. Bisa diubah nanti: peran tetap memegang izinnya, tetapi formulir memperingatkan tentang template dan kode yang menyebutnya, yang harus diperbarui developer. |
 | **Blueprint** | Field yang dimiliki entrinya (lihat di bawah). Menggantinya tetap mempertahankan isi entri yang sudah ada. |
 | **Other blueprints** | Blueprint lain yang bisa dipilih sebuah entri, di Page settings-nya (misalnya halaman promosi di antara halaman biasa). |
@@ -46,7 +47,7 @@ Seret field ke urutannya lewat pegangannya (field di dalam group atau repeater d
 
 ## Taksonomi
 
-**Structure → Taxonomies**: **Title**, **Handle** (bisa diubah nanti, seperti pada koleksi), **Nested terms** (term di bawah term lain, seperti subkategori), **Collections** yang entrinya dikelompokkan, **Term pages URL** (seperti `/topik/{slug}`; kosong: term tidak punya halaman), **Term fields** (blueprint untuk field term), **Template**, dan **SEO from fields**. Editor lalu menambahkan term di Content → Terms (lihat [Term](guide:website/terms)). Agar editor bisa memberi term pada entri, tambahkan field **Terms** ke blueprint koleksinya.
+**Structure → Taxonomies**: **Title** (dan **Title in …** untuk setiap bahasa lain, bagi pengunjung di halaman term-nya), **Handle** (bisa diubah nanti, seperti pada koleksi), **Nested terms** (term di bawah term lain, seperti subkategori), **Collections** yang entrinya dikelompokkan, **Term pages URL** (seperti `/topik/{slug}`; kosong: term tidak punya halaman), **Term fields** (blueprint untuk field term), **Template**, dan **SEO from fields**. Editor lalu menambahkan term di Content → Terms (lihat [Term](guide:website/terms)). Agar editor bisa memberi term pada entri, tambahkan field **Terms** ke blueprint koleksinya.
 
 ## Global set
 
@@ -61,7 +62,7 @@ Seret field ke urutannya lewat pegangannya (field di dalam group atau repeater d
 **Structure → Forms**: **Title**, **Handle** (bisa diubah nanti, seperti pada koleksi), **Blueprint** berisi field formulir (pengunjung mendapat field text, textarea, number, toggle, select, date, dan file), serta:
 
 - **Email to**: alamat yang menerima setiap kiriman, satu per baris; **Also email roles**: semua orang dengan peran ini juga.
-- **Thank-you message**: tampil setelah mengirim; atau **After sending, go to** halaman pilihan Anda.
+- **Thank-you message**: tampil setelah mengirim (di situs multibahasa, satu per bahasa lain; jika kosong, ucapan terima kasih bawaan situs dalam bahasa itu); atau **After sending, go to** halaman pilihan Anda.
 - **Sends per visitor a minute** dan **Require a captcha**, untuk mencegah spam.
 
 Developer lalu memasang formulir di sebuah halaman. Isian pengunjung masuk ke Content → Submissions (lihat [Kiriman formulir](guide:website/submissions)).

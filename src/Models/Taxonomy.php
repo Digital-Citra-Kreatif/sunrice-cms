@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Models;
 
+use Sunrice\Cms\Models\Concerns\TranslatesText;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -18,7 +20,8 @@ use Sunrice\Cms\Fields\Schema;
  *
  * @property int $id
  * @property string $handle
- * @property string $title
+ * @property string $title in the main language (titleIn() for the others)
+ * @property array<string, array<string, string>>|null $translations what visitors read in the other languages: {"id": {"title": "Lokasi"}}
  * @property bool $hierarchical terms can have a parent
  * @property string|null $route term pages' URL pattern ("/topics/{slug}"); none: no pages
  * @property string|null $blueprint terms' own fields
@@ -37,6 +40,7 @@ use Sunrice\Cms\Fields\Schema;
 class Taxonomy extends Model
 {
     use SoftDeletes;
+    use TranslatesText;
 
     protected $table = 'sunrice_taxonomies';
 
@@ -46,10 +50,16 @@ class Taxonomy extends Model
 
     private ?Schema $schema = null;
 
+    /** Its title in a language (null: the page's), as visitors read it on term pages. */
+    public function titleIn(?string $locale = null): string
+    {
+        return $this->translated('title', $locale);
+    }
+
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['hierarchical' => 'boolean'];
+        return ['hierarchical' => 'boolean', 'translations' => 'array'];
     }
 
     /** @return BelongsToMany<Collection, $this> */

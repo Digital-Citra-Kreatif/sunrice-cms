@@ -10,7 +10,7 @@
 </head>
 <body class="{{ \Sunrice\Cms\Content::bodyClass() }}">
     <x-sunrice-cms::code place="body-start" />
-    <p>{{ $taxonomy->title }}</p>
+    <p>{{ $taxonomy->titleIn($locale) }}</p>
     <h1>{{ $title }}</h1>
     @foreach ($values as $handle => $value)
         @if ($handle !== 'seo' && is_string($value) && $value !== '')

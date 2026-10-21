@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 // What visitors read on the site: the CMS's plain views, comments and forms (sunrice-cms::site.*).
 return [
+    'home' => 'Home',
     'preview' => 'Preview of the draft',
     'newer' => 'Newer',
     'older' => 'Older',
@@ -40,6 +41,7 @@ return [
     ],
     'forms' => [
         'send' => 'Send',
+        'thanks' => 'Thank you, we got your message.',
     ],
     'captcha' => 'Please confirm you\'re not a robot, then send the form again.',
 ];

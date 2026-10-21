@@ -10,12 +10,15 @@ use Sunrice\Admin\Actions\Settings\SaveSettings;
 use Sunrice\Admin\Activity\ActivityLog;
 use Sunrice\Cms\Actions\Entries\EntryInput;
 use Sunrice\Cms\Fields\Schema;
+use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\CollectionListing;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
+use Sunrice\Cms\Models\Form;
 use Sunrice\Cms\Models\GlobalValue;
 use Sunrice\Cms\Models\MenuItem;
 use Sunrice\Cms\Models\Redirect;
+use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Settings\LocaleSettings;
@@ -35,6 +38,9 @@ use Throwable;
  * - Entries and terms without the new main language stop the switch,
  *   unless `$copyMissing`: they get a copy of the old main language.
  * - Menu labels the new main language left empty take the old one's.
+ * - Collections' and taxonomies' titles and forms' thank-you messages
+ *   in the new main language become their own, and the old ones become
+ *   the old main language's translations.
  * - Addresses: the new main language's lose their prefix (/id/about →
  *   /about) and the old one's get it (/about → /en/about). Redirects are
  *   rewritten to match, and the old main language's pages redirect from
@@ -103,6 +109,7 @@ final class SwitchMainLanguage
                     fn (CollectionListing $listing): Schema => $listing->collection->listingSchema(),
                     fn (CollectionListing $listing): CollectionListing => CollectionListing::query()->firstOrNew(['collection_id' => $listing->collection_id, 'locale' => $to], ['data' => []]));
                 $this->counts['menu_items'] = $this->menus($from, $to);
+                $this->texts($from, $to);
                 $this->counts['redirects'] = $this->redirects($from, $to);
                 $this->activity->record('switched the main language', 'settings', LocaleSettings::key(), 'Languages', ['from' => $from, 'to' => $to]);
             });
@@ -286,6 +293,27 @@ final class SwitchMainLanguage
         }
 
         return $count;
+    }
+
+    /** Titles and thank-you messages: the new main language's become the attribute, the old one's its translation. */
+    private function texts(string $from, string $to): void
+    {
+        foreach ([[Collection::query()->withTrashed(), 'title'], [Taxonomy::query()->withTrashed(), 'title'], [Form::query(), 'message']] as [$query, $attribute]) {
+            foreach ($query->whereNotNull('translations')->get() as $record) {
+                $translations = is_array($record->translations) ? $record->translations : [];
+                $new = $translations[$to][$attribute] ?? null;
+                if (! is_string($new) || trim($new) === '') {
+                    continue;
+                }
+                unset($translations[$to][$attribute]);
+                $old = $record->getAttribute($attribute);
+                if (is_string($old) && trim($old) !== '') {
+                    $translations[$from][$attribute] = $old;
+                }
+                $translations = array_filter($translations, fn (mixed $texts): bool => is_array($texts) && $texts !== []);
+                $record->forceFill([$attribute => $new, 'translations' => $translations === [] ? null : $translations])->save();
+            }
+        }
     }
 
     /**

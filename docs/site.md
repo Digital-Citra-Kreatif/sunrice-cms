@@ -116,7 +116,7 @@ The seo component also prints structured data (schema.org, as JSON-LD), so searc
 
 - every page: the **WebSite**, with its search box (a SearchAction, when the search page is on), and who publishes it (an **Organization** with its logo, or a **Person**: Settings → Site);
 - entries: an **Article** (dated collections) or a **WebPage**, or the collection's **Structured data type** (Structure → Collections: Article, Blog post, News article, Web page, About page, Contact page). Articles get a headline, publish and change dates, the share image, author and publisher;
-- **BreadcrumbList**: Home, the collection's listing page, parent entries, the page;
+- **BreadcrumbList**: Home (`sunrice-cms::site.home`), the collection's listing page (its title in the page's language), parent entries (as visitors in that language see them), the page;
 - listing and term pages: a **CollectionPage**; the search page: a **SearchResultsPage**.
 
 A template adds nodes of its own (an event, a product, FAQs) with `:schema`:
@@ -197,7 +197,7 @@ A collection with a **listing page URL** (`listing_route`, like `/blog`) gets a 
 | `$collection` | the `Collection` (`->listingUrl($locale)`) |
 | `$entries` | a paginator of `EntryTranslation`s (`{{ $entries->links() }}`) |
 | `$values`, `$richText` | the listing page's fields, as for entries |
-| `$title`, `$locale`, `$url` | the collection's title, the language and the page's URL |
+| `$title`, `$locale`, `$url` | the collection's title in the page's language (`titleIn()`), the language and the page's URL |
 
 Listing URLs are fixed, so they're matched before any `{slug}` pattern; they're in the sitemap.
 

@@ -57,6 +57,8 @@ final class CollectionResource extends Resource
             TextInput::make('title')->required(),
             ...HandleField::make('collection', 'Lowercase letters, digits and underscores, like "articles".',
                 'Careful: templates and code that name it (the cms.{handle} view, Cms::entries(\'…\'), entries fields limited to it) need the new handle too. Roles keep their permissions for it.'),
+            ...TranslatedFields::make('title', fn (string $name, string $language) => TextInput::make($name)->label("Title in {$language}")->maxLength(255)
+                ->placeholder('As the title')->help('What visitors read in '.$language.': the listing page, breadcrumbs, menus.')),
             Select::make('blueprint')
                 ->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
                 ->help('The fields its entries have. Changing it keeps what entries already hold.'),

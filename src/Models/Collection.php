@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Models;
 
+use Sunrice\Cms\Models\Concerns\TranslatesText;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -19,7 +21,8 @@ use Sunrice\Cms\Support\Locales;
  *
  * @property int $id
  * @property string $handle
- * @property string $title
+ * @property string $title in the main language (titleIn() for the others)
+ * @property array<string, array<string, string>>|null $translations what visitors read in the other languages: {"id": {"title": "Properti"}}
  * @property string|null $blueprint the blueprint's handle
  * @property list<string>|null $blueprints more blueprints (handles) its entries may use instead (Entry::$blueprint)
  * @property bool $dated entries show a date, and list newest first
@@ -44,6 +47,7 @@ use Sunrice\Cms\Support\Locales;
 class Collection extends Model
 {
     use SoftDeletes;
+    use TranslatesText;
 
     protected $table = 'sunrice_collections';
 
@@ -59,7 +63,7 @@ class Collection extends Model
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['dated' => 'boolean', 'comments' => 'boolean', 'hierarchical' => 'boolean', 'ordered' => 'boolean', 'per_page' => 'integer', 'blueprints' => 'array'];
+        return ['dated' => 'boolean', 'comments' => 'boolean', 'hierarchical' => 'boolean', 'ordered' => 'boolean', 'per_page' => 'integer', 'blueprints' => 'array', 'translations' => 'array'];
     }
 
     /** @return HasMany<CollectionListing, $this> */
@@ -93,6 +97,12 @@ class Collection extends Model
     }
 
     /** The listing page's URL in a language, or null without one. */
+    /** Its title in a language (null: the page's), as visitors read it: listing pages, breadcrumbs, menus. */
+    public function titleIn(?string $locale = null): string
+    {
+        return $this->translated('title', $locale);
+    }
+
     public function listingUrl(?string $locale = null): ?string
     {
         if ($this->listing_route === null) {

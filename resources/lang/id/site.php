@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 // Yang dibaca pengunjung situs: tampilan bawaan CMS, komentar dan formulir (sunrice-cms::site.*).
 return [
+    'home' => 'Beranda',
     'preview' => 'Pratinjau draf',
     'newer' => 'Lebih baru',
     'older' => 'Lebih lama',
@@ -40,6 +41,7 @@ return [
     ],
     'forms' => [
         'send' => 'Kirim',
+        'thanks' => 'Terima kasih, pesan Anda sudah kami terima.',
     ],
     'captcha' => 'Konfirmasikan bahwa Anda bukan robot, lalu kirim formulir lagi.',
 ];

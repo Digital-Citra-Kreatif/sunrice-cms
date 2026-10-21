@@ -155,7 +155,7 @@ final class Seo
 
         $url = $collection->listingUrl($locale);
 
-        return self::tags($seo, is_string($seo['title'] ?? null) ? $seo['title'] : $collection->title, false, $url === null ? null : self::paged($url, $page),
+        return self::tags($seo, is_string($seo['title'] ?? null) ? $seo['title'] : $collection->titleIn($locale), false, $url === null ? null : self::paged($url, $page),
             self::withDefault($alternates), $locale, 'website', is_string($seo['title'] ?? null));
     }
 

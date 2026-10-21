@@ -56,9 +56,9 @@ final class FormController
         $redirect = $form->redirect_url !== null && SafeUrl::isSafe($form->redirect_url) ? $form->redirect_url : null;
 
         if ($request->expectsJson()) {
-            return response()->json(['message' => $form->successMessage(), 'redirect_url' => $redirect], 201);
+            return response()->json(['message' => $form->successMessage($locale), 'redirect_url' => $redirect], 201);
         }
 
-        return ($redirect !== null ? redirect()->to($redirect) : redirect()->back())->with(self::flashKey($form), $form->successMessage());
+        return ($redirect !== null ? redirect()->to($redirect) : redirect()->back())->with(self::flashKey($form), $form->successMessage($locale));
     }
 }

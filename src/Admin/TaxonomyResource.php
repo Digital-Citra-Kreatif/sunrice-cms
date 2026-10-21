@@ -57,6 +57,8 @@ final class TaxonomyResource extends Resource
             TextInput::make('title')->required(),
             ...HandleField::make('taxonomy', 'Lowercase letters, digits and underscores, like "categories".',
                 'Careful: terms fields and templates that name it (the cms.taxonomy-{handle} view, whereTerm(\'…\')) need the new handle too. Roles keep their permissions for it.'),
+            ...TranslatedFields::make('title', fn (string $name, string $language) => TextInput::make($name)->label("Title in {$language}")->maxLength(255)
+                ->placeholder('As the title')->help('What visitors read in '.$language.' on its term pages.')),
             Toggle::make('hierarchical')->label('Nested terms')->help('Terms can go under other terms, like categories and subcategories.'),
             CheckboxList::make('collections')
                 ->help('The collections whose entries it groups.')

@@ -9,7 +9,7 @@ Manage them in the admin under **Structure → Collections** (permissions `cms.c
 | | |
 | --- | --- |
 | `handle` | Lowercase letters, digits and underscores, starting with a letter. It can be changed on the edit form (with a warning): roles keep their permissions for the collection (see [renaming](#renaming-a-handle)), but templates and code that name it need the new one. A deleted collection's handle stays taken. |
-| `title` | The name editors see. |
+| `title` | The name editors see, and visitors in the main language. **Title in …** (`translations`, `{"id": {"title": "Properti"}}`) is what visitors read in each other language: the listing page's `$title` and SEO title, breadcrumbs (structured data) and menu links; `$collection->titleIn($locale)` gives it (else the title). |
 | `blueprint` | A blueprint's handle, or none. Changing it keeps entries' data: values of fields the new blueprint lacks stay stored, out of sight, and come back with the field. A blueprint can't be deleted while a collection uses it. |
 | `blueprints` | More blueprints its entries may use instead of its own (**Other blueprints**); see [per-entry blueprints](#per-entry-blueprints). |
 | `dated` | Entries show a date and list newest first. |
