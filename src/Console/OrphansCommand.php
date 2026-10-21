@@ -66,7 +66,7 @@ final class OrphansCommand extends Command
 
         if (! $this->option('purge')) {
             if ($kept !== []) {
-                $this->line('Restore deleted collections and taxonomies from their lists (filter: Deleted), or run <comment>sunrice:orphans --purge</comment> to delete them for good.');
+                $this->line('Restore deleted collections and taxonomies from the Trash of their lists (Structure → Collections, Structure → Taxonomies), or run <comment>sunrice:orphans --purge</comment> to delete them for good.');
             }
 
             return self::SUCCESS;
@@ -75,6 +75,11 @@ final class OrphansCommand extends Command
             $this->components->info('Nothing to purge.');
 
             return self::SUCCESS;
+        }
+        if (! $this->option('force') && ! $this->input->isInteractive()) {
+            $this->components->warn('Nothing was deleted: run it with --force to purge without being asked.');
+
+            return self::FAILURE;
         }
         if (! $this->option('force') && ! $this->confirm('Delete the deleted collections and taxonomies listed, with their entries and terms, for good? This can\'t be undone.')) {
             $this->components->warn('Nothing was deleted.');

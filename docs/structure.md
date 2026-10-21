@@ -137,7 +137,7 @@ Deleting a collection or a taxonomy keeps its entries or terms out of sight, and
 - media whose file is missing from its disk;
 - fields pointing at entries or terms that no longer exist.
 
-`sunrice:orphans --purge` deletes the deleted collections and taxonomies for good, with their entries (and those entries' languages, revisions and comments) and terms, freeing their handles; it asks first unless `--force`. In code, `Actions\Collections\PurgeDeleted`:
+`sunrice:orphans --purge` deletes the deleted collections and taxonomies for good, with their entries (and those entries' languages, revisions and comments) and terms, freeing their handles; it asks first unless `--force` (without a prompt to answer, `--no-interaction`, it deletes nothing and says to add `--force`). In code, `Actions\Collections\PurgeDeleted`:
 
 ```php
 app(PurgeDeleted::class)->collection($collection);  // the entries deleted; it must be deleted first
