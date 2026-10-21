@@ -191,6 +191,7 @@ final class CmsPlugin extends BasePlugin
                 Route::post('entries/{entry}/translations', 'addTranslation')->name('translations.store')->middleware(AuthorizeContent::class.':entries,create');
                 Route::delete('entries/{entry}/translations/{locale}', 'removeTranslation')->name('translations.destroy')->middleware(AuthorizeContent::class.':entries,delete');
                 Route::post('entries/{entry}/restore', 'restore')->name('restore')->middleware(AuthorizeContent::class.':entries,delete')->withTrashed();
+                Route::get('revisions/{revision}/compare', 'compareRevision')->name('revisions.compare')->middleware(AuthorizeContent::class.':entries,view');
                 Route::post('revisions/{revision}/restore', 'restoreRevision')->name('revisions.restore')->middleware(AuthorizeContent::class.':entries,update');
             });
             Route::prefix('cms')->name('cms.listings.')->controller(ListingController::class)->group(function (): void {

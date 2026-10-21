@@ -80,7 +80,7 @@ Kartu **Used by** menampilkan konten lain yang menautkan ke entri ini (entri lai
 
 ## Revisi
 
-Setiap penerbitan menyimpan sebuah **revisi**: salinan dari yang diterbitkan, beserta tanggalnya. Kartu **Revisions** menampilkannya; **Restore** memuat revisi ke dalam draf, sehingga Anda bisa memeriksanya dan menerbitkan saat siap. Berubah pikiran? **Undo the restore** mengembalikan draf Anda sebelumnya (sampai Anda keluar). Disimpan 50 revisi terakhir untuk setiap bahasa.
+Setiap penerbitan menyimpan sebuah **revisi**: salinan dari yang diterbitkan, beserta tanggal dan siapa yang menerbitkannya. Kartu **Revisions** menampilkannya beserta field yang diubah tiap revisi; **Compare** menampilkan revisi di samping draf yang tersimpan, field demi field; **Restore** memuat revisi ke dalam draf, sehingga Anda bisa memeriksanya dan menerbitkan saat siap. Berubah pikiran? **Undo the restore** mengembalikan draf Anda sebelumnya (sampai Anda keluar). Disimpan 50 revisi terakhir untuk setiap bahasa.
 
 ## Tindakan lain
 

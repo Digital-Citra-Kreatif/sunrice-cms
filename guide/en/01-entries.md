@@ -80,7 +80,7 @@ The **Used by** card lists the other content that links to this entry (other ent
 
 ## Revisions
 
-Every publish keeps a **revision**: a copy of what was published, with the date. The **Revisions** card lists them; **Restore** loads one into the draft, so you can check it and publish when ready. Changed your mind? **Undo the restore** puts your previous draft back (until you sign out). The latest 50 revisions of each language are kept.
+Every publish keeps a **revision**: a copy of what was published, with the date and who published it. The **Revisions** card lists them with the fields each one changed; **Compare** shows a revision beside your saved draft, field by field; **Restore** loads one into the draft, so you can check it and publish when ready. Changed your mind? **Undo the restore** puts your previous draft back (until you sign out). The latest 50 revisions of each language are kept.
 
 ## More actions
 

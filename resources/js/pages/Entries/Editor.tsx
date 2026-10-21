@@ -46,7 +46,7 @@ interface Props {
     } | null;
     values: { title: string; slug: string; data: FieldValues; seo: FieldValues | null };
     /** Deferred: loaded after the page shows. */
-    revisions?: { id: number; title: string; createdAt: string | null }[];
+    revisions?: Revision[];
     /** Deferred, when the collection takes comments and the user may see them (else null). */
     comments?: EntryCommentsSummary | null;
     /** The chosen terms' titles, by id, for terms fields. */
@@ -67,6 +67,8 @@ interface Props {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FieldValues = Record<string, any>;
 type UsedBy = { label: string; url: string | null; field: string };
+/** A published version: who published it and what it changed from the one before (null: the first, or older ones were pruned). */
+type Revision = { id: number; title: string; createdAt: string | null; author: string | null; changed: string[] | null };
 
 /** " It's used by A; B." for confirmations, or nothing. */
 function usedBySentence(usedBy: UsedBy[]): string {
@@ -100,6 +102,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
     useBreadcrumbs([{ label: collection.title, href: list }, { label: heading }]);
     const [confirm, confirmDialog] = useConfirm();
     const [scheduling, setScheduling] = React.useState(false);
+    const [comparing, setComparing] = React.useState<Revision | null>(null);
 
     const form = useForm<FormData>({
         ...values, seo: values.seo ?? {}, locale: entry?.locale ?? null, version: entry?.version ?? null, publish: false, published_at: null,
@@ -350,17 +353,25 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                                 <>
                                     {(revisions ?? []).length === 0 && <p className="cms:text-muted-foreground">Each publish keeps one.</p>}
                                     {(revisions ?? []).map((revision) => (
-                                        <div key={revision.id} className="cms:flex cms:items-center cms:justify-between cms:gap-2">
+                                        <div key={revision.id} className="cms:flex cms:flex-col cms:gap-1 cms:border-b cms:border-border/60 cms:pb-2 cms:last:border-b-0 cms:last:pb-0">
                                             <div className="cms:min-w-0">
                                                 <div className="cms:truncate">{revision.title}</div>
-                                                <div className="cms:text-xs cms:text-muted-foreground">{formatDate(revision.createdAt)}</div>
+                                                <div className="cms:text-xs cms:text-muted-foreground">
+                                                    {formatDate(revision.createdAt)}{revision.author ? ` · ${revision.author}` : ''}
+                                                </div>
+                                                <div className="cms:text-xs cms:text-muted-foreground">
+                                                    {revision.changed === null ? 'First kept version' : revision.changed.length === 0 ? 'No field changed' : `Changed: ${revision.changed.join(', ')}`}
+                                                </div>
                                             </div>
-                                            {can.update && !entry.trashed && (
-                                                <Button type="button" variant="ghost" size="sm"
-                                                    onClick={() => router.post(adminUrl(`cms/revisions/${revision.id}/restore`), {}, { preserveScroll: true })}>
-                                                    Restore
-                                                </Button>
-                                            )}
+                                            <div className="cms:flex cms:gap-1">
+                                                <Button type="button" variant="ghost" size="sm" onClick={() => setComparing(revision)}>Compare</Button>
+                                                {can.update && !entry.trashed && (
+                                                    <Button type="button" variant="ghost" size="sm"
+                                                        onClick={() => router.post(adminUrl(`cms/revisions/${revision.id}/restore`), {}, { preserveScroll: true })}>
+                                                        Restore
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </div>
                                     ))}
                                 </>
@@ -370,6 +381,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                 )}
             </div>
 
+            <CompareDialog revision={comparing} onClose={() => setComparing(null)} dirty={form.isDirty} />
             <ScheduleDialog open={scheduling} onClose={() => setScheduling(false)} processing={form.processing} rescheduling={scheduled}
                 current={entry?.publishedAt ?? null} onSchedule={(iso) => publish(iso)} />
         </form>
@@ -443,6 +455,60 @@ function ScheduleDialog({ open, onClose, onSchedule, current, processing, resche
                     <Button type="button" disabled={chosen === null || processing} onClick={() => chosen && onSchedule(chosen.toISOString())}>
                         {past ? 'Publish now, back-dated' : rescheduling ? 'Change the date' : 'Schedule'}
                     </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+/** A revision beside the saved draft: the fields where they differ, as text. */
+function CompareDialog({ revision, onClose, dirty }: { revision: Revision | null; onClose: () => void; dirty: boolean }) {
+    const [fields, setFields] = React.useState<{ label: string; revision: string; draft: string }[] | null>(null);
+    const [failed, setFailed] = React.useState(false);
+    React.useEffect(() => {
+        setFields(null);
+        setFailed(false);
+        if (!revision) return;
+        let current = true;
+        fetch(adminUrl(`cms/revisions/${revision.id}/compare`), { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
+            .then((response) => (response.ok ? response.json() : Promise.reject(new Error(String(response.status)))))
+            .then((body: { fields: { label: string; revision: string; draft: string }[] }) => { if (current) setFields(body.fields); })
+            .catch(() => { if (current) setFailed(true); });
+        return () => { current = false; };
+    }, [revision]);
+
+    return (
+        <Dialog open={revision !== null} onOpenChange={(next: boolean) => !next && onClose()}>
+            <DialogContent className="cms:max-h-[85vh] cms:overflow-y-auto cms:sm:max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Compare with the draft</DialogTitle>
+                    <DialogDescription>
+                        {revision ? `The version published ${formatDate(revision.createdAt)}${revision.author ? ` by ${revision.author}` : ''}, beside the saved draft.` : ''}
+                        {dirty ? ' Your unsaved changes aren\'t included.' : ''}
+                    </DialogDescription>
+                </DialogHeader>
+                {failed && <p className="cms:text-sm cms:text-destructive">The comparison could not be loaded. Try again.</p>}
+                {!failed && fields === null && <div className="cms:flex cms:flex-col cms:gap-2"><Skeleton className="cms:h-12" /><Skeleton className="cms:h-12" /></div>}
+                {fields?.length === 0 && <p className="cms:text-sm cms:text-muted-foreground">The draft is the same as this version.</p>}
+                {fields && fields.length > 0 && (
+                    <dl className="cms:flex cms:flex-col cms:gap-4 cms:text-sm">
+                        {fields.map((field) => (
+                            <div key={field.label} className="cms:flex cms:flex-col cms:gap-1">
+                                <dt className="cms:font-medium">{field.label}</dt>
+                                <dd className="cms:grid cms:gap-2 cms:sm:grid-cols-2">
+                                    <div className="cms:rounded-md cms:border cms:border-destructive/30 cms:bg-destructive/5 cms:p-2 cms:break-words cms:whitespace-pre-wrap">
+                                        <span className="cms:block cms:text-xs cms:text-muted-foreground">This version</span>{field.revision || '—'}
+                                    </div>
+                                    <div className="cms:rounded-md cms:border cms:border-emerald-500/30 cms:bg-emerald-500/5 cms:p-2 cms:break-words cms:whitespace-pre-wrap">
+                                        <span className="cms:block cms:text-xs cms:text-muted-foreground">Draft</span>{field.draft || '—'}
+                                    </div>
+                                </dd>
+                            </div>
+                        ))}
+                    </dl>
+                )}
+                <DialogFooter>
+                    <Button type="button" variant="outline" onClick={onClose}>Close</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

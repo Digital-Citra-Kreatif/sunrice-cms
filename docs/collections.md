@@ -200,7 +200,7 @@ A slug is lowercase letters, digits and dashes. Left empty, it's made from the t
 
 ## Revisions
 
-Every publish keeps a `Revision` (title, slug, fields and who published it); the latest 50 per translation are kept (`revisions.keep`). `RestoreRevision` loads one into the draft, to publish when ready. If another entry took its slug since, the draft keeps its current slug. In the editor, **Undo the restore** puts the replaced draft back, until the session ends (`PutBackDraft`).
+Every publish keeps a `Revision` (title, slug, fields and who published it); the latest 50 per translation are kept (`revisions.keep`). `RestoreRevision` loads one into the draft, to publish when ready. If another entry took its slug since, the draft keeps its current slug. In the editor, **Undo the restore** puts the replaced draft back, until the session ends (`PutBackDraft`). The **Revisions** card shows the latest 20, each with who published it and the fields it changed from the one before, and **Compare** shows where a revision and the saved draft differ, field by field as text (`GET cms/revisions/{revision}/compare`, `sunrice.admin.cms.entries.revisions.compare`, for those who may view the entry).
 
 ## Trash
 

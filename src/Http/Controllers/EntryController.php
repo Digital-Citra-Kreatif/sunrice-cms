@@ -30,6 +30,7 @@ use Sunrice\Cms\Actions\Entries\SaveEntrySettings;
 use Sunrice\Cms\Actions\Entries\TrashEntry;
 use Sunrice\Cms\Actions\Entries\UnpublishEntry;
 use Sunrice\Cms\Admin\EntryList;
+use Sunrice\Cms\Admin\RevisionList;
 use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Fields\Types\TermsField;
 use Sunrice\Cms\Models\Blueprint;
@@ -275,11 +276,8 @@ final class EntryController
             // The blueprints it may use, when there's a choice (Page settings).
             'blueprints' => self::blueprints($collection),
             // Loaded after the page shows (Inertia's deferred props): the sidebar's lists.
-            'revisions' => Inertia::defer(fn (): array => $translation->revisions()->limit(20)->get()->map(fn (Revision $revision): array => [
-                'id' => $revision->id,
-                'title' => $revision->title,
-                'createdAt' => $revision->created_at?->toIso8601String(),
-            ])->all()),
+            // Who published each and what it changed from the one before.
+            'revisions' => Inertia::defer(fn (): array => RevisionList::summaries($translation)),
             'comments' => $collection->comments && ($request->user()?->can('cms.comments.view') ?? false)
                 ? Inertia::defer(fn (): array => self::comments($entry, $request))
                 : null,
@@ -429,6 +427,12 @@ final class EntryController
         $delete->handle($entry->translation($locale) ?? abort(404));
 
         return redirect()->route('sunrice.admin.cms.entries.edit', $entry->id)->with('success', 'The translation was removed.');
+    }
+
+    /** A revision compared with the draft: the fields that differ, as text. */
+    public function compareRevision(Revision $revision): JsonResponse
+    {
+        return response()->json(['fields' => RevisionList::compare($revision)]);
     }
 
     public function restoreRevision(Request $request, Revision $revision, RestoreRevision $restore): RedirectResponse
