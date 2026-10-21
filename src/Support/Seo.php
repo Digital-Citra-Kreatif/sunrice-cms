@@ -350,6 +350,35 @@ final class Seo
         return $url === '' ? null : $url;
     }
 
+    /** Territories for languages whose own code isn't one (en: en_US); the others are doubled (fr: fr_FR). */
+    private const TERRITORIES = [
+        'af' => 'ZA', 'ar' => 'AR', 'bn' => 'IN', 'ca' => 'ES', 'cs' => 'CZ', 'cy' => 'GB', 'da' => 'DK', 'el' => 'GR',
+        'en' => 'US', 'et' => 'EE', 'eu' => 'ES', 'fa' => 'IR', 'fil' => 'PH', 'ga' => 'IE', 'gl' => 'ES', 'he' => 'IL',
+        'hi' => 'IN', 'hy' => 'AM', 'ja' => 'JP', 'jv' => 'ID', 'ka' => 'GE', 'kk' => 'KZ', 'km' => 'KH', 'ko' => 'KR',
+        'ms' => 'MY', 'nb' => 'NO', 'nn' => 'NO', 'no' => 'NO', 'sl' => 'SI', 'sq' => 'AL', 'sr' => 'RS', 'su' => 'ID',
+        'sv' => 'SE', 'sw' => 'KE', 'ta' => 'IN', 'te' => 'IN', 'tl' => 'PH', 'uk' => 'UA', 'ur' => 'PK', 'vi' => 'VN', 'zh' => 'CN',
+    ];
+
+    /**
+     * A language as share cards name it (og:locale), language_TERRITORY:
+     * "id" → "id_ID", "en" → "en_US", "pt-BR" → "pt_BR", "zh-Hant" → "zh_TW".
+     */
+    public static function ogLocale(string $locale): string
+    {
+        $parts = preg_split('/[-_]/', $locale) ?: [$locale];
+        $language = strtolower($parts[0]);
+        $region = $parts[1] ?? null;
+        $region = match (true) {
+            $region === null => null,
+            strtolower($region) === 'hant' => 'TW',
+            strtolower($region) === 'hans' => 'CN',
+            strlen($region) === 2 || ctype_digit($region) => strtoupper($region),
+            default => null,
+        };
+
+        return $language.'_'.($region ?? self::TERRITORIES[$language] ?? strtoupper($language));
+    }
+
     /** Whether a translation's live version asks not to be indexed. */
     public static function noindex(EntryTranslation $translation): bool
     {
