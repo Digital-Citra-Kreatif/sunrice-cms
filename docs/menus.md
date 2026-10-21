@@ -35,4 +35,4 @@ app(SaveMenu::class)->handle($menu, [
 </nav>
 ```
 
-Links come in the current language. `active` is true for the link to the page shown (its address, without the query string), and `active_trail` for it and the links above it. Entries, terms and listing pages that aren't on the site (drafts, scheduled, trashed, without a URL) are left out, with the links under them. An unknown menu gives an empty list. Menus load once per request.
+Links come in the current language. `active` is true for the link to the page shown (its address; a link with a query string, like `/properties?type=sale`, only when the address has the same values, and then it wins over the link without one, which is on the trail instead), and `active_trail` for it and the links above it, and on an entry's page for the links to its collection's listing page and to its parent entries. Entries, terms and listing pages that aren't on the site (drafts, scheduled, trashed, without a URL) are left out, with the links under them. An unknown menu gives an empty list. Menus load once per request.
