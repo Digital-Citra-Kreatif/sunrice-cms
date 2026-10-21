@@ -21,7 +21,7 @@ Centang beberapa entri (atau kotak di atas untuk seluruh halaman) untuk **Publis
 
 ### Mengurutkan entri
 
-Di koleksi dengan *urutan manual*, klik **Reorder** di atas daftar, seret setiap entri ke posisinya lewat pegangannya (atau dengan papan ketik: fokus ke pegangan, tekan Spasi, pindahkan dengan tombol panah, tekan Spasi lagi), lalu klik **Done**. Di koleksi yang entrinya bertingkat, entri berpindah di antara entri sejajarnya. Panah **Order** (**Move up** dan **Move down**) juga memindahkan satu entri satu posisi, saat daftar dalam urutannya sendiri, tanpa filter atau pencarian. Koleksi lain menampilkan entri terbaru lebih dulu (jika bertanggal) atau menurut judul.
+Di koleksi dengan *urutan manual*, klik **Reorder** di atas daftar, seret setiap entri ke posisinya lewat pegangannya (atau dengan papan ketik: fokus ke pegangan, tekan Spasi, pindahkan dengan tombol panah, tekan Spasi lagi), lalu klik **Done**. Di koleksi yang entrinya bertingkat, daftar menampilkan susunan pohonnya (entri menjorok di bawah induknya) dan entri berpindah di antara entri sejajarnya, beserta isinya; untuk menaruh entri di bawah entri lain, pilih **Parent**-nya di Page settings. Panah **Order** (**Move up** dan **Move down**) juga memindahkan satu entri satu posisi, saat daftar dalam urutannya sendiri, tanpa filter atau pencarian. Koleksi lain menampilkan entri terbaru lebih dulu (jika bertanggal) atau menurut judul.
 
 ## Menulis entri
 

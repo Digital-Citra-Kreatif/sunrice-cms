@@ -47,7 +47,7 @@ interface Option {
 }
 
 interface Props {
-    collection: { handle: string; title: string; dated: boolean; ordered?: boolean; listing?: boolean } | null;
+    collection: { handle: string; title: string; dated: boolean; ordered?: boolean; hierarchical?: boolean; listing?: boolean } | null;
     collections: { handle: string; title: string }[];
     entries: {
         data: Row[];
@@ -279,7 +279,7 @@ function EntryList({
                 </div>
             </div>
 
-            {reordering && draggable ? <EntryReorderList collection={collection.handle} rows={entries.data} /> : <Card className="cms:gap-0 cms:overflow-hidden cms:py-0">
+            {reordering && draggable ? <EntryReorderList collection={collection.handle} rows={entries.data} hierarchical={collection.hierarchical === true} /> : <Card className="cms:gap-0 cms:overflow-hidden cms:py-0">
                 <Table>
                     <TableHeader className="cms:bg-muted/60">
                         <TableRow className="cms:hover:bg-transparent">

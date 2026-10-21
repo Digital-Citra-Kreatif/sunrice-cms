@@ -21,7 +21,7 @@ Tick entries (or the box at the top for the whole page) to **Publish**, **Unpubl
 
 ### Putting entries in order
 
-In a collection with *manual order*, click **Reorder** above the list, drag each entry into its place by its handle (or use the keyboard: focus the handle, press Space, move with the arrow keys, press Space again), and click **Done**. In a collection where entries nest, an entry moves among the entries beside it. The **Order** arrows (**Move up** and **Move down**) also move one entry a place, while the list is in its own order, without filters or search. Other collections list their entries newest first (when they have dates) or by title.
+In a collection with *manual order*, click **Reorder** above the list, drag each entry into its place by its handle (or use the keyboard: focus the handle, press Space, move with the arrow keys, press Space again), and click **Done**. In a collection where entries nest, the list shows the tree (entries indented under their parent) and an entry moves among the entries beside it, with what's under it; to put an entry under another, choose its **Parent** in its Page settings. The **Order** arrows (**Move up** and **Move down**) also move one entry a place, while the list is in its own order, without filters or search. Other collections list their entries newest first (when they have dates) or by title.
 
 ## Writing an entry
 
