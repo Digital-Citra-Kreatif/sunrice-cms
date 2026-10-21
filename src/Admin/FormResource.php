@@ -17,7 +17,6 @@ use Sunrice\Admin\Resources\Resource;
 use Sunrice\Admin\Resources\Tables\Column;
 use Sunrice\Admin\Resources\Tables\Table;
 use Sunrice\Admin\Security\Captcha;
-use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Form as FormModel;
 use Sunrice\Cms\Support\RoleMembers;
 use Sunrice\Cms\Support\SafeUrl;
@@ -57,7 +56,7 @@ final class FormResource extends Resource
             ...HandleField::make('form', 'The site\'s pages show the form by this name. For developers: <x-sunrice-cms::form handle="contact" />.',
                 'Careful: pages that show the form use its handle, so ask your developer to change them too. Roles keep their permissions for its submissions.'),
             Select::make('blueprint')->required()
-                ->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
+                ->options(BlueprintChoices::options(BlueprintChoices::FORM))
                 ->help('Its fields. Visitors get the text, textarea, number, toggle, select, date and file ones.'),
             Textarea::make('notify')->label('Email to')->rows(3)->maxLength(2000)->placeholder('team@example.com')
                 ->help('One address per line, at most '.self::MAX_NOTIFY.'. Empty: submissions are only kept here.')

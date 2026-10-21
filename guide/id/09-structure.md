@@ -40,7 +40,7 @@ Field **Fieldset** menaruh field-field fieldset itu di tempatnya, seolah-olah mi
 | **Template** | Desain yang dipakai entri, jika developer membuatnya. |
 | **Listing page URL**, **Listing page fields**, **Entries per listing page** | Halaman yang menampilkan daftar entri (seperti `/blog`), field khususnya (pengantar), dan jumlah entri per halaman. |
 | **Allow comments** | Pengunjung boleh mengomentari entrinya (membutuhkan URL). |
-| **Structured data type** | Jenis entri yang diberitahukan ke mesin pencari (artikel, halaman web…). |
+| **Structured data type** | Jenis entri yang diberitahukan ke mesin pencari (artikel, halaman web, listing properti, atau orang, tempat, atau produk yang dibahas halaman…). |
 | **SEO from fields** | Field entri mana yang mengisi judul SEO, deskripsi, dan gambar berbagi yang kosong. |
 
 Menghapus koleksi tidak menghapus entrinya: entri hilang dari panel dan situs web. Filter **Deleted** di daftar menampilkan koleksi yang dihapus, dengan **Restore** untuk mengembalikannya.
@@ -53,20 +53,20 @@ Setiap koleksi mendapat izinnya sendiri (melihat, membuat, menyunting, menerbitk
 
 Untuk menambah field, pilih jenisnya, lalu atur:
 
-- **Label**: yang dilihat editor. **Handle** (cara template membaca field) dibuat dari label; mengganti handle nanti menyembunyikan nilai yang tersimpan dengan handle lama, jadi mintalah developer untuk mengganti nama field dengan aman.
+- **Label**: yang dilihat editor. **Handle** (cara template membaca field) dibuat dari label; mengganti handle nanti menyembunyikan nilai yang tersimpan dengan handle lama, jadi mintalah developer untuk mengganti nama field dengan aman. Field di tingkat teratas blueprint tidak bisa memakai handle yang dipakai konten itu sendiri, dan builder langsung memberi tahu saat Anda mengetik: `id`, `title`, `slug`, `url`, `status`, `locale`, `published_at`, `created_at`, `updated_at`, `parent`, `children`, `collection`, `blueprint`, `data`, `seo`, `author`.
 - **Instructions**: petunjuk yang tampil di bawah field.
 - **Required**: entri tidak bisa disimpan atau diterbitkan tanpanya.
 - **Per language**: **Yes, translated** (setiap bahasa punya isinya sendiri), **No, shared** (satu nilai untuk semua bahasa), atau **As the type decides** (teks diterjemahkan; angka, tanggal, saklar, dan media dipakai bersama).
 - **Extra rules**: pemeriksaan untuk developer, satu per baris (misalnya `email`).
 - Pengaturan khusus tiap jenis: pilihan sebuah select, koleksi yang ditautkan field entries, jenis berkas yang diterima field media, jumlah maksimal…
 
-Jenis-jenisnya: **Text**, **Textarea**, **Rich text**, **Number**, **Toggle**, **Select**, **Date**, **Link**, **Media**, **Entries**, **Terms**, **Group** (beberapa field bersama), **Repeater** (baris berisi field), **Flexible content** (blok berbagai jenis), **Fieldset** (menyertakan fieldset), dan **File (forms)** (berkas yang dikirim pengunjung lewat formulir).
+Jenis-jenisnya: **Text**, **Textarea**, **Rich text**, **Number**, **Toggle**, **Select**, **Date**, **Link**, **Media**, **Entries**, **Terms**, **Group** (beberapa field bersama), **Repeater** (baris berisi field), **Flexible content** (blok berbagai jenis), **Fieldset** (menyertakan fieldset: field-nya ditambahkan di tempatnya dengan handle masing-masing; agar tetap di bawah satu nama, taruh di dalam **Group**), dan **File (forms)** (berkas yang dikirim pengunjung lewat formulir: satu, atau beberapa dengan **Several files**).
 
-Seret field ke urutannya lewat pegangannya (field di dalam group atau repeater di antara sesamanya), lalu klik **Save** (atau **Create blueprint** untuk yang baru). Blueprint yang masih dipakai tidak bisa dihapus.
+Seret field ke urutannya lewat pegangannya (field di dalam group atau repeater di antara sesamanya), lalu klik **Save** (atau **Create blueprint** untuk yang baru). Blueprint yang masih dipakai tidak bisa dihapus. Begitu blueprint dipakai untuk entri atau term, global set, atau formulir, pilihan blueprint untuk jenis lain tidak lagi menawarkannya.
 
 ## Taksonomi
 
-**Structure → Taxonomies**: **Title**, **Handle** (bisa diubah nanti, seperti pada koleksi), **Nested terms** (term di bawah term lain, seperti subkategori), **Collections** yang entrinya dikelompokkan, **Term pages URL** (seperti `/topik/{slug}`; kosong: term tidak punya halaman), **Term fields** (blueprint untuk field term), **Template**, dan **SEO from fields**. Editor lalu menambahkan term di Content → Terms (lihat [Term](guide:website/terms)). Agar editor bisa memberi term pada entri, tambahkan field **Terms** ke blueprint koleksinya.
+**Structure → Taxonomies**: **Title**, **Handle** (bisa diubah nanti, seperti pada koleksi), **Nested terms** (term di bawah term lain, seperti subkategori), **Collections** yang entrinya dikelompokkan, **Term pages URL** (seperti `/topik/{slug}`; kosong: term tidak punya halaman), **Term fields** (blueprint untuk field term), **Template**, dan **SEO from fields**. Editor lalu menambahkan term di Content → Terms (lihat [Term](guide:website/terms)). Agar editor bisa memberi term pada entri, tambahkan field **Terms** ke blueprint koleksinya: itu sudah cukup agar daftar entri bisa disaring menurut taksonomi tersebut, tanpa mencentang koleksinya di sini.
 
 ## Global set
 

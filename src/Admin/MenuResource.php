@@ -46,9 +46,7 @@ final class MenuResource extends Resource
     {
         return $form->schema([
             TextInput::make('title')->required(),
-            TextInput::make('handle')->required()->maxLength(64)->unique()->onlyOnCreate()
-                ->rules(['regex:/^[a-z][a-z0-9_]*$/'])
-                ->help('How templates read it, like "main" or "footer". It can\'t change later.'),
+            ...HandleField::make('menu', 'How templates read it, like "main" or "footer".', 'Careful: templates that read it (Cms::menu(\'…\')) need the new handle too.'),
         ]);
     }
 

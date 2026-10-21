@@ -87,6 +87,7 @@ final class EntriesField extends FieldType
             new Field('collections', 'select', 'From collections', required: true, config: [
                 'multiple' => true,
                 'options' => Collection::query()->orderBy('title')->get()->map(fn (Collection $c): array => ['value' => $c->handle, 'label' => $c->title])->all(),
+                'empty' => 'There are no collections yet: create the one to link to first (Structure → Collections), then come back.',
             ]),
             new Field('multiple', 'toggle', 'Several entries'),
             new Field('max', 'number', 'At most', instructions: 'With several entries.', config: ['min' => 1, 'step' => 1]),

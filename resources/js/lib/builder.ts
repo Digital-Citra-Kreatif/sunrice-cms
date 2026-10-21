@@ -28,6 +28,17 @@ export function handleFromLabel(label: string): string {
     return handle;
 }
 
+/** What's typed in a handle box, kept to lowercase letters, digits and underscores ("Contact-Person" → "contact_person"), the end left as typed. */
+export function handleInput(text: string): string {
+    return text
+        .normalize('NFKD')
+        .replace(/[̀-ͯ]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^[0-9_]+/, '')
+        .slice(0, 64);
+}
+
 /** A handle not yet used on this level: "text", then "text_2"… */
 export function uniqueHandle(base: string, siblings: { handle: string }[]): string {
     const taken = new Set(siblings.map((field) => field.handle));
@@ -107,4 +118,20 @@ export function errorKeysAt(errors: Errors, path: string): string[] {
 /** Whether there's any error at or under a path. */
 export function hasErrors(errors: Errors, path: string): boolean {
     return Object.keys(errors).some((key) => key === path || key.startsWith(`${path}.`));
+}
+
+/** A blueprint's top level: the handles content keeps for itself (Blueprint::RESERVED). */
+export type ReservedHandles = string[];
+
+/** What's wrong with a field's handle before saving: taken on its level, or kept by content for itself. */
+export function handleWarning(field: { key: string; handle: string; type: string }, siblings: { key: string; handle: string; type: string }[], reserved?: ReservedHandles): string | null {
+    if (field.type === 'fieldset') return null;
+    if (reserved?.includes(field.handle)) {
+        return `"${field.handle}" is used by the content itself; choose another handle.`;
+    }
+    if (field.handle !== '' && siblings.some((sibling) => sibling.key !== field.key && sibling.type !== 'fieldset' && sibling.handle === field.handle)) {
+        return `There is already a field "${field.handle}" here.`;
+    }
+
+    return null;
 }

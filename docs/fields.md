@@ -2,7 +2,7 @@
 
 A **blueprint** lists the fields editors fill in for one kind of content: the entries of a collection, a taxonomy's terms, a global set or a form. A **fieldset** is a group of fields used in several places: blueprints include it, and flexible fields use fieldsets as their kinds of block.
 
-Both are stored in the database (`sunrice_blueprints`, `sunrice_fieldsets`) and built in the admin under **Structure → Blueprints** and **Structure → Fieldsets**, for people with the `cms.blueprints.manage` permission. The builder adds, edits, drags into order and removes fields (each nested group or repeater's fields among themselves), nests groups and repeaters, and shows each type's settings. Changing a blueprint never deletes data: content keeps values under handles the blueprint no longer has, and they come back when the field does. A blueprint can't be deleted while a collection (for its entries or its listing page), a taxonomy, a global set or a form uses it: the error names them.
+Both are stored in the database (`sunrice_blueprints`, `sunrice_fieldsets`) and built in the admin under **Structure → Blueprints** and **Structure → Fieldsets**, for people with the `cms.blueprints.manage` permission. The builder adds, edits, drags into order and removes fields (each nested group or repeater's fields among themselves), nests groups and repeaters, and shows each type's settings. Changing a blueprint never deletes data: content keeps values under handles the blueprint no longer has, and they come back when the field does. A blueprint can't be deleted while a collection (for its entries or its listing page), a taxonomy, a global set or a form uses it: the error names them. The blueprint pickers offer what fits: a blueprint used for content (a collection's entries or listing page, a taxonomy's terms) isn't offered to global sets and forms, one a form uses isn't offered to content or global sets, and so on; unused blueprints are offered everywhere. A blueprint's handle can be changed on its edit form: `Actions\Blueprints\RenameBlueprint` changes it everywhere it's named (collections, deleted ones too, taxonomies, global sets, forms and entries that picked it). A fieldset's handle can't change: flexible blocks store it with every block.
 
 ## Field definitions
 
@@ -16,7 +16,7 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 
 | Key | |
 | --- | --- |
-| `handle` | Lowercase letters, digits and underscores, starting with a letter; unique on its level. A blueprint's top level can't use the handles content keeps for itself (`Blueprint::RESERVED`: `title`, `slug`, `status`…). |
+| `handle` | Lowercase letters, digits and underscores, starting with a letter; unique on its level (`Support\HandleRule`, whose error suggests the handle meant: `job-title` → try "job_title"; the builder turns what's typed into one as you type). A blueprint's top level can't use the handles content keeps for itself (`Blueprint::RESERVED`: `id`, `title`, `slug`, `url`, `status`, `locale`, `published_at`, `created_at`, `updated_at`, `parent`, `children`, `collection`, `blueprint`, `data`, `seo`, `author`); the builder warns as they're typed, as it does for a handle already taken on its level. |
 | `type` | A registered field type (below). |
 | `required` | The field must be filled in. |
 | `translatable` | Whether the value differs per language; `null` lets the type decide (text does, numbers don't). |
@@ -41,7 +41,7 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 | `media` | a media id, or a list with `multiple` | a `Media` model, or a collection | `multiple`, `max`, `types` (image, video, audio, document) |
 | `group` | an object of its fields | an array | (its `fields`) |
 | `repeater` | a list of rows of its fields | `Items` of arrays | `min`, `max` (its `fields`) |
-| `flexible` | a list of blocks | `Items` of `Block` | `blocks` (fieldset handles), `max` |
+| `flexible` | a list of blocks | `Items` of `Block` | `blocks` (fieldset handles, offered in this order: the builder keeps the order they're ticked in), `max` |
 | `fieldset` | — | — | `fieldset`: includes that fieldset's fields in its place |
 | `terms` | a term id, or a list with `multiple` | one `Term` (or null), or with `multiple` a collection of them | `taxonomy`, `multiple`, `max` (see [taxonomies](taxonomies.md)) |
 | `entries` | an entry id (`null` or `[]` clears it), or a list with `multiple` | one `EntryTranslation` (or null), or with `multiple` a collection of them | `collections`, `multiple`, `max` |
@@ -76,7 +76,7 @@ A block's values are readable as properties (`$block->heading`) or keys (`$block
 
 ### Fieldsets
 
-A `fieldset` field puts the fieldset's fields in its own place; their handles count as the blueprint's own. A fieldset can include other fieldsets, but never itself (directly or through another). An include whose fieldset is gone stays in the blueprint and keeps its data. A fieldset can't be deleted while a blueprint or another fieldset includes it or uses it as a kind of block.
+A `fieldset` field puts the fieldset's fields in its own place, at its level and with their own handles: they count as the blueprint's own, and the include's own handle, label and settings aren't used (the builder shows only which fieldset). To keep them under a name of their own (`primary_contact.phone`), put the include in a Group with that handle; a clash says so. A fieldset can include other fieldsets, but never itself (directly or through another). An include whose fieldset is gone stays in the blueprint and keeps its data. A fieldset can't be deleted while a blueprint or another fieldset includes it or uses it as a kind of block.
 
 ## Showing a field only sometimes
 
@@ -170,5 +170,5 @@ Extend `FieldType` and override what differs:
 | `translatableByDefault()` | Whether values differ per language unless the field says. |
 | `sortCast()` | `'string'`, `'number'`, `'date'` or null: how values sort and compare in queries. |
 | `hasChildren()` | Whether the field holds other fields. |
-| `settings()` | The type's options in the builder, as fields, stored in `config`. |
+| `settings()` | The type's options in the builder, as fields, stored in `config`; errors name them by label. A multiple select setting with `config.empty` shows that text when it has no options (say what to create first). |
 | `toAdmin($field, $schema)` | The definition sent to the editor. |

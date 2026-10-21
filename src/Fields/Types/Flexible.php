@@ -134,9 +134,11 @@ final class Flexible extends FieldType
     public function settings(): array
     {
         return [
-            new Field('blocks', 'select', 'Kinds of block', required: true, instructions: 'Fieldsets editors can add as blocks.', config: [
+            new Field('blocks', 'select', 'Kinds of block', required: true, instructions: 'Fieldsets editors can add as blocks, offered in the order you tick them.', config: [
                 'multiple' => true,
+                'in_tick_order' => true,
                 'options' => Fieldset::options(),
+                'empty' => 'There are no fieldsets yet: each kind of block is a fieldset, so create them first (Structure → Fieldsets), then come back.',
             ]),
             new Field('max', 'number', 'At most (blocks)', config: ['min' => 1, 'step' => 1]),
         ];

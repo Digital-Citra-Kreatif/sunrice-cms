@@ -10,7 +10,6 @@ use Sunrice\Admin\Resources\Forms\TextInput;
 use Sunrice\Admin\Resources\Resource;
 use Sunrice\Admin\Resources\Tables\Column;
 use Sunrice\Admin\Resources\Tables\Table;
-use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\GlobalSet;
 
 /**
@@ -42,11 +41,9 @@ final class GlobalSetResource extends Resource
     {
         return $form->schema([
             TextInput::make('title')->required(),
-            TextInput::make('handle')->required()->maxLength(64)->unique()->onlyOnCreate()
-                ->rules(['regex:/^[a-z][a-z0-9_]*$/'])
-                ->help('How templates read it, like "contact". It can\'t change later.'),
+            ...HandleField::make('global', 'How templates read it, like "contact".', 'Careful: templates that read it (Cms::global(\'…\')) need the new handle too.'),
             Select::make('blueprint')
-                ->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
+                ->options(BlueprintChoices::options(BlueprintChoices::GLOBAL))
                 ->help('Its fields. Changing it keeps the values already saved.'),
         ]);
     }

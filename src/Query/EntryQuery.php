@@ -8,7 +8,6 @@ use Closure;
 use DateTimeInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Pagination\LengthAwarePaginator as Paginated;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection as Items;
 use InvalidArgumentException;
@@ -371,7 +370,8 @@ final class EntryQuery
 
     /**
      * A page of entries; `$pageName` is the query string's page number
-     * (two lists on one page each take their own).
+     * (two lists on one page each take their own). The first page's link
+     * has no page number (EntryPaginator).
      *
      * @return LengthAwarePaginator<int, EntryTranslation>
      */
@@ -381,7 +381,7 @@ final class EntryQuery
             $paginator = $this->builder()->paginate($perPage, ['*'], $pageName);
             $this->hydrate($paginator->getCollection());
 
-            return $paginator;
+            return EntryPaginator::from($paginator);
         }
         $page = Paginator::resolveCurrentPage($pageName);
         /** @var array{ids: list<int>, total: int} $cached */
@@ -391,7 +391,7 @@ final class EntryQuery
             return ['ids' => $paginator->getCollection()->pluck('id')->all(), 'total' => $paginator->total()];
         });
 
-        return new Paginated($this->hydrate($this->byIds($cached['ids'])), $cached['total'], $perPage, $page, ['path' => Paginator::resolveCurrentPath(), 'pageName' => $pageName]);
+        return new EntryPaginator($this->hydrate($this->byIds($cached['ids'])), $cached['total'], $perPage, $page, ['path' => Paginator::resolveCurrentPath(), 'pageName' => $pageName]);
     }
 
     /**

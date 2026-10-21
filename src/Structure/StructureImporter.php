@@ -69,15 +69,20 @@ final class StructureImporter
     public const SECTIONS = ['fieldsets', 'blueprints', 'collections', 'taxonomies', 'globals', 'forms', 'terms', 'entries', 'menus', 'redirects'];
 
     /** A collection's settings in the file. */
-    public const COLLECTION = ['handle', 'title', 'blueprint', 'blueprints', 'dated', 'ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template'];
+    public const COLLECTION = ['handle', 'title', 'blueprint', 'blueprints', 'dated', 'ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template', ...self::SEO_FIELDS];
 
-    public const TAXONOMY = ['handle', 'title', 'hierarchical', 'route', 'blueprint', 'template'];
+    public const TAXONOMY = ['handle', 'title', 'hierarchical', 'route', 'blueprint', 'template', ...self::SEO_FIELDS];
+
+    /** Which fields fill in what an entry's or term's SEO card leaves empty. */
+    public const SEO_FIELDS = ['seo_title_field', 'seo_description_field', 'seo_image_field'];
 
     public const GLOBAL_SET = ['handle', 'title', 'blueprint'];
 
-    public const FORM = ['handle', 'title', 'blueprint', 'notify', 'message', 'redirect_url', 'per_minute', 'captcha'];
+    public const FORM = ['handle', 'title', 'blueprint', 'notify', 'notify_roles', 'message', 'redirect_url', 'per_minute', 'captcha'];
 
     private const HANDLE = ['required', 'string', 'max:64', 'regex:/^[a-z][a-z0-9_]*$/'];
+
+    private const FIELD_HANDLE = ['nullable', 'string', 'max:64', 'regex:/^[a-z][a-z0-9_]*$/'];
 
     private const TEMPLATE = ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'];
 
@@ -250,10 +255,11 @@ final class StructureImporter
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
             'schema_type' => ['nullable', 'string', Rule::in(array_keys(StructuredData::ENTRY_TYPES))],
             'template' => self::TEMPLATE,
+            ...array_fill_keys(self::SEO_FIELDS, self::FIELD_HANDLE),
         ])->validate();
         $before = $existing?->only(self::COLLECTION);
         $collection = app(SaveCollection::class)->handle(array_intersect_key($item, array_flip(['title', 'blueprint', 'blueprints', 'dated'])) + ($existing === null ? ['handle' => $item['handle']] : []), $existing);
-        $collection->forceFill(array_intersect_key($validated, array_flip(['ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template'])))->save();
+        $collection->forceFill(array_intersect_key($validated, array_flip(['ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template', ...self::SEO_FIELDS])))->save();
         $this->report->add('collection', $collection->handle, $this->status($before, $collection->only(self::COLLECTION)));
     }
 
@@ -290,6 +296,7 @@ final class StructureImporter
             'route' => ['nullable', 'string', 'max:255', Rule::unique((new Taxonomy)->getTable(), 'route')->ignore($existing->id ?? 0), self::routeRule()],
             'blueprint' => ['nullable', 'string', Rule::exists((new Blueprint)->getTable(), 'handle')],
             'template' => self::TEMPLATE,
+            ...array_fill_keys(self::SEO_FIELDS, self::FIELD_HANDLE),
             'collections' => ['sometimes', 'array'],
             'collections.*' => ['string', Rule::exists((new Collection)->getTable(), 'handle')],
         ])->validate();
@@ -337,6 +344,8 @@ final class StructureImporter
             'blueprint' => ['required', 'string', Rule::exists((new Blueprint)->getTable(), 'handle')],
             'notify' => ['nullable', 'array', 'max:10'],
             'notify.*' => ['email'],
+            'notify_roles' => ['nullable', 'array', 'max:50'],
+            'notify_roles.*' => ['string', 'max:255'],
             'message' => ['nullable', 'string', 'max:1000'],
             'redirect_url' => ['nullable', 'string', 'max:2000', SafeUrl::rule()],
             'per_minute' => ['nullable', 'integer', 'min:1', 'max:1000'],

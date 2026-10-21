@@ -5,7 +5,7 @@ import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SortableHandle, SortableList, Switch, Textarea,
 } from '@sunrice/admin-sdk/ui';
 import { FieldError, FieldInput } from '@/components/FieldInput.tsx';
-import { type BuilderField, errorsAt, errorsUnder, hasErrors, MAX_DEPTH, newField, relabel } from '@/lib/builder.ts';
+import { type BuilderField, errorsAt, errorsUnder, handleInput, handleWarning, hasErrors, MAX_DEPTH, newField, relabel, type ReservedHandles } from '@/lib/builder.ts';
 import { OPERATORS } from '@/lib/conditions.ts';
 import type { Errors, FieldCondition, FieldTypeInfo } from '@/types.ts';
 
@@ -18,10 +18,12 @@ interface Props {
     depth?: number;
     /** For element ids. */
     idPrefix?: string;
+    /** The top level's: handles content keeps for itself, warned about as they're typed. */
+    reserved?: ReservedHandles;
 }
 
 /** The fields of a blueprint or fieldset: add, edit, drag into order and remove, groups and repeaters nested (each level its own list). */
-export function FieldBuilder({ fields, onChange, types, errors, depth = 1, idPrefix = 'field' }: Props) {
+export function FieldBuilder({ fields, onChange, types, errors, depth = 1, idPrefix = 'field', reserved }: Props) {
     const [open, setOpen] = React.useState<Set<string>>(() => new Set());
     const toggle = (key: string) => setOpen((keys) => {
         const next = new Set(keys);
@@ -29,23 +31,32 @@ export function FieldBuilder({ fields, onChange, types, errors, depth = 1, idPre
         return next;
     });
     const update = (index: number, field: BuilderField) => onChange(fields.map((f, i) => (i === index ? field : f)));
+    // A new field opens alone: the others fold to their summary line.
     const add = (type: FieldTypeInfo) => {
         const field = newField(type.type, type.label, fields);
         onChange([...fields, field]);
-        setOpen((keys) => new Set(keys).add(field.key));
+        setOpen(new Set([field.key]));
     };
 
     return (
         <div className="cms:flex cms:flex-col cms:gap-2">
             {fields.length === 0 && <p className="cms:rounded-lg cms:border cms:border-dashed cms:p-4 cms:text-sm cms:text-muted-foreground">No fields yet.</p>}
+            {fields.length > 1 && (
+                <div className="cms:flex cms:justify-end">
+                    {open.size > 0
+                        ? <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(new Set())}>Close all</Button>
+                        : <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(new Set(fields.map((field) => field.key)))}>Open all</Button>}
+                </div>
+            )}
             <SortableList items={fields} getId={(field) => field.key} getLabel={(field) => field.label || field.handle} onReorder={(next) => onChange(next)}>
                 {(field, { index, handle, isOverlay }) => {
                     const type = types.find((t) => t.type === field.type);
-                    const expanded = !isOverlay && (open.has(field.key) || hasErrors(errors, String(index)));
+                    const invalid = hasErrors(errors, String(index)) || handleWarning(field, fields, reserved) !== null;
+                    const expanded = !isOverlay && (open.has(field.key) || invalid);
                     const id = `${idPrefix}-${field.key}`;
 
                     return (
-                        <div className={`cms:rounded-lg cms:border cms:bg-card ${hasErrors(errors, String(index)) ? 'cms:border-destructive' : ''}`}>
+                        <div className={`cms:rounded-lg cms:border cms:bg-card ${invalid ? 'cms:border-destructive' : ''}`}>
                             <div className="cms:flex cms:items-center cms:gap-2 cms:p-2">
                                 <SortableHandle {...handle} label={`Move ${field.label || field.handle}`} />
                                 <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-expanded={expanded} aria-controls={id}
@@ -66,7 +77,7 @@ export function FieldBuilder({ fields, onChange, types, errors, depth = 1, idPre
                             </div>
                             {expanded && (
                                 <FieldSettings id={id} field={field} type={type} siblings={fields} onChange={(next) => update(index, next)}
-                                    types={types} errors={errorsUnder(errors, String(index))} depth={depth} />
+                                    types={types} errors={errorsUnder(errors, String(index))} depth={depth} reserved={reserved} />
                             )}
                         </div>
                     );
@@ -97,12 +108,35 @@ interface SettingsProps {
     types: FieldTypeInfo[];
     errors: Errors;
     depth: number;
+    reserved?: Props['reserved'];
 }
 
 const PER_LANGUAGE = { default: '__default', yes: 'yes', no: 'no' };
 
-function FieldSettings({ id, field, type, siblings, onChange, types, errors, depth }: SettingsProps) {
+function FieldSettings({ id, field, type, siblings, onChange, types, errors, depth, reserved }: SettingsProps) {
     const config = field.config ?? {};
+    const warning = handleWarning(field, siblings, reserved);
+
+    // A fieldset include: only which fieldset. Its fields land here with their own handles; its handle and settings aren't used.
+    if (field.type === 'fieldset') {
+        return (
+            <div id={id} className="cms:flex cms:flex-col cms:gap-4 cms:border-t cms:p-4">
+                <div className="cms:grid cms:gap-4 cms:md:grid-cols-2">
+                    <div className="cms:flex cms:flex-col cms:gap-2">
+                        <Label htmlFor={`${id}-label`}>Label</Label>
+                        <Input id={`${id}-label`} value={field.label ?? ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(relabel(field, e.target.value, siblings))} />
+                        <p className="cms:text-sm cms:text-muted-foreground">Only shown here, in the builder.</p>
+                    </div>
+                    {type?.settings.map((setting) => (
+                        <FieldInput key={setting.handle} id={`${id}-config-${setting.handle}`} field={setting} value={config[setting.handle]}
+                            errors={errorsAt(errors, `config.${setting.handle}`)}
+                            onChange={(value) => onChange({ ...field, config: { ...config, [setting.handle]: value } })} />
+                    ))}
+                </div>
+                <FieldError message={errors.handle ?? errors.type} />
+            </div>
+        );
+    }
 
     return (
         <div id={id} className="cms:flex cms:flex-col cms:gap-4 cms:border-t cms:p-4">
@@ -116,9 +150,9 @@ function FieldSettings({ id, field, type, siblings, onChange, types, errors, dep
                 <div className="cms:flex cms:flex-col cms:gap-2">
                     <Label htmlFor={`${id}-handle`}>Handle</Label>
                     <Input id={`${id}-handle`} className="cms:font-mono" value={field.handle}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...field, handle: e.target.value, handleTouched: true })} />
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...field, handle: handleInput(e.target.value), handleTouched: true })} />
                     <p className="cms:text-sm cms:text-muted-foreground">How templates read it. Renaming it hides values saved under the old one.</p>
-                    <FieldError message={errors.handle} />
+                    <FieldError message={errors.handle ?? warning ?? undefined} />
                 </div>
             </div>
             <div className="cms:flex cms:flex-col cms:gap-2">
@@ -162,10 +196,10 @@ function FieldSettings({ id, field, type, siblings, onChange, types, errors, dep
 
             <div className="cms:flex cms:flex-col cms:gap-2">
                 <Label htmlFor={`${id}-validation`}>Extra rules</Label>
-                <Textarea id={`${id}-validation`} rows={2} className="cms:font-mono" placeholder={'min:3\nregex:/^[A-Z]/'}
+                <Textarea id={`${id}-validation`} rows={2} className="cms:font-mono"
                     value={(field.validation ?? []).join('\n')}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange({ ...field, validation: e.target.value.split('\n') })} />
-                <p className="cms:text-sm cms:text-muted-foreground">Laravel rules, one per line.</p>
+                <p className="cms:text-sm cms:text-muted-foreground">Optional checks, one per line, such as <code>email</code> or <code>max:100</code> (for developers: Laravel validation rules).</p>
                 <FieldError message={errors.validation ?? Object.entries(errors).find(([key]) => key.startsWith('validation.'))?.[1]} />
             </div>
 

@@ -40,7 +40,7 @@ A **collection** is a kind of content: *Pages*, *Blog*, *Products*, *Events*. **
 | **Template** | The design entries use, if your developer made one for it. |
 | **Listing page URL**, **Listing page fields**, **Entries per listing page** | A page listing the entries (like `/blog`), its own fields (an introduction), and how many entries it shows per page. |
 | **Allow comments** | Visitors may comment on its entries (it needs a URL). |
-| **Structured data type** | What search engines are told its entries are (an article, a web page…). |
+| **Structured data type** | What search engines are told its entries are (an article, a web page, a real estate listing, or a person, place or product the page is about…). |
 | **SEO from fields** | Which of the entries' fields fill in an empty SEO title, description and share image. |
 
 Deleting a collection doesn't delete its entries: they leave the panel and the website. The list's **Deleted** filter shows deleted collections, with **Restore** to bring one back.
@@ -53,20 +53,20 @@ A **blueprint** is a list of fields: what editors fill in for a collection's ent
 
 To add a field, choose its type, then set:
 
-- **Label**: what editors see. The **Handle** (how templates read the field) is made from it; renaming a handle later hides values saved under the old one, so ask your developer to rename fields safely.
+- **Label**: what editors see. The **Handle** (how templates read the field) is made from it; renaming a handle later hides values saved under the old one, so ask your developer to rename fields safely. A blueprint's top-level fields can't use the handles the content keeps for itself, and the builder says so as you type: `id`, `title`, `slug`, `url`, `status`, `locale`, `published_at`, `created_at`, `updated_at`, `parent`, `children`, `collection`, `blueprint`, `data`, `seo`, `author`.
 - **Instructions**: a hint shown under the field.
 - **Required**: the entry can't be saved or published without it.
 - **Per language**: **Yes, translated** (each language has its own), **No, shared** (one value for every language), or **As the type decides** (text is translated; numbers, dates, switches and media are shared).
 - **Extra rules**: checks for developers, one per line (such as `email`).
 - Each type's own settings: the choices of a select, the collections an entries field links to, the types a media field accepts, how many items at most…
 
-The types: **Text**, **Textarea**, **Rich text**, **Number**, **Toggle**, **Select**, **Date**, **Link**, **Media**, **Entries**, **Terms**, **Group** (fields together), **Repeater** (rows of fields), **Flexible content** (blocks of different kinds), **Fieldset** (include a fieldset) and **File (forms)** (files visitors send with a form).
+The types: **Text**, **Textarea**, **Rich text**, **Number**, **Toggle**, **Select**, **Date**, **Link**, **Media**, **Entries**, **Terms**, **Group** (fields together), **Repeater** (rows of fields), **Flexible content** (blocks of different kinds), **Fieldset** (include a fieldset: its fields are added where it is, with their own handles; to keep them under one name, put it in a **Group**) and **File (forms)** (files visitors send with a form: one, or several with **Several files**).
 
-Drag the fields into order by their handle (the fields inside a group or repeater among themselves), then click **Save** (or **Create blueprint** for a new one). A blueprint still in use can't be deleted.
+Drag the fields into order by their handle (the fields inside a group or repeater among themselves), then click **Save** (or **Create blueprint** for a new one). A blueprint still in use can't be deleted. Once a blueprint is used for entries or terms, a global set or a form, the other kinds of picker no longer offer it.
 
 ## Taxonomies
 
-**Structure → Taxonomies**: a **Title**, a **Handle** (changeable later, as for collections), **Nested terms** (terms under other terms, like subcategories), the **Collections** whose entries it groups, a **Term pages URL** (like `/topics/{slug}`; empty: terms have no pages), **Term fields** (a blueprint for the terms' own fields), a **Template**, and **SEO from fields**. Editors then add the terms under Content → Terms (see [Terms](guide:website/terms)). To let editors give entries terms, add a **Terms** field to the collection's blueprint.
+**Structure → Taxonomies**: a **Title**, a **Handle** (changeable later, as for collections), **Nested terms** (terms under other terms, like subcategories), the **Collections** whose entries it groups, a **Term pages URL** (like `/topics/{slug}`; empty: terms have no pages), **Term fields** (a blueprint for the terms' own fields), a **Template**, and **SEO from fields**. Editors then add the terms under Content → Terms (see [Terms](guide:website/terms)). To let editors give entries terms, add a **Terms** field to the collection's blueprint: that's enough for the entries list to filter by the taxonomy too, without ticking the collection here.
 
 ## Global sets
 

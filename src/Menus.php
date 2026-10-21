@@ -7,6 +7,7 @@ namespace Sunrice\Cms;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\Menu;
 use Sunrice\Cms\Models\MenuItem;
+use Sunrice\Cms\Site\Page;
 use Sunrice\Cms\Site\Site;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\SiteCache;
@@ -14,9 +15,12 @@ use Sunrice\Cms\Support\SiteCache;
 /**
  * Menus for templates: items with their label and URL in a language, and
  * whether they're the page shown (`active`) or lead to it (`active_trail`:
- * the page is below them). Links to entries, terms and listing pages that
- * aren't on the site are left out, with what's under them. Loaded once
- * per request.
+ * the page is below them in the menu, or on the site: an entry's listing
+ * page and its parent entries). A link with a query string is the page
+ * shown only when the address has the same values, and then wins over the
+ * link without it (which is on the trail). Links to entries, terms and
+ * listing pages that aren't on the site are left out, with what's under
+ * them. Loaded once per request.
  *
  * @phpstan-type MenuLink array{label: string, url: string, new_tab: bool, active: bool, active_trail: bool, children: list<mixed>}
  *
@@ -48,26 +52,101 @@ final class Menus
         }
 
         // Which link is the page shown: per request, so not cached with them.
-        return self::mark($this->resolved[$key], self::normalize(request()->url()));
+        $current = ['path' => self::normalize(request()->url()), 'query' => request()->query(), 'above' => $this->above()];
+        $best = self::bestScore($this->resolved[$key], $current);
+
+        return self::mark($this->resolved[$key], $current, $best);
     }
 
     /**
      * @param  list<array{label: string, url: string, new_tab: bool, children: list<mixed>}>  $items
+     * @param  array{path: string, query: array<mixed>, above: list<string>}  $current
      * @return list<MenuLink>
      */
-    private static function mark(array $items, string $current): array
+    private static function mark(array $items, array $current, int $best): array
     {
         $marked = [];
         foreach ($items as $item) {
             /** @var list<array{label: string, url: string, new_tab: bool, children: list<mixed>}> $children */
             $children = $item['children'];
-            $children = self::mark($children, $current);
-            $active = self::normalize($item['url']) === $current;
-            $trail = $active || array_filter($children, fn (array $child): bool => $child['active_trail']) !== [];
+            $children = self::mark($children, $current, $best);
+            $score = self::score($item['url'], $current);
+            $active = $score >= 0 && $score === $best;
+            $trail = $score >= 0
+                || in_array(self::normalize($item['url']), $current['above'], true) && parse_url($item['url'], PHP_URL_QUERY) === null
+                || array_filter($children, fn (array $child): bool => $child['active_trail']) !== [];
             $marked[] = ['label' => $item['label'], 'url' => $item['url'], 'new_tab' => $item['new_tab'], 'active' => $active, 'active_trail' => $trail, 'children' => $children];
         }
 
         return $marked;
+    }
+
+    /**
+     * The best score of any link in the menu (-1: none is the page shown).
+     *
+     * @param  list<array{label: string, url: string, new_tab: bool, children: list<mixed>}>  $items
+     * @param  array{path: string, query: array<mixed>, above: list<string>}  $current
+     */
+    private static function bestScore(array $items, array $current): int
+    {
+        $best = -1;
+        foreach ($items as $item) {
+            /** @var list<array{label: string, url: string, new_tab: bool, children: list<mixed>}> $children */
+            $children = $item['children'];
+            $best = max($best, self::score($item['url'], $current), self::bestScore($children, $current));
+        }
+
+        return $best;
+    }
+
+    /**
+     * How well a link matches the page shown: -1 not at all, else how many
+     * of its query string's values the address has (it must have them all).
+     *
+     * @param  array{path: string, query: array<mixed>, above: list<string>}  $current
+     */
+    private static function score(string $url, array $current): int
+    {
+        if (self::normalize($url) !== $current['path']) {
+            return -1;
+        }
+        parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
+        foreach ($query as $name => $value) {
+            $given = $current['query'][$name] ?? null;
+            if (is_array($value) ? ! is_array($given) || array_diff(array_map(strval(...), array_filter($value, is_scalar(...))), array_map(strval(...), array_filter($given, is_scalar(...)))) !== [] : ! is_scalar($given) || (string) $given !== $value) {
+                return -1;
+            }
+        }
+
+        return count($query);
+    }
+
+    /**
+     * The pages above the entry shown, as compared URLs: its collection's
+     * listing page and its parent entries.
+     *
+     * @return list<string>
+     */
+    private function above(): array
+    {
+        $page = Page::current();
+        $translation = $page?->type === Page::ENTRY ? $page->entry : null;
+        $entry = $translation?->entry;
+        if ($page === null || $entry === null) {
+            return [];
+        }
+        $listing = $entry->collection->listingUrl($page->locale);
+        $urls = $listing === null ? [] : [self::normalize($listing)];
+        foreach ($entry->ancestors() as $ancestor) {
+            $live = $ancestor->translation($page->locale);
+            $live = $live !== null && $live->isLive() ? $live : $ancestor->mainTranslation();
+            $url = $live !== null && $live->isLive() ? app(Site::class)->urlIn($live, $page->locale) : null;
+            if ($url !== null) {
+                $urls[] = self::normalize($url);
+            }
+        }
+
+        return $urls;
     }
 
     /** A URL to compare: full, without a trailing slash, query or anchor. */

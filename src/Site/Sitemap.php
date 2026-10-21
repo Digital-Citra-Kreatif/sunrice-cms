@@ -14,8 +14,8 @@ use Sunrice\Cms\Support\Seo;
 use Sunrice\Cms\Support\SiteCache;
 
 /**
- * The sitemap's XML: every live entry page with its other languages, term
- * pages and listing pages, but those that ask not to be indexed, built in
+ * The sitemap's XML: every live entry page, term page and listing page
+ * with its other languages, but those that ask not to be indexed, built in
  * chunks (never all at once) and kept in the cache's sitemap area, in
  * files of at most LIMIT addresses: one file when they fit, else an index
  * of /sitemap-{n}.xml files.
@@ -126,10 +126,7 @@ final class Sitemap
             if ($translation->updated_at !== null) {
                 $xml .= '<lastmod>'.$translation->updated_at->toAtomString().'</lastmod>';
             }
-            foreach (Seo::alternates($translation) as $locale => $alternate) {
-                $xml .= '<xhtml:link rel="alternate" hreflang="'.e(str_replace('_', '-', $locale)).'" href="'.e($alternate).'"/>';
-            }
-            yield $xml.'</url>';
+            yield $xml.self::links(Seo::alternates($translation)).'</url>';
         }
         // Term pages, but those that ask not to be indexed.
         $taxonomies = Taxonomy::query()->whereNotNull('route')->pluck('id');
@@ -144,14 +141,30 @@ final class Sitemap
             if ($term->updated_at !== null) {
                 $xml .= '<lastmod>'.$term->updated_at->toAtomString().'</lastmod>';
             }
-            yield $xml.'</url>';
+            yield $xml.self::links(Seo::termAlternates($term)).'</url>';
         }
         // Listing pages, in every language.
         foreach (Collection::query()->whereNotNull('listing_route')->orderBy('id')->get() as $collection) {
+            $links = self::links(Seo::listingAlternates($collection));
             foreach (Locales::all() as $locale) {
-                yield '<url><loc>'.e((string) $collection->listingUrl($locale)).'</loc></url>';
+                yield '<url><loc>'.e((string) $collection->listingUrl($locale)).'</loc>'.$links.'</url>';
             }
         }
+    }
+
+    /**
+     * A page's other languages (and x-default) as hreflang links.
+     *
+     * @param  array<string, string>  $alternates
+     */
+    private static function links(array $alternates): string
+    {
+        $xml = '';
+        foreach ($alternates as $locale => $alternate) {
+            $xml .= '<xhtml:link rel="alternate" hreflang="'.e(str_replace('_', '-', $locale)).'" href="'.e($alternate).'"/>';
+        }
+
+        return $xml;
     }
 
     /** Its addresses are full URLs: per host. */

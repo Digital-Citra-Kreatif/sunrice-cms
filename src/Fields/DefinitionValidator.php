@@ -9,6 +9,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Validator as ValidatorInstance;
 use Sunrice\Cms\Fields\Types\FieldsetInclude;
+use Sunrice\Cms\Support\HandleRule;
 
 /**
  * Checks field definitions from the blueprint builder before they are
@@ -52,8 +53,10 @@ final class DefinitionValidator
     public function validate(mixed $input, string $attribute = 'fields', array $reserved = [], ?string $fieldset = null): array
     {
         $rules = [$attribute => ['present', 'array', 'list', 'max:200']];
-        $this->collectRules(is_array($input) ? $input : [], $attribute, 1, $rules);
-        $validator = Validator::make([$attribute => $input], $rules);
+        $names = [];
+        $this->collectRules(is_array($input) ? $input : [], $attribute, 1, $rules, $names);
+        // Errors name the setting ("From collections"), not the path (fields.0.config.collections).
+        $validator = Validator::make([$attribute => $input], $rules, [], $names);
         $validator->after(function (ValidatorInstance $validator) use ($input, $attribute, $reserved, $fieldset): void {
             if ($validator->errors()->isEmpty() && is_array($input)) {
                 $this->checkHandles($validator, Field::listFromArray($input), $attribute, $reserved, $fieldset);
@@ -67,14 +70,18 @@ final class DefinitionValidator
     /**
      * @param  array<mixed>  $fields
      * @param  array<string, list<mixed>>  $rules
+     * @param  array<string, string>  $names  readable names of the attributes
      */
-    private function collectRules(array $fields, string $path, int $depth, array &$rules): void
+    private function collectRules(array $fields, string $path, int $depth, array &$rules, array &$names): void
     {
         foreach ($fields as $index => $field) {
             $key = "{$path}.{$index}";
             $type = is_array($field) && is_string($field['type'] ?? null) && $this->types->has($field['type']) ? $this->types->get($field['type']) : null;
             $rules[$key] = ['array'];
-            $rules["{$key}.handle"] = ['required', 'string', 'max:64', 'regex:/^[a-z][a-z0-9_]*$/'];
+            foreach (['handle', 'type', 'label', 'instructions', 'required', 'translatable', 'validation', 'condition', 'config', 'fields'] as $part) {
+                $names["{$key}.{$part}"] = $part === 'validation' ? 'extra rules' : $part;
+            }
+            $rules["{$key}.handle"] = ['required', 'string', 'max:64', new HandleRule];
             $rules["{$key}.type"] = ['required', 'string', Rule::in(array_keys($this->types->all()))];
             $rules["{$key}.label"] = ['nullable', 'string', 'max:255'];
             $rules["{$key}.instructions"] = ['nullable', 'string', 'max:1000'];
@@ -104,12 +111,15 @@ final class DefinitionValidator
             }
             $config = is_array($field['config'] ?? null) ? $field['config'] : [];
             $rules += Schema::make($type->settings())->rules($config, "{$key}.config");
+            foreach ($type->settings() as $setting) {
+                $names["{$key}.config.{$setting->handle}"] = '"'.$setting->displayLabel().'"';
+            }
             $children = is_array($field['fields'] ?? null) ? $field['fields'] : [];
             if ($type->hasChildren() && $children !== []) {
                 if ($depth >= self::MAX_DEPTH) {
                     $rules["{$key}.fields"][] = 'prohibited';
                 } else {
-                    $this->collectRules($children, "{$key}.fields", $depth + 1, $rules);
+                    $this->collectRules($children, "{$key}.fields", $depth + 1, $rules, $names);
                 }
             }
         }
@@ -146,18 +156,27 @@ final class DefinitionValidator
                 }
                 $handles = array_map(fn (Field $child): string => $child->handle, Schema::make([$field])->fields());
             }
+            // An include's fields land at this level: say so, and how to keep them apart.
+            $include = $field->type === FieldsetInclude::TYPE ? ($field->configString('fieldset') ?? '') : null;
+            $at = $include !== null ? "{$key}.config.fieldset" : "{$key}.handle";
             foreach ($handles as $handle) {
+                $from = self::includeHint($include ?? (is_string($seen[$handle] ?? null) ? $seen[$handle] : null));
                 if (in_array($handle, $reserved, true)) {
-                    $validator->errors()->add("{$key}.handle", "\"{$handle}\" is used by the content itself; choose another handle.");
+                    $validator->errors()->add($at, "\"{$handle}\" is used by the content itself; choose another handle".self::includeHint($include).'.');
                 } elseif (isset($seen[$handle])) {
-                    $validator->errors()->add("{$key}.handle", "There is already a field \"{$handle}\" here.");
+                    $validator->errors()->add($at, "There is already a field \"{$handle}\" here{$from}.");
                 }
-                $seen[$handle] = true;
+                $seen[$handle] = $include ?? true;
             }
             if ($field->fields !== []) {
                 $this->checkHandles($validator, $field->fields, "{$key}.fields", [], $fieldset);
             }
         }
+    }
+
+    private static function includeHint(?string $fieldset): string
+    {
+        return $fieldset === null ? '' : " (the fieldset \"{$fieldset}\" adds its fields at this level: put it in a Group to keep them under a name of their own)";
     }
 
     /**

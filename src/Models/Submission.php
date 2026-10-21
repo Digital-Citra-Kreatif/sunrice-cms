@@ -68,8 +68,11 @@ class Submission extends Model
     {
         $paths = [];
         foreach ($this->data as $value) {
-            if (is_array($value) && is_string($value['path'] ?? null) && str_starts_with($value['path'], 'form-uploads/')) {
-                $paths[] = $value['path'];
+            // One file, or several.
+            foreach (is_array($value) && array_is_list($value) ? $value : [$value] as $file) {
+                if (is_array($file) && is_string($file['path'] ?? null) && str_starts_with($file['path'], 'form-uploads/')) {
+                    $paths[] = $file['path'];
+                }
             }
         }
         if ($paths !== []) {

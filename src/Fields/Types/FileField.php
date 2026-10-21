@@ -12,10 +12,11 @@ use Sunrice\Cms\Fields\FieldType;
 
 /**
  * A file visitors send with a form (config: types, a list of extensions
- * like "pdf, jpg"; max_kb). Kept on the private disk
- * `sunrice-cms.forms.upload_disk`, never public: people with the
- * submissions permission download it from the submission. Stored as
- * {path, name, size, mime}. Entries don't use it (use a media field).
+ * like "pdf, jpg"; max_kb; multiple with max_files, for several). Kept on
+ * the private disk `sunrice-cms.forms.upload_disk`, never public: people
+ * with the submissions permission download it from the submission.
+ * Stored as {path, name, size, mime}, or a list of them with `multiple`.
+ * Entries don't use it (use a media field).
  */
 final class FileField extends FieldType
 {
@@ -35,7 +36,32 @@ final class FileField extends FieldType
         return 'File (forms)';
     }
 
+    /** Files at most with `multiple`, unless max_files says. */
+    public const MAX_FILES = 10;
+
     public function rules(Field $field): array
+    {
+        return self::isMultiple($field) ? ['array', 'list', 'max:'.self::maxFiles($field)] : $this->fileRules($field);
+    }
+
+    public function nestedRules(Field $field, string $key, mixed $value): array
+    {
+        return self::isMultiple($field) ? ["{$key}.*" => $this->fileRules($field)] : [];
+    }
+
+    /** Whether visitors may send several files. */
+    public static function isMultiple(Field $field): bool
+    {
+        return $field->configBool('multiple');
+    }
+
+    public static function maxFiles(Field $field): int
+    {
+        return max(1, min(20, $field->configInt('max_files') ?? self::MAX_FILES));
+    }
+
+    /** @return list<mixed> one file's rules */
+    private function fileRules(Field $field): array
     {
         $types = self::types($field);
         $rules = ['file', 'max:'.self::ownMaxKb($field), function (string $attribute, mixed $value, Closure $fail): void {
@@ -55,8 +81,18 @@ final class FileField extends FieldType
         return $rules;
     }
 
-    /** Kept as stored by SubmitForm: {path, name, size, mime}. */
+    /** Kept as stored by SubmitForm: {path, name, size, mime}, or a list of them. */
     public function normalize(mixed $value, Field $field): mixed
+    {
+        if (self::isMultiple($field)) {
+            return array_values(array_filter(array_map(fn (mixed $file): ?array => self::one($file), is_array($value) && array_is_list($value) ? $value : [$value])));
+        }
+
+        return self::one($value);
+    }
+
+    /** @return array{path: string, name: string, size: int, mime: string}|null */
+    private static function one(mixed $value): ?array
     {
         if (! is_array($value) || ! is_string($value['path'] ?? null) || ! is_string($value['name'] ?? null)) {
             return null;
@@ -74,7 +110,9 @@ final class FileField extends FieldType
     {
         return [
             new Field('types', 'text', 'Accepted file types', instructions: 'Extensions, like "pdf, jpg, png, docx". Empty: any file, but those that could run as code.'),
-            new Field('max_kb', 'number', 'Largest file (KB)', instructions: 'Empty: 10240 (10 MB). PHP\'s own upload_max_filesize and post_max_size apply too.', config: ['min' => 1, 'step' => 1]),
+            new Field('multiple', 'toggle', 'Several files'),
+            new Field('max_files', 'number', 'At most (files)', instructions: 'With several files. Empty: '.self::MAX_FILES.'; at most 20.', config: ['min' => 1, 'max' => 20, 'step' => 1]),
+            new Field('max_kb', 'number', 'Largest file (KB)', instructions: 'Each file. Empty: 10240 (10 MB). PHP\'s own upload_max_filesize and post_max_size apply too.', config: ['min' => 1, 'step' => 1]),
         ];
     }
 

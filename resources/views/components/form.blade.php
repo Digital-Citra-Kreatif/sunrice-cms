@@ -49,7 +49,7 @@
                     @if ($field->type === 'textarea')
                         <textarea id="{{ $inputId }}" name="data[{{ $field->handle }}]" rows="5" @required($field->required) @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif @if ($fieldError) aria-invalid="true" @endif>{{ is_scalar($value) ? $value : '' }}</textarea>
                     @elseif ($field->type === 'file')
-                        <input type="file" id="{{ $inputId }}" name="data[{{ $field->handle }}]" @if (\Sunrice\Cms\Fields\Types\FileField::types($field) !== []) accept=".{{ implode(',.', \Sunrice\Cms\Fields\Types\FileField::types($field)) }}" @endif @required($field->required) @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif @if ($fieldError) aria-invalid="true" @endif>
+                        <input type="file" id="{{ $inputId }}" name="data[{{ $field->handle }}]{{ \Sunrice\Cms\Fields\Types\FileField::isMultiple($field) ? '[]' : '' }}" @if (\Sunrice\Cms\Fields\Types\FileField::isMultiple($field)) multiple @endif @if (\Sunrice\Cms\Fields\Types\FileField::types($field) !== []) accept=".{{ implode(',.', \Sunrice\Cms\Fields\Types\FileField::types($field)) }}" @endif @required($field->required) @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif @if ($fieldError) aria-invalid="true" @endif>
                     @elseif ($field->type === 'select')
                         <select id="{{ $inputId }}" name="data[{{ $field->handle }}]{{ $multiple ? '[]' : '' }}" @if ($multiple) multiple @endif @required($field->required) @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif @if ($fieldError) aria-invalid="true" @endif>
                             @unless ($multiple)<option value=""></option>@endunless

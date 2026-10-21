@@ -4,7 +4,7 @@ A **menu** (main, footer…) holds nested links: to an **entry**, which follows 
 
 ## Setting up and editing
 
-Under **Structure → Menu settings** (permissions `cms.menus.view`, `.create`, `.update`, `.delete`): a title and a handle that templates use.
+Under **Structure → Menu settings** (permissions `cms.menus.view`, `.create`, `.update`, `.delete`): a title and a handle that templates use (made from the title as you type it; it can be changed later, with a warning: templates that name it need the new one too).
 
 Under **Content → Menus** (`cms.menus.view` to see, `cms.menus.update` to save): add entries and links, give them labels in each language, open them in a new tab, nest them (three levels) with the indent and outdent buttons, drag them into order among the links of their level by their handle (or with the keyboard: focus the handle, space, arrows, space), and remove them; a link takes what's under it along. The menu is saved as a whole.
 
@@ -35,4 +35,4 @@ app(SaveMenu::class)->handle($menu, [
 </nav>
 ```
 
-Links come in the current language. `active` is true for the link to the page shown (its address, without the query string), and `active_trail` for it and the links above it. Entries, terms and listing pages that aren't on the site (drafts, scheduled, trashed, without a URL) are left out, with the links under them. An unknown menu gives an empty list. Menus load once per request.
+Links come in the current language. `active` is true for the link to the page shown (its address; a link with a query string, like `/properties?type=sale`, only when the address has the same values, and then it wins over the link without one, which is on the trail instead), and `active_trail` for it and the links above it, and on an entry's page for the links to its collection's listing page and to its parent entries. Entries, terms and listing pages that aren't on the site (drafts, scheduled, trashed, without a URL) are left out, with the links under them. An unknown menu gives an empty list. Menus load once per request.

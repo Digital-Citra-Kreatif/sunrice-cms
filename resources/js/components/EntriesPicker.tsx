@@ -16,6 +16,8 @@ interface Props {
     collections: string[];
     invalid: boolean;
     onChange: (value: number | number[] | null) => void;
+    /** Said when a search finds nothing, after "No entries match.": what to do instead. */
+    emptyHint?: string;
 }
 
 /** The entries found, and the asked-for collections the user can't pick from (by title). */
@@ -36,7 +38,7 @@ function titles(names: string[]): string {
  * Choose entries: the most recently edited show on focus, typing searches
  * their titles; several are kept in the order they're dragged into.
  */
-export function EntriesPicker({ id, value, multiple, max, collections, invalid, onChange }: Props) {
+export function EntriesPicker({ id, value, multiple, max, collections, invalid, onChange, emptyHint }: Props) {
     const ids = value === null ? [] : Array.isArray(value) ? value : [value];
     const [known, setKnown] = React.useState<Record<number, Item>>({});
     const [search, setSearch] = React.useState('');
@@ -104,7 +106,7 @@ export function EntriesPicker({ id, value, multiple, max, collections, invalid, 
                     {results !== null && (
                         <ul role="listbox" aria-label="Matching entries" className="cms:absolute cms:z-10 cms:mt-1 cms:max-h-64 cms:w-full cms:overflow-auto cms:rounded-md cms:border cms:bg-card cms:p-1 cms:shadow-md">
                             {results.filter((item) => !ids.includes(item.id)).length === 0 && (
-                                <li className="cms:p-2 cms:text-sm cms:text-muted-foreground">{search.trim() === '' ? 'No entries yet.' : 'No entries match.'}</li>
+                                <li className="cms:p-2 cms:text-sm cms:text-muted-foreground">{search.trim() === '' ? 'No entries yet.' : 'No entries match.'}{emptyHint && <> {emptyHint}</>}</li>
                             )}
                             {unavailable.length > 0 && (
                                 <li className="cms:p-2 cms:text-sm cms:text-muted-foreground">

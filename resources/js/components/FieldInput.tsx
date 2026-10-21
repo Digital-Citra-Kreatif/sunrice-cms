@@ -128,7 +128,8 @@ function Control({ field, value, onChange, errors, id, content }: Props) {
         }
         case 'select':
             return field.config?.multiple === true
-                ? <MultiSelect options={optionsOf(field)} value={Array.isArray(value) ? value.map(String) : []} onChange={onChange} />
+                ? <MultiSelect options={optionsOf(field)} value={Array.isArray(value) ? value.map(String) : []} onChange={onChange}
+                    empty={typeof field.config?.empty === 'string' ? field.config.empty : undefined} inTickOrder={field.config?.in_tick_order === true} />
                 : <SingleSelect options={optionsOf(field)} value={typeof value === 'string' ? value : null} onChange={onChange} id={id}
                     empty={offersEmptyChoice(optionsOf(field), field.required === true, typeof field.config?.default === 'string' && field.config.default !== '', typeof value === 'string' && value !== '')} />;
         case 'terms': {
@@ -205,8 +206,8 @@ function SingleSelect({ options, value, onChange, id, empty }: { options: Option
     );
 }
 
-function MultiSelect({ options, value, onChange }: { options: Option[]; value: string[]; onChange: (value: unknown) => void }) {
-    if (options.length === 0) return <p className="cms:text-sm cms:text-muted-foreground">Nothing to choose from yet.</p>;
+function MultiSelect({ options, value, onChange, empty, inTickOrder = false }: { options: Option[]; value: string[]; onChange: (value: unknown) => void; empty?: string; inTickOrder?: boolean }) {
+    if (options.length === 0) return <p className="cms:text-sm cms:text-muted-foreground">{empty ?? 'Nothing to choose from yet.'}</p>;
 
     return (
         <div className="cms:flex cms:flex-col cms:gap-2">
@@ -215,10 +216,13 @@ function MultiSelect({ options, value, onChange }: { options: Option[]; value: s
                     <Checkbox
                         checked={value.includes(option.value)}
                         onCheckedChange={(checked: boolean) => onChange(checked
-                            ? options.map((o) => o.value).filter((v) => v === option.value || value.includes(v))
+                            ? (inTickOrder ? [...value.filter((v) => v !== option.value), option.value] : options.map((o) => o.value).filter((v) => v === option.value || value.includes(v)))
                             : value.filter((v) => v !== option.value))}
                     />
                     {option.label}
+                    {inTickOrder && value.includes(option.value) && (
+                        <span className="cms:text-xs cms:text-muted-foreground" aria-label={`number ${value.indexOf(option.value) + 1}`}>#{value.indexOf(option.value) + 1}</span>
+                    )}
                 </label>
             ))}
         </div>

@@ -348,13 +348,14 @@ final class EntryFilter extends Component
 
     /**
      * A terms filter's choices: the taxonomy's terms in the editors' order,
-     * those under others after them, by their slug in the current language.
+     * those under others after them, by their slug in the current language,
+     * each counting the entries under it too (as the filter finds them).
      *
      * @return list<array{value: string, label: string, count: int, depth: int}>
      */
     private static function termOptions(string $taxonomy, Collection $collection, bool $hideEmpty): array
     {
-        $terms = new Terms($taxonomy, $collection->handle, $hideEmpty, tree: true);
+        $terms = new Terms($taxonomy, $collection->handle, $hideEmpty, tree: true, includeChildren: true);
         $options = [];
         $walk = function (Items $list, int $depth) use (&$walk, &$options): void {
             foreach ($list as $term) {

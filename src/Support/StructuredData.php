@@ -28,18 +28,31 @@ final class StructuredData
     public const ENTRY_TYPES = [
         'Article' => 'Article', 'BlogPosting' => 'Blog post', 'NewsArticle' => 'News article',
         'WebPage' => 'Web page', 'AboutPage' => 'About page', 'ContactPage' => 'Contact page',
+        'RealEstateListing' => 'Real estate listing',
+        'Person' => 'Person (a profile page)', 'Place' => 'Place', 'Product' => 'Product or offer',
     ];
 
     private const ARTICLES = ['Article', 'BlogPosting', 'NewsArticle'];
 
     /**
+     * Types that are a thing the page is about rather than a kind of page:
+     * the page is the WebPage subtype given, with the thing as its
+     * `mainEntity` (`@id` the page's URL with #main, for a template's own
+     * node to add to).
+     */
+    private const THINGS = ['Person' => 'ProfilePage', 'Place' => 'WebPage', 'Product' => 'ItemPage'];
+
+    /**
      * The `@graph` for a page (null: the app's own pages), with `$extra`
-     * nodes from the template.
+     * nodes from the template. `$author`: an article's author, a name (a
+     * Person) or a node of its own (a relative `url` made full); else who
+     * publishes the site.
      *
      * @param  list<array<string, mixed>>  $extra
+     * @param  string|array<string, mixed>|null  $author
      * @return list<array<string, mixed>>
      */
-    public static function graph(?Page $page, array $extra = []): array
+    public static function graph(?Page $page, array $extra = [], string|array|null $author = null): array
     {
         $site = app(SiteSettings::class);
         $locale = $page->locale ?? app()->getLocale();
@@ -60,7 +73,8 @@ final class StructuredData
         if ($site->profiles() !== []) {
             $publisher['sameAs'] = $site->profiles();
         }
-        $website = ['@type' => 'WebSite', '@id' => url('/').'#website', 'url' => $home, 'name' => $site->name(), 'inLanguage' => self::language($locale), 'publisher' => ['@id' => $publisher['@id']]];
+        // Each language's home is its own WebSite node.
+        $website = ['@type' => 'WebSite', '@id' => $home.'#website', 'url' => $home, 'name' => $site->name(), 'inLanguage' => self::language($locale), 'publisher' => ['@id' => $publisher['@id']]];
         if (trim($site->description) !== '') {
             $website['description'] = Str::squish($site->description);
         }
@@ -70,7 +84,7 @@ final class StructuredData
 
         $graph = [$website, $publisher];
         if ($page !== null && ! $page->preview) {
-            array_push($graph, ...self::forPage($page, $website['@id'], $publisher['@id']));
+            array_push($graph, ...self::forPage($page, $website['@id'], $publisher['@id'], self::author($author)));
         }
 
         return [...$graph, ...$extra];
@@ -88,8 +102,30 @@ final class StructuredData
             JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_INVALID_UTF8_SUBSTITUTE);
     }
 
-    /** @return list<array<string, mixed>> */
-    private static function forPage(Page $page, string $website, string $publisher): array
+    /**
+     * @param  string|array<string, mixed>|null  $author
+     * @return array<string, mixed>|null
+     */
+    private static function author(string|array|null $author): ?array
+    {
+        if (is_string($author)) {
+            $author = trim($author) === '' ? null : ['@type' => 'Person', 'name' => Str::squish($author)];
+        }
+        if ($author === null || $author === []) {
+            return null;
+        }
+        if (is_string($author['url'] ?? null) && str_starts_with($author['url'], '/') && ! str_starts_with($author['url'], '//')) {
+            $author['url'] = url($author['url']);
+        }
+
+        return $author;
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $author
+     * @return list<array<string, mixed>>
+     */
+    private static function forPage(Page $page, string $website, string $publisher, ?array $author = null): array
     {
         $seo = Seo::forPage($page);
         $url = $seo['canonical'] ?? url()->current();
@@ -104,11 +140,21 @@ final class StructuredData
             $collection = $translation->entry->collection;
             $type = $collection->schema_type !== null && isset(self::ENTRY_TYPES[$collection->schema_type]) ? $collection->schema_type : ($collection->dated ? 'Article' : 'WebPage');
             $title = (string) $translation->title;
-            $node = ['@type' => $type, ...$node, 'name' => $title];
+            $thing = isset(self::THINGS[$type]) ? ['@type' => $type, '@id' => $url.'#main', 'name' => $title, 'url' => $url] : null;
+            $node = ['@type' => self::THINGS[$type] ?? $type, ...$node, 'name' => $title];
+            if ($thing !== null) {
+                if ($seo['description'] !== null) {
+                    $thing['description'] = $seo['description'];
+                }
+                if ($seo['image'] !== null) {
+                    $thing['image'] = $seo['image'];
+                }
+                $node['mainEntity'] = $thing;
+            }
             if (in_array($type, self::ARTICLES, true)) {
                 $node['headline'] = Str::limit($title, 107);
                 $node['mainEntityOfPage'] = $url;
-                $node['author'] = ['@id' => $publisher];
+                $node['author'] = $author ?? ['@id' => $publisher];
                 $node['publisher'] = ['@id' => $publisher];
                 if ($translation->published_at !== null) {
                     $node['datePublished'] = $translation->published_at->toAtomString();

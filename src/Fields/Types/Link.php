@@ -121,6 +121,7 @@ final class Link extends FieldType
             new Field('collections', 'select', 'Entry links from collections', instructions: 'None: any collection.', config: [
                 'multiple' => true,
                 'options' => Collection::query()->orderBy('title')->get()->map(fn (Collection $c): array => ['value' => $c->handle, 'label' => $c->title])->all(),
+                'empty' => 'There are no collections yet: links can go to entries once there are (Structure → Collections).',
             ]),
         ];
     }

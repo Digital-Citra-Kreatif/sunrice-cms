@@ -21,7 +21,6 @@ use Sunrice\Admin\Resources\Tables\Column;
 use Sunrice\Admin\Resources\Tables\Filter;
 use Sunrice\Admin\Resources\Tables\Table;
 use Sunrice\Cms\Actions\Collections\RestoreDeleted;
-use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Site\RoutePatternRule;
 use Sunrice\Cms\Support\StructuredData;
@@ -58,10 +57,10 @@ final class CollectionResource extends Resource
             ...HandleField::make('collection', 'Lowercase letters, digits and underscores, like "articles".',
                 'Careful: the site\'s templates and code may use the handle, so ask your developer to change them too (for developers: the cms.{handle} view, Cms::entries(\'…\'), entries fields limited to it). Roles keep their permissions for it.'),
             Select::make('blueprint')
-                ->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
-                ->help('The fields its entries have. Changing it keeps what entries already hold.'),
+                ->options(BlueprintChoices::options(BlueprintChoices::CONTENT))
+                ->help('The fields its entries have. Changing it keeps what entries already hold. Blueprints of forms and global sets aren\'t offered.'),
             CheckboxList::make('blueprints')->label('Other blueprints')
-                ->options(fn (): array => Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
+                ->options(BlueprintChoices::options(BlueprintChoices::CONTENT, 'blueprints'))
                 ->help('Blueprints an entry may switch to instead, in its Page settings (fields both have keep their values).'),
             Toggle::make('dated')->label('Dated entries')->help('Entries show a date and list newest first, like articles.'),
             Toggle::make('ordered')->label('Manual order')->help('Editors put entries in order (Reorder above the entries list, or the Move up and Move down arrows), instead of by date or title.'),
@@ -73,7 +72,7 @@ final class CollectionResource extends Resource
                 ->rules(['regex:#^(/[a-z0-9\-_]+)+$#'])
                 ->help('A page listing the entries, like /blog. Empty: none. For developers: its template is cms.{handle}-listing, else cms.listing.'),
             Select::make('listing_blueprint')->label('Listing page fields')
-                ->options(Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
+                ->options(BlueprintChoices::options(BlueprintChoices::CONTENT, 'listing_blueprint'))
                 ->help('Fields of the listing page itself, like an intro, edited from the entries list.'),
             NumberInput::make('per_page')->label('Entries per listing page')->integer()->min(1)->max(100)->default(10),
             Toggle::make('comments')->label('Allow comments')->help('Visitors may comment on its entries (it needs a URL). Settings → Comments says how they\'re moderated.'),

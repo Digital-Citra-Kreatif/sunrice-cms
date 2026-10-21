@@ -10,6 +10,7 @@ use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
 use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Collection;
+use Sunrice\Cms\Support\HandleRule;
 
 /**
  * Creates a collection or changes one. Input: handle (only when creating;
@@ -33,7 +34,7 @@ final class SaveCollection
         $collection ??= new Collection;
         /** @var array{handle?: string, title: string, blueprint?: string|null, blueprints?: array<int|string, string>|null, dated?: bool} $validated */
         $validated = Validator::make($input, [
-            'handle' => $collection->exists ? ['prohibited'] : ['required', 'string', 'max:64', 'regex:/^[a-z][a-z0-9_]*$/', Rule::unique($collection->getTable(), 'handle')],
+            'handle' => $collection->exists ? ['prohibited'] : ['required', 'string', 'max:64', new HandleRule, Rule::unique($collection->getTable(), 'handle')],
             'title' => ['required', 'string', 'max:255'],
             'blueprint' => ['nullable', 'string', Rule::exists((new Blueprint)->getTable(), 'handle')],
             'blueprints' => ['sometimes', 'nullable', 'array'],

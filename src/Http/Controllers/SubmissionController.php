@@ -65,9 +65,14 @@ final class SubmissionController
     }
 
     /** A file sent with a form, as a download (never shown in the browser). */
-    public function file(Submission $submission, string $field): StreamedResponse
+    public function file(Request $request, Submission $submission, string $field): StreamedResponse
     {
         $file = $submission->data[$field] ?? null;
+        // One of several: ?index=n.
+        if (is_array($file) && array_is_list($file)) {
+            $index = $request->query('index');
+            $file = is_string($index) && ctype_digit($index) ? ($file[(int) $index] ?? null) : null;
+        }
         abort_unless(is_array($file) && is_string($file['path'] ?? null) && Storage::disk(SubmitForm::disk())->exists($file['path']), 404);
         $name = is_string($file['name'] ?? null) ? $file['name'] : basename($file['path']);
 

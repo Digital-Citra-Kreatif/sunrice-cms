@@ -6,7 +6,7 @@ The CMS serves entries as pages: each collection with a **URL** (`route`) shows 
 
 Set a collection's URL under Structure → Collections: a path with `{slug}` once, like `/blog/{slug}`, or `/{slug}` for pages at the root (and [related entries' slugs](#related-entries-in-the-url) if you like). Collections without one have no pages of their own (their entries can still be shown by your templates).
 
-- The main language has no prefix; others start with their code: `/blog/hello`, `/id/blog/halo`. The app's locale is set from the address as soon as the CMS's route takes over, so 404 pages, redirects and the search page are in that language too. The main language's own prefix (`/en/about`, from before the main language changed) redirects (301) to the plain address, query string kept; your app's own routes aren't touched.
+- The main language has no prefix; others start with their code: `/blog/hello`, `/id/blog/halo`. The app's locale is set from the address as soon as the CMS's route takes over, so 404 pages, redirects and the search page are in that language too. The main language's own prefix (`/en/about`, from before the main language changed) redirects (301) to the plain address, query string kept, and so do `/about/` and `/index.php/about`: each page has one address. Your app's own routes aren't touched.
 - The more specific pattern is tried first (more fixed characters): `/blog/{slug}` before `/{slug}`. The first pattern that matches decides: `/blog/about` looks for a blog entry "about", and is a 404 if there's none, even when a page "about" exists.
 - Two collections can't have the same URL.
 - Only live entries have pages: published, past their date, not in the trash, of a collection not deleted. Anything else is a 404.
@@ -102,7 +102,7 @@ Each entry's **Search and sharing** card holds an SEO title, a description, a sh
 </head>
 ```
 
-On the CMS's pages it reads the page shown (entry, term or listing page; or name it: `:entry="$entry" :preview="$preview"`, `:term="$term"`), and on your app's own pages it gives the site's tags with `title="Contact"`. It prints the `<title>` (the SEO title, else the page's, then the site name: "About | Acme"), the description, `robots` noindex (always in previews), the canonical URL, `hreflang` links to the page's other languages with `x-default` (the main language), Open Graph tags (`og:type` *article* for dated collections, else *website*; `og:site_name`, `og:locale` and `og:locale:alternate` for each other language; `article:published_time` and `article:modified_time` for dated entries) and an X (Twitter) card (`twitter:card`, `twitter:site`, `twitter:title`, `twitter:description`, `twitter:image`). Attributes: `title` (instead of the page's), `default-title` (when the page has no SEO title of its own), `description`, `noindex`, and `:collection` for a listing page; see [the components](#components). `Sunrice\Cms\Support\Seo::for($entry)` (and `forTerm()`, `forListing()`, `forPage()`) gives the same as an array if you'd rather write the tags yourself.
+On the CMS's pages it reads the page shown (entry, term or listing page; or name it: `:entry="$entry" :preview="$preview"`, `:term="$term"`), and on your app's own pages it gives the site's tags with `title="Contact"`. It prints the `<title>` (the SEO title, else the page's, then the site name: "About | Acme"; past the first page of a listing or term page with the page number, "Blog (page 2) | Acme", `sunrice-cms::site.page_title`), the description, `robots` noindex (`noindex` for a page that asks not to be indexed and for the search page, so its links are still followed; `noindex, nofollow` in previews and on a hidden site), the canonical URL (none on error pages: an `errors::*` view, such as your `errors/404.blade.php`, is also `noindex`), `hreflang` links to the page's other languages with `x-default` (the main language), Open Graph tags (`og:type` *article* for dated collections, else *website*; `og:site_name`, `og:locale` and `og:locale:alternate` for each other language; `article:published_time` and `article:modified_time` for dated entries) and an X (Twitter) card (`twitter:card`, `twitter:site`, `twitter:title`, `twitter:description`, `twitter:image`). Attributes: `title` (instead of the page's), `default-title` (when the page has no SEO title of its own), `description`, `noindex`, `author` (an article's author in the structured data, below) and `:collection` for a listing page; see [the components](#components). `Sunrice\Cms\Support\Seo::for($entry)` (and `forTerm()`, `forListing()`, `forPage()`) gives the same as an array if you'd rather write the tags yourself.
 
 **SEO from fields**: a collection (Structure → Collections) and a taxonomy (Structure → Taxonomies) may name the fields that fill in what an entry's or term page's SEO card leaves empty: a text field for the title, a text or textarea field for the description (plain text, at most 300 characters) and a media field whose first image is the share image (`seo_title_field`, `seo_description_field`, `seo_image_field`). A listing page has a **Search and sharing** card of its own on its page in the admin (stored per language with the listing page's fields, under `seo`), read by `Seo::forListing()`; its title falls back to the collection's.
 
@@ -112,14 +112,14 @@ On the CMS's pages it reads the page shown (entry, term or listing page; or name
 
 Past the first page of a listing, term or search page, the canonical and `hreflang` URLs (and `Cms::localeUrls()`) carry the page number (`/blog?page=2`), so each page is its own, not a copy of the first.
 
-`/sitemap.xml` lists every live entry of a collection with a URL (with `lastmod` and its other languages), term pages (with `lastmod`) and listing pages, but those hidden from search engines. It's built in chunks and kept in the cache until the content changes. Search engines read at most 50,000 addresses from one file, so past that `/sitemap.xml` becomes an index of `/sitemap-1.xml`, `/sitemap-2.xml`, … (route `sunrice.cms.sitemap.part`); `/sitemap-1.xml` always works.
+`/sitemap.xml` lists every live entry of a collection with a URL (with `lastmod` and its other languages), term pages (with `lastmod` and their other languages) and listing pages (with their other languages), but those hidden from search engines. It's built in chunks and kept in the cache until the content changes. Search engines read at most 50,000 addresses from one file, so past that `/sitemap.xml` becomes an index of `/sitemap-1.xml`, `/sitemap-2.xml`, … (route `sunrice.cms.sitemap.part`); `/sitemap-1.xml` always works.
 
 ### Structured data
 
 The seo component also prints structured data (schema.org, as JSON-LD), so search engines know what pages are and can show richer results:
 
-- every page: the **WebSite**, with its search box (a SearchAction, when the search page is on), and who publishes it (Settings → Site → Structured data): an **Organization**, or the more specific type given as **Kind of organization** (`LocalBusiness`, `RealEstateAgent` …), with its logo, or a **Person**; with its **Name** (else the site name), phone, address (as text) and profiles elsewhere (`sameAs`, one URL per line; `SiteSettings::profiles()`);
-- entries: an **Article** (dated collections) or a **WebPage**, or the collection's **Structured data type** (Structure → Collections: Article, Blog post, News article, Web page, About page, Contact page). Articles get a headline, publish and change dates, the share image, author and publisher;
+- every page: the **WebSite** (one per language: its `@id` is the language's home), with its search box (a SearchAction, when the search page is on), and who publishes it (Settings → Site → Structured data): an **Organization**, or the more specific type given as **Kind of organization** (`LocalBusiness`, `RealEstateAgent` …), with its logo, or a **Person**; with its **Name** (else the site name), phone, address (as text) and profiles elsewhere (`sameAs`, one URL per line; `SiteSettings::profiles()`);
+- entries: an **Article** (dated collections) or a **WebPage**, or the collection's **Structured data type** (Structure → Collections: Article, Blog post, News article, Web page, About page, Contact page, Real estate listing; or a thing the page is about: Person, on a **ProfilePage**, Place, on a **WebPage**, Product, on an **ItemPage**, as the page's `mainEntity` with its name, URL, description and share image, `@id` the page's URL with `#main`, so a template's node with that `@id` adds to it: `:schema="[['@id' => $entry->url().'#main', 'offers' => [...]]]"`). Articles get a headline, publish and change dates, the share image, author and publisher (the author is who publishes the site, unless the template names one: `author="Ayu Lestari"` for a Person, or a node of its own, `:author="['@type' => 'Person', 'name' => $agent->title, 'url' => $agent->url()]"`);
 - **BreadcrumbList**: Home, the collection's listing page, parent entries, the page;
 - listing and term pages: a **CollectionPage**; the search page: a **SearchResultsPage**.
 
@@ -134,7 +134,7 @@ A template adds nodes of its own (an event, a product, FAQs) with `:schema`:
 ]]" />
 ```
 
-What's printed can't end the script (`<`, `>`, `&` and quotes are escaped). `Sunrice\Cms\Support\StructuredData::graph($page, $extra)` gives the nodes as an array. Turn it off in Settings → Site.
+What's printed can't end the script (`<`, `>`, `&` and quotes are escaped). `Sunrice\Cms\Support\StructuredData::graph($page, $extra, $author)` gives the nodes as an array. Turn it off in Settings → Site.
 
 ## Site code
 
@@ -291,7 +291,8 @@ For a part of a template without PHP, `<x-sunrice-cms::entries>` and `<x-sunrice
 | --- | --- |
 | `taxonomy` | Its handle (required). |
 | `collection` | Count only that collection's entries in `entries_count`. |
-| `hide-empty` | Leave out terms without live entries. |
+| `hide-empty` | Leave out terms without live entries. With `tree`, a term with entries keeps its parents. |
+| `include-children` | `entries_count` also counts the entries of the terms under each term (each entry once), as a filter by the term finds them. |
 | `tree` | Only the top-level terms, each with `children` (to any depth). |
 | `parent` | The terms directly under a term (its slug, in any language, or id); `top`: the top-level ones. |
 | `order-by` | `manual` (the editors' order, default), `title`, `entries` (by `entries_count`), `created_at`; `-title` for the other way round. |
@@ -302,7 +303,7 @@ Each term has `entries_count` (its live entries in the current language). `$comp
 
 #### `<x-sunrice-cms::seo>`
 
-See [SEO](#seo): `entry` with `preview`, `term`, `collection` (a `Collection` or handle: its listing page), or none (the page shown); `title` (instead of the page's), `default-title` (when the page has no SEO title of its own), `description` (instead of the page's), `noindex` (keep this page out of search results), `schema` (JSON-LD nodes of your own). Titles and descriptions given are taken as plain text.
+See [SEO](#seo): `entry` with `preview`, `term`, `collection` (a `Collection` or handle: its listing page), or none (the page shown); `title` (instead of the page's), `default-title` (when the page has no SEO title of its own), `description` (instead of the page's), `noindex` (keep this page out of search results), `author` (an article's author: a name or a schema.org node), `schema` (JSON-LD nodes of your own). Titles and descriptions given are taken as plain text.
 
 #### `<x-sunrice-cms::search>`
 
@@ -380,7 +381,7 @@ Without a slot it prints a plain, accessible form (labels for every input, field
 | Type | Reads | Filters |
 | --- | --- | --- |
 | `search` | `?q=words` | `search()`: title and field text. |
-| `terms` | `?topic[]=slug` (`multiple: false`: `?topic=slug`) | Entries with any of the terms, or the terms under them (`whereTerm(..., includeChildren: true)`). Options: the taxonomy's terms (`taxonomy`, default the name) by slug in the page's language, each with `count` and `depth`; `hide_empty` leaves out terms without entries. |
+| `terms` | `?topic[]=slug` (`multiple: false`: `?topic=slug`) | Entries with any of the terms, or the terms under them (`whereTerm(..., includeChildren: true)`). Options: the taxonomy's terms (`taxonomy`, default the name) by slug in the page's language, each with `count` and `depth`; counts include the entries of the terms under each one, as the filter finds them; `hide_empty` leaves out terms without entries, but never the parents of a term that has some. |
 | `select` | `?color=red` (`multiple: true`: `?color[]=red&color[]=blue`) | The field equals one of the values; a select field with several choices holds any of them. Options: `options` given (value => label, or `[value, label]` rows), else the field's own; without either, any value. |
 | `range` | `?price_min=10&price_max=100` | Number fields between the two (either may be left out). |
 | `date_range` | `?made_from=2026-01-01&made_to=2026-01-31` | Date fields from the start of one day to the end of the other. |

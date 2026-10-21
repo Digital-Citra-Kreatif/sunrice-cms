@@ -8,6 +8,7 @@ use Sunrice\Cms\Fields\DefinitionValidator;
 use Sunrice\Cms\Fields\FieldType;
 use Sunrice\Cms\Fields\FieldTypes;
 use Sunrice\Cms\Fields\Schema;
+use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Fieldset;
 
 /**
@@ -20,7 +21,7 @@ final class BuilderData
 {
     public function __construct(private readonly FieldTypes $types) {}
 
-    /** @return array{fieldTypes: list<array<string, mixed>>, fieldsets: list<array{value: string, label: string}>, rules: list<string>} */
+    /** @return array{fieldTypes: list<array<string, mixed>>, fieldsets: list<array{value: string, label: string}>, rules: list<string>, reserved: list<string>} */
     public function toArray(): array
     {
         return [
@@ -32,6 +33,8 @@ final class BuilderData
             ], $this->types->all())),
             'fieldsets' => Fieldset::options(),
             'rules' => DefinitionValidator::RULES,
+            // Handles content keeps for itself: the builder warns as they're typed.
+            'reserved' => Blueprint::RESERVED,
         ];
     }
 }

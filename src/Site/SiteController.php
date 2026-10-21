@@ -19,6 +19,7 @@ use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\TermTranslation;
+use Sunrice\Cms\Query\EntryPaginator;
 use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Support\Access;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -170,9 +171,9 @@ final class SiteController
         // Run when the template first uses $entries: those of the term and, in a hierarchy, of the terms under it.
         $entries = new LazyEntries(function () use ($term, $taxonomy, $locale): LengthAwarePaginator {
             $terms = [$term->id, ...($taxonomy->hierarchical ? $term->descendantIds() : [])];
-            $entries = EntryTranslation::query()->live()->with('entry.collection')->where('locale', $locale)
+            $entries = EntryPaginator::from(EntryTranslation::query()->live()->with('entry.collection')->where('locale', $locale)
                 ->whereHas('entry.terms', fn ($q) => $q->whereIn('sunrice_terms.id', $terms))
-                ->orderByDesc('published_at')->orderByDesc('id')->paginate(10)->withQueryString();
+                ->orderByDesc('published_at')->orderByDesc('id')->paginate(10))->withQueryString();
             // Hydrated together: the first values() loads what all of them point at.
             (new HydrationContext($locale))->share($entries->getCollection());
 
@@ -208,12 +209,12 @@ final class SiteController
         $collection = $listing->collection;
         // Run when the template first uses $entries.
         $entries = new LazyEntries(function () use ($collection, $listing): LengthAwarePaginator {
-            $entries = EntryTranslation::query()->live()->with('entry.collection')
+            $entries = EntryPaginator::from(EntryTranslation::query()->live()->with('entry.collection')
                 ->where('collection_id', $collection->id)->where('locale', $listing->locale)
                 ->when($collection->ordered,
                     fn ($q) => $q->orderBy(Entry::query()->select('sort_order')->whereColumn('sunrice_entries.id', 'sunrice_entry_translations.entry_id'))->orderBy('id'),
                     fn ($q) => $collection->dated ? $q->orderByDesc('published_at')->orderByDesc('id') : $q->orderBy('title')->orderBy('id'))
-                ->paginate(max(1, min(100, $collection->per_page)))->withQueryString();
+                ->paginate(max(1, min(100, $collection->per_page))))->withQueryString();
             // Hydrated together: the first values() loads what all of them point at.
             (new HydrationContext($listing->locale))->share($entries->getCollection());
 

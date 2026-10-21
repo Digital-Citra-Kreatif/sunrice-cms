@@ -6,6 +6,7 @@ namespace Sunrice\Cms\View\Components;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection as Items;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\Component;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
@@ -30,6 +31,9 @@ use Sunrice\Cms\Support\Locales;
  * only the top-level terms, each with `children` (to any depth).
  * `parent`: the terms directly under a term (its slug or id), or "top".
  * `limit`: at most this many. `:entry="$entry"`: only that entry's terms.
+ * `include-children`: `entries_count` counts the entries of the terms
+ * under a term too (each entry once), as a filter by the term finds them.
+ * With `hide-empty` and `tree`, a term with entries keeps its ancestors.
  * `$component->isCurrent($term)`: whether it's the term page shown.
  *
  * @api
@@ -54,6 +58,7 @@ final class Terms extends Component
         int|string|null $parent = null,
         string $orderBy = 'manual',
         ?int $limit = null,
+        bool $includeChildren = false,
     ) {
         $this->currentTermId = Page::current()?->term?->term_id;
         $taxonomyId = Taxonomy::query()->where('handle', $taxonomy)->value('id');
@@ -66,13 +71,17 @@ final class Terms extends Component
         $collectionId = $collection !== null ? Collection::query()->where('handle', $collection)->value('id') : null;
         $entryId = $entry instanceof EntryTranslation ? $entry->entry_id : ($entry instanceof Entry ? $entry->id : $entry);
 
+        $entries = fn (Builder $q) => $q
+            ->when($collection !== null, fn (Builder $q) => $q->where('collection_id', $collectionId ?? 0))
+            ->whereIn('sunrice_entries.id', EntryTranslation::query()->live()->where('locale', $locale)->select('entry_id'));
         $all = Term::query()->where('taxonomy_id', $taxonomyId)->with('translations')
-            ->withCount(['entries' => fn (Builder $q) => $q
-                ->when($collection !== null, fn (Builder $q) => $q->where('collection_id', $collectionId ?? 0))
-                ->whereIn('sunrice_entries.id', EntryTranslation::query()->live()->where('locale', $locale)->select('entry_id'))])
+            ->when(! $includeChildren, fn (Builder $q) => $q->withCount(['entries' => $entries]))
             ->when($entryId !== null, fn (Builder $q) => $q->whereHas('entries', fn (Builder $e) => $e->where('sunrice_entries.id', $entryId)))
             ->orderBy('sort_order')->orderBy('id')->get()->toBase();
-        $terms = $hideEmpty ? $all->filter(fn (Term $term): bool => self::count($term) > 0)->values() : $all;
+        if ($includeChildren) {
+            self::countWithChildren($all, $entries);
+        }
+        $terms = $hideEmpty ? self::withEntries($all, $tree) : $all;
         $terms = self::sorted($terms, $orderBy);
         $parentId = self::parentId($all, $parent);
 
@@ -102,6 +111,61 @@ final class Terms extends Component
     public function render(): string
     {
         return '{{ $slot }}';
+    }
+
+    /**
+     * Sets each term's entries_count to the entries of it and the terms
+     * under it, each entry once (one query).
+     *
+     * @param  Items<int, Term>  $terms
+     * @param  \Closure(Builder<Entry>): mixed  $entries  the entries that count
+     */
+    private static function countWithChildren(Items $terms, \Closure $entries): void
+    {
+        $pairs = DB::table('sunrice_entry_term')->whereIn('term_id', $terms->pluck('id')->all())
+            ->whereIn('entry_id', tap(Entry::query(), $entries)->select('sunrice_entries.id'))
+            ->get(['term_id', 'entry_id']);
+        /** @var array<int, array<int, true>> $own */
+        $own = [];
+        foreach ($pairs as $pair) {
+            /** @var object{term_id: int|string, entry_id: int|string} $pair */
+            $own[(int) $pair->term_id][(int) $pair->entry_id] = true;
+        }
+        $children = $terms->groupBy(fn (Term $term): int => $term->parent_id ?? 0);
+        $collect = function (Term $term, int $depth) use (&$collect, $own, $children): array {
+            $ids = $own[$term->id] ?? [];
+            foreach ($depth < 20 ? $children->get($term->id, new Items) : [] as $child) {
+                $ids += $collect($child, $depth + 1);
+            }
+
+            return $ids;
+        };
+        foreach ($terms as $term) {
+            $term->setAttribute('entries_count', count($collect($term, 0)));
+        }
+    }
+
+    /**
+     * The terms with entries, and in a tree their ancestors too.
+     *
+     * @param  Items<int, Term>  $terms
+     * @return Items<int, Term>
+     */
+    private static function withEntries(Items $terms, bool $tree): Items
+    {
+        $byId = $terms->keyBy('id');
+        $keep = [];
+        foreach ($terms as $term) {
+            if (self::count($term) === 0) {
+                continue;
+            }
+            for ($at = $term, $depth = 0; $at !== null && ! isset($keep[$at->id]) && $depth < 20; $depth++) {
+                $keep[$at->id] = true;
+                $at = $tree && $at->parent_id !== null ? $byId->get($at->parent_id) : null;
+            }
+        }
+
+        return $terms->filter(fn (Term $term): bool => isset($keep[$term->id]))->values();
     }
 
     private static function count(Term $term): int

@@ -2,10 +2,11 @@
     The page head's SEO tags. On the CMS's pages: <x-sunrice-cms::seo /> (the page shown),
     or name it: :entry="$entry" :preview="$preview", :term="$term", :collection="$collection" (its listing page).
     On the app's own pages: title="Contact". Any page: title (instead of the page's), default-title (when the
-    page has no SEO title of its own), description, noindex.
+    page has no SEO title of its own), description, noindex, author (an article's author for structured data: a name,
+    or a node like ['@type' => 'Person', 'name' => …, 'url' => …]; default: who publishes the site).
     Structured data (JSON-LD) follows; :schema="[[ '@type' => 'Event', … ]]" adds nodes of the template's own.
 --}}
-@props(['entry' => null, 'term' => null, 'collection' => null, 'preview' => false, 'title' => null, 'defaultTitle' => null, 'description' => null, 'noindex' => false, 'schema' => []])
+@props(['entry' => null, 'term' => null, 'collection' => null, 'preview' => false, 'title' => null, 'defaultTitle' => null, 'description' => null, 'noindex' => false, 'schema' => [], 'author' => null])
 @php
     $listing = is_string($collection) ? \Sunrice\Cms\Models\Collection::query()->where('handle', $collection)->first() : $collection;
     $seo = \Sunrice\Cms\Support\Seo::adjust(match (true) {
@@ -20,7 +21,7 @@
 <meta name="description" content="{{ $seo['description'] }}">
 @endif
 @if ($seo['noindex'])
-<meta name="robots" content="noindex, nofollow">
+<meta name="robots" content="{{ $seo['robots'] ?? 'noindex' }}">
 @endif
 @if ($seo['canonical'])
 <link rel="canonical" href="{{ $seo['canonical'] }}">
@@ -64,5 +65,5 @@
 <meta name="twitter:image" content="{{ $seo['image'] }}">
 @endif
 @if (app(\Sunrice\Cms\Settings\SiteSettings::class)->structuredData)
-<script type="application/ld+json">{!! \Sunrice\Cms\Support\StructuredData::json(\Sunrice\Cms\Support\StructuredData::graph(\Sunrice\Cms\Site\Page::current(), array_values($schema))) !!}</script>
+<script type="application/ld+json">{!! \Sunrice\Cms\Support\StructuredData::json(\Sunrice\Cms\Support\StructuredData::graph(\Sunrice\Cms\Site\Page::current(), array_values($schema), $author)) !!}</script>
 @endif
