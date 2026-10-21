@@ -1127,5 +1127,6 @@
     "Preload the page cache now? The site's pages are requested in the background, a few at a time.": "Muat cache halaman sekarang? Halaman situs diminta di latar belakang, beberapa sekaligus.",
     "The whole-page cache is off: there's nothing to preload.": "Cache halaman utuh mati: tidak ada yang perlu dimuat.",
     "A preload is running already.": "Pemuatan sedang berjalan.",
-    "preloaded": "memuat"
+    "preloaded": "memuat",
+    "Put the * after a / (like /journal/*).": "Letakkan * setelah / (seperti /journal/*)."
 }

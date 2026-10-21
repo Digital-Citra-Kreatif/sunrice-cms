@@ -52,6 +52,8 @@ final class RedirectRule implements DataAwareRule, ValidationRule
             $fail(__('Use * at most once.'));
         } elseif (str_contains($value, Redirect::WILDCARD) && ! $wildcard) {
             $fail(__('A * here needs a From ending in /*, whose rest it stands for.'));
+        } elseif (str_contains($value, Redirect::WILDCARD) && ! str_contains($value, '/'.Redirect::WILDCARD)) {
+            $fail(__('Put the * after a / (like /journal/*).'));
         } elseif ($from !== '' && self::loops($from, $value, (bool) ($this->data['every_language'] ?? false))) {
             $fail(__('This would send visitors round in a loop: From takes this address too.'));
         }

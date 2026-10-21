@@ -51,9 +51,11 @@ class Redirect extends Model
     {
         $to = $this->to_url;
         if ($this->isWildcard()) {
-            // The visitor's rest of the path, never a way to another host (/old//evil.com, /old/\evil.com).
+            // The visitor's rest of the path, never a way to another host (/old//evil.com, /old/\evil.com),
+            // and always after a / so it can't become the scheme or the host (* → https:evil.com).
             $rest = ltrim((string) preg_replace('#[/\\\\]+#', '/', $this->captured($path) ?? ''), '/');
-            $to = str_replace(self::WILDCARD, $rest, $to);
+            $before = strstr($to, self::WILDCARD, true);
+            $to = str_replace(self::WILDCARD, ($before === false || str_ends_with($before, '/') ? '' : '/').$rest, $to);
             if (str_starts_with($to, '//') || str_starts_with($to, '/\\')) {
                 $to = '/';
             }
