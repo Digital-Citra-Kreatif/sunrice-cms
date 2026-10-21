@@ -70,7 +70,7 @@ Baris setiap field menampilkan tipe, label, dan handle-nya, dengan **Duplikat** 
 
 ## Taksonomi
 
-**Struktur → Taksonomi**: **Judul** (dan **Judul dalam …** untuk setiap bahasa lain, bagi pengunjung di halaman term-nya), **Handle** (bisa diubah nanti, seperti pada koleksi), **Term bertingkat** (term di bawah term lain, seperti subkategori), **Koleksi** yang entrinya dikelompokkan, **URL halaman term** (seperti `/topik/{slug}`; kosong: term tidak punya halaman), **Field term** (blueprint untuk field term), dan **Template halaman term**. Editor lalu menambahkan term di bagian Taksonomi pada sidebar (lihat [Term](guide:website/terms)). Agar editor bisa memberi term pada entri, tambahkan field **Term** ke blueprint koleksinya: itu sudah cukup agar daftar entri bisa disaring menurut taksonomi tersebut, tanpa mencentang koleksinya di sini.
+**Struktur → Taksonomi**: **Judul** (dan **Judul dalam …** untuk setiap bahasa lain, bagi pengunjung di halaman term-nya), **Handle** (bisa diubah nanti, seperti pada koleksi), **Term bertingkat** (term di bawah term lain, seperti subkategori), **Koleksi** yang entrinya dikelompokkan, **Field term** (blueprint untuk field term), dan di bagian **Halaman term**: **Term punya halaman** (setiap term mendapat halaman yang mendaftar entrinya), **URL halaman term** (seperti `/topik/{slug}`; kosong: `/{handle}/{slug}`) dan **Template halaman term**. Editor lalu menambahkan term di bagian Taksonomi pada sidebar (lihat [Term](guide:website/terms)). Agar editor bisa memberi term pada entri, tambahkan field **Term** ke blueprint koleksinya: itu sudah cukup agar daftar entri bisa disaring menurut taksonomi tersebut, tanpa mencentang koleksinya di sini.
 
 ## Set global
 

@@ -19,7 +19,7 @@ use Sunrice\Admin\Resources\Tables\Table;
 use Sunrice\Cms\Actions\Collections\RestoreDeleted;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Taxonomy;
-use Sunrice\Cms\Site\RoutePattern;
+use Sunrice\Cms\Site\RoutePatternRule;
 
 /**
  * Structure → Taxonomies, guarded by the cms.taxonomies.* permissions.
@@ -77,14 +77,14 @@ final class TaxonomyResource extends Resource
                     ->help('Extra fields for each term, like a description or an image.'),
             ]),
             Section::make('Term pages')->description('Whether each term has a page on the site listing its entries.')->columns(2)->schema([
-                TextInput::make('route')->label('Term pages URL')->span(2)->placeholder('/topics/{slug}')->unique()->maxLength(255)
-                    ->rules([function (string $attribute, mixed $value, \Closure $fail): void {
-                        if (is_string($value) && $value !== '' && ! RoutePattern::isValid($value)) {
-                            $fail(__('Use a path with {slug} once, like /topics/{slug}: lowercase letters, digits, dashes.'));
-                        }
-                    }])
-                    ->help('Empty: terms have no pages.'),
-                TextInput::make('template')->label('Term page template')->placeholder('cms.topic')->showWhen('route')->span(2)
+                Toggle::make('pages')->label('Terms have pages')->default(true)->span(2)
+                    ->help('Off: terms only group entries, with no address of their own.')
+                    ->loadUsing(fn (Model $taxonomy): bool => $taxonomy->getAttribute('route') !== null)
+                    ->saveUsing(fn (Model $taxonomy, mixed $on) => CollectionResource::switchPage($taxonomy, 'route', $on, '/{handle}/{slug}')),
+                TextInput::make('route')->label('Term page URL')->placeholder('/{handle}/{slug}')->unique()->maxLength(255)->span(2)->showWhen('pages')
+                    ->rules([new RoutePatternRule(parameters: false)])
+                    ->help('Like /topics/{slug}. Empty: /{handle}/{slug}.'),
+                TextInput::make('template')->label('Term page template')->placeholder('cms.topic')->showWhen('pages')->span(2)
                     ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
                     ->help(TemplateHelp::text('cms.topic', ['cms.taxonomy-{handle}', 'cms.term'])."\n".__('A term can choose its own on its page.')),
             ]),

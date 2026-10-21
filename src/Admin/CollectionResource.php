@@ -104,11 +104,11 @@ final class CollectionResource extends Resource
     }
 
     /**
-     * Entry pages or the listing page switched on or off: off clears the
-     * address, on without one gives the default (with the handle in it).
-     * Not sent (null): the address as given.
+     * Entry pages, the listing page or a taxonomy's term pages switched on
+     * or off: off clears the address, on without one gives the default
+     * (with the handle in it). Not sent (null): the address as given.
      */
-    private static function switchPage(Model $collection, string $attribute, mixed $on, string $default): void
+    public static function switchPage(Model $collection, string $attribute, mixed $on, string $default): void
     {
         if ($on === null) {
             return;

@@ -13,7 +13,7 @@ use Sunrice\Cms\Models\Blueprint;
 /**
  * Checks a collection's URL pattern when it's saved: {slug} once, and each
  * other {field} a single-value `entries` field of the blueprint chosen in
- * the same form.
+ * the same form. Without parameters (a taxonomy's term pages), {slug} only.
  *
  * @internal
  */
@@ -21,6 +21,8 @@ final class RoutePatternRule implements DataAwareRule, ValidationRule
 {
     /** @var array<mixed> */
     private array $data = [];
+
+    public function __construct(private readonly bool $parameters = true) {}
 
     /** @param array<mixed> $data */
     public function setData(array $data): static
@@ -33,6 +35,13 @@ final class RoutePatternRule implements DataAwareRule, ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (! is_string($value) || $value === '') {
+            return;
+        }
+        if (! $this->parameters) {
+            if (! RoutePattern::isValid($value)) {
+                $fail(__('Use a path with {slug} once, like /topics/{slug}: lowercase letters, digits, dashes.'));
+            }
+
             return;
         }
         if (! RoutePattern::isValid($value, parameters: true)) {

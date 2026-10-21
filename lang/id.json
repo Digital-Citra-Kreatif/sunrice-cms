@@ -963,5 +963,9 @@
     "A short name for this blueprint. Changing it updates the collections, taxonomies, global sets, forms and entries that use it.": "Nama singkat blueprint ini. Mengubahnya memperbarui koleksi, taksonomi, set global, formulir, dan entri yang memakainya.",
     "A short name for this blueprint, used by the collections, taxonomies, global sets and forms that pick it.": "Nama singkat blueprint ini, dipakai oleh koleksi, taksonomi, set global, dan formulir yang memilihnya.",
     "In a blueprint definition:": "Di definisi blueprint:",
-    "In code:": "Di kode:"
+    "In code:": "Di kode:",
+    "Terms have pages": "Term punya halaman",
+    "Off: terms only group entries, with no address of their own.": "Mati: term hanya mengelompokkan entri, tanpa alamat sendiri.",
+    "Term page URL": "URL halaman term",
+    "Like /topics/{slug}. Empty: /{handle}/{slug}.": "Seperti /topics/{slug}. Kosong: /{handle}/{slug}."
 }

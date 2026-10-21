@@ -70,7 +70,7 @@ Each field's row shows its type, label and handle, with **Duplicate** (a copy ri
 
 ## Taxonomies
 
-**Structure → Taxonomies**: a **Title** (and a **Title in …** each other language, for visitors on its term pages), a **Handle** (changeable later, as for collections), **Nested terms** (terms under other terms, like subcategories), the **Collections** whose entries it groups, a **Term pages URL** (like `/topics/{slug}`; empty: terms have no pages), **Term fields** (a blueprint for the terms' own fields), and a **Template**. Editors then add the terms under Taxonomies in the sidebar (see [Terms](guide:website/terms)). To let editors give entries terms, add a **Terms** field to the collection's blueprint: that's enough for the entries list to filter by the taxonomy too, without ticking the collection here.
+**Structure → Taxonomies**: a **Title** (and a **Title in …** each other language, for visitors on its term pages), a **Handle** (changeable later, as for collections), **Nested terms** (terms under other terms, like subcategories), the **Collections** whose entries it groups, **Term fields** (a blueprint for the terms' own fields), and under **Term pages**: **Terms have pages** (each term gets a page listing its entries), its **Term page URL** (like `/topics/{slug}`; empty: `/{handle}/{slug}`) and a **Template**. Editors then add the terms under Taxonomies in the sidebar (see [Terms](guide:website/terms)). To let editors give entries terms, add a **Terms** field to the collection's blueprint: that's enough for the entries list to filter by the taxonomy too, without ticking the collection here.
 
 ## Global sets
 
