@@ -70,6 +70,7 @@
                         <input type="{{ $type }}" id="{{ $inputId }}" name="data[{{ $field->handle }}]" value="{{ is_scalar($value) ? $value : '' }}" @required($field->required)
                             @if ($type === 'number' && is_numeric($field->config['step'] ?? null)) step="{{ $field->config['step'] }}" @elseif ($type === 'number') step="any" @endif
                             @if ($type === 'text' && is_int($field->config['max'] ?? null)) maxlength="{{ $field->config['max'] }}" @endif
+                            @if ($type === 'date' && ($field->config['future'] ?? false) === true) min="{{ now()->toDateString() }}" @elseif ($type === 'datetime-local' && ($field->config['future'] ?? false) === true) min="{{ now()->startOfDay()->format('Y-m-d\TH:i') }}" @endif
                             @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif @if ($fieldError) aria-invalid="true" @endif>
                     @endif
                 @endif

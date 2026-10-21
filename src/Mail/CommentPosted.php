@@ -39,6 +39,7 @@ final class CommentPosted extends Mailable
             'comment' => $this->comment,
             'title' => $translation->title ?? $translation->draft_title ?? '',
             'url' => $translation?->url(),
+            // The entry's comments with this one's status: those that came after it too.
             'moderate' => route('sunrice.admin.cms.comments.index', ['entry' => $this->comment->entry_id, 'status' => $this->comment->status]),
         ]);
     }

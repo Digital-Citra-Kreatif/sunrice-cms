@@ -39,7 +39,7 @@ Every comment also needs the honeypot. Spam is deleted after `sunrice-cms.commen
 
 ## Emails
 
-- **To moderators**, for each new comment by someone who can't moderate, with a link to it in the admin; one email each, so addresses aren't shown to each other (form notifications go the same way).
+- **To moderators**, for a new comment by someone who can't moderate, with a link to the entry's comments in the admin; one email each, so addresses aren't shown to each other (form notifications go the same way). A burst of comments on one entry sends one email: after one, the next comes no sooner than ten minutes later (`PostComment::TELL_EVERY`), and the link shows them all.
 - **To commenters** who asked, when a reply to their comment is published (once per reply; not for replying to yourself), in the language they commented in, with a link that stops these emails for that comment. The link (signed, `sunrice.cms.comments.unsubscribe`) opens a page that asks first, with a button that POSTs to the same link (`sunrice.cms.comments.unsubscribe.confirm`), so mail scanners that open links unsubscribe nobody. The page is the site's own `cms/comment-unsubscribe.blade.php` when there is one (the starter templates have one in the site's layout; it gets `$done`, `$action`, `$title`, `$url` and `$locale`), else the CMS's plain page.
 
 Both are queued: run a queue worker.

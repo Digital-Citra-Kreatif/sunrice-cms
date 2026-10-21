@@ -23,7 +23,8 @@ final class Date extends FieldType
 
     public function rules(Field $field): array
     {
-        return ['date'];
+        // "Today or later" (a booking's preferred day): today in the app's time zone.
+        return $field->configBool('future') ? ['date', 'after_or_equal:today'] : ['date'];
     }
 
     public function normalize(mixed $value, Field $field): mixed
@@ -56,6 +57,9 @@ final class Date extends FieldType
 
     public function settings(): array
     {
-        return [new Field('time', 'toggle', 'With time of day')];
+        return [
+            new Field('time', 'toggle', 'With time of day'),
+            new Field('future', 'toggle', 'Today or later only', instructions: 'For a preferred date on a form, say: earlier days are refused.'),
+        ];
     }
 }
