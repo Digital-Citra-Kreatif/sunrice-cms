@@ -251,7 +251,7 @@ function formatDay(iso: string | null | undefined): string {
     if (!iso) return '—';
     const date = new Date(iso);
 
-    return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+    return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString(document.documentElement.lang || undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 /** Renames a term in the language shown: its title, slug and where it sits. */

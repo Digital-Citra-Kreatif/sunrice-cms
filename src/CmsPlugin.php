@@ -123,11 +123,11 @@ final class CmsPlugin extends BasePlugin
         // Each collection under Content, each taxonomy under Taxonomies (from the cached handles).
         $panel->navigationUsing(fn (): array => [
             ...array_map(fn (string $handle, array $collection): NavigationItem => NavigationItem::make("cms-collection-{$handle}")
-                ->label($collection['title'])->url("cms/collections/{$handle}/entries")->icon($collection['listing'] ? 'newspaper' : 'file-text')
+                ->label($collection['title'])->verbatim()->url("cms/collections/{$handle}/entries")->icon($collection['listing'] ? 'newspaper' : 'file-text')
                 ->group('Content')->sort(10)->visible(fn (Authorizable $user): bool => Access::entries($user, 'view', $handle)),
                 array_keys(Support\Handles::collectionTitles()), Support\Handles::collectionTitles()),
             ...array_map(fn (string $handle, string $title): NavigationItem => NavigationItem::make("cms-taxonomy-{$handle}")
-                ->label($title)->url("cms/taxonomies/{$handle}/terms")->icon('tag')
+                ->label($title)->verbatim()->url("cms/taxonomies/{$handle}/terms")->icon('tag')
                 ->group('Taxonomies')->sort(60)->visible(fn (Authorizable $user): bool => Access::terms($user, 'view', $handle)),
                 array_keys(Support\Handles::taxonomyTitles()), Support\Handles::taxonomyTitles()),
         ]);

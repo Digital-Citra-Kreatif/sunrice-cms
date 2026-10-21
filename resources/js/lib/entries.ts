@@ -12,7 +12,7 @@ export function formatDate(iso: string | null | undefined, locale?: string): str
     const date = new Date(iso);
     if (Number.isNaN(date.getTime())) return '—';
 
-    return date.toLocaleString(locale, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleString(locale ?? (document.documentElement.lang || undefined), { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 /** The value of a datetime-local input for an ISO date, in the reader's time zone. */
