@@ -204,7 +204,10 @@ final class EntryController
             // Another language's rows and blocks show the main one's shared values.
             'values' => ['title' => $translation->draft_title, 'slug' => $translation->draft_slug, 'data' => $translation->completeData(true), 'seo' => $translation->draft_data[Seo::KEY] ?? null],
             // Every language's: the parent and its own Blade view.
-            'settings' => ['parentId' => $entry->parent_id, 'template' => $entry->template, 'commentsClosed' => $entry->comments_closed, 'blueprint' => $entry->blueprintHandle()],
+            // Not for translators: they edit their languages' text only.
+            'settings' => Access::entries($request->user(), 'update', $collection, $entry)
+                ? ['parentId' => $entry->parent_id, 'template' => $entry->template, 'commentsClosed' => $entry->comments_closed, 'blueprint' => $entry->blueprintHandle()]
+                : null,
             // The blueprints it may use, when there's a choice (Page settings).
             'blueprints' => self::blueprints($collection),
             // Loaded after the page shows (Inertia's deferred props): the sidebar's lists.

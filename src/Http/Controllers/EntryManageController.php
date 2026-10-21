@@ -86,10 +86,11 @@ final class EntryManageController
     public function settings(Request $request, Entry $entry, SaveEntrySettings $save, ChangeBlueprint $blueprint): RedirectResponse
     {
         abort_if($entry->collection->trashed(), 404);
+        // Every language's settings: for those who may edit the entry itself, not translators
+        // (whose "locale" lets them past the route's check for their languages' text).
+        abort_unless(Access::entries($request->user(), 'update', $entry->collection, $entry), 403);
         $input = $request->only(['parent_id', 'template', 'comments_closed']);
         if ($request->has('blueprint')) {
-            // Every language's fields: for those who may edit the entry itself, not translators.
-            abort_unless(Access::entries($request->user(), 'update', $entry->collection, $entry), 403);
             $handle = $request->input('blueprint');
             $blueprint->handle($entry, is_string($handle) ? $handle : null);
         }
@@ -106,6 +107,8 @@ final class EntryManageController
 
     public function move(Request $request, Entry $entry, MoveEntry $move): RedirectResponse
     {
+        // The order is every language's: not for translators.
+        abort_unless(Access::entries($request->user(), 'update', $entry->collection, $entry), 403);
         $move->handle($entry, $request->string('direction')->toString());
 
         return back();
