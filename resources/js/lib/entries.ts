@@ -10,7 +10,22 @@ export function formatDate(iso: string | null | undefined, locale?: string): str
     const date = new Date(iso);
     if (Number.isNaN(date.getTime())) return '—';
 
-    return date.toLocaleString(locale, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    // The 24-hour clock, as the date picker's time.
+    return date.toLocaleString(locale, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+}
+
+/**
+ * Where "Publish on a date" starts: the date it's scheduled for, when that's
+ * still to come; else tomorrow, on the hour (never an old publish date).
+ */
+export function scheduleStart(current: string | null, now: Date = new Date()): Date {
+    const scheduled = current ? new Date(current) : null;
+    if (scheduled && !Number.isNaN(scheduled.getTime()) && scheduled > now) return scheduled;
+    const start = new Date(now);
+    start.setDate(start.getDate() + 1);
+    start.setMinutes(0, 0, 0);
+
+    return start;
 }
 
 /** The value of a datetime-local input for an ISO date, in the reader's time zone. */

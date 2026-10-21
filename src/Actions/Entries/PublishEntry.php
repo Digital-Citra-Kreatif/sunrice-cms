@@ -17,8 +17,9 @@ use Sunrice\Cms\Support\SearchText;
 
 /**
  * Publishes the draft of an entry translation: the site shows it from its
- * date (now, the date it was first published, or the given one, which may
- * be in the future) and a revision is kept. The draft is checked again,
+ * date (now, the date it was first published or is scheduled for, or the
+ * given one, which may be in the future; a draft that was scheduled for
+ * later and unpublished goes live now) and a revision is kept. The draft is checked again,
  * as the blueprint may have changed since it was saved.
  *
  * @api
@@ -62,7 +63,9 @@ final class PublishEntry
                 'slug' => $values['slug'],
                 'data' => $values['data'],
                 'draft_data' => $values['data'],
-                'published_at' => $publishAt !== null ? Carbon::instance($publishAt) : ($translation->published_at ?? now()),
+                // Without a date: the one it has (first published, or scheduled), but now for a draft once scheduled for later.
+                'published_at' => $publishAt !== null ? Carbon::instance($publishAt)
+                    : ($translation->published_at === null || (! $translation->isPublished() && $translation->published_at->isFuture()) ? now() : $translation->published_at),
                 // Counted up too, so an editor opened before this publish can't save over it unknowingly.
                 'version' => $translation->version + 1,
             ]);

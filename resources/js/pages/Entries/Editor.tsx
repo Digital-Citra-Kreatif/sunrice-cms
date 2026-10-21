@@ -15,7 +15,7 @@ import { TermLabels } from '@/components/TermsPicker.tsx';
 import { SEO_FIELDS } from '@/lib/seo.ts';
 import { FieldError, Fields } from '@/components/FieldInput.tsx';
 import { errorsAt, hasErrors } from '@/lib/builder.ts';
-import { type EntryLocale, type EntryStatus, formatDate, localeName, localInputValue, statusLabel } from '@/lib/entries.ts';
+import { type EntryLocale, type EntryStatus, formatDate, localeName, localInputValue, scheduleStart, statusLabel } from '@/lib/entries.ts';
 import type { FieldDefinition } from '@/types.ts';
 
 interface Props {
@@ -113,6 +113,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
     // Nothing new to publish: the live version is the draft, and the form has no changes.
     const upToDate = entry !== null && entry.status !== 'draft' && !entry.hasUnpublishedChanges && !form.isDirty;
     const editable = entry === null ? can.create : can.update && !entry.trashed;
+    const scheduled = entry?.status === 'scheduled';
 
     const save = (publish = false, publishedAt: string | null = null) => {
         form.transform((data) => ({ ...data, publish, published_at: publishedAt }));
@@ -209,20 +210,29 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                         )}
                         {entry && !entry.trashed && can.publish && !lock.readOnly && (
                             <div className="cms:flex">
-                                <Button type="button" variant={upToDate ? 'outline' : 'default'} className="cms:rounded-r-none cms:disabled:opacity-100" disabled={form.processing || upToDate} onClick={() => publish()}>
-                                    {upToDate && <Check className="cms:text-emerald-600 cms:dark:text-emerald-400" />}
-                                    {entry.status === 'draft' ? 'Publish' : upToDate ? 'Published' : 'Publish changes'}
-                                </Button>
+                                {scheduled && upToDate ? (
+                                    <Button type="button" variant="outline" className="cms:rounded-r-none" disabled={form.processing} title="Change the date" onClick={() => setScheduling(true)}>
+                                        <CalendarClock /> Scheduled for {formatDate(entry.publishedAt)}
+                                    </Button>
+                                ) : (
+                                    <Button type="button" variant={upToDate ? 'outline' : 'default'} className="cms:rounded-r-none cms:disabled:opacity-100" disabled={form.processing || upToDate} onClick={() => publish()}>
+                                        {upToDate && <Check className="cms:text-emerald-600 cms:dark:text-emerald-400" />}
+                                        {entry.status === 'draft' ? 'Publish' : upToDate ? 'Published' : 'Publish changes'}
+                                    </Button>
+                                )}
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button type="button" size="icon" variant={upToDate ? 'outline' : 'default'} className={upToDate ? 'cms:-ml-px cms:rounded-l-none' : 'cms:rounded-l-none cms:border-l cms:border-primary-foreground/20'} aria-label="More publishing options"><ChevronDown /></Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onSelect={() => setScheduling(true)}><CalendarClock /> Publish on a date…</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => setScheduling(true)}><CalendarClock /> {scheduled ? 'Change the date…' : 'Publish on a date…'}</DropdownMenuItem>
+                                        {scheduled && <DropdownMenuItem onSelect={() => publish(new Date().toISOString())}>Publish now</DropdownMenuItem>}
                                         {entry.status !== 'draft' && (
                                             <>
                                                 <DropdownMenuSeparator />
-                                                <DropdownMenuItem onSelect={() => router.post(`${url}/unpublish`, locale, { preserveScroll: true })}>Unpublish</DropdownMenuItem>
+                                                <DropdownMenuItem onSelect={() => router.post(`${url}/unpublish`, locale, { preserveScroll: true })}>
+                                                    {scheduled ? 'Unschedule (back to draft)' : 'Unpublish'}
+                                                </DropdownMenuItem>
                                             </>
                                         )}
                                     </DropdownMenuContent>
@@ -355,7 +365,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                 )}
             </div>
 
-            <ScheduleDialog open={scheduling} onClose={() => setScheduling(false)} processing={form.processing}
+            <ScheduleDialog open={scheduling} onClose={() => setScheduling(false)} processing={form.processing} rescheduling={scheduled}
                 current={entry?.publishedAt ?? null} onSchedule={(iso) => publish(iso)} />
         </form>
     );
@@ -395,29 +405,39 @@ function LanguageBar({ entryUrl, current, locales, canAdd, canRemove, onRemove }
     );
 }
 
-function ScheduleDialog({ open, onClose, onSchedule, current, processing }: {
-    open: boolean; onClose: () => void; onSchedule: (iso: string) => void; current: string | null; processing: boolean;
+function ScheduleDialog({ open, onClose, onSchedule, current, processing, rescheduling }: {
+    open: boolean; onClose: () => void; onSchedule: (iso: string) => void; current: string | null; processing: boolean; rescheduling: boolean;
 }) {
     const [value, setValue] = React.useState('');
     React.useEffect(() => {
-        if (open) setValue(localInputValue(current ? new Date(current) : new Date(Date.now() + 86_400_000)));
+        // The date it's scheduled for, else tomorrow: never the date it was first published.
+        if (open) setValue(localInputValue(scheduleStart(current)));
     }, [open, current]);
+    const chosen = value === '' ? null : new Date(value);
+    const past = chosen !== null && chosen.getTime() <= Date.now();
 
     return (
         <Dialog open={open} onOpenChange={(next: boolean) => !next && onClose()}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Publish on a date</DialogTitle>
-                    <DialogDescription>The entry goes live then; a date in the past publishes it now with that date.</DialogDescription>
+                    <DialogTitle>{rescheduling ? 'Change the publish date' : 'Publish on a date'}</DialogTitle>
+                    <DialogDescription>The entry goes live then.</DialogDescription>
                 </DialogHeader>
                 <div className="cms:flex cms:flex-col cms:gap-2">
                     <Label htmlFor="published-at">Date and time</Label>
                     <DatePicker id="published-at" withTime required className="cms:max-w-none" value={value || null} onChange={(next) => setValue(next ?? '')} />
                     <p className="cms:text-sm cms:text-muted-foreground">In your time zone.</p>
+                    {past && (
+                        <p role="alert" className="cms:text-sm cms:text-amber-700 cms:dark:text-amber-400">
+                            This date has passed: the entry goes live now, dated {formatDate(chosen.toISOString())}.
+                        </p>
+                    )}
                 </div>
                 <DialogFooter>
                     <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-                    <Button type="button" disabled={value === '' || processing} onClick={() => onSchedule(new Date(value).toISOString())}>Publish</Button>
+                    <Button type="button" disabled={chosen === null || processing} onClick={() => chosen && onSchedule(chosen.toISOString())}>
+                        {past ? 'Publish now, back-dated' : rescheduling ? 'Change the date' : 'Schedule'}
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
