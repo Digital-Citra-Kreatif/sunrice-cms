@@ -51,10 +51,12 @@ Views get:
 | --- | --- |
 | `$entry` | the `EntryTranslation` (`$entry->title`, `->slug`, `->published_at`, `->url()`, `->entry->collection`) |
 | `$title` | the title (the draft's in a preview) |
-| `$values` | the fields as templates get them (see [fields](fields.md#field-types)) |
+| `$values` | the fields as templates get them (see [fields](fields.md#field-types)), by handle; a field never filled in may be missing, so read it with `$values['intro'] ?? null` |
+| `$richText` | the handles of its rich text fields, the only HTML a template may print as is |
 | `$collection` | the `Collection` |
 | `$locale` | the language; the app's locale is set to it too |
-| `$preview` | whether this is a preview of the draft |
+| `$preview` | whether this is a preview of the draft (from the editor, or `?draft`) |
+| `$draft` | whether this is the newer draft seen with `?draft` by someone signed in ([drafts on the site](#drafts-on-the-site)) |
 | `$fallback` | whether this is the main language's content in another language ([untranslated pages](#untranslated-pages)) |
 
 Rich text is cleaned when it's saved, so print it as is: `{!! $values['body'] !!}`. Print everything else escaped: `{{ $values['intro'] }}`.
@@ -195,7 +197,7 @@ A collection with a **listing page URL** (`listing_route`, like `/blog`) gets a 
 | --- | --- |
 | `$collection` | the `Collection` (`->listingUrl($locale)`) |
 | `$entries` | a paginator of `EntryTranslation`s (`{{ $entries->links() }}`) |
-| `$values`, `$richText` | the listing page's fields, as for entries |
+| `$values`, `$richText` | the listing page's fields, as for entries: only those of the collection's listing blueprint, and empty without one, so read them with `$values['intro'] ?? null` |
 | `$title`, `$locale`, `$url` | the collection's title, the language and the page's URL |
 
 Listing URLs are fixed, so they're matched before any `{slug}` pattern; they're in the sitemap.
