@@ -9,7 +9,7 @@ import {
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
 import { FieldError } from '@/components/FieldInput.tsx';
 import { localeName } from '@/lib/entries.ts';
-import { type FlatItem, flatten, indent, type MenuNode, newItem, outdent, removeItem, toTree } from '@/lib/menu.ts';
+import { type FlatItem, flatten, indent, labelFallback, type MenuNode, newItem, outdent, removeItem, toTree } from '@/lib/menu.ts';
 import { childIndexes, reorderLevel } from '@/lib/tree.ts';
 import { isSafeUrl, pickerQuery } from '@/lib/values.ts';
 
@@ -93,7 +93,7 @@ export default function MenuEdit({ menu, items: initial, locales, limits, terms,
                                 <div className="cms:flex cms:flex-wrap cms:gap-2">
                                     {locales.slice(1).map((code) => (
                                         <Input key={code} aria-label={t('Label (:language)', { language: localeName(code) })} className="cms:w-full cms:sm:max-w-xs" disabled={!can.update}
-                                            placeholder={item.url === null
+                                            placeholder={labelFallback(item) === 'title'
                                                 ? t(':language: its title there, else as :main', { language: localeName(code), main: localeName(main) })
                                                 : t(':language: as :main', { language: localeName(code), main: localeName(main) })} value={item.labels[code] ?? ''}
                                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => update(index, { labels: { ...item.labels, [code]: e.target.value } })} />

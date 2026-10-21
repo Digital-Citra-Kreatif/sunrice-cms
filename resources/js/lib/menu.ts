@@ -111,3 +111,14 @@ export function removeItem(items: FlatItem[], index: number): FlatItem[] {
 export function newItem(item: Partial<FlatItem>): FlatItem {
     return { key: `m${++next}`, depth: 0, entry_id: null, term_id: null, collection_id: null, target: null, url: null, labels: {}, new_tab: false, query: null, ...item };
 }
+
+/**
+ * What a link shows in a language without its own label: the target's title there (an entry, a term's page, a
+ * plain listing link), or the main language's label (an address, or a listing link with filters, whose
+ * label says more than the listing's title). As Menus::link() on the site.
+ */
+export function labelFallback(item: Pick<MenuNode, 'url' | 'collection_id' | 'query'>): 'title' | 'main' {
+    if (item.url !== null) return 'main';
+
+    return item.collection_id !== null && (item.query ?? '').trim() !== '' ? 'main' : 'title';
+}

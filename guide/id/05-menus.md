@@ -19,7 +19,7 @@ Tombol di atas daftar menambahkan tautan ke:
 
 ### Setiap tautan
 
-- **Label**: teks yang tampil, per bahasa. Untuk entri, term, dan halaman daftar, label boleh kosong (judulnya yang dipakai). Di bahasa lain yang belum punya label sendiri, item menampilkan judul tujuannya dalam bahasa itu jika ada, dan jika tidak, label bahasa utama. **Tautan** membutuhkan label dalam bahasa utama, dan bahasa lain memakainya jika belum punya label sendiri.
+- **Label**: teks yang tampil, per bahasa. Untuk entri, term, dan halaman daftar, label boleh kosong (judulnya yang dipakai). Di bahasa lain yang belum punya label sendiri, item menampilkan judul tujuannya dalam bahasa itu jika ada, dan jika tidak, label bahasa utama. Halaman daftar dengan **Filter** menampilkan label bahasa utama, bukan judul daftarnya, jadi beri label di setiap bahasa. **Tautan** membutuhkan label dalam bahasa utama, dan bahasa lain memakainya jika belum punya label sendiri.
 - **Tab baru**: membuka tautan di tab peramban baru. Gunakan untuk tautan ke situs web lain.
 - Seret tautan lewat pegangannya untuk mengubah posisinya di antara tautan setingkat (atau dengan papan ketik: fokus ke pegangan, tekan Spasi, pindahkan dengan tombol panah, tekan Spasi lagi).
 - **Masuk satu tingkat** menempatkan tautan di bawah tautan di atasnya (sub-menu); **Keluar satu tingkat** mengeluarkannya (beserta isinya) dari sub-menu, tepat setelah sub-menu itu; tautan lain tetap di tempatnya. Menu bisa sampai tiga tingkat.
