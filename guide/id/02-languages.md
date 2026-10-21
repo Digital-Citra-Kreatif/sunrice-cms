@@ -49,5 +49,9 @@ Saat bahasa utama berubah, bahasa lain tidak ikut berubah, kecuali field bersama
 - **Menu**: label per bahasa untuk setiap tautan (lihat [Menu](guide:website/menus)).
 - **Komentar** menyimpan bahasa tempat komentar itu ditulis, dan semua bahasa sebuah entri berbagi satu utas komentar.
 
+## Formulir, menu, dan judul halaman daftar
+
+**Konten → Terjemahan** mengumpulkan sisa teks yang dibaca pengunjung, dalam bahasa lain: deskripsi situs, judul halaman daftar (koleksi dan taksonomi), pesan terima kasih setiap formulir beserta label, petunjuk, dan pilihan field-nya, serta label tautan menu. Setiap baris menampilkan teks dalam bahasa utama di samping kotak untuk terjemahannya; biarkan kotak kosong agar teks bahasa utama yang tampil. Penerjemah bisa memakainya tanpa perlu bisa mengubah struktur atau pengaturan.
+
 > [!TECHNICAL]
 > Terjemahan mesin diatur dengan `sunrice-cms.translation`; seluruh koleksi bisa diterjemahkan dengan `php artisan sunrice:translate`, dan bahasa utama diganti dengan `php artisan sunrice:switch-main-language`. Lihat [Machine translation](docs:cms/translation) dan [Collections and entries](docs:cms/collections#languages).

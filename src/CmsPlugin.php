@@ -34,6 +34,7 @@ use Sunrice\Cms\Http\Controllers\MenuController;
 use Sunrice\Cms\Http\Controllers\SeoController;
 use Sunrice\Cms\Http\Controllers\SubmissionController;
 use Sunrice\Cms\Http\Controllers\TermController;
+use Sunrice\Cms\Http\Controllers\TranslationController;
 use Sunrice\Cms\Http\Middleware\AuthorizeContent;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\GlobalSet;
@@ -105,7 +106,7 @@ final class CmsPlugin extends BasePlugin
             Permission::make('cms.entries.export', 'Export entries as CSV', 'Content'),
             Permission::make('cms.entries.update-own', 'Edit drafts of their own entries (in collections they may view)', 'Content'),
             Permission::make('cms.entries.delete-own', 'Trash their own entries (in collections they may view)', 'Content'),
-            Permission::make('cms.entries.translate', 'Edit entries\' other languages (not the main one)', 'Content'),
+            Permission::make('cms.entries.translate', 'Translate entries, forms, menus and listing titles (not the main language)', 'Content'),
             Permission::make('cms.entries.view-drafts', 'See unpublished changes on the site while signed in', 'Content'),
             Permission::make('cms.terms.view', 'View terms', 'Content'),
             Permission::make('cms.terms.create', 'Create terms', 'Content'),
@@ -141,6 +142,9 @@ final class CmsPlugin extends BasePlugin
         $panel->navigation(
             NavigationItem::make('cms-comments')->label('Comments')->url('cms/comments')->icon('message-square')
                 ->group('Content')->sort(45)->permission('cms.comments.view'),
+            // What visitors read outside entries, in the other languages: for translators.
+            NavigationItem::make('cms-translations')->label('Translations')->url('cms/translations')->icon('globe')
+                ->group('Content')->sort(55)->visible(fn (Authorizable $user): bool => $user->can('cms.entries.translate') && count(Locales::all()) > 1),
             NavigationItem::make('cms-submissions')->label('Submissions')->url('cms/submissions')->icon('inbox')
                 ->group('Content')->sort(50)->visible(fn (Authorizable $user): bool => Access::submissions($user, 'view')),
             NavigationItem::make('cms-seo')->label('SEO')->url('cms/seo')->icon('search')
@@ -172,6 +176,10 @@ final class CmsPlugin extends BasePlugin
                 });
                 Route::post('languages/{locale}/main', [LanguageController::class, 'main'])->name('languages.main')
                     ->middleware('can:cms.settings.locales')->where('locale', '[A-Za-z0-9_-]{2,20}');
+                Route::name('translations.')->controller(TranslationController::class)->middleware('can:cms.entries.translate')->group(function (): void {
+                    Route::get('translations', 'edit')->name('edit');
+                    Route::put('translations', 'update')->name('update');
+                });
                 // A menu's links and a global set's values; the menus and sets themselves are resources (MenuResource, GlobalSetResource).
                 Route::name('menus.links.')->controller(MenuController::class)->group(function (): void {
                     Route::get('menus/{menu:handle}/links', 'edit')->name('edit')->middleware('can:cms.menus.view');
