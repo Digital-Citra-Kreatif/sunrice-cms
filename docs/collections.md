@@ -145,7 +145,7 @@ Shared fields inside a translated group, repeater or flexible block are shared t
 
 ## Switching the main language
 
-Once there's content, the main language is changed with a command, which moves what's stored so nothing is lost:
+Once there's content, the main language is changed from Settings → Languages (the **Main language** card's buttons, `POST admin/cms/languages/{locale}/main`, `sunrice.admin.cms.languages.main`, behind `cms.settings.locales`; it refuses while entries or terms lack the new language) or with a command, which can also copy what's missing; either moves what's stored so nothing is lost:
 
 ```bash
 php artisan sunrice:switch-main-language id --dry-run       # what would change

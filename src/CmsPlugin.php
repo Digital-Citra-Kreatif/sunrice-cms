@@ -28,6 +28,7 @@ use Sunrice\Cms\Http\Controllers\EntryController;
 use Sunrice\Cms\Http\Controllers\EntryManageController;
 use Sunrice\Cms\Http\Controllers\FieldsetController;
 use Sunrice\Cms\Http\Controllers\GlobalsController;
+use Sunrice\Cms\Http\Controllers\LanguageController;
 use Sunrice\Cms\Http\Controllers\ListingController;
 use Sunrice\Cms\Http\Controllers\MenuController;
 use Sunrice\Cms\Http\Controllers\SubmissionController;
@@ -134,6 +135,8 @@ final class CmsPlugin extends BasePlugin
                 Route::resource('blueprints', BlueprintController::class)->except('show');
                 Route::resource('fieldsets', FieldsetController::class)->except('show');
             });
+            Route::post('cms/languages/{locale}/main', [LanguageController::class, 'main'])->name('cms.languages.main')
+                ->middleware('can:cms.settings.locales')->where('locale', '[A-Za-z0-9_-]{2,20}');
             Route::prefix('cms')->name('cms.menus.')->controller(MenuController::class)->group(function (): void {
                 Route::get('menus', 'index')->name('index')->middleware('can:cms.menus.view');
                 Route::get('menus/{menu:handle}', 'edit')->name('edit')->middleware('can:cms.menus.view');

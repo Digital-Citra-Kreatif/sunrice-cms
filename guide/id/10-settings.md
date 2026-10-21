@@ -28,11 +28,11 @@ en: English
 id: Bahasa Indonesia
 ```
 
-Baris pertama adalah **bahasa utama**, di alamat biasa (`/about`); bahasa lain diawali kodenya (`/id/about`). Panel menolak daftar kosong dan bahasa yang tercantum dua kali.
+Baris pertama adalah **bahasa utama**, di alamat biasa (`/about`); bahasa lain diawali kodenya (`/id/about`). Sebelum disimpan, kotak ini menampilkan bahasa yang dipakai situs saat disiapkan. Panel menolak daftar kosong, baris yang bukan kode bahasa, dan bahasa yang tercantum dua kali.
 
 - **Menambah bahasa** membuatnya tersedia di bilah bahasa penyunting. Tidak ada yang diterjemahkan otomatis.
 - **Menghapus bahasa** menyembunyikan kontennya (tidak ada yang dihapus); tambahkan kembali untuk memunculkan kontennya lagi.
-- **Mengganti bahasa utama** tidak bisa dilakukan di sini setelah ada konten: developer melakukannya dengan perintah yang memindahkan semuanya dengan aman.
+- **Mengganti bahasa utama** setelah ada konten: pakai **Make … the main language** di kartu **Main language** di bawah formulir. Semuanya dipindahkan dengan aman, dan alamat berubah (bahasa utama baru kehilangan kodenya, yang lama mendapatkannya; alamat lama dialihkan). Setiap entri dan term perlu terjemahan dalam bahasa utama yang baru terlebih dahulu; panel memberi tahu berapa yang belum.
 
 Lihat [Bahasa](guide:website/languages) untuk bekerja dengan terjemahan.
 
