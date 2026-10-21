@@ -112,6 +112,7 @@ Admins with `cms.settings.cache` (*Edit Cache settings*; administrators have it)
 | **Parameters that make a page of their own** | `query` | Added to `cache.query` (both apply; `PageCacheHasher::query()` returns them all, `PageCacheHasher::configuredQuery()` only `page` and the config's). The page must still `read()` them, as above. `q` and `reply_to` are refused: those pages are never kept. |
 | **Any other parameter** | `otherQuery` | `ignore` (the default, as before): any other parameter gets the kept page. `skip`: an address with any other parameter is neither served from the cache nor kept, for templates that read parameters you can't list. |
 | **Parameters always ignored** | `ignore` | With `skip`: parameters that never skip the cache, `*` for any characters. `utm_*`, `fbclid`, `gclid` and `msclkid` by default (`CacheSettings::TRACKING`). |
+| **Preload after clearing the cache**, **Preload after content changes**, **Preload on a schedule** | `preloadAfterClear`, `preloadAfterChanges`, `preloadSchedule` | See [Preloading](#preloading). Off by default. |
 | **Keep the site's data for (minutes)** | `siteMinutes` | Over `cache.ttl`: how long addresses, menus, the sitemap and everything else in SiteCache is kept at most (`SiteCache::ttl()`). |
 
 The page-cache settings are greyed out, with the reason under them and on the card, while whole pages can't be kept on this server (`PageCache::unavailable()` says why, for developers): `cache.enabled` is off, spatie/laravel-responsecache isn't installed or is turned off (`RESPONSE_CACHE_ENABLED=false`), or its `CsrfTokenReplacer` is missing from `responsecache.replacers`. `PageCache::enabled()` is false then whatever the settings say. Addresses and other query parameters are checked before a kept page is served (`PageCache::excluded()`); collections after the page renders, so their pages are rendered every time but never kept. In code:
@@ -133,6 +134,21 @@ The card on Settings → Cache shows whether whole pages are kept, where pages a
 
 Both are `Sunrice\Cms\Actions\Cache\ClearCache` (`@api`; `handle(ClearCache::PAGES)` or `handle(ClearCache::ALL)`). A new version works on any store without touching anything else in it; the pages left behind expire within their lifetime. Kept pages are also removed from responsecache's store right away when it holds nothing else (`ClearCache::ownPageStore()`: a `responsecache.cache.tag`, or a store that is neither the app's default nor `cache.store`), so a shared store is never flushed.
 
+### Preloading
+
+A kept page is rendered for the first visitor who asks for it. Preloading asks for them first, so after a clear, a deploy or a busy content day even the first visitor gets a kept page. It's worth it on a site whose pages are slow to render or get many first visits (campaigns, search engines); on a small site, visitors fill the cache soon enough.
+
+- **Preload cache** on Settings → Cache's card (`POST admin/cms/cache/preload`, `sunrice.admin.cms.cache.preload`, `cms.settings.cache`; logged as "preloaded the page cache"), or `php artisan sunrice:cache-preload [--limit=] [--locale=] [--now]`.
+- **Preload after clearing the cache**: after either Clear button (`ClearCache`).
+- **Preload after content changes**: a minute after a change (several changes within that minute start one preload; none while one runs). On a big site that edits often, this keeps the server busy.
+- **Preload on a schedule**: hourly or daily, through Laravel's scheduler (the CMS schedules `sunrice:cache-preload` and runs it when the setting says so), which needs `* * * * * php artisan schedule:run` in cron.
+
+What's preloaded: the sitemap's pages, every language (entry pages, the homepage, term pages, and listing pages' first page), but pages that ask not to be indexed and what Settings → Cache leaves out (addresses and collections). Each is requested through the app itself (no outside HTTP), on `APP_URL` (so no `Host` header is trusted), as a visitor who isn't signed in and without a session, so the page cache keeps it as it would for a visitor.
+
+It runs in queued jobs (`Sunrice\Cms\Jobs\PreloadPages`) of `cache.preload.batch` pages (25), one job after the other (never several at once), with `cache.preload.delay` milliseconds (100) between pages, so it neither holds up a request nor floods the server: it **needs a queue worker** (`php artisan queue:work`). On the `sync` queue it runs after the response is sent, in that request's PHP process; `--now` runs it in the command. One preload runs at a time: another is refused until it ends (or two hours without progress). It stops early if whole pages stop being kept. The card shows the last preload's start and end, the pages kept and failed, and, while one runs, how far it got (the button comes back when it's done).
+
+In code: `Sunrice\Cms\Actions\Cache\PreloadCache` (`@api`): `handle(?int $limit, ?string $locale, bool $now)` returns the number of pages (it throws `ActionFailed` while one runs or whole pages aren't kept), `running()`, `status()`.
+
 ### Deploying
 
 New CSS and JS from `npm run build` start new kept pages by themselves. Changed Blade templates, translations or code don't: after a deploy that changes them, clear the kept pages with **Clear page cache**, or from the command line with
@@ -141,7 +157,7 @@ New CSS and JS from `npm run build` start new kept pages by themselves. Changed 
 php artisan responsecache:clear
 ```
 
-(with `php artisan view:clear` if your deploy doesn't already), or wait `cache.ttl` at most. `responsecache:clear` empties responsecache's whole store (`cache.store`, `file` by default), so give it a store of its own when that's the app's default store.
+(with `php artisan view:clear` if your deploy doesn't already), or wait `cache.ttl` at most. Then `php artisan sunrice:cache-preload` fills it again. `responsecache:clear` empties responsecache's whole store (`cache.store`, `file` by default), so give it a store of its own when that's the app's default store.
 
 ## Scheduled publishing
 

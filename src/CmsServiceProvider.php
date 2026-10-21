@@ -151,6 +151,12 @@ final class CmsServiceProvider extends ServiceProvider
                 app()->forgetInstance(Settings\CacheSettings::class);
             }
         });
+        // Settings → Cache → Preload after content changes (not after clearing: ClearCache says).
+        Event::listen(Events\ContentChanged::class, function (Events\ContentChanged $event): void {
+            if ($event->what !== Actions\Cache\ClearCache::CHANGE && app(Settings\CacheSettings::class)->preloadAfterChanges) {
+                app(Actions\Cache\PreloadCache::class)->soon();
+            }
+        });
         // Code on every page is a way in: changing it is a security event, and alerts.
         Event::listen(SettingsSaved::class, function (SettingsSaved $event): void {
             if ($event->section === Settings\CodeSettings::key() && $event->changed !== []) {
@@ -163,10 +169,13 @@ final class CmsServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 Console\PublishScheduledCommand::class, Console\RenameFieldCommand::class, Console\ExportStructureCommand::class, Console\ImportStructureCommand::class,
-                Console\OrphansCommand::class, Console\ReferencesCommand::class, Console\DemoContentCommand::class, Console\SwitchMainLanguageCommand::class, Console\TranslateCommand::class,
+                Console\OrphansCommand::class, Console\ReferencesCommand::class, Console\DemoContentCommand::class, Console\SwitchMainLanguageCommand::class, Console\TranslateCommand::class, Console\CachePreloadCommand::class,
             ]);
             $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
                 $schedule->command('sunrice:publish-scheduled')->everyMinute()->withoutOverlapping();
+                // Settings → Cache → Preload on a schedule (read when the scheduler runs).
+                $schedule->command('sunrice:cache-preload')->hourly()->when(fn (): bool => app(Settings\CacheSettings::class)->preloadSchedule === Settings\CacheSettings::HOURLY);
+                $schedule->command('sunrice:cache-preload')->daily()->when(fn (): bool => app(Settings\CacheSettings::class)->preloadSchedule === Settings\CacheSettings::DAILY);
                 // Old form submissions and their files (sunrice-cms.forms.prune_after_days).
                 $schedule->command('model:prune', ['--model' => [Models\Submission::class, Models\Comment::class]])->daily();
             });

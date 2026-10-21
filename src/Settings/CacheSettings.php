@@ -6,6 +6,7 @@ namespace Sunrice\Cms\Settings;
 
 use Closure;
 use Illuminate\Contracts\Auth\Access\Authorizable;
+use Illuminate\Support\Carbon;
 use Sunrice\Admin\Activity\Activity;
 use Sunrice\Admin\Resources\Forms\CheckboxList;
 use Sunrice\Admin\Resources\Forms\Form;
@@ -13,8 +14,10 @@ use Sunrice\Admin\Resources\Forms\ListInput;
 use Sunrice\Admin\Resources\Forms\NumberInput;
 use Sunrice\Admin\Resources\Forms\Section;
 use Sunrice\Admin\Resources\Forms\Select;
+use Sunrice\Admin\Resources\Forms\Toggle;
 use Sunrice\Admin\Settings\Settings;
 use Sunrice\Admin\Support\Card;
+use Sunrice\Cms\Actions\Cache\PreloadCache;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Site\PageCache;
 use Sunrice\Cms\Site\PageCacheHasher;
@@ -46,6 +49,13 @@ final class CacheSettings extends Settings
     /** Other query parameters: neither served from the cache nor kept. */
     public const SKIP = 'skip';
 
+    /** Preload on a schedule: never, every hour, every day. */
+    public const NEVER = 'off';
+
+    public const HOURLY = 'hourly';
+
+    public const DAILY = 'daily';
+
     /** Common tracking parameters, ignored even when other parameters skip the cache. */
     public const TRACKING = "utm_*\nfbclid\ngclid\nmsclkid";
 
@@ -71,6 +81,15 @@ final class CacheSettings extends Settings
 
     /** Minutes the site's data (addresses, menus, the sitemap) is kept at most; null: `sunrice-cms.cache.ttl`. */
     public ?int $siteMinutes = null;
+
+    /** Preload the page cache after Clear page cache / Clear all site caches. */
+    public bool $preloadAfterClear = false;
+
+    /** Preload the page cache a minute after content changes. */
+    public bool $preloadAfterChanges = false;
+
+    /** Preload on a schedule: NEVER, HOURLY or DAILY (needs Laravel's scheduler). */
+    public string $preloadSchedule = self::NEVER;
 
     /** @var array{0: string, 1: string, 2: string}|null the exclusion and ignore patterns as regular expressions, for the text they're from */
     private ?array $patterns = null;
@@ -125,6 +144,16 @@ final class CacheSettings extends Settings
                     ->rules([self::listRule(fn (string $name): ?string => self::parameterProblem($name, true))])
                     ->help('Tracking parameters from newsletters and ads, which never skip the cache. * stands for anything: utm_* is utm_source, utm_medium…'),
             ]),
+            Section::make('Preloading')->description('Request the site\'s pages ahead of visitors, so even the first visitor gets a kept page. It runs in the background, a few pages at a time.')->schema([
+                Toggle::make('preloadAfterClear')->label('Preload after clearing the cache')->disabled($off),
+                Toggle::make('preloadAfterChanges')->label('Preload after content changes')->disabled($off)
+                    ->help('A minute after the last change. On a big site, this keeps the server busy after every edit.'),
+                Select::make('preloadSchedule')->label('Preload on a schedule')->required()->disabled($off)->options([
+                    self::NEVER => 'Never',
+                    self::HOURLY => 'Every hour',
+                    self::DAILY => 'Every day',
+                ])->developerHelp('Preloading runs in queued jobs: it needs a queue worker (php artisan queue:work), and a schedule needs Laravel\'s scheduler in cron. From the command line: `php artisan sunrice:cache-preload`'),
+            ]),
             Section::make('Site data')->description('Which page is at an address, menus, the sitemap, global sets and forms, kept until the content changes.')->schema([
                 NumberInput::make('siteMinutes')->label('Keep the site\'s data for (minutes)')->integer()->min(1)->max(10080)->disabled(! SiteCache::enabled())
                     ->placeholder((string) intdiv(self::configuredTtl() + 59, 60))
@@ -144,15 +173,29 @@ final class CacheSettings extends Settings
             ! PageCache::enabled() => self::said($settings->pageCache === self::CONFIGURED ? 'Off (as configured)' : 'Off (set here)', []),
             default => self::said($settings->pageCache === self::CONFIGURED ? 'On (as configured)' : 'On (set here)', []),
         };
+        $preloader = app(PreloadCache::class);
+        $preload = $preloader->status();
+        $running = $preloader->running();
         $card = Card::make('Cache')->rows([
             'Whole-page cache' => $state,
             'Pages kept in' => $unavailable === null ? self::storeName(config('responsecache.cache.store')) : null,
             'Site data kept in' => SiteCache::enabled() ? self::storeName(config('sunrice-cms.cache.store')) : self::said('Not kept (turned off)', []),
             'Last cleared' => $last?->created_at,
             'Last cleared by' => $last === null ? null : ($last->user_name ?? self::said('System', [])).' ('.self::said($last->subject_id === 'pages' ? 'page cache' : 'all site caches', []).')',
+            'Last preload' => $preload === null ? null : Carbon::createFromTimestamp($preload['started_at']),
+            'Preload finished' => $preload === null || $preload['finished_at'] === null ? null : Carbon::createFromTimestamp($preload['finished_at']),
+            'Pages preloaded' => $preload === null ? null : self::said(':warmed of :total, :failed failed', ['warmed' => (string) $preload['warmed'], 'total' => (string) $preload['total'], 'failed' => (string) $preload['failed']]),
         ]);
+        if ($running && $preload !== null) {
+            $card->notice(self::said('Preloading now: :done of :total pages so far.', ['done' => (string) ($preload['warmed'] + $preload['failed']), 'total' => (string) $preload['total']]));
+        } elseif ($preload !== null && $preload['stopped'] !== null) {
+            $card->notice('The last preload stopped early.', Card::WARNING, $preload['stopped']);
+        }
         if ($unavailable !== null) {
             $card->notice('The whole-page cache isn\'t available on this server: ask your developer.', Card::WARNING, $unavailable);
+        }
+        if (PageCache::enabled() && ! $running) {
+            $card->button('Preload cache', route('sunrice.admin.cms.cache.preload', [], false), 'Preload the page cache now? The site\'s pages are requested in the background, a few at a time.');
         }
         if ($unavailable === null) {
             $card->button('Clear page cache', route('sunrice.admin.cms.cache.clear-pages', [], false), 'Clear the page cache now? Visitors get freshly rendered pages, so the site is a little slower for a moment.');

@@ -66,6 +66,12 @@ return [
         // the cache store with copies of one page. Settings → Cache adds to
         // these.
         'query' => [],
+        // Preloading the whole-page cache (Settings → Cache, sunrice:cache-preload):
+        // pages per queued job, and milliseconds between two pages.
+        'preload' => [
+            'batch' => 25,
+            'delay' => 100,
+        ],
     ],
 
     'search' => [

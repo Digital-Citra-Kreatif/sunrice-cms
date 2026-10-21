@@ -75,12 +75,19 @@ The website keeps what it shows often so pages load fast. A change to the conten
 - **Any other parameter**: **Ignore it** (the usual choice: visitors get the kept page) or **Skip the cache** (the page is rendered afresh and not kept), for pages that read parameters you can't list.
 - **Parameters always ignored** (with **Skip the cache**): tracking parameters from newsletters and ads, which never skip the cache. `utm_*` stands for `utm_source`, `utm_medium`…
 
+**Preloading** asks for the site's pages before visitors do, so even the first visitor gets a kept page. It runs in the background, a few pages at a time:
+
+- **Preload after clearing the cache**: after either Clear button below.
+- **Preload after content changes**: a minute after the last change. On a big site that's edited often, leave it off.
+- **Preload on a schedule**: **Never**, **Every hour** or **Every day**.
+
 **Site data**: **Keep the site's data for (minutes)**: which page is at an address, menus and the sitemap. Empty: as your developer set it.
 
 Saving applies at once: everything kept before is read afresh.
 
 The **Cache** card under the form shows whether whole pages are kept, where things are kept, and when the caches were last cleared and by whom. Its buttons ask first:
 
+- **Preload cache**: starts preloading now. While it runs, the card says how far it got and the button is gone until it's done; afterwards it shows how many pages were kept and how many failed.
 - **Clear page cache**: visitors get freshly rendered pages. Use it after a developer changed templates, if pages look old.
 - **Clear all site caches**: pages, addresses, menus and the sitemap are read afresh.
 
@@ -89,7 +96,7 @@ The site is a little slower for a moment after clearing. Both are recorded in th
 If the whole-page cache isn't available on your server, its settings are greyed out and the card says so: ask your developer.
 
 > [!TECHNICAL]
-> Settings here win over `config/sunrice-cms.php` (`cache.pages`, `cache.ttl`, `cache.query`); the store stays in the config. Whole pages need `spatie/laravel-responsecache` (`composer require spatie/laravel-responsecache`). From the command line: `php artisan responsecache:clear`. See [Caching](docs:cms/caching#cache-settings).
+> Settings here win over `config/sunrice-cms.php` (`cache.pages`, `cache.ttl`, `cache.query`); the store stays in the config. Whole pages need `spatie/laravel-responsecache` (`composer require spatie/laravel-responsecache`). From the command line: `php artisan responsecache:clear` and `php artisan sunrice:cache-preload`. Preloading runs in queued jobs, so it needs a queue worker (`php artisan queue:work`); a schedule needs Laravel's scheduler in cron. See [Caching](docs:cms/caching#cache-settings).
 
 ## Captcha
 

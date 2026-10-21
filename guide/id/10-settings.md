@@ -75,12 +75,19 @@ Situs web menyimpan apa yang sering ditampilkannya agar halaman cepat dimuat. Pe
 - **Parameter lainnya**: **Abaikan** (pilihan umum: pengunjung mendapat halaman tersimpan) atau **Lewati cache** (halaman dirender ulang dan tidak disimpan), untuk halaman yang membaca parameter yang tidak bisa Anda daftarkan.
 - **Parameter yang selalu diabaikan** (dengan **Lewati cache**): parameter pelacakan dari newsletter dan iklan, yang tidak pernah melewati cache. `utm_*` berarti `utm_source`, `utm_medium`…
 
+**Pemuatan awal** meminta halaman situs sebelum pengunjung, sehingga pengunjung pertama pun mendapat halaman tersimpan. Berjalan di latar belakang, beberapa halaman sekaligus:
+
+- **Muat ulang cache setelah dibersihkan**: setelah salah satu tombol Bersihkan di bawah.
+- **Muat ulang cache setelah konten berubah**: semenit setelah perubahan terakhir. Di situs besar yang sering disunting, biarkan mati.
+- **Muat cache terjadwal**: **Tidak pernah**, **Setiap jam**, atau **Setiap hari**.
+
 **Data situs**: **Simpan data situs selama (menit)**: halaman mana yang ada di sebuah alamat, menu, dan sitemap. Kosong: sesuai pengaturan developer.
 
 Menyimpan langsung berlaku: semua yang disimpan sebelumnya dibaca ulang.
 
 Kartu **Cache** di bawah formulir menunjukkan apakah halaman utuh disimpan, di mana semuanya disimpan, serta kapan dan oleh siapa cache terakhir dibersihkan. Tombol-tombolnya bertanya dulu:
 
+- **Muat cache**: mulai memuat sekarang. Selama berjalan, kartu menunjukkan sejauh mana dan tombolnya hilang sampai selesai; setelahnya tertulis berapa halaman yang tersimpan dan berapa yang gagal.
 - **Bersihkan cache halaman**: pengunjung mendapat halaman yang baru dirender. Pakai setelah developer mengubah template, jika halaman terlihat lama.
 - **Bersihkan semua cache situs**: halaman, alamat, menu, dan sitemap dibaca ulang.
 
@@ -89,7 +96,7 @@ Situs sedikit lebih lambat sesaat setelah dibersihkan. Keduanya dicatat di log a
 Jika cache halaman utuh tidak tersedia di server Anda, pengaturannya berwarna abu-abu dan kartunya memberi tahu: tanyakan kepada developer Anda.
 
 > [!TECHNICAL]
-> Pengaturan di sini mengalahkan `config/sunrice-cms.php` (`cache.pages`, `cache.ttl`, `cache.query`); tempat penyimpanan tetap di config. Halaman utuh memerlukan `spatie/laravel-responsecache` (`composer require spatie/laravel-responsecache`). Dari baris perintah: `php artisan responsecache:clear`. Lihat [Caching](docs:cms/caching#cache-settings).
+> Pengaturan di sini mengalahkan `config/sunrice-cms.php` (`cache.pages`, `cache.ttl`, `cache.query`); tempat penyimpanan tetap di config. Halaman utuh memerlukan `spatie/laravel-responsecache` (`composer require spatie/laravel-responsecache`). Dari baris perintah: `php artisan responsecache:clear` dan `php artisan sunrice:cache-preload`. Pemuatan berjalan sebagai job antrean, jadi perlu queue worker (`php artisan queue:work`); jadwal perlu scheduler Laravel di cron. Lihat [Caching](docs:cms/caching#cache-settings).
 
 ## Captcha
 

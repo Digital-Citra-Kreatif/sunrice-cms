@@ -181,6 +181,7 @@ final class CmsPlugin extends BasePlugin
                 Route::name('cache.')->controller(CacheController::class)->middleware('can:cms.settings.cache')->group(function (): void {
                     Route::post('cache/clear-pages', 'clearPages')->name('clear-pages');
                     Route::post('cache/clear', 'clear')->name('clear');
+                    Route::post('cache/preload', 'preload')->name('preload');
                 });
                 Route::post('languages/{locale}/main', [LanguageController::class, 'main'])->name('languages.main')
                     ->middleware('can:cms.settings.locales')->where('locale', '[A-Za-z0-9_-]{2,20}');
