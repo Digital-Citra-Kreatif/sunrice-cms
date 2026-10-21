@@ -62,8 +62,6 @@
     "A hidden field isn't required, and keeps what it had.": "Field yang tersembunyi tidak wajib diisi, dan tetap menyimpan isinya.",
     "A menu links to entries that already exist: create the page first (Content → Entries), then add it here, or add a web address instead.": "Menu menautkan entri yang sudah ada: buat halamannya dulu (Konten → Entri), lalu tambahkan di sini, atau tambahkan alamat web saja.",
     "A page listing its entries, like /blog.": "Halaman yang mendaftar entrinya, seperti /blog.",
-    "A path on this site, or a web address.": "Path di situs ini, atau alamat web.",
-    "A path on this site, starting with /.": "Path di situs ini, diawali /.",
     "A person": "Perorangan",
     "a reply": "balasan",
     "A sentence or two for search results.": "Satu atau dua kalimat untuk hasil pencarian.",
@@ -1038,5 +1036,14 @@
     "Its own address in :language, like /buku/{slug}. Empty: the entry URL under :prefix.": "Alamatnya sendiri dalam :language, misalnya /buku/{slug}. Kosong: URL entri di bawah :prefix.",
     "Its own address in :language, like /buku. Empty: the listing page URL under :prefix.": "Alamatnya sendiri dalam :language, misalnya /buku. Kosong: URL halaman daftar di bawah :prefix.",
     "Its own address in :language, like /topik/{slug}. Empty: the term page URL under :prefix.": "Alamatnya sendiri dalam :language, misalnya /topik/{slug}. Kosong: URL halaman term di bawah :prefix.",
-    ":title has this URL in :language already.": ":title sudah memakai URL ini dalam :language."
+    ":title has this URL in :language already.": ":title sudah memakai URL ini dalam :language.",
+    "A path on this site, starting with /. End it with /* for every address under it: /blog/* takes /blog/2024/hello.": "Path di situs ini, diawali /. Akhiri dengan /* untuk semua alamat di bawahnya: /blog/* mencakup /blog/2024/hello.",
+    "A path on this site, or a web address. With a From ending in /*, a * here is the rest of the address: /blog/* → /journal/* sends /blog/2024/hello to /journal/2024/hello; without a *, all of them go to one page.": "Path di situs ini, atau alamat web. Bila Dari diakhiri /*, tanda * di sini adalah sisa alamatnya: /blog/* → /journal/* mengarahkan /blog/2024/hello ke /journal/2024/hello; tanpa *, semuanya menuju satu halaman.",
+    "Match": "Cakupan",
+    "Everything under it": "Semua di bawahnya",
+    "This address": "Alamat ini",
+    "Use a path on this site starting with /, with * only at its end after a / (like /blog/*).": "Gunakan path di situs ini yang diawali /, dengan * hanya di ujungnya setelah / (seperti /blog/*).",
+    "Use * at most once.": "Gunakan * paling banyak sekali.",
+    "A * here needs a From ending in /*, whose rest it stands for.": "Tanda * di sini membutuhkan Dari yang diakhiri /*, yang sisanya diwakili tanda itu.",
+    "This would send visitors round in a loop: From takes this address too.": "Ini akan membuat pengunjung berputar-putar: Dari juga mencakup alamat ini."
 }

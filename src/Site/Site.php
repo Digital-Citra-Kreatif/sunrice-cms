@@ -491,7 +491,9 @@ final class Site
     /**
      * Where an old address moved, if it did: a redirect from this path, or
      * one for every language from the same path in another language
-     * (/listings for /id/listings). Send visitors to its targetFor($path).
+     * (/listings for /id/listings); else the wildcard redirect whose path
+     * is the longest start of it (/blog/* for /blog/2024/hello). Send
+     * visitors to its targetFor($path).
      */
     public function redirect(string $path): ?Redirect
     {
@@ -506,7 +508,41 @@ final class Site
             Locales::all(),
         )));
 
-        return Redirect::query()->where('every_language', true)->whereIn('from_path', $candidates)->orderBy('id')->first();
+        return Redirect::query()->where('every_language', true)->whereIn('from_path', $candidates)->orderBy('id')->first() ?? $this->wildcardRedirect($path);
+    }
+
+    /**
+     * The wildcard redirect for a path: the one whose path (without the
+     * language's prefix) is the longest start of it, one for this
+     * language's paths before one for every language. Wildcards are read
+     * once (and cached until a redirect changes), and tested in PHP.
+     */
+    private function wildcardRedirect(string $path): ?Redirect
+    {
+        /** @var list<array{0: int, 1: string, 2: bool}> $wildcards */
+        $wildcards = app(SiteCache::class)->remember('wildcard-redirects', fn (): array => Redirect::query()->where('from_path', 'like', '%/'.Redirect::WILDCARD)->orderBy('id')
+            ->get(['id', 'from_path', 'every_language'])->map(fn (Redirect $r): array => [$r->id, $r->from_path, $r->every_language])->values()->all(), SiteCache::ROUTES);
+        [, $rest] = Locales::split($path);
+        $best = null;
+        $bestRank = null;
+        foreach ($wildcards as [$id, $from, $everyLanguage]) {
+            if (! Redirect::wildcard($from)) {
+                continue;
+            }
+            $prefix = Redirect::prefixOf($from);
+            $own = str_starts_with($path, $prefix) && strlen($path) > strlen($prefix);
+            $restPrefix = Redirect::prefixOf(Locales::split($from)[1]);
+            $other = $everyLanguage && str_starts_with($rest, $restPrefix) && strlen($rest) > strlen($restPrefix);
+            if (! $own && ! $other) {
+                continue;
+            }
+            $rank = [strlen($restPrefix), $everyLanguage ? 0 : 1];
+            if ($bestRank === null || $rank > $bestRank) {
+                [$best, $bestRank] = [$id, $rank];
+            }
+        }
+
+        return $best === null ? null : Redirect::query()->find($best);
     }
 
     /**

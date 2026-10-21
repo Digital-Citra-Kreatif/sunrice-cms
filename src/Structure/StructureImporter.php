@@ -41,6 +41,7 @@ use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Settings\LocaleSettings;
+use Sunrice\Cms\Site\RedirectRule;
 use Sunrice\Cms\Site\RouteConflicts;
 use Sunrice\Cms\Site\RoutePattern;
 use Sunrice\Cms\Site\RoutePatternRule;
@@ -861,8 +862,8 @@ final class StructureImporter
     private function redirect(array $item): void
     {
         $validated = Validator::make($item, [
-            'from' => ['required', 'string', 'max:512', 'regex:#^/[^\s?\#]*$#'],
-            'to' => ['required', 'string', 'max:2048', SafeUrl::rule()],
+            'from' => ['required', 'string', 'max:512', new RedirectRule],
+            'to' => ['required', 'string', 'max:2048', SafeUrl::rule(), new RedirectRule('from')],
             'status' => ['sometimes', 'integer', Rule::in([301, 302])],
             'every_language' => ['sometimes', 'boolean'],
         ])->validate();
