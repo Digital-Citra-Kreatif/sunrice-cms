@@ -37,6 +37,26 @@ export function localInputValue(date: Date): string {
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+/**
+ * What publishing does with the Publish date picked in the editor (the
+ * date input's value, '' for none), compared with the one saved:
+ * 'now' (no date, or the saved one), 'schedule' (a date to come),
+ * 'backdate' (a past date on a draft: published now, dated then) or
+ * 'redate' (another past date on a published entry). Both Publish
+ * buttons go by it, so neither ignores a picked date.
+ */
+export function datedPublish(status: EntryStatus, picked: string, publishedAt: string | null, now: number = Date.now()): { action: 'now' | 'schedule' | 'backdate' | 'redate'; at: string | null } {
+    const chosen = picked === '' ? null : new Date(picked);
+    if (chosen === null || Number.isNaN(chosen.getTime())) return { action: 'now', at: null };
+    const minute = (time: number) => Math.floor(time / 60_000);
+    const saved = publishedAt ? new Date(publishedAt).getTime() : null;
+    if (status !== 'draft' && saved !== null && minute(saved) === minute(chosen.getTime())) return { action: 'now', at: null };
+    const at = chosen.toISOString();
+    if (chosen.getTime() > now) return { action: 'schedule', at };
+
+    return { action: status === 'draft' ? 'backdate' : 'redate', at };
+}
+
 /** A language's name: as Settings → Languages names it, else in the reader's language ("id" → "Indonesian"), or its code. */
 /** The content languages' names as Settings → Languages gives them (shared with every admin page as `cms.locales`). */
 let names: Record<string, string> = {};
@@ -72,12 +92,15 @@ export function slugFrom(title: string): string {
 
 /**
  * The slug after the title changes: a slug that was made from the old
- * title (a duplicate's "-copy") follows the new one, while the entry has
- * never been published (a live address doesn't move by itself); a slug
- * typed by hand stays.
+ * title (a duplicate's "-copy", or "-copy-2" when that was taken) follows
+ * the new one, while the entry has never been published (a live address
+ * doesn't move by itself); a slug typed by hand stays.
  */
 export function followingSlug(slug: string, oldTitle: string, newTitle: string, neverPublished: boolean): string {
-    return neverPublished && slug !== '' && slug === slugFrom(oldTitle) ? slugFrom(newTitle) : slug;
+    const made = slugFrom(oldTitle);
+    const fromTitle = slug === made || (slug.startsWith(`${made}-`) && /^\d+$/.test(slug.slice(made.length + 1)));
+
+    return neverPublished && made !== '' && fromTitle ? slugFrom(newTitle) : slug;
 }
 
 /**
