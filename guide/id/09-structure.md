@@ -41,7 +41,7 @@ Field **Fieldset** menaruh field-field fieldset itu di tempatnya, seolah-olah mi
 | **Setiap entri punya halaman sendiri** | Mati: entri tidak punya alamat, seperti FAQ atau anggota tim yang ditampilkan template. |
 | **URL entri** | Letak entri di situs web, dengan `{slug}` untuk slug setiap entri: `/blog/{slug}`, atau `/{slug}` untuk halaman di tingkat teratas. Kosong: `/{handle}/{slug}`. |
 | **Template entri** | Desain yang dipakai entri, jika developer membuatnya. |
-| **Punya halaman daftar**, **URL halaman daftar**, **Field halaman daftar**, **Entri per halaman** | Halaman yang menampilkan daftar entri (seperti `/blog`; kosong: `/{handle}`), field khususnya (pengantar), dan jumlah entri per halaman. |
+| **Punya halaman daftar**, **URL halaman daftar**, **Blueprint halaman daftar**, **Entri per halaman** | Halaman yang menampilkan daftar entri (seperti `/blog`; kosong: `/{handle}`), blueprint yang memberinya field sendiri (pengantar, gambar utama; editor mengisinya di entri koleksi itu → **Halaman daftar**; **Buat blueprint** atau **Ubah** di sebelahnya; *Tidak ada* untuk tanpa field yang bisa disunting), dan jumlah entri per halaman. |
 | **Izinkan komentar** | Pengunjung boleh mengomentari entrinya (membutuhkan URL). |
 | **Jenis structured data** | Jenis entri yang diberitahukan ke mesin pencari (artikel, halaman web, listing properti, atau orang, tempat, atau produk yang dibahas halaman…). |
 

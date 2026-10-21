@@ -41,7 +41,7 @@ A **collection** is a kind of content: *Pages*, *Blog*, *Products*, *Events*. **
 | **Each entry has its own page** | Off: entries have no address, like FAQs or team members a template shows. |
 | **Entry URL** | Where entries are on the website, with `{slug}` for each entry's slug: `/blog/{slug}`, or `/{slug}` for pages at the top. Empty: `/{handle}/{slug}`. |
 | **Template** | The design entries use, if your developer made one for it. |
-| **Has a listing page**, **Listing page URL**, **Listing page fields**, **Entries per page** | A page listing the entries (like `/blog`; empty: `/{handle}`), its own fields (an introduction), and how many entries it shows per page. |
+| **Has a listing page**, **Listing page URL**, **Listing page blueprint**, **Entries per page** | A page listing the entries (like `/blog`; empty: `/{handle}`), a blueprint giving it fields of its own (an introduction, a hero image; editors fill them in under the collection's entries → **Listing page**; **Create blueprint** or **Edit** next to it; *None* for no editable fields), and how many entries it shows per page. |
 | **Allow comments** | Visitors may comment on its entries (it needs a URL). |
 | **Structured data type** | What search engines are told its entries are (an article, a web page, a real estate listing, or a person, place or product the page is about…). |
 

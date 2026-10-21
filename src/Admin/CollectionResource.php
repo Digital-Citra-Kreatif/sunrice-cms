@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Resources\Forms\CheckboxList;
 use Sunrice\Admin\Resources\Forms\Form;
+use Sunrice\Admin\Resources\Forms\Link;
 use Sunrice\Admin\Resources\Forms\NumberInput;
 use Sunrice\Admin\Resources\Forms\Section;
 use Sunrice\Admin\Resources\Forms\Select;
@@ -96,8 +97,14 @@ final class CollectionResource extends Resource
                 TextInput::make('listing_route')->label('Listing page URL')->placeholder('/{handle}')->unique()->maxLength(255)->span(2)->showWhen('listing')
                     ->rules(['regex:#^(/[a-z0-9\-_]+)+$#'])
                     ->help(__('Empty: /{handle}. Its template is the first that exists, under resources/views:')."\n1. ".TemplateHelp::shortFile('cms.{handle}-listing')."\n2. ".TemplateHelp::shortFile('cms.listing')."\n3. ".__('the built-in template')),
-                Select::make('listing_blueprint')->label('Listing page fields')->verbatim()->options(BlueprintChoices::options(BlueprintChoices::CONTENT, 'listing_blueprint'))->showWhen('listing')
-                    ->help('Fields of the listing page itself, like an intro.'),
+                Select::make('listing_blueprint')->label('Listing page blueprint')->placeholder('None (no editable fields)')->verbatim()
+                    ->options(BlueprintChoices::options(BlueprintChoices::CONTENT, 'listing_blueprint'))->showWhen('listing')
+                    ->help('Gives the listing page (:url) its own fields, such as an intro or a hero image. Editors fill them in under Entries → :collection → Listing page.')
+                    ->helpValues(['url' => ['listing_route', '/{handle}'], 'collection' => ['title']])
+                    ->links([
+                        Link::make('Create blueprint', route('sunrice.admin.cms.blueprints.create', [], false))->showUnless('listing_blueprint'),
+                        Link::make('Edit', route('sunrice.admin.cms.blueprints.index', [], false).'/{listing_blueprint}/edit')->showWhen('listing_blueprint'),
+                    ]),
                 NumberInput::make('per_page')->label('Entries per page')->integer()->min(1)->max(100)->default(10)->showWhen('listing'),
             ]),
         ]);
