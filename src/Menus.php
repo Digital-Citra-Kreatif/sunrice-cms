@@ -62,12 +62,31 @@ final class Menus
             /** @var list<array{label: string, url: string, new_tab: bool, children: list<mixed>}> $children */
             $children = $item['children'];
             $children = self::mark($children, $current);
-            $active = self::normalize($item['url']) === $current;
+            $active = self::normalize($item['url']) === $current && self::queryMatches($item['url']);
             $trail = $active || array_filter($children, fn (array $child): bool => $child['active_trail']) !== [];
             $marked[] = ['label' => $item['label'], 'url' => $item['url'], 'new_tab' => $item['new_tab'], 'active' => $active, 'active_trail' => $trail, 'children' => $children];
         }
 
         return $marked;
+    }
+
+    /** Whether the page shown has the link's own query (a listing's filters): every parameter, as the link gives it. */
+    private static function queryMatches(string $url): bool
+    {
+        $query = parse_url($url, PHP_URL_QUERY);
+        if (! is_string($query) || $query === '') {
+            return true;
+        }
+        parse_str($query, $wanted);
+        $given = request()->query();
+        foreach ($wanted as $name => $value) {
+            $have = $given[$name] ?? null;
+            if (is_array($value) ? ! is_array($have) || array_diff(array_map(strval(...), array_filter($value, is_scalar(...))), array_map(strval(...), array_filter($have, is_scalar(...)))) !== [] : ! is_scalar($have) || (string) $have !== (string) $value) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /** A URL to compare: full, without a trailing slash, query or anchor. */
@@ -125,6 +144,8 @@ final class Menus
             if ($collection === null || $collection->trashed() || ($url = $collection->listingUrl($locale)) === null) {
                 return null;
             }
+            // Its filters, in every language (a term filter takes a slug in any language).
+            $url .= $item->query_string !== null ? '?'.$item->query_string : '';
 
             return ['label' => $label ?? $collection->title, 'url' => $url];
         }

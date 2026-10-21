@@ -12,7 +12,7 @@ Tombol di atas daftar menambahkan tautan ke:
 
 - **Entry**: halaman, artikel, atau entri lain. Label dan alamatnya mengikuti entri di setiap bahasa: ganti nama atau pindahkan entrinya, dan menu ikut menyesuaikan.
 - **Term**: halaman sebuah term, misalnya kategori (jika taksonominya memiliki halaman term).
-- **Listing**: halaman daftar sebuah koleksi, misalnya blog.
+- **Listing**: halaman daftar sebuah koleksi, misalnya blog. **Filters** (opsional) mempersempitnya, seperti "Dijual" di halaman properti: bagian setelah `?` di alamat halaman itu saat Anda menyaringnya, misalnya `listing_type=for-sale`. Saring halamannya di situs web, lalu salin bagian alamat itu. Tautan memakai filter yang sama di setiap bahasa.
 - **Link**: alamat web apa pun (`https://…`), alamat di situs ini (`/kontak`), email (`mailto:`), atau nomor telepon (`tel:`).
 
 ### Setiap tautan

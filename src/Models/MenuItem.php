@@ -22,6 +22,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $url
  * @property array<string, string> $labels by language; empty: the entry's title
  * @property bool $new_tab
+ * @property string|null $query_string a listing page's filters ("listing_type=for-sale"), added to its address
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Entry|null $entry

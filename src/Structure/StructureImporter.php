@@ -490,6 +490,7 @@ final class StructureImporter
                 continue;
             }
             $resolved[] = [...$target, 'labels' => is_array($item['labels'] ?? null) ? $item['labels'] : [], 'new_tab' => ($item['new_tab'] ?? false) === true,
+                'query' => isset($target['collection_id']) ? SaveMenu::queryString($item['query'] ?? null) : null,
                 'children' => $this->menuItems(is_array($item['children'] ?? null) ? $item['children'] : [], $notes)];
         }
 
@@ -508,7 +509,7 @@ final class StructureImporter
         foreach ($items as $item) {
             if ($item->parent_id === $parent) {
                 $tree[] = ['entry_id' => $item->entry_id, 'term_id' => $item->term_id, 'collection_id' => $item->collection_id, 'url' => $item->url,
-                    'labels' => $item->labels, 'new_tab' => $item->new_tab, 'children' => self::tree($items, $item->id)];
+                    'labels' => $item->labels, 'new_tab' => $item->new_tab, 'query' => $item->query_string, 'children' => self::tree($items, $item->id)];
             }
         }
 
@@ -526,6 +527,7 @@ final class StructureImporter
             'url' => trim(self::text($item['url'] ?? null)) === '' ? null : trim(self::text($item['url'] ?? null)),
             'labels' => array_filter(array_map(fn (mixed $l): string => trim(self::text($l)), is_array($item['labels'] ?? null) ? $item['labels'] : []), fn (string $l): bool => $l !== ''),
             'new_tab' => ($item['new_tab'] ?? false) === true,
+            'query' => SaveMenu::queryString($item['query'] ?? null),
             'children' => self::normalizeItems(is_array($item['children'] ?? null) ? array_values(array_filter($item['children'], 'is_array')) : []),
         ], $items);
     }

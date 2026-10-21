@@ -194,7 +194,9 @@ final class EntryFilter extends Component
                 break;
             case 'terms':
                 $filter->taxonomy = is_string($definition['taxonomy'] ?? null) ? $definition['taxonomy'] : $name;
-                $options = self::termOptions($filter->taxonomy, $collection, (bool) ($definition['hide_empty'] ?? false));
+                [$options, $aliases] = self::termOptions($filter->taxonomy, $collection, (bool) ($definition['hide_empty'] ?? false));
+                // A term's slug in another language, or its id, is the same term (a link from another language, or a menu's).
+                $raw = is_array($raw) ? array_map(fn (mixed $v): mixed => is_scalar($v) ? ($aliases[(string) $v] ?? $v) : $v, $raw) : (is_scalar($raw) ? ($aliases[(string) $raw] ?? $raw) : $raw);
                 $filter->value = self::chosen($raw, array_column($options, 'value'), $multiple);
                 break;
             default:
@@ -334,15 +336,18 @@ final class EntryFilter extends Component
 
     /**
      * A terms filter's choices: the taxonomy's terms in the editors' order,
-     * those under others after them, by their slug in the current language.
+     * those under others after them, by their slug in the current language
+     * (else the main one's); and what else names each: its slugs in the
+     * other languages and its id.
      *
-     * @return list<array{value: string, label: string, count: int, depth: int}>
+     * @return array{0: list<array{value: string, label: string, count: int, depth: int}>, 1: array<string, string>}
      */
     private static function termOptions(string $taxonomy, Collection $collection, bool $hideEmpty): array
     {
         $terms = new Terms($taxonomy, $collection->handle, $hideEmpty, tree: true);
         $options = [];
-        $walk = function (Items $list, int $depth) use (&$walk, &$options): void {
+        $aliases = [];
+        $walk = function (Items $list, int $depth) use (&$walk, &$options, &$aliases): void {
             foreach ($list as $term) {
                 if (! $term instanceof Term) {
                     continue;
@@ -351,6 +356,12 @@ final class EntryFilter extends Component
                 $count = $term->getAttribute('entries_count');
                 if ($slug !== '') {
                     $options[] = ['value' => $slug, 'label' => $term->title(Locales::current()), 'count' => is_numeric($count) ? (int) $count : 0, 'depth' => $depth];
+                    $aliases += [(string) $term->id => $slug];
+                    foreach ($term->translations as $translation) {
+                        if ($translation->slug !== $slug) {
+                            $aliases += [$translation->slug => $slug];
+                        }
+                    }
                 }
                 $children = $term->relationLoaded('children') ? $term->getRelation('children') : null;
                 if ($children instanceof Items && $depth < 20) {
@@ -359,8 +370,10 @@ final class EntryFilter extends Component
             }
         };
         $walk($terms->terms, 0);
+        // A slug of the page's own language is never another term's alias.
+        $aliases = array_diff_key($aliases, array_flip(array_column($options, 'value')));
 
-        return $options;
+        return [$options, $aliases];
     }
 
     /**

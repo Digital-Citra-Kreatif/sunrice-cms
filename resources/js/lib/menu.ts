@@ -13,6 +13,8 @@ export interface MenuNode {
     url: string | null;
     labels: Record<string, string>;
     new_tab: boolean;
+    /** A listing page's filters, added to its address in every language: "listing_type=for-sale". */
+    query?: string | null;
     children: MenuNode[];
 }
 
@@ -95,5 +97,5 @@ export function removeItem(items: FlatItem[], index: number): FlatItem[] {
 }
 
 export function newItem(item: Partial<FlatItem>): FlatItem {
-    return { key: `m${++next}`, depth: 0, entry_id: null, term_id: null, collection_id: null, target: null, url: null, labels: {}, new_tab: false, ...item };
+    return { key: `m${++next}`, depth: 0, entry_id: null, term_id: null, collection_id: null, target: null, url: null, labels: {}, new_tab: false, query: null, ...item };
 }

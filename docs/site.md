@@ -160,7 +160,7 @@ Code there runs in every visitor's browser, so give the permission only to peopl
 ```
 
 - `Cms::bodyClass($extra)`: what the page is, for CSS and scripts. Entries: `page-entry collection-{handle} entry-{id} entry-{slug}`, with `home`, `has-parent parent-{id}` and `is-preview` when they apply; listing pages: `page-listing collection-{handle}`; term pages: `page-term taxonomy-{handle} term-{id} term-{slug}`; pages past the first: `paged paged-{n}`; always `template-{view} lang-{locale}`, and `logged-in` for people signed in to the panel. On your app's own pages: `lang-{locale}` and your extras.
-- `Cms::localeUrls()`: the page shown in each language it's live in (and, with the [main-language fallback](#untranslated-pages), the others), in the order of `sunrice-cms.locales`, for a language switcher (none on your app's own pages).
+- `Cms::localeUrls()`: the page shown in each language it's live in (and, with the [main-language fallback](#untranslated-pages), the others), in the order of `sunrice-cms.locales`, for a language switcher (none on your app's own pages); a listing's or term page's keep its query string (filters, sort, page).
 - `Cms::page()`: the page shown (`Sunrice\Cms\Site\Page`: `type`, `locale`, `view`, `entry`, `collection`, `term`, `preview`, `home`, `pageNumber`, `fallback`), or null.
 
 `@bodyClass` prints the whole attribute: `<body @bodyClass>` or `<body @bodyClass('dark')>` gives `<body class="page-entry … dark">`.
@@ -382,7 +382,9 @@ Without a slot it prints a plain, accessible form (labels for every input, field
 | `date_range` | `?made_from=2026-01-01&made_to=2026-01-31` | Date fields from the start of one day to the end of the other. |
 | `toggle` | `?sale=1` | The field is on. |
 
-Only the filters declared are read, and only values among a filter's options (numbers for ranges, `YYYY-MM-DD` dates); anything else is ignored, so a link can't make it query what you didn't offer. Other query string parameters are kept by the links and the form.
+Only the filters declared are read, and only values among a filter's options (numbers for ranges, `YYYY-MM-DD` dates); anything else is ignored, so a link can't make it query what you didn't offer. A terms filter also takes a term's slug in another language, or its id, as that term (shown in the page's language): `/id/properties?listing_type=for-sale` works as `?listing_type=dijual` does, so a [menu link with filters](menus.md) or a language switcher keeps them. Other query string parameters are kept by the links and the form, and `Cms::localeUrls()` keeps a listing's or term page's query string.
+
+The query string names are the template's: `filters` keys (and `_min`/`_max`, `_from`/`_to` for ranges), `sort-name` (`sort`) and `page-name` (`page`). Write them down for editors (the Guide's menus page tells them to copy a filtered page's address), as they link to filtered listings.
 
 In the slot: `$component->entries` (a paginator of `EntryTranslation`s), `->filters` (`Filter\FilterControl`: `name`, `type`, `field`, `label`, `multiple`, `value`, `options` with `value`, `label`, `selected` (and `count`, `depth` for terms), `inputs` (input names: `['value' => 'topic[]']`, `['min' => 'price_min', 'max' => 'price_max']`), `id()`, `applied()`), `->filter('q')`, `->sorts` (`Filter\SortChoice`: `value`, `label`, `order`, `selected`) with `->sortName`, `->active` (`Filter\ActiveFilter`: `filter`, `label`, `value`, `removeUrl`), `->filtered()`, `->clearUrl()`, `->action` (this page), `->others` (the other query parameters) and `->query()` (the filtered `EntryQuery`, for a count or a map).
 

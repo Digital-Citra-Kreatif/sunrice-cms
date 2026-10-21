@@ -140,7 +140,7 @@ final class StructureExporter
                 $item->collection !== null => ['collection' => $item->collection->handle],
                 default => ['url' => $item->url],
             };
-            $tree[] = [...$target, 'labels' => (object) $item->labels, 'new_tab' => $item->new_tab, 'children' => $this->items($items, $item->id)];
+            $tree[] = [...$target, 'labels' => (object) $item->labels, 'new_tab' => $item->new_tab, ...($item->query_string !== null ? ['query' => $item->query_string] : []), 'children' => $this->items($items, $item->id)];
         }
 
         return $tree;
