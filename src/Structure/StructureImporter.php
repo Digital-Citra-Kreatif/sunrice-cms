@@ -69,16 +69,23 @@ final class StructureImporter
     public const SECTIONS = ['fieldsets', 'blueprints', 'collections', 'taxonomies', 'globals', 'forms', 'terms', 'entries', 'menus', 'redirects'];
 
     /** A collection's settings in the file. */
-    public const COLLECTION = ['handle', 'title', 'blueprint', 'blueprints', 'dated', 'ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template', ...self::SEO_FIELDS];
+    public const COLLECTION = ['handle', 'title', 'blueprint', 'blueprints', 'dated', 'ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template', 'translations', ...self::SEO_FIELDS];
 
-    public const TAXONOMY = ['handle', 'title', 'hierarchical', 'route', 'blueprint', 'template', ...self::SEO_FIELDS];
+    public const TAXONOMY = ['handle', 'title', 'hierarchical', 'route', 'blueprint', 'template', 'translations', ...self::SEO_FIELDS];
 
     /** Which fields fill in what an entry's or term's SEO card leaves empty. */
     public const SEO_FIELDS = ['seo_title_field', 'seo_description_field', 'seo_image_field'];
 
     public const GLOBAL_SET = ['handle', 'title', 'blueprint'];
 
-    public const FORM = ['handle', 'title', 'blueprint', 'notify', 'notify_roles', 'message', 'redirect_url', 'per_minute', 'captcha'];
+    /** What visitors read in the other languages: {"id": {"title": "Properti"}}. */
+    private const TRANSLATIONS = [
+        'translations' => ['sometimes', 'nullable', 'array'],
+        'translations.*' => ['array'],
+        'translations.*.*' => ['nullable', 'string', 'max:1000'],
+    ];
+
+    public const FORM = ['handle', 'title', 'blueprint', 'notify', 'notify_roles', 'message', 'redirect_url', 'per_minute', 'captcha', 'translations'];
 
     private const HANDLE = ['required', 'string', 'max:64', 'regex:/^[a-z][a-z0-9_]*$/'];
 
@@ -256,10 +263,11 @@ final class StructureImporter
             'schema_type' => ['nullable', 'string', Rule::in(array_keys(StructuredData::ENTRY_TYPES))],
             'template' => self::TEMPLATE,
             ...array_fill_keys(self::SEO_FIELDS, self::FIELD_HANDLE),
+            ...self::TRANSLATIONS,
         ])->validate();
         $before = $existing?->only(self::COLLECTION);
         $collection = app(SaveCollection::class)->handle(array_intersect_key($item, array_flip(['title', 'blueprint', 'blueprints', 'dated'])) + ($existing === null ? ['handle' => $item['handle']] : []), $existing);
-        $collection->forceFill(array_intersect_key($validated, array_flip(['ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template', ...self::SEO_FIELDS])))->save();
+        $collection->forceFill(array_intersect_key($validated, array_flip(['ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template', 'translations', ...self::SEO_FIELDS])))->save();
         $this->report->add('collection', $collection->handle, $this->status($before, $collection->only(self::COLLECTION)));
     }
 
@@ -299,6 +307,7 @@ final class StructureImporter
             ...array_fill_keys(self::SEO_FIELDS, self::FIELD_HANDLE),
             'collections' => ['sometimes', 'array'],
             'collections.*' => ['string', Rule::exists((new Collection)->getTable(), 'handle')],
+            ...self::TRANSLATIONS,
         ])->validate();
         $before = $existing === null ? null : [...$existing->only(self::TAXONOMY), 'collections' => $existing->collections()->pluck('handle')->sort()->values()->all()];
         $taxonomy = $existing ?? new Taxonomy;
@@ -350,6 +359,7 @@ final class StructureImporter
             'redirect_url' => ['nullable', 'string', 'max:2000', SafeUrl::rule()],
             'per_minute' => ['nullable', 'integer', 'min:1', 'max:1000'],
             'captcha' => ['sometimes', 'boolean'],
+            ...self::TRANSLATIONS,
         ])->validate();
         $before = $existing?->only(self::FORM);
         $form = $existing ?? new Form;
@@ -499,6 +509,7 @@ final class StructureImporter
                 continue;
             }
             $resolved[] = [...$target, 'labels' => is_array($item['labels'] ?? null) ? $item['labels'] : [], 'new_tab' => ($item['new_tab'] ?? false) === true,
+                'query' => isset($target['collection_id']) ? SaveMenu::queryString($item['query'] ?? null) : null,
                 'children' => $this->menuItems(is_array($item['children'] ?? null) ? $item['children'] : [], $notes)];
         }
 
@@ -517,7 +528,7 @@ final class StructureImporter
         foreach ($items as $item) {
             if ($item->parent_id === $parent) {
                 $tree[] = ['entry_id' => $item->entry_id, 'term_id' => $item->term_id, 'collection_id' => $item->collection_id, 'url' => $item->url,
-                    'labels' => $item->labels, 'new_tab' => $item->new_tab, 'children' => self::tree($items, $item->id)];
+                    'labels' => $item->labels, 'new_tab' => $item->new_tab, 'query' => $item->query_string, 'children' => self::tree($items, $item->id)];
             }
         }
 
@@ -535,6 +546,7 @@ final class StructureImporter
             'url' => trim(self::text($item['url'] ?? null)) === '' ? null : trim(self::text($item['url'] ?? null)),
             'labels' => array_filter(array_map(fn (mixed $l): string => trim(self::text($l)), is_array($item['labels'] ?? null) ? $item['labels'] : []), fn (string $l): bool => $l !== ''),
             'new_tab' => ($item['new_tab'] ?? false) === true,
+            'query' => SaveMenu::queryString($item['query'] ?? null),
             'children' => self::normalizeItems(is_array($item['children'] ?? null) ? array_values(array_filter($item['children'], 'is_array')) : []),
         ], $items);
     }

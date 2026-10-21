@@ -39,7 +39,8 @@ final class SubmitForm
         $schema = $form->schema();
         $data = array_intersect_key($input, array_flip(array_map(fn ($field): string => $field->handle, $schema->fields())));
         $rules = $schema->rules($data);
-        $attributes = EntryInput::attributes($schema, array_keys($rules));
+        // Fields named as the visitor reads them (their label in the form's language).
+        $attributes = EntryInput::attributes($schema, array_keys($rules), $locale !== null && Locales::has($locale) ? $locale : Locales::default());
         // Messages name fields without the "data." the rules are keyed under.
         $validator = Validator::make(['data' => $data], $rules, [], $attributes);
         if ($validator->fails()) {

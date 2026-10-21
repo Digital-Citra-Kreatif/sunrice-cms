@@ -145,7 +145,8 @@ final readonly class Page
 
     /**
      * This page in each language it's on, for a language switcher:
-     * ['en' => 'https://…/about', 'id' => 'https://…/id/tentang'].
+     * ['en' => 'https://…/about', 'id' => 'https://…/id/tentang']. A
+     * listing's and term page's keep the query string (its filters).
      *
      * @return array<string, string>
      */
@@ -158,7 +159,7 @@ final readonly class Page
             $main = null;
             foreach ($entry->translations as $translation) {
                 $translation->setRelation('entry', $entry);
-                if ($translation->isLive() && ($url = $translation->url()) !== null) {
+                if ($translation->isLive() && ($url = $site->url($translation)) !== null) {
                     $urls[$translation->locale] = $url;
                 }
                 if ($translation->locale === Locales::default()) {
@@ -204,9 +205,18 @@ final readonly class Page
         return array_filter(array_replace(array_fill_keys(Locales::all(), null), $urls), fn (?string $url): bool => $url !== null);
     }
 
-    /** The same page number in another language, past the first page. */
+    /**
+     * A listing's or term page's address in another language with what the
+     * visitor chose kept: its query string (filters, sort, page number).
+     * Term filters take a term's slug in any language (entry-filter).
+     */
     private function paged(string $url): string
     {
+        $query = request()->getQueryString();
+        if ($query !== null && $query !== '') {
+            return "{$url}?{$query}";
+        }
+
         return $this->pageNumber > 1 ? "{$url}?page={$this->pageNumber}" : $url;
     }
 

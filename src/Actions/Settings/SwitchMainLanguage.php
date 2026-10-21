@@ -10,12 +10,15 @@ use Sunrice\Admin\Actions\Settings\SaveSettings;
 use Sunrice\Admin\Activity\ActivityLog;
 use Sunrice\Cms\Actions\Entries\EntryInput;
 use Sunrice\Cms\Fields\Schema;
+use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\CollectionListing;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
+use Sunrice\Cms\Models\Form;
 use Sunrice\Cms\Models\GlobalValue;
 use Sunrice\Cms\Models\MenuItem;
 use Sunrice\Cms\Models\Redirect;
+use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Settings\LocaleSettings;
@@ -35,6 +38,9 @@ use Throwable;
  * - Entries and terms without the new main language stop the switch,
  *   unless `$copyMissing`: they get a copy of the old main language.
  * - Menu labels the new main language left empty take the old one's.
+ * - Collections' and taxonomies' titles, forms' thank-you messages and
+ *   the site's description in the new main language become their own,
+ *   and the old ones the old main language's translations.
  * - Addresses: the new main language's lose their prefix (/id/about →
  *   /about) and the old one's get it (/about → /en/about). Redirects are
  *   rewritten to match, and the old main language's pages redirect from
@@ -103,13 +109,20 @@ final class SwitchMainLanguage
                     fn (CollectionListing $listing): Schema => $listing->collection->listingSchema(),
                     fn (CollectionListing $listing): CollectionListing => CollectionListing::query()->firstOrNew(['collection_id' => $listing->collection_id, 'locale' => $to], ['data' => []]));
                 $this->counts['menu_items'] = $this->menus($from, $to);
+                $this->texts($from, $to);
                 $this->counts['redirects'] = $this->redirects($from, $to);
                 $this->activity->record('switched the main language', 'settings', LocaleSettings::key(), 'Languages', ['from' => $from, 'to' => $to]);
             });
         } catch (Throwable $e) {
             // The transaction is undone; so is what the settings cache read meanwhile.
-            app(LocaleSettings::class)->fill(['languages' => $before])->save();
-            app()->forgetInstance(LocaleSettings::class);
+            try {
+                app(LocaleSettings::class)->fill(['languages' => $before])->save();
+            } catch (Throwable $restoring) {
+                // What stopped the switch is what to see, not this.
+                report($restoring);
+            } finally {
+                app()->forgetInstance(LocaleSettings::class);
+            }
 
             throw $e;
         }
@@ -280,6 +293,44 @@ final class SwitchMainLanguage
         }
 
         return $count;
+    }
+
+    /** Titles, thank-you messages and the site's description: the new main language's become the text itself, the old one's its translation. */
+    private function texts(string $from, string $to): void
+    {
+        $site = app(SiteSettings::class);
+        $new = null;
+        $lines = [];
+        foreach (preg_split('/\R/', $site->descriptions) ?: [] as $line) {
+            [$code, $text] = array_pad(array_map(trim(...), explode(':', $line, 2)), 2, '');
+            if ($code === $to && $text !== '') {
+                $new = $text;
+            } elseif ($code !== '' && $text !== '') {
+                $lines[] = "{$code}: {$text}";
+            }
+        }
+        if ($new !== null) {
+            if (trim($site->description) !== '') {
+                $lines[] = "{$from}: ".trim($site->description);
+            }
+            $this->settings->handle($site, ['description' => $new, 'descriptions' => implode("\n", $lines)]);
+        }
+        foreach ([[Collection::query()->withTrashed(), 'title'], [Taxonomy::query()->withTrashed(), 'title'], [Form::query(), 'message']] as [$query, $attribute]) {
+            foreach ($query->whereNotNull('translations')->get() as $record) {
+                $translations = is_array($record->translations) ? $record->translations : [];
+                $new = $translations[$to][$attribute] ?? null;
+                if (! is_string($new) || trim($new) === '') {
+                    continue;
+                }
+                unset($translations[$to][$attribute]);
+                $old = $record->getAttribute($attribute);
+                if (is_string($old) && trim($old) !== '') {
+                    $translations[$from][$attribute] = $old;
+                }
+                $translations = array_filter($translations, fn (array $texts): bool => $texts !== []);
+                $record->forceFill([$attribute => $new, 'translations' => $translations === [] ? null : $translations])->save();
+            }
+        }
     }
 
     /**

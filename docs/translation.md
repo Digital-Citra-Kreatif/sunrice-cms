@@ -13,11 +13,11 @@ SUNRICE_GEMINI_KEY=…                     # https://aistudio.google.com/apikey
 # SUNRICE_TRANSLATE_MODEL=gemini-2.5-pro  # default: gemini-2.5-flash, or google/gemini-2.5-flash on OpenRouter
 ```
 
-The rest is in `config/sunrice-cms.php` under `translation`: `batch_size` (texts per request, 40) and `timeout` (seconds per request, 120). Requests the service answers with a server error, or that don't reach it, are tried again (three tries); a refusal (a wrong key) isn't. Without a driver, there's no machine translation and no button for it.
+The rest is in `config/sunrice-cms.php` under `translation`: `batch_size` (texts per request, 40) and `timeout` (seconds per request, 120). Requests the service answers with a server error, or that don't reach it, are tried again (three tries); a refusal (a wrong key) isn't. Without a driver, there's no machine translation: the editor's **Translate from …** button shows switched off in other languages, saying it needs setting up.
 
 ## What is translated
 
-- **Entries**: the title, text, textarea and rich text fields that are translated (not [shared](collections.md#languages)), inside groups, repeater rows and flexible blocks too (matched to the source's by id), and the SEO title and description. A missing translation is added first (as **Adding a language** does); a slug still the source's is made from the translated title. Saved through `SaveDraft`, so it's validated and rich text is cleaned like an editor's.
+- **Entries**: the title, text, textarea and rich text fields and the texts of link fields (not where they go) that are translated (not [shared](collections.md#languages)), inside groups, repeater rows and flexible blocks too (matched to the source's by id), and the SEO title and description. A missing translation is added first (as **Adding a language** does); a slug still the source's is made from the translated title. Saved through `SaveDraft`, so it's validated and rich text is cleaned like an editor's.
 - **Terms**: the title, fields and SEO description, saved as they are (`SaveTerm`, `SaveTermContent`).
 - **Globals**: their translated fields (`SaveGlobals`).
 - **Menus**: link labels.

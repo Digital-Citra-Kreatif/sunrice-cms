@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 // Yang dibaca pengunjung situs: tampilan bawaan CMS, komentar dan formulir (sunrice-cms::site.*).
 return [
+    'home' => 'Beranda',
     'preview' => 'Pratinjau draf',
     'preview_note' => 'Pengunjung belum melihatnya sampai diterbitkan.',
     'newer' => 'Lebih baru',
@@ -54,6 +55,29 @@ return [
         'file_hint' => 'Diterima: :types, maksimal :size.',
         'file_size' => 'Maksimal :size.',
         'too_big' => 'Berkas :attribute lebih besar dari :size, batas yang diterima situs ini.',
+        'thanks' => 'Terima kasih, pesan Anda sudah kami terima.',
+    ],
+    'filter' => [
+        'label' => 'Saring',
+        'min' => 'Min',
+        'max' => 'Maks',
+        'from' => 'Dari',
+        'to' => 'Sampai',
+        'all' => 'Semua',
+        'sort_by' => 'Urutkan menurut',
+        'show' => 'Tampilkan hasil',
+        'applied' => 'Filter yang dipakai',
+        'remove' => 'Hapus filter :filter: :value',
+        'clear' => 'Hapus semua',
+        'results' => ':count hasil',
+    ],
+    'draft' => [
+        'label' => 'Draf',
+        'viewing' => 'Anda melihat perubahan yang belum diterbitkan. Pengunjung melihat halaman yang tayang.',
+        'view_live' => 'Lihat halaman yang tayang',
+        'changes' => 'Halaman ini punya perubahan yang belum diterbitkan.',
+        'view_draft' => 'Lihat drafnya',
+        'edit' => 'Sunting',
     ],
     'captcha' => 'Konfirmasikan bahwa Anda bukan robot, lalu kirim formulir lagi.',
 ];

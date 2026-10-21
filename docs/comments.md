@@ -37,6 +37,8 @@ The markup's classes: `sunrice-comments` (`#comments`), `sunrice-comments-list`,
 
 Every comment also needs the honeypot. Spam is deleted after `sunrice-cms.comments.prune_spam_after_days` (30) by the daily `model:prune`.
 
+Dates on comments are in the app's time zone (`APP_TIMEZONE`; see [configuration](configuration.md)).
+
 ## Emails
 
 - **To moderators**, for a new comment by someone who can't moderate, with a link to the entry's comments in the admin; one email each, so addresses aren't shown to each other (form notifications go the same way). A burst of comments on one entry sends one email: after one, the next comes no sooner than ten minutes later (`PostComment::TELL_EVERY`), and the link shows them all.

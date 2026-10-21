@@ -31,10 +31,10 @@
 @endforeach
 <meta property="og:type" content="{{ $seo['type'] }}">
 <meta property="og:site_name" content="{{ $seo['site_name'] }}">
-<meta property="og:locale" content="{{ str_replace('-', '_', $seo['locale']) }}">
+<meta property="og:locale" content="{{ \Sunrice\Cms\Support\Seo::ogLocale($seo['locale']) }}">
 @foreach (array_keys($seo['alternates']) as $locale)
 @if ($locale !== 'x-default' && $locale !== $seo['locale'])
-<meta property="og:locale:alternate" content="{{ str_replace('-', '_', $locale) }}">
+<meta property="og:locale:alternate" content="{{ \Sunrice\Cms\Support\Seo::ogLocale($locale) }}">
 @endif
 @endforeach
 <meta property="og:title" content="{{ $seo['title'] }}">

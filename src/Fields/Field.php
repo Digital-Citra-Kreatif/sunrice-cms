@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Fields;
 
+use Illuminate\Support\Str;
+
 /**
  * One field in a blueprint or fieldset, as editors define it in the
  * blueprint builder. Stored as JSON:
@@ -13,6 +15,12 @@ namespace Sunrice\Cms\Fields;
  *      "fields": [ …children of groups and repeaters… ]}
  *
  * `translatable` null means "the type decides" (text yes, numbers no).
+ * `translations` holds what visitors read in other languages: the label,
+ * the instructions and a select's option labels, by language, as forms
+ * show them (labelIn(), instructionsIn(), optionLabel()):
+ *
+ *     "translations": {"id": {"label": "Nama", "instructions": "…", "options": {"house": "Rumah"}}}
+ *
  * Build one with Field::make() or Field::fromArray(); DefinitionValidator
  * checks a whole list before it is saved.
  *
@@ -25,6 +33,7 @@ final readonly class Field
      * @param  array<string, mixed>  $config  the type's settings
      * @param  list<Field>  $fields  children (groups and repeaters)
      * @param  array{field: string, operator: string, value: string|int|float|bool|null}|null  $condition  shown only when another field on its level is so
+     * @param  array<string, array{label?: string, instructions?: string, options?: array<string, string>}>  $translations  by language: what visitors read there
      */
     public function __construct(
         public string $handle,
@@ -37,6 +46,7 @@ final readonly class Field
         public array $config = [],
         public array $fields = [],
         public ?array $condition = null,
+        public array $translations = [],
     ) {}
 
     /** @param array<string, mixed> $config */
@@ -68,7 +78,39 @@ final readonly class Field
             config: array_filter($config, 'is_string', ARRAY_FILTER_USE_KEY),
             fields: self::listFromArray($children),
             condition: self::conditionFrom($data['condition'] ?? null),
+            translations: self::translationsFrom($data['translations'] ?? null),
         );
+    }
+
+    /** @return array<string, array{label?: string, instructions?: string, options?: array<string, string>}> */
+    private static function translationsFrom(mixed $translations): array
+    {
+        $clean = [];
+        foreach (is_array($translations) ? $translations : [] as $locale => $texts) {
+            if (! is_string($locale) || ! is_array($texts)) {
+                continue;
+            }
+            $own = [];
+            foreach (['label', 'instructions'] as $key) {
+                if (is_string($texts[$key] ?? null) && trim($texts[$key]) !== '') {
+                    $own[$key] = $texts[$key];
+                }
+            }
+            $options = [];
+            foreach (is_array($texts['options'] ?? null) ? $texts['options'] : [] as $value => $label) {
+                if (is_string($label) && trim($label) !== '') {
+                    $options[(string) $value] = $label;
+                }
+            }
+            if ($options !== []) {
+                $own['options'] = $options;
+            }
+            if ($own !== []) {
+                $clean[$locale] = $own;
+            }
+        }
+
+        return $clean;
     }
 
     /** What a field may be shown on: another field's value, or that it's filled in. */
@@ -150,13 +192,67 @@ final readonly class Field
             'validation' => $this->validation,
             'config' => $this->config,
             'fields' => self::listToArray($this->fields),
-        ] + ($this->condition !== null ? ['condition' => $this->condition] : []);
+        ] + ($this->condition !== null ? ['condition' => $this->condition] : [])
+            + ($this->translations !== [] ? ['translations' => $this->translations] : []);
     }
 
     /** The label, or the handle as words when there is none. */
     public function displayLabel(): string
     {
         return $this->label !== '' ? $this->label : ucfirst(str_replace('_', ' ', $this->handle));
+    }
+
+    /** The label in a language (null: the page's), else the label, else the handle as a headline ("Phone Number"). */
+    public function labelIn(?string $locale = null): string
+    {
+        return $this->translations[$locale ?? app()->getLocale()]['label'] ?? ($this->label !== '' ? $this->label : Str::headline($this->handle));
+    }
+
+    /** The instructions in a language (null: the page's), else the instructions. */
+    public function instructionsIn(?string $locale = null): string
+    {
+        return $this->translations[$locale ?? app()->getLocale()]['instructions'] ?? $this->instructions;
+    }
+
+    /**
+     * A select's options as a language shows them (null: the page's): each
+     * value with its label there, else its label, else the value.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    public function options(?string $locale = null): array
+    {
+        $translated = $this->translations[$locale ?? app()->getLocale()]['options'] ?? [];
+        $options = [];
+        foreach (is_array($this->config['options'] ?? null) ? $this->config['options'] : [] as $option) {
+            $value = is_array($option) ? ($option['value'] ?? null) : $option;
+            if (! is_scalar($value) || $value === '') {
+                continue;
+            }
+            $label = is_array($option) && is_scalar($option['label'] ?? null) && $option['label'] !== '' ? (string) $option['label'] : (string) $value;
+            $options[] = ['value' => (string) $value, 'label' => $translated[(string) $value] ?? $label];
+        }
+
+        return $options;
+    }
+
+    /**
+     * What a select's stored value reads as in a language (null: the
+     * page's): `$field->optionLabel($values['status'])` gives "Under offer"
+     * for under_offer. Null for a value that isn't one of its options.
+     */
+    public function optionLabel(mixed $value, ?string $locale = null): ?string
+    {
+        if (! is_scalar($value)) {
+            return null;
+        }
+        foreach ($this->options($locale) as $option) {
+            if ($option['value'] === (string) $value) {
+                return $option['label'];
+            }
+        }
+
+        return null;
     }
 
     public function config(string $key, mixed $default = null): mixed
@@ -203,12 +299,12 @@ final readonly class Field
     /** @param array<string, mixed> $config */
     public function withConfig(array $config): self
     {
-        return new self($this->handle, $this->type, $this->label, $this->required, $this->instructions, $this->translatable, $this->validation, $config, $this->fields);
+        return new self($this->handle, $this->type, $this->label, $this->required, $this->instructions, $this->translatable, $this->validation, $config, $this->fields, $this->condition, $this->translations);
     }
 
     /** @param list<Field> $fields */
     public function withFields(array $fields): self
     {
-        return new self($this->handle, $this->type, $this->label, $this->required, $this->instructions, $this->translatable, $this->validation, $this->config, $fields);
+        return new self($this->handle, $this->type, $this->label, $this->required, $this->instructions, $this->translatable, $this->validation, $this->config, $fields, $this->condition, $this->translations);
     }
 }

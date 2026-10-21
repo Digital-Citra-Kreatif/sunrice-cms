@@ -14,7 +14,7 @@ The buttons above the list add a link to:
 
 - **Entry**: a page, article or other entry. Its label and address follow the entry in each language: rename or move the entry, and the menu follows.
 - **Term**: a term's page, such as a category (when the taxonomy has term pages).
-- **Listing**: a collection's listing page, such as the blog's.
+- **Listing**: a collection's listing page, such as the blog's. **Filters** (optional) narrows it, like "For sale" on a properties page: what the page puts after the `?` in its address when you filter it, such as `listing_type=for-sale`. Filter the page on the website, then copy that part of its address. The link keeps the filters in every language.
 - **Link**: any web address (`https://…`), a path on the site (`/contact`), an email (`mailto:`) or a phone number (`tel:`).
 
 ### Each link

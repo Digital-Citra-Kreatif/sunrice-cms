@@ -204,8 +204,10 @@ final class Menus
             if ($collection === null || $collection->trashed() || ($url = $collection->listingUrl($locale)) === null) {
                 return null;
             }
+            // Its filters, in every language (a term filter takes a slug in any language).
+            $url .= $item->query_string !== null ? '?'.$item->query_string : '';
 
-            return ['label' => $label ?? $collection->title, 'url' => $url];
+            return ['label' => $label ?? $collection->titleIn($locale), 'url' => $url];
         }
         if ($item->entry_id === null) {
             return $item->url === null ? null : ['label' => $label ?? $item->url, 'url' => $item->url];

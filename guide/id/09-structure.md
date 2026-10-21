@@ -29,7 +29,8 @@ Field **Fieldset** menaruh field-field fieldset itu di tempatnya, seolah-olah mi
 
 | Pengaturan | |
 | --- | --- |
-| **Title** | Nama yang dilihat editor. |
+| **Title** | Nama yang dilihat editor, dan pengunjung dalam bahasa utama. |
+| **Title in …** | Di situs multibahasa, satu per bahasa lain: yang dibaca pengunjung di sana (judul halaman daftar, breadcrumb, menu). Kosong: judul di atas. |
 | **Handle** | Kode pendek yang dipakai template, seperti `articles`: huruf kecil, angka, dan garis bawah. Bisa diubah nanti: peran tetap memegang izinnya, tetapi formulir memperingatkan tentang template dan kode yang menyebutnya, yang harus diperbarui developer. |
 | **Blueprint** | Field yang dimiliki entrinya (lihat di bawah). Menggantinya tetap mempertahankan isi entri yang sudah ada. |
 | **Other blueprints** | Blueprint lain yang bisa dipilih sebuah entri, di Page settings-nya (misalnya halaman promosi di antara halaman biasa). |
@@ -57,6 +58,7 @@ Untuk menambah field, pilih jenisnya, lalu atur:
 - **Instructions**: petunjuk yang tampil di bawah field.
 - **Required**: entri tidak bisa disimpan atau diterbitkan tanpanya.
 - **Per language**: **Yes, translated** (setiap bahasa punya isinya sendiri), **No, shared** (satu nilai untuk semua bahasa), atau **As the type decides** (teks diterjemahkan; angka, tanggal, saklar, dan media dipakai bersama).
+- **In other languages** (di situs dengan beberapa bahasa): label, petunjuk, dan pilihan daftar sebagaimana dibaca pengunjung di setiap bahasa lain. Formulir di situs web menampilkannya, dan pesan kesalahannya menyebut field dengan nama ini. Kosong: seperti yang ditulis di atas.
 - **Extra rules**: pemeriksaan untuk developer, satu per baris (misalnya `email`).
 - Pengaturan khusus tiap jenis: pilihan sebuah select, koleksi yang ditautkan field entries, jenis berkas yang diterima field media, jumlah maksimal…
 
@@ -66,7 +68,7 @@ Seret field ke urutannya lewat pegangannya (field di dalam group atau repeater d
 
 ## Taksonomi
 
-**Structure → Taxonomies**: **Title**, **Handle** (bisa diubah nanti, seperti pada koleksi), **Nested terms** (term di bawah term lain, seperti subkategori), **Collections** yang entrinya dikelompokkan, **Term pages URL** (seperti `/topik/{slug}`; kosong: term tidak punya halaman), **Term fields** (blueprint untuk field term), **Template**, dan **SEO from fields**. Editor lalu menambahkan term di Content → Terms (lihat [Term](guide:website/terms)). Agar editor bisa memberi term pada entri, tambahkan field **Terms** ke blueprint koleksinya: itu sudah cukup agar daftar entri bisa disaring menurut taksonomi tersebut, tanpa mencentang koleksinya di sini.
+**Structure → Taxonomies**: **Title** (dan **Title in …** untuk setiap bahasa lain, bagi pengunjung di halaman term-nya), **Handle** (bisa diubah nanti, seperti pada koleksi), **Nested terms** (term di bawah term lain, seperti subkategori), **Collections** yang entrinya dikelompokkan, **Term pages URL** (seperti `/topik/{slug}`; kosong: term tidak punya halaman), **Term fields** (blueprint untuk field term), **Template**, dan **SEO from fields**. Editor lalu menambahkan term di Content → Terms (lihat [Term](guide:website/terms)). Agar editor bisa memberi term pada entri, tambahkan field **Terms** ke blueprint koleksinya: itu sudah cukup agar daftar entri bisa disaring menurut taksonomi tersebut, tanpa mencentang koleksinya di sini.
 
 ## Global set
 
@@ -81,7 +83,7 @@ Seret field ke urutannya lewat pegangannya (field di dalam group atau repeater d
 **Structure → Forms**: **Title**, **Handle** (bisa diubah nanti, seperti pada koleksi), **Blueprint** berisi field formulir (pengunjung mendapat field text, textarea, number, toggle, select, date, dan file), serta:
 
 - **Email to**: alamat yang menerima setiap kiriman, satu per baris; **Also email roles**: semua orang dengan peran ini juga.
-- **Thank-you message**: tampil setelah mengirim; atau **After sending, go to** halaman pilihan Anda.
+- **Thank-you message**: tampil setelah mengirim (di situs multibahasa, satu per bahasa lain; jika kosong, ucapan terima kasih bawaan situs dalam bahasa itu); atau **After sending, go to** halaman pilihan Anda.
 - **Sends per visitor a minute** dan **Require a captcha**, untuk mencegah spam.
 
 Developer lalu memasang formulir di sebuah halaman. Isian pengunjung masuk ke Content → Submissions (lihat [Kiriman formulir](guide:website/submissions)).

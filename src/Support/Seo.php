@@ -90,7 +90,7 @@ final class Seo
         $home = app(Site::class)->isHomepage($translation);
         $article = ! $home && $collection->dated;
 
-        $tags = self::tags($seo, $home && ! is_string($seo['title'] ?? null) ? '' : $title, $preview, $preview ? null : $translation->url(),
+        $tags = self::tags($seo, $home && ! is_string($seo['title'] ?? null) ? '' : $title, $preview, $preview ? null : app(Site::class)->url($translation),
             self::alternates($translation), $translation->locale, $article ? 'article' : 'website', is_string($seo['title'] ?? null));
         if ($article && ! $preview) {
             $tags['published_time'] = $translation->published_at?->toIso8601String();
@@ -179,7 +179,7 @@ final class Seo
 
         $url = $collection->listingUrl($locale);
 
-        return self::tags($seo, self::pageTitle(is_string($seo['title'] ?? null) ? $seo['title'] : $collection->title, $page), false, $url === null ? null : self::paged($url, $page),
+        return self::tags($seo, self::pageTitle(is_string($seo['title'] ?? null) ? $seo['title'] : $collection->titleIn($locale), $page), false, $url === null ? null : self::paged($url, $page),
             self::listingAlternates($collection, $page), $locale, 'website', is_string($seo['title'] ?? null));
     }
 
@@ -294,7 +294,8 @@ final class Seo
     {
         $site = app(SiteSettings::class);
         $imageId = is_int($seo['image'] ?? null) ? $seo['image'] : $site->image;
-        $description = is_string($seo['description'] ?? null) ? $seo['description'] : (trim($site->description) !== '' ? Str::squish($site->description) : null);
+        $siteDescription = $site->descriptionIn($locale);
+        $description = is_string($seo['description'] ?? null) ? $seo['description'] : (trim($siteDescription) !== '' ? Str::squish($siteDescription) : null);
         $own = is_string($seo['canonical'] ?? null) && SafeUrl::isSafe($seo['canonical']) ? $seo['canonical'] : null;
 
         return [
@@ -405,6 +406,35 @@ final class Seo
         }
 
         return $url === '' ? null : $url;
+    }
+
+    /** Territories for languages whose own code isn't one (en: en_US); the others are doubled (fr: fr_FR). */
+    private const TERRITORIES = [
+        'af' => 'ZA', 'ar' => 'AR', 'bn' => 'IN', 'ca' => 'ES', 'cs' => 'CZ', 'cy' => 'GB', 'da' => 'DK', 'el' => 'GR',
+        'en' => 'US', 'et' => 'EE', 'eu' => 'ES', 'fa' => 'IR', 'fil' => 'PH', 'ga' => 'IE', 'gl' => 'ES', 'he' => 'IL',
+        'hi' => 'IN', 'hy' => 'AM', 'ja' => 'JP', 'jv' => 'ID', 'ka' => 'GE', 'kk' => 'KZ', 'km' => 'KH', 'ko' => 'KR',
+        'ms' => 'MY', 'nb' => 'NO', 'nn' => 'NO', 'no' => 'NO', 'sl' => 'SI', 'sq' => 'AL', 'sr' => 'RS', 'su' => 'ID',
+        'sv' => 'SE', 'sw' => 'KE', 'ta' => 'IN', 'te' => 'IN', 'tl' => 'PH', 'uk' => 'UA', 'ur' => 'PK', 'vi' => 'VN', 'zh' => 'CN',
+    ];
+
+    /**
+     * A language as share cards name it (og:locale), language_TERRITORY:
+     * "id" → "id_ID", "en" → "en_US", "pt-BR" → "pt_BR", "zh-Hant" → "zh_TW".
+     */
+    public static function ogLocale(string $locale): string
+    {
+        $parts = preg_split('/[-_]/', $locale) ?: [$locale];
+        $language = strtolower($parts[0]);
+        $region = $parts[1] ?? null;
+        $region = match (true) {
+            $region === null => null,
+            strtolower($region) === 'hant' => 'TW',
+            strtolower($region) === 'hans' => 'CN',
+            strlen($region) === 2 || ctype_digit($region) => strtoupper($region),
+            default => null,
+        };
+
+        return $language.'_'.($region ?? self::TERRITORIES[$language] ?? strtoupper($language));
     }
 
     /** Whether a translation's live version asks not to be indexed. */

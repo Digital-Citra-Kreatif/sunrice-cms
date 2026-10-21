@@ -119,7 +119,7 @@ final class Sitemap
         $translations = EntryTranslation::query()->live()->with('entry.collection', 'entry.translations')
             ->whereIn('collection_id', $routed)->lazyById(500);
         foreach ($translations as $translation) {
-            if (Seo::noindex($translation) || ($url = $translation->url()) === null) {
+            if (Seo::noindex($translation) || ($url = app(Site::class)->url($translation)) === null) {
                 continue;
             }
             $xml = '<url><loc>'.e($url).'</loc>';

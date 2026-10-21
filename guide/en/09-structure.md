@@ -29,7 +29,8 @@ A **collection** is a kind of content: *Pages*, *Blog*, *Products*, *Events*. **
 
 | Setting | |
 | --- | --- |
-| **Title** | The name editors see. |
+| **Title** | The name editors see, and visitors in the main language. |
+| **Title in …** | On a multilingual site, one per other language: what visitors read there (the listing page's heading, breadcrumbs, menus). Empty: the title. |
 | **Handle** | A short code used by templates, like `articles`: lowercase letters, digits and underscores. It can be changed later: roles keep their permissions, but the form warns you about templates and code that name it, which your developer must update. |
 | **Blueprint** | The fields its entries have (see below). Changing it keeps what entries already hold. |
 | **Other blueprints** | More blueprints an entry may switch to, in its Page settings (a landing page among pages, for example). |
@@ -57,6 +58,7 @@ To add a field, choose its type, then set:
 - **Instructions**: a hint shown under the field.
 - **Required**: the entry can't be saved or published without it.
 - **Per language**: **Yes, translated** (each language has its own), **No, shared** (one value for every language), or **As the type decides** (text is translated; numbers, dates, switches and media are shared).
+- **In other languages** (on a site with several languages): the label, instructions and a choice list's options as visitors read them in each other language. Forms on the website show these, and their error messages name the field this way. Empty: as written above.
 - **Extra rules**: checks for developers, one per line (such as `email`).
 - Each type's own settings: the choices of a select, the collections an entries field links to, the types a media field accepts, how many items at most…
 
@@ -66,7 +68,7 @@ Drag the fields into order by their handle (the fields inside a group or repeate
 
 ## Taxonomies
 
-**Structure → Taxonomies**: a **Title**, a **Handle** (changeable later, as for collections), **Nested terms** (terms under other terms, like subcategories), the **Collections** whose entries it groups, a **Term pages URL** (like `/topics/{slug}`; empty: terms have no pages), **Term fields** (a blueprint for the terms' own fields), a **Template**, and **SEO from fields**. Editors then add the terms under Content → Terms (see [Terms](guide:website/terms)). To let editors give entries terms, add a **Terms** field to the collection's blueprint: that's enough for the entries list to filter by the taxonomy too, without ticking the collection here.
+**Structure → Taxonomies**: a **Title** (and a **Title in …** each other language, for visitors on its term pages), a **Handle** (changeable later, as for collections), **Nested terms** (terms under other terms, like subcategories), the **Collections** whose entries it groups, a **Term pages URL** (like `/topics/{slug}`; empty: terms have no pages), **Term fields** (a blueprint for the terms' own fields), a **Template**, and **SEO from fields**. Editors then add the terms under Content → Terms (see [Terms](guide:website/terms)). To let editors give entries terms, add a **Terms** field to the collection's blueprint: that's enough for the entries list to filter by the taxonomy too, without ticking the collection here.
 
 ## Global sets
 
@@ -81,7 +83,7 @@ Drag the fields into order by their handle (the fields inside a group or repeate
 **Structure → Forms**: a **Title**, a **Handle** (changeable later, as for collections), a **Blueprint** with the form's fields (visitors get the text, textarea, number, toggle, select, date and file ones), and:
 
 - **Email to**: addresses that receive each submission, one per line; **Also email roles**: everyone with these roles too.
-- **Thank-you message**: shown after sending; or **After sending, go to** a page of your choice.
+- **Thank-you message**: shown after sending (with one per other language on a multilingual site; empty there, the website's own thank-you in that language); or **After sending, go to** a page of your choice.
 - **Sends per visitor a minute** and **Require a captcha**, against spam.
 
 Your developer then puts the form on a page. What visitors send arrives under Content → Submissions (see [Form submissions](guide:website/submissions)).

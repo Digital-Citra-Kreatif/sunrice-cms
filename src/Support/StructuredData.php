@@ -10,6 +10,7 @@ use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Site\Page;
 use Sunrice\Cms\Site\Search;
+use Sunrice\Cms\Site\Site;
 
 /**
  * Structured data (schema.org, as JSON-LD) for a page's head, so search
@@ -75,8 +76,8 @@ final class StructuredData
         }
         // Each language's home is its own WebSite node.
         $website = ['@type' => 'WebSite', '@id' => $home.'#website', 'url' => $home, 'name' => $site->name(), 'inLanguage' => self::language($locale), 'publisher' => ['@id' => $publisher['@id']]];
-        if (trim($site->description) !== '') {
-            $website['description'] = Str::squish($site->description);
+        if (trim($site->descriptionIn($locale)) !== '') {
+            $website['description'] = Str::squish($site->descriptionIn($locale));
         }
         if (Search::enabled()) {
             $website['potentialAction'] = ['@type' => 'SearchAction', 'target' => ['@type' => 'EntryPoint', 'urlTemplate' => Search::url($locale).'?'.Search::NAME.'={search_term_string}'], 'query-input' => 'required name=search_term_string'];
@@ -166,20 +167,20 @@ final class StructuredData
             if ($seo['image'] !== null) {
                 $node['image'] = $seo['image'];
             }
-            $crumbs = self::entryCrumbs($translation, $page->home);
+            $crumbs = self::entryCrumbs($translation, $page->home, $page->locale);
         } elseif ($page->term !== null) {
             $node = ['@type' => 'CollectionPage', ...$node, 'name' => $page->term->title];
             $crumbs = [[$page->term->title, $url]];
         } elseif ($page->collection !== null) {
-            $node = ['@type' => 'CollectionPage', ...$node, 'name' => $page->collection->title];
-            $crumbs = [[$page->collection->title, $url]];
+            $node = ['@type' => 'CollectionPage', ...$node, 'name' => $page->collection->titleIn($page->locale)];
+            $crumbs = [[$page->collection->titleIn($page->locale), $url]];
         } elseif ($page->type === Page::SEARCH) {
-            $node = ['@type' => 'SearchResultsPage', ...$node, 'name' => 'Search'];
+            $node = ['@type' => 'SearchResultsPage', ...$node, 'name' => __('sunrice-cms::site.search.title', [], $page->locale)];
         }
 
         $nodes = [$node];
         if ($crumbs !== [] && ! $page->home) {
-            $items = [['Home', url($page->locale === Locales::default() ? '/' : '/'.$page->locale)], ...$crumbs];
+            $items = [[__('sunrice-cms::site.home', [], $page->locale), url($page->locale === Locales::default() ? '/' : '/'.$page->locale)], ...$crumbs];
             $list = [];
             foreach ($items as $i => [$name, $item]) {
                 $list[] = ['@type' => 'ListItem', 'position' => $i + 1, 'name' => $name, 'item' => $item];
@@ -192,29 +193,30 @@ final class StructuredData
     }
 
     /**
-     * The way to an entry: its collection's listing page, its parents, itself.
+     * The way to an entry in the page's language: its collection's listing
+     * page, its parents (as visitors there see them), itself.
      *
      * @return list<array{0: string, 1: string}>
      */
-    private static function entryCrumbs(EntryTranslation $translation, bool $home): array
+    private static function entryCrumbs(EntryTranslation $translation, bool $home, string $locale): array
     {
         if ($home) {
             return [];
         }
         $crumbs = [];
         $collection = $translation->entry->collection;
-        if (($listing = $collection->listingUrl($translation->locale)) !== null) {
-            $crumbs[] = [$collection->title, $listing];
+        if (($listing = $collection->listingUrl($locale)) !== null) {
+            $crumbs[] = [$collection->titleIn($locale), $listing];
         }
         if ($collection->hierarchical) {
             foreach ($translation->entry->ancestors() as $ancestor) {
-                $parent = $ancestor->translation($translation->locale)?->setRelation('entry', $ancestor);
-                if ($parent !== null && $parent->isLive() && ($parentUrl = $parent->url()) !== null) {
+                $parent = $ancestor->shownIn($locale);
+                if ($parent !== null && ($parentUrl = $parent->url()) !== null) {
                     $crumbs[] = [(string) $parent->title, $parentUrl];
                 }
             }
         }
-        $crumbs[] = [(string) $translation->title, (string) $translation->url()];
+        $crumbs[] = [(string) $translation->title, (string) app(Site::class)->urlIn($translation, $locale)];
 
         return $crumbs;
     }

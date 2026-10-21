@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\Schema;
+use Sunrice\Cms\Models\Concerns\TranslatesText;
 use Sunrice\Cms\Support\SiteRecords;
 
 /**
@@ -19,7 +21,8 @@ use Sunrice\Cms\Support\SiteRecords;
  *
  * @property int $id
  * @property string $handle
- * @property string $title
+ * @property string $title in the main language (titleIn() for the others)
+ * @property array<string, array<string, string>>|null $translations what visitors read in the other languages: {"id": {"title": "Lokasi"}}
  * @property bool $hierarchical terms can have a parent
  * @property string|null $route term pages' URL pattern ("/topics/{slug}"); none: no pages
  * @property string|null $blueprint terms' own fields
@@ -38,6 +41,7 @@ use Sunrice\Cms\Support\SiteRecords;
 class Taxonomy extends Model
 {
     use SoftDeletes;
+    use TranslatesText;
 
     protected $table = 'sunrice_taxonomies';
 
@@ -45,12 +49,21 @@ class Taxonomy extends Model
 
     protected $attributes = ['hierarchical' => false];
 
+    /** The field terms of a taxonomy without a blueprint have: an introduction for their page. */
+    public const DESCRIPTION = 'description';
+
     private ?Schema $schema = null;
+
+    /** Its title in a language (null: the page's), as visitors read it on term pages. */
+    public function titleIn(?string $locale = null): string
+    {
+        return $this->translated('title', $locale);
+    }
 
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['hierarchical' => 'boolean'];
+        return ['hierarchical' => 'boolean', 'translations' => 'array'];
     }
 
     /** @return BelongsToMany<Collection, $this> */
@@ -66,8 +79,13 @@ class Taxonomy extends Model
     }
 
     /** Terms' own fields (none without a blueprint), loaded once. */
+    /**
+     * Its terms' own fields: its blueprint's; without one, a description
+     * (DESCRIPTION), so a term's page has an introduction to write.
+     */
     public function schema(): Schema
     {
-        return $this->schema ??= SiteRecords::blueprint($this->blueprint)?->schema() ?? Schema::make([]);
+        return $this->schema ??= SiteRecords::blueprint($this->blueprint)?->schema()
+            ?? Schema::make($this->blueprint === null ? [new Field(self::DESCRIPTION, 'textarea', 'Description', instructions: 'An introduction shown on the term\'s page.')] : []);
     }
 }

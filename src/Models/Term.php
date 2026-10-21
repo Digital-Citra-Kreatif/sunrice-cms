@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Sunrice\Cms\Site\Site;
 use Sunrice\Cms\Support\Locales;
 
 /**
@@ -106,10 +107,21 @@ class Term extends Model
         return $ids;
     }
 
-    /** The term's page in a language (null: its taxonomy has no pages, or it isn't translated). */
+    /**
+     * The term's page in a language: its translation's, else (with the
+     * main-language fallback) the main language's at that language's
+     * address. Null: its taxonomy has no pages, or it has no page there.
+     */
     public function url(?string $locale = null): ?string
     {
-        $translation = $this->translations->firstWhere('locale', $locale ?? Locales::current());
+        $locale ??= Locales::current();
+        $translation = $this->translations->firstWhere('locale', $locale);
+        if ($translation === null && $locale !== Locales::default() && Site::fallback()) {
+            $main = $this->translations->firstWhere('locale', Locales::default());
+            $main?->setRelation('term', $this);
+
+            return $main === null ? null : app(Site::class)->termUrlIn($main, $locale);
+        }
 
         return $translation?->url();
     }

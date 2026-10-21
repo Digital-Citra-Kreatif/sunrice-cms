@@ -11,7 +11,7 @@ use Laravel\Mcp\Server\Attributes\Description;
 use Sunrice\Cms\Actions\Menus\SaveMenu as Save;
 use Sunrice\Cms\Models\Menu;
 
-#[Description('Replace a menu\'s items with a tree (send every item: what\'s left out is removed). An item: one target, "entry_id", "term_id" (its page), "collection_id" (its listing page) or "url"; "labels" by language (needed for a url; empty: the target\'s title); "new_tab"; "children" (three levels at most). Start from cms_get_menu\'s items. Live as soon as it\'s saved: ask first. Item ids change; to only reorder, use cms_reorder.')]
+#[Description('Replace a menu\'s items with a tree (send every item: what\'s left out is removed). An item: one target, "entry_id", "term_id" (its page), "collection_id" (its listing page; "query" adds its filters in every language, "listing_type=for-sale") or "url"; "labels" by language (needed for a url; empty: the target\'s title); "new_tab"; "children" (three levels at most). Start from cms_get_menu\'s items. Live as soon as it\'s saved: ask first. Item ids change; to only reorder, use cms_reorder.')]
 final class SaveMenu extends CmsTool
 {
     protected string $name = 'cms_save_menu';

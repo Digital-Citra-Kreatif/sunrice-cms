@@ -92,6 +92,7 @@ final class MenuController
                     'url' => $item->url,
                     'labels' => (object) $item->labels,
                     'new_tab' => $item->new_tab,
+                    'query' => $item->query_string,
                     'children' => self::tree($items, $item->id),
                 ];
             }

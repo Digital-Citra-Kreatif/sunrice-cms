@@ -12,13 +12,14 @@ Pilih taksonomi lewat menu di samping judul, dan bahasanya lewat **Language**. T
 - Ikon halaman membuka **halaman term itu sendiri** (lihat di bawah).
 - Ikon tempat sampah **memindahkannya ke tempat sampah**, beserta term di bawahnya.
 
-Term yang belum berjudul dalam bahasa yang tampil ditulis abu-abu sebagai *… · not translated*. Ganti namanya dalam bahasa itu untuk menerjemahkannya.
+Term yang belum berjudul dalam bahasa yang tampil ditulis abu-abu sebagai *… · not translated*. Ganti namanya dalam bahasa itu untuk menerjemahkannya, atau beri judul di halamannya sendiri.
 
 ## Halaman term
 
 Jika taksonomi memiliki halaman term di situs web (misalnya `/topik/berita`), halaman setiap term menampilkan entrinya, dan Anda bisa menambahkan:
 
-- field khususnya, jika taksonomi memilikinya (deskripsi, gambar…);
+- **Title** dan **Slug**-nya dalam bahasa yang tampil: di bahasa yang belum diterjemahkan, memberi judul di sini akan menambahkannya (tidak perlu mengganti nama di daftar lebih dulu);
+- field khususnya: **Description** untuk memperkenalkan halamannya, atau field yang diberikan developer untuk taksonomi (gambar…);
 - **Search and sharing**: judul SEO, deskripsi, gambar untuk dibagikan, dan *Hide from search engines* (lihat [SEO](guide:website/seo));
 - **Template**, jika developer membuat desain khusus (kosongkan untuk desain taksonomi).
 

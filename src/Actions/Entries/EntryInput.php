@@ -60,18 +60,19 @@ final class EntryInput
 
     /**
      * Names for messages: "The Intro field is required", not "The data.intro field".
+     * With `$locale`, each field's label in that language (Field::labelIn()).
      *
      * @param  list<string>  $keys
      * @return array<string, string>
      */
-    public static function attributes(Schema $schema, array $keys): array
+    public static function attributes(Schema $schema, array $keys, ?string $locale = null): array
     {
         $names = [];
         foreach ($keys as $key) {
             if (str_starts_with($key, 'data.')) {
                 $path = substr($key, 5);
                 $field = $schema->field($path);
-                $names[$key] = $field?->label ?: Str::headline((string) Str::afterLast($path, '.'));
+                $names[$key] = $field !== null && $locale !== null ? $field->labelIn($locale) : ($field?->label ?: Str::headline((string) Str::afterLast($path, '.')));
             }
         }
 

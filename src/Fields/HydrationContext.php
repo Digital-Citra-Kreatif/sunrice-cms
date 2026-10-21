@@ -264,7 +264,15 @@ final class HydrationContext
             $entry = $found->get($id);
             // Each translation knows its entry (and so its collection and fields) without asking again.
             $entry?->translations->each(fn (EntryTranslation $translation) => $translation->setRelation('entry', $entry));
-            $translation = $entry === null || $entry->collection->trashed() ? null : ($entry->translation($this->locale) ?? $entry->mainTranslation());
+            $translation = null;
+            if ($entry !== null && ! $entry->collection->trashed()) {
+                $translation = $entry->translation($this->locale);
+                // Not live in this language: the main language's stands in (as its page does).
+                if ($translation === null || ! ($this->preview || $translation->isLive())) {
+                    $translation = $entry->mainTranslation();
+                }
+            }
+            // Shared below, so its url() gives the page in this language (at its address when it stands in).
             $this->entries[$id] = $translation !== null && ($this->preview || $translation->isLive()) ? $translation : null;
             if ($this->entries[$id] !== null) {
                 $loaded[] = $this->entries[$id];
@@ -276,8 +284,9 @@ final class HydrationContext
 
     /**
      * Linked entries as templates show them: each one's translation in this
-     * context's language (else its main one), live, or its draft in a
-     * preview; in the given order, skipping missing, trashed and unpublished
+     * context's language (else, when that isn't live, its main one), live,
+     * or its draft in a preview, whose url() is its page for a visitor
+     * reading this language (Site::urlIn()); in the given order, skipping missing, trashed and unpublished
      * ones. Loaded once per context.
      *
      * @param  list<int>  $ids  entry ids

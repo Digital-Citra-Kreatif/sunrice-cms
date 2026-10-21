@@ -14,7 +14,7 @@
         @endif
     @elseif ($value instanceof \Sunrice\Admin\Media\Media && $value->isImage())
         <figure>
-            <img src="{{ $value->url() }}" alt="{{ $value->alt ?? '' }}" loading="lazy">
+            <img src="{{ $value->url() }}" alt="{{ $value->altIn() ?? '' }}" loading="lazy">
         </figure>
     @elseif ($value instanceof \Illuminate\Support\Collection && $value->first() instanceof \Sunrice\Cms\Fields\Block)
         @include('cms.partials.blocks', ['blocks' => $value])
@@ -22,7 +22,7 @@
         <ul class="gallery">
             @foreach ($value as $media)
                 @if ($media->isImage())
-                    <li><img src="{{ $media->url() }}" alt="{{ $media->alt ?? '' }}" loading="lazy"></li>
+                    <li><img src="{{ $media->url() }}" alt="{{ $media->altIn() ?? '' }}" loading="lazy"></li>
                 @endif
             @endforeach
         </ul>

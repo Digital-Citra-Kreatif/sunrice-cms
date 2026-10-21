@@ -54,7 +54,7 @@ So: one design for every entry of a collection: `{collection}.blade.php`; one pa
 - Escape with `{{ }}`. Only rich text fields are printed as is (`{!! $values['body'] !!}`): they're cleaned when saved. Never print anything else unescaped.
 - Data only through the CMS (`Cms::…`, components, `$values`): no database queries or models, no `@php` beyond small formatting.
 - Every field can be empty: `@if`, `?->`, `?? ''`.
-- Images: a media field's value has `->url()` (and sizes, `->url('medium')`) and `->alt`: always `alt="{{ $image->alt }}"`.
+- Images: a media field's value has `->url()` (and sizes, `->url('medium')`) and `->altIn()` (its alt text in the page's language): always `alt="{{ $image->altIn() }}"`.
 - Links: `->url()` of entries and terms, menus' `url`; never build them from slugs.
 - After writing, open the page with cms_render_page and fix what it reports.
 MD;

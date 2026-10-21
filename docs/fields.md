@@ -23,6 +23,8 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 | `validation` | Extra Laravel rules from an allowed list (`min:3`, `regex:/…/`, `email`…; see `DefinitionValidator::RULES`). Rules that read the database aren't allowed. |
 | `config` | The type's settings. |
 | `fields` | The fields of a group or a repeater. Groups and repeaters nest up to five levels. |
+| `condition` | When it shows ([below](#showing-a-field-only-sometimes)). |
+| `translations` | What visitors read in other languages, by language code: `label`, `instructions` and a select's `options` (value => label), as [forms](forms.md) show them (**In other languages** in the builder). `{"id": {"label": "Jenis properti", "options": {"house": "Rumah"}}}` |
 
 `DefinitionValidator` checks definitions before they are saved, and the `SaveBlueprint` and `SaveFieldset` actions use it.
 
@@ -38,7 +40,7 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 | `select` | a value, or a list with `multiple` | the same | `options` (`[{value, label}]`), `multiple`, `default` |
 | `date` | `2026-10-19`, or `2026-10-19T14:30:00` with `time` | a Carbon | `time`; `future` (*Today or later only*: earlier days are refused, and a form's date input gets `min`) |
 | `link` | `{type: url, url, label, new_tab}` or `{type: entry, entry_id, label, new_tab}` | `{type, url, label, title, new_tab}`, or null | `collections` (entry links; none: any) |
-| `media` | a media id, or a list with `multiple` | a `Media` model, or a collection | `multiple`, `max`, `types` (image, video, audio, document) |
+| `media` | a media id, or a list with `multiple` | a `Media` model, or a collection (`$image->altIn()` and `captionIn()`: its alt text and caption in the page's language, set per language in the media library; see [media](../../admin/docs/media.md)) | `multiple`, `max`, `types` (image, video, audio, document) |
 | `group` | an object of its fields | an array | (its `fields`) |
 | `repeater` | a list of rows of its fields | `Items` of arrays | `min`, `max` (its `fields`) |
 | `flexible` | a list of blocks | `Items` of `Block` | `blocks` (fieldset handles, offered in this order: the builder keeps the order they're ticked in), `max` |
@@ -110,6 +112,13 @@ $schema->references($data);                                  // media it uses, a
 ```
 
 `rules()` takes the input because a flexible field's rules depend on which blocks were sent.
+
+A field's words for visitors, in a language (default: the page's), with its `translations`: `$field->labelIn('id')`, `$field->instructionsIn('id')`, `$field->options('id')` (a select's `[['value' => …, 'label' => …], …]`) and `$field->optionLabel($value, 'id')`, which turns a select's stored value into what it reads as (`under_offer` → "Dalam penawaran", else the option's label, else the value; null for a value that isn't an option):
+
+```blade
+@php($status = $entry->entry->schema()->field('property_status'))
+<span class="badge">{{ $status?->optionLabel($values['property_status']) }}</span>
+```
 
 A `HydrationContext` remembers the media, entries and terms it loads, so hydrating many values with one context costs one query per kind: `$context->preload($schema->references($data))` loads everything a set of data points at up front. An entry's `values()` loads what all its fields point at together first (one query per kind, not per field), and `$context->share($translations)` makes a list of entries hydrate together: the first `values()` of any of them loads what all of them point at, and `$translation->hydrateWith($context)` makes `values()` use a context when given none. The entries a context loads for an entries field share it too, so `$values['agent']->values()` on every card costs nothing more either: each level of links costs one query per kind.
 

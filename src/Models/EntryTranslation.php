@@ -9,10 +9,12 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Carbon;
 use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Fields\Schema;
 use Sunrice\Cms\Site\Site;
+use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\SearchText;
 
 /**
@@ -100,6 +102,34 @@ class EntryTranslation extends Model
             ->whereHas('entry', fn (Builder $entry) => $entry->withoutTrashed()->whereHas('collection', fn (Builder $collection) => $collection->withoutTrashed()));
     }
 
+    /**
+     * In a language as the site shows it: the translations in that
+     * language and, with the main-language fallback (`$fallback`; null:
+     * `sunrice-cms.site.fallback`), the main language's of entries that
+     * aren't live in it: one row per entry. In a preview (`$preview`) a
+     * translation counts there whether it's live or not. Combine it with
+     * live() (or the preview's own conditions).
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeShownIn(Builder $query, string $locale, ?bool $fallback = null, bool $preview = false): void
+    {
+        $main = Locales::default();
+        $column = $query->qualifyColumn('locale');
+        if ($locale === $main || ! ($fallback ?? Site::fallback())) {
+            $query->where($column, $locale);
+
+            return;
+        }
+        $table = $this->getTable();
+        $query->where(fn (Builder $either) => $either->where($column, $locale)->orWhere(fn (Builder $stand) => $stand->where($column, $main)
+            ->whereNotExists(function (QueryBuilder $own) use ($table, $locale, $preview): void {
+                $own->selectRaw('1')->from($table.' as own')
+                    ->whereColumn('own.entry_id', $table.'.entry_id')->where('own.locale', $locale)
+                    ->when(! $preview, fn (QueryBuilder $live) => $live->where('own.status', self::PUBLISHED)->where('own.published_at', '<=', now()));
+            })));
+    }
+
     public function isPublished(): bool
     {
         return $this->status === self::PUBLISHED;
@@ -126,10 +156,17 @@ class EntryTranslation extends Model
             || $this->draft_data != $this->data;
     }
 
-    /** The live page's URL, or null when the collection has no route (or it was never published). */
+    /**
+     * The live page's URL, or null when the collection has no route (or it
+     * was never published). Hydrated for a page in another language (a
+     * main-language entry in a list on /id, see hydrateWith()), the page
+     * at that language's address when it stands in there (Site::urlIn()).
+     */
     public function url(): ?string
     {
-        return app(Site::class)->url($this);
+        $site = app(Site::class);
+
+        return $this->hydration !== null ? $site->urlIn($this, $this->hydration->locale) : $site->url($this);
     }
 
     /** Whether this is the entry's main translation, which holds the shared fields. */
@@ -221,7 +258,10 @@ class EntryTranslation extends Model
         return $this->entry->schema()->withoutShared($data, $main ?? $mainTranslation->draft_data);
     }
 
-    /** Hydrate with this context when values() is given none: a query shares one with its whole result. */
+    /**
+     * Hydrate with this context when values() is given none (a query shares
+     * one with its whole result), and give url() in its language.
+     */
     public function hydrateWith(HydrationContext $context): static
     {
         $this->hydration = $context;

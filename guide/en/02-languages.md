@@ -16,6 +16,8 @@ A translation marked **Outdated** was saved before the latest change to the main
 
 Each translation is saved, published, scheduled and unpublished on its own. Publishing the English version doesn't publish the Indonesian one.
 
+A translation published for the first time takes the date of the main language's (so a translated article keeps its date), unless you pick another.
+
 ## Translated and shared fields
 
 Some fields are **translated**: each language has its own (titles, text, rich text, links). Others are **shared**: one value for every language (a price, a date, a photo, a yes/no switch). The blueprint decides which.
@@ -26,7 +28,7 @@ Inside groups, repeater rows and flexible blocks, the same goes row by row: the 
 
 ## Translating with a machine
 
-If your developer has set up machine translation, the editor of a translation has a **Translate from …** button. It fills in what isn't translated yet, from the main language, into the draft. Save your own changes first (the button waits until you do), then read the result, correct it, and publish when it's right.
+If your developer has set up machine translation, the editor of a translation has a **Translate from …** button. It fills in what isn't translated yet, from the main language, into the draft. Save your own changes first (the button waits until you do), then read the result, correct it, and publish when it's right. Without it, the button shows greyed out: ask your developer to set it up.
 
 ## Pages not translated yet
 

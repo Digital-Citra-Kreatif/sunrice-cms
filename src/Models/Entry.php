@@ -11,8 +11,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Fields\Schema;
 use Sunrice\Cms\Settings\CommentSettings;
+use Sunrice\Cms\Site\Site;
 use Sunrice\Cms\Support\Locales;
 
 /**
@@ -192,6 +194,30 @@ class Entry extends Model
     public function translation(string $locale): ?EntryTranslation
     {
         return $this->translations->firstWhere('locale', $locale);
+    }
+
+    /**
+     * What a visitor reading a language sees of this entry: its live
+     * translation there, else (with the main-language fallback, see
+     * Site::fallback()) the main language's live one; null when neither
+     * is live or the entry is in the trash. Its url() and values() are in
+     * that language: a breadcrumb or link to the page there.
+     */
+    public function shownIn(?string $locale = null): ?EntryTranslation
+    {
+        $locale ??= Locales::current();
+        if ($this->trashed()) {
+            return null;
+        }
+        $own = $this->translation($locale);
+        $shown = $own !== null && $own->isLive() ? $own : null;
+        if ($shown === null && $locale !== Locales::default() && Site::fallback()) {
+            $main = $this->translation(Locales::default());
+            $shown = $main !== null && $main->isLive() ? $main : null;
+        }
+        $shown?->setRelation('entry', $this);
+
+        return $shown?->hydrateWith(new HydrationContext($locale));
     }
 
     /**

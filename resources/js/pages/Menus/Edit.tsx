@@ -82,6 +82,11 @@ export default function MenuEdit({ menu, items: initial, locales, limits, terms,
                                     </div>
                                 )}
                             </div>
+                            {item.collection_id !== null && (
+                                <Input aria-label="Filters" className="cms:w-full cms:sm:max-w-md cms:font-mono" disabled={!can.update}
+                                    placeholder="Filters (optional): listing_type=for-sale" value={item.query ?? ''}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => update(index, { query: e.target.value })} />
+                            )}
                             {locales.length > 1 && (
                                 <div className="cms:flex cms:flex-wrap cms:gap-2">
                                     {locales.slice(1).map((code) => (
@@ -145,7 +150,7 @@ const TITLES: Record<Kind, string> = { entry: 'Link to an entry', term: 'Link to
 const DESCRIPTIONS: Record<Kind, string> = {
     entry: 'It follows the entry: its title (unless you give a label) and its address in each language. It shows only while the entry is on the site.',
     term: 'The page listing the term\'s entries, in each language. Its title is the label unless you give one.',
-    listing: 'The collection\'s listing page, in each language. The collection\'s title is the label unless you give one.',
+    listing: 'The collection\'s listing page, in each language, optionally with filters. The collection\'s title is the label unless you give one.',
     url: 'A web address, a path on this site (/contact), mailto: or tel:.',
 };
 
@@ -161,7 +166,8 @@ function AddDialog({ kind, terms, listings, onClose, onAdd, main }: {
     const [choice, setChoice] = React.useState('');
     const [address, setAddress] = React.useState('');
     const [label, setLabel] = React.useState('');
-    React.useEffect(() => { setEntryId(null); setChoice(''); setAddress(''); setLabel(''); }, [kind]);
+    const [query, setQuery] = React.useState('');
+    React.useEffect(() => { setEntryId(null); setChoice(''); setAddress(''); setLabel(''); setQuery(''); }, [kind]);
     const safe = address.trim() === '' || isSafeUrl(address.trim());
     const labels = label.trim() ? { [main]: label.trim() } : {};
 
@@ -175,7 +181,7 @@ function AddDialog({ kind, terms, listings, onClose, onAdd, main }: {
             onAdd(newItem({ term_id: Number(choice), target: term ? { title: term.title, kind: term.taxonomy, live: true } : null, labels }));
         } else if (kind === 'listing' && choice !== '') {
             const listing = listings.find((l) => String(l.id) === choice);
-            onAdd(newItem({ collection_id: Number(choice), target: listing ? { title: listing.title, kind: 'Listing page', live: true } : null, labels }));
+            onAdd(newItem({ collection_id: Number(choice), target: listing ? { title: listing.title, kind: 'Listing page', live: true } : null, labels, query: query.trim().replace(/^\?/, '') || null }));
         } else if (kind === 'url' && address.trim() !== '' && safe && label.trim() !== '') {
             onAdd(newItem({ url: address.trim(), labels }));
         }
@@ -205,6 +211,14 @@ function AddDialog({ kind, terms, listings, onClose, onAdd, main }: {
                                         : listings.map((l) => <SelectItem key={l.id} value={String(l.id)}>{l.title}</SelectItem>)}
                                 </SelectContent>
                             </Select>
+                        </div>
+                    )}
+                    {kind === 'listing' && (
+                        <div className="cms:flex cms:flex-col cms:gap-2">
+                            <Label htmlFor="menu-query">Filters (optional)</Label>
+                            <Input id="menu-query" className="cms:font-mono" value={query} placeholder="listing_type=for-sale"
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)} />
+                            <p className="cms:text-sm cms:text-muted-foreground">What the listing page's filters put after the ? in its address. Each language's link gets them, and a term may be named by its slug in any language.</p>
                         </div>
                     )}
                     {kind === 'url' && (

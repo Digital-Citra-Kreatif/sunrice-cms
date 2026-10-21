@@ -32,11 +32,12 @@
         @foreach ($form->schema()->fields() as $field)
             @php
                 $inputId = 'form-'.$form->handle.'-'.$field->handle;
-                $label = $field->label ?: \Illuminate\Support\Str::headline($field->handle);
+                $label = $field->labelIn($locale);
+                $help = $field->instructionsIn($locale);
                 $value = $old($field->handle, $form->schema()->type($field)->defaultValue($field));
                 $fieldError = $error($field->handle);
-                $describedBy = trim(($field->instructions !== '' || $field->type === 'file' ? $inputId.'-help ' : '').($fieldError ? $inputId.'-error' : ''));
-                $options = is_array($field->config['options'] ?? null) ? $field->config['options'] : [];
+                $describedBy = trim(($help !== '' || $field->type === 'file' ? $inputId.'-help ' : '').($fieldError ? $inputId.'-error' : ''));
+                $options = $field->options($locale);
                 $multiple = ($field->config['multiple'] ?? false) === true;
             @endphp
             <div>
@@ -54,9 +55,7 @@
                         <select id="{{ $inputId }}" name="data[{{ $field->handle }}]{{ $multiple ? '[]' : '' }}" @if ($multiple) multiple @endif @required($field->required) @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif @if ($fieldError) aria-invalid="true" @endif>
                             @unless ($multiple)<option value=""></option>@endunless
                             @foreach ($options as $option)
-                                @if (is_array($option) && is_scalar($option['value'] ?? null))
-                                    <option value="{{ $option['value'] }}" @selected(in_array((string) $option['value'], array_map('strval', array_filter((array) $value, 'is_scalar')), true))>{{ is_scalar($option['label'] ?? null) && $option['label'] !== '' ? $option['label'] : $option['value'] }}</option>
-                                @endif
+                                <option value="{{ $option['value'] }}" @selected(in_array($option['value'], array_map('strval', array_filter((array) $value, 'is_scalar')), true))>{{ $option['label'] }}</option>
                             @endforeach
                         </select>
                     @else
@@ -74,8 +73,8 @@
                             @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif @if ($fieldError) aria-invalid="true" @endif>
                     @endif
                 @endif
-                @if ($field->instructions !== '' || $field->type === 'file')
-                    <p id="{{ $inputId }}-help">{{ $field->instructions }}@if ($field->type === 'file'){{ $field->instructions !== '' ? ' ' : '' }}{{ \Sunrice\Cms\Fields\Types\FileField::hint($field) }}@endif</p>
+                @if ($help !== '' || $field->type === 'file')
+                    <p id="{{ $inputId }}-help">{{ $help }}@if ($field->type === 'file'){{ $help !== '' ? ' ' : '' }}{{ \Sunrice\Cms\Fields\Types\FileField::hint($field) }}@endif</p>
                 @endif
                 @if ($fieldError)
                     <p id="{{ $inputId }}-error" role="alert">{{ $fieldError }}</p>

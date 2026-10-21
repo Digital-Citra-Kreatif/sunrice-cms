@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 // What visitors read on the site: the CMS's plain views, comments and forms (sunrice-cms::site.*).
 return [
+    'home' => 'Home',
     'preview' => 'Preview of the draft',
     'preview_note' => 'Visitors don\'t see it until it\'s published.',
     'newer' => 'Newer',
@@ -54,6 +55,29 @@ return [
         'file_hint' => 'Accepted: :types, up to :size.',
         'file_size' => 'Up to :size.',
         'too_big' => 'The :attribute file is larger than :size, the most this site accepts.',
+        'thanks' => 'Thank you, we got your message.',
+    ],
+    'filter' => [
+        'label' => 'Filter',
+        'min' => 'Min',
+        'max' => 'Max',
+        'from' => 'From',
+        'to' => 'To',
+        'all' => 'All',
+        'sort_by' => 'Sort by',
+        'show' => 'Show results',
+        'applied' => 'Applied filters',
+        'remove' => 'Remove filter :filter: :value',
+        'clear' => 'Clear all',
+        'results' => ':count result|:count results',
+    ],
+    'draft' => [
+        'label' => 'Draft',
+        'viewing' => 'You are viewing unpublished changes. Visitors see the live page.',
+        'view_live' => 'View the live page',
+        'changes' => 'This page has unpublished changes.',
+        'view_draft' => 'View the draft',
+        'edit' => 'Edit',
     ],
     'captcha' => 'Please confirm you\'re not a robot, then send the form again.',
 ];

@@ -16,6 +16,8 @@ Terjemahan yang ditandai **Outdated** terakhir disimpan sebelum perubahan terbar
 
 Setiap terjemahan disimpan, diterbitkan, dijadwalkan, dan ditarik dari situs secara terpisah. Menerbitkan versi bahasa Inggris tidak ikut menerbitkan versi bahasa Indonesia.
 
+Terjemahan yang pertama kali diterbitkan memakai tanggal versi bahasa utama (jadi artikel terjemahan tetap bertanggal sama), kecuali Anda memilih tanggal lain.
+
 ## Field yang diterjemahkan dan yang dipakai bersama
 
 Sebagian field **diterjemahkan**: setiap bahasa punya isinya sendiri (judul, teks, rich text, tautan). Sebagian lagi **dipakai bersama**: satu nilai untuk semua bahasa (harga, tanggal, foto, saklar ya/tidak). Blueprint yang menentukan mana yang mana.
@@ -26,7 +28,7 @@ Di dalam group, baris repeater, dan blok flexible, aturannya sama per baris: tek
 
 ## Menerjemahkan dengan mesin
 
-Jika developer Anda menyiapkan terjemahan mesin, penyunting terjemahan memiliki tombol **Translate from …**. Tombol ini mengisi bagian yang belum diterjemahkan, dari bahasa utama, ke dalam draf. Simpan dulu perubahan Anda sendiri (tombol menunggu sampai Anda menyimpan), lalu baca hasilnya, perbaiki, dan terbitkan setelah benar.
+Jika developer Anda menyiapkan terjemahan mesin, penyunting terjemahan memiliki tombol **Translate from …**. Tombol ini mengisi bagian yang belum diterjemahkan, dari bahasa utama, ke dalam draf. Simpan dulu perubahan Anda sendiri (tombol menunggu sampai Anda menyimpan), lalu baca hasilnya, perbaiki, dan terbitkan setelah benar. Tanpa itu, tombolnya tampil abu-abu: minta developer Anda menyiapkannya.
 
 ## Halaman yang belum diterjemahkan
 

@@ -18,6 +18,7 @@ use Sunrice\Admin\Resources\Tables\Column;
 use Sunrice\Admin\Resources\Tables\Table;
 use Sunrice\Admin\Security\Captcha;
 use Sunrice\Cms\Models\Form as FormModel;
+use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\RoleMembers;
 use Sunrice\Cms\Support\SafeUrl;
 
@@ -81,7 +82,10 @@ final class FormResource extends Resource
                 ->options(fn (): array => RoleMembers::options())
                 ->help('Everyone with these roles gets each submission too, one email each.'),
             Textarea::make('message')->label('Thank-you message')->rows(2)->maxLength(1000)
-                ->placeholder('Thank you, we got your message.'),
+                ->placeholder(__('sunrice-cms::site.forms.thanks', [], Locales::default())),
+            ...TranslatedFields::make('message', fn (string $name, string $language) => Textarea::make($name)->label("Thank-you message in {$language}")->rows(2)->maxLength(1000)
+                ->placeholder(__('sunrice-cms::site.forms.thanks', [], array_search($language, Locales::names(), true) ?: Locales::default()))
+                ->help('What visitors who sent it from a page in '.$language.' read. Empty: the site\'s own words in that language, or the message above.')),
             TextInput::make('redirect_url')->label('After sending, go to')->maxLength(2000)->placeholder('/thank-you')
                 ->rules([SafeUrl::rule()])
                 ->help('A page or address visitors go to once it\'s sent (with the thank-you message). Empty: back to the page they were on.'),

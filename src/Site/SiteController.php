@@ -22,6 +22,7 @@ use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Query\EntryPaginator;
 use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Support\Access;
+use Sunrice\Cms\Support\Locales;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 /**
@@ -63,6 +64,10 @@ final class SiteController
         }
         if ($translation === null) {
             $redirect = $site->redirect($request->path());
+            if ($redirect === null && ($own = $site->translatedAddress($request->path())) !== null) {
+                // The main language's slug in a language the page has its own address in.
+                return redirect()->to(self::withQuery($own, $request), 301);
+            }
             abort_if($redirect === null, 404);
 
             return redirect()->to(self::withQuery($redirect->to_url, $request), $redirect->status);
@@ -171,7 +176,7 @@ final class SiteController
         // Run when the template first uses $entries: those of the term and, in a hierarchy, of the terms under it.
         $entries = new LazyEntries(function () use ($term, $taxonomy, $locale): LengthAwarePaginator {
             $terms = [$term->id, ...($taxonomy->hierarchical ? $term->descendantIds() : [])];
-            $entries = EntryPaginator::from(EntryTranslation::query()->live()->with('entry.collection')->where('locale', $locale)
+            $entries = EntryPaginator::from(EntryTranslation::query()->live()->with(self::listed($locale))->shownIn($locale)
                 ->whereHas('entry.terms', fn ($q) => $q->whereIn('sunrice_terms.id', $terms))
                 ->orderByDesc('published_at')->orderByDesc('id')->paginate(10))->withQueryString();
             // Hydrated together: the first values() loads what all of them point at.
@@ -209,8 +214,8 @@ final class SiteController
         $collection = $listing->collection;
         // Run when the template first uses $entries.
         $entries = new LazyEntries(function () use ($collection, $listing): LengthAwarePaginator {
-            $entries = EntryPaginator::from(EntryTranslation::query()->live()->with('entry.collection')
-                ->where('collection_id', $collection->id)->where('locale', $listing->locale)
+            $entries = EntryPaginator::from(EntryTranslation::query()->live()->with(self::listed($listing->locale))
+                ->where('collection_id', $collection->id)->shownIn($listing->locale)
                 ->when($collection->ordered,
                     fn ($q) => $q->orderBy(Entry::query()->select('sort_order')->whereColumn('sunrice_entries.id', 'sunrice_entry_translations.entry_id'))->orderBy('id'),
                     fn ($q) => $collection->dated ? $q->orderByDesc('published_at')->orderByDesc('id') : $q->orderBy('title')->orderBy('id'))
@@ -236,13 +241,25 @@ final class SiteController
 
         return $this->hidden(self::renderView($view, [
             'collection' => $collection,
-            'title' => $collection->title,
+            'title' => $collection->titleIn($listing->locale),
             'entries' => $entries,
             'values' => $schema->hydrate($collection->listingData($listing->locale, $schema), new HydrationContext($listing->locale)),
             'richText' => array_values(array_map(fn (Field $field): string => $field->handle, array_filter($schema->fields(), fn (Field $field): bool => $field->type === 'rich_text'))),
             'locale' => $listing->locale,
             'url' => $collection->listingUrl($listing->locale),
         ]));
+    }
+
+    /**
+     * What a list's entries load with: in another language than the main
+     * one, their other translations too (a main-language one standing in
+     * links to its page at this language's address: Site::urlIn()).
+     *
+     * @return list<string>
+     */
+    public static function listed(string $locale): array
+    {
+        return $locale === Locales::default() ? ['entry.collection'] : ['entry.collection', 'entry.translations'];
     }
 
     /**

@@ -102,6 +102,37 @@ final class Site
         return null;
     }
 
+    /**
+     * Where a main-language slug at another language's address goes when
+     * the entry (or term) has a page of its own in that language:
+     * /id/about → /id/tentang-kami. Null when nothing like that is there.
+     */
+    public function translatedAddress(string $path): ?string
+    {
+        [$locale, $rest] = $this->splitLocale('/'.trim($path, '/'));
+        if ($locale === Locales::default() || $rest === '/') {
+            return null;
+        }
+        foreach ($this->patterns() as [$type, $id, $pattern]) {
+            $matched = $pattern->match($rest);
+            if ($matched === null) {
+                continue;
+            }
+            if ($type === 'taxonomy') {
+                $main = $this->termQuery()->where('taxonomy_id', $id)->where('locale', Locales::default())->where('slug', $matched['slug'])->first();
+                $own = $main === null ? null : $main->term->translations->firstWhere('locale', $locale)?->setRelation('term', $main->term);
+
+                return $own?->url();
+            }
+            $main = $this->entryQuery()->where('collection_id', $id)->where('locale', Locales::default())->where('slug', $matched['slug'])->first();
+            $own = $main === null ? null : $main->entry->translations->firstWhere('locale', $locale)?->setRelation('entry', $main->entry);
+
+            return $own !== null && $own->isLive() ? $own->url() : null;
+        }
+
+        return null;
+    }
+
     /** Whether pages not translated into a language show the main language's there (`sunrice-cms.site.fallback`). */
     public static function fallback(): bool
     {

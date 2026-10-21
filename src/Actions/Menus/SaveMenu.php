@@ -22,7 +22,9 @@ use Sunrice\Cms\Support\SafeUrl;
  * Replaces a menu's items with the given tree. Each item: entry_id (an
  * entry), term_id (a term's page), collection_id (its listing page) or
  * url (a safe address), labels by language (required for an
- * address), new_tab, and children (three levels at most).
+ * address), new_tab, and children (three levels at most). A listing
+ * page's link may take `query`, its filters as a query string
+ * ("listing_type=for-sale"), added to its address in every language.
  *
  * @api
  */
@@ -92,6 +94,13 @@ final class SaveMenu
             }
             // An address has no title to fall back on.
             $rules["{$key}.labels.".Locales::default()][] = "required_with:{$key}.url";
+            $rules["{$key}.query"] = ['nullable', 'string', 'max:500', function (string $attribute, mixed $value, \Closure $fail) use ($item): void {
+                if (! is_array($item) || ! is_numeric($item['collection_id'] ?? null)) {
+                    $fail('Only a link to a listing page takes filters.');
+                } elseif (self::queryString($value) === null) {
+                    $fail('Write the filters as on the listing page\'s address: listing_type=for-sale&city=jakarta.');
+                }
+            }];
             $rules["{$key}.new_tab"] = ['nullable', 'boolean'];
             $rules["{$key}.children"] = $depth >= self::MAX_DEPTH ? ['prohibited'] : ['nullable', 'array', 'list'];
             $children = is_array($item) && is_array($item['children'] ?? null) ? $item['children'] : [];
@@ -99,6 +108,25 @@ final class SaveMenu
                 $this->rules($children, "{$key}.children", $depth + 1, $rules, $count);
             }
         }
+    }
+
+    /**
+     * A listing link's filters as kept: a query string without its "?",
+     * re-encoded ("a=1&b[]=x"); null when there are none, or it isn't one.
+     */
+    public static function queryString(mixed $value): ?string
+    {
+        if (! is_string($value) || trim(ltrim(trim($value), '?')) === '') {
+            return null;
+        }
+        $value = ltrim(trim($value), '?');
+        if (str_contains($value, '#') || preg_match('/\s/', $value) === 1) {
+            return null;
+        }
+        parse_str($value, $parameters);
+        $query = http_build_query($parameters, '', '&', PHP_QUERY_RFC3986);
+
+        return $query === '' ? null : $query;
     }
 
     /** @param array<mixed> $items */
@@ -121,6 +149,7 @@ final class SaveMenu
                 'url' => is_string($item['url'] ?? null) && trim($item['url']) !== '' ? trim($item['url']) : null,
                 'labels' => array_map(trim(...), $labels),
                 'new_tab' => ($item['new_tab'] ?? false) === true,
+                'query_string' => is_numeric($collection) ? self::queryString($item['query'] ?? null) : null,
             ]);
             $this->create($menu, is_array($item['children'] ?? null) ? $item['children'] : [], $created->id);
         }

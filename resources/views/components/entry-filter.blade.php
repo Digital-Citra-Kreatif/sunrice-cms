@@ -7,7 +7,7 @@
 {{ $slot }}
 @else
 <div class="sunrice-entry-filter">
-    <form method="GET" action="{{ $action }}" role="search" aria-label="{{ __('Filter') }}" {{ $attributes }}>
+    <form method="GET" action="{{ $action }}" role="search" aria-label="{{ __('sunrice-cms::site.filter.label') }}" {{ $attributes }}>
         @foreach ($others as $param => $kept)
             @if (is_scalar($kept))
                 <input type="hidden" name="{{ $param }}" value="{{ $kept }}">
@@ -29,7 +29,7 @@
                         <fieldset>
                             <legend>{{ $control->label }}</legend>
                             @foreach ($control->inputs as $part => $input)
-                                <label for="{{ $control->id($part) }}">{{ __(ucfirst($part)) }}</label>
+                                <label for="{{ $control->id($part) }}">{{ __('sunrice-cms::site.filter.'.$part) }}</label>
                                 <input type="{{ $control->type === 'range' ? 'number' : 'date' }}" @if ($control->type === 'range') step="any" @endif
                                     id="{{ $control->id($part) }}" name="{{ $input }}" value="{{ is_array($control->value) ? ($control->value[$part] ?? '') : '' }}">
                             @endforeach
@@ -52,7 +52,7 @@
                                 <input type="text" id="{{ $control->id() }}" name="{{ $control->inputs['value'] }}" value="{{ is_string($control->value) ? $control->value : '' }}">
                             @else
                                 <select id="{{ $control->id() }}" name="{{ $control->inputs['value'] }}">
-                                    <option value="">{{ __('All') }}</option>
+                                    <option value="">{{ __('sunrice-cms::site.filter.all') }}</option>
                                     @foreach ($control->options as $option)
                                         <option value="{{ $option['value'] }}" @selected($option['selected'])>{{ str_repeat('— ', $option['depth'] ?? 0) }}{{ $option['label'] }}</option>
                                     @endforeach
@@ -64,7 +64,7 @@
         @endforeach
         @if (count($sorts) > 1)
             <div class="sunrice-entry-filter__control sunrice-entry-filter__control--sort">
-                <label for="filter-{{ $sortName }}">{{ __('Sort by') }}</label>
+                <label for="filter-{{ $sortName }}">{{ __('sunrice-cms::site.filter.sort_by') }}</label>
                 <select id="filter-{{ $sortName }}" name="{{ $sortName }}">
                     @foreach ($sorts as $sort)
                         <option value="{{ $sort->value }}" @selected($sort->selected)>{{ $sort->label }}</option>
@@ -72,19 +72,19 @@
                 </select>
             </div>
         @endif
-        <button type="submit">{{ __('Show results') }}</button>
+        <button type="submit">{{ __('sunrice-cms::site.filter.show') }}</button>
     </form>
 
     @if ($filtered())
-        <ul class="sunrice-entry-filter__active" aria-label="{{ __('Applied filters') }}">
+        <ul class="sunrice-entry-filter__active" aria-label="{{ __('sunrice-cms::site.filter.applied') }}">
             @foreach ($active as $chip)
-                <li><a href="{{ $chip->removeUrl }}" aria-label="{{ __('Remove filter :filter: :value', ['filter' => $chip->label, 'value' => $chip->value]) }}">{{ $chip->label }}: {{ $chip->value }} <span aria-hidden="true">×</span></a></li>
+                <li><a href="{{ $chip->removeUrl }}" aria-label="{{ __('sunrice-cms::site.filter.remove', ['filter' => $chip->label, 'value' => $chip->value]) }}">{{ $chip->label }}: {{ $chip->value }} <span aria-hidden="true">×</span></a></li>
             @endforeach
-            <li><a href="{{ $clearUrl() }}">{{ __('Clear all') }}</a></li>
+            <li><a href="{{ $clearUrl() }}">{{ __('sunrice-cms::site.filter.clear') }}</a></li>
         </ul>
     @endif
 
-    <p class="sunrice-entry-filter__status" role="status" aria-live="polite">{{ trans_choice(':count result|:count results', $entries->total(), ['count' => $entries->total()]) }}</p>
+    <p class="sunrice-entry-filter__status" role="status" aria-live="polite">{{ trans_choice('sunrice-cms::site.filter.results', $entries->total(), ['count' => $entries->total()]) }}</p>
 
     @if ($entries->isNotEmpty())
         <ul class="sunrice-entry-filter__entries">

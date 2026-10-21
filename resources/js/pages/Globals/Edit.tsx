@@ -91,6 +91,13 @@ function GlobalsEdit({ set, fields, locale, locales, shared, values, version, ca
             ) : (
                 <div className="cms:flex cms:flex-col cms:gap-4">
                     <ViewingNotice by={lock.viewingBy} onTakeOver={lock.requestTakeOver} />
+                    {mainLocale && locale !== mainLocale && (
+                        <p className="cms:rounded-lg cms:border cms:bg-muted/40 cms:p-3 cms:text-sm cms:text-muted-foreground" role="note">
+                            {version === null
+                                ? `Not saved in ${localeName(locale)} yet: these are the ${localeName(mainLocale)} values, which the site shows meanwhile. Translate them, then save.`
+                                : `A field left empty shows the ${localeName(mainLocale)} value on the site.`}
+                        </p>
+                    )}
                     <VersionConflict message={errors.version} processing={form.processing} onSaveMine={saveMine} />
                     <KeptEditsNotice kept={lock.kept} disabled={!writable} onLoad={(id: number) => void loadKept(id)} onDiscard={(id: number) => void lock.discardKept(id)} />
                     <FieldSections disabled={!writable} fields={fields} values={form.data.data} errors={errors} storageKey={`cms:global:${set.handle}`}

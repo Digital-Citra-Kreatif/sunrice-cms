@@ -7,7 +7,7 @@ import {
 import { FieldError, FieldInput } from '@/components/FieldInput.tsx';
 import { type BuilderField, errorsAt, errorsUnder, handleInput, handleWarning, hasErrors, MAX_DEPTH, newField, relabel, type ReservedHandles } from '@/lib/builder.ts';
 import { OPERATORS } from '@/lib/conditions.ts';
-import type { Errors, FieldCondition, FieldTypeInfo } from '@/types.ts';
+import type { Errors, FieldCondition, FieldTranslation, FieldTypeInfo, LocaleInfo } from '@/types.ts';
 
 interface Props {
     fields: BuilderField[];
@@ -20,10 +20,12 @@ interface Props {
     idPrefix?: string;
     /** The top level's: handles content keeps for itself, warned about as they're typed. */
     reserved?: ReservedHandles;
+    /** The other content languages than the main one: what visitors read in them (forms show it). */
+    locales?: LocaleInfo[];
 }
 
 /** The fields of a blueprint or fieldset: add, edit, drag into order and remove, groups and repeaters nested (each level its own list). */
-export function FieldBuilder({ fields, onChange, types, errors, depth = 1, idPrefix = 'field', reserved }: Props) {
+export function FieldBuilder({ fields, onChange, types, errors, depth = 1, idPrefix = 'field', reserved, locales = [] }: Props) {
     const [open, setOpen] = React.useState<Set<string>>(() => new Set());
     const toggle = (key: string) => setOpen((keys) => {
         const next = new Set(keys);
@@ -77,7 +79,7 @@ export function FieldBuilder({ fields, onChange, types, errors, depth = 1, idPre
                             </div>
                             {expanded && (
                                 <FieldSettings id={id} field={field} type={type} siblings={fields} onChange={(next) => update(index, next)}
-                                    types={types} errors={errorsUnder(errors, String(index))} depth={depth} reserved={reserved} />
+                                    types={types} errors={errorsUnder(errors, String(index))} depth={depth} reserved={reserved} locales={locales} />
                             )}
                         </div>
                     );
@@ -109,11 +111,12 @@ interface SettingsProps {
     errors: Errors;
     depth: number;
     reserved?: Props['reserved'];
+    locales: LocaleInfo[];
 }
 
 const PER_LANGUAGE = { default: '__default', yes: 'yes', no: 'no' };
 
-function FieldSettings({ id, field, type, siblings, onChange, types, errors, depth, reserved }: SettingsProps) {
+function FieldSettings({ id, field, type, siblings, onChange, types, errors, depth, reserved, locales }: SettingsProps) {
     const config = field.config ?? {};
     const warning = handleWarning(field, siblings, reserved);
 
@@ -184,6 +187,8 @@ function FieldSettings({ id, field, type, siblings, onChange, types, errors, dep
 
             <ConditionSettings id={id} field={field} siblings={siblings} onChange={onChange} errors={errorsUnder(errors, 'condition')} />
 
+            {locales.length > 0 && <TranslationSettings id={id} field={field} locales={locales} onChange={onChange} errors={errorsUnder(errors, 'translations')} />}
+
             {(type?.settings.length ?? 0) > 0 && (
                 <div className="cms:grid cms:gap-4 cms:md:grid-cols-2">
                     {type?.settings.map((setting) => (
@@ -207,12 +212,64 @@ function FieldSettings({ id, field, type, siblings, onChange, types, errors, dep
                 <div className="cms:flex cms:flex-col cms:gap-2">
                     <Label>Fields inside</Label>
                     <FieldBuilder fields={field.fields} onChange={(fields) => onChange({ ...field, fields })} types={types}
-                        errors={errorsUnder(errors, 'fields')} depth={depth + 1} idPrefix={id} />
+                        errors={errorsUnder(errors, 'fields')} depth={depth + 1} idPrefix={id} locales={locales} />
                     <FieldError message={errors.fields} />
                 </div>
             )}
             <FieldError message={errors.type} />
         </div>
+    );
+}
+
+/** The field's label, instructions and a select's option labels in the other languages, for visitors (forms, optionLabel()). */
+function TranslationSettings({ id, field, locales, onChange, errors }: { id: string; field: BuilderField; locales: LocaleInfo[]; onChange: (field: BuilderField) => void; errors: Errors }) {
+    const translations = field.translations ?? {};
+    const options = field.type === 'select' && Array.isArray(field.config?.options)
+        ? (field.config.options as { value?: unknown; label?: unknown }[]).filter((option) => typeof option?.value === 'string' && option.value !== '')
+        : [];
+    const set = (code: string, changes: Partial<FieldTranslation>) => {
+        const next = { ...translations, [code]: { ...translations[code], ...changes } };
+        onChange({ ...field, translations: next });
+    };
+    const message = Object.entries(errors).find(([, error]) => error)?.[1];
+
+    return (
+        <details className="cms:rounded-lg cms:border cms:p-3" open={Object.keys(translations).length > 0 || message !== undefined}>
+            <summary className="cms:cursor-pointer cms:text-sm cms:font-medium">In other languages</summary>
+            <p className="cms:mt-2 cms:text-sm cms:text-muted-foreground">What visitors read in each language, as forms show it. Empty: as above.</p>
+            <div className="cms:mt-3 cms:flex cms:flex-col cms:gap-4">
+                {locales.map(({ code, name }) => (
+                    <div key={code} className="cms:grid cms:gap-3 cms:md:grid-cols-2">
+                        <div className="cms:flex cms:flex-col cms:gap-2">
+                            <Label htmlFor={`${id}-label-${code}`}>Label ({name})</Label>
+                            <Input id={`${id}-label-${code}`} value={translations[code]?.label ?? ''} placeholder={field.label ?? ''}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => set(code, { label: e.target.value })} />
+                        </div>
+                        <div className="cms:flex cms:flex-col cms:gap-2">
+                            <Label htmlFor={`${id}-instructions-${code}`}>Instructions ({name})</Label>
+                            <Input id={`${id}-instructions-${code}`} value={translations[code]?.instructions ?? ''} placeholder={field.instructions ?? ''}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => set(code, { instructions: e.target.value })} />
+                        </div>
+                        {options.length > 0 && (
+                            <fieldset className="cms:flex cms:flex-col cms:gap-2 cms:md:col-span-2">
+                                <legend className="cms:text-sm cms:font-medium">Options ({name})</legend>
+                                <div className="cms:grid cms:gap-2 cms:sm:grid-cols-2">
+                                    {options.map((option) => {
+                                        const value = String(option.value);
+                                        return (
+                                            <Input key={value} aria-label={`${value} (${name})`} value={translations[code]?.options?.[value] ?? ''}
+                                                placeholder={typeof option.label === 'string' && option.label !== '' ? option.label : value}
+                                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => set(code, { options: { ...translations[code]?.options, [value]: e.target.value } })} />
+                                        );
+                                    })}
+                                </div>
+                            </fieldset>
+                        )}
+                    </div>
+                ))}
+            </div>
+            <FieldError message={message} />
+        </details>
     );
 }
 

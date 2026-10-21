@@ -43,20 +43,23 @@ final class StructureExporter
             'sunrice' => self::VERSION,
             'fieldsets' => Fieldset::query()->orderBy('handle')->get()->map(fn (Fieldset $f): array => ['handle' => $f->handle, 'title' => $f->title, 'fields' => $f->fields])->all(),
             'blueprints' => Blueprint::query()->orderBy('handle')->get()->map(fn (Blueprint $b): array => ['handle' => $b->handle, 'title' => $b->title, 'fields' => $b->fields])->all(),
+            // Translations only when there are some, after the rest.
             'collections' => Collection::query()->with('listings')->orderBy('handle')->get()->map(fn (Collection $c): array => [
                 // "blueprints" only when it offers more than its own.
-                ...array_diff_key($c->only(StructureImporter::COLLECTION), $c->blueprints === null ? ['blueprints' => true] : []),
+                ...array_diff_key($c->only(StructureImporter::COLLECTION), ['translations' => true], $c->blueprints === null ? ['blueprints' => true] : []),
                 'listings' => (object) $c->listings->sortBy('locale')->mapWithKeys(fn (CollectionListing $l): array => [$l->locale => $l->data])->all(),
+                ...($c->translations !== null ? ['translations' => $c->translations] : []),
             ])->all(),
             'taxonomies' => Taxonomy::query()->with('collections')->orderBy('handle')->get()->map(fn (Taxonomy $t): array => [
-                ...$t->only(StructureImporter::TAXONOMY),
+                ...array_diff_key($t->only(StructureImporter::TAXONOMY), ['translations' => true]),
                 'collections' => $t->collections->pluck('handle')->sort()->values()->all(),
+                ...($t->translations !== null ? ['translations' => $t->translations] : []),
             ])->all(),
             'globals' => GlobalSet::query()->with('values')->orderBy('handle')->get()->map(fn (GlobalSet $g): array => [
                 ...$g->only(StructureImporter::GLOBAL_SET),
                 ...($content ? ['values' => (object) $g->values->sortBy('locale')->mapWithKeys(fn (GlobalValue $v): array => [$v->locale => $v->data])->all()] : []),
             ])->all(),
-            'forms' => Form::query()->orderBy('handle')->get()->map(fn (Form $f): array => $f->only(StructureImporter::FORM))->all(),
+            'forms' => Form::query()->orderBy('handle')->get()->map(fn (Form $f): array => [...array_diff_key($f->only(StructureImporter::FORM), ['translations' => true]), ...($f->translations !== null ? ['translations' => $f->translations] : [])])->all(),
             'menus' => [],
             'redirects' => Redirect::query()->orderBy('from_path')->get()->map(fn (Redirect $r): array => ['from' => $r->from_path, 'to' => $r->to_url, 'status' => $r->status])->all(),
         ];
@@ -140,7 +143,7 @@ final class StructureExporter
                 $item->collection !== null => ['collection' => $item->collection->handle],
                 default => ['url' => $item->url],
             };
-            $tree[] = [...$target, 'labels' => (object) $item->labels, 'new_tab' => $item->new_tab, 'children' => $this->items($items, $item->id)];
+            $tree[] = [...$target, 'labels' => (object) $item->labels, 'new_tab' => $item->new_tab, ...($item->query_string !== null ? ['query' => $item->query_string] : []), 'children' => $this->items($items, $item->id)];
         }
 
         return $tree;

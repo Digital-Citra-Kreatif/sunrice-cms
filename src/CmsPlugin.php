@@ -42,6 +42,7 @@ use Sunrice\Cms\Settings\CommentSettings;
 use Sunrice\Cms\Settings\LocaleSettings;
 use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Support\Access;
+use Sunrice\Cms\Support\Locales;
 
 /**
  * The CMS, added to the panel in the app's panel provider:
@@ -83,6 +84,10 @@ final class CmsPlugin extends BasePlugin
         $panel->settings(SiteSettings::class, LocaleSettings::class, CodeSettings::class, CommentSettings::class);
         // Each permission for one collection, taxonomy or form too (see Support\Access).
         $panel->permissionsUsing(fn (): array => Support\ScopedPermissions::all());
+        // Media files take alt text and captions in each content language.
+        $panel->contentLocales(fn (): array => Locales::names());
+        // Every screen names the languages as Settings → Languages does.
+        $panel->share('cms', fn (): array => ['locales' => Locales::names()]);
         // sunrice:roles: people who write and look after the content, not the structure or the people.
         $panel->defaultRole('editor', [Panel::ACCESS, 'sunrice.media.*', 'cms.entries.*', 'cms.terms.*', 'cms.globals.*', 'cms.menus.view', 'cms.menus.update', 'cms.comments.*', 'cms.submissions.view', 'cms.submissions.export', 'cms.homepage']);
         // Writes entries, publishes nothing, and edits only their own.

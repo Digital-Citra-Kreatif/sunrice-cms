@@ -12,13 +12,14 @@ Pick the taxonomy with the menu next to the title, and the language with **Langu
 - The page icon opens the **term's own page** (below).
 - The bin **moves it to the trash**, with the terms under it.
 
-Terms that have no title in the language shown appear in grey as *… · not translated*. Rename them in that language to translate them.
+Terms that have no title in the language shown appear in grey as *… · not translated*. Rename them in that language to translate them, or give them a title on their own page.
 
 ## A term's own page
 
 When the taxonomy has term pages on the website (like `/topics/news`), each term's page lists its entries, and you can give it more:
 
-- its own fields, if the taxonomy has any (a description, an image…);
+- its **Title** and **Slug** in the language shown: in a language the term isn't translated into yet, giving it a title there adds it (no need to rename it in the list first);
+- its own fields: a **Description** to introduce the page, or the fields your developer gave the taxonomy (an image…);
 - **Search and sharing**: an SEO title, a description, a share image and *Hide from search engines* (see [SEO](guide:website/seo));
 - a **Template**, if your developer made a special design (leave it empty for the taxonomy's own).
 
