@@ -60,7 +60,7 @@ final class StructureExporter
             'collections' => Collection::query()->with('listings')->orderBy('handle')->get()->map(fn (Collection $c): array => [
                 // "blueprints" only when it offers more than its own.
                 ...array_diff_key($c->only(StructureImporter::COLLECTION), ['translations' => true, 'routes' => true], $c->blueprints === null ? ['blueprints' => true] : []),
-                'listings' => (object) $c->listings->sortBy('locale')->mapWithKeys(fn (CollectionListing $l): array => [$l->locale => $l->data])->all(),
+                'listings' => (object) $c->listings->sortBy('locale')->mapWithKeys(fn (CollectionListing $l): array => [$l->locale => $this->references->portable($c->listingSchema(), $l->data)])->all(),
                 ...($c->translations !== null ? ['translations' => $c->translations] : []),
                 ...($c->routes !== null ? ['routes' => $c->routes] : []),
             ])->all(),

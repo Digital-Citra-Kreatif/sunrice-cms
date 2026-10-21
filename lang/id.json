@@ -1127,5 +1127,9 @@
     "Preload the page cache now? The site's pages are requested in the background, a few at a time.": "Muat cache halaman sekarang? Halaman situs diminta di latar belakang, beberapa sekaligus.",
     "The whole-page cache is off: there's nothing to preload.": "Cache halaman utuh mati: tidak ada yang perlu dimuat.",
     "A preload is running already.": "Pemuatan sedang berjalan.",
-    "preloaded": "memuat"
+    "preloaded": "memuat",
+    ":label (in the trash)": ":label (di tempat sampah)",
+    "the collection \":title\" (one of its other blueprints)": "koleksi \":title\" (salah satu blueprint lainnya)",
+    "{1} an entry of \":title\"|[2,*] :count entries of \":title\"": "{1} sebuah entri di \":title\"|[2,*] :count entri di \":title\"",
+    "Entries nest at most :max deep, counting the ones under this entry.": "Entri bersarang paling dalam :max tingkat, termasuk entri di bawah entri ini."
 }

@@ -69,7 +69,8 @@ MD;
             'guide' => self::GUIDE,
             'current' => Templates::map(),
             'templates' => Templates::files(),
-            'defaults' => array_map(fn (string $f): string => basename($f), glob(dirname(__DIR__, 2).'/resources/views/{entry,listing,term,search}.blade.php', GLOB_BRACE) ?: []),
+            // Not GLOB_BRACE: some PHP builds (musl, Alpine) don't have it.
+            'defaults' => array_values(array_filter(['entry.blade.php', 'listing.blade.php', 'term.blade.php', 'search.blade.php'], fn (string $file): bool => is_file(dirname(__DIR__, 2).'/resources/views/'.$file))),
             'can_write' => $writable = Templates::writable($this->user()),
             // Why not, since cms_write_template isn't listed then.
             'write_note' => $writable ? null : 'cms_write_template is only for super admins, on sites that allow it (sunrice-cms.ai.templates, SUNRICE_AI_TEMPLATES=true): templates run code on the server. Suggest the change to a developer instead.',

@@ -158,7 +158,6 @@ final class StructureImporter
             $this->each('taxonomy', $section('taxonomies'), fn (array $item) => $this->taxonomy($item));
             $this->each('fieldset', $section('fieldsets'), fn (array $item) => $this->definition(Fieldset::class, $item, $newFieldsets));
             $this->each('blueprint', $section('blueprints'), fn (array $item) => $this->definition(Blueprint::class, $item, $newBlueprints));
-            $this->each('listing', $section('collections'), fn (array $item) => $this->listings($item));
             $this->each('global set', $section('globals'), fn (array $item) => $this->globalSet($item));
             $this->each('form', $section('forms'), fn (array $item) => $this->form($item));
             $this->each('term', $section('terms'), fn (array $item) => $this->term($item));
@@ -175,7 +174,8 @@ final class StructureImporter
             });
             $this->each('entry', $entries, fn (array $item) => $this->entryLinks($item, $created, $later));
             $this->each('entry', $entries, fn (array $item) => $this->entrySettings($item, $created));
-            // Global values may link to entries: after them.
+            // Listing pages and global values may link to entries: after them.
+            $this->each('listing', $section('collections'), fn (array $item) => $this->listings($item));
             $this->each('global set', $section('globals'), fn (array $item) => $this->globalValues($item));
             $this->each('menu', $section('menus'), fn (array $item) => $this->menu($item));
             $this->each('redirect', $section('redirects'), fn (array $item) => $this->redirect($item));
@@ -326,15 +326,23 @@ final class StructureImporter
             return;
         }
         $changed = false;
+        $notes = [];
         foreach ($listings as $locale => $data) {
+            if (! is_string($locale) || ! is_array($data)) {
+                continue;
+            }
+            // Files and links as this site's ids; the SEO card saved as SEO.
+            $data = $this->resolved($data, $notes);
             $stored = $collection->listings->firstWhere('locale', $locale);
-            if (is_string($locale) && is_array($data) && ($stored === null || array_replace($stored->data, $data) != $stored->data)) {
-                app(SaveListing::class)->handle($collection, $data, $locale);
+            if ($stored === null || array_replace($stored->data, $data) != $stored->data) {
+                $seo = $data[Seo::KEY] ?? null;
+                unset($data[Seo::KEY]);
+                app(SaveListing::class)->handle($collection, $data, $locale, seo: is_array($seo) ? $seo : null);
                 $changed = true;
             }
         }
         if ($changed) {
-            $this->report->add('listing', $collection->handle, ImportReport::UPDATED);
+            $this->report->add('listing', $collection->handle, ImportReport::UPDATED, $notes);
         }
     }
 

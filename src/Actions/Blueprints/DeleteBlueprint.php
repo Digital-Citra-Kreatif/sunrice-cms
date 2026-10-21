@@ -8,13 +8,15 @@ use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
 use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Collection;
+use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\Form;
 use Sunrice\Cms\Models\GlobalSet;
 use Sunrice\Cms\Models\Taxonomy;
 
 /**
- * Deletes a blueprint nothing uses: no collection (for its entries or its
- * listing page), taxonomy, global set or form.
+ * Deletes a blueprint nothing uses: no collection (for its entries, as one
+ * of its other blueprints, or for its listing page), entry, taxonomy,
+ * global set or form, counting those in the trash.
  *
  * @api
  */
@@ -36,26 +38,41 @@ final class DeleteBlueprint
     }
 
     /**
-     * What uses the blueprint, named: collections (entries and listing
-     * pages), taxonomies, global sets and forms. Deleted collections and
-     * taxonomies don't count: there is no restoring them.
+     * What uses the blueprint, named: collections (for their entries, as
+     * one of their other blueprints, or for their listing pages), entries
+     * that chose it, taxonomies, global sets and forms. Collections and
+     * taxonomies in the trash count (marked so): restoring one needs it.
      *
      * @return list<string>
      */
     public function usedBy(Blueprint $blueprint): array
     {
         $handle = $blueprint->handle;
+        $trashed = fn (Collection|Taxonomy $model, string $label): string => $model->trashed() ? __(':label (in the trash)', ['label' => $label]) : $label;
         $users = [];
-        foreach (Collection::query()->where(fn ($query) => $query->where('blueprint', $handle)->orWhere('listing_blueprint', $handle))->orderBy('title')->get() as $collection) {
+        $collections = Collection::query()->withTrashed()
+            ->where(fn ($query) => $query->where('blueprint', $handle)->orWhere('listing_blueprint', $handle)->orWhereJsonContains('blueprints', $handle))
+            ->orderBy('title')->get();
+        foreach ($collections as $collection) {
             if ($collection->blueprint === $handle) {
-                $users[] = __('the collection ":title"', ['title' => $collection->title]);
+                $users[] = $trashed($collection, __('the collection ":title"', ['title' => $collection->title]));
+            } elseif (in_array($handle, $collection->blueprints ?? [], true)) {
+                $users[] = $trashed($collection, __('the collection ":title" (one of its other blueprints)', ['title' => $collection->title]));
             }
             if ($collection->listing_blueprint === $handle) {
-                $users[] = __('the listing page of ":title"', ['title' => $collection->title]);
+                $users[] = $trashed($collection, __('the listing page of ":title"', ['title' => $collection->title]));
             }
         }
-        foreach (Taxonomy::query()->where('blueprint', $handle)->orderBy('title')->get() as $taxonomy) {
-            $users[] = __('the taxonomy ":title"', ['title' => $taxonomy->title]);
+        $entries = Entry::query()->withTrashed()->where('blueprint', $handle)
+            ->selectRaw('collection_id, count(*) as aggregate')->groupBy('collection_id')->pluck('aggregate', 'collection_id');
+        if ($entries->isNotEmpty()) {
+            foreach (Collection::query()->withTrashed()->whereKey($entries->keys()->all())->orderBy('title')->get() as $collection) {
+                $count = $entries[$collection->id];
+                $users[] = trans_choice('{1} an entry of ":title"|[2,*] :count entries of ":title"', is_numeric($count) ? (int) $count : 0, ['title' => $collection->title]);
+            }
+        }
+        foreach (Taxonomy::query()->withTrashed()->where('blueprint', $handle)->orderBy('title')->get() as $taxonomy) {
+            $users[] = $trashed($taxonomy, __('the taxonomy ":title"', ['title' => $taxonomy->title]));
         }
         foreach (GlobalSet::query()->where('blueprint', $handle)->orderBy('title')->get() as $set) {
             $users[] = __('the global set ":title"', ['title' => $set->title]);

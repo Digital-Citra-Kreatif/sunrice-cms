@@ -107,7 +107,8 @@ final class SaveEntrySettings
     /**
      * The parent an entry may have, from an id as given (null when empty):
      * an entry of its hierarchical collection, never itself or one below
-     * it, at most Entry::MAX_DEPTH deep. The entry may be new (unsaved).
+     * it, at most Entry::MAX_DEPTH deep with the entries under it. The
+     * entry may be new (unsaved).
      *
      * @throws ValidationException
      */
@@ -133,7 +134,27 @@ final class SaveEntrySettings
                 throw ValidationException::withMessages(['parent_id' => __('Entries nest at most :max deep.', ['max' => Entry::MAX_DEPTH])]);
             }
         }
+        // Its own children move with it.
+        if ($entry->exists && $depth + self::levelsBelow($entry, Entry::MAX_DEPTH - $depth + 1) > Entry::MAX_DEPTH) {
+            throw ValidationException::withMessages(['parent_id' => __('Entries nest at most :max deep, counting the ones under this entry.', ['max' => Entry::MAX_DEPTH])]);
+        }
 
         return $parent;
+    }
+
+    /** How many levels of entries are under an entry (0 for none), counting at most $limit: one query a level. */
+    private static function levelsBelow(Entry $entry, int $limit): int
+    {
+        $levels = 0;
+        $ids = [$entry->id];
+        while ($levels < $limit) {
+            $ids = Entry::query()->withTrashed()->whereIn('parent_id', $ids)->pluck('id')->all();
+            if ($ids === []) {
+                break;
+            }
+            $levels++;
+        }
+
+        return $levels;
     }
 }

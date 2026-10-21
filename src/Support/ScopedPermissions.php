@@ -18,7 +18,9 @@ use Throwable;
 /**
  * The permissions for one collection, taxonomy or form (see Access),
  * kept in step with them: created when one is, renamed with its handle
- * (renamed()), deleted with it.
+ * (renamed()), deleted with it. A collection or taxonomy in the trash
+ * keeps them, and the roles and users that have them, until it's deleted
+ * for good: restoring it gives the same access back.
  *
  * @internal
  */
@@ -74,7 +76,7 @@ final class ScopedPermissions
                 $make("cms.entries.{$collection->handle}.{$action}", $label, "Entries: {$collection->title}");
             }
         }
-        foreach (Taxonomy::query()->orderBy('title')->get(['handle', 'title']) as $taxonomy) {
+        foreach (Taxonomy::query()->withTrashed()->orderBy('title')->get(['handle', 'title']) as $taxonomy) {
             foreach (self::TERM_LABELS as $action => $label) {
                 $make("cms.terms.{$taxonomy->handle}.{$action}", $label, "Terms: {$taxonomy->title}");
             }
