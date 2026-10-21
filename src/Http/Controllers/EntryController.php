@@ -355,11 +355,10 @@ final class EntryController
                 : null,
             // The blueprints it may use, when there's a choice (Page settings).
             'blueprints' => self::blueprints($collection),
-            // Whether it's the site's homepage, and whether this user may make it so (a page of a collection with a URL).
-            'homepage' => [
-                'is' => app(SiteSettings::class)->homepage === $entry->id,
-                'can' => $collection->route !== null && ($request->user()?->can('cms.homepage') ?? false),
-            ],
+            // Whether it's the site's homepage, whether this user may make it so (a page
+            // of a collection whose entries can be: SetHomepage::offers()), and the
+            // current homepage's title, for the confirmation.
+            'homepage' => self::homepageState($entry, $collection, $request),
             // Loaded after the page shows (Inertia's deferred props): the sidebar's lists.
             // Who published each and what it changed from the one before.
             'revisions' => Inertia::defer(fn (): array => RevisionList::summaries($translation)),
@@ -448,6 +447,16 @@ final class EntryController
         $translation = $publish->handle(self::translation($entry, $request->input('locale')), self::publishAt($request));
 
         return back()->with('success', self::published($translation));
+    }
+
+    /** @return array{is: bool, can: bool, current: string|null} */
+    private static function homepageState(Entry $entry, Collection $collection, Request $request): array
+    {
+        $current = app(SiteSettings::class)->homepage;
+        $can = $current !== $entry->id && ($request->user()?->can('cms.homepage') ?? false) && SetHomepage::offers($collection);
+        $title = $can && $current !== null ? EntryTranslation::query()->where('entry_id', $current)->where('locale', Locales::default())->first() : null;
+
+        return ['is' => $current === $entry->id, 'can' => $can, 'current' => $title === null ? null : ($title->title ?? $title->draft_title)];
     }
 
     /** The entry as the site's homepage (cms.homepage). */

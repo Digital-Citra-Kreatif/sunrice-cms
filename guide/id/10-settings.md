@@ -6,7 +6,7 @@ Pengaturan langsung berlaku begitu Anda mengeklik **Simpan**.
 
 ## Situs
 
-- **Beranda**: halaman yang tampil di alamat utama situs web (`/`), dalam setiap bahasa tempat entri itu terbit; ketik untuk mencari halaman yang sudah tayang. Alamat entri itu sendiri dialihkan ke sana. Editor juga bisa menekan **Jadikan beranda** di kartu Status halaman yang sudah tayang.
+- **Beranda**: halaman yang tampil di alamat utama situs web (`/`), dalam setiap bahasa tempat entri itu terbit; ketik untuk mencari halaman yang sudah tayang. Alamat entri itu sendiri dialihkan ke sana. Editor juga bisa menekan **Jadikan beranda** di kartu Status halaman tayang yang berada di akar situs web (seperti `/about`), lalu mengonfirmasinya.
 
 **Situs**, untuk halaman yang tidak mengatur sendiri:
 

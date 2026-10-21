@@ -6,7 +6,7 @@ Settings are live as soon as you click **Save**.
 
 ## Site
 
-- **Homepage**: the page shown at the website's address (`/`), in each language it's published in; type to search the live pages. Its own address redirects there. Editors can also press **Make this the homepage** in a live page's Status card.
+- **Homepage**: the page shown at the website's address (`/`), in each language it's published in; type to search the live pages. Its own address redirects there. Editors can also press **Make this the homepage** in the Status card of a live page at the root of the website (like `/about`), and confirm.
 
 **The site**, for pages that don't say their own:
 
