@@ -441,7 +441,7 @@ What the CMS's own views say to visitors (the plain pages' **Newer** and **Older
 return ['comments' => ['post' => 'Kirim']];
 ```
 
-Laravel's own lines (`pagination`, `validation`, `auth`, `passwords`, and the pagination view's words) come in English only; the CMS brings Indonesian ones, used for each file the app has none of: your `lang/id/validation.php` always wins, as do the lines in `lang/id.json`. Form and comment errors, and paginator links, are then in Indonesian on Indonesian pages.
+Laravel's own lines (`pagination`, `validation`, `auth`, `passwords`, and the pagination view's words) come in English only; the CMS brings Indonesian ones, read like the app's own language files (only when a page needs them): the lines in your `lang/id/validation.php` win, line by line (lines it leaves out stay the CMS's), as do the lines in `lang/id.json`. Form and comment errors, and paginator links, are then in Indonesian on Indonesian pages.
 
 ## Previews
 

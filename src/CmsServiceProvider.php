@@ -6,6 +6,9 @@ namespace Sunrice\Cms;
 
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\Translation\Loader;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -71,13 +74,15 @@ final class CmsServiceProvider extends ServiceProvider
         $this->app->scoped(Settings\LocaleSettings::class);
         $this->app->singleton(Site\PageCache::class);
         $this->app->singleton(Site\SiteHooks::class);
+        // Indonesian for Laravel's own lines the app hasn't got, read as they're needed.
+        $this->app->extend('translation.loader', fn (Loader $loader, Application $app): Loader => Support\CoreTranslations::loader($loader, $app->make(Filesystem::class)));
     }
 
     public function boot(): void
     {
         $this->loadMigrationsFrom(dirname(__DIR__).'/database/migrations');
         $this->loadViewsFrom(dirname(__DIR__).'/resources/views', 'sunrice-cms');
-        // What visitors read (sunrice-cms::site.*), and Indonesian for Laravel's own lines the app hasn't got.
+        // What visitors read (sunrice-cms::site.*); with another loader than Laravel's, Indonesian for its own lines too.
         $this->loadTranslationsFrom(dirname(__DIR__).'/resources/lang', 'sunrice-cms');
         $this->callAfterResolving('translator', function (mixed $translator): void {
             if ($translator instanceof Translator) {
