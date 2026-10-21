@@ -31,15 +31,23 @@ export function FieldBuilder({ fields, onChange, types, errors, depth = 1, idPre
         return next;
     });
     const update = (index: number, field: BuilderField) => onChange(fields.map((f, i) => (i === index ? field : f)));
+    // A new field opens alone: the others fold to their summary line.
     const add = (type: FieldTypeInfo) => {
         const field = newField(type.type, type.label, fields);
         onChange([...fields, field]);
-        setOpen((keys) => new Set(keys).add(field.key));
+        setOpen(new Set([field.key]));
     };
 
     return (
         <div className="cms:flex cms:flex-col cms:gap-2">
             {fields.length === 0 && <p className="cms:rounded-lg cms:border cms:border-dashed cms:p-4 cms:text-sm cms:text-muted-foreground">No fields yet.</p>}
+            {fields.length > 1 && (
+                <div className="cms:flex cms:justify-end">
+                    {open.size > 0
+                        ? <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(new Set())}>Close all</Button>
+                        : <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(new Set(fields.map((field) => field.key)))}>Open all</Button>}
+                </div>
+            )}
             <SortableList items={fields} getId={(field) => field.key} onReorder={(next) => onChange(next)}>
                 {(field, { index, handle, isOverlay }) => {
                     const type = types.find((t) => t.type === field.type);
@@ -188,10 +196,10 @@ function FieldSettings({ id, field, type, siblings, onChange, types, errors, dep
 
             <div className="cms:flex cms:flex-col cms:gap-2">
                 <Label htmlFor={`${id}-validation`}>Extra rules</Label>
-                <Textarea id={`${id}-validation`} rows={2} className="cms:font-mono" placeholder={'min:3\nregex:/^[A-Z]/'}
+                <Textarea id={`${id}-validation`} rows={2} className="cms:font-mono"
                     value={(field.validation ?? []).join('\n')}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange({ ...field, validation: e.target.value.split('\n') })} />
-                <p className="cms:text-sm cms:text-muted-foreground">Laravel rules, one per line.</p>
+                <p className="cms:text-sm cms:text-muted-foreground">Optional checks, one per line, such as <code>email</code> or <code>max:100</code> (for developers: Laravel validation rules).</p>
                 <FieldError message={errors.validation ?? Object.entries(errors).find(([key]) => key.startsWith('validation.'))?.[1]} />
             </div>
 
