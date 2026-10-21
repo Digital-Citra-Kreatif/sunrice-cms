@@ -55,7 +55,7 @@ final class Seo
             })],
             'seo.noindex' => ['nullable', 'boolean'],
             'seo.canonical' => ['nullable', 'string', 'max:2000', 'url:http,https'],
-        ], [], ['seo.title' => 'SEO title', 'seo.description' => 'description', 'seo.image' => 'share image', 'seo.canonical' => 'canonical address'])->validate()['seo'] ?? [];
+        ], [], ['seo.title' => __('SEO title'), 'seo.description' => __('description'), 'seo.image' => __('share image'), 'seo.canonical' => __('canonical address')])->validate()['seo'] ?? [];
         $seo = [
             'title' => self::text($valid['title'] ?? null),
             'description' => self::text($valid['description'] ?? null),

@@ -15,8 +15,8 @@ final class TemplateHelp
     /** @param  list<string>  $fallbacks  view names, tried in this order */
     public static function text(string $example, array $fallbacks): string
     {
-        $lines = ["A Blade view: {$example} is ".self::file($example).'.', 'Empty: the first that exists of'];
-        foreach ([...array_map(self::file(...), $fallbacks), 'the built-in template'] as $i => $fallback) {
+        $lines = [__('A Blade view: :example is :file.', ['example' => $example, 'file' => self::file($example)]), __('Empty: the first that exists of')];
+        foreach ([...array_map(self::file(...), $fallbacks), __('the built-in template')] as $i => $fallback) {
             $lines[] = ($i + 1).'. '.$fallback;
         }
 

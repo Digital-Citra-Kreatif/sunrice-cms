@@ -68,15 +68,15 @@ final class FormResource extends Resource
             ]),
             Section::make('Notifications')->description('Who hears about each submission. Every one is kept under Content → Submissions too.')->schema([
                 Textarea::make('notify')->label('Email to')->rows(3)->maxLength(2000)->placeholder('team@example.com')
-                    ->help('One address per line, up to '.self::MAX_NOTIFY.'.')
+                    ->help(__('One address per line, up to :max.', ['max' => self::MAX_NOTIFY]))
                     ->rules([function (string $attribute, mixed $value, Closure $fail): void {
                         $addresses = self::addresses($value);
                         if (count($addresses) > self::MAX_NOTIFY) {
-                            $fail('Use at most '.self::MAX_NOTIFY.' addresses.');
+                            $fail(__('Use at most :max addresses.', ['max' => self::MAX_NOTIFY]));
                         }
                         foreach ($addresses as $address) {
                             if (filter_var($address, FILTER_VALIDATE_EMAIL) === false) {
-                                $fail('"'.$address.'" isn\'t an email address.');
+                                $fail(__('":address" isn\'t an email address.', ['address' => $address]));
 
                                 return;
                             }

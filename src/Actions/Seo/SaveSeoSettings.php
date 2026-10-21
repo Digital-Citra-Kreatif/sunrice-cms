@@ -52,7 +52,7 @@ final class SaveSeoSettings
             'mappings.*.title' => ['nullable', 'string', 'max:64'],
             'mappings.*.description' => ['nullable', 'string', 'max:64'],
             'mappings.*.image' => ['nullable', 'string', 'max:64'],
-        ], [], ['site.twitter' => 'X (Twitter) account'])->validate();
+        ], [], ['site.twitter' => __('X (Twitter) account')])->validate();
 
         // Each field named must be one of the blueprint's of the right type.
         $owners = [];
@@ -69,7 +69,7 @@ final class SaveSeoSettings
             foreach (['title' => 'seo_title_field', 'description' => 'seo_description_field', 'image' => 'seo_image_field'] as $role => $column) {
                 $field = $mapping[$role] ?? null;
                 if ($field !== null && $field !== '' && ! array_key_exists($field, $options[$column])) {
-                    $errors["mappings.{$index}.{$role}"] = "\"{$field}\" isn't a field {$owner->title} can use for that.";
+                    $errors["mappings.{$index}.{$role}"] = __('":field" isn\'t a field :owner can use for that.', ['field' => $field, 'owner' => $owner->title]);
                 }
             }
             $owners[] = [$owner, $mapping];

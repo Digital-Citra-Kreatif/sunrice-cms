@@ -32,10 +32,10 @@ final class MachineTranslateEntry
     {
         $main = $translation->entry->mainTranslation();
         if ($main === null || $main->is($translation)) {
-            throw ValidationException::withMessages(['locale' => 'This is the main language: there\'s nothing to translate it from.']);
+            throw ValidationException::withMessages(['locale' => __('This is the main language: there\'s nothing to translate it from.')]);
         }
         if ($version !== null && (string) $version !== (string) $translation->version) {
-            throw ValidationException::withMessages(['version' => 'Someone else saved this entry after you opened it. Reload to see their changes.']);
+            throw ValidationException::withMessages(['version' => __('Someone else saved this entry after you opened it. Reload to see their changes.')]);
         }
         $translator = new ContentTranslator($this->translators->make(), $main->locale, $translation->locale);
         $translator->entry($translation->entry);

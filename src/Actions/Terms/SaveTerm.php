@@ -47,22 +47,22 @@ final class SaveTerm
             'slug' => ['nullable', 'string', 'max:200', 'regex:'.EntryInput::SLUG],
             'locale' => ['sometimes', 'string', function (string $attribute, mixed $value, \Closure $fail): void {
                 if (! is_string($value) || ! Locales::has($value)) {
-                    $fail('Choose one of the site\'s languages.');
+                    $fail(__('Choose one of the site\'s languages.'));
                 }
             }],
             'parent_id' => ['nullable', 'integer'],
-        ], ['slug.regex' => 'Use lowercase letters, digits and dashes (about-us).']);
+        ], ['slug.regex' => __('Use lowercase letters, digits and dashes (about-us).')]);
         $validator->after(function (ValidatorInstance $validator) use ($input, $taxonomy, $term, $locale, $existing): void {
             $slug = $input['slug'] ?? null;
             if (is_string($slug) && $slug !== '' && is_string($locale) && self::taken($taxonomy, $locale, $slug, $existing?->id)) {
-                $validator->errors()->add('slug', "Another term already uses \"{$slug}\".");
+                $validator->errors()->add('slug', __('Another term already uses ":slug".', ['slug' => $slug]));
             }
             $parent = $input['parent_id'] ?? null;
             if (is_numeric($parent)) {
                 if (! $taxonomy->hierarchical) {
-                    $validator->errors()->add('parent_id', 'This taxonomy\'s terms have no parents.');
+                    $validator->errors()->add('parent_id', __('This taxonomy\'s terms have no parents.'));
                 } elseif (! Term::query()->whereKey($parent)->where('taxonomy_id', $taxonomy->id)->exists()) {
-                    $validator->errors()->add('parent_id', 'Choose a term of this taxonomy.');
+                    $validator->errors()->add('parent_id', __('Choose a term of this taxonomy.'));
                 } elseif ($term->exists && in_array((int) $parent, [$term->id, ...self::descendants($term)], true)) {
                     $validator->errors()->add('parent_id', 'A term can\'t go under itself or a term under it.');
                 }

@@ -47,7 +47,7 @@ final class BlueprintController
     {
         $blueprint = $save->handle($request->only(['handle', 'title', 'fields']));
 
-        return redirect()->route('sunrice.admin.cms.blueprints.edit', $blueprint)->with('success', "Blueprint \"{$blueprint->title}\" created.");
+        return redirect()->route('sunrice.admin.cms.blueprints.edit', $blueprint)->with('success', __('Blueprint ":title" created.', ['title' => $blueprint->title]));
     }
 
     public function edit(Blueprint $blueprint, BuilderData $builder): Response
@@ -69,6 +69,6 @@ final class BlueprintController
     {
         $delete->handle($blueprint);
 
-        return redirect()->route('sunrice.admin.cms.blueprints.index')->with('success', "Blueprint \"{$blueprint->title}\" deleted.");
+        return redirect()->route('sunrice.admin.cms.blueprints.index')->with('success', __('Blueprint ":title" deleted.', ['title' => $blueprint->title]));
     }
 }

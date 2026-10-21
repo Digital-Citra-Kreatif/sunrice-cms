@@ -80,12 +80,14 @@ final class RenameFieldHandle
         $parent = array_slice($path, 0, -1);
         $handle = str_contains($to, '.') ? (string) substr($to, (int) strrpos($to, '.') + 1) : trim($to);
         if (str_contains($to, '.') && $to !== implode('.', [...$parent, $handle])) {
-            throw ValidationException::withMessages(['to' => 'The new handle stays where the field is: give only the new name.']);
+            throw ValidationException::withMessages(['to' => __('The new handle stays where the field is: give only the new name.')]);
         }
         $kind = $definition instanceof Blueprint ? 'blueprint' : 'fieldset';
         $fields = $definition->fields;
         if ($this->locate($fields, $path) === null) {
-            throw ValidationException::withMessages(['from' => "The {$kind} \"{$definition->handle}\" has no field \"{$from}\" of its own (a fieldset's fields are renamed in the fieldset)."]);
+            throw ValidationException::withMessages(['from' => $kind === 'blueprint'
+                ? __('The blueprint ":handle" has no field ":field" of its own (a fieldset\'s fields are renamed in the fieldset).', ['handle' => $definition->handle, 'field' => $from])
+                : __('The fieldset ":handle" has no field ":field" of its own (a fieldset\'s fields are renamed in the fieldset).', ['handle' => $definition->handle, 'field' => $from])]);
         }
         $this->validateHandle($definition, $parent, $handle, end($path));
 
@@ -131,20 +133,20 @@ final class RenameFieldHandle
     private function validateHandle(Blueprint|Fieldset $definition, array $parent, string $handle, string $old): void
     {
         if (preg_match('/^[a-z][a-z0-9_]*$/', $handle) !== 1 || strlen($handle) > 64) {
-            throw ValidationException::withMessages(['to' => 'A handle is lowercase letters, digits and underscores, starting with a letter (64 at most).']);
+            throw ValidationException::withMessages(['to' => __('A handle is lowercase letters, digits and underscores, starting with a letter (64 at most).')]);
         }
         if ($handle === $old) {
-            throw ValidationException::withMessages(['to' => 'The field already has that handle.']);
+            throw ValidationException::withMessages(['to' => __('The field already has that handle.')]);
         }
         if ($parent === [] && in_array($handle, Blueprint::RESERVED, true)) {
-            throw ValidationException::withMessages(['to' => "\"{$handle}\" is used by content itself; choose another handle."]);
+            throw ValidationException::withMessages(['to' => __('":handle" is used by content itself; choose another handle.', ['handle' => $handle])]);
         }
         // Siblings, fieldsets' included fields counted.
         $schema = $definition->schema();
         $siblings = $parent === [] ? $schema->fields() : ($schema->field(implode('.', $parent))->fields ?? []);
         foreach ($siblings as $sibling) {
             if ($sibling->handle === $handle) {
-                throw ValidationException::withMessages(['to' => "There already is a field \"{$handle}\" there."]);
+                throw ValidationException::withMessages(['to' => __('There already is a field ":handle" there.', ['handle' => $handle])]);
             }
         }
         if ($definition instanceof Fieldset) {
@@ -179,8 +181,13 @@ final class RenameFieldHandle
                 foreach ($siblings as $sibling) {
                     if ($sibling->handle === $handle) {
                         $kind = $definition instanceof Blueprint ? 'blueprint' : 'fieldset';
-                        $where = $path === [] ? '' : ' in "'.implode('.', $path).'"';
-                        throw ValidationException::withMessages(['to' => "The {$kind} \"{$definition->handle}\" includes the fieldset \"{$fieldset->handle}\" and already has a field \"{$handle}\"{$where}."]);
+                        $replace = ['handle' => $definition->handle, 'fieldset' => $fieldset->handle, 'field' => $handle, 'path' => implode('.', $path)];
+                        throw ValidationException::withMessages(['to' => match (true) {
+                            $kind === 'blueprint' && $path === [] => __('The blueprint ":handle" includes the fieldset ":fieldset" and already has a field ":field".', $replace),
+                            $kind === 'blueprint' => __('The blueprint ":handle" includes the fieldset ":fieldset" and already has a field ":field" in ":path".', $replace),
+                            $path === [] => __('The fieldset ":handle" includes the fieldset ":fieldset" and already has a field ":field".', $replace),
+                            default => __('The fieldset ":handle" includes the fieldset ":fieldset" and already has a field ":field" in ":path".', $replace),
+                        }]);
                     }
                 }
             }

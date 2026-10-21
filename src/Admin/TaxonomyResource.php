@@ -79,13 +79,13 @@ final class TaxonomyResource extends Resource
                 TextInput::make('route')->label('Term pages URL')->span(2)->placeholder('/topics/{slug}')->unique()->maxLength(255)
                     ->rules([function (string $attribute, mixed $value, \Closure $fail): void {
                         if (is_string($value) && $value !== '' && ! RoutePattern::isValid($value)) {
-                            $fail('Use a path with {slug} once, like /topics/{slug}: lowercase letters, digits, dashes.');
+                            $fail(__('Use a path with {slug} once, like /topics/{slug}: lowercase letters, digits, dashes.'));
                         }
                     }])
                     ->help('Empty: terms have no pages.'),
                 TextInput::make('template')->label('Term page template')->placeholder('cms.topic')->showWhen('route')->span(2)
                     ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
-                    ->help(TemplateHelp::text('cms.topic', ['cms.taxonomy-{handle}', 'cms.term'])."\nA term can choose its own on its page."),
+                    ->help(TemplateHelp::text('cms.topic', ['cms.taxonomy-{handle}', 'cms.term'])."\n".__('A term can choose its own on its page.')),
             ]),
         ]);
     }

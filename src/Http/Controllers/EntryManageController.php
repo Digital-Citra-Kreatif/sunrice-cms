@@ -49,8 +49,9 @@ final class EntryManageController
 
         return back()->with($done > 0 ? 'success' : 'error', match (true) {
             $done === 0 => 'Nothing was changed.',
-            $skipped > 0 => "Done for {$done} of ".count($ids)." entries; the others can't be (not allowed, or not ready to publish).",
-            default => "Done for {$done} ".($done === 1 ? 'entry' : 'entries').'.',
+            $skipped > 0 => __('Done for :done of :count entries; the others can\'t be (not allowed, or not ready to publish).', ['done' => $done, 'count' => count($ids)]),
+            $done === 1 => 'Done for 1 entry.',
+            default => __('Done for :count entries.', ['count' => $done]),
         });
     }
 

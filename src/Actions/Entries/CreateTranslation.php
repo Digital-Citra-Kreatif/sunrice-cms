@@ -25,19 +25,19 @@ final class CreateTranslation
     public function handle(Entry $entry, string $locale): EntryTranslation
     {
         if (! Locales::has($locale)) {
-            throw ValidationException::withMessages(['locale' => 'Choose one of the site\'s languages: '.implode(', ', Locales::all()).'.']);
+            throw ValidationException::withMessages(['locale' => __('Choose one of the site\'s languages: :languages.', ['languages' => implode(', ', Locales::all())])]);
         }
         if (! $entry->collection->translatable) {
-            throw ValidationException::withMessages(['locale' => "{$entry->collection->title} isn't translatable: its entries are in the main language only."]);
+            throw ValidationException::withMessages(['locale' => __(':title isn\'t translatable: its entries are in the main language only.', ['title' => $entry->collection->title])]);
         }
         if ($entry->trashed()) {
-            throw ValidationException::withMessages(['entry' => 'This entry is in the trash; restore it first.']);
+            throw ValidationException::withMessages(['entry' => __('This entry is in the trash; restore it first.')]);
         }
         $entry->loadMissing('translations');
         if ($entry->translation($locale) !== null) {
-            throw ValidationException::withMessages(['locale' => 'The entry already has this language.']);
+            throw ValidationException::withMessages(['locale' => __('The entry already has this language.')]);
         }
-        $main = $entry->mainTranslation() ?? throw ValidationException::withMessages(['entry' => 'The entry has no translation to copy.']);
+        $main = $entry->mainTranslation() ?? throw ValidationException::withMessages(['entry' => __('The entry has no translation to copy.')]);
 
         // The slug check and the write in one transaction: see EntryInput::write().
         $translation = EntryInput::write(function () use ($entry, $main, $locale): EntryTranslation {

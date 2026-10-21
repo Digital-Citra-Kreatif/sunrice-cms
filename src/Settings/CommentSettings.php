@@ -86,7 +86,7 @@ final class CommentSettings extends Settings
                 ->rules(['nullable', function (string $attribute, mixed $value, \Closure $fail): void {
                     foreach (self::lines($value) as $address) {
                         if (filter_var($address, FILTER_VALIDATE_EMAIL) === false) {
-                            $fail('"'.$address.'" isn\'t an email address.');
+                            $fail(__('":address" isn\'t an email address.', ['address' => $address]));
 
                             return;
                         }

@@ -84,7 +84,7 @@ final class DefinitionValidator
             $rules["{$key}.validation.*"] = ['string', 'max:255', function (string $attribute, mixed $value, \Closure $fail): void {
                 $name = is_string($value) ? strtolower(explode(':', $value, 2)[0]) : '';
                 if (! in_array($name, self::RULES, true)) {
-                    $fail("\"{$name}\" can't be used as an extra rule. Use one of: ".implode(', ', self::RULES).'.');
+                    $fail(__('":rule" can\'t be used as an extra rule. Use one of: :rules.', ['rule' => $name, 'rules' => implode(', ', self::RULES)]));
                 }
             }];
             $own = is_array($field) ? ($field['handle'] ?? null) : null;
@@ -94,7 +94,7 @@ final class DefinitionValidator
             $rules["{$key}.condition.operator"] = ["required_with:{$key}.condition", 'string', Rule::in(Field::OPERATORS)];
             $rules["{$key}.condition.value"] = ['nullable', function (string $attribute, mixed $value, \Closure $fail): void {
                 if (! is_scalar($value) || (is_string($value) && mb_strlen($value) > 255)) {
-                    $fail('The value to compare with must be short text, a number or true/false.');
+                    $fail(__('The value to compare with must be short text, a number or true/false.'));
                 }
             }];
             $rules["{$key}.config"] = ['nullable', 'array'];
@@ -120,7 +120,7 @@ final class DefinitionValidator
     {
         return function (string $attribute, mixed $value, \Closure $fail): void {
             if (is_string($value) && preg_match('/^[a-z][a-z0-9_]*$/', $value) !== 1) {
-                $fail("\"{$value}\" can't be a handle: use lowercase letters, numbers and underscores, starting with a letter (like hero_image).");
+                $fail(__('":handle" can\'t be a handle: use lowercase letters, numbers and underscores, starting with a letter (like hero_image).', ['handle' => $value]));
             }
         };
     }
@@ -129,7 +129,7 @@ final class DefinitionValidator
     {
         return function (string $attribute, mixed $value, \Closure $fail): void {
             if (! is_bool($value)) {
-                $fail('The :attribute field must be true or false.');
+                $fail(__('The :attribute field must be true or false.'));
             }
         };
     }
@@ -150,7 +150,7 @@ final class DefinitionValidator
             if ($field->type === FieldsetInclude::TYPE) {
                 $included = $field->configString('fieldset') ?? '';
                 if ($included === $fieldset || $this->includes($included, $fieldset)) {
-                    $validator->errors()->add("{$key}.config.fieldset", "The fieldset \"{$included}\" includes this one, so it can't be included here.");
+                    $validator->errors()->add("{$key}.config.fieldset", __('The fieldset ":fieldset" includes this one, so it can\'t be included here.', ['fieldset' => $included]));
 
                     continue;
                 }
@@ -158,9 +158,9 @@ final class DefinitionValidator
             }
             foreach ($handles as $handle) {
                 if (in_array($handle, $reserved, true)) {
-                    $validator->errors()->add("{$key}.handle", "\"{$handle}\" is used by the content itself; choose another handle.");
+                    $validator->errors()->add("{$key}.handle", __('":handle" is used by the content itself; choose another handle.', ['handle' => $handle]));
                 } elseif (isset($seen[$handle])) {
-                    $validator->errors()->add("{$key}.handle", "There is already a field \"{$handle}\" here.");
+                    $validator->errors()->add("{$key}.handle", __('There is already a field ":handle" here.', ['handle' => $handle]));
                 }
                 $seen[$handle] = true;
             }

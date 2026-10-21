@@ -110,7 +110,7 @@ final class TermController
             ? (string) AdminUrls::term($term, $locale)
             : route('sunrice.admin.cms.taxonomies.terms.index', ['taxonomy' => $taxonomy->handle, 'locale' => $locale]);
 
-        return redirect()->to($to)->with('success', "\"{$term->title($locale)}\" added.");
+        return redirect()->to($to)->with('success', __('":title" added.', ['title' => $term->title($locale)]));
     }
 
     public function update(Request $request, Term $term, SaveTerm $save): RedirectResponse

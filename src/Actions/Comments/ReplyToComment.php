@@ -24,9 +24,9 @@ final class ReplyToComment
     /** @throws ValidationException */
     public function handle(Comment $comment, string $body, Model $user): Comment
     {
-        Validator::make(['body' => $body], ['body' => ['required', 'string', 'max:'.PostComment::MAX_LENGTH]], [], ['body' => 'reply'])->validate();
+        Validator::make(['body' => $body], ['body' => ['required', 'string', 'max:'.PostComment::MAX_LENGTH]], [], ['body' => __('reply')])->validate();
         if ($comment->status === Comment::SPAM || $comment->trashed()) {
-            throw ValidationException::withMessages(['body' => 'Restore the comment, or mark it not spam, before replying.']);
+            throw ValidationException::withMessages(['body' => __('Restore the comment, or mark it not spam, before replying.')]);
         }
         if (! $comment->isApproved()) {
             $this->status->handle($comment, Comment::APPROVED);

@@ -23,10 +23,12 @@ final class RestoreDeleted
         if (! $collection->trashed()) {
             return;
         }
-        foreach (['route' => 'URL', 'listing_route' => 'listing page URL'] as $column => $what) {
+        foreach (['route', 'listing_route'] as $column) {
             $value = $collection->getAttribute($column);
             if (is_string($value) && $value !== '' && Collection::query()->where($column, $value)->exists()) {
-                throw ValidationException::withMessages([$column => "Another collection has its {$what} ({$value}) now: change that one first."]);
+                throw ValidationException::withMessages([$column => $column === 'route'
+                    ? __('Another collection has its URL (:address) now: change that one first.', ['address' => $value])
+                    : __('Another collection has its listing page URL (:address) now: change that one first.', ['address' => $value])]);
             }
         }
         $collection->restore();
@@ -39,7 +41,7 @@ final class RestoreDeleted
             return;
         }
         if (is_string($taxonomy->route) && $taxonomy->route !== '' && Taxonomy::query()->where('route', $taxonomy->route)->exists()) {
-            throw ValidationException::withMessages(['route' => "Another taxonomy has its term pages URL ({$taxonomy->route}) now: change that one first."]);
+            throw ValidationException::withMessages(['route' => __('Another taxonomy has its term pages URL (:address) now: change that one first.', ['address' => $taxonomy->route])]);
         }
         $taxonomy->restore();
     }

@@ -41,7 +41,7 @@ final class SaveCollection
             'blueprints.*' => ['string', 'distinct', Rule::exists((new Blueprint)->getTable(), 'handle')],
             'dated' => ['sometimes', 'boolean'],
             'translatable' => ['sometimes', 'boolean'],
-        ], ['handle.unique' => 'A collection (perhaps a deleted one) already has this handle.'])->validate();
+        ], ['handle.unique' => __('A collection (perhaps a deleted one) already has this handle.')])->validate();
 
         $creating = ! $collection->exists;
         if ($creating) {

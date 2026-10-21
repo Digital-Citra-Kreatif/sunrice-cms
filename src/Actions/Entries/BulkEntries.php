@@ -42,10 +42,10 @@ final class BulkEntries
     public function handle(Collection $collection, string $action, array $ids, ?Authorizable $user): int
     {
         if (! in_array($action, self::ACTIONS, true)) {
-            throw ValidationException::withMessages(['action' => 'Choose one of: '.implode(', ', self::ACTIONS).'.']);
+            throw ValidationException::withMessages(['action' => __('Choose one of: :actions.', ['actions' => implode(', ', self::ACTIONS)])]);
         }
         if (count($ids) > self::MAX) {
-            throw ValidationException::withMessages(['ids' => 'Choose at most '.self::MAX.' entries at once.']);
+            throw ValidationException::withMessages(['ids' => __('Choose at most :max entries at once.', ['max' => self::MAX])]);
         }
         $ability = in_array($action, ['publish', 'unpublish'], true) ? 'publish' : 'delete';
         if ($user === null) {

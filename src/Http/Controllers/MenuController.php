@@ -64,7 +64,7 @@ final class MenuController
             return ['title' => $item->term->title(), 'kind' => $item->term->taxonomy->title, 'live' => ! $item->term->trashed() && $item->term->taxonomy->route !== null];
         }
         if ($item->collection !== null) {
-            return ['title' => $item->collection->title, 'kind' => 'Listing page', 'live' => ! $item->collection->trashed() && $item->collection->listing_route !== null];
+            return ['title' => $item->collection->title, 'kind' => __('Listing page'), 'live' => ! $item->collection->trashed() && $item->collection->listing_route !== null];
         }
 
         return null;

@@ -29,9 +29,9 @@ final class HandleField
     {
         return function (string $attribute, mixed $value, \Closure $fail): void {
             if (is_string($value) && $value !== '' && preg_match('/^[a-z][a-z0-9_]*$/', $value) !== 1) {
-                $fail('Use lowercase letters, numbers and underscores, starting with a letter (like main_menu).');
+                $fail(__('Use lowercase letters, numbers and underscores, starting with a letter (like main_menu).'));
             } elseif (in_array($value, self::RESERVED, true)) {
-                $fail("\"{$value}\" is used by the admin's addresses: choose another handle.");
+                $fail(__('":value" is used by the admin\'s addresses: choose another handle.', ['value' => $value]));
             }
         };
     }

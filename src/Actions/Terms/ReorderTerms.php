@@ -34,7 +34,7 @@ final class ReorderTerms
     public function handle(Taxonomy $taxonomy, array $ids, ?int $parentId = null): void
     {
         if ($parentId !== null && ! $taxonomy->hierarchical) {
-            throw ValidationException::withMessages(['parent_id' => 'Terms of this taxonomy have no parents.']);
+            throw ValidationException::withMessages(['parent_id' => __('Terms of this taxonomy have no parents.')]);
         }
         $order = self::ids($ids);
 
@@ -46,7 +46,7 @@ final class ReorderTerms
             }
             $unknown = array_diff($order, $level);
             if ($unknown !== []) {
-                throw ValidationException::withMessages(['ids' => 'Not terms of this taxonomy at this level: '.implode(', ', $unknown).'.']);
+                throw ValidationException::withMessages(['ids' => __('Not terms of this taxonomy at this level: :ids.', ['ids' => implode(', ', $unknown)])]);
             }
             $positions = [];
             foreach ([...$order, ...array_diff($level, $order)] as $index => $id) {
@@ -69,12 +69,12 @@ final class ReorderTerms
         $valid = [];
         foreach ($ids as $id) {
             if (! is_int($id) && ! (is_string($id) && ctype_digit($id))) {
-                throw ValidationException::withMessages(['ids' => 'Give term ids (numbers).']);
+                throw ValidationException::withMessages(['ids' => __('Give term ids (numbers).')]);
             }
             $valid[] = (int) $id;
         }
         if ($valid === [] || count(array_unique($valid)) !== count($valid)) {
-            throw ValidationException::withMessages(['ids' => 'Give each term id once, in the new order.']);
+            throw ValidationException::withMessages(['ids' => __('Give each term id once, in the new order.')]);
         }
 
         return $valid;

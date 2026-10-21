@@ -65,11 +65,13 @@ final class DashboardWidgets
                     $scheduled = self::int($row->scheduled ?? null);
                     $rows[] = [
                         'title' => is_string($row->title ?? null) ? $row->title : '',
-                        'meta' => implode(' · ', array_filter([
-                            $drafts > 0 ? $drafts.' '.Str::plural('draft', $drafts) : null,
-                            $scheduled > 0 ? "{$scheduled} scheduled" : null,
-                        ])) ?: 'No drafts',
-                        'badge' => "{$live} live",
+                        'meta' => match (true) {
+                            $drafts > 0 && $scheduled > 0 => __(':drafts · :scheduled', ['drafts' => self::drafts($drafts), 'scheduled' => self::said(__(':count scheduled', ['count' => $scheduled]), "{$scheduled} scheduled")]),
+                            $drafts > 0 => self::drafts($drafts),
+                            $scheduled > 0 => __(':count scheduled', ['count' => $scheduled]),
+                            default => __('No drafts'),
+                        },
+                        'badge' => __(':count live', ['count' => $live]),
                         'tone' => $live > 0 ? 'success' : 'neutral',
                         'url' => 'cms/collections/'.(is_string($row->handle ?? null) ? $row->handle : '').'/entries',
                     ];
@@ -121,7 +123,7 @@ final class DashboardWidgets
                 return [
                     'count' => $first === null ? 0 : self::int($first->getAttribute('waiting')),
                     'rows' => $comments->map(fn (Comment $comment): array => [
-                        'title' => $comment->authorName().(is_string($title = $comment->getAttribute('entry_title')) ? " on {$title}" : ''),
+                        'title' => is_string($title = $comment->getAttribute('entry_title')) ? __(':author on :entry', ['author' => $comment->authorName(), 'entry' => $title]) : $comment->authorName(),
                         'meta' => Str::limit(Str::squish($comment->body), 90),
                         'url' => 'cms/comments?status=pending',
                         'at' => $comment->created_at?->toIso8601String(),
@@ -160,7 +162,7 @@ final class DashboardWidgets
                         $title = $submission->getAttribute('form_title');
 
                         return [
-                            'title' => $summary ?? "Submission #{$submission->id}",
+                            'title' => $summary ?? __('Submission #:id', ['id' => $submission->id]),
                             'meta' => is_string($title) ? $title : null,
                             'url' => is_string($handle) ? "cms/forms/{$handle}/submissions" : null,
                             'at' => $submission->created_at?->toIso8601String(),
@@ -203,9 +205,9 @@ final class DashboardWidgets
             'meta' => (is_string($collection) ? $collection : '').(count(Locales::all()) > 1 ? ' · '.Str::upper($translation->locale) : ''),
             'url' => 'cms/collections/'.(is_string($handle) ? $handle : '').'/entries/'.$translation->entry_id.'/edit'.($main ? '' : '?locale='.urlencode($translation->locale)),
             'badge' => match ($status) {
-                'published' => 'Live',
-                'scheduled' => 'Scheduled',
-                default => 'Draft',
+                'published' => __('Live'),
+                'scheduled' => __('Scheduled'),
+                default => __('Draft'),
             },
             'tone' => match ($status) {
                 'published' => 'success',
@@ -220,6 +222,18 @@ final class DashboardWidgets
     private static function collectionsFor(Authorizable $user): array
     {
         return array_values(array_filter(Handles::collections(), fn (string $handle): bool => Access::entries($user, 'view', $handle)));
+    }
+
+    /** "1 draft", "3 drafts" */
+    private static function drafts(int $count): string
+    {
+        return $count === 1 ? self::said(__('1 draft'), '1 draft') : self::said(__(':count drafts', ['count' => $count]), "{$count} drafts");
+    }
+
+    /** What __() said, or the English when it gave something else. */
+    private static function said(mixed $said, string $english): string
+    {
+        return is_string($said) ? $said : $english;
     }
 
     private static function int(mixed $value): int

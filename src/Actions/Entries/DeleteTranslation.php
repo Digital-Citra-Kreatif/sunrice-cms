@@ -23,7 +23,7 @@ final class DeleteTranslation
     public function handle(EntryTranslation $translation): void
     {
         if ($translation->isMain()) {
-            throw ValidationException::withMessages(['locale' => 'The main language can\'t be removed; move the entry to the trash instead.']);
+            throw ValidationException::withMessages(['locale' => __('The main language can\'t be removed; move the entry to the trash instead.')]);
         }
         $translation->delete();
         $translation->entry->unsetRelation('translations');

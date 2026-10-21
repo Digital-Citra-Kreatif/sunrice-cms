@@ -32,11 +32,11 @@ final class ForceDeleteEntry
     public function handle(Entry $entry, bool $force = false): void
     {
         if (! $entry->trashed()) {
-            throw ValidationException::withMessages(['entry' => 'Move the entry to the trash first.']);
+            throw ValidationException::withMessages(['entry' => __('Move the entry to the trash first.')]);
         }
         $usedBy = References::usedBy(Reference::ENTRY, $entry->id);
         if (! $force && $usedBy !== []) {
-            throw ValidationException::withMessages(['entry' => 'This entry is used by '.References::sentence($usedBy).'. Delete it anyway to leave those links empty.']);
+            throw ValidationException::withMessages(['entry' => __('This entry is used by :uses. Delete it anyway to leave those links empty.', ['uses' => References::sentence($usedBy)])]);
         }
         $label = TrashEntry::label($entry);
         // Explicitly, not by the foreign keys' cascade: not every connection enforces them.

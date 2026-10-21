@@ -86,7 +86,7 @@ final class CollectionResource extends Resource
                     ->help('Visitors can comment on its entries.'),
                 TextInput::make('template')->label('Entry template')->placeholder('cms.article')->showWhen('pages')
                     ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
-                    ->help(TemplateHelp::text('cms.article', ['cms.{handle}', 'cms.entry'])."\nAn entry can choose its own in its Page settings."),
+                    ->help(TemplateHelp::text('cms.article', ['cms.{handle}', 'cms.entry'])."\n".__('An entry can choose its own in its Page settings.')),
                 Select::make('schema_type')->label('Structured data type')->options(StructuredData::ENTRY_TYPES)->showWhen('pages')
                     ->help('What search engines are told its entries are. Empty: Article if dated, else Web page.'),
             ]),
@@ -96,7 +96,7 @@ final class CollectionResource extends Resource
                     ->saveUsing(fn (Model $collection, mixed $on) => self::switchPage($collection, 'listing_route', $on, '/{handle}')),
                 TextInput::make('listing_route')->label('Listing page URL')->placeholder('/{handle}')->unique()->maxLength(255)->span(2)->showWhen('listing')
                     ->rules(['regex:#^(/[a-z0-9\-_]+)+$#'])
-                    ->help("Empty: /{handle}. Its template is the first that exists of\n1. ".TemplateHelp::file('cms.{handle}-listing')."\n2. ".TemplateHelp::file('cms.listing')."\n3. the built-in template"),
+                    ->help(__('Empty: /{handle}. Its template is the first that exists of')."\n1. ".TemplateHelp::file('cms.{handle}-listing')."\n2. ".TemplateHelp::file('cms.listing')."\n3. ".__('the built-in template')),
                 Select::make('listing_blueprint')->label('Listing page fields')->options($blueprints())->showWhen('listing')
                     ->help('Fields of the listing page itself, like an intro.'),
                 NumberInput::make('per_page')->label('Entries per page')->integer()->min(1)->max(100)->default(10)->showWhen('listing'),

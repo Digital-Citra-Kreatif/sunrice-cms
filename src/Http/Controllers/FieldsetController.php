@@ -42,7 +42,7 @@ final class FieldsetController
     {
         $fieldset = $save->handle($request->only(['handle', 'title', 'fields']));
 
-        return redirect()->route('sunrice.admin.cms.fieldsets.edit', $fieldset)->with('success', "Fieldset \"{$fieldset->title}\" created.");
+        return redirect()->route('sunrice.admin.cms.fieldsets.edit', $fieldset)->with('success', __('Fieldset ":title" created.', ['title' => $fieldset->title]));
     }
 
     public function edit(Fieldset $fieldset, BuilderData $builder, DeleteFieldset $delete): Response
@@ -66,6 +66,6 @@ final class FieldsetController
     {
         $delete->handle($fieldset);
 
-        return redirect()->route('sunrice.admin.cms.fieldsets.index')->with('success', "Fieldset \"{$fieldset->title}\" deleted.");
+        return redirect()->route('sunrice.admin.cms.fieldsets.index')->with('success', __('Fieldset ":title" deleted.', ['title' => $fieldset->title]));
     }
 }

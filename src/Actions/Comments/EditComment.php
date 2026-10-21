@@ -21,7 +21,7 @@ final class EditComment
     /** @throws ValidationException */
     public function handle(Comment $comment, string $body): Comment
     {
-        Validator::make(['body' => $body], ['body' => ['required', 'string', 'max:'.PostComment::MAX_LENGTH]], [], ['body' => 'comment'])->validate();
+        Validator::make(['body' => $body], ['body' => ['required', 'string', 'max:'.PostComment::MAX_LENGTH]], [], ['body' => __('comment')])->validate();
         $comment->body = trim(str_replace("\r\n", "\n", $body));
         $comment->save();
         $this->activity->record('updated', 'comments', $comment, $comment->authorName());

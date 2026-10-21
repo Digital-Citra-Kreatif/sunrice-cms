@@ -172,7 +172,7 @@ final class EntryController
     {
         $translation = $create->handle($collection, $request->only(['title', 'slug', 'data', 'seo']));
 
-        return redirect()->to((string) AdminUrls::entry($translation->entry))->with('success', "\"{$translation->draft_title}\" created as a draft.");
+        return redirect()->to((string) AdminUrls::entry($translation->entry))->with('success', __('":title" created as a draft.', ['title' => $translation->draft_title]));
     }
 
     /** An entry's old short address: to the one under its collection. */
@@ -344,15 +344,15 @@ final class EntryController
         try {
             $stats = $machine->handle($translation, is_int($version) || is_string($version) ? $version : null);
         } catch (\RuntimeException $e) {
-            return back()->with('error', 'The translation service failed: '.$e->getMessage());
+            return back()->with('error', __('The translation service failed: :message', ['message' => $e->getMessage()]));
         }
         if ($stats->errors !== []) {
-            return back()->with('error', 'Not translated: '.implode(' ', $stats->errors));
+            return back()->with('error', __('Not translated: :errors', ['errors' => implode(' ', $stats->errors)]));
         }
 
         return back()->with('success', $stats->translated === 0
             ? 'Everything is translated already.'
-            : "Translated {$stats->translated} texts into the draft. Check them, then publish.");
+            : __('Translated :count texts into the draft. Check them, then publish.', ['count' => $stats->translated]));
     }
 
     public function removeTranslation(Entry $entry, string $locale, DeleteTranslation $delete): RedirectResponse
@@ -442,7 +442,7 @@ final class EntryController
 
     private static function published(EntryTranslation $translation): string
     {
-        return $translation->isLive() ? 'Published.' : 'Scheduled for '.$translation->published_at?->toDayDateTimeString().'.';
+        return $translation->isLive() ? 'Published.' : __('Scheduled for :date.', ['date' => $translation->published_at?->toDayDateTimeString()]);
     }
 
     /** @return array{handle: string, title: string, dated: bool, hierarchical: bool, ordered: bool, listing: bool} */

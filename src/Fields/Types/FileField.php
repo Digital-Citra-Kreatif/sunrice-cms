@@ -41,7 +41,7 @@ final class FileField extends FieldType
         $types = self::types($field);
         $rules = ['file', 'max:'.max(1, $maxKb), function (string $attribute, mixed $value, Closure $fail): void {
             if ($value instanceof UploadedFile && array_intersect(self::extensions($value), self::BLOCKED) !== []) {
-                $fail('Files of this type can\'t be sent.');
+                $fail(__('Files of this type can\'t be sent.'));
             }
         }];
         if ($types !== []) {

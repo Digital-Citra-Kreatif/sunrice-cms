@@ -61,10 +61,10 @@ final class LocaleSettings extends Settings
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Pairs::make('languages')->label('Content languages')->labels('Code', 'Name')->maxLength(2000)->required()
-                ->suggest(self::KNOWN + Locales::names())->firstBadge('Main')->addLabel('Add a language')
+            Pairs::make('languages')->label('Content languages')->labels(__('Code'), __('Name'))->maxLength(2000)->required()
+                ->suggest(self::KNOWN + Locales::names())->firstBadge(__('Main'))->addLabel('Add a language')
                 ->rules([fn (string $attribute, mixed $value, Closure $fail) => self::check($value, $fail)])
-                ->extra('Address', '/{key}', '/')
+                ->extra(__('Address'), '/{key}', '/')
                 ->help('The first is the main language. Address: what its URLs start with (/ for plain ones). Once there is content, change the main one with php artisan sunrice:switch-main-language.'),
         ]);
     }
@@ -173,19 +173,19 @@ final class LocaleSettings extends Settings
             }
             $code = trim(explode(':', $line, 2)[0]);
             if (preg_match(self::CODE, $code) !== 1) {
-                $fail('Line '.($number + 1).": \"{$code}\" isn't a language code (two or three lowercase letters, then a region if any: en, id, pt_BR).");
+                $fail(__('Line :line: ":code" isn\'t a language code (two or three lowercase letters, then a region if any: en, id, pt_BR).', ['line' => $number + 1, 'code' => $code]));
 
                 return;
             }
             if (in_array($code, $codes, true)) {
-                $fail("{$code} is listed twice.");
+                $fail(__(':code is listed twice.', ['code' => $code]));
 
                 return;
             }
             $codes[] = $code;
         }
         if ($codes === []) {
-            $fail('List at least one language.');
+            $fail(__('List at least one language.'));
 
             return;
         }
@@ -193,20 +193,20 @@ final class LocaleSettings extends Settings
         foreach (preg_split('/\R/', is_string($value) ? $value : '') ?: [] as $line) {
             $prefix = str_contains($line, '|') ? trim(explode('|', $line, 2)[1], " /\t") : '';
             if ($prefix !== '' && preg_match(self::PREFIX, $prefix) !== 1) {
-                $fail("\"{$prefix}\" can't be an address: use lowercase letters, numbers and dashes, like en or pt-br.");
+                $fail(__('":prefix" can\'t be an address: use lowercase letters, numbers and dashes, like en or pt-br.', ['prefix' => $prefix]));
 
                 return;
             }
         }
         $segments = Locales::segmentsFor($codes, $set);
         if (count(array_unique($segments)) !== count($segments)) {
-            $fail('Two languages have the same address. Give each its own.');
+            $fail(__('Two languages have the same address. Give each its own.'));
 
             return;
         }
         $main = Locales::default();
         if ($codes[0] !== $main && self::holdsContent($main)) {
-            $fail(Locales::name($main)." ({$main}) is the main language and content is written in it: keep it first. To change the main language, run php artisan sunrice:switch-main-language {$codes[0]}.");
+            $fail(__(':name (:code) is the main language and content is written in it: keep it first. To change the main language, run php artisan sunrice:switch-main-language :new.', ['name' => Locales::name($main), 'code' => $main, 'new' => $codes[0]]));
         }
     }
 

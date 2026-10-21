@@ -35,10 +35,10 @@ final class PublishEntry
     {
         $entry = $translation->entry;
         if ($entry->trashed()) {
-            throw ValidationException::withMessages(['entry' => 'This entry is in the trash; restore it before publishing.']);
+            throw ValidationException::withMessages(['entry' => __('This entry is in the trash; restore it before publishing.')]);
         }
         if ($entry->collection->trashed()) {
-            throw ValidationException::withMessages(['entry' => "The collection \"{$entry->collection->title}\" was deleted."]);
+            throw ValidationException::withMessages(['entry' => __('The collection ":title" was deleted.', ['title' => $entry->collection->title])]);
         }
         // Where the live page was, to redirect from if its address changes.
         $site = app(Site::class);

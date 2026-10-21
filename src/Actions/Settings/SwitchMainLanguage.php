@@ -83,7 +83,7 @@ final class SwitchMainLanguage
         $report = $this->report($to);
         $from = Locales::default();
         if (! $copyMissing && ($report['missing_entries'] > 0 || $report['missing_terms'] > 0)) {
-            throw ValidationException::withMessages(['locale' => "{$report['missing_entries']} entries and {$report['missing_terms']} terms have no ".Locales::name($to)." translation. Translate them first, or copy the {$from} ones into it (--copy-missing)."]);
+            throw ValidationException::withMessages(['locale' => __(':entries entries and :terms terms have no :language translation. Translate them first, or copy the :from ones into it (--copy-missing).', ['entries' => $report['missing_entries'], 'terms' => $report['missing_terms'], 'language' => Locales::name($to), 'from' => $from])]);
         }
 
         $locales = Locales::names();
@@ -124,10 +124,10 @@ final class SwitchMainLanguage
     private function check(string $to): string
     {
         if (! Locales::has($to)) {
-            throw ValidationException::withMessages(['locale' => "\"{$to}\" isn't one of the site's languages (".implode(', ', Locales::all()).'). Add it in Settings → Languages first.']);
+            throw ValidationException::withMessages(['locale' => __('":code" isn\'t one of the site\'s languages (:languages). Add it in Settings → Languages first.', ['code' => $to, 'languages' => implode(', ', Locales::all())])]);
         }
         if ($to === Locales::default()) {
-            throw ValidationException::withMessages(['locale' => Locales::name($to)." ({$to}) is the main language already."]);
+            throw ValidationException::withMessages(['locale' => __(':name (:code) is the main language already.', ['name' => Locales::name($to), 'code' => $to])]);
         }
 
         return Locales::default();

@@ -40,7 +40,7 @@ final class SaveGlobals
     {
         $locale ??= Locales::default();
         if (! Locales::has($locale)) {
-            throw ValidationException::withMessages(['locale' => 'Choose one of the site\'s languages: '.implode(', ', Locales::all()).'.']);
+            throw ValidationException::withMessages(['locale' => __('Choose one of the site\'s languages: :languages.', ['languages' => implode(', ', Locales::all())])]);
         }
         $expected = Versioned::expected($version);
         $schema = $set->editableSchema($locale);

@@ -38,7 +38,7 @@ final class SaveTermContent
         $locale ??= Locales::default();
         $translation = $term->translations()->where('locale', $locale)->first();
         if ($translation === null) {
-            throw ValidationException::withMessages(['locale' => 'Give the term a title in this language first.']);
+            throw ValidationException::withMessages(['locale' => __('Give the term a title in this language first.')]);
         }
         $expected = Versioned::expected($input['version'] ?? null);
         $schema = $term->taxonomy->schema();

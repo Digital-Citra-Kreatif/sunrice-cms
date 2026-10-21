@@ -39,12 +39,12 @@ final class EntryInput
         $validator = Validator::make(
             ['title' => $title, 'slug' => $slug, 'data' => $data],
             $rules,
-            ['slug.regex' => 'Use lowercase letters, digits and dashes (about-us).'],
+            ['slug.regex' => __('Use lowercase letters, digits and dashes (about-us).')],
             self::attributes($schema, array_keys($rules)),
         );
         $validator->after(function (ValidatorInstance $validator) use ($slug, $collectionId, $locale, $except): void {
             if (is_string($slug) && $slug !== '' && self::taken($slug, $collectionId, $locale, $except)) {
-                $validator->errors()->add('slug', "Another entry in this collection already uses \"{$slug}\".");
+                $validator->errors()->add('slug', __('Another entry in this collection already uses ":slug".', ['slug' => $slug]));
             }
         });
         $validator->validate();
@@ -111,7 +111,7 @@ final class EntryInput
         try {
             return DB::transaction($write);
         } catch (UniqueConstraintViolationException) {
-            throw ValidationException::withMessages(['slug' => 'This slug is already used. Choose another one.']);
+            throw ValidationException::withMessages(['slug' => __('This slug is already used. Choose another one.')]);
         }
     }
 

@@ -136,7 +136,7 @@ final class CommentController
         $ids = array_values(array_filter((array) $request->input('ids', []), 'is_numeric'));
         $moderating = in_array($action, ['approve', 'unapprove', 'spam'], true);
         if (! $moderating && ! in_array($action, ['trash', 'restore', 'delete'], true)) {
-            throw ValidationException::withMessages(['action' => 'Choose what to do.']);
+            throw ValidationException::withMessages(['action' => __('Choose what to do.')]);
         }
         abort_unless($request->user()?->can($moderating ? 'cms.comments.moderate' : 'cms.comments.delete') ?? false, 403);
         $done = 0;
@@ -152,7 +152,7 @@ final class CommentController
             $done++;
         }
 
-        return back()->with('success', $done === 1 ? '1 comment done.' : "{$done} comments done.");
+        return back()->with('success', $done === 1 ? '1 comment done.' : __(':count comments done.', ['count' => $done]));
     }
 
     /** @return array<string, mixed> */

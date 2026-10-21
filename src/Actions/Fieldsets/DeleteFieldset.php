@@ -29,7 +29,7 @@ final class DeleteFieldset
         $users = $this->usedBy($fieldset);
         if ($users !== []) {
             throw ValidationException::withMessages([
-                'fieldset' => "\"{$fieldset->title}\" is used by ".implode(', ', $users).'. Remove it from there first.',
+                'fieldset' => __('":title" is used by :users. Remove it from there first.', ['title' => $fieldset->title, 'users' => implode(', ', $users)]),
             ]);
         }
         $fieldset->delete();
@@ -47,12 +47,12 @@ final class DeleteFieldset
         $users = [];
         foreach (Blueprint::query()->orderBy('title')->get() as $blueprint) {
             if (in_array($fieldset->handle, DefinitionValidator::usedFieldsets($blueprint->fields()), true)) {
-                $users[] = "the blueprint \"{$blueprint->title}\"";
+                $users[] = __('the blueprint ":title"', ['title' => $blueprint->title]);
             }
         }
         foreach ($this->fieldsets->all() as $other) {
             if ($other->handle !== $fieldset->handle && in_array($fieldset->handle, DefinitionValidator::usedFieldsets($other->fields()), true)) {
-                $users[] = "the fieldset \"{$other->title}\"";
+                $users[] = __('the fieldset ":title"', ['title' => $other->title]);
             }
         }
 
