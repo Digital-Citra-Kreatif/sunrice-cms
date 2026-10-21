@@ -6,7 +6,7 @@ import { Button, Card, CardContent, Input, Label, PageHeader, useBreadcrumbs, us
 import { useConfirm } from '@/components/Confirm.tsx';
 import { FieldBuilder } from '@/components/FieldBuilder.tsx';
 import { FieldError } from '@/components/FieldInput.tsx';
-import { type BuilderField, errorsUnder, fromDefinitions, handleFromLabel, toDefinitions } from '@/lib/builder.ts';
+import { type BuilderField, errorsUnder, fromDefinitions, handleFromLabel, handleInput, toDefinitions } from '@/lib/builder.ts';
 import type { FieldDefinition, FieldTypeInfo, Option } from '@/types.ts';
 
 interface Props {
@@ -18,6 +18,18 @@ interface Props {
     rules: string[];
     /** For a fieldset: what uses it ("the blueprint \"Page\""). */
     usedBy?: string[];
+}
+
+function handleHelp(kind: 'blueprint' | 'fieldset', exists: boolean): string {
+    if (kind === 'fieldset') {
+        return exists
+            ? 'Set when it was created: flexible blocks keep it with what they hold.'
+            : 'Lowercase letters, digits and underscores. It can\'t change later: flexible blocks keep it with what they hold.';
+    }
+
+    return exists
+        ? 'Changing it updates the collections, taxonomies, global sets, forms and entries that use it.'
+        : 'Lowercase letters, digits and underscores, made from the title until you type one.';
 }
 
 export default function BlueprintForm({ kind = 'blueprint', blueprint, fieldTypes, usedBy = [] }: Props) {
@@ -44,7 +56,8 @@ export default function BlueprintForm({ kind = 'blueprint', blueprint, fieldType
     const save = () => {
         if (form.processing) return;
         form.transform((data) => ({
-            ...(blueprint ? { title: data.title } : data),
+            // A blueprint's handle can change (RenameBlueprint); a fieldset's can't: flexible blocks store it.
+            ...(blueprint ? (kind === 'blueprint' ? { title: data.title, handle: data.handle } : { title: data.title }) : data),
             fields: toDefinitions(fields, hasChildren),
         }));
         if (blueprint) {
@@ -98,9 +111,9 @@ export default function BlueprintForm({ kind = 'blueprint', blueprint, fieldType
                     </div>
                     <div className="cms:flex cms:flex-col cms:gap-2">
                         <Label htmlFor="handle">Handle</Label>
-                        <Input id="handle" className="cms:font-mono" value={form.data.handle} disabled={blueprint !== null} required
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setHandleTouched(true); form.setData('handle', e.target.value); }} />
-                        <p className="cms:text-sm cms:text-muted-foreground">{blueprint ? 'Set when it was created.' : 'Lowercase letters, digits and underscores. It can\'t change later.'}</p>
+                        <Input id="handle" className="cms:font-mono" value={form.data.handle} disabled={blueprint !== null && kind === 'fieldset'} required spellCheck={false}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setHandleTouched(true); form.setData('handle', handleInput(e.target.value)); }} />
+                        <p className="cms:text-sm cms:text-muted-foreground">{handleHelp(kind, blueprint !== null)}</p>
                         <FieldError message={errors.handle} />
                     </div>
                 </CardContent>

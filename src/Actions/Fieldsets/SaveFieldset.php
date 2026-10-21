@@ -12,6 +12,7 @@ use Sunrice\Cms\Fields\DefinitionValidator;
 use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\Fieldsets;
 use Sunrice\Cms\Models\Fieldset;
+use Sunrice\Cms\Support\HandleRule;
 
 /**
  * Creates a fieldset or changes one. Input: handle (only when creating:
@@ -38,7 +39,7 @@ final class SaveFieldset
         $fieldset ??= new Fieldset;
         /** @var array{handle?: string, title: string} $validated */
         $validated = Validator::make($input, [
-            'handle' => $fieldset->exists ? ['prohibited'] : ['required', 'string', 'max:64', 'regex:/^[a-z][a-z0-9_]*$/', Rule::unique($fieldset->getTable(), 'handle')],
+            'handle' => $fieldset->exists ? ['prohibited'] : ['required', 'string', 'max:64', new HandleRule, Rule::unique($fieldset->getTable(), 'handle')],
             'title' => ['required', 'string', 'max:255'],
         ])->validate();
         $handle = $fieldset->exists ? $fieldset->handle : ($validated['handle'] ?? '');

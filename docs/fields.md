@@ -2,7 +2,7 @@
 
 A **blueprint** lists the fields editors fill in for one kind of content: the entries of a collection, a taxonomy's terms, a global set or a form. A **fieldset** is a group of fields used in several places: blueprints include it, and flexible fields use fieldsets as their kinds of block.
 
-Both are stored in the database (`sunrice_blueprints`, `sunrice_fieldsets`) and built in the admin under **Structure → Blueprints** and **Structure → Fieldsets**, for people with the `cms.blueprints.manage` permission. The builder adds, edits, drags into order and removes fields (each nested group or repeater's fields among themselves), nests groups and repeaters, and shows each type's settings. Changing a blueprint never deletes data: content keeps values under handles the blueprint no longer has, and they come back when the field does. A blueprint can't be deleted while a collection (for its entries or its listing page), a taxonomy, a global set or a form uses it: the error names them.
+Both are stored in the database (`sunrice_blueprints`, `sunrice_fieldsets`) and built in the admin under **Structure → Blueprints** and **Structure → Fieldsets**, for people with the `cms.blueprints.manage` permission. The builder adds, edits, drags into order and removes fields (each nested group or repeater's fields among themselves), nests groups and repeaters, and shows each type's settings. Changing a blueprint never deletes data: content keeps values under handles the blueprint no longer has, and they come back when the field does. A blueprint can't be deleted while a collection (for its entries or its listing page), a taxonomy, a global set or a form uses it: the error names them. A blueprint's handle can be changed on its edit form: `Actions\Blueprints\RenameBlueprint` changes it everywhere it's named (collections, deleted ones too, taxonomies, global sets, forms and entries that picked it). A fieldset's handle can't change: flexible blocks store it with every block.
 
 ## Field definitions
 
@@ -16,7 +16,7 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 
 | Key | |
 | --- | --- |
-| `handle` | Lowercase letters, digits and underscores, starting with a letter; unique on its level. A blueprint's top level can't use the handles content keeps for itself (`Blueprint::RESERVED`: `title`, `slug`, `status`…). |
+| `handle` | Lowercase letters, digits and underscores, starting with a letter; unique on its level (`Support\HandleRule`, whose error suggests the handle meant: `job-title` → try "job_title"; the builder turns what's typed into one as you type). A blueprint's top level can't use the handles content keeps for itself (`Blueprint::RESERVED`: `title`, `slug`, `status`…). |
 | `type` | A registered field type (below). |
 | `required` | The field must be filled in. |
 | `translatable` | Whether the value differs per language; `null` lets the type decide (text does, numbers don't). |

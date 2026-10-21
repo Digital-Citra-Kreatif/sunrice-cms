@@ -5,7 +5,7 @@ import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SortableHandle, SortableList, Switch, Textarea,
 } from '@sunrice/admin-sdk/ui';
 import { FieldError, FieldInput } from '@/components/FieldInput.tsx';
-import { type BuilderField, errorsAt, errorsUnder, hasErrors, MAX_DEPTH, newField, relabel } from '@/lib/builder.ts';
+import { type BuilderField, errorsAt, errorsUnder, handleInput, hasErrors, MAX_DEPTH, newField, relabel } from '@/lib/builder.ts';
 import { OPERATORS } from '@/lib/conditions.ts';
 import type { Errors, FieldCondition, FieldTypeInfo } from '@/types.ts';
 
@@ -116,7 +116,7 @@ function FieldSettings({ id, field, type, siblings, onChange, types, errors, dep
                 <div className="cms:flex cms:flex-col cms:gap-2">
                     <Label htmlFor={`${id}-handle`}>Handle</Label>
                     <Input id={`${id}-handle`} className="cms:font-mono" value={field.handle}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...field, handle: e.target.value, handleTouched: true })} />
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...field, handle: handleInput(e.target.value), handleTouched: true })} />
                     <p className="cms:text-sm cms:text-muted-foreground">How templates read it. Renaming it hides values saved under the old one.</p>
                     <FieldError message={errors.handle} />
                 </div>

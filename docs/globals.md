@@ -4,7 +4,7 @@
 
 ## Setting up
 
-Under **Structure → Global sets** (permissions `cms.global-sets.view`, `.create`, `.update`, `.delete`): a title, a handle that templates use and that can't change later, and a blueprint. Changing the blueprint keeps the values already saved.
+Under **Structure → Global sets** (permissions `cms.global-sets.view`, `.create`, `.update`, `.delete`): a title, a handle that templates use (made from the title as you type it; it can be changed later on the edit form, with a warning: templates that name it need the new one too), and a blueprint. Changing the blueprint keeps the values already saved.
 
 ## Editing
 

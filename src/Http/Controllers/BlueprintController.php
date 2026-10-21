@@ -6,9 +6,11 @@ namespace Sunrice\Cms\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Sunrice\Cms\Actions\Blueprints\DeleteBlueprint;
+use Sunrice\Cms\Actions\Blueprints\RenameBlueprint;
 use Sunrice\Cms\Actions\Blueprints\SaveBlueprint;
 use Sunrice\Cms\Admin\BuilderData;
 use Sunrice\Cms\Models\Blueprint;
@@ -58,9 +60,15 @@ final class BlueprintController
         ]);
     }
 
-    public function update(Request $request, Blueprint $blueprint, SaveBlueprint $save): RedirectResponse
+    public function update(Request $request, Blueprint $blueprint, SaveBlueprint $save, RenameBlueprint $rename): RedirectResponse
     {
-        $save->handle($request->only(['title', 'fields']), $blueprint);
+        $handle = $request->input('handle');
+        DB::transaction(function () use ($request, $blueprint, $save, $rename, $handle): void {
+            if (is_string($handle) && $handle !== '') {
+                $rename->handle($blueprint, $handle);
+            }
+            $save->handle($request->only(['title', 'fields']), $blueprint);
+        });
 
         return back()->with('success', 'Blueprint saved.');
     }

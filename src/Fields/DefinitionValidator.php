@@ -9,6 +9,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Validator as ValidatorInstance;
 use Sunrice\Cms\Fields\Types\FieldsetInclude;
+use Sunrice\Cms\Support\HandleRule;
 
 /**
  * Checks field definitions from the blueprint builder before they are
@@ -74,7 +75,7 @@ final class DefinitionValidator
             $key = "{$path}.{$index}";
             $type = is_array($field) && is_string($field['type'] ?? null) && $this->types->has($field['type']) ? $this->types->get($field['type']) : null;
             $rules[$key] = ['array'];
-            $rules["{$key}.handle"] = ['required', 'string', 'max:64', 'regex:/^[a-z][a-z0-9_]*$/'];
+            $rules["{$key}.handle"] = ['required', 'string', 'max:64', new HandleRule];
             $rules["{$key}.type"] = ['required', 'string', Rule::in(array_keys($this->types->all()))];
             $rules["{$key}.label"] = ['nullable', 'string', 'max:255'];
             $rules["{$key}.instructions"] = ['nullable', 'string', 'max:1000'];
