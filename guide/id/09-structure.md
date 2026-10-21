@@ -2,6 +2,27 @@
 
 **Structure** adalah tempat pengelola situs menentukan konten apa yang dimiliki situs web dan bagaimana susunannya. Editor jarang memerlukannya. Perubahan di sini memengaruhi pekerjaan semua orang, jadi rencanakan bersama tim, dan bersama developer jika perubahan itu membutuhkan desain baru (template).
 
+## Menyiapkan situs baru, berurutan
+
+Beberapa pengaturan menunjuk ke hal lain, jadi baru bisa dipilih setelah hal itu ada. Saat membangun situs dari nol, urutan ini menghindarkan Anda dari gagal simpan:
+
+1. **Fieldset** berisi field biasa (alamat, ajakan bertindak), dan **blueprint** yang hanya berisi field biasa (teks, media, tanggal…): belum ada yang menunjuk ke koleksi atau taksonomi.
+2. **Taksonomi** (*Topik*, *Lokasi*), untuk sementara tanpa koleksinya.
+3. **Koleksi**, masing-masing dengan blueprint-nya.
+4. Kembali ke **blueprint** (dan fieldset): tambahkan field **Entries**, yang menautkan ke koleksi, dan field **Terms**, yang menautkan ke taksonomi.
+5. Kembali ke **taksonomi**: centang **Collections** yang entrinya dikelompokkan.
+6. **Global set**, **pengaturan menu**, dan **formulir**; lalu kontennya, dan beranda di Settings → Site.
+
+Di dasbor, **Getting the site ready** menampilkan apa yang masih kurang.
+
+### Handle
+
+**Handle** (milik field, koleksi, taksonomi…) adalah nama yang dipakai template: huruf kecil, angka, dan garis bawah, diawali huruf. `contact_person` bisa; `contact-person` (tanda hubung) dan `ContactPerson` tidak. Panel membuatnya dari judul atau label saat Anda mengetik.
+
+Setiap entri sudah memiliki yang berikut, jadi tidak ada field yang boleh memakainya sebagai handle: `id`, `title`, `slug`, `url`, `status`, `locale`, `published_at`, `created_at`, `updated_at`, `parent`, `children`, `collection`, `blueprint`, `data`, `seo`, `author`.
+
+Field **Fieldset** menaruh field-field fieldset itu di tempatnya, seolah-olah milik blueprint itu sendiri: handle-nya dihitung sebagai milik blueprint (dua field tidak boleh memakai handle yang sama), dan handle field Fieldset itu sendiri tidak dipakai apa pun.
+
 ## Koleksi
 
 **Koleksi** adalah jenis konten: *Pages*, *Blog*, *Produk*, *Acara*. **Structure → Collections** menampilkannya; **New collection** menambah yang baru.
@@ -13,7 +34,7 @@
 | **Blueprint** | Field yang dimiliki entrinya (lihat di bawah). Menggantinya tetap mempertahankan isi entri yang sudah ada. |
 | **Other blueprints** | Blueprint lain yang bisa dipilih sebuah entri, di Page settings-nya (misalnya halaman promosi di antara halaman biasa). |
 | **Dated entries** | Entri menampilkan tanggal dan terurut dari yang terbaru, seperti artikel. |
-| **Manual order** | Editor mengurutkan entri sendiri (**Reorder** di daftar), bukan menurut tanggal atau judul. |
+| **Manual order** | Editor mengurutkan entri sendiri (**Reorder** di atas daftar entri, atau panah **Move up** dan **Move down**), bukan menurut tanggal atau judul. |
 | **Hierarchical** | Entri bisa berada di bawah entri induk, seperti halaman di bawah halaman (untuk jejak halaman dan sub-menu; alamatnya tetap). |
 | **URL** | Letak entri di situs web, dengan `{slug}` untuk slug setiap entri: `/blog/{slug}`, atau `/{slug}` untuk halaman di tingkat teratas. Kosong: entri tidak punya halaman sendiri. |
 | **Template** | Desain yang dipakai entri, jika developer membuatnya. |

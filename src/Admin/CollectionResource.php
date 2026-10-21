@@ -64,7 +64,7 @@ final class CollectionResource extends Resource
                 ->options(fn (): array => Blueprint::query()->orderBy('title')->get()->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->title])->all())
                 ->help('Blueprints an entry may switch to instead, in its Page settings (fields both have keep their values).'),
             Toggle::make('dated')->label('Dated entries')->help('Entries show a date and list newest first, like articles.'),
-            Toggle::make('ordered')->label('Manual order')->help('Editors put entries in order (Move up, Move down), instead of by date or title.'),
+            Toggle::make('ordered')->label('Manual order')->help('Editors put entries in order (Reorder above the entries list, or the Move up and Move down arrows), instead of by date or title.'),
             Toggle::make('hierarchical')->label('Hierarchical')->help('Entries may have a parent entry, like pages under pages (for breadcrumbs and sub-menus; their URLs stay the same).'),
             TextInput::make('route')->label('URL')->placeholder('/blog/{slug}')->unique()
                 ->rules([new RoutePatternRule])
