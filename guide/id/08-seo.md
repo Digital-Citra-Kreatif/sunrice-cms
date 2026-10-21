@@ -39,7 +39,7 @@ Beri setiap gambar yang bermakna **Teks alternatif** di [pustaka media](guide:pa
 
 ## Alamat dan pengalihan
 
-Saat Anda menerbitkan entri dengan slug baru, alamat lamanya tetap berfungsi: {panel} otomatis menambahkan pengalihan dari alamat lama ke yang baru, sehingga tautan dan hasil pencarian tidak rusak. **Struktur → Pengalihan** menampilkannya, dan pengelola situs bisa menambahkan sendiri: **Dari** alamat di situs, **Ke** alamat di situs atau alamat web, permanen (301) atau sementara (302).
+Saat Anda menerbitkan entri dengan slug baru, alamat lamanya tetap berfungsi: {panel} otomatis menambahkan pengalihan dari alamat lama ke yang baru, sehingga tautan dan hasil pencarian tidak rusak. **Struktur → Pengalihan** menampilkannya, dan pengelola situs bisa menambahkan sendiri: **Dari** alamat di situs (atau semua yang di bawahnya, diakhiri `/*`), **Ke** alamat di situs atau alamat web, permanen (301) atau sementara (302).
 
 ## Peta situs
 

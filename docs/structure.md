@@ -93,7 +93,8 @@ The file is JSON with a section per kind, each item by handle, and records point
         {"entry": "pages/about", "labels": {}, "new_tab": false, "children": []},
         {"term": "topics/news"}, {"collection": "blog", "labels": {"en": "Blog"}}, {"url": "https://example.com", "labels": {"en": "Shop"}}
     ]}],
-    "redirects": [{"from": "/old", "to": "/new", "status": 301}, {"from": "/listings", "to": "/properties", "status": 301, "every_language": true}],
+    "redirects": [{"from": "/old", "to": "/new", "status": 301}, {"from": "/listings", "to": "/properties", "status": 301, "every_language": true},
+        {"from": "/blog/*", "to": "/journal/*", "status": 301}],
     "terms": [{"taxonomy": "topics", "slug": "local", "parent": "news", "translations": {"en": {"title": "Local", "slug": "local", "data": {...}}}}],
     "entries": [{"collection": "pages", "slug": "team", "parent": "about", "template": null,
         "translations": {"en": {"title": "Team", "slug": "team", "data": {...}, "published": true}}}]

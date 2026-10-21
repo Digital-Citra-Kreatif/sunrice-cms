@@ -99,5 +99,7 @@ Your developer then puts the form on a page. What visitors send arrives under Co
 
 **Structure → Redirects** lists the redirects made when entries changed address, and takes your own: **From** a path on the site (starting with `/`), **To** a path or a web address, and the **Type**: **Permanent (301)** or **Temporary (302)**. On a site in several languages, turn on **In every language** to make it work from the same address in each language too: /listings → /properties then also sends /id/listings to /id/properties. A live page always wins over a redirect from its address.
 
+**Wildcards** move a whole part of the site at once: end **From** with `/*` and it takes every address under it. Put a `*` in **To** for the rest of the address: `/blog/*` → `/journal/*` sends `/blog/2024/hello` to `/journal/2024/hello`; leave it out to send them all to one page (`/old-shop/*` → `/products`). The list's **Match** column says **Everything under it** for these. A redirect for one exact address wins over a wildcard, and a longer wildcard over a shorter one (`/blog/2024/*` before `/blog/*`). The form refuses a `*` anywhere but at the end of **From**, more than one `*` in **To**, and a **To** that **From** would take again (a loop).
+
 > [!TECHNICAL]
 > Structure can be exported and imported between sites (`sunrice:export-structure`, `sunrice:import-structure`), and fields renamed safely (`sunrice:rename-field`). See [Structure tools](docs:cms/structure) and [Fields](docs:cms/fields).

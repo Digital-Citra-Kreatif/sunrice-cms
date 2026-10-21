@@ -39,7 +39,7 @@ Give every meaningful image **Alternative text** in the [media library](guide:pa
 
 ## Addresses and redirects
 
-When you publish an entry with a new slug, the old address keeps working: {panel} adds a redirect from it to the new one automatically, so links and search results don't break. **Structure → Redirects** lists them, and site managers can add their own: **From** a path on the site, **To** a path or a web address, permanent (301) or temporary (302).
+When you publish an entry with a new slug, the old address keeps working: {panel} adds a redirect from it to the new one automatically, so links and search results don't break. **Structure → Redirects** lists them, and site managers can add their own: **From** a path on the site (or everything under one, ending in `/*`), **To** a path or a web address, permanent (301) or temporary (302).
 
 ## The sitemap
 

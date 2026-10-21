@@ -99,5 +99,7 @@ Developer lalu memasang formulir di sebuah halaman. Isian pengunjung masuk ke Ko
 
 **Struktur → Pengalihan** menampilkan pengalihan yang dibuat saat alamat entri berubah, dan menerima pengalihan Anda sendiri: **Dari** alamat di situs (diawali `/`), **Ke** alamat di situs atau alamat web, dan **Jenis**: **Permanen (301)** atau **Sementara (302)**. Di situs dengan beberapa bahasa, nyalakan **Di semua bahasa** agar pengalihan juga berlaku dari alamat yang sama di setiap bahasa: /listings → /properties juga mengirim /id/listings ke /id/properties. Halaman yang tayang selalu menang atas pengalihan dari alamatnya.
 
+**Wildcard** memindahkan satu bagian situs sekaligus: akhiri **Dari** dengan `/*` maka semua alamat di bawahnya ikut. Taruh `*` di **Ke** untuk sisa alamatnya: `/blog/*` → `/journal/*` mengirim `/blog/2024/hello` ke `/journal/2024/hello`; tanpa `*`, semuanya menuju satu halaman (`/old-shop/*` → `/products`). Kolom **Cakupan** di daftar menandai yang seperti ini dengan **Semua di bawahnya**. Pengalihan untuk satu alamat persis menang atas wildcard, dan wildcard yang lebih panjang atas yang lebih pendek (`/blog/2024/*` sebelum `/blog/*`). Formulir menolak `*` selain di ujung **Dari**, lebih dari satu `*` di **Ke**, dan **Ke** yang akan dicakup **Dari** lagi (berputar-putar).
+
 > [!TECHNICAL]
 > Struktur bisa diekspor dan diimpor antarsitus (`sunrice:export-structure`, `sunrice:import-structure`), dan field bisa diganti namanya dengan aman (`sunrice:rename-field`). Lihat [Structure tools](docs:cms/structure) dan [Fields](docs:cms/fields).
