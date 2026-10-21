@@ -184,6 +184,8 @@ final class CmsServiceProvider extends ServiceProvider
 
             return;
         }
+        // Which pages paginate: only they are kept apart by ?page=.
+        Site\PageNumberWatch::register();
         if (config('responsecache.cache_profile', CacheAllSuccessfulGetRequests::class) === CacheAllSuccessfulGetRequests::class) {
             config(['responsecache.cache_profile' => Site\PageCacheProfile::class]);
         }

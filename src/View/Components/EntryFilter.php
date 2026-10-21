@@ -16,6 +16,7 @@ use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Query\EntryQuery;
+use Sunrice\Cms\Site\PageCache;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\View\Components\Filter\ActiveFilter;
 use Sunrice\Cms\View\Components\Filter\FilterControl;
@@ -186,11 +187,17 @@ final class EntryFilter extends Component
                         $type === 'date_range' && is_string($given) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $given) === 1 && strtotime($given) !== false => $given,
                         default => null,
                     };
+                    if ($value[$key] === null && $given !== null && $given !== '') {
+                        self::ignored();
+                    }
                 }
                 $filter->value = $value;
                 break;
             case 'toggle':
                 $filter->value = in_array($raw, ['1', 'true', 'on', 'yes'], true);
+                if (! $filter->value && ! in_array($raw, [null, '', '0'], true)) {
+                    self::ignored();
+                }
                 break;
             case 'terms':
                 $filter->taxonomy = is_string($definition['taxonomy'] ?? null) ? $definition['taxonomy'] : $name;
@@ -324,12 +331,19 @@ final class EntryFilter extends Component
      */
     private static function chosen(mixed $raw, array $allowed, bool $multiple, bool $any = false): string|array|null
     {
-        $values = array_values(array_unique(array_filter(
-            array_map(fn (mixed $v): string => is_scalar($v) ? trim(mb_substr((string) $v, 0, 200)) : '', is_array($raw) ? $raw : [$raw]),
-            fn (string $v): bool => $v !== '' && ($any || in_array($v, $allowed, true)),
-        )));
+        $given = array_map(fn (mixed $v): string => is_scalar($v) ? trim(mb_substr((string) $v, 0, 200)) : '', is_array($raw) ? $raw : ($raw === null ? [] : [$raw]));
+        $values = array_values(array_unique(array_filter($given, fn (string $v): bool => $v !== '' && ($any || in_array($v, $allowed, true)))));
+        if (count(array_filter($given, fn (string $v): bool => $v !== '')) > count($values) || (! $multiple && count($values) > 1)) {
+            self::ignored();
+        }
 
         return $multiple ? $values : ($values[0] ?? null);
+    }
+
+    /** A value in the address was ignored: the page isn't kept, so made-up values can't fill the page cache. */
+    private static function ignored(): void
+    {
+        app(PageCache::class)->dontKeep();
     }
 
     /**
@@ -403,7 +417,11 @@ final class EntryFilter extends Component
         if ($choices === []) {
             return [];
         }
-        $selected = Arr::first($choices, fn (SortChoice $choice): bool => $choice->value === $current) ?? $choices[0];
+        $selected = Arr::first($choices, fn (SortChoice $choice): bool => $choice->value === $current);
+        if ($selected === null && $current !== null && $current !== '') {
+            self::ignored();
+        }
+        $selected ??= $choices[0];
         $selected->selected = true;
 
         return $choices;
