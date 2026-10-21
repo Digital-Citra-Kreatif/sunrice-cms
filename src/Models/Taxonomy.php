@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\Schema;
 
 /**
@@ -48,6 +49,9 @@ class Taxonomy extends Model
 
     protected $attributes = ['hierarchical' => false];
 
+    /** The field terms of a taxonomy without a blueprint have: an introduction for their page. */
+    public const DESCRIPTION = 'description';
+
     private ?Schema $schema = null;
 
     /** Its title in a language (null: the page's), as visitors read it on term pages. */
@@ -75,8 +79,13 @@ class Taxonomy extends Model
     }
 
     /** Terms' own fields (none without a blueprint), loaded once. */
+    /**
+     * Its terms' own fields: its blueprint's; without one, a description
+     * (DESCRIPTION), so a term's page has an introduction to write.
+     */
     public function schema(): Schema
     {
-        return $this->schema ??= ($this->blueprint === null ? null : Blueprint::query()->where('handle', $this->blueprint)->first()?->schema()) ?? Schema::make([]);
+        return $this->schema ??= ($this->blueprint === null ? null : Blueprint::query()->where('handle', $this->blueprint)->first()?->schema())
+            ?? Schema::make($this->blueprint === null ? [new Field(self::DESCRIPTION, 'textarea', 'Description', instructions: 'An introduction shown on the term\'s page.')] : []);
     }
 }
