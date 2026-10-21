@@ -218,7 +218,8 @@ The CMS adds these widgets to the panel's [dashboard](../../admin/docs/panel.md#
 | Widget | Shows | Who sees it |
 | --- | --- | --- |
 | `cms.collections` (Content) | Each collection's entries in the main language: live, drafts and scheduled, linking to its list. | Users who may view some collection's entries. |
-| `cms.recent-edits` (Recently edited) | The last eight entry translations edited, any language, with their status. | The same. |
+| `cms.setup` (Getting the site ready) | What's left to set up a new site: the first entries, the homepage, menus without links; gone once done. | `cms.settings.site` |
+| `cms.recent-edits` (Recently edited entries) | The last eight entry translations edited, any language, with their status. | Users who may view some collection's entries. |
 | `cms.comments` (Comments waiting) | How many comments wait for moderation, and the latest five. | `cms.comments.view` |
 | `cms.scheduled` (Coming up) | The next eight entries scheduled to go live. | Users who may view some collection's entries. |
 | `cms.submissions` (Latest submissions) | The last eight submissions of the forms the user may read, each summed up by its first text field. | `cms.submissions.view`, or a form's own. |
