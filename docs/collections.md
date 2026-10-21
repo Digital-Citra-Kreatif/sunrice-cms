@@ -72,7 +72,7 @@ Scoped permissions are named after handles, so when a collection's, taxonomy's o
 In the editor:
 
 - **Ctrl/Cmd+S** saves the draft, and leaving the page with unsaved changes asks first.
-- **Page settings**: the parent (in hierarchical collections; never the entry itself or one below it, at most 10 deep), a Blade view for this entry alone (`SaveEntrySettings`) and, when the collection offers more than one, its blueprint (`ChangeBlueprint`), for every language. Deleting an entry for good moves its children up to its parent.
+- **Page settings**: the parent (in hierarchical collections; never the entry itself or one below it, at most 10 deep; also chosen when creating, `CreateEntry`'s `parent_id`), a Blade view for this entry alone and whether it takes comments (`SaveEntrySettings`), for every language, saved with the draft (the editor's `PUT` sends `parent_id`, `template` and `comments_closed` with the fields, all or nothing); and, when the collection offers more than one, its blueprint (`ChangeBlueprint`), changed on its own. Deleting an entry for good moves its children up to its parent.
 - **Duplicate** copies every language's draft as a new draft entry ("Hello (copy)", slug `hello-copy`).
 - Only one person edits an entry in a language at a time: others are told who's editing and can view it or take over (see [edit locks](../../admin/docs/locks.md)).
 - When someone else saved since you opened the page, saving says so: **Load theirs**, or **Save mine anyway** over their version.

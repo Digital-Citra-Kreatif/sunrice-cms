@@ -63,10 +63,10 @@ The **Status** card on the right says whether the entry is a draft, scheduled or
 
 ## Page settings
 
-The **Page settings** card on the right is saved on its own, for every language, with **Save settings**:
+The **Page settings** card on the right applies to every language. It's saved with the draft (**Save draft**, **Publish**, Ctrl+S), except the blueprint, which has its own button:
 
-- **Parent**: in collections where entries nest (like pages under pages), the entry this one sits under. It's used for breadcrumbs and sub-menus; the web address doesn't change.
-- **Blueprint**: when the collection offers more than one set of fields (a normal page or a landing page, say), the one this entry uses. Switching keeps every value: fields both have keep theirs, and the others are kept out of sight and come back if you switch back. The editor reloads with the new fields.
+- **Parent**: in collections where entries nest (like pages under pages), the entry this one sits under; you can also choose it while creating the entry. It's used for breadcrumbs and sub-menus; the web address doesn't change.
+- **Blueprint**: when the collection offers more than one set of fields (a normal page or a landing page, say), the one this entry uses. Switching keeps every value: fields both have keep theirs, and the others are kept out of sight and come back if you switch back. Save your draft first, then press **Change blueprint**: the editor reloads with the new fields.
 - **Template**: a different design for this entry alone, if your developer made one. Leave it empty for the collection's own.
 - **Accept new comments**: in collections with comments, switch it off to close this entry's comments (approved ones stay). **Comments** opens this entry's comments.
 

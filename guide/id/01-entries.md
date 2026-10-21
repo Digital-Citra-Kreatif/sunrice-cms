@@ -63,10 +63,10 @@ Kartu **Status** di kanan menunjukkan apakah entri masih draf, terjadwal, atau t
 
 ## Pengaturan halaman
 
-Kartu **Page settings** di kanan disimpan tersendiri, untuk semua bahasa, dengan **Save settings**:
+Kartu **Page settings** di kanan berlaku untuk semua bahasa. Isinya disimpan bersama draf (**Save draft**, **Publish**, Ctrl+S), kecuali blueprint, yang punya tombolnya sendiri:
 
-- **Parent** (induk): di koleksi yang entrinya bertingkat (seperti halaman di bawah halaman), entri tempat entri ini berada. Dipakai untuk jejak halaman dan sub-menu; alamat webnya tidak berubah.
-- **Blueprint**: jika koleksi menawarkan lebih dari satu susunan field (misalnya halaman biasa atau halaman promosi), susunan yang dipakai entri ini. Menggantinya tetap menyimpan semua nilai: field yang ada di keduanya mempertahankan isinya, dan sisanya disimpan tersembunyi dan muncul lagi jika Anda kembali. Penyunting dimuat ulang dengan field yang baru.
+- **Parent** (induk): di koleksi yang entrinya bertingkat (seperti halaman di bawah halaman), entri tempat entri ini berada; bisa juga dipilih saat membuat entri. Dipakai untuk jejak halaman dan sub-menu; alamat webnya tidak berubah.
+- **Blueprint**: jika koleksi menawarkan lebih dari satu susunan field (misalnya halaman biasa atau halaman promosi), susunan yang dipakai entri ini. Menggantinya tetap menyimpan semua nilai: field yang ada di keduanya mempertahankan isinya, dan sisanya disimpan tersembunyi dan muncul lagi jika Anda kembali. Simpan draf dulu, lalu tekan **Change blueprint**: penyunting dimuat ulang dengan field yang baru.
 - **Template**: desain lain khusus untuk entri ini, jika developer membuatnya. Kosongkan untuk desain koleksi.
 - **Accept new comments**: di koleksi yang memiliki komentar, matikan untuk menutup komentar entri ini (komentar yang sudah disetujui tetap tampil). **Comments** membuka komentar entri ini.
 

@@ -8,6 +8,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -22,6 +23,7 @@ use Sunrice\Cms\Actions\Entries\PublishEntry;
 use Sunrice\Cms\Actions\Entries\RestoreEntry;
 use Sunrice\Cms\Actions\Entries\RestoreRevision;
 use Sunrice\Cms\Actions\Entries\SaveDraft;
+use Sunrice\Cms\Actions\Entries\SaveEntrySettings;
 use Sunrice\Cms\Actions\Entries\TrashEntry;
 use Sunrice\Cms\Actions\Entries\UnpublishEntry;
 use Sunrice\Cms\Admin\EntryList;
@@ -168,7 +170,7 @@ final class EntryController
 
     public function store(Request $request, Collection $collection, CreateEntry $create): RedirectResponse
     {
-        $translation = $create->handle($collection, $request->only(['title', 'slug', 'data', 'seo']));
+        $translation = $create->handle($collection, $request->only(['title', 'slug', 'data', 'seo', 'parent_id']));
 
         return redirect()->route('sunrice.admin.cms.entries.edit', $translation->entry_id)->with('success', "\"{$translation->draft_title}\" created as a draft.");
     }
@@ -264,8 +266,12 @@ final class EntryController
         ];
     }
 
-    /** Saves the draft; with "publish", publishes it too (needs cms.entries.publish). */
-    public function update(Request $request, Entry $entry, SaveDraft $save, PublishEntry $publish): RedirectResponse
+    /**
+     * Saves the draft with the page settings given (parent_id, template,
+     * comments_closed), all or nothing; with "publish", publishes it too
+     * (needs cms.entries.publish).
+     */
+    public function update(Request $request, Entry $entry, SaveDraft $save, PublishEntry $publish, SaveEntrySettings $settings): RedirectResponse
     {
         $publishing = $request->boolean('publish');
         if ($publishing) {
@@ -273,7 +279,11 @@ final class EntryController
             abort_unless(Access::entries($request->user(), 'publish', $entry->collection), 403);
         }
         $publishAt = $publishing ? self::publishAt($request) : null;
-        $translation = $save->handle(self::translation($entry, $request->input('locale')), $request->only(['title', 'slug', 'data', 'seo', 'version']));
+        $translation = DB::transaction(function () use ($request, $entry, $save, $settings): EntryTranslation {
+            EntryManageController::saveSettings($request, $entry, $settings);
+
+            return $save->handle(self::translation($entry, $request->input('locale')), $request->only(['title', 'slug', 'data', 'seo', 'version']));
+        });
         if ($publishing) {
             $publish->handle($translation, $publishAt);
 

@@ -74,7 +74,12 @@ function usedBySentence(usedBy: UsedBy[]): string {
     const shown = usedBy.slice(0, 5).map((use) => use.label).join('; ');
     return ` It's used by ${shown}${usedBy.length > 5 ? ` and ${usedBy.length - 5} more` : ''}: those links will show nothing.`;
 }
-type FormData = { locale: string | null; title: string; slug: string; data: FieldValues; seo: FieldValues; version: number | null; publish: boolean; published_at: string | null };
+/** With the page settings (every language's), saved with the draft. */
+type FormData = {
+    locale: string | null; title: string; slug: string; data: FieldValues; seo: FieldValues; version: number | null; publish: boolean; published_at: string | null;
+    parent_id: number | null; template: string; comments_closed: boolean;
+};
+type SettingsValues = Pick<FormData, 'parent_id' | 'template' | 'comments_closed'>;
 
 
 /**
@@ -96,7 +101,11 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
     const [confirm, confirmDialog] = useConfirm();
     const [scheduling, setScheduling] = React.useState(false);
 
-    const form = useForm<FormData>({ ...values, seo: values.seo ?? {}, locale: entry?.locale ?? null, version: entry?.version ?? null, publish: false, published_at: null });
+    const form = useForm<FormData>({
+        ...values, seo: values.seo ?? {}, locale: entry?.locale ?? null, version: entry?.version ?? null, publish: false, published_at: null,
+        parent_id: settings?.parentId ?? null, template: settings?.template ?? '', comments_closed: settings?.commentsClosed === true,
+    });
+    const setSettings = (patch: Partial<SettingsValues>) => form.setData((data) => ({ ...data, ...patch }));
     const locale = entry ? { locale: entry.locale } : {};
     const mainLocale = locales.find((l) => l.main)?.code;
 
@@ -286,6 +295,15 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                     </CollapsibleCard>
                 </div>
 
+                {!entry && collection.hierarchical && (
+                    <aside className="cms:flex cms:flex-col cms:gap-4">
+                        <CollapsibleCard title="Page settings" titleClassName="cms:text-base" storageKey="cms:entry:page-settings" hasErrors={errors.parent_id !== undefined}>
+                            <fieldset disabled={!writable} className="cms:flex cms:flex-col cms:gap-4 cms:text-sm">
+                                <ParentField collection={collection} value={form.data.parent_id} error={errors.parent_id} onChange={(parent_id) => setSettings({ parent_id })} />
+                            </fieldset>
+                        </CollapsibleCard>
+                    </aside>
+                )}
                 {entry && (
                     <aside className="cms:flex cms:flex-col cms:gap-4">
                         <CollapsibleCard title="Status" titleClassName="cms:text-base" storageKey="cms:entry:status" contentClassName="cms:flex cms:flex-col cms:gap-1 cms:text-sm">
@@ -304,7 +322,8 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                                 </div>
                             ))}
                         </CollapsibleCard>
-                        {settings && <PageSettings entryUrl={url} collection={collection} settings={settings} blueprints={blueprints} disabled={!writable} />}
+                        {settings && <PageSettings entryUrl={url} collection={collection} settings={settings} blueprints={blueprints} disabled={!writable}
+                            values={form.data} errors={errors} onChange={setSettings} draftDirty={form.isDirty} />}
                         {comments !== null && collection.comments && <EntryComments entryId={entry.id} comments={comments} />}
                         <CollapsibleCard title="Revisions" titleClassName="cms:text-base" storageKey="cms:entry:revisions" contentClassName="cms:flex cms:flex-col cms:gap-2 cms:text-sm">
                             {undoRestore !== null && can.update && (
@@ -405,64 +424,74 @@ function ScheduleDialog({ open, onClose, onSchedule, current, processing }: {
     );
 }
 
-/** The parent entry, the entry's own template, blueprint and comments, saved apart from the fields (every language's). */
-function PageSettings({ entryUrl, collection, settings, blueprints, disabled }: {
+function ParentField({ collection, value, error, onChange }: { collection: Props['collection']; value: number | null; error?: string; onChange: (id: number | null) => void }) {
+    return (
+        <div className="cms:flex cms:flex-col cms:gap-2">
+            <Label htmlFor="parent">Parent</Label>
+            <EntriesPicker id="parent" multiple={false} max={1} collections={[collection.handle]} invalid={error !== undefined}
+                value={value} onChange={(next) => onChange(typeof next === 'number' ? next : null)} />
+            <FieldError message={error} />
+        </div>
+    );
+}
+
+/**
+ * The parent entry, the entry's own template and comments (every
+ * language's), saved with the draft; and its blueprint, changed on its own
+ * (the editor reloads with the new fields).
+ */
+function PageSettings({ entryUrl, collection, settings, blueprints, disabled, values, errors, onChange, draftDirty }: {
     entryUrl: string;
     collection: Props['collection'];
     settings: NonNullable<Props['settings']>;
     blueprints: NonNullable<Props['blueprints']>;
     disabled: boolean;
+    values: SettingsValues;
+    errors: Record<string, string | undefined>;
+    onChange: (patch: Partial<SettingsValues>) => void;
+    draftDirty: boolean;
 }) {
     const savedBlueprint = blueprints.length > 1 ? (settings.blueprint ?? blueprints[0]!.handle) : undefined;
-    const form = useForm({
-        parent_id: settings.parentId, template: settings.template ?? '', comments_closed: settings.commentsClosed === true,
-        ...(savedBlueprint !== undefined ? { blueprint: savedBlueprint } : {}),
-    });
-    const errors = form.errors as Record<string, string | undefined>;
+    const blueprintForm = useForm({ blueprint: savedBlueprint ?? '' });
+    const blueprintError = (blueprintForm.errors as Record<string, string | undefined>).blueprint;
+    const hasErrors = ['parent_id', 'template', 'comments_closed'].some((key) => errors[key] !== undefined) || blueprintError !== undefined;
 
     return (
-        <CollapsibleCard title="Page settings" titleClassName="cms:text-base" storageKey="cms:entry:page-settings" hasErrors={Object.keys(errors).length > 0}>
+        <CollapsibleCard title="Page settings" titleClassName="cms:text-base" storageKey="cms:entry:page-settings" hasErrors={hasErrors}>
             <fieldset disabled={disabled} className="cms:flex cms:flex-col cms:gap-4 cms:text-sm">
-                {collection.hierarchical && (
-                    <div className="cms:flex cms:flex-col cms:gap-2">
-                        <Label htmlFor="parent">Parent</Label>
-                        <EntriesPicker id="parent" multiple={false} max={1} collections={[collection.handle]} invalid={errors.parent_id !== undefined}
-                            value={form.data.parent_id} onChange={(value) => form.setData('parent_id', typeof value === 'number' ? value : null)} />
-                        <FieldError message={errors.parent_id} />
-                    </div>
-                )}
+                {collection.hierarchical && <ParentField collection={collection} value={values.parent_id} error={errors.parent_id} onChange={(parent_id) => onChange({ parent_id })} />}
                 {blueprints.length > 1 && (
                     <div className="cms:flex cms:flex-col cms:gap-2">
                         <Label htmlFor="blueprint">Blueprint</Label>
-                        <Select value={form.data.blueprint} onValueChange={(handle: string) => form.setData('blueprint', handle)}>
-                            <SelectTrigger id="blueprint" aria-invalid={errors.blueprint !== undefined}><SelectValue /></SelectTrigger>
+                        <Select value={blueprintForm.data.blueprint} onValueChange={(handle: string) => blueprintForm.setData('blueprint', handle)}>
+                            <SelectTrigger id="blueprint" aria-invalid={blueprintError !== undefined}><SelectValue /></SelectTrigger>
                             <SelectContent>
                                 {blueprints.map((blueprint) => <SelectItem key={blueprint.handle} value={blueprint.handle}>{blueprint.title}</SelectItem>)}
                             </SelectContent>
                         </Select>
-                        {form.data.blueprint !== savedBlueprint && (
-                            <p className="cms:text-muted-foreground">The fields change in every language; values of fields both blueprints have are kept. Save your draft first: the editor reloads.</p>
+                        {blueprintForm.data.blueprint !== savedBlueprint && (
+                            <>
+                                <p className="cms:text-muted-foreground">The fields change in every language; values of fields both blueprints have are kept. The editor reloads.</p>
+                                <Button type="button" size="sm" disabled={blueprintForm.processing || draftDirty} title={draftDirty ? 'Save your draft first' : undefined}
+                                    // A new blueprint means new fields and versions: the editor starts afresh.
+                                    onClick={() => blueprintForm.put(`${entryUrl}/settings`, { preserveScroll: true })}>Change blueprint</Button>
+                            </>
                         )}
-                        <FieldError message={errors.blueprint} />
+                        <FieldError message={blueprintError} />
                     </div>
                 )}
                 <div className="cms:flex cms:flex-col cms:gap-2">
                     <Label htmlFor="template">Template</Label>
-                    <Input id="template" className="cms:font-mono" placeholder="The collection's" value={form.data.template}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => form.setData('template', e.target.value)} aria-invalid={errors.template !== undefined} />
+                    <Input id="template" className="cms:font-mono" placeholder="The collection's" value={values.template}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ template: e.target.value })} aria-invalid={errors.template !== undefined} />
                     <FieldError message={errors.template} />
                 </div>
                 {collection.comments && (
                     <div className="cms:flex cms:items-center cms:gap-3">
-                        <Switch id="comments-open" checked={!form.data.comments_closed} onCheckedChange={(open: boolean) => form.setData('comments_closed', !open)} />
+                        <Switch id="comments-open" checked={!values.comments_closed} onCheckedChange={(open: boolean) => onChange({ comments_closed: !open })} />
                         <Label htmlFor="comments-open">Accept new comments</Label>
                         <a href={adminUrl(`cms/comments?entry=${entryUrl.split('/').slice(-1)[0]}`)} className="cms:ml-auto cms:text-muted-foreground cms:underline-offset-4 hover:cms:underline">Comments</a>
                     </div>
-                )}
-                {form.isDirty && (
-                    <Button type="button" size="sm" disabled={form.processing}
-                        // A new blueprint means new fields and versions: the editor starts afresh.
-                        onClick={() => form.put(`${entryUrl}/settings`, { preserveScroll: true, preserveState: form.data.blueprint === savedBlueprint, onSuccess: () => form.setDefaults() })}>Save settings</Button>
                 )}
             </fieldset>
         </CollapsibleCard>
