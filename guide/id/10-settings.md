@@ -12,6 +12,7 @@ Pengaturan langsung berlaku begitu Anda mengeklik **Simpan**.
 
 - **Nama situs**: ditambahkan ke judul halaman dan tampil saat halaman dibagikan. Kosong: nama yang diatur developer.
 - **Deskripsi**: dipakai jika halaman tidak punya sendiri.
+- **Deskripsi dalam bahasa lain** (jika ada lebih dari satu bahasa): satu kotak per bahasa, untuk halaman dalam bahasa itu. Kosong: deskripsi di atas.
 
 Gambar berbagi, nama situs di judul beserta pemisahnya, akun X (Twitter), dan menyembunyikan seluruh situs dari mesin pencari ada di halaman **SEO** (di bawah Struktur pada sidebar; lihat [SEO](guide:website/seo)).
 

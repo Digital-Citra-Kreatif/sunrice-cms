@@ -12,6 +12,7 @@ Settings are live as soon as you click **Save**.
 
 - **Site name**: added to page titles and shown when pages are shared. Empty: the name your developer set.
 - **Description**: used when a page has none of its own.
+- **Description in other languages** (with more than one language): a box per language, for pages in that language. Empty: the description above.
 
 The share image, the site name in titles and its separator, the X (Twitter) account and hiding the whole site from search engines are on the **SEO** page (under Structure in the sidebar; see [SEO](guide:website/seo)).
 
