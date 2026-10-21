@@ -17,7 +17,7 @@ Settings are live as soon as you click **Save**.
 - **X (Twitter) account**: the site's account, such as `@acme`, for shared links.
 - **Hide the whole site from search engines**: for a site still being built. Every page asks not to be indexed and the sitemap is empty. Turn it off when the site goes live.
 
-**Structured data**: **Add structured data to pages** (on unless you have a reason), whether the site is **Published by** an organisation or a person, and the organisation's **Logo** (square or wide, at least 112 pixels).
+**Structured data**: **Add structured data to pages** (on unless you have a reason), whether the site is **Published by** an organisation or a person, and the organisation's **Logo** (square or wide, at least 112 pixels). Search engines also like the publisher's details: its **Name** (empty: the site name), the **Kind of organization** as a schema.org type written as one word (*LocalBusiness*, *RealEstateAgent*, *Restaurant*…), **Phone**, **Address** and **Profiles elsewhere** (its Instagram, LinkedIn… pages, one address per line).
 
 ## Languages
 

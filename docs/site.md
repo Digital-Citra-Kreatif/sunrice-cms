@@ -113,7 +113,7 @@ Past the first page of a listing, term or search page, the canonical and `hrefla
 
 The seo component also prints structured data (schema.org, as JSON-LD), so search engines know what pages are and can show richer results:
 
-- every page: the **WebSite**, with its search box (a SearchAction, when the search page is on), and who publishes it (an **Organization** with its logo, or a **Person**: Settings → Site);
+- every page: the **WebSite**, with its search box (a SearchAction, when the search page is on), and who publishes it (Settings → Site → Structured data): an **Organization**, or the more specific type given as **Kind of organization** (`LocalBusiness`, `RealEstateAgent` …), with its logo, or a **Person**; with its **Name** (else the site name), phone, address (as text) and profiles elsewhere (`sameAs`, one URL per line; `SiteSettings::profiles()`);
 - entries: an **Article** (dated collections) or a **WebPage**, or the collection's **Structured data type** (Structure → Collections: Article, Blog post, News article, Web page, About page, Contact page). Articles get a headline, publish and change dates, the share image, author and publisher;
 - **BreadcrumbList**: Home, the collection's listing page, parent entries, the page;
 - listing and term pages: a **CollectionPage**; the search page: a **SearchResultsPage**.

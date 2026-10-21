@@ -17,7 +17,7 @@ Pengaturan langsung berlaku begitu Anda mengeklik **Save**.
 - **X (Twitter) account**: akun situs, seperti `@acme`, untuk tautan yang dibagikan.
 - **Hide the whole site from search engines**: untuk situs yang masih dibangun. Semua halaman meminta tidak diindeks dan peta situs kosong. Matikan saat situs mulai tayang.
 
-**Structured data**: **Add structured data to pages** (biarkan menyala kecuali ada alasan), apakah situs diterbitkan oleh organisasi atau perorangan (**Published by**), dan **Logo** organisasi (persegi atau melebar, minimal 112 piksel).
+**Structured data**: **Add structured data to pages** (biarkan menyala kecuali ada alasan), apakah situs diterbitkan oleh organisasi atau perorangan (**Published by**), dan **Logo** organisasi (persegi atau melebar, minimal 112 piksel). Mesin pencari juga menyukai detail penerbit: **Name** (kosong: nama situs), **Kind of organization** sebagai jenis schema.org yang ditulis satu kata (*LocalBusiness*, *RealEstateAgent*, *Restaurant*…), **Phone**, **Address**, dan **Profiles elsewhere** (halaman Instagram, LinkedIn… penerbit, satu alamat per baris).
 
 ## Languages
 
