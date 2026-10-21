@@ -58,14 +58,14 @@ Untuk menambah field, pilih jenisnya, lalu atur:
 - **Label**: yang dilihat editor. **Handle** (cara template membaca field) dibuat dari label; mengganti handle nanti menyembunyikan nilai yang tersimpan dengan handle lama, jadi mintalah developer untuk mengganti nama field dengan aman. Field di tingkat teratas blueprint tidak bisa memakai handle yang dipakai konten itu sendiri, dan builder langsung memberi tahu saat Anda mengetik: `id`, `title`, `slug`, `url`, `status`, `locale`, `published_at`, `created_at`, `updated_at`, `parent`, `children`, `collection`, `blueprint`, `data`, `seo`, `author`.
 - **Petunjuk**: teks yang tampil di bawah field.
 - **Wajib**: entri tidak bisa disimpan atau diterbitkan tanpanya.
-- **Per bahasa**: **Ya, diterjemahkan** (setiap bahasa punya isinya sendiri), **Tidak, dipakai bersama** (satu nilai untuk semua bahasa), atau **Sesuai tipenya** (teks diterjemahkan; angka, tanggal, saklar, dan media dipakai bersama).
+- **Dapat diterjemahkan**: nyala, setiap bahasa punya nilainya sendiri; mati, satu nilai dipakai bersama semua bahasa. Awalnya mengikuti tipenya (nyala untuk teks, mati untuk angka, tanggal, saklar, dan media). Di baris field, penanda **Bersama** menunjukkan field yang tidak diterjemahkan.
 - **Dalam bahasa lain** (di situs dengan beberapa bahasa): label, petunjuk, dan opsi pilihan sebagaimana dibaca pengunjung di setiap bahasa lain. Formulir di situs web menampilkannya, dan pesan kesalahannya menyebut field dengan nama ini. Kosong: seperti yang ditulis di atas.
 - **Aturan tambahan**: pemeriksaan opsional, satu per baris (misalnya `email` atau `max:100`; untuk developer: aturan validasi Laravel).
 - Pengaturan khusus tiap jenis: opsi sebuah field pilihan, koleksi yang ditautkan field entri, jenis berkas yang diterima field media, jumlah maksimal…
 
 Jenis-jenisnya: **Teks**, **Textarea**, **Teks kaya**, **Angka**, **Toggle**, **Pilihan**, **Tanggal**, **Tautan**, **Media**, **Entri**, **Term**, **Grup** (beberapa field bersama), **Repeater** (baris berisi field), **Konten fleksibel** (blok berbagai jenis), **Fieldset** (menyertakan fieldset: field-nya ditambahkan di tempatnya dengan handle masing-masing; agar tetap di bawah satu nama, taruh di dalam **Grup**), dan **File (formulir)** (berkas yang dikirim pengunjung lewat formulir: satu, atau beberapa dengan **Beberapa file**).
 
-Seret field ke urutannya lewat pegangannya (field di dalam grup atau repeater di antara sesamanya), lalu klik **Simpan** (atau **Buat blueprint** untuk yang baru). Blueprint yang masih dipakai tidak bisa dihapus. Begitu blueprint dipakai untuk entri atau term, set global, atau formulir, pilihan blueprint untuk jenis lain tidak lagi menawarkannya.
+Baris setiap field menampilkan tipe, label, dan handle-nya, dengan **Duplikat** (salinan tepat di bawahnya, berlabel "(salinan)", dengan handle sendiri, disimpan bersama blueprint) dan **Hapus** di ujungnya. Seret field ke urutannya lewat pegangannya (field di dalam grup atau repeater di antara sesamanya), lalu klik **Simpan** (atau **Buat blueprint** untuk yang baru). Blueprint yang masih dipakai tidak bisa dihapus. Begitu blueprint dipakai untuk entri atau term, set global, atau formulir, pilihan blueprint untuk jenis lain tidak lagi menawarkannya.
 
 ## Taksonomi
 

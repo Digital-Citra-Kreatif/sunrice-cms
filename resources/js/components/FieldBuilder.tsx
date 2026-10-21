@@ -1,5 +1,8 @@
 import * as React from 'react';
-import { ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import {
+    AlignLeft, Blocks, Calendar, ChevronRight, Copy, FileText, Group, Hash, Image, Link2, List, type LucideIcon, Newspaper, Paperclip, Plus, Puzzle,
+    Repeat, Shapes, Tags, ToggleLeft, Trash2, Type,
+} from 'lucide-react';
 import {
     Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input, Label,
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SortableHandle, SortableList, Switch, Textarea,
@@ -7,7 +10,7 @@ import {
 import { t } from '@sunrice/admin-sdk';
 import { ChangeWarning } from '@/components/ChangeWarning.tsx';
 import { FieldError, FieldInput } from '@/components/FieldInput.tsx';
-import { type BuilderField, cleanHandle, conditionChoices, errorsAt, errorsUnder, handleWarning, hasErrors, MAX_DEPTH, newField, relabel, renamedFrom, type ReservedHandles } from '@/lib/builder.ts';
+import { type BuilderField, cleanHandle, conditionChoices, duplicateField, errorsAt, errorsUnder, handleWarning, hasErrors, isTranslatable, MAX_DEPTH, newField, relabel, renamedFrom, type ReservedHandles, setTranslatable } from '@/lib/builder.ts';
 import { OPERATORS } from '@/lib/conditions.ts';
 import type { Errors, FieldCondition, FieldTranslation, FieldTypeInfo, LocaleInfo } from '@/types.ts';
 
@@ -41,6 +44,15 @@ export function FieldBuilder({ fields, onChange, types, errors, depth = 1, idPre
         onChange([...fields, field]);
         setOpen(new Set([field.key]));
     };
+    // "Duplicate": the copy goes right after the original and opens alone, said aloud for screen readers.
+    const [announcement, setAnnouncement] = React.useState('');
+    const duplicate = (index: number) => {
+        const result = duplicateField(fields, index, reserved, t);
+        if (!result) return;
+        onChange(result.fields);
+        setOpen(new Set([result.copy.key]));
+        setAnnouncement(t(':title duplicated as :copy, below it.', { title: fields[index]?.label || fields[index]?.handle || '', copy: result.copy.label ?? result.copy.handle }));
+    };
 
     return (
         <div className="cms:flex cms:flex-col cms:gap-2">
@@ -61,24 +73,8 @@ export function FieldBuilder({ fields, onChange, types, errors, depth = 1, idPre
 
                     return (
                         <div data-invalid={invalid ? 'true' : undefined} className={`cms:rounded-lg cms:border cms:bg-card ${invalid ? 'cms:border-destructive' : ''}`}>
-                            <div className="cms:flex cms:items-center cms:gap-2 cms:p-2">
-                                <SortableHandle {...handle} label={t('Move :title', { title: field.label || field.handle })} />
-                                <Button type="button" variant="ghost" size="icon" className="cms:size-8" aria-expanded={expanded} aria-controls={id}
-                                    aria-label={expanded ? t('Close :title', { title: field.label || field.handle }) : t('Open :title', { title: field.label || field.handle })} onClick={() => toggle(field.key)}>
-                                    {expanded ? <ChevronDown /> : <ChevronRight />}
-                                </Button>
-                                <button type="button" className="cms:flex cms:min-w-0 cms:flex-1 cms:items-center cms:gap-2 cms:text-left" onClick={() => toggle(field.key)}>
-                                    <span className="cms:truncate cms:font-medium">{field.label || field.handle}</span>
-                                    <code className="cms:truncate cms:text-xs cms:text-muted-foreground">{field.handle}</code>
-                                </button>
-                                {field.required && <Badge variant="outline">{t('Required')}</Badge>}
-                                <Badge variant="secondary">{type?.label ?? field.type}</Badge>
-                                {type?.hasChildren && field.fields.length > 0 && !expanded && (
-                                    <span className="cms:text-xs cms:text-muted-foreground">{t(':count inside', { count: field.fields.length })}</span>
-                                )}
-                                <Button type="button" variant="ghost" size="icon" className="cms:size-8 cms:text-destructive" aria-label={t('Remove :title', { title: field.label || field.handle })}
-                                    onClick={() => onChange(fields.filter((_, i) => i !== index))}><Trash2 /></Button>
-                            </div>
+                            <FieldRow field={field} type={type} index={index} expanded={expanded} controls={id} handle={handle} shared={locales.length > 0}
+                                onToggle={() => toggle(field.key)} onDuplicate={() => duplicate(index)} onRemove={() => onChange(fields.filter((_, i) => i !== index))} />
                             {expanded && (
                                 <FieldSettings id={id} field={field} type={type} siblings={fields} onChange={(next) => update(index, next)}
                                     types={types} errors={errorsUnder(errors, String(index))} depth={depth} reserved={reserved} locales={locales} />
@@ -87,6 +83,7 @@ export function FieldBuilder({ fields, onChange, types, errors, depth = 1, idPre
                     );
                 }}
             </SortableList>
+            <p className="cms:sr-only" aria-live="polite">{announcement}</p>
             <div>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -103,6 +100,65 @@ export function FieldBuilder({ fields, onChange, types, errors, depth = 1, idPre
     );
 }
 
+/** Each type's icon in a field's row; a type the panel doesn't know gets a plain one. */
+const TYPE_ICONS: Record<string, LucideIcon> = {
+    text: Type, textarea: AlignLeft, rich_text: FileText, number: Hash, toggle: ToggleLeft, date: Calendar, select: List,
+    media: Image, entries: Newspaper, terms: Tags, link: Link2, group: Group, repeater: Repeat, flexible: Blocks, fieldset: Puzzle, file: Paperclip,
+};
+
+/**
+ * A field's summary line: drag handle, open/close, then what it is at a glance (its type, its label and its
+ * handle, the key content keeps it under), the markers that matter (required, shared, conditional), and
+ * Duplicate and Remove at the end. The handle wraps under the label on narrow screens.
+ */
+function FieldRow({ field, type, expanded, controls, handle, shared, onToggle, onDuplicate, onRemove }: {
+    field: BuilderField; type: FieldTypeInfo | undefined; index: number; expanded: boolean; controls: string;
+    handle: React.ComponentProps<typeof SortableHandle>; shared: boolean; onToggle: () => void; onDuplicate: () => void; onRemove: () => void;
+}) {
+    const title = field.label || field.handle;
+    const Icon = TYPE_ICONS[field.type] ?? Shapes;
+    const include = field.type === 'fieldset';
+    const key = include ? (typeof field.config?.fieldset === 'string' ? field.config.fieldset : '') : field.handle;
+    const isShared = shared && !include && !isTranslatable(field, type?.translatable ?? false);
+
+    return (
+        <div className="cms:flex cms:items-center cms:gap-1 cms:py-1.5 cms:pr-1.5 cms:pl-2">
+            <SortableHandle {...handle} label={t('Move :title', { title })} />
+            <button type="button" aria-expanded={expanded} aria-controls={controls} onClick={onToggle}
+                aria-label={expanded ? t('Close :title', { title }) : t('Open :title', { title })}
+                className="cms:inline-flex cms:size-7 cms:shrink-0 cms:items-center cms:justify-center cms:rounded-md cms:text-muted-foreground cms:transition-colors hover:cms:bg-accent hover:cms:text-foreground focus-visible:cms:outline-none focus-visible:cms:ring-2 focus-visible:cms:ring-ring">
+                <ChevronRight aria-hidden className={`cms:size-4 cms:transition-transform cms:duration-200 ${expanded ? 'cms:rotate-90' : ''}`} />
+            </button>
+            {/* The whole line opens it too, for the mouse; the chevron is the control for keyboards and screen readers. */}
+            <div role="presentation" onClick={onToggle} className="cms:flex cms:min-w-0 cms:flex-1 cms:cursor-pointer cms:flex-wrap cms:items-center cms:gap-x-2.5 cms:gap-y-1 cms:py-0.5">
+                <span className="cms:inline-flex cms:shrink-0 cms:items-center cms:gap-1 cms:rounded-md cms:bg-muted cms:px-1.5 cms:py-0.5 cms:text-xs cms:text-muted-foreground">
+                    <Icon aria-hidden className="cms:size-3.5" />{type?.label ?? field.type}
+                </span>
+                <span className="cms:flex cms:min-w-0 cms:max-w-full cms:flex-col cms:gap-x-2 cms:sm:flex-row cms:sm:items-baseline">
+                    <span className="cms:truncate cms:font-medium">{title}</span>
+                    {key !== '' && key !== title && (
+                        <code className="cms:truncate cms:text-xs cms:text-muted-foreground" title={include ? t('Fieldset') : t('Handle')}>{key}</code>
+                    )}
+                </span>
+                {(field.required || isShared || field.condition || (type?.hasChildren && field.fields.length > 0 && !expanded)) && (
+                    <span className="cms:flex cms:flex-wrap cms:items-center cms:gap-1">
+                        {field.required && <Badge variant="outline" className="cms:font-normal">{t('Required')}</Badge>}
+                        {isShared && <Badge variant="outline" className="cms:font-normal" title={t('One value shared by every language.')}>{t('Shared')}</Badge>}
+                        {field.condition && <Badge variant="outline" className="cms:font-normal">{t('Conditional')}</Badge>}
+                        {type?.hasChildren && field.fields.length > 0 && !expanded && (
+                            <span className="cms:text-xs cms:text-muted-foreground">{t(':count inside', { count: field.fields.length })}</span>
+                        )}
+                    </span>
+                )}
+            </div>
+            <Button type="button" variant="ghost" size="icon" className="cms:size-8 cms:text-muted-foreground hover:cms:text-foreground"
+                aria-label={t('Duplicate :title', { title })} title={t('Duplicate :title', { title })} onClick={onDuplicate}><Copy /></Button>
+            <Button type="button" variant="ghost" size="icon" className="cms:size-8 cms:text-destructive"
+                aria-label={t('Remove :title', { title })} title={t('Remove :title', { title })} onClick={onRemove}><Trash2 /></Button>
+        </div>
+    );
+}
+
 interface SettingsProps {
     id: string;
     field: BuilderField;
@@ -115,8 +171,6 @@ interface SettingsProps {
     reserved?: Props['reserved'];
     locales: LocaleInfo[];
 }
-
-const PER_LANGUAGE = { default: '__default', yes: 'yes', no: 'no' };
 
 function FieldSettings({ id, field, type, siblings, onChange, types, errors, depth, reserved, locales }: SettingsProps) {
     const config = field.config ?? {};
@@ -156,11 +210,12 @@ function FieldSettings({ id, field, type, siblings, onChange, types, errors, dep
                     <Label htmlFor={`${id}-handle`}>{t('Handle')}</Label>
                     <Input id={`${id}-handle`} className="cms:font-mono" value={field.handle}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...field, handle: cleanHandle(e.target.value), handleTouched: true })} />
-                    <p className="cms:text-sm cms:text-muted-foreground">{t('How templates read it. Renaming it hides values saved under the old one.')}</p>
+                    {renamedFrom(field) === null && <p className="cms:text-sm cms:text-muted-foreground">{t('How templates read it. Renaming it hides values saved under the old one.')}</p>}
                     <div aria-live="polite">
                         {renamedFrom(field) !== null && (
                             <ChangeWarning>
-                                {t('Content saved under ":old" won\'t show under the new handle, and templates that read ":old" get nothing. To keep it, put back ":old", save, and run php artisan sunrice:rename-field, which renames the field and moves its values.', { old: renamedFrom(field) ?? '' })}
+                                {withCode(t('Content saved under :old won\'t show under :new, and templates reading :old get nothing. To rename it with its content: put back :old, save, then run :command.'),
+                                    { old: renamedFrom(field) ?? '', new: field.handle || '…', command: 'php artisan sunrice:rename-field' })}
                             </ChangeWarning>
                         )}
                     </div>
@@ -173,24 +228,18 @@ function FieldSettings({ id, field, type, siblings, onChange, types, errors, dep
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...field, instructions: e.target.value || null })} />
                 <FieldError message={errors.instructions} />
             </div>
-            <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-6">
+            <div className="cms:flex cms:flex-wrap cms:items-start cms:gap-x-8 cms:gap-y-3">
                 <div className="cms:flex cms:items-center cms:gap-3">
                     <Switch id={`${id}-required`} checked={field.required === true} onCheckedChange={(required: boolean) => onChange({ ...field, required })} />
                     <Label htmlFor={`${id}-required`}>{t('Required')}</Label>
                 </div>
+                <div className="cms:flex cms:min-w-0 cms:flex-col cms:gap-1">
                 <div className="cms:flex cms:items-center cms:gap-3">
-                    <Label htmlFor={`${id}-translatable`}>{t('Per language')}</Label>
-                    <Select
-                        value={field.translatable === true ? PER_LANGUAGE.yes : field.translatable === false ? PER_LANGUAGE.no : PER_LANGUAGE.default}
-                        onValueChange={(value: string) => onChange({ ...field, translatable: value === PER_LANGUAGE.yes ? true : value === PER_LANGUAGE.no ? false : null })}
-                    >
-                        <SelectTrigger id={`${id}-translatable`} className="cms:w-48"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value={PER_LANGUAGE.default}>{t('As the type decides')}</SelectItem>
-                            <SelectItem value={PER_LANGUAGE.yes}>{t('Yes, translated')}</SelectItem>
-                            <SelectItem value={PER_LANGUAGE.no}>{t('No, shared')}</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <Switch id={`${id}-translatable`} checked={isTranslatable(field, type?.translatable ?? false)} aria-describedby={`${id}-translatable-help`}
+                        onCheckedChange={(on: boolean) => onChange(setTranslatable(field, on, type?.translatable ?? false))} />
+                    <Label htmlFor={`${id}-translatable`}>{t('Translatable')}</Label>
+                </div>
+                <p id={`${id}-translatable-help`} className="cms:text-sm cms:text-muted-foreground">{t('Each language gets its own value. Off: one value shared by every language.')}</p>
                 </div>
             </div>
 

@@ -169,3 +169,51 @@ export function handleWarning(field: { key: string; handle: string; type: string
 
     return null;
 }
+
+/** Whether a field is translated: its own setting, else its type's default (FieldType::translatableByDefault()). */
+export function isTranslatable(field: Pick<BuilderField, 'translatable'>, typeDefault: boolean): boolean {
+    return typeof field.translatable === 'boolean' ? field.translatable : typeDefault;
+}
+
+/** Turns "Translatable" on or off: the same as the type's default is stored as unset, so definitions stay clean and follow the type. */
+export function setTranslatable<T extends Pick<BuilderField, 'translatable'>>(field: T, on: boolean, typeDefault: boolean): T {
+    return { ...field, translatable: on === typeDefault ? null : on };
+}
+
+/** A copy's handle on its level: "excerpt_copy", then "excerpt_copy_2"…, never a reserved one, at most 64 characters. */
+export function copyHandle(handle: string, siblings: { handle: string }[], reserved: ReservedHandles = []): string {
+    const taken = new Set([...siblings.map((field) => field.handle), ...reserved]);
+    const base = `${(cleanHandle(handle) || 'field').slice(0, 64 - '_copy_99'.length)}_copy`;
+    let copy = base;
+    for (let i = 2; taken.has(copy); i++) {
+        copy = `${base}_${i}`;
+    }
+
+    return copy;
+}
+
+/** A field and what's inside it with new builder keys and nothing saved: settings, condition and translations copied deeply. */
+function cloneField(field: BuilderField): BuilderField {
+    const { key: _key, savedHandle: _saved, fields, ...rest } = field;
+
+    return { ...(structuredClone(rest) as Omit<BuilderField, 'key' | 'savedHandle' | 'fields'>), key: newKey(), fields: fields.map(cloneField) };
+}
+
+/**
+ * "Duplicate": a copy of the field at `index`, put right after it, labelled
+ * "… (copy)" with a handle of its own on this level. Unsaved, like any new
+ * field. Returns the fields and the copy.
+ */
+export function duplicateField(fields: BuilderField[], index: number, reserved: ReservedHandles = [], translate: Translate = english): { fields: BuilderField[]; copy: BuilderField } | null {
+    const field = fields[index];
+    if (field === undefined) return null;
+    const label = field.label || field.handle;
+    const copy: BuilderField = {
+        ...cloneField(field),
+        label: translate(':label (copy)', { label }),
+        handle: field.type === 'fieldset' ? field.handle : copyHandle(field.handle, fields, reserved),
+        handleTouched: true,
+    };
+
+    return { fields: [...fields.slice(0, index + 1), copy, ...fields.slice(index + 1)], copy };
+}

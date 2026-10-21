@@ -19,7 +19,7 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 | `handle` | Lowercase letters, digits and underscores, starting with a letter; unique on its level (`Support\HandleRule`, whose error suggests the handle meant: `job-title` → try "job_title"; the builder turns what's typed into one as you type). A blueprint's top level can't use the handles content keeps for itself (`Blueprint::RESERVED`: `id`, `title`, `slug`, `url`, `status`, `locale`, `published_at`, `created_at`, `updated_at`, `parent`, `children`, `collection`, `blueprint`, `data`, `seo`, `author`); the builder warns as they're typed, as it does for a handle already taken on its level. |
 | `type` | A registered field type (below). |
 | `required` | The field must be filled in. |
-| `translatable` | Whether the value differs per language; `null` lets the type decide (text does, numbers don't). |
+| `translatable` | Whether the value differs per language; `null` follows the type (text does, numbers don't). The builder's *Translatable* switch starts at the type's default and stores only a different choice. |
 | `validation` | Extra Laravel rules from an allowed list (`min:3`, `regex:/…/`, `email`…; see `DefinitionValidator::RULES`). Rules that read the database aren't allowed. |
 | `config` | The type's settings. |
 | `fields` | The fields of a group or a repeater. Groups and repeaters nest up to five levels. |
