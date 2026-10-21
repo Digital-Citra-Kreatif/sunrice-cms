@@ -911,5 +911,9 @@
     "Content saved under \":old\" won't show under the new handle, and templates that read \":old\" get nothing. To keep it, put back \":old\", save, and run php artisan sunrice:rename-field, which renames the field and moves its values.": "Konten yang tersimpan di bawah \":old\" tidak akan tampil di bawah handle baru, dan template yang membaca \":old\" tidak mendapat apa-apa. Untuk mempertahankannya, kembalikan \":old\", simpan, lalu jalankan php artisan sunrice:rename-field, yang mengganti nama field dan memindahkan nilainya.",
     "Once published, the old address redirects to the new one.": "Setelah diterbitkan, alamat lama dialihkan ke alamat baru.",
     "The old address will stop working (404) unless a redirect is added.": "Alamat lama tidak akan berfungsi lagi (404) kecuali pengalihan ditambahkan.",
-    "Add a redirect": "Tambah pengalihan"
+    "Add a redirect": "Tambah pengalihan",
+    "Make \":title\" the homepage? Visitors to / will see it instead of \":current\".": "Jadikan \":title\" beranda? Pengunjung / akan melihatnya, bukan \":current\" lagi.",
+    "Make \":title\" the homepage? Visitors to / will see it.": "Jadikan \":title\" beranda? Pengunjung / akan melihatnya.",
+    "Its own address will lead to / as well.": "Alamatnya sendiri juga akan mengarah ke /.",
+    "Only a page at the root of the site (like /about) can be made the homepage here. To use another, choose it in Settings → Site.": "Hanya halaman di akar situs (seperti /about) yang bisa dijadikan beranda di sini. Untuk memakai yang lain, pilih di Pengaturan → Situs."
 }

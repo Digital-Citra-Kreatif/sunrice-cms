@@ -24,8 +24,8 @@ interface Props {
     collection: { handle: string; title: string; dated: boolean; hierarchical?: boolean; ordered?: boolean; comments?: boolean; pages?: boolean };
     /** Every language's: the parent entry and the entry's own Blade view. */
     settings?: { parentId: number | null; template: string | null; commentsClosed?: boolean; blueprint?: string | null };
-    /** Whether it's the site's homepage, and whether the user may make it so (cms.homepage). */
-    homepage?: { is: boolean; can: boolean };
+    /** Whether it's the site's homepage, whether the user may make it so (cms.homepage, in a collection whose entries can be), and the current homepage's title. */
+    homepage?: { is: boolean; can: boolean; current?: string | null };
     /** The blueprints the entry may use, when its collection offers more than one. */
     blueprints?: { handle: string; title: string }[];
     fields: FieldDefinition[];
@@ -436,7 +436,12 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                             {homepage?.is && <p className="cms:text-muted-foreground">{t('This is the site\'s homepage.')}</p>}
                             {homepage && !homepage.is && homepage.can && entry.status === 'published' && !entry.trashed && (
                                 <Button type="button" variant="outline" size="sm" className="cms:mt-1 cms:self-start"
-                                    onClick={() => router.post(`${url}/homepage`, {}, { preserveScroll: true })}>
+                                    onClick={() => confirm(
+                                        (homepage.current
+                                            ? t('Make ":title" the homepage? Visitors to / will see it instead of ":current".', { title: values.title, current: homepage.current })
+                                            : t('Make ":title" the homepage? Visitors to / will see it.', { title: values.title }))
+                                        + ' ' + t('Its own address will lead to / as well.'),
+                                        () => router.post(`${url}/homepage`, {}, { preserveScroll: true }), t('Make this the homepage'))}>
                                     {t('Make this the homepage')}
                                 </Button>
                             )}

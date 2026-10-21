@@ -45,7 +45,7 @@ Field **Fieldset** menaruh field-field fieldset itu di tempatnya, seolah-olah mi
 | **Izinkan komentar** | Pengunjung boleh mengomentari entrinya (membutuhkan URL). |
 | **Jenis structured data** | Jenis entri yang diberitahukan ke mesin pencari (artikel, halaman web, listing properti, atau orang, tempat, atau produk yang dibahas halaman…). |
 
-Menghapus koleksi tidak menghapus entrinya: entri hilang dari panel dan situs web. Tombol **Tempat sampah** di daftar menampilkan koleksi yang dihapus, dengan **Pulihkan** untuk mengembalikannya.
+Menghapus koleksi tidak menghapus entrinya: entri hilang dari panel dan situs web. Tombol **Tempat sampah** di daftar menampilkan koleksi yang dihapus, dengan **Pulihkan** untuk mengembalikannya. Menghapusnya untuk selamanya, beserta entrinya, dilakukan oleh developer (`sunrice:orphans --purge`), sehingga kekeliruan di panel selalu bisa dibatalkan.
 
 Setiap koleksi mendapat izinnya sendiri (melihat, membuat, menyunting, menerbitkan, menghapus, dan mengekspor entrinya), sehingga sebuah peran bisa dibatasi hanya ke *Blog*, misalnya. Lihat [Pengguna dan peran](guide:panel/users-roles).
 
