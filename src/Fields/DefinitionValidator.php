@@ -53,8 +53,10 @@ final class DefinitionValidator
     public function validate(mixed $input, string $attribute = 'fields', array $reserved = [], ?string $fieldset = null): array
     {
         $rules = [$attribute => ['present', 'array', 'list', 'max:200']];
-        $this->collectRules(is_array($input) ? $input : [], $attribute, 1, $rules);
-        $validator = Validator::make([$attribute => $input], $rules);
+        $names = [];
+        $this->collectRules(is_array($input) ? $input : [], $attribute, 1, $rules, $names);
+        // Errors name the setting ("From collections"), not the path (fields.0.config.collections).
+        $validator = Validator::make([$attribute => $input], $rules, [], $names);
         $validator->after(function (ValidatorInstance $validator) use ($input, $attribute, $reserved, $fieldset): void {
             if ($validator->errors()->isEmpty() && is_array($input)) {
                 $this->checkHandles($validator, Field::listFromArray($input), $attribute, $reserved, $fieldset);
@@ -68,13 +70,17 @@ final class DefinitionValidator
     /**
      * @param  array<mixed>  $fields
      * @param  array<string, list<mixed>>  $rules
+     * @param  array<string, string>  $names  readable names of the attributes
      */
-    private function collectRules(array $fields, string $path, int $depth, array &$rules): void
+    private function collectRules(array $fields, string $path, int $depth, array &$rules, array &$names): void
     {
         foreach ($fields as $index => $field) {
             $key = "{$path}.{$index}";
             $type = is_array($field) && is_string($field['type'] ?? null) && $this->types->has($field['type']) ? $this->types->get($field['type']) : null;
             $rules[$key] = ['array'];
+            foreach (['handle', 'type', 'label', 'instructions', 'required', 'translatable', 'validation', 'condition', 'config', 'fields'] as $part) {
+                $names["{$key}.{$part}"] = $part === 'validation' ? 'extra rules' : $part;
+            }
             $rules["{$key}.handle"] = ['required', 'string', 'max:64', new HandleRule];
             $rules["{$key}.type"] = ['required', 'string', Rule::in(array_keys($this->types->all()))];
             $rules["{$key}.label"] = ['nullable', 'string', 'max:255'];
@@ -105,12 +111,15 @@ final class DefinitionValidator
             }
             $config = is_array($field['config'] ?? null) ? $field['config'] : [];
             $rules += Schema::make($type->settings())->rules($config, "{$key}.config");
+            foreach ($type->settings() as $setting) {
+                $names["{$key}.config.{$setting->handle}"] = '"'.$setting->displayLabel().'"';
+            }
             $children = is_array($field['fields'] ?? null) ? $field['fields'] : [];
             if ($type->hasChildren() && $children !== []) {
                 if ($depth >= self::MAX_DEPTH) {
                     $rules["{$key}.fields"][] = 'prohibited';
                 } else {
-                    $this->collectRules($children, "{$key}.fields", $depth + 1, $rules);
+                    $this->collectRules($children, "{$key}.fields", $depth + 1, $rules, $names);
                 }
             }
         }

@@ -108,7 +108,8 @@ function Control({ field, value, onChange, errors, id, content }: Props) {
         }
         case 'select':
             return field.config?.multiple === true
-                ? <MultiSelect options={optionsOf(field)} value={Array.isArray(value) ? value.map(String) : []} onChange={onChange} />
+                ? <MultiSelect options={optionsOf(field)} value={Array.isArray(value) ? value.map(String) : []} onChange={onChange}
+                    empty={typeof field.config?.empty === 'string' ? field.config.empty : undefined} />
                 : <SingleSelect options={optionsOf(field)} value={typeof value === 'string' ? value : null} onChange={onChange} id={id} required={field.required === true} />;
         case 'terms': {
             const multiple = field.config?.multiple === true;
@@ -183,8 +184,8 @@ function SingleSelect({ options, value, onChange, id, required }: { options: Opt
     );
 }
 
-function MultiSelect({ options, value, onChange }: { options: Option[]; value: string[]; onChange: (value: unknown) => void }) {
-    if (options.length === 0) return <p className="cms:text-sm cms:text-muted-foreground">Nothing to choose from yet.</p>;
+function MultiSelect({ options, value, onChange, empty }: { options: Option[]; value: string[]; onChange: (value: unknown) => void; empty?: string }) {
+    if (options.length === 0) return <p className="cms:text-sm cms:text-muted-foreground">{empty ?? 'Nothing to choose from yet.'}</p>;
 
     return (
         <div className="cms:flex cms:flex-col cms:gap-2">

@@ -162,5 +162,5 @@ Extend `FieldType` and override what differs:
 | `translatableByDefault()` | Whether values differ per language unless the field says. |
 | `sortCast()` | `'string'`, `'number'`, `'date'` or null: how values sort and compare in queries. |
 | `hasChildren()` | Whether the field holds other fields. |
-| `settings()` | The type's options in the builder, as fields, stored in `config`. |
+| `settings()` | The type's options in the builder, as fields, stored in `config`; errors name them by label. A multiple select setting with `config.empty` shows that text when it has no options (say what to create first). |
 | `toAdmin($field, $schema)` | The definition sent to the editor. |
