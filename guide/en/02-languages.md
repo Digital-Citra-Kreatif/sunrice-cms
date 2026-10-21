@@ -16,6 +16,8 @@ A translation marked **Outdated** was saved before the latest change to the main
 
 Each translation is saved, published, scheduled and unpublished on its own. Publishing the English version doesn't publish the Indonesian one.
 
+A translation published for the first time takes the date of the main language's (so a translated article keeps its date), unless you pick another.
+
 ## Translated and shared fields
 
 Some fields are **translated**: each language has its own (titles, text, rich text, links). Others are **shared**: one value for every language (a price, a date, a photo, a yes/no switch). The blueprint decides which.

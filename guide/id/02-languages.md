@@ -16,6 +16,8 @@ Terjemahan yang ditandai **Outdated** terakhir disimpan sebelum perubahan terbar
 
 Setiap terjemahan disimpan, diterbitkan, dijadwalkan, dan ditarik dari situs secara terpisah. Menerbitkan versi bahasa Inggris tidak ikut menerbitkan versi bahasa Indonesia.
 
+Terjemahan yang pertama kali diterbitkan memakai tanggal versi bahasa utama (jadi artikel terjemahan tetap bertanggal sama), kecuali Anda memilih tanggal lain.
+
 ## Field yang diterjemahkan dan yang dipakai bersama
 
 Sebagian field **diterjemahkan**: setiap bahasa punya isinya sendiri (judul, teks, rich text, tautan). Sebagian lagi **dipakai bersama**: satu nilai untuk semua bahasa (harga, tanggal, foto, saklar ya/tidak). Blueprint yang menentukan mana yang mana.
