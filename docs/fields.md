@@ -40,7 +40,7 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 | `select` | a value, or a list with `multiple` | the same | `options` (`[{value, label}]`), `multiple`, `default` |
 | `date` | `2026-10-19`, or `2026-10-19T14:30:00` with `time` | a Carbon | `time` |
 | `link` | `{type: url, url, label, new_tab}` or `{type: entry, entry_id, label, new_tab}` | `{type, url, label, title, new_tab}`, or null | `collections` (entry links; none: any) |
-| `media` | a media id, or a list with `multiple` | a `Media` model, or a collection | `multiple`, `max`, `types` (image, video, audio, document) |
+| `media` | a media id, or a list with `multiple` | a `Media` model, or a collection (`$image->altIn()` and `captionIn()`: its alt text and caption in the page's language, set per language in the media library; see [media](../../admin/docs/media.md)) | `multiple`, `max`, `types` (image, video, audio, document) |
 | `group` | an object of its fields | an array | (its `fields`) |
 | `repeater` | a list of rows of its fields | `Items` of arrays | `min`, `max` (its `fields`) |
 | `flexible` | a list of blocks | `Items` of `Block` | `blocks` (fieldset handles), `max` |
