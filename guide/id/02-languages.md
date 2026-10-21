@@ -2,7 +2,7 @@
 
 Situs web bisa tersedia dalam beberapa bahasa. Setiap entri lalu memiliki versi untuk tiap bahasa (sebuah **terjemahan**), dengan judul, slug, field, draf, dan status terbitnya sendiri. Daftar bahasanya diatur di **Pengaturan → Bahasa** (lihat [Pengaturan situs](guide:website/settings#bahasa)); yang pertama adalah **bahasa utama**.
 
-Di situs web, bahasa utama memakai alamat biasa (`/about`) dan bahasa lain diawali kodenya (`/id/about`).
+Di situs web, bahasa utama memakai alamat biasa (`/about`) dan bahasa lain diawali kodenya (`/id/about`). Bagian tetap alamat sebuah koleksi atau taksonomi juga bisa diterjemahkan, di Struktur (`/id/buku/…` untuk `/books/…`: lihat [Struktur](guide:website/structure)).
 
 ## Bilah bahasa
 

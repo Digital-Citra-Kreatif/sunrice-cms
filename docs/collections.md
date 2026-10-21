@@ -13,9 +13,9 @@ Manage them in the admin under **Structure → Collections** (permissions `cms.c
 | `blueprint` | A blueprint's handle, or none. Changing it keeps entries' data: values of fields the new blueprint lacks stay stored, out of sight, and come back with the field. A blueprint can't be deleted while a collection uses it. |
 | `blueprints` | More blueprints its entries may use instead of its own (**Other blueprints**); see [per-entry blueprints](#per-entry-blueprints). |
 | `dated` | Entries show a date and list newest first. |
-| `route` | The entries' URL, like `/blog/{slug}` or `/projects/{project}/{slug}`; none: no pages. See [the site](site.md). |
+| `route` | The entries' URL, like `/blog/{slug}` or `/projects/{project}/{slug}`; none: no pages. See [the site](site.md). **Entry URL in …** (`routes`) gives another language its own, like `/buku/{slug}` ([translated URLs](site.md#translated-urls)); `$collection->routeIn($locale)`. |
 | `template` | The Blade view entries render with; none: `cms.{handle}`, then `cms.entry`. |
-| `listing_route` | The URL of a page listing the entries, like `/blog`; none: no listing page. See [the site](site.md#listing-pages). |
+| `listing_route` | The URL of a page listing the entries, like `/blog`; none: no listing page. See [the site](site.md#listing-pages). **Listing page URL in …** gives another language its own, like `/buku` (`routeIn($locale, 'listing_route')`). |
 | `listing_blueprint`, `per_page` | The listing page's own fields (an intro…; **Listing page blueprint** in the form, shown while it has a listing page, with **Create blueprint** / **Edit** links), edited from the entries list (**Listing page**, per language: its language switch marks the languages with texts of their own, prop `translated`), and how many entries it shows per page (10). `SaveListing` saves the fields (and the listing page's own SEO, `$seo`) per language and, given the `version` the editor opened (`CollectionListing::$version`), refuses a save over someone else's newer one. |
 | `ordered` | **Manual order**: editors put entries in order in the list (**Reorder**, then drag; a hierarchical collection shows its tree, and an entry moves among its siblings with its children), instead of by date or title. |
 | `hierarchical` | Entries may have a **parent** entry, like pages under pages, for breadcrumbs and sub-menus. URLs stay flat: *Team* under *About* is still `/team`. |
@@ -165,6 +165,7 @@ php artisan sunrice:switch-main-language id --copy-missing  # back up the databa
 - **Entries** (live and draft), **terms**, **globals** and **listing pages**: the shared values move from the old main language to the new one, which holds them from then on (in rows and blocks too); the old main language keeps only its text, and every language shows what it showed before.
 - Entries and terms without a translation in the new main language stop the switch, unless `--copy-missing`, which gives them a copy of the old main language's (published as it was).
 - **Menu labels** the new main language left empty take the old one's.
+- **URL patterns** a collection or taxonomy has of its own in the new main language become its main ones, and the old main ones the old main language's own ([translated URLs](site.md#translated-urls)).
 - **Addresses**: the new main language's lose their prefix (`/id/about` → `/about`, and `/id/…` redirects there) and the old one's get it (`/about` → `/en/about`). Redirects are rewritten to match, and the old main language's pages and terms redirect (301) from their old addresses, where the new main language has no page of its own, without chains.
 - **Settings → Languages** lists the new main language first. The command reports what it moved.
 

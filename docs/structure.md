@@ -84,8 +84,9 @@ The file is JSON with a section per kind, each item by handle, and records point
     "fieldsets": [{"handle": "cta", "title": "Call to action", "fields": [...]}],
     "blueprints": [{"handle": "page", "title": "Page", "fields": [...]}],
     "collections": [{"handle": "blog", "title": "Blog", "blueprint": "post", "dated": true, "route": "/blog/{slug}",
-        "listing_route": "/blog", "listing_blueprint": "page", "per_page": 10, "listings": {"en": {"intro": "News"}}, ...}],
-    "taxonomies": [{"handle": "topics", "title": "Topics", "hierarchical": true, "collections": ["blog"], ...}],
+        "listing_route": "/blog", "listing_blueprint": "page", "per_page": 10, "listings": {"en": {"intro": "News"}},
+        "routes": {"id": {"route": "/artikel/{slug}", "listing_route": "/artikel"}}, ...}],
+    "taxonomies": [{"handle": "topics", "title": "Topics", "hierarchical": true, "collections": ["blog"], "routes": {"id": {"route": "/topik/{slug}"}}, ...}],
     "globals": [{"handle": "site", "title": "Site", "blueprint": "site_info", "values": {"en": {...}}}],
     "forms": [{"handle": "contact", "title": "Contact", "blueprint": "contact_form", "notify": ["team@example.com"], ...}],
     "menus": [{"handle": "main", "title": "Main", "items": [
@@ -99,7 +100,7 @@ The file is JSON with a section per kind, each item by handle, and records point
 }
 ```
 
-Every setting of a collection, taxonomy, global set and form is in the file, "SEO from fields" (`seo_title_field`, `seo_description_field`, `seo_image_field`) and a form's `notify_roles` included (`StructureImporter::COLLECTION`, `TAXONOMY`, `GLOBAL_SET` and `FORM` list them).
+Every setting of a collection, taxonomy, global set and form is in the file, "SEO from fields" (`seo_title_field`, `seo_description_field`, `seo_image_field`) and a form's `notify_roles` included (`StructureImporter::COLLECTION`, `TAXONOMY`, `GLOBAL_SET` and `FORM` list them), and the other languages' own URL patterns (`routes`, only when there are some; [translated URLs](site.md#translated-urls)), checked on import like the admin checks them. The patterns a language had before (`previous_routes`, `StructureImporter::NOT_CARRIED`) are the site's own history and stay out: an import that changes a pattern keeps the site's old one to redirect from.
 
 Menu links point at entries and terms by collection or taxonomy and slug in the main language (`"entry": "pages/about"`), those in the trash included, so they're found on another site by slug; links whose entry or term was permanently deleted are left out. A structure file written before the pages existed has no links to them, and importing it leaves a menu's links to them alone.
 
@@ -109,7 +110,7 @@ On import these become the site's ids again: entries and terms by slug, files by
 
 Importing goes through the same actions and checks as the admin: field definitions through `DefinitionValidator`, collections through `SaveCollection`, listing pages through `SaveListing`, entries through `CreateEntry`, `SaveDraft` and `PublishEntry`, menus through `SaveMenu`. Each item is created, or updated when its handle exists:
 
-- a file with texts in a language the site doesn't have (listing pages, titles and labels in other languages, menus' labels, entries' and terms' translations) stops **before anything is imported**: "It has texts in Bahasa Indonesia (id), which isn't one of this site's languages (en). Add it in Settings → Languages or set SUNRICE_LOCALES=en,id, then import again." `--skip-other-languages` (`import(..., skipOtherLanguages: true)`) imports the rest and leaves those texts out, and the report says which languages it left out;
+- a file with texts in a language the site doesn't have (listing pages, titles and labels in other languages, URL patterns, menus' labels, entries' and terms' translations) stops **before anything is imported**: "It has texts in Bahasa Indonesia (id), which isn't one of this site's languages (en). Add it in Settings → Languages or set SUNRICE_LOCALES=en,id, then import again." `--skip-other-languages` (`import(..., skipOtherLanguages: true)`) imports the rest and leaves those texts out, and the report says which languages it left out;
 - an update of a fieldset or blueprint that would remove fields is **refused** (its line says which) unless `--force`: rename fields with `sunrice:rename-field` first, so their values move along;
 - content is only added: an entry or term that exists (by its slug in the main language) and global values already saved are left alone, and a menu link to an entry or term that isn't there is left out (and noted);
 - menus' links are content too: a menu that isn't there is created with the file's links, but a menu that exists keeps its links (those editors added, moved or relabelled included): only the file's links it doesn't have yet (the same entry, term, listing page with the same filters, or address) are added, each after the link it follows in the file, and its line notes "Adds a link to pages/about." `--replace-menus` (`import(..., replaceMenus: true)`) makes existing menus' links the file's instead, and notes each link it removes ("Removes the link to pages/about."): try it with `--dry-run` first;

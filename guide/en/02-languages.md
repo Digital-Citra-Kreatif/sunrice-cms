@@ -2,7 +2,7 @@
 
 A website can be in several languages. Each entry then has a version per language (a **translation**), with its own title, slug, fields, draft and publish state. The languages themselves are set in **Settings → Languages** (see [The website's settings](guide:website/settings#languages)); the first one is the **main language**.
 
-On the website, the main language has plain addresses (`/about`) and the others start with their code (`/id/about`).
+On the website, the main language has plain addresses (`/about`) and the others start with their code (`/id/about`). A collection's or taxonomy's fixed part of the address can be translated too, under Structure (`/id/buku/…` for `/books/…`: see [Structure](guide:website/structure)).
 
 ## The language bar
 

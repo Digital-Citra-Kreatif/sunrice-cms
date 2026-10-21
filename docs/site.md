@@ -8,11 +8,33 @@ Set a collection's URL under Structure → Collections: a path with `{slug}` onc
 
 - The main language has no prefix; others start with their code: `/blog/hello`, `/id/blog/halo`. The app's locale is set from the address as soon as the CMS's route takes over, so 404 pages, redirects and the search page are in that language too. The main language's own prefix (`/en/about`, from before the main language changed) redirects (301) to the plain address, query string kept, and so do `/about/` and `/index.php/about`: each page has one address. Your app's own routes aren't touched.
 - The more specific pattern is tried first (more fixed characters): `/blog/{slug}` before `/{slug}`. The first pattern that matches decides: `/blog/about` looks for a blog entry "about", and is a 404 if there's none, even when a page "about" exists.
-- Two collections can't have the same URL.
+- Two collections can't have the same URL. Each language can have its own ([translated URLs](#translated-urls)).
 - Only live entries have pages: published, past their date, not in the trash, of a collection not deleted. Anything else is a 404.
 - The CMS's route is the app's **fallback**: your own routes (`routes/web.php`) always come first. Turn the site off with `sunrice-cms.site.enabled` (the admin and previews keep working); its middleware is `sunrice-cms.site.middleware` (`web`).
 
 `$translation->url()` gives an entry's address (null without a route). For a visitor reading another language, `app(Sunrice\Cms\Site\Site::class)->urlIn($translation, $locale)` gives the page to link to: the translation's own address when it's in that language, else, for a main-language translation of an entry not live there and with the [fallback](#untranslated-pages) on, its page at that language's address (`/id/blog/hello`), else its own. `app(Site::class)->termUrlIn($termTranslation, $locale)` does the same for term pages. Entries from `Cms::entries()`, linked entries and `$entry->shownIn($locale)` already link this way.
+
+### Translated URLs
+
+By default only the prefix tells languages apart: `/books/{slug}` and `/id/books/{slug}`, `/books` and `/id/books`; slugs are translated, the fixed parts aren't. Each language can have its own pattern instead, under its prefix: **Entry URL in …**, **Listing page URL in …** (Structure → Collections) and **Term page URL in …** (Structure → Taxonomies), shown next to the main fields when the site has more than one language, with the main pattern as placeholder. `/buku/{slug}` and `/buku` for Indonesian give `/id/buku/halo` and `/id/buku`. Empty: the main pattern under the prefix, as before.
+
+- They're checked like the main ones: a collection's entry URL may hold the same kind of `{field}` parameters (each an Entries field of its blueprint), a term page URL only `{slug}`, a listing URL fixed segments. No two collections (or two taxonomies) may have the same pattern in a language, counting a language's own pattern and the main pattern of those without one; that goes for the main field too.
+- The site matches each language's own patterns, and only in that language: `/id/buku/halo` is the books collection in Indonesian, `/buku/hello` is nothing. Specificity is as for the main patterns, among the patterns of that language (most specific first, collections before taxonomies, listing pages before any `{slug}`).
+- Every URL the CMS builds uses the language's pattern: `$translation->url()`, `Site::urlIn()` and `termUrlIn()`, `$collection->listingUrl($locale)`, pagination links, menus (listing links with their filters too), breadcrumbs and structured data, `Cms::localeUrls()`, canonical and `hreflang` links, the sitemap with its alternates, search results, the redirects made when a slug changes and the AI tools.
+- **Old addresses keep working.** Once a language has its own pattern, its addresses at the main pattern (`/id/books/halo`, `/id/books`) redirect (301, query string kept) to the new ones (`/id/buku/halo`); when a language's pattern changes or is emptied, the patterns it had before redirect too (the last ten are kept in `previous_routes`, by the model whatever saves it). These are found from the slug, with no redirect rows to keep: `Site::movedAddress($path)` gives the new address. A page or a redirect you made at the address wins.
+- The patterns are read with the collections and taxonomies once and kept in the [site cache](caching.md) (`routes` area), so matching costs no more queries; saving a collection or taxonomy clears it, and the page cache with it.
+
+In code (`Sunrice\Cms\Models\Concerns\HasLanguageRoutes`, on `Collection` and `Taxonomy`):
+
+```php
+$books->setOwnRoute('id', '/buku/{slug}')->setOwnRoute('id', '/buku', 'listing_route')->save();
+$books->routeIn('id');                   // '/buku/{slug}' (its own, else the main one; null without pages)
+$books->routeIn('id', 'listing_route');  // '/buku'
+$books->ownRoute('en');                  // null: the main language has the main patterns
+$books->previousRoutes('id');            // patterns it had before, newest first
+```
+
+They're stored in `routes` (`{"id": {"route": "/buku/{slug}", "listing_route": "/buku"}}`); a pattern equal to the main one, or empty, isn't kept. [Switching the main language](collections.md#switching-the-main-language) swaps them, so no address changes but for the prefixes. [Structure export](structure.md) carries them.
 
 ### Untranslated pages
 
@@ -195,7 +217,7 @@ When a published entry's address changes (a new slug), publishing it adds a perm
 
 ## Listing pages
 
-A collection with a **listing page URL** (`listing_route`, like `/blog`) gets a page listing its live entries, `per_page` at a time (`?page=2`), newest first for dated collections, in Manual order for ordered ones, else by title; other languages under their prefix (`/id/blog`). Its own fields come from the collection's listing blueprint and are edited from the entries list (**Listing page**, `cms.entries.update`; `SaveListing` in code), per language. It renders with the first view that exists: `cms.{handle}-listing`, `cms.listing`, or the CMS's plain one, with:
+A collection with a **listing page URL** (`listing_route`, like `/blog`) gets a page listing its live entries, `per_page` at a time (`?page=2`), newest first for dated collections, in Manual order for ordered ones, else by title; other languages under their prefix (`/id/blog`), or at their own URL (`/id/artikel`, [translated URLs](#translated-urls)). Its own fields come from the collection's listing blueprint and are edited from the entries list (**Listing page**, `cms.entries.update`; `SaveListing` in code), per language. It renders with the first view that exists: `cms.{handle}-listing`, `cms.listing`, or the CMS's plain one, with:
 
 | | |
 | --- | --- |
