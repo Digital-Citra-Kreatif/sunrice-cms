@@ -16,6 +16,8 @@ interface Props {
     fieldTypes: FieldTypeInfo[];
     fieldsets: Option[];
     rules: string[];
+    /** Handles content keeps for itself (Blueprint::RESERVED). */
+    reserved?: string[];
     /** For a fieldset: what uses it ("the blueprint \"Page\""). */
     usedBy?: string[];
 }
@@ -32,7 +34,7 @@ function handleHelp(kind: 'blueprint' | 'fieldset', exists: boolean): string {
         : 'Lowercase letters, digits and underscores, made from the title until you type one.';
 }
 
-export default function BlueprintForm({ kind = 'blueprint', blueprint, fieldTypes, usedBy = [] }: Props) {
+export default function BlueprintForm({ kind = 'blueprint', blueprint, fieldTypes, usedBy = [], reserved = [] }: Props) {
     const noun = kind === 'fieldset' ? 'Fieldset' : 'Blueprint';
     const base = adminUrl(kind === 'fieldset' ? 'cms/fieldsets' : 'cms/blueprints');
     const title = blueprint ? blueprint.title : `New ${noun.toLowerCase()}`;
@@ -123,7 +125,7 @@ export default function BlueprintForm({ kind = 'blueprint', blueprint, fieldType
 
             <section className="cms:flex cms:flex-col cms:gap-3" aria-labelledby="fields-heading">
                 <h2 id="fields-heading" className="cms:text-lg cms:font-medium">Fields</h2>
-                <FieldBuilder fields={fields} onChange={setFields} types={fieldTypes} errors={errorsUnder(errors, 'fields')} />
+                <FieldBuilder fields={fields} onChange={setFields} types={fieldTypes} errors={errorsUnder(errors, 'fields')} reserved={kind === 'blueprint' ? reserved : undefined} />
                 <FieldError message={errors.fields} />
             </section>
         </form>

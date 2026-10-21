@@ -32,7 +32,7 @@ Setiap koleksi mendapat izinnya sendiri (melihat, membuat, menyunting, menerbitk
 
 Untuk menambah field, pilih jenisnya, lalu atur:
 
-- **Label**: yang dilihat editor. **Handle** (cara template membaca field) dibuat dari label; mengganti handle nanti menyembunyikan nilai yang tersimpan dengan handle lama, jadi mintalah developer untuk mengganti nama field dengan aman.
+- **Label**: yang dilihat editor. **Handle** (cara template membaca field) dibuat dari label; mengganti handle nanti menyembunyikan nilai yang tersimpan dengan handle lama, jadi mintalah developer untuk mengganti nama field dengan aman. Field di tingkat teratas blueprint tidak bisa memakai handle yang dipakai konten itu sendiri, dan builder langsung memberi tahu saat Anda mengetik: `id`, `title`, `slug`, `url`, `status`, `locale`, `published_at`, `created_at`, `updated_at`, `parent`, `children`, `collection`, `blueprint`, `data`, `seo`, `author`.
 - **Instructions**: petunjuk yang tampil di bawah field.
 - **Required**: entri tidak bisa disimpan atau diterbitkan tanpanya.
 - **Per language**: **Yes, translated** (setiap bahasa punya isinya sendiri), **No, shared** (satu nilai untuk semua bahasa), atau **As the type decides** (teks diterjemahkan; angka, tanggal, saklar, dan media dipakai bersama).

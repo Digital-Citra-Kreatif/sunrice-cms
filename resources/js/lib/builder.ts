@@ -114,3 +114,19 @@ export function errorsAt(errors: Errors, path: string): Errors {
 export function hasErrors(errors: Errors, path: string): boolean {
     return Object.keys(errors).some((key) => key === path || key.startsWith(`${path}.`));
 }
+
+/** A blueprint's top level: the handles content keeps for itself (Blueprint::RESERVED). */
+export type ReservedHandles = string[];
+
+/** What's wrong with a field's handle before saving: taken on its level, or kept by content for itself. */
+export function handleWarning(field: { key: string; handle: string; type: string }, siblings: { key: string; handle: string; type: string }[], reserved?: ReservedHandles): string | null {
+    if (field.type === 'fieldset') return null;
+    if (reserved?.includes(field.handle)) {
+        return `"${field.handle}" is used by the content itself; choose another handle.`;
+    }
+    if (field.handle !== '' && siblings.some((sibling) => sibling.key !== field.key && sibling.type !== 'fieldset' && sibling.handle === field.handle)) {
+        return `There is already a field "${field.handle}" here.`;
+    }
+
+    return null;
+}

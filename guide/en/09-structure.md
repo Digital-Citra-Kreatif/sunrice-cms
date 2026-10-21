@@ -32,7 +32,7 @@ A **blueprint** is a list of fields: what editors fill in for a collection's ent
 
 To add a field, choose its type, then set:
 
-- **Label**: what editors see. The **Handle** (how templates read the field) is made from it; renaming a handle later hides values saved under the old one, so ask your developer to rename fields safely.
+- **Label**: what editors see. The **Handle** (how templates read the field) is made from it; renaming a handle later hides values saved under the old one, so ask your developer to rename fields safely. A blueprint's top-level fields can't use the handles the content keeps for itself, and the builder says so as you type: `id`, `title`, `slug`, `url`, `status`, `locale`, `published_at`, `created_at`, `updated_at`, `parent`, `children`, `collection`, `blueprint`, `data`, `seo`, `author`.
 - **Instructions**: a hint shown under the field.
 - **Required**: the entry can't be saved or published without it.
 - **Per language**: **Yes, translated** (each language has its own), **No, shared** (one value for every language), or **As the type decides** (text is translated; numbers, dates, switches and media are shared).

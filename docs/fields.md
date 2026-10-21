@@ -16,7 +16,7 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 
 | Key | |
 | --- | --- |
-| `handle` | Lowercase letters, digits and underscores, starting with a letter; unique on its level (`Support\HandleRule`, whose error suggests the handle meant: `job-title` → try "job_title"; the builder turns what's typed into one as you type). A blueprint's top level can't use the handles content keeps for itself (`Blueprint::RESERVED`: `title`, `slug`, `status`…). |
+| `handle` | Lowercase letters, digits and underscores, starting with a letter; unique on its level (`Support\HandleRule`, whose error suggests the handle meant: `job-title` → try "job_title"; the builder turns what's typed into one as you type). A blueprint's top level can't use the handles content keeps for itself (`Blueprint::RESERVED`: `id`, `title`, `slug`, `url`, `status`, `locale`, `published_at`, `created_at`, `updated_at`, `parent`, `children`, `collection`, `blueprint`, `data`, `seo`, `author`); the builder warns as they're typed, as it does for a handle already taken on its level. |
 | `type` | A registered field type (below). |
 | `required` | The field must be filled in. |
 | `translatable` | Whether the value differs per language; `null` lets the type decide (text does, numbers don't). |
