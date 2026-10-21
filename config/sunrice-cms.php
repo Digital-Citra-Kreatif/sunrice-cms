@@ -54,15 +54,17 @@ return [
         // The cache store (null: the app's default). Use a shared one
         // (redis, database, memcached) with several servers.
         'store' => env('SUNRICE_CACHE_STORE'),
-        // Seconds anything is kept at most.
+        // Seconds anything is kept at most (Settings → Cache can set it).
         'ttl' => 3600,
         // Keep whole pages for visitors who aren't signed in. Turn it on
         // when templates show nothing personal (or skip those pages with
-        // PageCache::skipWhen()).
+        // PageCache::skipWhen()). Settings → Cache can turn it on or off
+        // over this.
         'pages' => env('SUNRICE_PAGE_CACHE', false),
         // Query parameters that make a kept page different, besides `page`
         // and `q`. Any other (?utm_source=…) is ignored, so it can't fill
-        // the cache store with copies of one page.
+        // the cache store with copies of one page. Settings → Cache adds to
+        // these.
         'query' => [],
     ],
 

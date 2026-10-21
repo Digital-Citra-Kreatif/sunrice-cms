@@ -1,6 +1,6 @@
 # Pengaturan situs
 
-Situs web menambahkan empat bagian ke **Pengaturan** di bawah Administrasi: **Situs**, **Bahasa**, **Kode situs**, dan **Komentar**. Masing-masing adalah izin tersendiri, jadi mungkin Anda hanya melihat sebagian. Bagian milik panel (**Branding**, **Keamanan**, dan **Email**) dijelaskan di [Pengaturan](guide:panel/settings).
+Situs web menambahkan lima bagian ke **Pengaturan** di bawah Administrasi: **Situs**, **Bahasa**, **Kode situs**, **Komentar**, dan **Cache**. Masing-masing adalah izin tersendiri, jadi mungkin Anda hanya melihat sebagian. Bagian milik panel (**Branding**, **Keamanan**, dan **Email**) dijelaskan di [Pengaturan](guide:panel/settings).
 
 Pengaturan langsung berlaku begitu Anda mengeklik **Simpan**.
 
@@ -54,6 +54,42 @@ Cara kerja komentar pengunjung pada koleksi yang mengizinkannya (lihat [Komentar
 | **Izinkan pemberi komentar menerima email saat ada yang membalas** | Menambahkan kotak centang di formulir komentar. |
 
 Spam terhapus otomatis setelah beberapa waktu.
+
+## Cache
+
+Situs web menyimpan apa yang sering ditampilkannya agar halaman cepat dimuat. Perubahan konten tetap langsung tampil: Anda jarang memerlukan bagian ini. Dengan **Cache halaman utuh** menyala, halaman dirender sekali lalu disimpan untuk pengunjung yang tidak masuk (saat masuk, Anda selalu melihat halaman terbaru).
+
+**Halaman utuh**:
+
+- **Cache halaman utuh**: **Sesuai pengaturan developer** (tertulis apakah itu menyala atau mati), **Simpan halaman utuh**, atau **Jangan simpan halaman utuh**. Matikan jika halaman menampilkan sesuatu yang berbeda untuk setiap pengunjung, seperti keranjang atau "Hai, Ana".
+- **Simpan halaman selama (menit)**: paling lama sebuah halaman disimpan. Kosong: selama data situs.
+
+**Halaman yang tidak pernah disimpan**, selalu dirender ulang:
+
+- **Alamat**: **Tambah alamat** untuk masing-masing, diawali `/`. Tanda `*` berarti apa saja: `/contact` adalah halaman itu, `/account/*` setiap halaman di bawah `/account`, `/search*` setiap alamat yang diawali `/search`. Sebuah alamat berlaku di setiap bahasa (`/contact` juga `/id/contact`).
+- **Koleksi**: centang koleksi agar halaman-halamannya dan halaman daftarnya tidak pernah disimpan.
+
+**Query string** adalah bagian setelah `?` pada alamat, seperti `?sort=price` dari filter atau `?utm_source=newsletter` dari tautan newsletter:
+
+- **Parameter yang membuat halaman tersendiri**: parameter yang mengubah isi halaman (filter, urutan, tab), sehingga setiap nilainya disimpan terpisah. Developer mungkin sudah mengatur sebagian; teks bantuan menyebutkannya.
+- **Parameter lainnya**: **Abaikan** (pilihan umum: pengunjung mendapat halaman tersimpan) atau **Lewati cache** (halaman dirender ulang dan tidak disimpan), untuk halaman yang membaca parameter yang tidak bisa Anda daftarkan.
+- **Parameter yang selalu diabaikan** (dengan **Lewati cache**): parameter pelacakan dari newsletter dan iklan, yang tidak pernah melewati cache. `utm_*` berarti `utm_source`, `utm_medium`…
+
+**Data situs**: **Simpan data situs selama (menit)**: halaman mana yang ada di sebuah alamat, menu, dan sitemap. Kosong: sesuai pengaturan developer.
+
+Menyimpan langsung berlaku: semua yang disimpan sebelumnya dibaca ulang.
+
+Kartu **Cache** di bawah formulir menunjukkan apakah halaman utuh disimpan, di mana semuanya disimpan, serta kapan dan oleh siapa cache terakhir dibersihkan. Tombol-tombolnya bertanya dulu:
+
+- **Bersihkan cache halaman**: pengunjung mendapat halaman yang baru dirender. Pakai setelah developer mengubah template, jika halaman terlihat lama.
+- **Bersihkan semua cache situs**: halaman, alamat, menu, dan sitemap dibaca ulang.
+
+Situs sedikit lebih lambat sesaat setelah dibersihkan. Keduanya dicatat di log aktivitas.
+
+Jika cache halaman utuh tidak tersedia di server Anda, pengaturannya berwarna abu-abu dan kartunya memberi tahu: tanyakan kepada developer Anda.
+
+> [!TECHNICAL]
+> Pengaturan di sini mengalahkan `config/sunrice-cms.php` (`cache.pages`, `cache.ttl`, `cache.query`); tempat penyimpanan tetap di config. Halaman utuh memerlukan `spatie/laravel-responsecache` (`composer require spatie/laravel-responsecache`). Dari baris perintah: `php artisan responsecache:clear`. Lihat [Caching](docs:cms/caching#cache-settings).
 
 ## Captcha
 

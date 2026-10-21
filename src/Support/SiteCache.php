@@ -9,6 +9,7 @@ use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Sunrice\Cms\Events\ContentChanged;
+use Sunrice\Cms\Settings\CacheSettings;
 
 /**
  * What the site reads often (which page is at a path, menus, the
@@ -27,7 +28,7 @@ use Sunrice\Cms\Events\ContentChanged;
  *     app(SiteCache::class)->changed('shop products', SiteCache::PAGES);        // or no areas: all of them
  *
  * Config `sunrice-cms.cache`: `enabled`, `store` (null: the default)
- * and `ttl` (seconds).
+ * and `ttl` (seconds; Settings → Cache can set it in minutes).
  *
  * @api
  */
@@ -116,11 +117,10 @@ final class SiteCache
         });
     }
 
+    /** Seconds anything is kept at most: Settings → Cache's minutes, else config `ttl`. */
     public static function ttl(): int
     {
-        $ttl = config('sunrice-cms.cache.ttl', 3600);
-
-        return is_numeric($ttl) ? max(1, (int) $ttl) : 3600;
+        return app(CacheSettings::class)->siteTtl();
     }
 
     public function store(): Repository

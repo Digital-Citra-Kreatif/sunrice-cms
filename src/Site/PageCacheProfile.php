@@ -7,6 +7,7 @@ namespace Sunrice\Cms\Site;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Vite;
 use Spatie\ResponseCache\CacheProfiles\CacheAllSuccessfulGetRequests;
+use Sunrice\Cms\Settings\CacheSettings;
 use Sunrice\Cms\Support\SiteCache;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -14,7 +15,8 @@ use Symfony\Component\HttpFoundation\Response;
  * responsecache's cache profile for the site's pages (see PageCache): the
  * CMS sets it as `responsecache.cache_profile` unless the app set its own
  * (then extend this one). Pages are kept under the content version, so a
- * change shows at once without clearing the cache, for `cache.ttl` at most.
+ * change shows at once without clearing the cache, for Settings → Cache's
+ * minutes (else `cache.ttl`) at most.
  *
  * @api
  */
@@ -33,7 +35,7 @@ class PageCacheProfile extends CacheAllSuccessfulGetRequests
 
     public function cacheLifetimeInSeconds(Request $request): int
     {
-        $lifetime = min(parent::cacheLifetimeInSeconds($request), SiteCache::ttl());
+        $lifetime = min(parent::cacheLifetimeInSeconds($request), app(CacheSettings::class)->pageLifetime());
         $own = app(PageCache::class)->lifetime($request, Page::current());
 
         return $own === null ? $lifetime : min($lifetime, $own);

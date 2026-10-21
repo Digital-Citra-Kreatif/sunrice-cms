@@ -6,11 +6,13 @@ namespace Sunrice\Cms\Site;
 
 use Illuminate\Http\Request;
 use Spatie\ResponseCache\Hasher\DefaultHasher;
+use Sunrice\Cms\Settings\CacheSettings;
 
 /**
  * What tells kept pages apart (see PageCache): the host, the path, the
  * language and only the query parameters the site reads (a `page` number
- * above 1 and config `sunrice-cms.cache.query`), so `?utm_source=…`,
+ * above 1, config `sunrice-cms.cache.query` and those in Settings →
+ * Cache), so `?utm_source=…`,
  * `?x=<random>` or `?page=abc` can't fill the cache store with copies of
  * one page. (`?q=` and `?reply_to=` pages are never kept: see
  * PageCache::UNKEPT_QUERY.) The CMS sets it as `responsecache.hasher`
@@ -28,8 +30,14 @@ class PageCacheHasher extends DefaultHasher
         return hash('xxh128', parent::getHashFor($request).'-'.app()->getLocale());
     }
 
-    /** @return list<string> */
+    /** @return list<string> the parameters that tell kept pages apart: `page`, config `sunrice-cms.cache.query` and Settings → Cache's */
     public static function query(): array
+    {
+        return array_values(array_unique([...self::configuredQuery(), ...app(CacheSettings::class)->queryParameters()]));
+    }
+
+    /** @return list<string> `page` and config `sunrice-cms.cache.query` (without Settings → Cache's) */
+    public static function configuredQuery(): array
     {
         $extra = config('sunrice-cms.cache.query', []);
         $extra = is_array($extra) ? array_values(array_filter($extra, fn (mixed $name): bool => is_string($name) && $name !== '')) : [];
