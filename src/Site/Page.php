@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Site;
 
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Sunrice\Admin\Panel;
 use Sunrice\Cms\Models\Collection;
@@ -68,6 +69,27 @@ final readonly class Page
         request()->attributes->set(self::KEY, $page);
 
         return $page;
+    }
+
+    /**
+     * The language the page's content is in: the entry's or term's own,
+     * which is the main language's on an untranslated page ($fallback),
+     * else the page's. Mark fallback content with it (`lang="en"`), so
+     * screen readers read it in the right language.
+     */
+    public function contentLocale(): string
+    {
+        return $this->entry->locale ?? $this->term->locale ?? $this->locale;
+    }
+
+    /**
+     * ` lang="en"` on an untranslated page ($fallback), else nothing: for
+     * the element around the entry's or term's own content, which is in
+     * another language than the page (`<article{{ cms_page()?->langAttribute() }}>`).
+     */
+    public function langAttribute(): HtmlString
+    {
+        return new HtmlString($this->fallback ? ' lang="'.e(str_replace('_', '-', $this->contentLocale())).'"' : '');
     }
 
     /** The same page rendered with another view. */

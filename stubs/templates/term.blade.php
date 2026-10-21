@@ -1,18 +1,21 @@
 {{--
     A term's page (starter template). For one taxonomy only, copy it to cms/taxonomy-{taxonomy}.blade.php.
     Gets $term (TermTranslation), $taxonomy, $title, $entries (a paginator of the live entries with the term),
-    $values and $richText (the term's fields), $locale and $fallback.
+    $values and $richText (the term's fields), $locale, $fallback and $contentLocale (the language of the term's
+    own content: lang marks it on untranslated pages).
 --}}
 @extends('cms.layout')
 
 @section('content')
     <header class="page-header">
         <p class="eyebrow">{{ $taxonomy->title }}</p>
-        <h1>{{ $title }}</h1>
         @if ($fallback)
             <p class="notice" role="note">{{ __('This page isn\'t translated yet: it\'s shown in its original language.') }}</p>
         @endif
-        @include('cms.partials.fields', ['values' => $values, 'richText' => $richText])
+        <div{{ cms_page()?->langAttribute() }}>
+            <h1>{{ $title }}</h1>
+            @include('cms.partials.fields', ['values' => $values, 'richText' => $richText])
+        </div>
     </header>
 
     @if ($entries->isEmpty())

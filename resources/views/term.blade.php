@@ -11,7 +11,7 @@
 <body class="{{ \Sunrice\Cms\Content::bodyClass() }}">
     <x-sunrice-cms::code place="body-start" />
     <p>{{ $taxonomy->title }}</p>
-    <h1>{{ $title }}</h1>
+    <article{{ \Sunrice\Cms\Content::page()?->langAttribute() }}><h1>{{ $title }}</h1>
     @foreach ($values as $handle => $value)
         @if ($handle !== 'seo' && is_string($value) && $value !== '')
             @if (in_array($handle, $richText, true))
@@ -21,6 +21,7 @@
             @endif
         @endif
     @endforeach
+    </article>
     <ul>
         @foreach ($entries as $entry)
             <li><a href="{{ $entry->url() }}">{{ $entry->title }}</a></li>

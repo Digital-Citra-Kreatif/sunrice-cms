@@ -19,6 +19,7 @@ Set a collection's URL under Structure → Collections: a path with `{slug}` onc
 An entry that isn't live in a language other than the main one (no translation there, or one still a draft or scheduled) shows its main language's content at that language's address, with the main language's slug: `/id/blog/hello`. The same goes for term pages without a translation and for the homepage (`/id`). On such a page:
 
 - the app's locale and `$locale` are the address's language, so the layout's own words are in it; templates get `$fallback = true` (and `Cms::page()->fallback`), to say "Not translated yet" if you like;
+- the content is in another language than the page: `$contentLocale` (and `Cms::page()->contentLocale()`) is its language, and `Cms::page()->langAttribute()` prints ` lang="en"` on such pages (nothing on others) for the element around it, so screen readers read it in the right language: `<article{{ cms_page()?->langAttribute() }}>`. The CMS's plain pages and the starter templates do this;
 - `<x-sunrice-cms::seo />` gives the main language's page as the canonical URL and no `hreflang` links, and the main page's `hreflang` links leave the language out; the sitemap lists only the main page;
 - menus, entry links and `Cms::localeUrls()` link it in that language, so visitors stay in it; site search in that language doesn't find it (only what's translated).
 
@@ -56,6 +57,7 @@ Views get:
 | `$locale` | the language; the app's locale is set to it too |
 | `$preview` | whether this is a preview of the draft |
 | `$fallback` | whether this is the main language's content in another language ([untranslated pages](#untranslated-pages)) |
+| `$contentLocale` | the language the entry's content is in: the main language's on an untranslated page, else `$locale` |
 
 Rich text is cleaned when it's saved, so print it as is: `{!! $values['body'] !!}`. Print everything else escaped: `{{ $values['intro'] }}`.
 
@@ -160,7 +162,7 @@ Code there runs in every visitor's browser, so give the permission only to peopl
 
 - `Cms::bodyClass($extra)`: what the page is, for CSS and scripts. Entries: `page-entry collection-{handle} entry-{id} entry-{slug}`, with `home`, `has-parent parent-{id}` and `is-preview` when they apply; listing pages: `page-listing collection-{handle}`; term pages: `page-term taxonomy-{handle} term-{id} term-{slug}`; pages past the first: `paged paged-{n}`; always `template-{view} lang-{locale}`, and `logged-in` for people signed in to the panel. On your app's own pages: `lang-{locale}` and your extras.
 - `Cms::localeUrls()`: the page shown in each language it's live in (and, with the [main-language fallback](#untranslated-pages), the others), in the order of `sunrice-cms.locales`, for a language switcher (none on your app's own pages).
-- `Cms::page()`: the page shown (`Sunrice\Cms\Site\Page`: `type`, `locale`, `view`, `entry`, `collection`, `term`, `preview`, `home`, `pageNumber`, `fallback`), or null.
+- `Cms::page()`: the page shown (`Sunrice\Cms\Site\Page`: `type`, `locale`, `view`, `entry`, `collection`, `term`, `preview`, `home`, `pageNumber`, `fallback`; `contentLocale()` and `langAttribute()`), or null.
 
 `@bodyClass` prints the whole attribute: `<body @bodyClass>` or `<body @bodyClass('dark')>` gives `<body class="page-entry … dark">`.
 

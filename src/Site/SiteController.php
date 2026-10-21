@@ -151,6 +151,7 @@ final class SiteController
             'draft' => $draft,
             // The main language's content, in a language it isn't translated into.
             'fallback' => $fallback,
+            'contentLocale' => $translation->locale,
         ]));
     }
 
@@ -185,6 +186,7 @@ final class SiteController
             'richText' => array_values(array_map(fn (Field $field): string => $field->handle, array_filter($schema->fields(), fn (Field $field): bool => $field->type === 'rich_text'))),
             'locale' => $locale,
             'fallback' => $fallback,
+            'contentLocale' => $translation->locale,
         ]));
     }
 
