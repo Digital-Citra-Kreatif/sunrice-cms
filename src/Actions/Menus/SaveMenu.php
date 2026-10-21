@@ -60,7 +60,7 @@ final class SaveMenu
         });
         $menu->unsetRelation('items');
         $this->menus->flush();
-        $this->activity->record('updated', 'menu', $menu, $menu->title);
+        $this->activity->record('updated', 'menu', $menu, $menu->title, ['note' => $count.' '.($count === 1 ? 'link' : 'links')]);
     }
 
     /**
