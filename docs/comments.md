@@ -28,7 +28,7 @@ The markup's classes: `sunrice-comments` (`#comments`), `sunrice-comments-list`,
 | New comments | Hold a commenter's first comment | Or hold every comment, or publish at once. "First" trusts a commenter once one of theirs is approved: signed-in users by their account; guests by the same name, email and address (its hash) as an approved guest comment, since an email alone proves nothing, so a different name or address is held again. Comments by people who may moderate are always published. |
 | Only signed-in users can comment | off | Guests see the thread but not the form. |
 | Ask for a captcha | off | The captcha set up for [forms](forms.md#captcha). |
-| Comments per visitor a minute | 3 | More get `429`. |
+| Comments per visitor a minute | 3 | Only comments kept count. More go back to the form with a message and what was typed (`_limit` in the `comments` bag), or `429` for JSON. |
 | Close comments after | never | Days after the entry's publish date. |
 | Reply levels shown | 3 | Deeper replies line up at the last level. |
 | Email moderators about new comments | on | Users with `cms.comments.moderate`, and the extra addresses. |

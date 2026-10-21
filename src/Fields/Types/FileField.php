@@ -36,10 +36,8 @@ final class FileField extends FieldType
 
     public function rules(Field $field): array
     {
-        $default = config('sunrice-cms.forms.upload_max_kb', 10240);
-        $maxKb = $field->configInt('max_kb') ?? (is_numeric($default) ? (int) $default : 10240);
         $types = self::types($field);
-        $rules = ['file', 'max:'.max(1, $maxKb), function (string $attribute, mixed $value, Closure $fail): void {
+        $rules = ['file', 'max:'.self::ownMaxKb($field), function (string $attribute, mixed $value, Closure $fail): void {
             if ($value instanceof UploadedFile && array_intersect(self::extensions($value), self::BLOCKED) !== []) {
                 $fail('Files of this type can\'t be sent.');
             }
@@ -73,6 +71,54 @@ final class FileField extends FieldType
             new Field('types', 'text', 'Accepted file types', instructions: 'Extensions, like "pdf, jpg, png, docx". Empty: any file, but those that could run as code.'),
             new Field('max_kb', 'number', 'Largest file (KB)', instructions: 'Empty: 10240 (10 MB). PHP\'s own upload_max_filesize and post_max_size apply too.', config: ['min' => 1, 'step' => 1]),
         ];
+    }
+
+    /** The largest file the field takes, in KB, as set (`max_kb`, else `sunrice-cms.forms.upload_max_kb`). */
+    private static function ownMaxKb(Field $field): int
+    {
+        $default = config('sunrice-cms.forms.upload_max_kb', 10240);
+
+        return max(1, $field->configInt('max_kb') ?? (is_numeric($default) ? (int) $default : 10240));
+    }
+
+    /** The largest file the field can take, in KB: its own limit, or PHP's upload_max_filesize when that's lower. */
+    public static function maxKb(Field $field): int
+    {
+        $php = self::iniKb((string) ini_get('upload_max_filesize'));
+
+        return $php !== null ? min(self::ownMaxKb($field), $php) : self::ownMaxKb($field);
+    }
+
+    /** What the form says under the field: the types it accepts and how large a file may be. */
+    public static function hint(Field $field, ?string $locale = null): string
+    {
+        $size = self::size(self::maxKb($field));
+        $types = self::types($field);
+
+        return $types === []
+            ? __('sunrice-cms::site.forms.file_size', ['size' => $size], $locale)
+            : __('sunrice-cms::site.forms.file_hint', ['types' => strtoupper(implode(', ', $types)), 'size' => $size], $locale);
+    }
+
+    /** A size in KB as people read it: "500 KB", "2 MB". */
+    public static function size(int $kb): string
+    {
+        return $kb >= 1024 ? rtrim(rtrim(number_format($kb / 1024, 1, '.', ''), '0'), '.').' MB' : $kb.' KB';
+    }
+
+    /** "2M", "512K", "1G" or bytes, in KB (null: no limit or unreadable). */
+    private static function iniKb(string $value): ?int
+    {
+        if (preg_match('/^\s*(\d+)\s*([kmg]?)\s*$/i', $value, $m) !== 1 || (int) $m[1] <= 0) {
+            return null;
+        }
+
+        return match (strtolower($m[2])) {
+            'g' => (int) $m[1] * 1024 * 1024,
+            'm' => (int) $m[1] * 1024,
+            'k' => (int) $m[1],
+            default => max(1, intdiv((int) $m[1], 1024)),
+        };
     }
 
     /**

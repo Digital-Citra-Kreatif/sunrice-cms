@@ -93,6 +93,27 @@ final class Form extends Component
     }
 
     /**
+     * This form's errors for a summary above it, the first per field: field
+     * handle (null for the captcha's and the send limit's, which have no
+     * input to link to) => message.
+     *
+     * @return list<array{0: string|null, 1: string}>
+     */
+    public function errorSummary(): array
+    {
+        $handles = $this->form === null ? [] : array_map(fn ($field): string => $field->handle, $this->form->schema()->fields());
+        $list = [];
+        foreach ($this->bag()->toArray() as $key => $messages) {
+            $message = is_array($messages) ? ($messages[0] ?? null) : null;
+            if (is_string($message) && $message !== '') {
+                $list[] = [in_array($key, $handles, true) ? (string) $key : null, $message];
+            }
+        }
+
+        return $list;
+    }
+
+    /**
      * What this form's field was sent with, when it came back with errors
      * (another form's input is never shown here); else `$default`.
      */

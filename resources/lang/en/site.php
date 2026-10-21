@@ -40,6 +40,11 @@ return [
     ],
     'forms' => [
         'send' => 'Send',
+        'errors' => 'Please correct the following and send the form again:',
+        'too_many' => 'You\'ve sent this form several times in a short while. Please wait :seconds seconds and send it again; what you typed is kept.',
+        'file_hint' => 'Accepted: :types, up to :size.',
+        'file_size' => 'Up to :size.',
+        'too_big' => 'The :attribute file is larger than :size, the most this site accepts.',
     ],
     'captcha' => 'Please confirm you\'re not a robot, then send the form again.',
 ];

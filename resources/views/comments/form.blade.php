@@ -12,6 +12,7 @@
         <input type="hidden" name="parent_id" value="{{ $parent->id }}">
         <p>{{ __('sunrice-cms::site.comments.replying_to', ['name' => $parent->authorName()]) }} · <a href="?#comment-form">{{ __('sunrice-cms::site.comments.cancel') }}</a></p>
     @endisset
+    @if ($message = $bag->first(\Sunrice\Cms\Site\SendLimit::ERROR))<p role="alert">{{ $message }}</p>@endif
     @if ($message = $bag->first('parent_id'))<p role="alert">{{ $message }}</p>@endif
     <p>
         <label for="comment-body">{{ __('sunrice-cms::site.comments.comment') }}</label>

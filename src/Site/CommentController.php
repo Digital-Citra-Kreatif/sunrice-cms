@@ -38,7 +38,9 @@ final class CommentController
         $locale = $request->input('locale');
         $locale = is_string($locale) ? $locale : app()->getLocale();
         $user = $request->user(app(Panel::class)->getGuard()) ?? $request->user();
+        $limit = new SendLimit('sunrice-comments|'.$request->ip(), max(1, $settings->perMinute));
         try {
+            $limit->check($locale, self::BAG);
             if ($settings->captcha && ! $captcha->passes($request)) {
                 throw ValidationException::withMessages(['_captcha' => Lang::get('sunrice-cms::site.captcha', [], $locale)]);
             }
@@ -47,6 +49,7 @@ final class CommentController
         } catch (ValidationException $e) {
             throw $e->errorBag(self::BAG)->redirectTo(url()->previous().'#comment-form');
         }
+        $limit->sent();
         $message = Lang::get($comment->isApproved() ? 'sunrice-cms::site.comments.posted' : 'sunrice-cms::site.comments.held', [], $locale);
 
         if ($request->expectsJson()) {

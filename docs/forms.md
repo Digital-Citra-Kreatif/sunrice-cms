@@ -53,7 +53,7 @@ With a slot, the markup inside the `<form>` is yours; the component still adds t
 
 Fields the form's blueprint doesn't have are ignored; a toggle needs a hidden `0` before its checkbox to send "off"; a select with several choices is `data[topics][]`; a file field needs the form to send `multipart/form-data` (the component adds it when the form has one).
 
-Forms post to `POST /forms/{handle}` (route `sunrice.cms.forms.submit`), the fields as `data[handle]` (or by handle, as in older templates). After sending, visitors go back to the page they were on, with the thank-you message in the session (`session('sunrice-cms.form.contact')`); errors are in the form's own error bag (`$errors->contact`), so two forms on a page don't mix them up.
+Forms post to `POST /forms/{handle}` (route `sunrice.cms.forms.submit`), the fields as `data[handle]` (or by handle, as in older templates). After sending, visitors go back to the form on the page they were on (`#form-{handle}`, the `<form>`'s id), with the thank-you message in the session (`session('sunrice-cms.form.contact')`); errors are in the form's own error bag (`$errors->contact`), so two forms on a page don't mix them up. The component's own markup puts the thank-you message, or a summary of the errors with a link to each field, first in the form and focuses it (`autofocus`, no JavaScript), so keyboard and screen reader users start there; with a slot, `$component->errorSummary()` gives the errors as `[handle or null, message]` pairs for your own.
 
 ### Submitting without a page reload
 
@@ -76,13 +76,13 @@ form.addEventListener('submit', async (event) => {
 | --- | --- | --- |
 | `201` | `{"message": "Thanks!", "redirect_url": "/thanks" \| null}` | Kept (and emailed). `redirect_url` is the form's **After sending, go to**. |
 | `422` | `{"message": "…", "errors": {"email": ["…"], "_captcha": ["…"]}}` | Not kept. Errors are keyed by field handle (no `data.`); `_captcha` for the captcha. |
-| `429` | | Too many sends from this address this minute. |
+| `429` | `{"message", "errors": {"_limit": ["… wait 42 seconds …"]}}` | Too many sends from this address this minute. |
 | `419` | | The CSRF token is missing or stale (the page was open too long): reload it. |
 | `200`, empty | | The honeypot caught it (fields missing, the trap filled in, or sent too fast); nothing is kept. |
 
 ### Files
 
-A **File (forms)** field takes one file per field. Its settings: **Accepted file types** (extensions, like `pdf, jpg, docx`; checked against the name and the content) and **Largest file** (KB; empty: `sunrice-cms.forms.upload_max_kb`, 10 MB). Files that could run as code (`.php`, `.html`, `.svg`, `.js`, `.exe` …) are always refused. PHP's own `upload_max_filesize` and `post_max_size` (and your web server's body limit) apply too.
+A **File (forms)** field takes one file per field. Its settings: **Accepted file types** (extensions, like `pdf, jpg, docx`; checked against the name and the content) and **Largest file** (KB; empty: `sunrice-cms.forms.upload_max_kb`, 10 MB). Files that could run as code (`.php`, `.html`, `.svg`, `.js`, `.exe` …) are always refused. PHP's own `upload_max_filesize` and `post_max_size` (and your web server's body limit) apply too. The component says under the field which types it takes and how large a file may be (the lower of its own limit and `upload_max_filesize`: "Accepted: JPG, PNG, up to 2 MB."), and a file over PHP's limit is refused with that size ("The Photos file is larger than 2 MB …") rather than "failed to upload" (`FileField::maxKb()`, `hint()`). A request over `post_max_size` arrives empty: keep it above `upload_max_filesize` times the file fields.
 
 Files are kept on the private disk `sunrice-cms.forms.upload_disk` (`local`, `SUNRICE_FORMS_DISK`) under `form-uploads/{handle}` with names of their own, never served to the public: people with `cms.submissions.view` download them from the submission. The submission keeps `{path, name, size, mime}`; the email and CSV show the name. Deleting a submission deletes its files. Entries don't use this field: use a media field.
 
@@ -103,12 +103,12 @@ Plugins use the same captcha: `app(\Sunrice\Admin\Security\Captcha::class)->widg
 ### Spam
 
 - Every form post must carry the honeypot fields ([spatie/laravel-honeypot](https://github.com/spatie/laravel-honeypot), which the component prints). Bots that fill in the hidden field, send too fast or leave the fields out get an empty page and nothing is kept. Configure it with the package's `honeypot` config. On pages kept by the [page cache](caching.md#whole-pages), each visitor gets their own honeypot fields (`Site\HoneypotReplacer`), so "too fast" counts from when the visitor got the page.
-- One visitor (IP address) may send a form 5 times a minute (`sunrice-cms.forms.per_minute`, or the form's own setting); more get `429`.
+- One visitor (IP address) may send a form 5 times a minute (`sunrice-cms.forms.per_minute`, or the form's own setting). Only sends that were kept count, so fixing a mistake doesn't use the limit up (with a ceiling of ten times as many tries of any kind). Over it, the visitor goes back to the form with a message saying how long to wait (under `_limit` in the form's error bag) and what they typed; JSON requests get `429`. Visitors behind one address (an office) share the limit.
 - A [captcha](#captcha), for forms that ask for it.
 
 ### After sending
 
-Visitors go back to the page they were on, or to the form's **After sending, go to** page, with the thank-you message in the session. JSON requests get `201 {"message": "…", "redirect_url": "/thanks" | null}` ([more](#submitting-without-a-page-reload)).
+Visitors go back to the form on the page they were on, or to the form's **After sending, go to** page, with the thank-you message in the session. JSON requests get `201 {"message": "…", "redirect_url": "/thanks" | null}` ([more](#submitting-without-a-page-reload)).
 
 ## Submissions
 

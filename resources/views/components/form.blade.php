@@ -5,7 +5,7 @@
     own view its properties ($form, $id) and methods ($error('email'), $old('email'), $success()) are variables.
 --}}
 @if ($replace && $success())
-<p id="{{ $id }}" role="status">{{ $success() }}</p>
+<p id="{{ $id }}" role="status" tabindex="-1" autofocus>{{ $success() }}</p>
 @else
 <form method="POST" action="{{ route('sunrice.cms.forms.submit', $form->handle) }}" id="{{ $id }}" @if ($form->takesFiles()) enctype="multipart/form-data" @endif {{ $attributes }}>
     @csrf
@@ -13,18 +13,29 @@
     <input type="hidden" name="locale" value="{{ $locale }}">
     <input type="hidden" name="{{ \Sunrice\Cms\View\Components\Form::FORM_INPUT }}" value="{{ $form->handle }}">
     @if ($success())
-        <p role="status">{{ $success() }}</p>
+        <p role="status" tabindex="-1" autofocus>{{ $success() }}</p>
     @endif
     @if ($slot->isNotEmpty())
     {{ $slot }}
     @else
+        @if ($failed())
+            {{-- Sent back with errors: focus lands here, each error links to its field. --}}
+            <div id="{{ $id }}-errors" role="alert" tabindex="-1" autofocus>
+                <p>{{ __('sunrice-cms::site.forms.errors') }}</p>
+                <ul>
+                    @foreach ($errorSummary() as [$errorField, $message])
+                        <li>@if ($errorField !== null)<a href="#form-{{ $form->handle }}-{{ $errorField }}">{{ $message }}</a>@else{{ $message }}@endif</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
         @foreach ($form->schema()->fields() as $field)
             @php
                 $inputId = 'form-'.$form->handle.'-'.$field->handle;
                 $label = $field->label ?: \Illuminate\Support\Str::headline($field->handle);
                 $value = $old($field->handle, $form->schema()->type($field)->defaultValue($field));
                 $fieldError = $error($field->handle);
-                $describedBy = trim(($field->instructions !== '' ? $inputId.'-help ' : '').($fieldError ? $inputId.'-error' : ''));
+                $describedBy = trim(($field->instructions !== '' || $field->type === 'file' ? $inputId.'-help ' : '').($fieldError ? $inputId.'-error' : ''));
                 $options = is_array($field->config['options'] ?? null) ? $field->config['options'] : [];
                 $multiple = ($field->config['multiple'] ?? false) === true;
             @endphp
@@ -62,8 +73,8 @@
                             @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif @if ($fieldError) aria-invalid="true" @endif>
                     @endif
                 @endif
-                @if ($field->instructions !== '')
-                    <p id="{{ $inputId }}-help">{{ $field->instructions }}</p>
+                @if ($field->instructions !== '' || $field->type === 'file')
+                    <p id="{{ $inputId }}-help">{{ $field->instructions }}@if ($field->type === 'file'){{ $field->instructions !== '' ? ' ' : '' }}{{ \Sunrice\Cms\Fields\Types\FileField::hint($field) }}@endif</p>
                 @endif
                 @if ($fieldError)
                     <p id="{{ $inputId }}-error" role="alert">{{ $fieldError }}</p>

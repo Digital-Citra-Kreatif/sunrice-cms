@@ -40,6 +40,11 @@ return [
     ],
     'forms' => [
         'send' => 'Kirim',
+        'errors' => 'Perbaiki isian berikut, lalu kirim formulir lagi:',
+        'too_many' => 'Anda telah beberapa kali mengirim formulir ini dalam waktu singkat. Tunggu :seconds detik, lalu kirim lagi; isian Anda tetap tersimpan.',
+        'file_hint' => 'Diterima: :types, maksimal :size.',
+        'file_size' => 'Maksimal :size.',
+        'too_big' => 'Berkas :attribute lebih besar dari :size, batas yang diterima situs ini.',
     ],
     'captcha' => 'Konfirmasikan bahwa Anda bukan robot, lalu kirim formulir lagi.',
 ];
