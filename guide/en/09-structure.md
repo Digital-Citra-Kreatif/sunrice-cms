@@ -36,6 +36,7 @@ To add a field, choose its type, then set:
 - **Instructions**: a hint shown under the field.
 - **Required**: the entry can't be saved or published without it.
 - **Per language**: **Yes, translated** (each language has its own), **No, shared** (one value for every language), or **As the type decides** (text is translated; numbers, dates, switches and media are shared).
+- **In other languages** (on a site with several languages): the label, instructions and a choice list's options as visitors read them in each other language. Forms on the website show these, and their error messages name the field this way. Empty: as written above.
 - **Extra rules**: checks for developers, one per line (such as `email`).
 - Each type's own settings: the choices of a select, the collections an entries field links to, the types a media field accepts, how many items at most…
 

@@ -14,7 +14,7 @@
 <x-sunrice-cms::form handle="contact" submit="Send message" class="contact-form" />
 ```
 
-Empty, the component prints the form with its labels, help texts and errors (each tied to its input with `aria-describedby` and `aria-invalid`), the CSRF token and the honeypot, the [captcha](#captcha) when the form asks for one, and the thank-you message once it's sent. Other attributes go on the `<form>`. It has no styles of its own: style it from your stylesheet, or publish the CMS's views to change its markup. Nothing is printed for an unknown handle.
+Empty, the component prints the form with its labels, help texts and select options in the page's language (the fields' `translations`, **In other languages** in the blueprint builder: see [field definitions](fields.md#field-definitions); else as written), and errors (each tied to its input with `aria-describedby` and `aria-invalid`), the CSRF token and the honeypot, the [captcha](#captcha) when the form asks for one, and the thank-you message once it's sent. Other attributes go on the `<form>`. It has no styles of its own: style it from your stylesheet, or publish the CMS's views to change its markup. Nothing is printed for an unknown handle.
 
 | Attribute | |
 | --- | --- |
@@ -105,6 +105,7 @@ Plugins use the same captcha: `app(\Sunrice\Admin\Security\Captcha::class)->widg
 - Every form post must carry the honeypot fields ([spatie/laravel-honeypot](https://github.com/spatie/laravel-honeypot), which the component prints). Bots that fill in the hidden field, send too fast or leave the fields out get an empty page and nothing is kept. Configure it with the package's `honeypot` config.
 - One visitor (IP address) may send a form 5 times a minute (`sunrice-cms.forms.per_minute`, or the form's own setting); more get `429`.
 - A [captcha](#captcha), for forms that ask for it.
+- Errors come in the language of the page the form was sent from (its `locale` input), naming each field by its label in that language: "Nama Anda wajib diisi." The CMS brings Indonesian for Laravel's validation lines (see [the site's words](site.md#the-sites-words)); add `lang/{locale}/validation.php` for other languages.
 
 ### After sending
 

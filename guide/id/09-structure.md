@@ -36,6 +36,7 @@ Untuk menambah field, pilih jenisnya, lalu atur:
 - **Instructions**: petunjuk yang tampil di bawah field.
 - **Required**: entri tidak bisa disimpan atau diterbitkan tanpanya.
 - **Per language**: **Yes, translated** (setiap bahasa punya isinya sendiri), **No, shared** (satu nilai untuk semua bahasa), atau **As the type decides** (teks diterjemahkan; angka, tanggal, saklar, dan media dipakai bersama).
+- **In other languages** (di situs dengan beberapa bahasa): label, petunjuk, dan pilihan daftar sebagaimana dibaca pengunjung di setiap bahasa lain. Formulir di situs web menampilkannya, dan pesan kesalahannya menyebut field dengan nama ini. Kosong: seperti yang ditulis di atas.
 - **Extra rules**: pemeriksaan untuk developer, satu per baris (misalnya `email`).
 - Pengaturan khusus tiap jenis: pilihan sebuah select, koleksi yang ditautkan field entries, jenis berkas yang diterima field media, jumlah maksimal…
 

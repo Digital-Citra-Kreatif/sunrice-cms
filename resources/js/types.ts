@@ -6,6 +6,18 @@ export interface FieldCondition {
 }
 
 /** A field definition as stored (see Sunrice\Cms\Fields\Field). */
+export interface FieldTranslation {
+    label?: string;
+    instructions?: string;
+    options?: Record<string, string>;
+}
+
+/** A content language: its code and name. */
+export interface LocaleInfo {
+    code: string;
+    name: string;
+}
+
 export interface FieldDefinition {
     handle: string;
     type: string;
@@ -17,6 +29,8 @@ export interface FieldDefinition {
     config?: Record<string, unknown>;
     fields?: FieldDefinition[];
     condition?: FieldCondition | null;
+    /** What visitors read in other languages, by language: label, instructions, a select's option labels by value. */
+    translations?: Record<string, FieldTranslation>;
     /** A flexible field's kinds of block, as the editor gets them. */
     blocks?: BlockType[];
     /** A terms field's taxonomy (its terms load from cms/term-picker). */

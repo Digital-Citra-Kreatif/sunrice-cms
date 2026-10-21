@@ -6,6 +6,7 @@ namespace Sunrice\Cms\Fields;
 
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Sunrice\Cms\Settings\LocaleSettings;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Validator as ValidatorInstance;
 use Sunrice\Cms\Fields\Types\FieldsetInclude;
@@ -97,6 +98,19 @@ final class DefinitionValidator
                     $fail('The value to compare with must be short text, a number or true/false.');
                 }
             }];
+            // What visitors read in other languages: label, instructions, a select's option labels.
+            $rules["{$key}.translations"] = ['nullable', 'array', function (string $attribute, mixed $value, \Closure $fail): void {
+                foreach (is_array($value) ? array_keys($value) : [] as $locale) {
+                    if (! is_string($locale) || preg_match(LocaleSettings::CODE, $locale) !== 1) {
+                        $fail('Translations are by language code, like "id".');
+                    }
+                }
+            }];
+            $rules["{$key}.translations.*"] = ['array:label,instructions,options'];
+            $rules["{$key}.translations.*.label"] = ['nullable', 'string', 'max:255'];
+            $rules["{$key}.translations.*.instructions"] = ['nullable', 'string', 'max:1000'];
+            $rules["{$key}.translations.*.options"] = ['nullable', 'array', 'max:500'];
+            $rules["{$key}.translations.*.options.*"] = ['nullable', 'string', 'max:255'];
             $rules["{$key}.config"] = ['nullable', 'array'];
             $rules["{$key}.fields"] = ['nullable', 'array', 'list', 'max:200'];
             if ($type === null) {
@@ -275,6 +289,7 @@ final class DefinitionValidator
                 config: $config,
                 fields: $type->hasChildren() ? $this->clean($field->fields) : [],
                 condition: $field->condition,
+                translations: $field->translations,
             );
         }, $fields);
     }

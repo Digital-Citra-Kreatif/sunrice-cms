@@ -12,11 +12,13 @@ use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Security\Captcha;
 use Sunrice\Cms\Actions\Forms\SubmitForm;
 use Sunrice\Cms\Models\Form;
+use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\SafeUrl;
 
 /**
  * POST /forms/{handle}: a visitor sends a form, its fields as data[handle]
- * (or by handle). Behind the honeypot, a per-address limit and, when the
+ * (or by handle), in the language its `locale` says (errors and the
+ * thank-you message are in it). Behind the honeypot, a per-address limit and, when the
  * form asks, the captcha; answers JSON to requests that ask for it.
  *
  * @internal
@@ -35,7 +37,9 @@ final class FormController
     public function __invoke(Request $request, Form $form, SubmitForm $submit, Captcha $captcha): RedirectResponse|JsonResponse
     {
         $locale = $request->input('locale');
-        $locale = is_string($locale) ? $locale : app()->getLocale();
+        $locale = is_string($locale) && Locales::has($locale) ? $locale : app()->getLocale();
+        // Errors in the visitor's language (the form's page sent it).
+        app()->setLocale($locale);
         try {
             // The captcha first: nothing else is looked at until it's passed.
             if ($form->captcha && ! $captcha->passes($request)) {

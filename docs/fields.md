@@ -23,6 +23,8 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 | `validation` | Extra Laravel rules from an allowed list (`min:3`, `regex:/…/`, `email`…; see `DefinitionValidator::RULES`). Rules that read the database aren't allowed. |
 | `config` | The type's settings. |
 | `fields` | The fields of a group or a repeater. Groups and repeaters nest up to five levels. |
+| `condition` | When it shows ([below](#showing-a-field-only-sometimes)). |
+| `translations` | What visitors read in other languages, by language code: `label`, `instructions` and a select's `options` (value => label), as [forms](forms.md) show them (**In other languages** in the builder). `{"id": {"label": "Jenis properti", "options": {"house": "Rumah"}}}` |
 
 `DefinitionValidator` checks definitions before they are saved, and the `SaveBlueprint` and `SaveFieldset` actions use it.
 
@@ -110,6 +112,13 @@ $schema->references($data);                                  // media it uses, a
 ```
 
 `rules()` takes the input because a flexible field's rules depend on which blocks were sent.
+
+A field's words for visitors, in a language (default: the page's), with its `translations`: `$field->labelIn('id')`, `$field->instructionsIn('id')`, `$field->options('id')` (a select's `[['value' => …, 'label' => …], …]`) and `$field->optionLabel($value, 'id')`, which turns a select's stored value into what it reads as (`under_offer` → "Dalam penawaran", else the option's label, else the value; null for a value that isn't an option):
+
+```blade
+@php($status = $entry->entry->schema()->field('property_status'))
+<span class="badge">{{ $status?->optionLabel($values['property_status']) }}</span>
+```
 
 A `HydrationContext` remembers the media, entries and terms it loads, so hydrating many values with one context costs one query per kind: `$context->preload($schema->references($data))` loads everything a set of data points at up front. `Cms::entries()` does this for its whole result, and `$translation->hydrateWith($context)` makes `values()` use a context when given none.
 
