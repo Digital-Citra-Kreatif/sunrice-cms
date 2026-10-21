@@ -8,11 +8,11 @@ Setiap entri memiliki kartu **SEO** di bawah field-nya, per bahasa. Kartu ini di
 
 | Field | Fungsinya |
 | --- | --- |
-| **Meta title** | Judul di hasil pencarian dan tab peramban. Kosong: judul entri. Nama situs ditambahkan di belakangnya ("Tentang | Acme"), kecuali dimatikan. |
-| **Meta description** | Satu atau dua kalimat yang tampil di bawah judul di hasil pencarian dan di tautan yang dibagikan. Tulislah untuk manusia: apa yang akan mereka temukan di halaman ini? |
+| **Judul meta** | Judul di hasil pencarian dan tab peramban. Jika kosong, memakai **Judul** entri. Nama situs ditambahkan di belakangnya ("Tentang | Acme"), kecuali dimatikan. |
+| **Deskripsi meta** | Satu atau dua kalimat yang tampil di bawah judul di hasil pencarian dan di tautan yang dibagikan. Tulislah untuk manusia: apa yang akan mereka temukan di halaman ini? |
 | **Gambar Open Graph** | Gambar yang tampil saat halaman dibagikan di media sosial atau aplikasi obrolan. |
 | **Sembunyikan dari mesin pencari (noindex)** | Meminta mesin pencari tidak mencantumkan halaman ini, dan mengeluarkannya dari peta situs. Pengunjung tetap bisa membukanya. |
-| **Canonical URL** | Hanya untuk halaman yang menyalin halaman lain: alamat lengkap halaman tersebut. Hampir selalu dibiarkan kosong. |
+| **URL kanonis** | Hanya untuk halaman yang menyalin halaman lain: alamat lengkap halaman tersebut. Hampir selalu dibiarkan kosong. |
 
 Field yang kosong bisa diisi dari field entri itu sendiri, jika pengelola situs mengaturnya di halaman **SEO** (**Field yang dipakai untuk SEO**: ringkasan sebagai deskripsi, gambar utama sebagai gambar berbagi). Jika tidak, pengaturan bawaan situs yang dipakai.
 
@@ -27,7 +27,7 @@ Halaman sebuah term dan halaman daftar sebuah koleksi memiliki kartu **SEO** yan
 
 **Pengaturan → Situs** menyimpan **Nama situs** dan **Deskripsi**, dipakai oleh halaman yang tidak punya sendiri. Judul beranda adalah nama situs. Lihat [Pengaturan situs](guide:website/settings#situs).
 
-Halaman **SEO** (di bawah Struktur pada sidebar) menyimpan sisanya, di **Mesin pencari dan berbagi**: **Gambar berbagi bawaan**, apakah nama situs ditambahkan ke judul (**Tambahkan nama situs ke judul halaman**) beserta **Pemisah** di antaranya (tanda `|` dalam "Tentang | Acme"), dan **Akun X (Twitter)** situs. Di bawahnya, **Field yang dipakai untuk SEO** menentukan, untuk tiap koleksi dan taksonomi, field mana yang mengisi meta title, deskripsi, atau gambar berbagi yang kosong.
+Halaman **SEO** (di bawah Struktur pada sidebar) menyimpan sisanya, di **Mesin pencari dan berbagi**: **Gambar berbagi bawaan**, apakah nama situs ditambahkan ke judul (**Tambahkan nama situs ke judul halaman**) beserta **Pemisah** di antaranya (tanda `|` dalam "Tentang | Acme"), dan **Akun X (Twitter)** situs. Di bawahnya, **Field yang dipakai untuk SEO** menentukan, untuk tiap koleksi dan taksonomi, field mana yang mengisi judul meta, deskripsi meta, atau gambar berbagi yang kosong.
 
 **Sembunyikan seluruh situs dari mesin pencari** (di halaman yang sama) untuk salinan situs yang belum publik (situs *staging*). Pengaturan ini menyembunyikan semua halaman dan mengosongkan peta situs. Pastikan mati di situs yang sebenarnya.
 
