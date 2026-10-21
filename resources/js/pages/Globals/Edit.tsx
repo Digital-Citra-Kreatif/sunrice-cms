@@ -66,11 +66,11 @@ function GlobalsEdit({ set, fields, locale, locales, shared, values, version, ca
             {lock.dialogs}
             <PageHeader
                 title={set.title}
+                menu={settings ? [{ label: t('Settings'), href: settings, icon: <Settings2 /> }] : []}
                 back={{ href: adminUrl('cms/globals'), label: t('Back to globals') }}
                 actions={
                     <>
-                        {settings && <Button type="button" variant="ghost" asChild><Link href={settings}><Settings2 /> {t('Settings')}</Link></Button>}
-                        {locales.length > 1 && (
+                                                {locales.length > 1 && (
                             <Select value={locale} onValueChange={(next: string) => router.get(url, { locale: next })}>
                                 <SelectTrigger className="cms:w-48" aria-label={t('Language')}><SelectValue /></SelectTrigger>
                                 <SelectContent>

@@ -77,27 +77,24 @@ export default function CommentsIndex({ tab, counts, filters, collections, comme
     return (
         <div className="cms:flex cms:flex-col cms:gap-6">
             <Head title={t('Comments')} />
-            <PageHeader
-                title={t('Comments')}
-                actions={
-                    <>
-                        <div className="cms:relative cms:w-full cms:sm:w-64">
-                            <Search className="cms:pointer-events-none cms:absolute cms:top-1/2 cms:left-3 cms:size-4 cms:-translate-y-1/2 cms:text-muted-foreground" />
-                            <Input type="search" placeholder={t('Search text, name or email')} aria-label={t('Search comments')} className="cms:pl-9"
-                                value={search} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)} />
-                        </div>
-                        {collections.length > 1 && (
-                            <Select value={filters.collection ?? 'all'} onValueChange={(value: string) => visit({ collection: value === 'all' ? null : value })}>
-                                <SelectTrigger className="cms:w-48" aria-label={t('Collection')}><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">{t('Every collection')}</SelectItem>
-                                    {collections.map((c) => <SelectItem key={c.handle} value={c.handle}>{c.title}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
-                        )}
-                    </>
-                }
-            />
+            <PageHeader title={t('Comments')} />
+
+            <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
+                <div className="cms:relative cms:w-full cms:sm:w-64">
+                    <Search className="cms:pointer-events-none cms:absolute cms:top-1/2 cms:left-3 cms:size-4 cms:-translate-y-1/2 cms:text-muted-foreground" />
+                    <Input type="search" placeholder={t('Search text, name or email')} aria-label={t('Search comments')} className="cms:pl-9"
+                        value={search} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)} />
+                </div>
+                {collections.length > 1 && (
+                    <Select value={filters.collection ?? 'all'} onValueChange={(value: string) => visit({ collection: value === 'all' ? null : value })}>
+                        <SelectTrigger className="cms:w-48" aria-label={t('Collection')}><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">{t('Every collection')}</SelectItem>
+                            {collections.map((c) => <SelectItem key={c.handle} value={c.handle}>{c.title}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                )}
+            </div>
 
             {filters.entry !== null && (
                 <p className="cms:text-sm cms:text-muted-foreground">

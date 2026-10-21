@@ -10,8 +10,8 @@ The list shows one collection at a time; pick another one with the collection me
 - **Status** shows only **Drafts**, **Published**, **Scheduled** (published, going live later) or the **Trash**.
 - Filter by author, by a term (such as a category) and by **Language**: the list shows the titles and statuses in that language.
 - Click a column's title to sort by it. **Columns** chooses which columns you see, including some of the entry's own fields (a price, a date…). The panel remembers your columns and page size.
-- **Go to** leads to what you might need next: the collection's listing page, its terms, its settings and its blueprint, as your role allows.
-- **Export CSV** downloads the list as filtered, sorted and in its language, every page of it, for a spreadsheet. It needs its own permission: being able to see a list isn't enough to download it.
+- The **⋮** menu beside **New entry** leads to what you might need next: the collection's listing page, its terms, its settings and its blueprint, as your role allows.
+- **Export CSV** (in the **⋮** menu) downloads the list as filtered, sorted and in its language, every page of it, for a spreadsheet. It needs its own permission: being able to see a list isn't enough to download it.
 
 The filters stay in the page's address, so you can bookmark a view or send it to a colleague.
 
@@ -99,7 +99,7 @@ Only one person edits an entry in a language at a time. If a colleague has it op
 
 ## Listing pages
 
-A collection may have a **listing page** that lists its entries on the website (like `/blog`). Its own words (an introduction, a heading) and its search and sharing details are edited with **Listing page** above the entries list, and saved straight away (there's no draft).
+A collection may have a **listing page** that lists its entries on the website (like `/blog`). Its own words (an introduction, a heading) and its search and sharing details are edited with **Edit the listing page** in the **⋮** menu above the entries list, and saved straight away (there's no draft).
 
 > [!TECHNICAL]
 > Collections, their URLs and templates are set up under Structure. See [Collections and entries](docs:cms/collections) and [The site](docs:cms/site).

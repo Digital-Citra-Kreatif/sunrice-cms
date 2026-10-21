@@ -63,11 +63,7 @@ export default function SubmissionsIndex({ form, forms, submissions, can, create
             <Head title={t(':form submissions', { form: form.title })} />
             <PageHeader
                 title={form.title}
-                actions={submissions.total > 0 && can.export && (
-                    <Button variant="outline" asChild>
-                        <a href={adminUrl(`cms/forms/${form.handle}/submissions/export`)}><Download /> {t('Export CSV')}</a>
-                    </Button>
-                )}
+                menu={submissions.total > 0 && can.export ? [{ label: t('Export CSV'), href: adminUrl(`cms/forms/${form.handle}/submissions/export`), download: true, icon: <Download /> }] : []}
             >
                 {forms.length > 1 && (
                     <Select value={form.handle} onValueChange={(handle: string) => router.get(adminUrl(`cms/forms/${handle}/submissions`))}>

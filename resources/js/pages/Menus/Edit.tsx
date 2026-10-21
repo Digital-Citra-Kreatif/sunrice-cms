@@ -114,11 +114,11 @@ export default function MenuEdit({ menu, items: initial, locales, limits, terms,
             <Head title={menu.title} />
             <PageHeader
                 title={menu.title}
+                menu={settings ? [{ label: t('Settings'), href: settings, icon: <Settings2 /> }] : []}
                 back={{ href: adminUrl('cms/menus'), label: t('Back to menus') }}
                 actions={can.update && (
                     <>
-                        {settings && <Button type="button" variant="ghost" asChild><Link href={settings}><Settings2 /> {t('Settings')}</Link></Button>}
-                        <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('entry')}><Plus /> {t('Entry')}</Button>
+                                                <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('entry')}><Plus /> {t('Entry')}</Button>
                         {terms.length > 0 && <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('term')}><Tag /> {t('Term')}</Button>}
                         {listings.length > 0 && <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('listing')}><List /> {t('Listing')}</Button>}
                         <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('url')}><Link2 /> {t('Link')}</Button>

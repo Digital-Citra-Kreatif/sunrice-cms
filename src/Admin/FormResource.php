@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Admin;
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
 use Sunrice\Admin\Resources\Forms\CheckboxList;
 use Sunrice\Admin\Resources\Forms\Form;
@@ -18,6 +19,7 @@ use Sunrice\Admin\Resources\Resource;
 use Sunrice\Admin\Resources\Tables\Column;
 use Sunrice\Admin\Resources\Tables\Table;
 use Sunrice\Cms\Models\Form as FormModel;
+use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\CaptchaHelp;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\RoleMembers;
@@ -95,6 +97,12 @@ final class FormResource extends Resource
                 CaptchaHelp::toggle(Toggle::make('captcha')->label('Require a captcha'), 'Visitors prove they\'re not a robot, with :provider.'),
             ]),
         ]);
+    }
+
+    /** The list's menu: where submissions are read. */
+    public static function links(Authorizable $user): array
+    {
+        return Access::submissions($user, 'view') ? [['label' => 'Submissions', 'url' => 'cms/submissions']] : [];
     }
 
     public static function table(Table $table): Table

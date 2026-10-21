@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { ExternalLink, FileText, MoreHorizontal, MoreVertical, Pencil, Plus, RotateCcw, Search, Settings2, Trash2 } from 'lucide-react';
+import { ExternalLink, FileText, MoreHorizontal, Pencil, Plus, RotateCcw, Search, Settings2, Trash2 } from 'lucide-react';
 import { adminUrl, t } from '@sunrice/admin-sdk';
 import {
     Button, Card, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-    DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, Input, Label, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+    DropdownMenuSeparator, DropdownMenuTrigger, Input, Label, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
     SortableHandle, type SortableHandleProps, SortableList, useBreadcrumbs,
 } from '@sunrice/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
@@ -160,35 +160,11 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
             {confirmDialog}
             <PageHeader
                 title={trashed ? t(':title — trash', { title: taxonomy.title }) : taxonomy.title}
-                actions={
-                    <>
-                        {locales.length > 1 && (
-                            <Select value={locale} onValueChange={(next: string) => router.get(base, { locale: next, ...(trashed ? { status: 'trashed' } : {}) })}>
-                                <SelectTrigger className="cms:w-40" aria-label={t('Language')}><SelectValue /></SelectTrigger>
-                                <SelectContent>{locales.map((code) => <SelectItem key={code} value={code}>{localeName(code)}</SelectItem>)}</SelectContent>
-                            </Select>
-                        )}
-                        {trashed
-                            ? <Button variant="outline" onClick={() => router.get(base, { locale })}>{t('Back to terms')}</Button>
-                            : <Button asChild><Link href={`${base}/create?locale=${encodeURIComponent(locale)}`}><Plus /> {t('New term')}</Link></Button>}
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="icon" aria-label={t('More')}><MoreVertical /></Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="cms:min-w-56">
-                                {collections.length > 0 && (
-                                    <>
-                                        <DropdownMenuLabel>{t('Used by collections')}</DropdownMenuLabel>
-                                        {collections.map((c) => <DropdownMenuItem key={c.url} asChild><Link href={c.url}>{c.title}</Link></DropdownMenuItem>)}
-                                        <DropdownMenuSeparator />
-                                    </>
-                                )}
-                                {taxonomy.settings && <DropdownMenuItem asChild><Link href={taxonomy.settings}><Settings2 /> {t('Taxonomy settings')}</Link></DropdownMenuItem>}
-                                {!trashed && <DropdownMenuItem onSelect={() => router.get(base, { locale, status: 'trashed' })}><Trash2 /> {t('Trash')}</DropdownMenuItem>}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </>
-                }
+                primary={!trashed && <Button asChild><Link href={`${base}/create?locale=${encodeURIComponent(locale)}`}><Plus /> {t('New term')}</Link></Button>}
+                menu={[
+                    ...collections.map((c) => ({ label: c.title, href: c.url, group: t('Used by collections') })),
+                    ...(taxonomy.settings ? [{ label: t('Taxonomy settings'), href: taxonomy.settings, icon: <Settings2 />, group: t('Structure') }] : []),
+                ]}
             >
                 {taxonomies.length > 1 && (
                     <Select value={taxonomy.handle} onValueChange={(handle: string) => router.get(adminUrl(`cms/taxonomies/${handle}/terms`))}>
@@ -204,6 +180,16 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
                     <Input className="cms:pl-9" placeholder={t('Search terms…')} aria-label={t('Search terms')} value={search}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)} />
                 </div>
+                {locales.length > 1 && (
+                    <Select value={locale} onValueChange={(next: string) => router.get(base, { locale: next, ...(trashed ? { status: 'trashed' } : {}) })}>
+                        <SelectTrigger className="cms:w-40" aria-label={t('Language')}><SelectValue /></SelectTrigger>
+                        <SelectContent>{locales.map((code) => <SelectItem key={code} value={code}>{localeName(code)}</SelectItem>)}</SelectContent>
+                    </Select>
+                )}
+                <Button variant={trashed ? 'secondary' : 'ghost'} className="cms:ml-auto cms:order-last"
+                    onClick={() => router.get(base, trashed ? { locale } : { locale, status: 'trashed' })}>
+                    {trashed ? t('Back to terms') : <><Trash2 /> {t('Trash')}</>}
+                </Button>
                 {!trashed && rows.length > 1 && !found && (
                     <p className="cms:text-sm cms:text-muted-foreground">{taxonomy.hierarchical ? t('Drag terms to set their order; a term\'s parent is set when you rename it.') : t('Drag terms to set their order.')}</p>
                 )}
