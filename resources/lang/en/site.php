@@ -8,6 +8,7 @@ return [
     'newer' => 'Newer',
     'older' => 'Older',
     'previous' => 'Previous',
+    'page_title' => ':title (page :page)',
     'next' => 'Next',
     'search' => [
         'title' => 'Search',

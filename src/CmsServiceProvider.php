@@ -108,6 +108,8 @@ final class CmsServiceProvider extends ServiceProvider
         TermTranslation::saved(fn (TermTranslation $translation) => Support\References::term($translation));
         GlobalValue::saved(fn (GlobalValue $value) => Support\References::global($value));
         $this->pageCache();
+        // An error page (the app's errors::404 and the like): <x-sunrice-cms::seo> leaves it out of search results.
+        Event::listen('composing: errors::*', fn () => Support\Seo::markErrorPage());
         // A collection, taxonomy or form came or went: so do its permissions.
         foreach ([Models\Collection::class, Models\Taxonomy::class, Models\Form::class] as $class) {
             foreach (['created', 'forceDeleted', 'deleted'] as $event) {

@@ -34,12 +34,15 @@ final class StructuredData
 
     /**
      * The `@graph` for a page (null: the app's own pages), with `$extra`
-     * nodes from the template.
+     * nodes from the template. `$author`: an article's author, a name (a
+     * Person) or a node of its own (a relative `url` made full); else who
+     * publishes the site.
      *
      * @param  list<array<string, mixed>>  $extra
+     * @param  string|array<string, mixed>|null  $author
      * @return list<array<string, mixed>>
      */
-    public static function graph(?Page $page, array $extra = []): array
+    public static function graph(?Page $page, array $extra = [], string|array|null $author = null): array
     {
         $site = app(SiteSettings::class);
         $locale = $page->locale ?? app()->getLocale();
@@ -48,7 +51,8 @@ final class StructuredData
         if ($publisher['@type'] === 'Organization' && $site->logo !== null && ($logo = Media::query()->find($site->logo)?->url()) !== null) {
             $publisher['logo'] = ['@type' => 'ImageObject', 'url' => $logo];
         }
-        $website = ['@type' => 'WebSite', '@id' => url('/').'#website', 'url' => $home, 'name' => $site->name(), 'inLanguage' => self::language($locale), 'publisher' => ['@id' => $publisher['@id']]];
+        // Each language's home is its own WebSite node.
+        $website = ['@type' => 'WebSite', '@id' => $home.'#website', 'url' => $home, 'name' => $site->name(), 'inLanguage' => self::language($locale), 'publisher' => ['@id' => $publisher['@id']]];
         if (trim($site->description) !== '') {
             $website['description'] = Str::squish($site->description);
         }
@@ -58,7 +62,7 @@ final class StructuredData
 
         $graph = [$website, $publisher];
         if ($page !== null && ! $page->preview) {
-            array_push($graph, ...self::forPage($page, $website['@id'], $publisher['@id']));
+            array_push($graph, ...self::forPage($page, $website['@id'], $publisher['@id'], self::author($author)));
         }
 
         return [...$graph, ...$extra];
@@ -76,8 +80,30 @@ final class StructuredData
             JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_INVALID_UTF8_SUBSTITUTE);
     }
 
-    /** @return list<array<string, mixed>> */
-    private static function forPage(Page $page, string $website, string $publisher): array
+    /**
+     * @param  string|array<string, mixed>|null  $author
+     * @return array<string, mixed>|null
+     */
+    private static function author(string|array|null $author): ?array
+    {
+        if (is_string($author)) {
+            $author = trim($author) === '' ? null : ['@type' => 'Person', 'name' => Str::squish($author)];
+        }
+        if ($author === null || $author === []) {
+            return null;
+        }
+        if (is_string($author['url'] ?? null) && str_starts_with($author['url'], '/') && ! str_starts_with($author['url'], '//')) {
+            $author['url'] = url($author['url']);
+        }
+
+        return $author;
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $author
+     * @return list<array<string, mixed>>
+     */
+    private static function forPage(Page $page, string $website, string $publisher, ?array $author = null): array
     {
         $seo = Seo::forPage($page);
         $url = $seo['canonical'] ?? url()->current();
@@ -96,7 +122,7 @@ final class StructuredData
             if (in_array($type, self::ARTICLES, true)) {
                 $node['headline'] = Str::limit($title, 107);
                 $node['mainEntityOfPage'] = $url;
-                $node['author'] = ['@id' => $publisher];
+                $node['author'] = $author ?? ['@id' => $publisher];
                 $node['publisher'] = ['@id' => $publisher];
                 if ($translation->published_at !== null) {
                     $node['datePublished'] = $translation->published_at->toAtomString();

@@ -8,6 +8,7 @@ return [
     'newer' => 'Lebih baru',
     'older' => 'Lebih lama',
     'previous' => 'Sebelumnya',
+    'page_title' => ':title (halaman :page)',
     'next' => 'Berikutnya',
     'search' => [
         'title' => 'Cari',

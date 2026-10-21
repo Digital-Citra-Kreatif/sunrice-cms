@@ -17,6 +17,7 @@ use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\TermTranslation;
+use Sunrice\Cms\Query\EntryPaginator;
 use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Support\Access;
 
@@ -161,9 +162,9 @@ final class SiteController
         app()->setLocale($locale);
         $term = $translation->term;
         $taxonomy = $term->taxonomy;
-        $entries = EntryTranslation::query()->live()->with('entry.collection')->where('locale', $locale)
+        $entries = EntryPaginator::from(EntryTranslation::query()->live()->with('entry.collection')->where('locale', $locale)
             ->whereHas('entry.terms', fn ($q) => $q->where('sunrice_terms.id', $term->id))
-            ->orderByDesc('published_at')->orderByDesc('id')->paginate(10)->withQueryString();
+            ->orderByDesc('published_at')->orderByDesc('id')->paginate(10))->withQueryString();
         abort_if($entries->currentPage() > 1 && $entries->isEmpty(), 404);
         $view = 'sunrice-cms::term';
         foreach (array_filter([self::own($term->template), $taxonomy->template, "cms.taxonomy-{$taxonomy->handle}", 'cms.term']) as $candidate) {
@@ -192,12 +193,12 @@ final class SiteController
     {
         app()->setLocale($listing->locale);
         $collection = $listing->collection;
-        $entries = EntryTranslation::query()->live()->with('entry.collection')
+        $entries = EntryPaginator::from(EntryTranslation::query()->live()->with('entry.collection')
             ->where('collection_id', $collection->id)->where('locale', $listing->locale)
             ->when($collection->ordered,
                 fn ($q) => $q->orderBy(Entry::query()->select('sort_order')->whereColumn('sunrice_entries.id', 'sunrice_entry_translations.entry_id'))->orderBy('id'),
                 fn ($q) => $collection->dated ? $q->orderByDesc('published_at')->orderByDesc('id') : $q->orderBy('title')->orderBy('id'))
-            ->paginate(max(1, min(100, $collection->per_page)))->withQueryString();
+            ->paginate(max(1, min(100, $collection->per_page))))->withQueryString();
         abort_if($entries->currentPage() > 1 && $entries->isEmpty(), 404);
         $schema = $collection->listingSchema();
 
