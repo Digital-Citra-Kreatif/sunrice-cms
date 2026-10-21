@@ -9,7 +9,7 @@ Di situs web, bahasa utama memakai alamat biasa (`/about`) dan bahasa lain diawa
 Jika situs memiliki lebih dari satu bahasa, penyunting entri menampilkan bilah bahasa di atas field. Bahasa utama ditandai **(utama)**, dan setiap bahasa menampilkan statusnya (*Draf*, *Terjadwal*, *Terbit*).
 
 - Klik sebuah bahasa untuk menyunting terjemahan itu.
-- Bahasa dengan garis putus-putus dan tanda **+** belum memiliki terjemahan. Klik untuk menambahkannya: terjemahan dimulai sebagai draf yang disalin dari bahasa utama, siap diterjemahkan.
+- Bahasa dengan garis putus-putus dan tanda **+** belum memiliki terjemahan. Klik untuk menambahkannya: terjemahan dimulai sebagai draf yang disalin dari bahasa utama, siap diterjemahkan. Penerjemah juga bisa menambahkan bahasa, bukan hanya yang bisa membuat entri.
 - **Hapus bahasa ini** menghapus terjemahan yang sedang dibuka, beserta revisinya. Bahasa utama tidak bisa dihapus: pindahkan seluruh entri ke tempat sampah sebagai gantinya.
 
 Terjemahan yang ditandai *usang* terakhir disimpan sebelum perubahan terbaru di bahasa utama: isinya mungkin sudah tidak sesuai. Kartu **Status** entri juga memberi tahu.

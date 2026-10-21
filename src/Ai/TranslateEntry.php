@@ -21,18 +21,16 @@ final class TranslateEntry extends CmsTool
 
     public function handle(Request $request): Response
     {
-        if (! $this->may('create')) {
-            return $this->denied('add translations');
-        }
         $entry = $this->findEntry($request);
         if ($entry instanceof Response) {
             return $entry;
         }
-        if (! $this->may('create', $entry->collection)) {
-            return $this->denied('add translations to entries of '.$entry->collection->title);
-        }
         $locale = $request->get('locale');
         $locale = is_string($locale) ? $locale : '';
+        // Those who may create its collection's entries, or edit it in that language (translators).
+        if (! $this->may('add-translation', $entry->collection, $entry, $locale)) {
+            return $this->denied('add translations to entries of '.$entry->collection->title);
+        }
         $machine = $request->get('machine') === true;
         if ($machine && ! app(TranslatorFactory::class)->configured()) {
             return Response::error('Machine translation isn\'t set up on this site: translate the text yourself with cms_save_entry.');

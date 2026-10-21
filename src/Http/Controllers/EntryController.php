@@ -696,6 +696,11 @@ final class EntryController
         foreach (['create', 'update', 'publish', 'delete', 'export'] as $ability) {
             $can[$ability] = Access::entries($request->user(), $ability, $collection, $entry, $locale);
         }
+        // An entry's editor: whether one may add another language (translators may too), asked for one that isn't the main one.
+        if ($entry !== null) {
+            $other = array_values(array_diff(Locales::all(), [Locales::default()]))[0] ?? null;
+            $can['translate'] = $other !== null && Access::entries($request->user(), 'add-translation', $collection, $entry, $other);
+        }
 
         return $can;
     }

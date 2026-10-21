@@ -69,7 +69,8 @@ interface Props {
     machineTranslate?: number | null;
     /** Another language, without machine translation set up: the button shows, off, saying what it needs. */
     machineTranslateMissing?: boolean;
-    can: { create: boolean; update: boolean; publish: boolean; delete: boolean };
+    /** translate: may add a language to the entry (create, or translators' right to edit other languages). */
+    can: { create: boolean; update: boolean; publish: boolean; delete: boolean; translate?: boolean };
 }
 
 /**
@@ -314,7 +315,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
             </PageHeader>
 
             {entry && locales.length > 1 && (
-                <LanguageBar entryUrl={url} editUrl={`${list}/${entry.id}/edit`} current={entry.locale} locales={locales} canAdd={can.create && !entry.trashed}
+                <LanguageBar entryUrl={url} editUrl={`${list}/${entry.id}/edit`} current={entry.locale} locales={locales} canAdd={(can.create || can.translate === true) && !entry.trashed}
                     canRemove={can.delete && !entry.isMain && !entry.trashed}
                     onRemove={() => confirm(t('Remove the :language translation of ":title"? Its revisions go with it.', { language: localeName(entry.locale), title: values.title }),
                         () => router.delete(`${url}/translations/${entry.locale}`))} />

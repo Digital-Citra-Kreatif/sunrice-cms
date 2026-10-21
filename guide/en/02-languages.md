@@ -9,7 +9,7 @@ On the website, the main language has plain addresses (`/about`) and the others 
 When the site has more than one language, the entry editor shows a bar of them above the fields. The main one says **(main)**, and each language shows its status (*Draft*, *Scheduled*, *Published*).
 
 - Click a language to edit that translation.
-- A language with a dashed outline and a **+** has no translation yet. Click it to add one: it starts as a draft copied from the main language, ready to translate.
+- A language with a dashed outline and a **+** has no translation yet. Click it to add one: it starts as a draft copied from the main language, ready to translate. Translators can add languages too, not only those who create entries.
 - **Remove this language** deletes the translation you're on, with its revisions. The main language can't be removed: move the whole entry to the trash instead.
 
 A translation marked **Outdated** was saved before the latest change to the main language: its text may no longer match. The entry's **Status** card says so too.

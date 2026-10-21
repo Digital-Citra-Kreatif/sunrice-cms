@@ -58,7 +58,7 @@ Editors write entries under **Content → Entries**: a list per collection (see 
 | `cms.entries.delete` | Move entries to the trash, restore them and delete them for good, also several at once. |
 | `cms.entries.export` | Download a collection's entries as CSV (with `view`). |
 | `cms.entries.update-own`, `.delete-own` | The same, for entries they created, in collections they may view. |
-| `cms.entries.translate` | Save drafts of entries' other languages (not the main one), in collections they may view: to keep a translator to some collections, give them those collections' **View** (`cms.entries.{collection}.view`) instead of `cms.entries.view`. Not what every language shares: Page settings (parent, template, blueprint, comments) and the order of entries need `cms.entries.update` (or `update-own`). |
+| `cms.entries.translate` | Add other languages to entries and save their drafts (not the main one), in collections they may view: to keep a translator to some collections, give them those collections' **View** (`cms.entries.{collection}.view`) instead of `cms.entries.view`. Not what every language shares: Page settings (parent, template, blueprint, comments) and the order of entries need `cms.entries.update` (or `update-own`). |
 | `cms.homepage` | Make a live page the site's homepage from its editor (`SetHomepage`); Settings → Site (`cms.settings.site`) sets it too. |
 | `cms.entries.view-drafts` | While signed in, see on the site that a live page has unpublished changes, and open them (`?draft`), in collections they may view. See [draft viewing](site.md#drafts-on-the-site). |
 
@@ -139,7 +139,7 @@ The editor's language bar and the entries list name each language as set.
 
 Each language of an entry is a translation of its own: its own title, slug, draft, status, publish date and revisions. With more than one language, the editor shows a bar of them:
 
-- **Adding a language** (`cms.entries.create`, or `CreateTranslation`) makes a draft copied from the main translation, to translate and publish on its own.
+- **Adding a language** (`cms.entries.create`, or editing the entry in that language: `cms.entries.translate`, `update`, `update-own`; `Access::entries($user, 'add-translation', $collection, $entry, $locale)`; or `CreateTranslation`) makes a draft copied from the main translation, to translate and publish on its own.
 - **Removing one** (`cms.entries.delete`, or `DeleteTranslation`) deletes that translation and its revisions. The main translation can't be removed: trash the entry instead.
 - **Outdated** shows on a language (in the bar, in the list's language badges, and to AI tools as `outdated` and `outdated_languages`) when the main translation changed after it was translated: each translation keeps the main one's `version` from when it was created, saved or published (`main_version`), and `$translation->isOutdated()` compares. Saving or publishing the translation clears it.
 

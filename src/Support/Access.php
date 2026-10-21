@@ -18,6 +18,7 @@ use Sunrice\Cms\Models\Taxonomy;
  *   cms.entries.{action}            cms.entries.{collection}.{action}     view, create, update, publish, delete, export
  *   cms.entries.update-own, .delete-own   their own entries, in collections they may view
  *   cms.entries.translate           the other languages of entries they may view, not the main one
+ *                                   (adding one too: the `add-translation` action)
  *   cms.terms.{action}              cms.terms.{taxonomy}.{action}         view, create, update, delete
  *   cms.submissions.{action}        cms.submissions.{form}.{action}       view, export, delete
  *
@@ -36,7 +37,8 @@ final class Access
     /**
      * Whether a user may do this with entries: of a collection (or, with
      * none, of some collection); of an entry (their own ones) and in a
-     * language (translators).
+     * language (translators). `add-translation` is adding a language to an
+     * entry: `create`, or `update` in that language.
      */
     public static function entries(?Authorizable $user, string $action, Collection|string|null $collection = null, ?Entry $entry = null, ?string $locale = null): bool
     {
@@ -44,6 +46,10 @@ final class Access
             return false;
         }
         $handle = $collection instanceof Collection ? $collection->handle : $collection;
+        // Adding a language to an entry: those who may create its collection's entries, or edit it in that language (translators).
+        if ($action === 'add-translation') {
+            return self::entries($user, 'create', $collection, $entry, $locale) || self::entries($user, 'update', $collection, $entry, $locale);
+        }
         if ($user->can("cms.entries.{$action}") || ($handle !== null ? $user->can("cms.entries.{$handle}.{$action}") : self::anyScoped($user, "cms.entries.%s.{$action}", Handles::collections()))) {
             return true;
         }
