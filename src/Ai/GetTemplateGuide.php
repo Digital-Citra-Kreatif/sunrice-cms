@@ -70,7 +70,9 @@ MD;
             'current' => Templates::map(),
             'templates' => Templates::files(),
             'defaults' => array_map(fn (string $f): string => basename($f), glob(dirname(__DIR__, 2).'/resources/views/{entry,listing,term,search}.blade.php', GLOB_BRACE) ?: []),
-            'can_write' => Templates::writable($this->user()),
+            'can_write' => $writable = Templates::writable($this->user()),
+            // Why not, since cms_write_template isn't listed then.
+            'write_note' => $writable ? null : 'cms_write_template is only for super admins, on sites that allow it (sunrice-cms.ai.templates, SUNRICE_AI_TEMPLATES=true): templates run code on the server. Suggest the change to a developer instead.',
         ]);
     }
 }
