@@ -38,7 +38,7 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 | `number` | a number | the number | `min`, `max`, `step` (1 for whole numbers), `default` |
 | `toggle` | true or false | the boolean | `default` |
 | `select` | a value, or a list with `multiple` | the same | `options` (`[{value, label}]`), `multiple`, `default` |
-| `date` | `2026-10-19`, or `2026-10-19T14:30:00` with `time` | a Carbon | `time`; `future` (*Today or later only*: earlier days are refused, and a form's date input gets `min`) |
+| `date` | `2026-10-19`, or `2026-10-19T14:30:00` with `time` | a Carbon | `time`; `future` (*Today or later only*: earlier days are refused with `sunrice-cms::site.forms.today_or_later`, "The Preferred date must be today or a later date.", and a form's date input gets `min`) |
 | `link` | `{type: url, url, label, new_tab}` or `{type: entry, entry_id, label, new_tab}` | `{type, url, label, title, new_tab}`, or null | `collections` (entry links; none: any) |
 | `media` | a media id, or a list with `multiple` | a `Media` model, or a collection (`$image->altIn()` and `captionIn()`: its alt text and caption in the page's language, set per language in the media library; see [media](../../admin/docs/media.md)) | `multiple`, `max`, `types` (image, video, audio, document) |
 | `group` | an object of its fields | an array | (its `fields`) |
