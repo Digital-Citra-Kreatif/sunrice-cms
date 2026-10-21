@@ -464,6 +464,26 @@ Signed-in panel users with `cms.entries.view-drafts` (and view access to the col
 
 ## Security
 
+### Security headers
+
+Every response of the CMS's site routes (entry, listing and term pages, search, `sitemap.xml`, previews, the comment unsubscribe page, form and comment posts, 404s among them, kept pages too) carries the headers in `site.headers` (`config/sunrice-cms.php`):
+
+| Header | Default | Why |
+| --- | --- | --- |
+| `X-Content-Type-Options` | `nosniff` | Browsers don't guess a type other than the one sent. |
+| `X-Frame-Options` | `SAMEORIGIN` | Other sites can't frame your pages (clickjacking); your own can. |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | Other sites see only your origin, never the page's path or query. |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | No page (nor a script in it) may ask for these. |
+| `Content-Security-Policy` | none (`SUNRICE_SITE_CSP`) | Off by default: what it must allow depends on your templates, scripts, fonts, embeds and site code snippets. |
+
+Set one to `null` to leave it out, change its value, or add others (`'Strict-Transport-Security' => 'max-age=31536000'` once the whole site is on HTTPS). A header the response already has, set by your own middleware, is kept. A CSP to start from, then check the browser console on every kind of page:
+
+```
+SUNRICE_SITE_CSP="default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; frame-ancestors 'self'"
+```
+
+Site code (Settings → Site code) and captcha widgets load scripts from elsewhere: allow their origins in `script-src` and `frame-src`. Your app's own routes (a `robots.txt` route, say) aren't touched; the panel sends its own ([panel security headers](../../admin/docs/security.md#security-headers)).
+
 ### The Host header
 
 Whoever sends a request chooses its `Host` header, so the site never puts it in what it sends back where a cache or proxy could keep it for everyone: its redirects to its own pages (`/en/about` to `/about`, `/about/` and `/index.php/about` to `/about`, plain addresses to the main language's prefix, redirects editors made to a path) are host-relative (`Location: /about`), and the sitemap's addresses are on `APP_URL`. Pages still print links from `url()`, so also turn on Laravel's `TrustHosts` middleware (`$middleware->trustHosts()` in `bootstrap/app.php`; it trusts `APP_URL`'s host and its subdomains) or have your web server answer only your own host names. A `robots.txt` route of your own should name the sitemap with `Sunrice\Admin\Support\AppUrl::route('sunrice.cms.sitemap')`, not `url()`.
