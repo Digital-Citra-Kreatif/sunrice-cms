@@ -1,11 +1,13 @@
 {{--
     <x-sunrice-cms::form handle="contact" />: the form's fields, the honeypot, its errors and the
-    thank-you message; with a slot, the markup inside the <form> is yours (name inputs data[handle]).
+    thank-you message; with a slot, the markup inside the <form> is yours (name inputs data[handle]), after the
+    error summary (unless the slot has its own element with id="form-{handle}-errors" tabindex="-1").
     Publish the views to change this markup; extra attributes go on <form>. Inside a class component's
     own view its properties ($form, $id) and methods ($error('email'), $old('email'), $success()) are variables.
 --}}
 @if ($replace && $success())
-<p id="{{ $id }}" role="status" tabindex="-1" autofocus>{{ $success() }}</p>
+{{-- The visitor lands here (#form-{handle}-status), and focus with them. --}}
+<p id="{{ $id }}-status" role="status" tabindex="-1" autofocus>{{ $success() }}</p>
 @else
 <form method="POST" action="{{ route('sunrice.cms.forms.submit', $form->handle) }}" id="{{ $id }}" @if ($form->takesFiles()) enctype="multipart/form-data" @endif {{ $attributes }}>
     @csrf
@@ -13,22 +15,26 @@
     <input type="hidden" name="locale" value="{{ $locale }}">
     <input type="hidden" name="{{ \Sunrice\Cms\View\Components\Form::FORM_INPUT }}" value="{{ $form->handle }}">
     @if ($success())
-        <p role="status" tabindex="-1" autofocus>{{ $success() }}</p>
+        <p id="{{ $id }}-status" role="status" tabindex="-1" autofocus>{{ $success() }}</p>
     @endif
-    @if ($slot->isNotEmpty())
-    {{ $slot }}
+    @php
+        $slotHtml = $slot->isNotEmpty() ? (string) $slot : null;
+    @endphp
+    @if ($failed() && ($slotHtml === null || ! str_contains($slotHtml, 'id="'.$id.'-errors"')))
+        {{-- Sent back with errors: the visitor lands here (#form-{handle}-errors), focus with them, and each error links to its field.
+             A slot of yours can have its own: an element with id="{{ $id }}-errors" tabindex="-1". --}}
+        <div id="{{ $id }}-errors" role="alert" tabindex="-1" autofocus>
+            <p>{{ __($limited() ? 'sunrice-cms::site.forms.limited' : 'sunrice-cms::site.forms.errors') }}</p>
+            <ul>
+                @foreach ($errorSummary() as [$errorField, $message])
+                    <li>@if ($errorField !== null && ($slotHtml === null || str_contains($slotHtml, 'id="'.$id.'-'.$errorField.'"')))<a href="#{{ $id }}-{{ $errorField }}">{{ $message }}</a>@else{{ $message }}@endif</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+    @if ($slotHtml !== null)
+    {!! $slotHtml !!}
     @else
-        @if ($failed())
-            {{-- Sent back with errors: focus lands here, each error links to its field. --}}
-            <div id="{{ $id }}-errors" role="alert" tabindex="-1" autofocus>
-                <p>{{ __('sunrice-cms::site.forms.errors') }}</p>
-                <ul>
-                    @foreach ($errorSummary() as [$errorField, $message])
-                        <li>@if ($errorField !== null)<a href="#form-{{ $form->handle }}-{{ $errorField }}">{{ $message }}</a>@else{{ $message }}@endif</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
         @foreach ($form->schema()->fields() as $field)
             @php
                 $inputId = 'form-'.$form->handle.'-'.$field->handle;

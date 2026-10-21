@@ -71,7 +71,8 @@ final class EntryInput
         foreach ($keys as $key) {
             if (str_starts_with($key, 'data.')) {
                 $path = substr($key, 5);
-                $field = $schema->field($path);
+                // One of a field's several values ("photos.*", "photos.0") is named as the field.
+                $field = $schema->field($path) ?? $schema->field((string) preg_replace('/(\.(\*|\d+))+$/', '', $path));
                 $names[$key] = $field !== null && $locale !== null ? $field->labelIn($locale) : ($field?->label ?: Str::headline((string) Str::afterLast($path, '.')));
             }
         }

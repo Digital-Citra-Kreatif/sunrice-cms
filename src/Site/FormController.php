@@ -20,7 +20,8 @@ use Sunrice\Cms\Support\SafeUrl;
  * (or by handle), in the language its `locale` says (errors and the
  * thank-you message are in it). Behind the honeypot, a per-address limit
  * on what's kept (SendLimit) and, when the form asks, the captcha; back to
- * the form (#form-{handle}) with its errors or thank-you message, or JSON
+ * the form's error summary (#form-{handle}-errors) or thank-you message
+ * (#form-{handle}-status), or JSON
  * to requests that ask for it.
  *
  * @internal
@@ -42,8 +43,9 @@ final class FormController
         $locale = is_string($locale) && Locales::has($locale) ? $locale : app()->getLocale();
         // Errors in the visitor's language (the form's page sent it).
         app()->setLocale($locale);
-        // Back to the form itself, not the top of the page.
-        $back = url()->previous().'#form-'.$form->handle;
+        // Back to the form itself, not the top of the page: to its error summary or thank-you message, which
+        // take focus as the browser goes to them (they have tabindex="-1"; autofocus is ignored with a fragment).
+        $back = url()->previous();
         $limit = new SendLimit('sunrice-forms|'.$form->handle.'|'.$request->ip(), $form->perMinute());
         try {
             $limit->check($locale, $form->handle);
@@ -57,7 +59,7 @@ final class FormController
                 $request->ip(), $request->userAgent(), $request->headers->get('referer'));
         } catch (ValidationException $e) {
             // Errors under the form's own bag, so two forms on a page don't mix them up.
-            throw $e->errorBag($form->handle)->redirectTo($back);
+            throw $e->errorBag($form->handle)->redirectTo($back.'#form-'.$form->handle.'-errors');
         }
         $limit->sent();
         $redirect = $form->redirect_url !== null && SafeUrl::isSafe($form->redirect_url) ? $form->redirect_url : null;
@@ -66,6 +68,6 @@ final class FormController
             return response()->json(['message' => $form->successMessage($locale), 'redirect_url' => $redirect], 201);
         }
 
-        return redirect()->to($redirect ?? $back)->with(self::flashKey($form), $form->successMessage($locale));
+        return redirect()->to($redirect ?? $back.'#form-'.$form->handle.'-status')->with(self::flashKey($form), $form->successMessage($locale));
     }
 }

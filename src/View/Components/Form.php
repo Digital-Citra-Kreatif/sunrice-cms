@@ -13,6 +13,7 @@ use Illuminate\View\Component;
 use Sunrice\Admin\Security\Captcha;
 use Sunrice\Cms\Models\Form as FormModel;
 use Sunrice\Cms\Site\FormController;
+use Sunrice\Cms\Site\SendLimit;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\SiteRecords;
 
@@ -46,7 +47,7 @@ final class Form extends Component
 
     public ?FormModel $form;
 
-    /** The <form>'s id (and the thank-you message's, with `replace`). */
+    /** The <form>'s id: its error summary is "{id}-errors" and its thank-you message "{id}-status", where visitors land after sending. */
     public string $id;
 
     public string $locale;
@@ -90,6 +91,14 @@ final class Form extends Component
     public function failed(): bool
     {
         return $this->bag()->isNotEmpty();
+    }
+
+    /** Whether the only error is the send limit's (the summary then says the form wasn't sent, not what to correct). */
+    public function limited(): bool
+    {
+        $keys = array_keys($this->bag()->toArray());
+
+        return $keys === [SendLimit::ERROR];
     }
 
     /**

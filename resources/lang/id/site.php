@@ -51,10 +51,12 @@ return [
     'forms' => [
         'send' => 'Kirim',
         'errors' => 'Perbaiki isian berikut, lalu kirim formulir lagi:',
+        'limited' => 'Formulir ini belum terkirim:',
         'too_many' => 'Anda telah beberapa kali mengirim formulir ini dalam waktu singkat. Tunggu :seconds detik, lalu kirim lagi; isian Anda tetap tersimpan.',
         'file_hint' => 'Diterima: :types, maksimal :size.',
         'file_size' => 'Maksimal :size.',
         'too_big' => 'Berkas :attribute lebih besar dari :size, batas yang diterima situs ini.',
+        'too_big_each' => 'Salah satu berkas :attribute lebih besar dari :size, batas tiap berkas yang diterima situs ini.',
         'thanks' => 'Terima kasih, pesan Anda sudah kami terima.',
     ],
     'filter' => [

@@ -51,10 +51,12 @@ return [
     'forms' => [
         'send' => 'Send',
         'errors' => 'Please correct the following and send the form again:',
+        'limited' => 'This form wasn\'t sent:',
         'too_many' => 'You\'ve sent this form several times in a short while. Please wait :seconds seconds and send it again; what you typed is kept.',
         'file_hint' => 'Accepted: :types, up to :size.',
         'file_size' => 'Up to :size.',
         'too_big' => 'The :attribute file is larger than :size, the most this site accepts.',
+        'too_big_each' => 'One of the :attribute files is larger than :size, the most this site accepts for each file.',
         'thanks' => 'Thank you, we got your message.',
     ],
     'filter' => [

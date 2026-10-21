@@ -53,9 +53,15 @@ final class SubmitForm
             }
             // A file over PHP's own limit arrives empty ("failed to upload"): say how large one may be.
             foreach ($schema->fields() as $field) {
-                $file = $data[$field->handle] ?? null;
-                if ($field->type === FileField::TYPE && $file instanceof UploadedFile && in_array($file->getError(), [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)) {
-                    $errors[$field->handle] = [__('sunrice-cms::site.forms.too_big', ['attribute' => $attributes['data.'.$field->handle] ?? $field->handle, 'size' => FileField::size(FileField::maxKb($field))], $locale)];
+                if ($field->type !== FileField::TYPE) {
+                    continue;
+                }
+                $sent = $data[$field->handle] ?? null;
+                $tooBig = array_filter(is_array($sent) ? $sent : [$sent], fn (mixed $file): bool => $file instanceof UploadedFile
+                    && in_array($file->getError(), [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true));
+                if ($tooBig !== []) {
+                    $replace = ['attribute' => $attributes['data.'.$field->handle] ?? $field->labelIn($locale ?? Locales::default()), 'size' => FileField::size(FileField::maxKb($field))];
+                    $errors[$field->handle] = [__(FileField::isMultiple($field) ? 'sunrice-cms::site.forms.too_big_each' : 'sunrice-cms::site.forms.too_big', $replace, $locale)];
                 }
             }
             throw ValidationException::withMessages($errors);

@@ -20,11 +20,11 @@ Empty, the component prints the form with its labels, help texts and select opti
 | --- | --- |
 | `handle` | The form's handle (required). |
 | `submit` | The button's text when it prints the fields (`Send`). |
-| `replace` | Once it's sent, the thank-you message (`<p role="status" id="form-{handle}">`) takes the form's place; without it, the message shows above the form. |
+| `replace` | Once it's sent, the thank-you message (`<p role="status" id="form-{handle}-status">`) takes the form's place; without it, the message shows above the form. |
 
 ### Your own markup
 
-With a slot, the markup inside the `<form>` is yours; the component still adds the `<form>` itself, the CSRF token, the honeypot and two hidden inputs (`locale`, and `_form`, which tells this form's old input from another's). Name the inputs `data[handle]` and use the component's methods:
+With a slot, the markup inside the `<form>` is yours; the component still adds the `<form>` itself, the CSRF token, the honeypot, two hidden inputs (`locale`, and `_form`, which tells this form's old input from another's), the thank-you message and, after a failed send, the error summary visitors land on (see below). Name the inputs `data[handle]` and use the component's methods:
 
 ```blade
 <x-sunrice-cms::form handle="contact" class="stack" replace>
@@ -46,14 +46,22 @@ With a slot, the markup inside the `<form>` is yours; the component still adds t
 ```
 
 - `$component->old('email', $default)`: what the field was sent with when the form came back with errors, for this form only (two forms with an `email` field don't refill each other).
-- `$component->error('email')`: this form's first error for the field, or null; `failed()` whether it has any (for a summary); `captchaError()` the captcha's.
+- `$component->error('email')`: this form's first error for the field, or null; `failed()` whether it has any (for a summary); `limited()` whether the only one is the [send limit's](#spam) (nothing to correct: the form wasn't sent); `captchaError()` the captcha's.
 - `$component->success()`: the thank-you message right after it was sent, or null (the component prints it already; use it to show something else).
 - `$component->captcha()`: the captcha widget and its script when the form asks for one, else null. With your own markup, print it yourself.
 - `$component->submitted()`: whether the page comes right after this form was sent back with errors. `$component->form` is the `Form` model (`->schema()->fields()` lists its fields).
 
 Fields the form's blueprint doesn't have are ignored; a toggle needs a hidden `0` before its checkbox to send "off"; a select with several choices is `data[topics][]`, and so is a file field that takes several files (`data[photos][]` with `multiple`); a file field needs the form to send `multipart/form-data` (the component adds it when the form has one).
 
-Forms post to `POST /forms/{handle}` (route `sunrice.cms.forms.submit`), the fields as `data[handle]` (or by handle, as in older templates). After sending, visitors go back to the form on the page they were on (`#form-{handle}`, the `<form>`'s id), with the thank-you message in the session (`session('sunrice-cms.form.contact')`); errors are in the form's own error bag (`$errors->contact`), so two forms on a page don't mix them up. The component's own markup puts the thank-you message, or a summary of the errors with a link to each field, first in the form and focuses it (`autofocus`, no JavaScript), so keyboard and screen reader users start there; with a slot, `$component->errorSummary()` gives the errors as `[handle or null, message]` pairs for your own.
+Forms post to `POST /forms/{handle}` (route `sunrice.cms.forms.submit`), the fields as `data[handle]` (or by handle, as in older templates). After sending, visitors go back to the form on the page they were on, with the thank-you message in the session (`session('sunrice-cms.form.contact')`); errors are in the form's own error bag (`$errors->contact`), so two forms on a page don't mix them up. They land on the thank-you message (`#form-{handle}-status`) or, after errors, on a summary of them (`#form-{handle}-errors`, each error linking to its field; headed "This form wasn't sent:" when the only error is the send limit's, else "Please correct the following…"). Both have `tabindex="-1"`, so the browser moves focus to them as it goes to the address's fragment, with no JavaScript (browsers ignore `autofocus` on a page whose address has a fragment), and keyboard and screen reader users start there. With a slot, the component prints the summary before your markup, linking only to inputs your markup has with the component's ids (`id="form-{handle}-{field}"`); to write your own instead, give an element of yours `id="form-{handle}-errors"` and `tabindex="-1"` (`$component->errorSummary()` gives the errors as `[handle or null, message]` pairs, the send limit's and the captcha's with no handle):
+
+```blade
+@if ($component->failed())
+    <div id="{{ $component->id }}-errors" role="alert" tabindex="-1">…</div>
+@endif
+```
+
+A file over PHP's own `upload_max_filesize` arrives empty; the error says so, naming the field and the largest size accepted ("The Photos file is larger than 2 MB…"; for a field that takes several files, "One of the Photos files is larger than 2 MB…"), in the summary and under the field.
 
 ### Submitting without a page reload
 
@@ -103,7 +111,7 @@ Plugins use the same captcha: `app(\Sunrice\Admin\Security\Captcha::class)->widg
 ### Spam
 
 - Every form post must carry the honeypot fields ([spatie/laravel-honeypot](https://github.com/spatie/laravel-honeypot), which the component prints). Bots that fill in the hidden field, send too fast or leave the fields out get an empty page and nothing is kept. Configure it with the package's `honeypot` config. On pages kept by the [page cache](caching.md#whole-pages), each visitor gets their own honeypot fields (`Site\HoneypotReplacer`), so "too fast" counts from when the visitor got the page.
-- One visitor (IP address) may send a form 5 times a minute (`sunrice-cms.forms.per_minute`, or the form's own setting). Only sends that were kept count, so fixing a mistake doesn't use the limit up (with a ceiling of ten times as many tries of any kind). Over it, the visitor goes back to the form with a message saying how long to wait (under `_limit` in the form's error bag) and what they typed; JSON requests get `429`. Visitors behind one address (an office) share the limit.
+- One visitor (IP address) may send a form 5 times a minute (`sunrice-cms.forms.per_minute`, or the form's own setting). Only sends that were kept count, so fixing a mistake doesn't use the limit up (with a ceiling of ten times as many tries of any kind). Over it, the visitor goes back to the form with a message saying how long to wait (under `_limit` in the form's error bag) and what they typed; JSON requests get `429`. Visitors behind one address (an office) share the limit. It's counted per address because that's what a bot can't shed: it starts a new session (no cookies) on every request, so a limit per session or per browser would stop nobody. Each form has its own count, so an office sending one form doesn't use up another's; where many people share an address and a form gets busy, raise that form's **Sends per visitor a minute**.
 - A [captcha](#captcha), for forms that ask for it.
 - Errors come in the language of the page the form was sent from (its `locale` input), naming each field by its label in that language: "Nama Anda wajib diisi." The CMS brings Indonesian for Laravel's validation lines (see [the site's words](site.md#the-sites-words)); add `lang/{locale}/validation.php` for other languages.
 
