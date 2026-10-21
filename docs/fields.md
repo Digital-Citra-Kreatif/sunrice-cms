@@ -76,7 +76,7 @@ A block's values are readable as properties (`$block->heading`) or keys (`$block
 
 ### Fieldsets
 
-A `fieldset` field puts the fieldset's fields in its own place; their handles count as the blueprint's own. A fieldset can include other fieldsets, but never itself (directly or through another). An include whose fieldset is gone stays in the blueprint and keeps its data. A fieldset can't be deleted while a blueprint or another fieldset includes it or uses it as a kind of block.
+A `fieldset` field puts the fieldset's fields in its own place, at its level and with their own handles: they count as the blueprint's own, and the include's own handle, label and settings aren't used (the builder shows only which fieldset). To keep them under a name of their own (`primary_contact.phone`), put the include in a Group with that handle; a clash says so. A fieldset can include other fieldsets, but never itself (directly or through another). An include whose fieldset is gone stays in the blueprint and keeps its data. A fieldset can't be deleted while a blueprint or another fieldset includes it or uses it as a kind of block.
 
 ## Showing a field only sometimes
 

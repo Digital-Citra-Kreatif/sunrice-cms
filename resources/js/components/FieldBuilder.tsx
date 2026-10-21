@@ -109,6 +109,27 @@ function FieldSettings({ id, field, type, siblings, onChange, types, errors, dep
     const config = field.config ?? {};
     const warning = handleWarning(field, siblings, reserved);
 
+    // A fieldset include: only which fieldset. Its fields land here with their own handles; its handle and settings aren't used.
+    if (field.type === 'fieldset') {
+        return (
+            <div id={id} className="cms:flex cms:flex-col cms:gap-4 cms:border-t cms:p-4">
+                <div className="cms:grid cms:gap-4 cms:md:grid-cols-2">
+                    <div className="cms:flex cms:flex-col cms:gap-2">
+                        <Label htmlFor={`${id}-label`}>Label</Label>
+                        <Input id={`${id}-label`} value={field.label ?? ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(relabel(field, e.target.value, siblings))} />
+                        <p className="cms:text-sm cms:text-muted-foreground">Only shown here, in the builder.</p>
+                    </div>
+                    {type?.settings.map((setting) => (
+                        <FieldInput key={setting.handle} id={`${id}-config-${setting.handle}`} field={setting} value={config[setting.handle]}
+                            errors={errorsAt(errors, `config.${setting.handle}`)}
+                            onChange={(value) => onChange({ ...field, config: { ...config, [setting.handle]: value } })} />
+                    ))}
+                </div>
+                <FieldError message={errors.handle ?? errors.type} />
+            </div>
+        );
+    }
+
     return (
         <div id={id} className="cms:flex cms:flex-col cms:gap-4 cms:border-t cms:p-4">
             {!type && <p className="cms:text-sm cms:text-destructive">The field type "{field.type}" isn't registered. Its data is kept; register the type or remove the field.</p>}

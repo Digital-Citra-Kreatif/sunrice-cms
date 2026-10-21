@@ -147,18 +147,27 @@ final class DefinitionValidator
                 }
                 $handles = array_map(fn (Field $child): string => $child->handle, Schema::make([$field])->fields());
             }
+            // An include's fields land at this level: say so, and how to keep them apart.
+            $include = $field->type === FieldsetInclude::TYPE ? ($field->configString('fieldset') ?? '') : null;
+            $at = $include !== null ? "{$key}.config.fieldset" : "{$key}.handle";
             foreach ($handles as $handle) {
+                $from = self::includeHint($include ?? (is_string($seen[$handle] ?? null) ? $seen[$handle] : null));
                 if (in_array($handle, $reserved, true)) {
-                    $validator->errors()->add("{$key}.handle", "\"{$handle}\" is used by the content itself; choose another handle.");
+                    $validator->errors()->add($at, "\"{$handle}\" is used by the content itself; choose another handle".self::includeHint($include).'.');
                 } elseif (isset($seen[$handle])) {
-                    $validator->errors()->add("{$key}.handle", "There is already a field \"{$handle}\" here.");
+                    $validator->errors()->add($at, "There is already a field \"{$handle}\" here{$from}.");
                 }
-                $seen[$handle] = true;
+                $seen[$handle] = $include ?? true;
             }
             if ($field->fields !== []) {
                 $this->checkHandles($validator, $field->fields, "{$key}.fields", [], $fieldset);
             }
         }
+    }
+
+    private static function includeHint(?string $fieldset): string
+    {
+        return $fieldset === null ? '' : " (the fieldset \"{$fieldset}\" adds its fields at this level: put it in a Group to keep them under a name of their own)";
     }
 
     /**
