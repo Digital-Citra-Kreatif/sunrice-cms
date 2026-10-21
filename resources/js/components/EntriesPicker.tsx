@@ -16,6 +16,8 @@ interface Props {
     collections: string[];
     invalid: boolean;
     onChange: (value: number | number[] | null) => void;
+    /** Said when a search finds nothing, after "No entries match.": what to do instead. */
+    emptyHint?: string;
 }
 
 async function fetchItems(params: { ids?: number[]; search?: string; collections: string[] }): Promise<Item[]> {
@@ -26,7 +28,7 @@ async function fetchItems(params: { ids?: number[]; search?: string; collections
 }
 
 /** Choose entries by searching their titles; several are kept in the order they're dragged into. */
-export function EntriesPicker({ id, value, multiple, max, collections, invalid, onChange }: Props) {
+export function EntriesPicker({ id, value, multiple, max, collections, invalid, onChange, emptyHint }: Props) {
     const ids = value === null ? [] : Array.isArray(value) ? value : [value];
     const [known, setKnown] = React.useState<Record<number, Item>>({});
     const [search, setSearch] = React.useState('');
@@ -86,7 +88,7 @@ export function EntriesPicker({ id, value, multiple, max, collections, invalid, 
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)} />
                     {results !== null && (
                         <ul role="listbox" aria-label="Matching entries" className="cms:absolute cms:z-10 cms:mt-1 cms:max-h-64 cms:w-full cms:overflow-auto cms:rounded-md cms:border cms:bg-card cms:p-1 cms:shadow-md">
-                            {results.filter((item) => !ids.includes(item.id)).length === 0 && <li className="cms:p-2 cms:text-sm cms:text-muted-foreground">No entries match.</li>}
+                            {results.filter((item) => !ids.includes(item.id)).length === 0 && <li className="cms:p-2 cms:text-sm cms:text-muted-foreground">No entries match.{emptyHint && <> {emptyHint}</>}</li>}
                             {results.filter((item) => !ids.includes(item.id)).map((item) => (
                                 <li key={item.id} role="option" aria-selected={false}>
                                     <button type="button" className="cms:flex cms:w-full cms:items-center cms:gap-2 cms:rounded cms:px-2 cms:py-1.5 cms:text-left cms:text-sm cms:hover:bg-accent"

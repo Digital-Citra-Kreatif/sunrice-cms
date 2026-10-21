@@ -136,6 +136,9 @@ function strip({ target: _target, children, ...node }: MenuNode): Omit<MenuNode,
     return { ...node, children: children.map(strip) as MenuNode[] };
 }
 
+/** A menu links to pages that exist: said when the search finds none. */
+const MENU_ENTRY_HINT = 'A menu links to entries that already exist: create the page first (Content → Entries), then add it here, or add a web address instead.';
+
 const TITLES: Record<Kind, string> = { entry: 'Link to an entry', term: 'Link to a term\'s page', listing: 'Link to a listing page', url: 'Link to an address' };
 
 const DESCRIPTIONS: Record<Kind, string> = {
@@ -188,7 +191,7 @@ function AddDialog({ kind, terms, listings, onClose, onAdd, main }: {
                 <div className="cms:flex cms:flex-col cms:gap-3">
                     {kind === 'entry' && (
                         <EntriesPicker id="menu-entry" value={entryId} multiple={false} max={null} collections={[]} invalid={false}
-                            onChange={(value) => setEntryId(typeof value === 'number' ? value : null)} />
+                            emptyHint={MENU_ENTRY_HINT} onChange={(value) => setEntryId(typeof value === 'number' ? value : null)} />
                     )}
                     {(kind === 'term' || kind === 'listing') && (
                         <div className="cms:flex cms:flex-col cms:gap-2">
