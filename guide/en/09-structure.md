@@ -9,8 +9,8 @@ Some settings point at other things, so they can only be chosen once those exist
 1. **Fieldsets** of plain fields (an address, a call to action), and **blueprints** with plain fields only (text, media, dates…): nothing that points at a collection or a taxonomy yet.
 2. **Taxonomies** (*Topics*, *Locations*), without their collections for now.
 3. **Collections**, each with its blueprint.
-4. Back to the **blueprints** (and fieldsets): add the **Entries** fields, which link to collections, and the **Terms** fields, which link to taxonomies.
-5. Back to the **taxonomies**: tick the **Collections** whose entries they group.
+4. Back to the **blueprints** (and fieldsets): add the **Entries** fields, which link to collections (the **Terms** fields come with step 5).
+5. Back to the **taxonomies**: tick the **Collections** whose entries they group (their blueprints get a **Terms** field for it).
 6. **Global sets**, **menu settings** and **forms**; then the content, and the homepage in Settings → Site.
 
 On the dashboard, **Getting the site ready** lists what's still missing.
@@ -70,7 +70,7 @@ Each field's row shows its type, label and handle, with **Duplicate** (a copy ri
 
 ## Taxonomies
 
-**Structure → Taxonomies**: a **Title** (and a **Title in …** each other language, for visitors on its term pages), a **Handle** (changeable later, as for collections), **Nested terms** (terms under other terms, like subcategories), the **Collections** whose entries it groups, **Term fields** (a blueprint for the terms' own fields), and under **Term pages**: **Terms have pages** (each term gets a page listing its entries), its **Term page URL** (like `/topics/{slug}`; empty: `/{handle}/{slug}`) and a **Template**. Editors then add the terms under Taxonomies in the sidebar (see [Terms](guide:website/terms)). To let editors give entries terms, add a **Terms** field to the collection's blueprint: that's enough for the entries list to filter by the taxonomy too, without ticking the collection here.
+**Structure → Taxonomies**: a **Title** (and a **Title in …** each other language, for visitors on its term pages), a **Handle** (changeable later, as for collections), **Nested terms** (terms under other terms, like subcategories), the **Collections** whose entries it groups, **Term fields** (a blueprint for the terms' own fields), and under **Term pages**: **Terms have pages** (each term gets a page listing its entries), its **Term page URL** (like `/topics/{slug}`; empty: `/{handle}/{slug}`) and a **Template**. Editors then add the terms under Taxonomies in the sidebar (see [Terms](guide:website/terms)). Ticking a collection under **Collections** lets editors give its entries terms: its blueprints get a **Terms** field for the taxonomy (named after it) unless they have one already, and its entries list filters by the taxonomy. The card beside the form lists the blueprints that have such a field. When you untick a collection, the field stays (with the terms entries have) unless you switch on **Also remove the terms field from collections you untick**, which appears once the list changes.
 
 ## Global sets
 

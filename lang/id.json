@@ -967,5 +967,11 @@
     "Terms have pages": "Term punya halaman",
     "Off: terms only group entries, with no address of their own.": "Mati: term hanya mengelompokkan entri, tanpa alamat sendiri.",
     "Term page URL": "URL halaman term",
-    "Like /topics/{slug}. Empty: /{handle}/{slug}.": "Seperti /topics/{slug}. Kosong: /{handle}/{slug}."
+    "Like /topics/{slug}. Empty: /{handle}/{slug}.": "Seperti /topics/{slug}. Kosong: /{handle}/{slug}.",
+    "Ticking a collection adds a terms field for this taxonomy to its blueprints (when they have none), so editors choose terms on its entries, and its entries list filters by them.": "Mencentang koleksi menambahkan field term untuk taksonomi ini ke blueprint-nya (bila belum punya), sehingga editor memilih term pada entrinya, dan daftar entrinya bisa disaring menurut term itu.",
+    "Also remove the terms field from collections you untick": "Hapus juga field term dari koleksi yang tidak dicentang lagi",
+    "Off: their blueprints keep the field, and entries keep their terms. On: the field goes from blueprints no ticked collection uses; what entries chose stays stored, out of sight.": "Mati: blueprint-nya tetap punya field itu, dan entri tetap punya term-nya. Nyala: field dihapus dari blueprint yang tidak dipakai koleksi tercentang; pilihan entri tetap tersimpan, tidak terlihat.",
+    "Terms fields": "Field term",
+    "Editors choose its terms through a terms field. These blueprints have one:": "Editor memilih term-nya lewat field term. Blueprint ini punya field itu:",
+    "None yet: tick a collection to add one to its blueprints, or add a Terms field in a blueprint.": "Belum ada: centang koleksi untuk menambahkannya ke blueprint-nya, atau tambahkan field Term di sebuah blueprint."
 }

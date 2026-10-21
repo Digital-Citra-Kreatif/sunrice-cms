@@ -103,6 +103,8 @@ Each collection's list (`EntryController::index`, built by `Sunrice\Cms\Admin\En
 | `sort` | `title`, `slug`, `status`, `published_at`, `updated_at`, `created_at`, `author` or `field.{handle}`, with `-` first for descending. None: the collection's order (manual, newest first when dated, else by title). |
 | `per_page` | 10, 25, 50 or 100. |
 
+Attaching a taxonomy to a collection (Structure → Taxonomies) also adds a terms field for it to the collection's blueprints that have none, so its entries get the taxonomy's terms in the editor ([Taxonomies](taxonomies.md)).
+
 Besides the title, the **Columns** menu shows the slug, the status (with a badge per other language), the author, the dates, and **field columns**: the blueprint's top-level text, textarea, number, date, select, toggle and entries fields (custom fields built on them too), shown as short text (select labels, Yes/No, linked entries' titles). Field columns sort by the draft's value (shared fields: the main language's), numbers and dates as such; entries fields and multiple selects don't sort. The chosen columns and page size are kept per person ([preferences](../../admin/docs/preferences.md), key `table.cms.entries.{collection}`); a `per_page` in the address wins.
 
 **Go to** links to what an editor tends to need next, where they may go: the listing page (edit and view), the collection's taxonomies' terms (`cms.terms.*`), the collection's settings (`cms.collections.update`) and its blueprint (`cms.blueprints.manage`). In a collection with manual order, Move up and Move down appear while the list is in that order, unfiltered.

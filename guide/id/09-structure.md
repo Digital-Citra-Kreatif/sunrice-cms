@@ -9,8 +9,8 @@ Beberapa pengaturan menunjuk ke hal lain, jadi baru bisa dipilih setelah hal itu
 1. **Fieldset** berisi field biasa (alamat, ajakan bertindak), dan **blueprint** yang hanya berisi field biasa (teks, media, tanggal…): belum ada yang menunjuk ke koleksi atau taksonomi.
 2. **Taksonomi** (*Topik*, *Lokasi*), untuk sementara tanpa koleksinya.
 3. **Koleksi**, masing-masing dengan blueprint-nya.
-4. Kembali ke **blueprint** (dan fieldset): tambahkan field **Entri**, yang menautkan ke koleksi, dan field **Term**, yang menautkan ke taksonomi.
-5. Kembali ke **taksonomi**: centang **Koleksi** yang entrinya dikelompokkan.
+4. Kembali ke **blueprint** (dan fieldset): tambahkan field **Entri**, yang menautkan ke koleksi (field **Term** datang bersama langkah 5).
+5. Kembali ke **taksonomi**: centang **Koleksi** yang entrinya dikelompokkan (blueprint-nya mendapat field **Term** untuk taksonomi itu).
 6. **Set global**, **pengaturan menu**, dan **formulir**; lalu kontennya, dan beranda di Pengaturan → Situs.
 
 Di dasbor, **Menyiapkan situs** menampilkan apa yang masih kurang.
@@ -70,7 +70,7 @@ Baris setiap field menampilkan tipe, label, dan handle-nya, dengan **Duplikat** 
 
 ## Taksonomi
 
-**Struktur → Taksonomi**: **Judul** (dan **Judul dalam …** untuk setiap bahasa lain, bagi pengunjung di halaman term-nya), **Handle** (bisa diubah nanti, seperti pada koleksi), **Term bertingkat** (term di bawah term lain, seperti subkategori), **Koleksi** yang entrinya dikelompokkan, **Field term** (blueprint untuk field term), dan di bagian **Halaman term**: **Term punya halaman** (setiap term mendapat halaman yang mendaftar entrinya), **URL halaman term** (seperti `/topik/{slug}`; kosong: `/{handle}/{slug}`) dan **Template halaman term**. Editor lalu menambahkan term di bagian Taksonomi pada sidebar (lihat [Term](guide:website/terms)). Agar editor bisa memberi term pada entri, tambahkan field **Term** ke blueprint koleksinya: itu sudah cukup agar daftar entri bisa disaring menurut taksonomi tersebut, tanpa mencentang koleksinya di sini.
+**Struktur → Taksonomi**: **Judul** (dan **Judul dalam …** untuk setiap bahasa lain, bagi pengunjung di halaman term-nya), **Handle** (bisa diubah nanti, seperti pada koleksi), **Term bertingkat** (term di bawah term lain, seperti subkategori), **Koleksi** yang entrinya dikelompokkan, **Field term** (blueprint untuk field term), dan di bagian **Halaman term**: **Term punya halaman** (setiap term mendapat halaman yang mendaftar entrinya), **URL halaman term** (seperti `/topik/{slug}`; kosong: `/{handle}/{slug}`) dan **Template halaman term**. Editor lalu menambahkan term di bagian Taksonomi pada sidebar (lihat [Term](guide:website/terms)). Mencentang koleksi di **Koleksi** membuat editor bisa memberi term pada entrinya: blueprint-nya mendapat field **Term** untuk taksonomi ini (dinamai menurut taksonominya) kecuali sudah punya, dan daftar entrinya bisa disaring menurut taksonomi itu. Kartu di samping formulir mendaftar blueprint yang punya field seperti itu. Saat Anda tidak mencentang lagi sebuah koleksi, field itu tetap ada (beserta term yang sudah dipilih entri) kecuali Anda menyalakan **Hapus juga field term dari koleksi yang tidak dicentang lagi**, yang muncul begitu daftarnya berubah.
 
 ## Set global
 

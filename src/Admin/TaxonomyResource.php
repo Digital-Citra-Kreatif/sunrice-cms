@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Admin;
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Resources\Forms\CheckboxList;
@@ -16,7 +17,9 @@ use Sunrice\Admin\Resources\Resource;
 use Sunrice\Admin\Resources\Tables\ActionFailed;
 use Sunrice\Admin\Resources\Tables\Column;
 use Sunrice\Admin\Resources\Tables\Table;
+use Sunrice\Admin\Support\Card;
 use Sunrice\Cms\Actions\Collections\RestoreDeleted;
+use Sunrice\Cms\Actions\Taxonomies\AttachCollections;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Site\RoutePatternRule;
@@ -52,6 +55,19 @@ final class TaxonomyResource extends Resource
         return 'handle';
     }
 
+    /** Which blueprints give entries (or anything else) its terms: a terms field for it. */
+    public static function aside(Model $record, Authorizable $user): array
+    {
+        if (! $record instanceof Taxonomy) {
+            return [];
+        }
+
+        return [Card::make('Terms fields')->description('Editors choose its terms through a terms field. These blueprints have one:')
+            ->list('Blueprints', array_map(fn (array $found): array => ['label' => $found['blueprint']->title, 'meta' => $found['field']], AttachCollections::blueprintsWithField($record)),
+                'None yet: tick a collection to add one to its blueprints, or add a Terms field in a blueprint.')
+            ->link('Blueprints', route('sunrice.admin.cms.blueprints.index', [], false))];
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -62,16 +78,20 @@ final class TaxonomyResource extends Resource
                     ->placeholder('As the title')->help(__('What visitors read in :language on its term pages.', ['language' => $language]))),
                 Toggle::make('hierarchical')->label('Nested terms')->span(2)->help('Terms can sit under other terms, like subcategories.'),
                 CheckboxList::make('collections')->span(2)
-                    ->help('The collections whose entries it groups, for their entries list\'s filters. A collection whose blueprint has a Terms field for it is included anyway.')
+                    ->help('Ticking a collection adds a terms field for this taxonomy to its blueprints (when they have none), so editors choose terms on its entries, and its entries list filters by them.')
                     ->verbatim()->options(fn () => Collection::query()->orderBy('title')->get()->mapWithKeys(fn (Collection $c): array => [(string) $c->id => $c->title])->all())
                     ->loadUsing(fn (Model $taxonomy): array => $taxonomy instanceof Taxonomy
                         ? $taxonomy->collections()->get(['sunrice_collections.id'])->map(fn (Collection $c): string => (string) $c->id)->all()
                         : [])
                     ->saveUsing(function (Model $taxonomy, mixed $ids): void {
                         if ($taxonomy instanceof Taxonomy) {
-                            $taxonomy->collections()->sync(array_map(intval(...), array_filter(is_array($ids) ? $ids : [], is_numeric(...))));
+                            app(AttachCollections::class)->handle($taxonomy, array_values(array_map(intval(...), array_filter(is_array($ids) ? $ids : [], is_numeric(...)))), request()->boolean('remove_term_fields'));
                         }
                     }),
+                // Asked only once the collections change: read by the collections' saveUsing, never stored.
+                Toggle::make('remove_term_fields')->label('Also remove the terms field from collections you untick')->span(2)->onlyOnEdit()->showWhenChanged('collections')
+                    ->help('Off: their blueprints keep the field, and entries keep their terms. On: the field goes from blueprints no ticked collection uses; what entries chose stays stored, out of sight.')
+                    ->loadUsing(fn (): bool => false)->saveUsing(fn (): null => null),
                 Select::make('blueprint')->label('Term fields')->span(2)
                     ->verbatim()->options(BlueprintChoices::options(BlueprintChoices::CONTENT))
                     ->help('Extra fields for each term, like a description or an image.'),
