@@ -38,7 +38,7 @@ Selanjutnya, **Save draft** menyimpan pekerjaan Anda (atau tekan **Ctrl S** / **
 - Field **Media** memilih gambar atau berkas dari [pustaka media](guide:panel/media), atau mengunggah yang baru.
 - Field **Entries** dan **Terms** menautkan ke entri lain atau ke kategori dan tag; cari berdasarkan judul.
 - Field **Link** menerima alamat web, atau entri lain (pilih **Entry** agar mengikuti alamat entri itu meskipun berubah).
-- Field **Group**, **Repeater**, dan **Flexible** menampung beberapa field sekaligus; repeater dan flexible menambahkan baris atau blok, yang Anda seret ke urutannya lewat pegangannya.
+- Field **Group**, **Repeater**, dan **Flexible** menampung beberapa field sekaligus; repeater dan flexible menambahkan baris atau blok, yang Anda seret ke urutannya lewat pegangannya. Setiap baris atau blok diberi nama dari teks pertamanya; klik namanya untuk melipatnya (**Collapse all** melipat seluruh daftar), dan matikan **Visible on site** untuk menyimpannya di sini tanpa menampilkannya di halaman.
 
 Kartu-kartu di penyunting (group, **Search and sharing**, dan kartu di kanan) bisa dilipat dengan mengeklik judulnya. Panel mengingat kartu mana yang Anda lipat, dan membuka sendiri kartu yang field di dalamnya bermasalah.
 

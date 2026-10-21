@@ -23,6 +23,27 @@ export function newRow(): Record<string, unknown> {
     return { _hidden: false };
 }
 
+/**
+ * What a repeater row or block says, to name it in its bar ("15 m saltwater
+ * pool" rather than "Feature 2"): its first filled text field, else null.
+ * Text inside groups counts; rich text is read without its tags.
+ */
+export function itemSummary(fields: readonly { handle: string; type: string; fields?: unknown[] }[], values: Record<string, unknown>, max = 60): string | null {
+    for (const field of fields) {
+        const value = values[field.handle];
+        let text: string | null = null;
+        if (['text', 'textarea', 'email', 'url'].includes(field.type) && typeof value === 'string') text = value;
+        else if (field.type === 'rich_text' && typeof value === 'string') text = value.replace(/<[^>]*>/g, ' ');
+        else if (field.type === 'group' && Array.isArray(field.fields)) {
+            text = itemSummary(field.fields as { handle: string; type: string }[], asRecord(value), max);
+        }
+        const clean = (text ?? '').replace(/\s+/g, ' ').trim();
+        if (clean !== '') return clean.length > max ? `${clean.slice(0, max - 1).trimEnd()}…` : clean;
+    }
+
+    return null;
+}
+
 /** A new flexible block of a kind (a fieldset's handle). */
 export function newBlock(type: string): Record<string, unknown> {
     return { type, hidden: false, values: {} };

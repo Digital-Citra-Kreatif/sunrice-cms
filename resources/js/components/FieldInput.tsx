@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, Plus, Trash2 } from 'lucide-react';
 import {
     Badge, Button, Checkbox, DatePicker, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input, Label, MediaPickerInput,
     moveItem, RichTextEditor, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Skeleton, SortableHandle, type SortableHandleProps, SortableList, Switch, Textarea,
@@ -8,7 +8,7 @@ import { EntriesPicker } from '@/components/EntriesPicker.tsx';
 import { TermsPicker } from '@/components/TermsPicker.tsx';
 import { errorsAt } from '@/lib/builder.ts';
 import { isShown } from '@/lib/conditions.ts';
-import { asRecord, dateInputValue, dateValueFromInput, newBlock, newRow, syncKeys } from '@/lib/values.ts';
+import { asRecord, dateInputValue, dateValueFromInput, itemSummary, newBlock, newRow, syncKeys } from '@/lib/values.ts';
 import type { Errors, FieldDefinition, Option } from '@/types.ts';
 
 /** Radix's Select can't hold an empty value, so "none" is this. */
@@ -263,6 +263,37 @@ function useItemKeys(count: number) {
     };
 }
 
+/**
+ * Which rows or blocks of a list are folded, by item key: long lists fold
+ * to their bars to scan and reorder. One with an error inside stays open.
+ */
+function useCollapsed() {
+    const [collapsed, setCollapsed] = React.useState<ReadonlySet<string>>(() => new Set());
+
+    return {
+        isCollapsed: (key: string, hasErrors: boolean) => !hasErrors && collapsed.has(key),
+        toggle: (key: string) => setCollapsed((current) => {
+            const next = new Set(current);
+            if (!next.delete(key)) next.add(key);
+            return next;
+        }),
+        setAll: (keys: string[], fold: boolean) => setCollapsed(fold ? new Set(keys) : new Set()),
+        anyOpen: (keys: string[]) => keys.some((key) => !collapsed.has(key)),
+    };
+}
+
+/** "Collapse all" / "Expand all" beside a list's Add button, from two items on. */
+function FoldAll({ keys, folding }: { keys: string[]; folding: ReturnType<typeof useCollapsed> }) {
+    if (keys.length < 2) return null;
+    const open = folding.anyOpen(keys);
+
+    return (
+        <Button type="button" variant="ghost" size="sm" onClick={() => folding.setAll(keys, open)}>
+            {open ? <ChevronsDownUp /> : <ChevronsUpDown />} {open ? 'Collapse all' : 'Expand all'}
+        </Button>
+    );
+}
+
 function Rows({ field, value, onChange, errors, id, content = false }: Omit<Props, 'value'> & { value: unknown[] }) {
     const columns = field.fields ?? [];
     const rows = value.map(asRecord);
@@ -272,12 +303,13 @@ function Rows({ field, value, onChange, errors, id, content = false }: Omit<Prop
     const noun = (field.label || 'row').toLowerCase().replace(/s$/, '');
     const Noun = noun.charAt(0).toUpperCase() + noun.slice(1);
     const items = rows.map((row, index) => ({ row, index, key: keys.keys[index] ?? String(index) }));
+    const folding = useCollapsed();
 
     return (
         <div className="cms:flex cms:flex-col cms:gap-2">
             <SortableList items={items} getId={(item) => item.key}
                 onReorder={(next, from, to) => { keys.move(from, to); onChange(next.map((item) => item.row)); }}>
-                {({ row, index }, { handle }) => isCompact(field, content) ? (
+                {({ row, index, key }, { handle }) => isCompact(field, content) ? (
                     <div className="cms:flex cms:items-start cms:gap-2">
                         <SortableHandle {...handle} label={`Move ${noun} ${index + 1}`} className="cms:mt-1" />
                         {columns.map((column) => (
@@ -292,18 +324,26 @@ function Rows({ field, value, onChange, errors, id, content = false }: Omit<Prop
                             <Trash2 />
                         </Button>
                     </div>
-                ) : (
-                    <div className="cms:flex cms:flex-col cms:gap-2">
-                        <ItemBar label={`${Noun} ${index + 1}`} handle={handle} onRemove={() => remove(index)}
-                            hidden={content ? row._hidden === true : undefined} onHidden={(hidden) => set(index, { ...row, _hidden: hidden })} />
-                        <Fields fields={columns} value={row} onChange={(next) => set(index, next)} errors={errorsAt(errors, String(index))} id={`${id}-${index}`} content={content} />
-                    </div>
-                )}
+                ) : (() => {
+                    const rowErrors = errorsAt(errors, String(index));
+                    const collapsed = folding.isCollapsed(key, Object.keys(rowErrors).length > 0);
+                    return (
+                        <div className="cms:flex cms:flex-col cms:gap-2">
+                            <ItemBar label={`${Noun} ${index + 1}`} summary={itemSummary(columns, row)} handle={handle} onRemove={() => remove(index)}
+                                collapsed={collapsed} onToggle={() => folding.toggle(key)} controls={`${id}-${index}-fields`}
+                                hidden={content ? row._hidden === true : undefined} onHidden={(hidden) => set(index, { ...row, _hidden: hidden })} />
+                            <div id={`${id}-${index}-fields`} hidden={collapsed}>
+                                {!collapsed && <Fields fields={columns} value={row} onChange={(next) => set(index, next)} errors={rowErrors} id={`${id}-${index}`} content={content} />}
+                            </div>
+                        </div>
+                    );
+                })()}
             </SortableList>
-            <div>
+            <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
                 <Button type="button" variant="outline" size="sm" onClick={() => onChange([...rows, content ? newRow() : {}])}>
                     <Plus /> Add {noun}
                 </Button>
+                {!isCompact(field, content) && <FoldAll keys={items.map((item) => item.key)} folding={folding} />}
             </div>
         </div>
     );
@@ -316,29 +356,35 @@ function Blocks({ field, value, onChange, errors, id }: Omit<Props, 'value'> & {
     const set = (index: number, block: Record<string, unknown>) => onChange(blocks.map((b, i) => (i === index ? block : b)));
     const remove = (index: number) => { keys.remove(index); onChange(blocks.filter((_, i) => i !== index)); };
     const items = blocks.map((block, index) => ({ block, index, key: keys.keys[index] ?? String(index) }));
+    const folding = useCollapsed();
 
     return (
         <div className="cms:flex cms:flex-col cms:gap-3">
             <SortableList items={items} getId={(item) => item.key} className="cms:gap-3"
                 onReorder={(next, from, to) => { keys.move(from, to); onChange(next.map((item) => item.block)); }}>
-                {({ block, index }, { handle }) => {
+                {({ block, index, key }, { handle }) => {
                     const type = types.find((t) => t.type === block.type);
+                    const blockErrors = errorsAt(errors, `${index}.values`);
+                    const collapsed = folding.isCollapsed(key, Object.keys(blockErrors).length > 0 || errors[`${index}.type`] !== undefined);
                     return (
                         <div className="cms:flex cms:flex-col cms:gap-2">
-                            <ItemBar label={type?.label ?? String(block.type)} badge handle={handle} onRemove={() => remove(index)}
+                            <ItemBar label={type?.label ?? String(block.type)} summary={type ? itemSummary(type.fields, asRecord(block.values)) : null} badge
+                                handle={handle} onRemove={() => remove(index)} collapsed={collapsed} onToggle={() => folding.toggle(key)} controls={`${id}-${index}-fields`}
                                 hidden={block.hidden === true} onHidden={(hidden) => set(index, { ...block, hidden })} />
-                            {type ? (
-                                <Fields fields={type.fields} value={asRecord(block.values)} onChange={(values) => set(index, { ...block, values })}
-                                    errors={errorsAt(errors, `${index}.values`)} id={`${id}-${index}`} content />
-                            ) : (
-                                <p className="cms:rounded-lg cms:border cms:p-4 cms:text-sm cms:text-muted-foreground">This kind of block no longer exists. Its values are kept.</p>
-                            )}
+                            <div id={`${id}-${index}-fields`} hidden={collapsed}>
+                                {collapsed ? null : type ? (
+                                    <Fields fields={type.fields} value={asRecord(block.values)} onChange={(values) => set(index, { ...block, values })}
+                                        errors={blockErrors} id={`${id}-${index}`} content />
+                                ) : (
+                                    <p className="cms:rounded-lg cms:border cms:p-4 cms:text-sm cms:text-muted-foreground">This kind of block no longer exists. Its values are kept.</p>
+                                )}
+                            </div>
                             <FieldError message={errors[`${index}.type`]} />
                         </div>
                     );
                 }}
             </SortableList>
-            <div>
+            <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button type="button" variant="outline" size="sm" disabled={types.length === 0}><Plus /> Add block</Button>
@@ -349,28 +395,42 @@ function Blocks({ field, value, onChange, errors, id }: Omit<Props, 'value'> & {
                         ))}
                     </DropdownMenuContent>
                 </DropdownMenu>
+                <FoldAll keys={items.map((item) => item.key)} folding={folding} />
             </div>
         </div>
     );
 }
 
-/** The bar above a row or block: its drag handle, name, show/hide and remove. */
-function ItemBar({ label, badge = false, handle, onRemove, hidden, onHidden }: {
-    label: string; badge?: boolean; handle: SortableHandleProps; onRemove: () => void;
+/**
+ * The bar above a row or block: its drag handle, a fold toggle with its
+ * name and what it says, whether the site shows it, and remove.
+ */
+function ItemBar({ label, summary, badge = false, handle, onRemove, collapsed, onToggle, controls, hidden, onHidden }: {
+    label: string; summary?: string | null; badge?: boolean; handle: SortableHandleProps; onRemove: () => void;
+    collapsed: boolean; onToggle: () => void; controls: string;
     hidden?: boolean; onHidden: (hidden: boolean) => void;
 }) {
+    const Chevron = collapsed ? ChevronRight : ChevronDown;
+    const name = summary ? `${label}: ${summary}` : label;
+
     return (
         <div className="cms:flex cms:items-center cms:gap-2">
-            <SortableHandle {...handle} label={`Move ${label}`} />
-            {badge ? <Badge variant="secondary">{label}</Badge> : <span className="cms:text-sm cms:font-medium">{label}</span>}
+            <SortableHandle {...handle} label={`Move ${name}`} />
+            <button type="button" onClick={onToggle} aria-expanded={!collapsed} aria-controls={controls}
+                className="cms:flex cms:min-w-0 cms:flex-1 cms:items-center cms:gap-2 cms:rounded-md cms:text-left cms:outline-none cms:focus-visible:ring-2 cms:focus-visible:ring-ring">
+                <Chevron className="cms:size-4 cms:shrink-0 cms:text-muted-foreground" aria-hidden />
+                {badge ? <Badge variant="secondary">{label}</Badge> : <span className="cms:shrink-0 cms:text-sm cms:font-medium">{label}</span>}
+                {summary && <span className="cms:truncate cms:text-sm cms:text-muted-foreground">{summary}</span>}
+                <span className="cms:sr-only">{collapsed ? '(collapsed)' : ''}</span>
+            </button>
             {hidden !== undefined && (
-                <label className="cms:ml-auto cms:flex cms:items-center cms:gap-2 cms:text-sm cms:text-muted-foreground">
-                    <Switch checked={!hidden} onCheckedChange={(shown: boolean) => onHidden(!shown)} aria-label={`Show ${label}`} />
-                    Show
+                <label className="cms:flex cms:shrink-0 cms:items-center cms:gap-2 cms:text-sm cms:text-muted-foreground" title="Off: kept here, but left out of the page">
+                    <Switch checked={!hidden} onCheckedChange={(shown: boolean) => onHidden(!shown)} aria-label={`${name}: visible on site`} />
+                    Visible on site
                 </label>
             )}
-            <Button type="button" variant="ghost" size="icon" className={`cms:size-8 cms:text-destructive ${hidden === undefined ? 'cms:ml-auto' : ''}`}
-                aria-label={`Remove ${label}`} onClick={onRemove}><Trash2 /></Button>
+            <Button type="button" variant="ghost" size="icon" className="cms:size-8 cms:shrink-0 cms:text-destructive"
+                aria-label={`Remove ${name}`} onClick={onRemove}><Trash2 /></Button>
         </div>
     );
 }
