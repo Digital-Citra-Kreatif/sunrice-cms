@@ -81,9 +81,9 @@ final class StructureImporter
     public const SECTIONS = ['fieldsets', 'blueprints', 'collections', 'taxonomies', 'globals', 'forms', 'terms', 'entries', 'menus', 'redirects'];
 
     /** A collection's settings in the file. */
-    public const COLLECTION = ['handle', 'title', 'blueprint', 'blueprints', 'dated', 'translatable', 'ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template', 'translations', 'routes', ...self::SEO_FIELDS];
+    public const COLLECTION = ['handle', 'title', 'blueprint', 'blueprints', 'dated', 'translatable', 'ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template', 'listing_template', 'translations', 'routes', ...self::SEO_FIELDS];
 
-    public const TAXONOMY = ['handle', 'title', 'hierarchical', 'route', 'index_route', 'blueprint', 'index_blueprint', 'template', 'translations', 'routes', ...self::SEO_FIELDS];
+    public const TAXONOMY = ['handle', 'title', 'hierarchical', 'route', 'index_route', 'blueprint', 'index_blueprint', 'template', 'index_template', 'translations', 'routes', ...self::SEO_FIELDS];
 
     /** Which fields fill in what an entry's or term's SEO card leaves empty. */
     public const SEO_FIELDS = ['seo_title_field', 'seo_description_field', 'seo_image_field'];
@@ -312,13 +312,14 @@ final class StructureImporter
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
             'schema_type' => ['nullable', 'string', Rule::in(array_keys(StructuredData::ENTRY_TYPES))],
             'template' => self::TEMPLATE,
+            'listing_template' => self::TEMPLATE,
             ...array_fill_keys(self::SEO_FIELDS, self::FIELD_HANDLE),
             ...self::TRANSLATIONS,
         ])->validate();
         self::checkRoutes($existing ?? new Collection, $validated, ['route', 'listing_route']);
         $before = $existing?->only(self::COLLECTION);
         $collection = app(SaveCollection::class)->handle(array_intersect_key($item, array_flip(['title', 'blueprint', 'blueprints', 'dated', 'translatable'])) + ($existing === null ? ['handle' => $item['handle']] : []), $existing);
-        $collection->forceFill(array_intersect_key($validated, array_flip(['ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template', 'translations', ...self::SEO_FIELDS])));
+        $collection->forceFill(array_intersect_key($validated, array_flip(['ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template', 'listing_template', 'translations', ...self::SEO_FIELDS])));
         self::fillRoutes($collection, $validated, ['route', 'listing_route']);
         $collection->save();
         $this->report->add('collection', $collection->handle, $this->status($before, $collection->only(self::COLLECTION)));
@@ -369,6 +370,7 @@ final class StructureImporter
             'index_blueprint' => ['nullable', 'string', Rule::exists((new Blueprint)->getTable(), 'handle')],
             'listings' => ['sometimes', 'nullable', 'array'],
             'template' => self::TEMPLATE,
+            'index_template' => self::TEMPLATE,
             ...array_fill_keys(self::SEO_FIELDS, self::FIELD_HANDLE),
             'collections' => ['sometimes', 'array'],
             'collections.*' => ['string', Rule::exists((new Collection)->getTable(), 'handle')],

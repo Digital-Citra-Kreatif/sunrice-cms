@@ -105,11 +105,14 @@ final class TaxonomyResource extends Resource
                 Select::make('index_blueprint')->label('Index page fields')->span(2)->placeholder('None (no editable fields)')
                     ->verbatim()->options(BlueprintChoices::options(BlueprintChoices::CONTENT, 'index_blueprint'))
                     ->help('Gives its index pages (the shared one, and each collection\'s) their own fields, such as an intro. Editors fill them in under Terms → ⋮ → Index page.')
-                    ->helpDetails('Which file?', TemplateHelp::files(['cms.taxonomy-{handle}-index', 'cms.taxonomy-index'])."\n".__('In a collection, :file is tried first.', ['file' => '`cms/{collection}/{handle}-index.blade.php`']))
                     ->links([
                         Link::make('Create blueprint', route('sunrice.admin.cms.blueprints.create', [], false))->showUnless('index_blueprint'),
                         Link::make('Edit', route('sunrice.admin.cms.blueprints.index', [], false).'/{index_blueprint}/edit')->showWhen('index_blueprint'),
                     ]),
+                TextInput::make('index_template')->label('Index page template')->placeholder('cms.tag-cloud')->span(2)
+                    ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
+                    ->help('For its index pages, the shared one and each collection\'s. Empty: the first template that exists.')
+                    ->helpDetails('Which file?', TemplateHelp::files(['cms.taxonomies.{handle}.index', 'cms.taxonomies.index'], 'cms.tag-cloud')."\n".__('In a collection, :file is tried first.', ['file' => '`cms/collections/{collection}/{handle}/index.blade.php`'])),
             ]),
             Section::make('Term pages in collections')->description('Each collection it groups can have a page per term listing only that collection\'s entries, like /books/tags/featured, and an index page of the terms its entries have, like /books/tags.')->columns(2)
                 ->schema(self::collectionTermFields()),
@@ -160,7 +163,7 @@ final class TaxonomyResource extends Resource
                     TextInput::make('template')->label('Term page template')->placeholder('cms.topic')->span(2)
                         ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
                         ->help('For shared and collections\' term pages. Empty: the first template that exists. A term can choose its own on its page.')
-                        ->helpDetails('Which file?', TemplateHelp::files(['cms.taxonomy-{handle}', 'cms.term'], 'cms.topic')."\n".__('In a collection, :file is tried first.', ['file' => '`cms/{collection}/{handle}.blade.php`'])),
+                        ->helpDetails('Which file?', TemplateHelp::files(['cms.taxonomies.{handle}.show', 'cms.taxonomies.show'], 'cms.topic')."\n".__('Before this template, :file is tried for the term with that slug in the main language.', ['file' => '`cms/taxonomies/{handle}/{slug}.blade.php`'])."\n".__('In a collection, :slug and then :file are tried first.', ['slug' => '`cms/collections/{collection}/{handle}/{slug}.blade.php`', 'file' => '`cms/collections/{collection}/{handle}/show.blade.php`'])),
                 ]),
         ]);
     }

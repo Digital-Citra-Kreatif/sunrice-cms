@@ -1,4 +1,4 @@
-{{-- The CMS's plain term page, until the app has its own: resources/views/cms/taxonomy-{handle}.blade.php or cms/term.blade.php. --}}
+{{-- The CMS's plain term page, until the app has its own: resources/views/cms/taxonomies/{taxonomy}/show.blade.php or cms/taxonomies/show.blade.php. --}}
 <!doctype html>
 <html lang="{{ str_replace('_', '-', $locale) }}">
 <head>

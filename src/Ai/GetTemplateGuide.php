@@ -19,29 +19,43 @@ final class GetTemplateGuide extends CmsTool
     public const GUIDE = <<<'MD'
 # Templates
 
-The site's templates are Blade views in `resources/views/cms/` (view names `cms.…`: `pages/landing.blade.php` is `cms.pages.landing`). The CMS's plain fallbacks are `sunrice-cms::entry`, `::listing`, `::term` and `::search`: read them with cms_read_template (source "default") for complete, working examples.
+The site's templates are Blade views in `resources/views/cms/` (view names `cms.…`: `pages/landing.blade.php` is `cms.pages.landing`). The CMS's plain fallbacks are `sunrice-cms::entry`, `::listing`, `::term`, `::taxonomy-index` and `::search`: read them with cms_read_template (source "default") for complete, working examples.
 
 ## Which view a page uses (the first that exists)
 
-- Entry: the entry's own template (its Page settings) → the collection's `template` → `cms.{collection}` → `cms.entry` → `sunrice-cms::entry`.
-- Listing page: `cms.{collection}-listing` → `cms.listing` → `sunrice-cms::listing`.
-- Term page: the term's own template → the taxonomy's `template` → `cms.taxonomy-{taxonomy}` → `cms.term` → `sunrice-cms::term`.
-- Taxonomy index page (its terms): in a collection `cms.{collection}.{taxonomy}-index` → `cms.taxonomy-{taxonomy}-index` → `cms.taxonomy-index` → `sunrice-cms::taxonomy-index`.
+```
+resources/views/cms/
+  collections/index.blade.php        any listing page
+  collections/show.blade.php         any entry
+  collections/{collection}/index     that collection's listing page
+  collections/{collection}/show      its entries
+  collections/{collection}/{slug}    only its entry with that slug
+  collections/{collection}/{taxonomy}/index|show|{slug}   its index and term pages of a taxonomy
+  taxonomies/index.blade.php         any taxonomy index page
+  taxonomies/show.blade.php          any term page
+  taxonomies/{taxonomy}/index|show|{slug}   that taxonomy's
+```
+
+- Entry: the entry's own template (its Page settings) → `cms.collections.{collection}.{slug}` → the collection's `template` → `cms.collections.{collection}.show` → `cms.collections.show` → `sunrice-cms::entry`.
+- Listing page: the collection's `listing_template` → `cms.collections.{collection}.index` → `cms.collections.index` → `sunrice-cms::listing`.
+- Term page: the term's own template → (on a collection's term page: `cms.collections.{collection}.{taxonomy}.{slug}` → `cms.collections.{collection}.{taxonomy}.show` →) `cms.taxonomies.{taxonomy}.{slug}` → the taxonomy's `template` → `cms.taxonomies.{taxonomy}.show` → `cms.taxonomies.show` → `sunrice-cms::term`.
+- Taxonomy index page (its terms): the taxonomy's `index_template` → (in a collection: `cms.collections.{collection}.{taxonomy}.index` →) `cms.taxonomies.{taxonomy}.index` → `cms.taxonomies.index` → `sunrice-cms::taxonomy-index`.
 - Search page: `cms.search` → `sunrice-cms::search`. The homepage (Settings → Site) is an entry.
 
-So: one design for every entry of a collection: `{collection}.blade.php`; one page of its own: `pages/landing.blade.php`, then set the entry's template to `cms.pages.landing`. Own templates must start with `cms.`.
+`{slug}` is the main language's slug, so one file serves every language; slugs `index` and `show` never pick a file. Handles keep their underscores. So: one design for every entry of a collection: `collections/{collection}/show.blade.php`; one page of its own: `collections/pages/about.blade.php`, or any view such as `pages/landing.blade.php` set as the entry's template (`cms.pages.landing`). Own templates must start with `cms.`.
 
 ## What views get
 
-- Entries: `$entry` (the EntryTranslation: `->title`, `->url()`, `->published_at`, `->entry->collection`), `$title`, `$values` (fields by handle, ready for templates), `$richText` (handles of rich text fields), `$collection`, `$locale`, `$preview`.
-- Listing pages: `$collection`, `$entries` (a paginator: `{{ $entries->links() }}`), `$values`, `$richText`, `$title`, `$locale`, `$url`.
-- Term pages: `$term`, `$taxonomy`, `$entries` (paginator), `$values`, `$richText`, `$title`, `$locale`.
-- Taxonomy index pages: `$taxonomy`, `$collection` (null on the shared one), `$terms` (each `->title($locale)`, `->url($locale)`, `->entries_count`), `$values`, `$richText`, `$title`, `$locale`, `$url`.
-- Search: `$query`, `$results` (paginator), `$title`, `$locale`.
+- Every page: `$page` (what `Cms::page()` gives), `$title`, `$locale`.
+- Entries: `$entry` (the EntryTranslation: `->title`, `->url()`, `->published_at`, `->entry->collection`), `$collection`, `$values` (fields by handle, ready for templates), `$richText` (handles of rich text fields), `$preview`, `$draft`, `$fallback`, `$contentLocale`.
+- Listing pages: `$collection`, `$entries` (a paginator: `{{ $entries->links() }}`), `$values`, `$richText`, `$url`.
+- Term pages: `$term`, `$taxonomy`, `$collection` (null on the shared one), `$entries` (paginator), `$values`, `$richText`, `$fallback`, `$contentLocale`.
+- Taxonomy index pages: `$taxonomy`, `$collection` (null on the shared one), `$terms` (each `->title($locale)`, `->url($locale)`, `->entries_count`), `$values`, `$richText`, `$url`.
+- Search: `$query`, `$results` (paginator).
 
 ## In the layout
 
-`<x-sunrice-cms::seo />` in `<head>` (title, description, canonical, hreflang, share tags, structured data); `<x-sunrice-cms::code place="head|body-start|body-end" />` for the site code; `{{ Cms::bodyClass() }}` on `<body>`; `Cms::localeUrls()` for a language switcher; `Cms::page()` for what's shown. Share a layout with `@extends('cms.layouts.site')` and `@section('content')`, and parts with `@include('cms.partials.card', ['entry' => $post])`.
+`<x-sunrice-cms::seo />` in `<head>` (title, description, canonical, hreflang, share tags, structured data); `<x-sunrice-cms::code place="head|body-start|body-end" />` for the site code; `{{ Cms::bodyClass() }}` on `<body>`; `Cms::localeUrls()` for a language switcher; `Cms::page()` for what's shown. Share a layout with `@extends('cms.layout')` and `@section('content')`, and parts with `@include('cms.partials.card', ['entry' => $post])`.
 
 ## Data
 

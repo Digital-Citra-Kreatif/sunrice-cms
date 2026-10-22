@@ -8,10 +8,10 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\View;
 use Sunrice\Admin\Users\PermissionRank;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Taxonomy;
+use Sunrice\Cms\Site\TemplateLookup;
 use Symfony\Component\Finder\Finder;
 use Throwable;
 
@@ -117,34 +117,45 @@ final class Templates
      */
     public static function map(): array
     {
-        $chain = function (array $candidates, string $fallback): array {
-            $views = array_values(array_filter($candidates, is_string(...)));
-            $exists = array_map(fn (string $view): bool => View::exists($view), $views);
-            $first = array_search(true, $exists, true);
-
-            return [
-                'candidates' => array_map(fn (string $view, bool $found): array => ['view' => $view, 'exists' => $found], $views, $exists),
-                'uses' => $first === false ? $fallback : $views[$first],
-            ];
-        };
+        $lookup = new TemplateLookup;
         $collections = [];
         foreach (Collection::query()->orderBy('title')->get() as $c) {
             $collections[$c->handle] = array_filter([
-                'entry_page' => $c->route === null ? null : ['note' => 'An entry\'s own template (its Page settings) comes first.', ...$chain([$c->template, "cms.{$c->handle}", 'cms.entry'], 'sunrice-cms::entry')],
-                'listing_page' => $c->listing_route === null ? null : $chain(["cms.{$c->handle}-listing", 'cms.listing'], 'sunrice-cms::listing'),
+                'entry_page' => $c->route === null ? null : ['note' => "An entry's own template (its Page settings) comes first, then cms.collections.{$c->handle}.{slug} for the entry with that main-language slug (not index or show).", ...self::chain($lookup, TemplateLookup::entry($c, null), TemplateLookup::ENTRY)],
+                'listing_page' => $c->listing_route === null ? null : self::chain($lookup, TemplateLookup::listing($c), TemplateLookup::LISTING),
             ]);
         }
         $taxonomies = [];
         foreach (Taxonomy::query()->whereNotNull('route')->orderBy('title')->get() as $t) {
-            $taxonomies[$t->handle] = ['note' => 'A term\'s own template comes first.', ...$chain([$t->template, "cms.taxonomy-{$t->handle}", 'cms.term'], 'sunrice-cms::term')];
+            $taxonomies[$t->handle] = ['note' => "A term's own template comes first, then cms.taxonomies.{$t->handle}.{slug} for the term with that main-language slug. On a collection's term page, cms.collections.{collection}.{$t->handle}.{slug} and cms.collections.{collection}.{$t->handle}.show come right after the term's own.", ...self::chain($lookup, TemplateLookup::term($t, null, null), TemplateLookup::TERM)];
         }
 
-        // Taxonomies' index pages: the shared one's chain; in a collection, cms.{collection}.{handle}-index comes first.
+        // Taxonomies' index pages: the shared one's chain; in a collection, cms.collections.{collection}.{handle}.index comes after the index_template setting.
         $indexes = [];
         foreach (Taxonomy::query()->where(fn ($q) => $q->whereNotNull('index_route')->orWhereHas('collections', fn ($q) => $q->where('sunrice_collection_taxonomy.index_page', true)))->orderBy('title')->get() as $t) {
-            $indexes[$t->handle] = ['note' => 'In a collection, cms.{collection}.'.$t->handle.'-index comes first.', ...$chain(["cms.taxonomy-{$t->handle}-index", 'cms.taxonomy-index'], 'sunrice-cms::taxonomy-index')];
+            $indexes[$t->handle] = ['note' => "In a collection, cms.collections.{collection}.{$t->handle}.index comes right after the taxonomy's index_template.", ...self::chain($lookup, TemplateLookup::index($t, null), TemplateLookup::INDEX)];
         }
 
-        return ['collections' => $collections, 'taxonomies' => $taxonomies, 'taxonomy_indexes' => $indexes, 'search' => $chain(['cms.search'], 'sunrice-cms::search')];
+        return ['collections' => $collections, 'taxonomies' => $taxonomies, 'taxonomy_indexes' => $indexes, 'search' => self::chain($lookup, ['cms.search'], 'sunrice-cms::search')];
+    }
+
+    /**
+     * The views in order, whether each exists, and the one used.
+     *
+     * @param  list<string>  $views
+     * @return array{candidates: list<array{view: string, exists: bool}>, uses: string}
+     */
+    private static function chain(TemplateLookup $lookup, array $views, string $fallback): array
+    {
+        $candidates = [];
+        $uses = $fallback;
+        foreach ($views as $view) {
+            $candidates[] = ['view' => $view, 'exists' => $exists = $lookup->exists($view)];
+            if ($exists && $uses === $fallback) {
+                $uses = $view;
+            }
+        }
+
+        return ['candidates' => $candidates, 'uses' => $uses];
     }
 }

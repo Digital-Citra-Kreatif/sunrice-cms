@@ -34,6 +34,7 @@ use Sunrice\Cms\Support\SiteRecords;
  * @property string|null $blueprint terms' own fields
  * @property string|null $index_blueprint its index pages' own fields (TaxonomyListing)
  * @property string|null $template the Blade view term pages render with
+ * @property string|null $index_template the Blade view its index pages render with
  * @property string|null $seo_title_field a text field whose value is the SEO title when the SEO card leaves it empty
  * @property string|null $seo_description_field a text or textarea field for the description
  * @property string|null $seo_image_field a media field whose first image is the share image

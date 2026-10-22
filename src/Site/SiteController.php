@@ -10,10 +10,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\View;
 use Illuminate\View\ViewException;
 use Sunrice\Admin\Panel;
-use Sunrice\Cms\Actions\Entries\SaveEntrySettings;
 use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Models\Entry;
@@ -162,11 +160,13 @@ final class SiteController
         $fallback = $locale !== $translation->locale;
         app()->setLocale($locale);
         $collection = $translation->entry->collection;
-        $view = self::view($collection->handle, $collection->template, $translation->entry->template);
-        $view = (new Page(Page::ENTRY, $locale, $view, entry: $translation, collection: $collection, preview: $preview,
-            home: app(Site::class)->isHomepage($translation), fallback: $fallback, draft: $draft))->share()->view;
+        $view = (new TemplateLookup)->first(TemplateLookup::entry($collection, TemplateLookup::entrySlug($translation), $translation->entry->template), TemplateLookup::ENTRY);
+        $page = (new Page(Page::ENTRY, $locale, $view, entry: $translation, collection: $collection, preview: $preview,
+            home: app(Site::class)->isHomepage($translation), fallback: $fallback, draft: $draft))->share();
 
-        return $this->hidden(response()->view($view, [
+        return $this->hidden(response()->view($page->view, [
+            // The page shown (as Cms::page() gives it to layouts and partials).
+            'page' => $page,
             'entry' => $translation,
             'title' => $preview ? $translation->draft_title : $translation->title,
             'values' => $translation->values(new HydrationContext($locale, $preview)),
@@ -206,19 +206,12 @@ final class SiteController
 
             return $entries;
         });
-        // The term's own, then (in a collection) cms.{collection}.{taxonomy}, the taxonomy's, cms.taxonomy-{handle}, cms.term, the CMS's plain one.
-        $view = 'sunrice-cms::term';
-        foreach (array_filter([self::own($term->template), $collection !== null ? "cms.{$collection->handle}.{$taxonomy->handle}" : null, $taxonomy->template, "cms.taxonomy-{$taxonomy->handle}", 'cms.term']) as $candidate) {
-            if (View::exists($candidate)) {
-                $view = $candidate;
-
-                break;
-            }
-        }
+        $view = (new TemplateLookup)->first(TemplateLookup::term($taxonomy, $collection, TemplateLookup::termSlug($translation), $term->template), TemplateLookup::TERM);
         $schema = $taxonomy->schema();
-        $view = (new Page(Page::TERM, $locale, $view, collection: $collection, term: $translation, pageNumber: self::pageNumber(), fallback: $fallback))->share()->view;
+        $page = (new Page(Page::TERM, $locale, $view, collection: $collection, term: $translation, pageNumber: self::pageNumber(), fallback: $fallback))->share();
 
-        return $this->hidden(self::renderView($view, [
+        return $this->hidden(self::renderView($page->view, [
+            'page' => $page,
             'term' => $translation,
             'taxonomy' => $taxonomy,
             // The collection whose term page this is; null on the shared one.
@@ -252,19 +245,11 @@ final class SiteController
         });
         $schema = $collection->listingSchema();
 
-        // cms.{handle}-listing, else cms.listing, else the CMS's plain one.
-        $view = 'sunrice-cms::listing';
-        foreach (["cms.{$collection->handle}-listing", 'cms.listing'] as $candidate) {
-            if (View::exists($candidate)) {
-                $view = $candidate;
+        $view = (new TemplateLookup)->first(TemplateLookup::listing($collection), TemplateLookup::LISTING);
+        $page = (new Page(Page::LISTING, $listing->locale, $view, collection: $collection, pageNumber: self::pageNumber()))->share();
 
-                break;
-            }
-        }
-
-        $view = (new Page(Page::LISTING, $listing->locale, $view, collection: $collection, pageNumber: self::pageNumber()))->share()->view;
-
-        return $this->hidden(self::renderView($view, [
+        return $this->hidden(self::renderView($page->view, [
+            'page' => $page,
             'collection' => $collection,
             'title' => $collection->titleIn($listing->locale),
             'entries' => $entries,
@@ -304,18 +289,11 @@ final class SiteController
         }
         $schema = $taxonomy->indexSchema();
 
-        // In a collection cms.{collection}.{taxonomy}-index, then cms.taxonomy-{handle}-index, cms.taxonomy-index, the CMS's plain one.
-        $view = 'sunrice-cms::taxonomy-index';
-        foreach (array_filter([$collection !== null ? "cms.{$collection->handle}.{$taxonomy->handle}-index" : null, "cms.taxonomy-{$taxonomy->handle}-index", 'cms.taxonomy-index']) as $candidate) {
-            if (View::exists($candidate)) {
-                $view = $candidate;
+        $view = (new TemplateLookup)->first(TemplateLookup::index($taxonomy, $collection), TemplateLookup::INDEX);
+        $page = (new Page(Page::TAXONOMY, $locale, $view, collection: $collection, taxonomy: $taxonomy))->share();
 
-                break;
-            }
-        }
-        $view = (new Page(Page::TAXONOMY, $locale, $view, collection: $collection, taxonomy: $taxonomy))->share()->view;
-
-        return $this->hidden(self::renderView($view, [
+        return $this->hidden(self::renderView($page->view, [
+            'page' => $page,
             'taxonomy' => $taxonomy,
             // The collection whose index page this is; null on the shared one.
             'collection' => $collection,
@@ -371,23 +349,5 @@ final class SiteController
     private function hidden(Response $response): Response
     {
         return app(SiteSettings::class)->hidden() ? $response->header('X-Robots-Tag', 'noindex, nofollow') : $response;
-    }
-
-    /** The entry's own template, else the collection's, else cms.{handle}, else cms.entry, else the CMS's plain one. */
-    public static function view(string $handle, ?string $template, ?string $entryTemplate = null): string
-    {
-        foreach (array_filter([self::own($entryTemplate), $template, "cms.{$handle}", 'cms.entry']) as $view) {
-            if (View::exists($view)) {
-                return $view;
-            }
-        }
-
-        return 'sunrice-cms::entry';
-    }
-
-    /** An entry's or term's own template, only under the site's template prefixes (never another view of the app). */
-    private static function own(?string $template): ?string
-    {
-        return $template !== null && SaveEntrySettings::allowed($template) ? $template : null;
     }
 }

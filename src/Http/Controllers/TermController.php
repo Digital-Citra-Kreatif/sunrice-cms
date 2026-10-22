@@ -25,6 +25,7 @@ use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
+use Sunrice\Cms\Site\TemplateLookup;
 use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\AdminUrls;
 use Sunrice\Cms\Support\Locales;
@@ -162,7 +163,7 @@ final class TermController
             // The views tried for its page, in order, and which exist (Template → Which file?).
             'templates' => [
                 'own' => $term === null ? null : (TemplateHelp::lookup([$term->template])[0] ?? null),
-                'fallbacks' => TemplateHelp::lookup([$taxonomy->template, "cms.taxonomy-{$taxonomy->handle}", 'cms.term']),
+                'fallbacks' => TemplateHelp::lookup(TemplateLookup::term($taxonomy, null, $term?->translation(Locales::default())?->slug)),
             ],
             'hasPages' => $taxonomy->route !== null,
             'fields' => $taxonomy->schema()->toAdmin(),

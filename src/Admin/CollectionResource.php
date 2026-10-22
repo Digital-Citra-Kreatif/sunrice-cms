@@ -100,7 +100,7 @@ final class CollectionResource extends Resource
                     TextInput::make('template')->label('Entry template')->placeholder('cms.article')->showWhen('pages')
                         ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
                         ->help('Empty: the first template that exists. An entry can choose its own in its Page settings.')
-                        ->helpDetails('Which file?', TemplateHelp::files(['cms.{handle}', 'cms.entry'], 'cms.article')),
+                        ->helpDetails('Which file?', TemplateHelp::files(['cms.collections.{handle}.show', 'cms.collections.show'], 'cms.article')."\n".__('Before this template, :file is tried for the entry with that slug in the main language.', ['file' => '`cms/collections/{handle}/{slug}.blade.php`'])),
                     Select::make('schema_type')->label('Structured data type')->options(StructuredData::ENTRY_TYPES)->showWhen('pages')
                         ->help('What search engines are told its entries are. Empty: Article if dated, else Web page.'),
                 ]),
@@ -115,8 +115,7 @@ final class CollectionResource extends Resource
                         ->saveUsing(fn (Model $collection, mixed $on) => self::switchPage($collection, 'listing_route', $on, '/{handle}')),
                     RouteInput::make('listing_route')->language(null, 'listing_route')->label('Listing page URL')->placeholder('/{handle}')->unique()->span(2)->showWhen('listing')
                         ->rules([self::LISTING_ROUTE])
-                        ->help('Like /blog. Empty: /{handle}.')
-                        ->helpDetails('Which file?', TemplateHelp::files(['cms.{handle}-listing', 'cms.listing'])),
+                        ->help('Like /blog. Empty: /{handle}.'),
                     ...TranslatedFields::routes('listing_route', fn (RouteInput $input, string $code, string $language) => $input
                         ->label(__('Listing page URL in :language', ['language' => $language]))->placeholderFrom('listing_route', '/{handle}')->span(2)->showWhen('listing')
                         ->rules([self::LISTING_ROUTE])
@@ -132,6 +131,10 @@ final class CollectionResource extends Resource
                             Link::make('Edit', route('sunrice.admin.cms.blueprints.index', [], false).'/{listing_blueprint}/edit')->showWhen('listing_blueprint'),
                         ]),
                     NumberInput::make('per_page')->label('Entries per page')->integer()->min(1)->max(100)->default(10)->showWhen('listing'),
+                    TextInput::make('listing_template')->label('Listing page template')->placeholder('cms.blog-home')->span(2)->showWhen('listing')
+                        ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
+                        ->help('Empty: the first template that exists.')
+                        ->helpDetails('Which file?', TemplateHelp::files(['cms.collections.{handle}.index', 'cms.collections.index'], 'cms.blog-home')),
                 ]),
         ]);
     }

@@ -1,6 +1,6 @@
 {{--
-    The search page, /search?q=… (starter template). Gets $query, $results (a paginator of EntryTranslations),
-    $title and $locale. Search pages are never indexed.
+    The search page, /search?q=… (starter template). Gets $page (Cms::page()), $query, $results (a paginator of
+    EntryTranslations), $title and $locale. Search pages are never indexed.
 --}}
 @extends('cms.layout', ['seoTitle' => $title])
 

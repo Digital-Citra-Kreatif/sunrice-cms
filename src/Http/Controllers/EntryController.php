@@ -47,6 +47,7 @@ use Sunrice\Cms\Models\Revision;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Settings\SiteSettings;
+use Sunrice\Cms\Site\TemplateLookup;
 use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\AdminUrls;
 use Sunrice\Cms\Support\Locales;
@@ -406,7 +407,7 @@ final class EntryController
             // The views tried for its page, in order, and which exist (Page settings → Which file?).
             'templates' => [
                 'own' => TemplateHelp::lookup([$entry->template])[0] ?? null,
-                'fallbacks' => TemplateHelp::lookup([$collection->template, "cms.{$collection->handle}", 'cms.entry']),
+                'fallbacks' => TemplateHelp::lookup(TemplateLookup::entry($collection, TemplateLookup::entrySlug($translation))),
             ],
             // The blueprints it may use, when there's a choice (Page settings).
             'blueprints' => self::blueprints($collection),

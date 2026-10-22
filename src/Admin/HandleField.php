@@ -46,8 +46,8 @@ final class HandleField
     public static function warning(string $kind): string
     {
         $warning = match ($kind) {
-            'collection' => __('Changing the handle can break your site. Sunrice renames the collection\'s permissions (roles keep them), and its addresses stay as they are. You update the rest: templates named after it (cms/:old.blade.php, cms/:old-listing.blade.php), code that names it (Cms::entries(\':old\'), cms_entries(\':old\')), styles for the collection-:old body class, entries fields limited to it, and structure exports made before.'),
-            'taxonomy' => __('Changing the handle can break your site. Sunrice renames the taxonomy\'s permissions (roles keep them), and term addresses stay as they are. You update the rest: templates named after it (cms/taxonomy-:old.blade.php), code that names it (whereTerm(\':old\', …)), styles for the taxonomy-:old body class, terms fields that use it, and structure exports made before.'),
+            'collection' => __('Changing the handle can break your site. Sunrice renames the collection\'s permissions (roles keep them), and its addresses stay as they are. You update the rest: templates named after it (the folder cms/collections/:old/), code that names it (Cms::entries(\':old\'), cms_entries(\':old\')), styles for the collection-:old body class, entries fields limited to it, and structure exports made before.'),
+            'taxonomy' => __('Changing the handle can break your site. Sunrice renames the taxonomy\'s permissions (roles keep them), and term addresses stay as they are. You update the rest: templates named after it (the folders cms/taxonomies/:old/ and cms/collections/{collection}/:old/), code that names it (whereTerm(\':old\', …)), styles for the taxonomy-:old body class, terms fields that use it, and structure exports made before.'),
             'form' => __('Changing the handle can break your site. Sunrice renames the form\'s permissions (roles keep them) and keeps its submissions. You update the rest: templates that show it (<x-sunrice-cms::form handle=":old" />), forms of your own that post to /forms/:old or link to #form-:old, and structure exports made before.'),
             'global' => __('Changing the handle can break your site. Sunrice keeps the set\'s values. You update the rest: templates and code that read it (Cms::global(\':old\'), cms_global(\':old\')), which get nothing until then, and structure exports made before.'),
             'menu' => __('Changing the handle can break your site. Sunrice keeps the menu\'s links. You update the rest: templates and code that show it (Cms::menu(\':old\'), cms_menu(\':old\')), which show no links until then, and structure exports made before. The CMS\'s own layout shows the menus "main" and "footer".'),
@@ -66,7 +66,7 @@ final class HandleField
     public static function snippet(string $kind): array
     {
         return match ($kind) {
-            'collection' => ['In templates and code: `Cms::entries(\':value\')`, templates `cms/:value.blade.php`.', 'articles'],
+            'collection' => ['In templates and code: `Cms::entries(\':value\')`, templates in `cms/collections/:value/`.', 'articles'],
             'taxonomy' => ['In templates: `<x-sunrice-cms::terms taxonomy=":value" />`, in code `whereTerm(\':value\', …)`.', 'categories'],
             'form' => ['In a template: `<x-sunrice-cms::form handle=":value" />`', 'newsletter'],
             'global' => ['In templates and code: `Cms::global(\':value\')`', 'contact'],

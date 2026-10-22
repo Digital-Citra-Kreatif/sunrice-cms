@@ -12,12 +12,12 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 use Sunrice\Cms\Support\Templates;
 
 #[IsReadOnly]
-#[Description('Read a template: source "site" (the default) for the site\'s own in resources/views/cms ("pages/landing.blade.php"), or "default" for the CMS\'s plain fallbacks ("entry.blade.php", "listing.blade.php", "term.blade.php", "search.blade.php"). cms_get_template_guide lists them.')]
+#[Description('Read a template: source "site" (the default) for the site\'s own in resources/views/cms ("pages/landing.blade.php"), or "default" for the CMS\'s plain fallbacks ("entry.blade.php", "listing.blade.php", "term.blade.php", "taxonomy-index.blade.php", "search.blade.php"). cms_get_template_guide lists them.')]
 final class ReadTemplate extends CmsTool
 {
     protected string $name = 'cms_read_template';
 
-    private const DEFAULTS = ['entry.blade.php', 'listing.blade.php', 'term.blade.php', 'search.blade.php'];
+    private const DEFAULTS = ['entry.blade.php', 'listing.blade.php', 'term.blade.php', 'taxonomy-index.blade.php', 'search.blade.php'];
 
     public function handle(Request $request): Response
     {

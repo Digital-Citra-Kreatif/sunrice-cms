@@ -59,32 +59,121 @@ A collection's URL may also hold the slug of an entry its entries link to: put t
 
 ## Templates
 
-An entry renders with the first view that exists:
+Pages render with Blade views in `resources/views/cms/`, chosen by where the file is:
 
-1. the entry's own **template** (its Page settings), like `cms.landing`;
-1. the collection's **template** (Structure → Collections), like `cms.article`;
-2. `cms.{handle}`: `resources/views/cms/blog.blade.php`;
-3. `cms.entry`: `resources/views/cms/entry.blade.php`;
-4. the CMS's plain page, which shows the title and text fields.
+```
+resources/views/cms/
+├── layout.blade.php                 your layout (the starter templates' one; any name works)
+├── search.blade.php                 the search page
+├── collections/
+│   ├── index.blade.php              any listing page
+│   ├── show.blade.php               any entry
+│   └── pages/                       a folder per collection handle
+│       ├── index.blade.php          that collection's listing page
+│       ├── show.blade.php           any entry of that collection
+│       ├── about.blade.php          only the entry whose main-language slug is "about"
+│       └── tags/                    a folder per taxonomy it groups: its term and index pages there
+│           ├── index.blade.php      its index page (/pages/tags)
+│           ├── show.blade.php       a term's page in that collection
+│           └── php.blade.php        only the term whose main-language slug is "php", in that collection
+└── taxonomies/
+    ├── index.blade.php              any taxonomy index page
+    ├── show.blade.php               any term page
+    └── tags/
+        ├── index.blade.php          the shared index page (/tags)
+        ├── show.blade.php           the shared term pages (and collections' ones without their own)
+        └── php.blade.php            only the term "php"
+```
 
-An entry's or a term's own template must be under one of the site's template prefixes, `cms.` unless `sunrice-cms.site.template_prefixes` says otherwise (`['cms.', 'pages.']`), so no other view of the app (`layouts.app`, `emails.invoice`) can be made a public page; a stored one outside them is ignored. Only the collection's editors (`cms.entries.update`) pick it: authors with `cms.entries.update-own` change the other page settings and keep the template as it is.
+View names use dots (`cms/collections/pages/about.blade.php` is `cms.collections.pages.about`); handles keep their underscores (`cms.collections.case_studies.show`). A page renders with the first view that exists, the templates picked in the admin always first:
 
-Views get:
+| Page | Views tried, in order |
+| --- | --- |
+| Entry | the entry's own **template** (its Page settings) → `cms.collections.{collection}.{slug}` → the collection's **Entry template** (`template`) → `cms.collections.{collection}.show` → `cms.collections.show` → the built-in one |
+| Listing page | the collection's **Listing page template** (`listing_template`) → `cms.collections.{collection}.index` → `cms.collections.index` → the built-in one |
+| Term page | the term's own **template** → `cms.taxonomies.{taxonomy}.{slug}` → the taxonomy's **Term page template** (`template`) → `cms.taxonomies.{taxonomy}.show` → `cms.taxonomies.show` → the built-in one |
+| A collection's term page | the term's own **template** → `cms.collections.{collection}.{taxonomy}.{slug}` → `cms.collections.{collection}.{taxonomy}.show` → then as a term page: `cms.taxonomies.{taxonomy}.{slug}` → the taxonomy's `template` → `cms.taxonomies.{taxonomy}.show` → `cms.taxonomies.show` → the built-in one |
+| Taxonomy index page | the taxonomy's **Index page template** (`index_template`) → `cms.taxonomies.{taxonomy}.index` → `cms.taxonomies.index` → the built-in one |
+| A collection's index page | `index_template` → `cms.collections.{collection}.{taxonomy}.index` → `cms.taxonomies.{taxonomy}.index` → `cms.taxonomies.index` → the built-in one |
+| Search page | `cms.search` → the built-in one |
+
+- **`{slug}` is the main language's slug** of the entry or term (its live one, else its draft's), so one file serves the page in every language, and renaming a translation's slug never changes its template. Changing the main-language slug does: rename the file too.
+- **`index` and `show` are reserved**: an entry or term with that slug never picks a slug file (it gets `show.blade.php` like the others). Only slugs that can name a file are tried (lowercase letters, digits, `-` and `_`).
+- **Templates picked in the admin come first**, before any file found by name. An entry's or a term's own template must be under one of the site's template prefixes, `cms.` unless `sunrice-cms.site.template_prefixes` says otherwise (`['cms.', 'pages.']`), so no other view of the app (`layouts.app`, `emails.invoice`) can be made a public page; a stored one outside them is ignored. Only the collection's editors (`cms.entries.update`) pick it: authors with `cms.entries.update-own` change the other page settings and keep the template as it is. A collection's and a taxonomy's templates are set under Structure (`cms.collections.update`, `cms.taxonomies.update`).
+- The built-in views are `sunrice-cms::entry`, `::listing`, `::term`, `::taxonomy-index` and `::search`; a [hook](#hooks) can still choose another view for any page.
+- Each view is looked for once per page (the editor's **Which file?** lists the same views and marks the one in use).
+
+### What templates get
+
+Every page's view gets `$page`, the page shown (`Sunrice\Cms\Site\Page`, the same as `Cms::page()`: `type`, `view`, `entry`, `term`, `collection`, `taxonomy`, `pageNumber`, …), `$title` and `$locale` (the app's locale is set to it too). Blade hands a view's variables on to its layout and to the partials it includes, but a loop's variable (`@foreach ($entries as $entry)`) takes over the name: layouts and partials read the page from `cms_page()` (or `Cms::page()`), which the [layout helpers](#layout-helpers), components and error pages (`cms_page()` is null there) can always reach.
+
+Rich text is cleaned when it's saved, so print it as is: `{!! $values['body'] !!}`. Print everything else escaped: `{{ $values['intro'] }}`.
+
+#### Entry pages get
 
 | | |
 | --- | --- |
+| `$page` | the page shown (`Cms::page()`) |
 | `$entry` | the `EntryTranslation` (`$entry->title`, `->slug`, `->published_at`, `->url()`, `->entry->collection`) |
+| `$collection` | the `Collection` |
 | `$title` | the title (the draft's in a preview) |
 | `$values` | the fields as templates get them (see [fields](fields.md#field-types)), by handle; a field never filled in may be missing, so read it with `$values['intro'] ?? null` |
 | `$richText` | the handles of its rich text fields, the only HTML a template may print as is |
-| `$collection` | the `Collection` |
 | `$locale` | the language; the app's locale is set to it too |
 | `$preview` | whether this is a preview of the draft (from the editor, or `?draft`) |
 | `$draft` | whether this is the newer draft seen with `?draft` by someone signed in ([drafts on the site](#drafts-on-the-site)) |
 | `$fallback` | whether this is the main language's content in another language ([untranslated pages](#untranslated-pages)) |
 | `$contentLocale` | the language the entry's content is in: the main language's on an untranslated page, else `$locale` |
 
-Rich text is cleaned when it's saved, so print it as is: `{!! $values['body'] !!}`. Print everything else escaped: `{{ $values['intro'] }}`.
+#### Listing pages get
+
+| | |
+| --- | --- |
+| `$page` | the page shown (`Cms::page()`) |
+| `$collection` | the `Collection` (`->listingUrl($locale)`) |
+| `$entries` | a paginator of `EntryTranslation`s (`{{ $entries->links() }}`; an `Illuminate\Contracts\Pagination\LengthAwarePaginator`), queried only when the template first uses it, so a template that lists entries its own way (an [entry filter](#filtering-entries), `Cms::entries()`) costs nothing for it; a page past the last is a 404 |
+| `$values`, `$richText` | the listing page's fields, as for entries: only those of the collection's listing blueprint, and empty without one, so read them with `$values['intro'] ?? null` |
+| `$title` | the collection's title in the page's language (`titleIn()`) |
+| `$locale` | the language |
+| `$url` | the page's URL |
+
+#### Term pages get
+
+| | |
+| --- | --- |
+| `$page` | the page shown (`Cms::page()`) |
+| `$term` | the `TermTranslation` (`->title`, `->slug`, `->url()`, `->term`) |
+| `$taxonomy` | the `Taxonomy` |
+| `$collection` | the `Collection` whose term page it is; null on the shared one |
+| `$entries` | a paginator of the live entries with the term (and, in a hierarchical taxonomy, with the terms under it), of that collection only on a collection's page, newest first, 10 a page; queried only when the template first uses it, a page past the last is a 404 |
+| `$values`, `$richText` | the term's fields, as for entries |
+| `$title` | the term's title |
+| `$locale` | the language |
+| `$fallback` | whether this is the main language's term in another language ([untranslated pages](#untranslated-pages)) |
+| `$contentLocale` | the language the term's content is in |
+
+#### Taxonomy index pages get
+
+| | |
+| --- | --- |
+| `$page` | the page shown (`Cms::page()`) |
+| `$taxonomy` | the `Taxonomy` (`->indexUrl($locale, $collection)`) |
+| `$collection` | the `Collection` whose index page it is; null on the shared one |
+| `$terms` | the terms out of the trash, in their order (a collection's: those with its live entries), as `Term` models with their translations and `entries_count` (live entries in the page's language; a collection's only), loaded at once: `$term->title($locale)`, `$term->url($locale)` (in a collection with term pages, its page there) |
+| `$values`, `$richText` | the index page's fields, as for listing pages: only those of the index blueprint, and empty without one |
+| `$title` | the taxonomy's title in the page's language (`titleIn()`) |
+| `$locale` | the language |
+| `$url` | the page's URL |
+
+#### The search page gets
+
+| | |
+| --- | --- |
+| `$page` | the page shown (`Cms::page()`) |
+| `$query` | what was searched for (`?q=`), trimmed; empty before a search |
+| `$results` | a paginator of the `EntryTranslation`s found |
+| `$title` | the page's title ("Search", or "Search: …") |
+| `$locale` | the language |
 
 ### Starter templates
 
@@ -94,15 +183,15 @@ A working set of templates to start from, and edit freely:
 php artisan vendor:publish --tag=sunrice-cms-templates
 ```
 
-It copies them into `resources/views/cms/`, where the rules above pick them up, the error pages into `resources/views/errors/`, and a small stylesheet to `public/cms/site.css`:
+It copies them into `resources/views/cms/`, where the rules above pick them up (copy one into a collection's or taxonomy's folder, `cms/collections/blog/show.blade.php`, to change it for that one only), the error pages into `resources/views/errors/`, and a small stylesheet to `public/cms/site.css`:
 
 | File | Used for | Shows how to |
 | --- | --- | --- |
 | `cms/layout.blade.php` | every page (`@extends('cms.layout')`, `@section('content')`, `@push('head')`) | `<x-sunrice-cms::seo>`, site code, the `main` and `footer` menus, the language switcher, a footer (the `footer` global's `text`), `@bodyClass`, a skip link |
-| `cms/entry.blade.php` | any entry | the title, date and fields; a note on [untranslated pages](#untranslated-pages); comments |
-| `cms/listing.blade.php` | listing pages | the listing's fields, cards, pagination |
-| `cms/term.blade.php` | term pages | the term's fields and its entries (`cms/{collection}/{taxonomy}.blade.php` first for a collection's term pages) |
-| `cms/taxonomy-index.blade.php` | taxonomy index pages | the page's fields and the terms with their counts (`cms/{collection}/{taxonomy}-index.blade.php` first for a collection's) |
+| `cms/collections/show.blade.php` | any entry | the title, date and fields; a note on [untranslated pages](#untranslated-pages); comments |
+| `cms/collections/index.blade.php` | listing pages | the listing's fields, cards, pagination |
+| `cms/taxonomies/show.blade.php` | term pages, shared and collections' | the term's fields and its entries |
+| `cms/taxonomies/index.blade.php` | taxonomy index pages, shared and collections' | the page's fields and the terms with their counts |
 | `cms/search.blade.php` | the search page | the search box, results |
 | `cms/comment-unsubscribe.blade.php` | a reply email's "stop these emails" link | the confirm button, then the done message, in the layout ([Comments](comments.md)) |
 | `cms/partials/fields.blade.php` | the pages above | text, rich text, images, galleries, links and flexible blocks, by kind |
@@ -220,28 +309,13 @@ When a published entry's address changes (a new slug), publishing it adds a perm
 
 ## Listing pages
 
-A collection with a **listing page URL** (`listing_route`, like `/blog`) gets a page listing its live entries, `per_page` at a time (`?page=2`), newest first for dated collections, in Manual order for ordered ones, else by title; other languages under their prefix (`/id/blog`), or at their own URL (`/id/artikel`, [translated URLs](#translated-urls)). Its own fields come from the collection's listing blueprint and are edited from the entries list (**Listing page**, `cms.entries.update`; `SaveListing` in code), per language. It renders with the first view that exists: `cms.{handle}-listing`, `cms.listing`, or the CMS's plain one, with:
-
-| | |
-| --- | --- |
-| `$collection` | the `Collection` (`->listingUrl($locale)`) |
-| `$entries` | a paginator of `EntryTranslation`s (`{{ $entries->links() }}`; an `Illuminate\Contracts\Pagination\LengthAwarePaginator`), queried only when the template first uses it, so a template that lists entries its own way (an [entry filter](#filtering-entries), `Cms::entries()`) costs nothing for it; a page past the last is a 404 |
-| `$values`, `$richText` | the listing page's fields, as for entries: only those of the collection's listing blueprint, and empty without one, so read them with `$values['intro'] ?? null` |
-| `$title`, `$locale`, `$url` | the collection's title in the page's language (`titleIn()`), the language and the page's URL |
+A collection with a **listing page URL** (`listing_route`, like `/blog`) gets a page listing its live entries, `per_page` at a time (`?page=2`), newest first for dated collections, in Manual order for ordered ones, else by title; other languages under their prefix (`/id/blog`), or at their own URL (`/id/artikel`, [translated URLs](#translated-urls)). Its own fields come from the collection's listing blueprint and are edited from the entries list (**Listing page**, `cms.entries.update`; `SaveListing` in code), per language. It renders with the collection's **Listing page template**, else `cms.collections.{handle}.index`, `cms.collections.index` or the CMS's plain one ([templates](#templates)), with [what listing pages get](#listing-pages-get).
 
 Listing URLs are fixed, so they're matched before any `{slug}` pattern; they're in the sitemap.
 
 ## Taxonomy index pages
 
-A taxonomy can have an index page listing its terms: a shared one (**Shared index page**, `index_route`, like `/tags`) and one in each collection it groups (`/books/tags`, only the terms its entries have), each with its own URL per language; see [index pages](taxonomies.md#index-pages). Their URLs are fixed like listing pages' (matched before any `{slug}` pattern, old ones redirecting), and their own fields come from the taxonomy's **Index page fields** blueprint, edited per page and language from the terms list (`SaveIndexPage` in code). One renders with the first view that exists: in a collection `cms.{collection}.{taxonomy}-index`, then `cms.taxonomy-{handle}-index`, `cms.taxonomy-index`, or the CMS's plain one, with:
-
-| | |
-| --- | --- |
-| `$taxonomy` | the `Taxonomy` (`->indexUrl($locale, $collection)`) |
-| `$collection` | the `Collection` whose index page it is; null on the shared one |
-| `$terms` | the terms out of the trash, in their order (a collection's: those with its live entries), as `Term` models with their translations and `entries_count` (live entries in the page's language; a collection's only), loaded at once: `$term->title($locale)`, `$term->url($locale)` (in a collection with term pages, its page there) |
-| `$values`, `$richText` | the index page's fields, as for listing pages: only those of the index blueprint, and empty without one |
-| `$title`, `$locale`, `$url` | the taxonomy's title in the page's language (`titleIn()`), the language and the page's URL |
+A taxonomy can have an index page listing its terms: a shared one (**Shared index page**, `index_route`, like `/tags`) and one in each collection it groups (`/books/tags`, only the terms its entries have), each with its own URL per language; see [index pages](taxonomies.md#index-pages). Their URLs are fixed like listing pages' (matched before any `{slug}` pattern, old ones redirecting), and their own fields come from the taxonomy's **Index page fields** blueprint, edited per page and language from the terms list (`SaveIndexPage` in code). One renders with the taxonomy's **Index page template**, else (in a collection) `cms.collections.{collection}.{taxonomy}.index`, then `cms.taxonomies.{taxonomy}.index`, `cms.taxonomies.index` or the CMS's plain one ([templates](#templates)), with [what taxonomy index pages get](#taxonomy-index-pages-get).
 
 ## The homepage
 
@@ -446,7 +520,7 @@ In hierarchical collections, `$entry->entry->parent`, `->children` and `->ancest
 
 ## Search
 
-`/search?q=…` (and `/{locale}/search`) searches the live entries that have pages, in that language (with the [main-language fallback](#untranslated-pages), the main language's of entries not live in it, linked at that language's address): their title and field text (the words only: no field handles, HTML tags, addresses or SEO), titles first, then newest first. It renders with `cms.search`, or the CMS's plain page, with `$query`, `$results` (a paginator of `EntryTranslation`s), `$title` and `$locale`. Search pages are never indexed or kept by the page cache, and one visitor may search `per_minute` times a minute, everyone together `per_minute_global` times. Your app's own `/search` route wins; the search page wins over an entry at that address.
+`/search?q=…` (and `/{locale}/search`) searches the live entries that have pages, in that language (with the [main-language fallback](#untranslated-pages), the main language's of entries not live in it, linked at that language's address): their title and field text (the words only: no field handles, HTML tags, addresses or SEO), titles first, then newest first. It renders with `cms.search`, or the CMS's plain page, with [what the search page gets](#the-search-page-gets). Search pages are never indexed or kept by the page cache, and one visitor may search `per_minute` times a minute, everyone together `per_minute_global` times. Your app's own `/search` route wins; the search page wins over an entry at that address.
 
 Each database searches its own way, with the index of migration `000017`: MySQL and MariaDB by whole words with a FULLTEXT index (natural language mode, so words shorter than `innodb_ft_min_token_size`, three characters, and stopwords aren't found), Postgres by words with a GIN index (the `simple` dictionary: every language, no stemming), and SQLite, for development only, by matching what's typed anywhere (`%` and `_` aren't wildcards). The same search within a minute is answered from the [site cache](caching.md) (ids only), gone with the next change to content.
 

@@ -1,7 +1,7 @@
 {{--
-    A collection's listing page (starter template). For one collection only, copy it to cms/{collection}-listing.blade.php.
-    Gets $collection, $title, $entries (a paginator of EntryTranslations), $values and $richText (the listing page's
-    own fields), $locale and $url.
+    A collection's listing page (starter template). For one collection only, copy it to cms/collections/{collection}/index.blade.php.
+    Gets $page (Cms::page()), $collection, $title, $entries (a paginator of EntryTranslations), $values and $richText
+    (the listing page's own fields), $locale and $url.
 --}}
 @extends('cms.layout')
 

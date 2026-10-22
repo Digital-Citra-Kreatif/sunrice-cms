@@ -1,8 +1,9 @@
 {{--
     A taxonomy's index page (starter template): its terms, each linking to its page. For one taxonomy only, copy it to
-    cms/taxonomy-{taxonomy}-index.blade.php; for its index page in one collection, to cms/{collection}/{taxonomy}-index.blade.php.
-    Gets $taxonomy, $collection (null on the shared index page), $title, $terms (Terms, with entries_count: their live
-    entries, in $collection when there is one), $values and $richText (the index page's own fields), $locale and $url.
+    cms/taxonomies/{taxonomy}/index.blade.php; for its index page in one collection, to cms/collections/{collection}/{taxonomy}/index.blade.php.
+    Gets $page (Cms::page()), $taxonomy, $collection (null on the shared index page), $title, $terms (Terms, with
+    entries_count: their live entries, in $collection when there is one), $values and $richText (the index page's own
+    fields), $locale and $url.
 --}}
 @extends('cms.layout')
 

@@ -1,7 +1,8 @@
 {{--
-    Any entry (starter template). For one collection only, copy it to cms/{collection}.blade.php.
-    Gets $entry (EntryTranslation), $title, $values (its fields), $richText (the rich text fields' handles),
-    $collection, $locale, $preview, $draft, $fallback (the main language's content in another language) and
+    Any entry (starter template). For one collection only, copy it to cms/collections/{collection}/show.blade.php;
+    for one entry, to cms/collections/{collection}/{slug}.blade.php (its slug in the main language).
+    Gets $page (Cms::page()), $entry (EntryTranslation), $title, $values (its fields), $richText (the rich text fields'
+    handles), $collection, $locale, $preview, $draft, $fallback (the main language's content in another language) and
     $contentLocale (the language the content is in: lang marks it on untranslated pages, for screen readers).
 --}}
 @extends('cms.layout')

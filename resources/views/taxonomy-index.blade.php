@@ -1,4 +1,4 @@
-{{-- The CMS's plain taxonomy index page, until the app has its own: resources/views/cms/taxonomy-{handle}-index.blade.php or cms/taxonomy-index.blade.php. --}}
+{{-- The CMS's plain taxonomy index page, until the app has its own: resources/views/cms/taxonomies/{taxonomy}/index.blade.php or cms/taxonomies/index.blade.php. --}}
 <!doctype html>
 <html lang="{{ str_replace('_', '-', $locale) }}">
 <head>

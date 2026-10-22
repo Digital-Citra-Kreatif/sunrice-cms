@@ -1,4 +1,4 @@
-{{-- The CMS's plain page, until the app has its own: resources/views/cms/{collection}.blade.php or cms/entry.blade.php. --}}
+{{-- The CMS's plain page, until the app has its own: resources/views/cms/collections/{collection}/show.blade.php or cms/collections/show.blade.php (see the docs' Templates). --}}
 <!doctype html>
 <html lang="{{ str_replace('_', '-', $locale) }}">
 <head>

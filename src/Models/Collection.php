@@ -30,6 +30,7 @@ use Sunrice\Cms\Support\SiteRecords;
  * @property bool $translatable entries can have a version in each language; false: the main language only
  * @property string|null $route the entries' public URL pattern ("/blog/{slug}") in the main language (routeIn() for the others); none: no pages
  * @property string|null $template the Blade view entries render with
+ * @property string|null $listing_template the Blade view its listing page renders with
  * @property bool $hierarchical entries may have a parent entry
  * @property bool $ordered entries are in the order editors put them in
  * @property string|null $listing_route the listing page's URL ("/blog") in the main language (routeIn($locale, 'listing_route') for the others); none: no listing page
