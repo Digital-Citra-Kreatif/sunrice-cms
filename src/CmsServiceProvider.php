@@ -11,6 +11,7 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Translation\Translator;
@@ -31,6 +32,7 @@ use Sunrice\Cms\Fields\Types;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\GlobalValue;
 use Sunrice\Cms\Models\TermTranslation;
+use Throwable;
 
 /**
  * Boots the CMS. The CMS is added to a panel as a plugin (CmsPlugin);
@@ -155,6 +157,18 @@ final class CmsServiceProvider extends ServiceProvider
         Event::listen(Events\ContentChanged::class, function (Events\ContentChanged $event): void {
             if ($event->what !== Actions\Cache\ClearCache::CHANGE && app(Settings\CacheSettings::class)->preloadAfterChanges) {
                 app(Actions\Cache\PreloadCache::class)->soon();
+            }
+        });
+        // php artisan cache:clear empties one store: the site's caches and kept pages may be in others.
+        Event::listen('cache:cleared', function (mixed $store = null, mixed $tags = []): void {
+            if (is_array($tags) && $tags !== []) {
+                return; // only some tags
+            }
+            try {
+                app(Actions\Cache\ClearCache::class)->handle(Actions\Cache\ClearCache::ALL);
+            } catch (Throwable $e) {
+                // Never fail the command (a deploy that clears before it migrates).
+                Log::warning('Sunrice: could not clear the site\'s caches after cache:clear: '.$e->getMessage());
             }
         });
         // Code on every page is a way in: changing it is a security event, and alerts.

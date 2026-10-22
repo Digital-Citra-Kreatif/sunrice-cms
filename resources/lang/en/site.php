@@ -60,6 +60,7 @@ return [
         'blocked_type' => ':attribute: files of this type can\'t be sent.',
         'blocked_type_accepted' => ':attribute: files of this type can\'t be sent (accepted: :types).',
         'today_or_later' => 'The :attribute must be today or a later date.',
+        'tick' => 'Please tick this box to continue.',
         'thanks' => 'Thank you, we got your message.',
     ],
     'filter' => [

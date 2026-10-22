@@ -60,6 +60,7 @@ return [
         'blocked_type' => ':attribute: berkas jenis ini tidak bisa dikirim.',
         'blocked_type_accepted' => ':attribute: berkas jenis ini tidak bisa dikirim (diterima: :types).',
         'today_or_later' => ':attribute harus berupa tanggal hari ini atau setelahnya.',
+        'tick' => 'Centang kotak ini untuk melanjutkan.',
         'thanks' => 'Terima kasih, pesan Anda sudah kami terima.',
     ],
     'filter' => [

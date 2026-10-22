@@ -41,8 +41,17 @@ final class SubmitForm
         $rules = $schema->rules($data);
         // Fields named as the visitor reads them (their label in the form's language).
         $attributes = EntryInput::attributes($schema, array_keys($rules), $locale !== null && Locales::has($locale) ? $locale : Locales::default());
+        // A consent box's label is a whole sentence: ask for the tick in a few words instead.
+        $messages = [];
+        foreach ($schema->fields() as $field) {
+            if ($field->type === 'toggle' && $field->required) {
+                $tick = __('sunrice-cms::site.forms.tick', [], $locale);
+                $messages['data.'.$field->handle.'.required'] = $tick;
+                $messages['data.'.$field->handle.'.accepted'] = $tick;
+            }
+        }
         // Messages name fields without the "data." the rules are keyed under.
-        $validator = Validator::make(['data' => $data], $rules, [], $attributes);
+        $validator = Validator::make(['data' => $data], $rules, $messages, $attributes);
         if ($validator->fails()) {
             $errors = [];
             foreach ($validator->errors()->messages() as $key => $messages) {

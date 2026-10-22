@@ -1145,5 +1145,10 @@
     "Before this template, :file is tried for the entry with that slug in the main language.": "Sebelum template ini, :file dicoba untuk entri dengan slug itu di bahasa utama.",
     "Before this template, :file is tried for the term with that slug in the main language.": "Sebelum template ini, :file dicoba untuk term dengan slug itu di bahasa utama.",
     "In a collection, :slug and then :file are tried first.": "Dalam sebuah koleksi, :slug lalu :file dicoba lebih dulu.",
-    ":title has the URL :url in :language already.": ":title sudah memakai URL :url dalam :language."
+    ":title has the URL :url in :language already.": ":title sudah memakai URL :url dalam :language.",
+    "This collection has no listing page. Switch it on in its settings: Has a listing page.": "Koleksi ini tidak punya halaman daftar. Aktifkan di pengaturannya: Punya halaman daftar.",
+    "This collection has no listing page. An administrator can switch it on in its settings.": "Koleksi ini tidak punya halaman daftar. Administrator dapat mengaktifkannya di pengaturannya.",
+    "This index page is off. Switch it on in the taxonomy's settings: :setting.": "Halaman indeks ini nonaktif. Aktifkan di pengaturan taksonomi: :setting.",
+    "This index page is off. An administrator can switch it on in the taxonomy's settings.": "Halaman indeks ini nonaktif. Administrator dapat mengaktifkannya di pengaturan taksonomi.",
+    "Addresses with query parameters that aren't listed get the page kept without them, so a filter or sort a template reads may show the wrong page. Unless that's what you chose, set Any other parameter to Skip the cache.": "Alamat dengan parameter kueri yang tidak terdaftar mendapat halaman yang disimpan tanpa parameter itu, sehingga filter atau urutan yang dibaca template bisa menampilkan halaman yang salah. Kecuali memang itu pilihan Anda, atur Parameter lainnya ke Lewati cache."
 }

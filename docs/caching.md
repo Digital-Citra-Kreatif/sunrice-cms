@@ -110,7 +110,7 @@ Admins with `cms.settings.cache` (*Edit Cache settings*; administrators have it)
 | **Pages never kept → Addresses** | `exclude` | Path patterns, one per line, starting with `/` (or `*`); `*` is any characters, `/` included: `/contact`, `/account/*` (every page under `/account`), `/search*`, `*/print`. Case doesn't matter, nor a trailing slash, and a pattern matches an address with or without its language's prefix (`/contact` matches `/id/contact`; a translated address needs its own line). |
 | **Pages never kept → Collections** | `collections` | Handles of collections whose entry pages and listing page are rendered every time, never kept. |
 | **Parameters that make a page of their own** | `query` | Added to `cache.query` (both apply; `PageCacheHasher::query()` returns them all, `PageCacheHasher::configuredQuery()` only `page` and the config's). The page must still `read()` them, as above. `q` and `reply_to` are refused: those pages are never kept. |
-| **Any other parameter** | `otherQuery` | `skip` (the default): an address with any other parameter (tracking ones aside, see below) is neither served from the cache nor kept, so a filter or sort works even when it isn't listed. `ignore`: any other parameter gets the kept page, faster, for sites whose templates read only listed parameters. Either way, a page that read a parameter (`read()`, as the entry filter does) that isn't listed is never kept, so its filtered version can't be served for the address without it. |
+| **Any other parameter** | `otherQuery` | `skip` (the default): an address with any other parameter (tracking ones aside, see below) is neither served from the cache nor kept, so a filter or sort works even when it isn't listed. `ignore`: any other parameter gets the kept page, faster, for sites whose templates read only listed parameters. The card warns while it's `ignore` and whole pages are kept: sites that saved these settings when `ignore` was the default keep it until changed. Either way, a page that read a parameter (`read()`, as the entry filter does) that isn't listed is never kept, so its filtered version can't be served for the address without it. |
 | **Parameters always ignored** | `ignore` | With `skip`: parameters that never skip the cache, `*` for any characters. `utm_*`, `fbclid`, `gclid` and `msclkid` by default (`CacheSettings::TRACKING`). |
 | **Preload after clearing the cache**, **Preload after content changes**, **Preload on a schedule** | `preloadAfterClear`, `preloadAfterChanges`, `preloadSchedule` | See [Preloading](#preloading). Off by default. |
 | **Keep the site's data for (minutes)** | `siteMinutes` | Over `cache.ttl`: how long addresses, menus, the sitemap and everything else in SiteCache is kept at most (`SiteCache::ttl()`). |
@@ -134,12 +134,14 @@ The card on Settings → Cache shows whether whole pages are kept, where pages a
 
 Both are `Sunrice\Cms\Actions\Cache\ClearCache` (`@api`; `handle(ClearCache::PAGES)` or `handle(ClearCache::ALL)`). A new version works on any store without touching anything else in it; the pages left behind expire within their lifetime. Kept pages are also removed from responsecache's store right away when it holds nothing else (`ClearCache::ownPageStore()`: a `responsecache.cache.tag`, or a store that is neither the app's default nor `cache.store`), so a shared store is never flushed.
 
+`php artisan cache:clear` does what **Clear all site caches** does, too: it empties one store (the app's default, or the one named), and the CMS then starts a new version of every area and empties responsecache's own store (as above), so the site's data and kept pages go with it wherever they're kept. It's logged the same way, and starts a preload with **Preload after clearing the cache**. `cache:clear --tags=…` (only some tags) leaves them alone. If the site's tables aren't there yet (a deploy that clears before it migrates), the command still succeeds and the CMS logs a warning.
+
 ### Preloading
 
 A kept page is rendered for the first visitor who asks for it. Preloading asks for them first, so after a clear, a deploy or a busy content day even the first visitor gets a kept page. It's worth it on a site whose pages are slow to render or get many first visits (campaigns, search engines); on a small site, visitors fill the cache soon enough.
 
 - **Preload cache** on Settings → Cache's card (`POST admin/cms/cache/preload`, `sunrice.admin.cms.cache.preload`, `cms.settings.cache`; logged as "preloaded the page cache"), or `php artisan sunrice:cache-preload [--limit=] [--locale=] [--now]`.
-- **Preload after clearing the cache**: after either Clear button (`ClearCache`).
+- **Preload after clearing the cache**: after either Clear button or `php artisan cache:clear` (`ClearCache`).
 - **Preload after content changes**: a minute after a change (several changes within that minute start one preload; none while one runs). On a big site that edits often, this keeps the server busy.
 - **Preload on a schedule**: hourly or daily, through Laravel's scheduler (the CMS schedules `sunrice:cache-preload` and runs it when the setting says so), which needs `* * * * * php artisan schedule:run` in cron.
 
@@ -154,10 +156,10 @@ In code: `Sunrice\Cms\Actions\Cache\PreloadCache` (`@api`): `handle(?int $limit,
 New CSS and JS from `npm run build` start new kept pages by themselves. Changed Blade templates, translations or code don't: after a deploy that changes them, clear the kept pages with **Clear page cache**, or from the command line with
 
 ```bash
-php artisan responsecache:clear
+php artisan cache:clear
 ```
 
-(with `php artisan view:clear` if your deploy doesn't already), or wait `cache.ttl` at most. Then `php artisan sunrice:cache-preload` fills it again. `responsecache:clear` empties responsecache's whole store (`cache.store`, `file` by default), so give it a store of its own when that's the app's default store.
+(with `php artisan view:clear` if your deploy doesn't already), or wait `cache.ttl` at most. Then `php artisan sunrice:cache-preload` fills it again (or let **Preload after clearing the cache** do it). `cache:clear` also empties the app's default cache store; to keep that, use `php artisan responsecache:clear`, which empties only responsecache's store (`cache.store`, `file` by default, so give it a store of its own when that's the app's default) and doesn't touch the site's other caches.
 
 ## Scheduled publishing
 

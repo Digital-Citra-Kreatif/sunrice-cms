@@ -194,6 +194,10 @@ final class CacheSettings extends Settings
         if ($unavailable !== null) {
             $card->notice('The whole-page cache isn\'t available on this server: ask your developer.', Card::WARNING, $unavailable);
         }
+        // The default before skipping was, kept by sites that saved these settings then: say what it risks.
+        if ($settings->otherQuery === self::IGNORE && PageCache::enabled()) {
+            $card->notice('Addresses with query parameters that aren\'t listed get the page kept without them, so a filter or sort a template reads may show the wrong page. Unless that\'s what you chose, set Any other parameter to Skip the cache.', Card::WARNING);
+        }
         if (PageCache::enabled() && ! $running) {
             $card->button('Preload cache', route('sunrice.admin.cms.cache.preload', [], false), 'Preload the page cache now? The site\'s pages are requested in the background, a few at a time.');
         }

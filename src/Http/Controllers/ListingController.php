@@ -17,15 +17,21 @@ use Sunrice\Cms\Support\Seo;
 
 /**
  * A collection's listing page fields and SEO, per language (cms.entries.view to
- * see, .update to save).
+ * see, .update to save). Without a listing page, the editor sends to the
+ * collection's settings (or, for those who can't change them, its entries).
  *
  * @internal
  */
 final class ListingController
 {
-    public function edit(Request $request, Collection $collection): Response
+    public function edit(Request $request, Collection $collection): Response|RedirectResponse
     {
-        abort_if($collection->listing_route === null, 404);
+        if ($collection->listing_route === null) {
+            // Off: where it's switched on, for those who may, else the collection's entries; not a bare 404.
+            return $request->user()?->can('cms.collections.update') === true
+                ? redirect()->route('sunrice.admin.cms.collections.edit', $collection->handle)->with('error', 'This collection has no listing page. Switch it on in its settings: Has a listing page.')
+                : redirect()->route('sunrice.admin.cms.collections.entries.index', $collection->handle)->with('error', 'This collection has no listing page. An administrator can switch it on in its settings.');
+        }
         $locale = $request->query('locale');
         $locale = is_string($locale) && Locales::has($locale) ? $locale : Locales::default();
         $collection->load('listings');

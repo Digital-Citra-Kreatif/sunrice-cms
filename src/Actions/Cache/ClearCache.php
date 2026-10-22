@@ -25,7 +25,8 @@ use Throwable;
  * when it holds nothing else (a store of its own, or a cache tag): a
  * shared store isn't flushed, and the pages left in it expire.
  * With Settings → Cache's "Preload after clearing", a preload starts
- * (PreloadCache). Authorize first (cms.settings.cache).
+ * (PreloadCache). Authorize first (cms.settings.cache). `php artisan
+ * cache:clear` runs it too (ALL; CmsServiceProvider listens for it).
  *
  * @api
  */

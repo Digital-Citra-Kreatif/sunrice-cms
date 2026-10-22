@@ -26,8 +26,15 @@ use Sunrice\Cms\Support\Seo;
  */
 final class IndexPageController
 {
-    public function edit(Request $request, Taxonomy $taxonomy): Response
+    public function edit(Request $request, Taxonomy $taxonomy): Response|RedirectResponse
     {
+        $off = self::off($request, $taxonomy);
+        if ($off !== null) {
+            // Off: where it's switched on, for those who may, else the taxonomy's terms; not a bare 404.
+            return $request->user()?->can('cms.taxonomies.update') === true
+                ? redirect()->route('sunrice.admin.cms.taxonomies.edit', $taxonomy->handle)->with('error', __('This index page is off. Switch it on in the taxonomy\'s settings: :setting.', ['setting' => __(...$off)]))
+                : redirect()->route('sunrice.admin.cms.taxonomies.terms.index', $taxonomy->handle)->with('error', 'This index page is off. An administrator can switch it on in the taxonomy\'s settings.');
+        }
         $collection = self::collection($request, $taxonomy);
         $locale = $request->query('locale');
         $locale = is_string($locale) && Locales::has($locale) ? $locale : Locales::default();
@@ -82,6 +89,27 @@ final class IndexPageController
         }
 
         return $pages;
+    }
+
+    /**
+     * When the page asked for is one the taxonomy has but is off, the
+     * setting that switches it on (its label, with its replacements); null
+     * otherwise (on, or a collection it doesn't group: collection() says 404).
+     *
+     * @return array{0: string, 1: array<string, string>}|null
+     */
+    private static function off(Request $request, Taxonomy $taxonomy): ?array
+    {
+        $handle = $request->query('collection');
+        if (! is_string($handle) || $handle === '') {
+            return $taxonomy->index_route === null ? ['Shared index page', []] : null;
+        }
+        $collection = $taxonomy->collections()->where('handle', $handle)->first();
+        $pivot = $collection?->getRelation('pivot');
+
+        return $collection !== null && $pivot instanceof CollectionTaxonomy && ! $pivot->index_page
+            ? ['Index page in :collection', ['collection' => $collection->title]]
+            : null;
     }
 
     /** The page asked for (?collection=books: that collection's; none: the shared one); a 404 when it isn't on. */
