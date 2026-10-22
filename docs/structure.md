@@ -52,7 +52,7 @@ php artisan sunrice:rename-field page subtitle tagline --dry-run # only count wh
 It renames the field in the definition and moves the values stored under the old handle, in place, in everything filled in with it:
 
 - entries' drafts, live versions and revisions, in every language;
-- terms' pages, global sets' values, listing pages and form submissions;
+- terms' pages, global sets' values, listing pages, taxonomy index pages and form submissions;
 - a fieldset's fields wherever the fieldset is included or used as a kind of flexible block, in every blueprint that reaches it.
 
 References and search text are rebuilt for what changed, and the records' versions count up, so an editor who had one open is asked to reload before saving. The new handle must be a valid one (lowercase letters, digits and underscores), not taken on that level (for a fieldset's field, also not in any blueprint or fieldset that includes the fieldset, through other includes too, at the level its fields land on; the refusal names it) and, at the top level, not one content keeps for itself (`title`, `slug`…). In code:
@@ -86,12 +86,14 @@ The file is JSON with a section per kind, each item by handle, and records point
     "collections": [{"handle": "blog", "title": "Blog", "blueprint": "post", "dated": true, "route": "/blog/{slug}",
         "listing_route": "/blog", "listing_blueprint": "page", "per_page": 10, "listings": {"en": {"intro": "News"}},
         "routes": {"id": {"route": "/artikel/{slug}", "listing_route": "/artikel"}}, ...}],
-    "taxonomies": [{"handle": "topics", "title": "Topics", "hierarchical": true, "collections": ["blog"], "collection_pages": {"blog": {"pages": true, "route": "/blog/topics/{slug}"}}, "routes": {"id": {"route": "/topik/{slug}"}}, ...}],
+    "taxonomies": [{"handle": "topics", "title": "Topics", "hierarchical": true, "index_route": "/topics", "index_blueprint": "page", "listings": {"en": {"intro": "Every topic"}},
+        "collections": ["blog"], "collection_pages": {"blog": {"pages": true, "route": "/blog/topics/{slug}", "index": true, "listings": {"en": {"intro": "Topics on the blog"}}}},
+        "routes": {"id": {"route": "/topik/{slug}", "index_route": "/topik"}}, ...}],
     "globals": [{"handle": "site", "title": "Site", "blueprint": "site_info", "values": {"en": {...}}}],
     "forms": [{"handle": "contact", "title": "Contact", "blueprint": "contact_form", "notify": ["team@example.com"], ...}],
     "menus": [{"handle": "main", "title": "Main", "items": [
         {"entry": "pages/about", "labels": {}, "new_tab": false, "children": []},
-        {"term": "topics/news"}, {"collection": "blog", "labels": {"en": "Blog"}}, {"url": "https://example.com", "labels": {"en": "Shop"}}
+        {"term": "topics/news"}, {"collection": "blog", "labels": {"en": "Blog"}}, {"index": "topics", "collection": "blog"}, {"url": "https://example.com", "labels": {"en": "Shop"}}
     ]}],
     "redirects": [{"from": "/old", "to": "/new", "status": 301}, {"from": "/listings", "to": "/properties", "status": 301, "every_language": true},
         {"from": "/blog/*", "to": "/journal/*", "status": 301}],
@@ -101,9 +103,9 @@ The file is JSON with a section per kind, each item by handle, and records point
 }
 ```
 
-Every setting of a collection, taxonomy, global set and form is in the file, "SEO from fields" (`seo_title_field`, `seo_description_field`, `seo_image_field`) and a form's `notify_roles` included (`StructureImporter::COLLECTION`, `TAXONOMY`, `GLOBAL_SET` and `FORM` list them), and the other languages' own URL patterns (`routes`, only when there are some; [translated URLs](site.md#translated-urls)), checked on import like the admin checks them. A taxonomy's `collection_pages` holds each attached collection's [term pages](taxonomies.md#term-pages-and-fields) (`pages`, and its own `route` and `routes` when it has some); a collection it doesn't name keeps its own (new ones get them). The patterns a language had before (`previous_routes`, `StructureImporter::NOT_CARRIED`) are the site's own history and stay out: an import that changes a pattern keeps the site's old one to redirect from.
+Every setting of a collection, taxonomy, global set and form is in the file, "SEO from fields" (`seo_title_field`, `seo_description_field`, `seo_image_field`) and a form's `notify_roles` included (`StructureImporter::COLLECTION`, `TAXONOMY`, `GLOBAL_SET` and `FORM` list them), and the other languages' own URL patterns (`routes`, only when there are some; [translated URLs](site.md#translated-urls)), checked on import like the admin checks them. A taxonomy's `collection_pages` holds each attached collection's [term pages](taxonomies.md#term-pages-and-fields) (`pages`, and its own `route` and `routes` when it has some) and [index page](taxonomies.md#index-pages) (`index`, its own `index_route` and `index_routes` when it has some, and its fields per language, `listings`, like a collection's listing page); a collection it doesn't name keeps its own (new ones get them), and an entry without `index` (a file written before index pages) leaves the index page as it is. The taxonomy's own `listings` are its shared index page's fields; both are imported after entries, for the pages that are on, through `SaveIndexPage`, and index page URLs are checked against listing pages' and other index pages'. The patterns a language had before (`previous_routes`, `StructureImporter::NOT_CARRIED`) are the site's own history and stay out: an import that changes a pattern keeps the site's old one to redirect from.
 
-Menu links point at entries and terms by collection or taxonomy and slug in the main language (`"entry": "pages/about"`), those in the trash included, so they're found on another site by slug; links whose entry or term was permanently deleted are left out. A structure file written before the pages existed has no links to them, and importing it leaves a menu's links to them alone.
+Menu links point at entries and terms by collection or taxonomy and slug in the main language (`"entry": "pages/about"`; a term's page in a collection, or a taxonomy's index page, names the collection too: `{"index": "topics", "collection": "blog"}`), those in the trash included, so they're found on another site by slug; links whose entry or term was permanently deleted are left out. A structure file written before the pages existed has no links to them, and importing it leaves a menu's links to them alone.
 
 Listing pages' fields and SEO card are always in the file, with files and links written as below; importing one finds them on the site and saves its SEO card as SEO.
 

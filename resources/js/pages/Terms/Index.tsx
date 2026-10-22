@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import { ExternalLink, LayoutTemplate, MoreHorizontal, Pencil, Plus, RotateCcw, Search, Settings2, Trash2 } from 'lucide-react';
+import { ExternalLink, LayoutTemplate, ListTree, MoreHorizontal, Pencil, Plus, RotateCcw, Search, Settings2, Trash2 } from 'lucide-react';
 import { adminUrl, t } from '@imajiner/admin-sdk';
 import {
     Button, Card, DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -40,6 +40,8 @@ interface Props {
         blueprint?: string | null;
         /** The collections whose entries it groups. */
         collections?: { title: string; url: string }[];
+        /** Its index pages that are on (collection null: the shared one), with their fields' editor. */
+        indexPages?: { title: string; collection: string | null; url: string }[];
     } | null;
     /** Showing the trash. */
     trashed?: boolean;
@@ -159,6 +161,7 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
                 primary={!trashed && <Button asChild><Link href={`${base}/create?locale=${encodeURIComponent(locale)}`}><Plus /> {t('New term')}</Link></Button>}
                 menu={[
                     ...collections.map((c) => ({ label: c.title, href: c.url, group: t('Used by collections') })),
+                    ...(taxonomy.indexPages ?? []).map((p) => ({ label: p.collection === null ? t('Index page') : t('Index page: :collection', { collection: p.title }), href: p.url, icon: <ListTree />, group: t('Pages') })),
                     ...(taxonomy.settings ? [{ label: t('Taxonomy settings'), href: taxonomy.settings, icon: <Settings2 />, group: t('Structure') }] : []),
                     ...(taxonomy.blueprint ? [{ label: t('Edit blueprint'), href: taxonomy.blueprint, icon: <LayoutTemplate />, group: t('Structure') }] : []),
                 ]}

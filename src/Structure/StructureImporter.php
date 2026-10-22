@@ -24,6 +24,7 @@ use Sunrice\Cms\Actions\Entries\SaveEntrySettings;
 use Sunrice\Cms\Actions\Fieldsets\SaveFieldset;
 use Sunrice\Cms\Actions\Globals\SaveGlobals;
 use Sunrice\Cms\Actions\Menus\SaveMenu;
+use Sunrice\Cms\Actions\Taxonomies\SaveIndexPage;
 use Sunrice\Cms\Actions\Terms\SaveTerm;
 use Sunrice\Cms\Actions\Terms\SaveTermContent;
 use Sunrice\Cms\Fields\Fieldsets;
@@ -41,6 +42,7 @@ use Sunrice\Cms\Models\Menu;
 use Sunrice\Cms\Models\MenuItem;
 use Sunrice\Cms\Models\Redirect;
 use Sunrice\Cms\Models\Taxonomy;
+use Sunrice\Cms\Models\TaxonomyListing;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Settings\LocaleSettings;
@@ -57,7 +59,7 @@ use Throwable;
 /**
  * Creates or updates, by handle, the structure a file describes (the
  * shape StructureExporter writes): fieldsets, blueprints, collections
- * with their listing pages, taxonomies, global sets, forms, menus and
+ * with their listing pages, taxonomies with their index pages, global sets, forms, menus and
  * redirects, and terms, entries and global values when it has them,
  * through the same actions and checks as the admin (field definitions by
  * DefinitionValidator).
@@ -81,7 +83,7 @@ final class StructureImporter
     /** A collection's settings in the file. */
     public const COLLECTION = ['handle', 'title', 'blueprint', 'blueprints', 'dated', 'translatable', 'ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template', 'translations', 'routes', ...self::SEO_FIELDS];
 
-    public const TAXONOMY = ['handle', 'title', 'hierarchical', 'route', 'blueprint', 'template', 'translations', 'routes', ...self::SEO_FIELDS];
+    public const TAXONOMY = ['handle', 'title', 'hierarchical', 'route', 'index_route', 'blueprint', 'index_blueprint', 'template', 'translations', 'routes', ...self::SEO_FIELDS];
 
     /** Which fields fill in what an entry's or term's SEO card leaves empty. */
     public const SEO_FIELDS = ['seo_title_field', 'seo_description_field', 'seo_image_field'];
@@ -180,6 +182,7 @@ final class StructureImporter
             $this->each('entry', $entries, fn (array $item) => $this->entrySettings($item, $created));
             // Listing pages and global values may link to entries: after them.
             $this->each('listing', $section('collections'), fn (array $item) => $this->listings($item));
+            $this->each('index page', $section('taxonomies'), fn (array $item) => $this->indexPages($item));
             $this->each('global set', $section('globals'), fn (array $item) => $this->globalValues($item));
             $this->each('menu', $section('menus'), fn (array $item) => $this->menu($item));
             $this->each('redirect', $section('redirects'), fn (array $item) => $this->redirect($item));
@@ -360,25 +363,33 @@ final class StructureImporter
             'title' => ['required', 'string', 'max:255'],
             'hierarchical' => ['sometimes', 'boolean'],
             'route' => ['nullable', 'string', 'max:255', Rule::unique((new Taxonomy)->getTable(), 'route')->ignore($existing->id ?? 0), self::routeRule()],
-            ...self::routesRules(['route' => self::routeRule()]),
+            'index_route' => ['nullable', 'string', 'max:255', 'regex:#^(/[a-z0-9\-_]+)+$#', Rule::unique((new Taxonomy)->getTable(), 'index_route')->ignore($existing->id ?? 0)],
+            ...self::routesRules(['route' => self::routeRule(), 'index_route' => 'regex:#^(/[a-z0-9\-_]+)+$#']),
             'blueprint' => ['nullable', 'string', Rule::exists((new Blueprint)->getTable(), 'handle')],
+            'index_blueprint' => ['nullable', 'string', Rule::exists((new Blueprint)->getTable(), 'handle')],
+            'listings' => ['sometimes', 'nullable', 'array'],
             'template' => self::TEMPLATE,
             ...array_fill_keys(self::SEO_FIELDS, self::FIELD_HANDLE),
             'collections' => ['sometimes', 'array'],
             'collections.*' => ['string', Rule::exists((new Collection)->getTable(), 'handle')],
             'collection_pages' => ['sometimes', 'array'],
-            'collection_pages.*' => ['array:pages,route,routes'],
+            'collection_pages.*' => ['array:pages,route,routes,index,index_route,index_routes,listings'],
             'collection_pages.*.pages' => ['sometimes', 'boolean'],
             'collection_pages.*.route' => ['nullable', 'string', 'max:255', self::routeRule()],
             'collection_pages.*.routes' => ['nullable', 'array'],
             'collection_pages.*.routes.*' => ['string', 'max:255', self::routeRule()],
+            'collection_pages.*.index' => ['sometimes', 'boolean'],
+            'collection_pages.*.index_route' => ['nullable', 'string', 'max:255', 'regex:#^(/[a-z0-9\-_]+)+$#'],
+            'collection_pages.*.index_routes' => ['nullable', 'array'],
+            'collection_pages.*.index_routes.*' => ['string', 'max:255', 'regex:#^(/[a-z0-9\-_]+)+$#'],
+            'collection_pages.*.listings' => ['nullable', 'array'],
             ...self::TRANSLATIONS,
         ])->validate();
         $before = $existing === null ? null : [...$existing->only(self::TAXONOMY), 'collections' => self::collectionPages($existing)];
         $taxonomy = $existing ?? new Taxonomy;
-        self::checkRoutes($taxonomy, $validated, ['route']);
+        self::checkRoutes($taxonomy, $validated, ['route', 'index_route']);
         $taxonomy->fill(array_intersect_key($validated, array_flip(array_diff(self::TAXONOMY, ['routes']))));
-        self::fillRoutes($taxonomy, $validated, ['route']);
+        self::fillRoutes($taxonomy, $validated, ['route', 'index_route']);
         $taxonomy->save();
         if (array_key_exists('collections', $validated)) {
             $taxonomy->collections()->sync(Collection::query()->whereIn('handle', $validated['collections'])->pluck('id')->all());
@@ -392,9 +403,16 @@ final class StructureImporter
                         'term_pages' => (bool) ($pages['pages'] ?? true),
                         'term_route' => is_string($pages['route'] ?? null) && $pages['route'] !== '' ? $pages['route'] : null,
                         'term_routes' => is_array($pages['routes'] ?? null) && $pages['routes'] !== [] ? $pages['routes'] : null,
+                        // Its index page, when the file says (files written before index pages leave it as it is).
+                        ...(array_key_exists('index', $pages) ? [
+                            'index_page' => (bool) $pages['index'],
+                            'index_route' => is_string($pages['index_route'] ?? null) && $pages['index_route'] !== '' ? $pages['index_route'] : null,
+                            'index_routes' => is_array($pages['index_routes'] ?? null) && $pages['index_routes'] !== [] ? $pages['index_routes'] : null,
+                        ] : []),
                     ]);
                 }
             }
+            self::checkIndexPages($taxonomy);
         }
         $this->report->add('taxonomy', $taxonomy->handle, $this->status($before, [...$taxonomy->only(self::TAXONOMY), 'collections' => self::collectionPages($taxonomy)]));
     }
@@ -408,8 +426,78 @@ final class StructureImporter
     private static function collectionPages(Taxonomy $taxonomy): array
     {
         return $taxonomy->collections()->orderBy('handle')->get()
-            ->mapWithKeys(fn (Collection $c): array => [$c->handle => $c->getRelation('pivot') instanceof CollectionTaxonomy ? $c->getRelation('pivot')->only(['term_pages', 'term_route', 'term_routes']) : []])
+            ->mapWithKeys(fn (Collection $c): array => [$c->handle => $c->getRelation('pivot') instanceof CollectionTaxonomy ? $c->getRelation('pivot')->only(CollectionTaxonomy::COLUMNS) : []])
             ->all();
+    }
+
+    /**
+     * No collection's index page of a taxonomy may have an address a
+     * listing page or another index page has, in any language
+     * (RouteConflicts).
+     */
+    private static function checkIndexPages(Taxonomy $taxonomy): void
+    {
+        $errors = [];
+        foreach ($taxonomy->collections()->wherePivot('index_page', true)->get() as $collection) {
+            $pivot = $collection->getRelation('pivot');
+            if (! $pivot instanceof CollectionTaxonomy) {
+                continue;
+            }
+            foreach (Locales::all() as $locale) {
+                $path = $pivot->indexPath($collection, $taxonomy, $locale);
+                if (($other = RouteConflicts::forIndexPage($collection, $taxonomy, $locale, $path)) !== null) {
+                    $errors["collection_pages.{$collection->handle}.index_route"] = "{$other} has the address {$path} in {$locale} already.";
+                }
+            }
+        }
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+    }
+
+    /**
+     * A taxonomy's index pages' fields: the shared one's (`listings`) and
+     * each collection's (`collection_pages.{handle}.listings`), per
+     * language, for the pages that are on.
+     *
+     * @param  array<mixed>  $item
+     */
+    private function indexPages(array $item): void
+    {
+        $taxonomy = Taxonomy::query()->with('listings')->where('handle', $item['handle'] ?? null)->first();
+        if ($taxonomy === null) {
+            return;
+        }
+        $pages = [[null, is_array($item['listings'] ?? null) ? $item['listings'] : []]];
+        foreach (is_array($item['collection_pages'] ?? null) ? $item['collection_pages'] : [] as $handle => $own) {
+            if (is_string($handle) && is_array($own) && is_array($own['listings'] ?? null) && ($collection = Collection::query()->where('handle', $handle)->first()) !== null) {
+                $pages[] = [$collection, $own['listings']];
+            }
+        }
+        foreach ($pages as [$collection, $values]) {
+            if ($values === [] || ! $taxonomy->hasIndexPage($collection)) {
+                continue;
+            }
+            $changed = false;
+            $notes = [];
+            foreach ($values as $locale => $data) {
+                if (! is_string($locale) || ! is_array($data)) {
+                    continue;
+                }
+                // Files and links as this site's ids; the SEO card saved as SEO.
+                $data = $this->resolved($data, $notes);
+                $stored = $taxonomy->listings->first(fn (TaxonomyListing $page): bool => $page->locale === $locale && $page->collection_id === $collection?->id);
+                if ($stored === null || array_replace($stored->data, $data) != $stored->data) {
+                    $seo = $data[Seo::KEY] ?? null;
+                    unset($data[Seo::KEY]);
+                    app(SaveIndexPage::class)->handle($taxonomy, $collection, $data, $locale, seo: is_array($seo) ? $seo : null);
+                    $changed = true;
+                }
+            }
+            if ($changed) {
+                $this->report->add('index page', $taxonomy->handle.($collection === null ? '' : ' in '.$collection->handle), ImportReport::UPDATED, $notes);
+            }
+        }
     }
 
     /** @param array<mixed> $item */
@@ -799,7 +887,8 @@ final class StructureImporter
 
         return match (true) {
             $id('entry_id') !== '' => 'entry:'.$id('entry_id'),
-            $id('term_id') !== '' => 'term:'.$id('term_id'),
+            $id('term_id') !== '' => 'term:'.$id('term_id').'/'.$id('collection_id'),
+            $id('taxonomy_id') !== '' => 'index:'.$id('taxonomy_id').'/'.$id('collection_id'),
             $id('collection_id') !== '' => 'collection:'.$id('collection_id').'?'.self::text($link['query'] ?? null),
             default => 'url:'.trim(self::text($link['url'] ?? null)),
         };
@@ -844,6 +933,8 @@ final class StructureImporter
         $described = match (true) {
             is_numeric($link['entry_id'] ?? null) => ($entry = Entry::withTrashed()->with('collection')->find((int) $link['entry_id'])) === null ? null : $entry->collection->handle.'/'.($entry->translation(Locales::default())->draft_slug ?? $entry->id),
             is_numeric($link['term_id'] ?? null) => ($term = Term::withTrashed()->with('taxonomy')->find((int) $link['term_id'])) === null ? null : $term->taxonomy->handle.'/'.self::text($term->translations()->where('locale', Locales::default())->value('slug') ?? (string) $term->id),
+            is_numeric($link['taxonomy_id'] ?? null) => ($handle = Taxonomy::withTrashed()->whereKey((int) $link['taxonomy_id'])->value('handle')) === null ? null
+                : 'the index of '.self::text($handle).(is_numeric($link['collection_id'] ?? null) ? ' in '.self::text(Collection::withTrashed()->whereKey((int) $link['collection_id'])->value('handle')) : ''),
             is_numeric($link['collection_id'] ?? null) => Collection::withTrashed()->whereKey((int) $link['collection_id'])->value('handle'),
             default => trim(self::text($link['url'] ?? null)),
         };
@@ -866,11 +957,15 @@ final class StructureImporter
             if (! is_array($item)) {
                 continue;
             }
-            $to = self::text($item['entry'] ?? $item['term'] ?? $item['collection'] ?? null);
+            $to = self::text($item['entry'] ?? $item['term'] ?? $item['index'] ?? $item['collection'] ?? null);
             [$parent, $slug] = array_pad(explode('/', $to, 2), 2, '');
+            // A term's page or a taxonomy's index page in a collection names it too.
+            $in = is_string($item['collection'] ?? null) && (is_string($item['term'] ?? null) || is_string($item['index'] ?? null))
+                ? ['collection_id' => Collection::query()->where('handle', $item['collection'])->value('id')] : [];
             $target = match (true) {
                 is_string($item['entry'] ?? null) => ['entry_id' => ($c = Collection::query()->where('handle', $parent)->first()) === null ? null : self::entryId($c, $slug)],
-                is_string($item['term'] ?? null) => ['term_id' => ($t = Taxonomy::query()->where('handle', $parent)->first()) === null ? null : self::termId($t, $slug)],
+                is_string($item['term'] ?? null) => ['term_id' => ($t = Taxonomy::query()->where('handle', $parent)->first()) === null ? null : self::termId($t, $slug), ...$in],
+                is_string($item['index'] ?? null) => ['taxonomy_id' => Taxonomy::query()->where('handle', $to)->value('id'), ...$in],
                 is_string($item['collection'] ?? null) => ['collection_id' => Collection::query()->where('handle', $to)->value('id')],
                 default => ['url' => $item['url'] ?? null],
             };
@@ -880,7 +975,7 @@ final class StructureImporter
                 continue;
             }
             $resolved[] = [...$target, 'labels' => is_array($item['labels'] ?? null) ? $item['labels'] : [], 'new_tab' => ($item['new_tab'] ?? false) === true,
-                'query' => isset($target['collection_id']) ? SaveMenu::queryString($item['query'] ?? null) : null,
+                'query' => isset($target['collection_id']) && $in === [] ? SaveMenu::queryString($item['query'] ?? null) : null,
                 'children' => $this->menuItems(is_array($item['children'] ?? null) ? $item['children'] : [], $notes)];
         }
 
@@ -898,7 +993,7 @@ final class StructureImporter
         $tree = [];
         foreach ($items as $item) {
             if ($item->parent_id === $parent) {
-                $tree[] = ['entry_id' => $item->entry_id, 'term_id' => $item->term_id, 'collection_id' => $item->collection_id, 'url' => $item->url,
+                $tree[] = ['entry_id' => $item->entry_id, 'term_id' => $item->term_id, 'taxonomy_id' => $item->taxonomy_id, 'collection_id' => $item->collection_id, 'url' => $item->url,
                     'labels' => $item->labels, 'new_tab' => $item->new_tab, 'query' => $item->query_string, 'children' => self::tree($items, $item->id)];
             }
         }
@@ -913,7 +1008,7 @@ final class StructureImporter
     private static function normalizeItems(array $items): array
     {
         return array_map(fn (array $item): array => [
-            'entry_id' => $item['entry_id'] ?? null, 'term_id' => $item['term_id'] ?? null, 'collection_id' => $item['collection_id'] ?? null,
+            'entry_id' => $item['entry_id'] ?? null, 'term_id' => $item['term_id'] ?? null, 'taxonomy_id' => $item['taxonomy_id'] ?? null, 'collection_id' => $item['collection_id'] ?? null,
             'url' => trim(self::text($item['url'] ?? null)) === '' ? null : trim(self::text($item['url'] ?? null)),
             'labels' => array_filter(array_map(fn (mixed $l): string => trim(self::text($l)), is_array($item['labels'] ?? null) ? $item['labels'] : []), fn (string $l): bool => $l !== ''),
             'new_tab' => ($item['new_tab'] ?? false) === true,
@@ -1068,7 +1163,24 @@ final class StructureImporter
             }
         };
         $each('collections', ['listings', 'translations', 'routes']);
-        $each('taxonomies', ['translations', 'routes']);
+        $each('taxonomies', ['listings', 'translations', 'routes'], function (array $item) use ($map): array {
+            // Each collection's own term page and index page addresses, and its index page's fields.
+            if (is_array($item['collection_pages'] ?? null)) {
+                foreach ($item['collection_pages'] as $handle => $pages) {
+                    if (! is_array($pages)) {
+                        continue;
+                    }
+                    foreach (['routes', 'index_routes', 'listings'] as $key) {
+                        if (array_key_exists($key, $pages)) {
+                            $pages[$key] = $map($pages[$key]);
+                        }
+                    }
+                    $item['collection_pages'][$handle] = $pages;
+                }
+            }
+
+            return $item;
+        });
         $each('forms', ['translations']);
         $each('globals', ['values']);
         $each('terms', ['translations']);
@@ -1156,8 +1268,12 @@ final class StructureImporter
     {
         $routes = is_array($validated['routes'] ?? null) ? $validated['routes'] : (array_key_exists('routes', $validated) ? [] : ($record->routes ?? []));
         $errors = [];
-        foreach (array_slice(Locales::all(), 1) as $locale) {
+        foreach (Locales::all() as $locale) {
             foreach ($attributes as $attribute) {
+                // The main language's: a unique column for its own kind, so only fixed pages (listing, index) against the other kind.
+                if ($locale === Locales::default() && $attribute === 'route') {
+                    continue;
+                }
                 $main = array_key_exists($attribute, $validated) ? $validated[$attribute] : $record->getAttribute($attribute);
                 $own = is_array($routes[$locale] ?? null) ? ($routes[$locale][$attribute] ?? null) : null;
                 $pattern = is_string($own) && $own !== '' ? $own : $main;

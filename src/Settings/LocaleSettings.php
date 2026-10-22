@@ -13,6 +13,7 @@ use Sunrice\Admin\Support\Card;
 use Sunrice\Cms\Models\CollectionListing;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\GlobalValue;
+use Sunrice\Cms\Models\TaxonomyListing;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Support\Locales;
 
@@ -240,12 +241,13 @@ final class LocaleSettings extends Settings
         }
     }
 
-    /** Whether any entry, term, global set or listing page has content in the language. */
+    /** Whether any entry, term, global set, listing page or taxonomy index page has content in the language. */
     public static function holdsContent(string $locale): bool
     {
         return EntryTranslation::query()->where('locale', $locale)->exists()
             || TermTranslation::query()->where('locale', $locale)->exists()
             || GlobalValue::query()->where('locale', $locale)->exists()
-            || CollectionListing::query()->where('locale', $locale)->exists();
+            || CollectionListing::query()->where('locale', $locale)->exists()
+            || TaxonomyListing::query()->where('locale', $locale)->exists();
     }
 }

@@ -20,7 +20,8 @@ use Sunrice\Cms\Support\SiteCache;
  * shown only when the address has the same values, and then wins over the
  * link without it (which is on the trail). Links to entries, terms and
  * listing pages that aren't on the site are left out, with what's under
- * them. Loaded once per request.
+ * them; so are links to taxonomy index pages that are off. Loaded once per
+ * request.
  *
  * @phpstan-type MenuLink array{label: string, url: string, new_tab: bool, active: bool, active_trail: bool, children: list<mixed>}
  *
@@ -45,7 +46,7 @@ final class Menus
             // Its links are full URLs: per host.
             $this->resolved[$key] = app(SiteCache::class)->remember('menu:'.sha1(url('/').'|'.$key), function () use ($handle, $locale): array {
                 $menu = Menu::query()->where('handle', $handle)
-                    ->with('items.entry.translations', 'items.entry.collection', 'items.term.translations', 'items.term.taxonomy', 'items.collection')->first();
+                    ->with('items.entry.translations', 'items.entry.collection', 'items.term.translations', 'items.term.taxonomy', 'items.collection', 'items.taxonomy')->first();
 
                 return $menu === null ? [] : $this->tree($menu->items->all(), null, $locale);
             }, SiteCache::MENUS);
@@ -203,6 +204,19 @@ final class Menus
             $url = $translation === null ? null : app(Site::class)->termUrlIn($translation, $locale, followPage: false);
 
             return $url === null ? null : ['label' => $own ?? ($translation->locale === $locale ? $translation->title : ($main ?? $translation->title)), 'url' => $url];
+        }
+        if ($item->taxonomy_id !== null) {
+            // A taxonomy's index page: the shared one, or with a collection that collection's (/books/tags).
+            $taxonomy = $item->taxonomy;
+            $in = $item->collection_id !== null ? $item->collection : null;
+            if ($taxonomy === null || $taxonomy->trashed() || ($item->collection_id !== null && ($in === null || $in->trashed()))
+                || ($url = $taxonomy->indexUrl($locale, $in)) === null) {
+                return null;
+            }
+            $translated = $taxonomy->getAttribute('translations');
+            $hasTitle = is_array($translated) && is_array($translated[$locale] ?? null) && self::text($translated[$locale]['title'] ?? null) !== null;
+
+            return ['label' => $own ?? ($hasTitle ? $taxonomy->titleIn($locale) : ($main ?? $taxonomy->titleIn($locale))), 'url' => $url];
         }
         if ($item->collection_id !== null) {
             $collection = $item->collection;

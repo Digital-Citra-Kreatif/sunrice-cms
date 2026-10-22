@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Head, useForm } from '@inertiajs/react';
-import { IndentDecrease, IndentIncrease, Link2, List, LoaderCircle, Plus, Settings2, Tag, Trash2 } from 'lucide-react';
+import { IndentDecrease, IndentIncrease, Link2, List, LoaderCircle, Plus, Settings2, Tag, Tags, Trash2 } from 'lucide-react';
 import { adminUrl, t } from '@imajiner/admin-sdk';
 import {
     Badge, Button, Card, Checkbox, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input, Label, PageHeader,
@@ -21,14 +21,16 @@ interface Props {
     /** Terms with pages: the shared page (collection null) and their collections' term pages. */
     terms: { id: number; title: string; taxonomy: string; pages: { collection: number | null; title: string }[] }[];
     listings: { id: number; title: string }[];
+    /** Taxonomies with index pages: the shared one (collection null) and their collections'. */
+    indexes?: { id: number; title: string; pages: { collection: number | null; title: string }[] }[];
     can: { update: boolean };
     /** Its title and handle (the menu's resource), when the user may change them. */
     settings?: string | null;
 }
 
-type Kind = 'entry' | 'term' | 'listing' | 'url';
+type Kind = 'entry' | 'term' | 'listing' | 'index' | 'url';
 
-export default function MenuEdit({ menu, items: initial, locales, limits, terms, listings, can, settings }: Props) {
+export default function MenuEdit({ menu, items: initial, locales, limits, terms, listings, indexes = [], can, settings }: Props) {
     const url = adminUrl(`cms/menus/${menu.handle}/links`);
     useBreadcrumbs([{ label: t('Menus'), href: adminUrl('cms/menus') }, { label: menu.title }]);
     const [items, setItems] = React.useState<FlatItem[]>(() => flatten(initial));
@@ -85,7 +87,7 @@ export default function MenuEdit({ menu, items: initial, locales, limits, terms,
                                     </div>
                                 )}
                             </div>
-                            {item.collection_id !== null && item.term_id === null && (
+                            {item.collection_id !== null && item.term_id === null && !item.taxonomy_id && (
                                 <Input aria-label={t('Filters')} className="cms:w-full cms:sm:max-w-md cms:font-mono" disabled={!can.update}
                                     placeholder={t('Filters (optional): :example', { example: 'filter=value' })} value={item.query ?? ''}
                                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => update(index, { query: e.target.value })} />
@@ -122,6 +124,7 @@ export default function MenuEdit({ menu, items: initial, locales, limits, terms,
                                                 <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('entry')}><Plus /> {t('Entry')}</Button>
                         {terms.length > 0 && <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('term')}><Tag /> {t('Term')}</Button>}
                         {listings.length > 0 && <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('listing')}><List /> {t('Listing')}</Button>}
+                        {indexes.length > 0 && <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('index')}><Tags /> {t('Taxonomy index')}</Button>}
                         <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('url')}><Link2 /> {t('Link')}</Button>
                         <Button type="submit" disabled={form.processing}>{form.processing && <LoaderCircle className="cms:animate-spin" />} {t('Save')}</Button>
                     </>
@@ -138,7 +141,7 @@ export default function MenuEdit({ menu, items: initial, locales, limits, terms,
                 {items.length === 0 ? <p className="cms:p-4 cms:text-center cms:text-muted-foreground">{t('No links yet. Add an entry or a link.')}</p> : level(-1)}
             </Card>
 
-            <AddDialog kind={adding} terms={terms} listings={listings} onClose={() => setAdding(null)} onAdd={(item) => { change([...items, item]); setAdding(null); }} main={main} />
+            <AddDialog kind={adding} terms={terms} listings={listings} indexes={indexes} onClose={() => setAdding(null)} onAdd={(item) => { change([...items, item]); setAdding(null); }} main={main} />
         </form>
     );
 }
@@ -151,19 +154,21 @@ function strip({ target: _target, children, ...node }: MenuNode): Omit<MenuNode,
 /** A menu links to pages that exist: said when the search finds none. */
 const menuEntryHint = (): string => t('A menu links to entries that already exist: create the page first (Content → Entries), then add it here, or add a web address instead.');
 
-const titles = (): Record<Kind, string> => ({ entry: t('Link to an entry'), term: t('Link to a term\'s page'), listing: t('Link to a listing page'), url: t('Link to an address') });
+const titles = (): Record<Kind, string> => ({ entry: t('Link to an entry'), term: t('Link to a term\'s page'), listing: t('Link to a listing page'), index: t('Link to a taxonomy\'s index page'), url: t('Link to an address') });
 
 const descriptions = (): Record<Kind, string> => ({
     entry: t('It follows the entry: its title (unless you give a label) and its address in each language. It shows only while the entry is on the site.'),
     term: t('The page listing the term\'s entries, in each language. Its title is the label unless you give one.'),
     listing: t('The collection\'s listing page, in each language, optionally with filters. The collection\'s title is the label unless you give one.'),
+    index: t('The page listing a taxonomy\'s terms, in each language. The taxonomy\'s title is the label unless you give one.'),
     url: t('A web address, a path on this site (/contact), mailto: or tel:.'),
 });
 
-function AddDialog({ kind, terms, listings, onClose, onAdd, main }: {
+function AddDialog({ kind, terms, listings, indexes, onClose, onAdd, main }: {
     kind: Kind | null;
     terms: Props['terms'];
     listings: Props['listings'];
+    indexes: NonNullable<Props['indexes']>;
     onClose: () => void;
     onAdd: (item: FlatItem) => void;
     main: string;
@@ -179,6 +184,11 @@ function AddDialog({ kind, terms, listings, onClose, onAdd, main }: {
     React.useEffect(() => setPage(''), [choice]);
     const chosenTerm = kind === 'term' ? terms.find((each) => String(each.id) === choice) : undefined;
     const termPage = chosenTerm?.pages.find((each) => String(each.collection ?? '') === page) ?? chosenTerm?.pages[0];
+    const chosenIndex = kind === 'index' ? indexes.find((each) => String(each.id) === choice) : undefined;
+    const indexPage = chosenIndex?.pages.find((each) => String(each.collection ?? '') === page) ?? chosenIndex?.pages[0];
+    // The pages to choose from: a term's or a taxonomy's index pages.
+    const chosen = chosenTerm ?? chosenIndex;
+    const chosenPage = chosenTerm ? termPage : indexPage;
     const safe = address.trim() === '' || isSafeUrl(address.trim());
     const labels = label.trim() ? { [main]: label.trim() } : {};
 
@@ -192,6 +202,10 @@ function AddDialog({ kind, terms, listings, onClose, onAdd, main }: {
             const collection = termPage?.collection ?? null;
             const page = collection === null ? t('Shared page') : (termPage?.title ?? '');
             onAdd(newItem({ term_id: Number(choice), collection_id: collection, target: term ? { title: term.title, kind: `${term.taxonomy} · ${page}`, live: true } : null, labels }));
+        } else if (kind === 'index' && choice !== '' && chosenIndex) {
+            const collection = indexPage?.collection ?? null;
+            const kindLabel = collection === null ? t(':taxonomy · Index page', { taxonomy: chosenIndex.title }) : t(':taxonomy · :collection index', { taxonomy: chosenIndex.title, collection: indexPage?.title ?? '' });
+            onAdd(newItem({ taxonomy_id: chosenIndex.id, collection_id: collection, target: { title: chosenIndex.title, kind: kindLabel, live: true }, labels }));
         } else if (kind === 'listing' && choice !== '') {
             const listing = listings.find((l) => String(l.id) === choice);
             onAdd(newItem({ collection_id: Number(choice), target: listing ? { title: listing.title, kind: t('Listing page'), live: true } : null, labels, query: query.trim().replace(/^\?/, '') || null }));
@@ -213,29 +227,31 @@ function AddDialog({ kind, terms, listings, onClose, onAdd, main }: {
                         <EntriesPicker id="menu-entry" value={entryId} multiple={false} max={null} collections={[]} invalid={false}
                             emptyHint={menuEntryHint()} onChange={(value) => setEntryId(typeof value === 'number' ? value : null)} />
                     )}
-                    {(kind === 'term' || kind === 'listing') && (
+                    {(kind === 'term' || kind === 'listing' || kind === 'index') && (
                         <div className="cms:flex cms:flex-col cms:gap-2">
-                            <Label htmlFor="menu-target">{kind === 'term' ? t('Term') : t('Collection')}</Label>
+                            <Label htmlFor="menu-target">{kind === 'term' ? t('Term') : kind === 'index' ? t('Taxonomy') : t('Collection')}</Label>
                             <Select value={choice} onValueChange={setChoice}>
                                 <SelectTrigger id="menu-target"><SelectValue placeholder={t('Choose…')} /></SelectTrigger>
                                 <SelectContent>
                                     {kind === 'term'
                                         ? terms.map((term) => <SelectItem key={term.id} value={String(term.id)}>{term.taxonomy}: {term.title}</SelectItem>)
-                                        : listings.map((l) => <SelectItem key={l.id} value={String(l.id)}>{l.title}</SelectItem>)}
+                                        : (kind === 'index' ? indexes : listings).map((l) => <SelectItem key={l.id} value={String(l.id)}>{l.title}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
                     )}
-                    {chosenTerm && chosenTerm.pages.length > 0 && (
+                    {chosen && chosen.pages.length > 0 && (
                         <div className="cms:flex cms:flex-col cms:gap-2">
                             <Label htmlFor="menu-term-page">{t('Page')}</Label>
-                            <Select value={String(termPage?.collection ?? '') || '__all'} onValueChange={(value: string) => setPage(value === '__all' ? '' : value)}>
+                            <Select value={String(chosenPage?.collection ?? '') || '__all'} onValueChange={(value: string) => setPage(value === '__all' ? '' : value)}>
                                 <SelectTrigger id="menu-term-page"><SelectValue /></SelectTrigger>
                                 <SelectContent>
-                                    {chosenTerm.pages.map((each) => <SelectItem key={each.collection ?? '__all'} value={each.collection === null ? '__all' : String(each.collection)}>{each.collection === null ? each.title : t(':collection only', { collection: each.title })}</SelectItem>)}
+                                    {chosen.pages.map((each) => <SelectItem key={each.collection ?? '__all'} value={each.collection === null ? '__all' : String(each.collection)}>{each.collection === null ? each.title : t(':collection only', { collection: each.title })}</SelectItem>)}
                                 </SelectContent>
                             </Select>
-                            <p className="cms:text-sm cms:text-muted-foreground">{t('The shared page lists the term\'s entries from every collection; a collection\'s page only its own.')}</p>
+                            <p className="cms:text-sm cms:text-muted-foreground">{chosenTerm
+                                ? t('The shared page lists the term\'s entries from every collection; a collection\'s page only its own.')
+                                : t('The shared index lists all the taxonomy\'s terms; a collection\'s only those its entries have.')}</p>
                         </div>
                     )}
                     {kind === 'listing' && (

@@ -34,6 +34,7 @@ final class ContentWatch
         Models\Collection::class => [],
         Models\CollectionListing::class => [],
         Models\Taxonomy::class => [],
+        Models\TaxonomyListing::class => [],
         Models\Term::class => [],
         Models\TermTranslation::class => [],
         Models\Menu::class => [SiteCache::MENUS, SiteCache::PAGES],

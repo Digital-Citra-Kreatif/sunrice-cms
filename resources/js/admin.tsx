@@ -16,6 +16,7 @@ import SeoEdit from '@/pages/Seo/Edit.tsx';
 import SubmissionsIndex from '@/pages/Submissions/Index.tsx';
 import TermEdit from '@/pages/Terms/Edit.tsx';
 import TermsIndex from '@/pages/Terms/Index.tsx';
+import TaxonomyIndexEdit from '@/pages/TaxonomyIndex/Edit.tsx';
 import TranslationsEdit from '@/pages/Translations/Edit.tsx';
 
 /** A page that first takes the content languages' names the panel shares (`cms.locales`), so localeName() says them as the site does. */
@@ -37,6 +38,7 @@ const pages: Record<string, React.ComponentType<never>> = {
     'Cms/Entries/Edit': EntryEdit,
     'Cms/Listing/Edit': ListingEdit,
     'Cms/Terms/Index': TermsIndex,
+    'Cms/TaxonomyIndex/Edit': TaxonomyIndexEdit,
     'Cms/Translations/Edit': TranslationsEdit,
     'Cms/Terms/Edit': TermEdit,
     'Cms/Globals/Edit': GlobalsEdit,

@@ -9,14 +9,15 @@ use Sunrice\Admin\Support\AppUrl;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Taxonomy;
+use Sunrice\Cms\Models\TaxonomyListing;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\Seo;
 use Sunrice\Cms\Support\SiteCache;
 
 /**
- * The sitemap's XML: every live entry page, term page and listing page
- * with its other languages, but those that ask not to be indexed, built in
+ * The sitemap's XML: every live entry page, term page, listing page and
+ * taxonomy index page with its other languages, but those that ask not to be indexed, built in
  * chunks (never all at once) and kept in the cache's sitemap area, in
  * files of at most LIMIT addresses: one file when they fit, else an index
  * of /sitemap-{n}.xml files. Its addresses are on APP_URL (AppUrl), never
@@ -164,14 +165,57 @@ final class Sitemap
                 yield '<url><loc>'.e(AppUrl::url((string) $collection->listingUrl($locale))).'</loc>'.$links.'</url>';
             }
         }
+        // Taxonomies' index pages, shared and in collections, in every language, but those that ask not to be indexed.
+        foreach ($this->indexPages() as [$taxonomy, $collection]) {
+            $links = self::links(Seo::indexAlternates($taxonomy, $collection));
+            foreach (Locales::all() as $locale) {
+                if (! self::indexNoindex($taxonomy, $collection, $locale) && ($url = $taxonomy->indexUrl($locale, $collection)) !== null) {
+                    yield '<url><loc>'.e(AppUrl::url($url)).'</loc>'.$links.'</url>';
+                }
+            }
+        }
+    }
+
+    /**
+     * Every taxonomy index page that's on: the shared ones (collection
+     * null) and collections' (in id order).
+     *
+     * @return list<array{0: Taxonomy, 1: Collection|null}>
+     */
+    private function indexPages(): array
+    {
+        $indexes = app(Site::class)->collectionIndexes();
+        $taxonomies = Taxonomy::query()->with('listings')->where(fn ($q) => $q->whereNotNull('index_route')->orWhereIn('id', array_keys($indexes)))->orderBy('id')->get();
+        $collections = Collection::query()->whereIn('id', array_merge([], ...array_map(array_keys(...), array_values($indexes))))->get()->keyBy('id');
+        $pages = [];
+        foreach ($taxonomies as $taxonomy) {
+            if ($taxonomy->index_route !== null) {
+                $pages[] = [$taxonomy, null];
+            }
+            foreach (array_keys($indexes[$taxonomy->id] ?? []) as $id) {
+                if (($collection = $collections->get($id)) instanceof Collection) {
+                    $pages[] = [$taxonomy, $collection];
+                }
+            }
+        }
+
+        return $pages;
+    }
+
+    /** Whether an index page asks not to be indexed in a language (its SEO card). */
+    private static function indexNoindex(Taxonomy $taxonomy, ?Collection $collection, string $locale): bool
+    {
+        $seo = $taxonomy->listings->first(fn (TaxonomyListing $listing): bool => $listing->locale === $locale && $listing->collection_id === $collection?->id)?->data[Seo::KEY] ?? null;
+
+        return is_array($seo) && ($seo['noindex'] ?? false) === true;
     }
 
     /**
      * The sitemap's pages, one language each (all, or `$locale`), as full
      * addresses on APP_URL with their collection's handle (null for term
      * pages): what the page cache preloads (PreloadCache). Entry pages,
-     * term pages and listing pages (their first page), but those that ask
-     * not to be indexed.
+     * term pages, listing pages (their first page) and taxonomy index
+     * pages, but those that ask not to be indexed.
      *
      * @return Generator<int, array{url: string, collection: string|null}>
      */
@@ -205,6 +249,13 @@ final class Sitemap
             foreach (Locales::all() as $code) {
                 if (($locale === null || $locale === $code) && ($url = $collection->listingUrl($code)) !== null) {
                     yield ['url' => AppUrl::url($url), 'collection' => $collection->handle];
+                }
+            }
+        }
+        foreach ($this->indexPages() as [$taxonomy, $collection]) {
+            foreach (Locales::all() as $code) {
+                if (($locale === null || $locale === $code) && ! self::indexNoindex($taxonomy, $collection, $code) && ($url = $taxonomy->indexUrl($code, $collection)) !== null) {
+                    yield ['url' => AppUrl::url($url), 'collection' => $collection?->handle];
                 }
             }
         }

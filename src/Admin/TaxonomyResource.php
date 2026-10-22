@@ -102,15 +102,29 @@ final class TaxonomyResource extends Resource
                 Select::make('blueprint')->label('Term fields')->span(2)
                     ->verbatim()->options(BlueprintChoices::options(BlueprintChoices::CONTENT))
                     ->help('Extra fields for each term, like a description or an image.'),
+                Select::make('index_blueprint')->label('Index page fields')->span(2)->placeholder('None (no editable fields)')
+                    ->verbatim()->options(BlueprintChoices::options(BlueprintChoices::CONTENT, 'index_blueprint'))
+                    ->help('Gives its index pages (the shared one, and each collection\'s) their own fields, such as an intro. Editors fill them in under Terms → ⋮ → Index page.')
+                    ->helpDetails('Which file?', TemplateHelp::files(['cms.taxonomy-{handle}-index', 'cms.taxonomy-index'])."\n".__('In a collection, :file is tried first.', ['file' => '`cms/{collection}/{handle}-index.blade.php`']))
+                    ->links([
+                        Link::make('Create blueprint', route('sunrice.admin.cms.blueprints.create', [], false))->showUnless('index_blueprint'),
+                        Link::make('Edit', route('sunrice.admin.cms.blueprints.index', [], false).'/{index_blueprint}/edit')->showWhen('index_blueprint'),
+                    ]),
             ]),
-            Section::make('Term pages in collections')->description('Each collection it groups can have a page per term listing only that collection\'s entries, like /books/tags/featured.')->columns(2)
+            Section::make('Term pages in collections')->description('Each collection it groups can have a page per term listing only that collection\'s entries, like /books/tags/featured, and an index page of the terms its entries have, like /books/tags.')->columns(2)
                 ->schema(self::collectionTermFields()),
-            Section::make('Shared term pages')->description('A page per term listing its entries from every collection, like /tags/featured.')->columns(2)
+            Section::make('Shared term pages')->description('A page per term listing its entries from every collection, like /tags/featured, and an index page of all its terms, like /tags.')->columns(2)
                 ->links(function (?Model $taxonomy): array {
                     $term = $taxonomy instanceof Taxonomy && $taxonomy->route !== null ? $taxonomy->terms()->with('translations')->orderBy('id')->first() : null;
                     $url = $term?->url(Locales::default());
+                    $index = $taxonomy instanceof Taxonomy && $taxonomy->index_route !== null ? $taxonomy->indexUrl(Locales::default()) : null;
 
-                    return $url !== null ? [Link::make('View a term page', $url)->newTab()->showWhen('pages')] : [];
+                    return array_values(array_filter([
+                        $url !== null ? Link::make('View a term page', $url)->newTab()->showWhen('pages') : null,
+                        $index !== null ? Link::make('View the index page', $index)->newTab()->showWhen('index') : null,
+                        $taxonomy instanceof Taxonomy && $taxonomy->index_route !== null
+                            ? Link::make('Edit index page', route('sunrice.admin.cms.taxonomies.index-page.edit', $taxonomy->handle, false))->showWhen('index') : null,
+                    ]));
                 })
                 ->schema([
                     Toggle::make('pages')->label('Shared term pages')->default(false)->span(2)
@@ -130,6 +144,19 @@ final class TaxonomyResource extends Resource
 
                             return $url !== null ? [Link::make('View a term page', $url)->newTab()->showWhen('pages')] : [];
                         })),
+                    Toggle::make('index')->label('Shared index page')->default(false)->span(2)
+                        ->help('A page listing all its terms, each linking to its page, like /tags.')
+                        ->loadUsing(fn (Model $taxonomy): bool => $taxonomy->getAttribute('index_route') !== null)
+                        ->saveUsing(fn (Model $taxonomy, mixed $on) => $taxonomy instanceof Taxonomy ? CollectionResource::switchPage($taxonomy, 'index_route', $on, '/'.str_replace('_', '-', $taxonomy->handle)) : null),
+                    RouteInput::make('index_route')->language(null, 'index_route')->label('Shared index page URL')->placeholder('/{handle}')->unique()->span(2)->showWhen('index')
+                        ->rules([CollectionResource::LISTING_ROUTE])
+                        ->help('Like /tags. Empty: /{handle}.'),
+                    ...TranslatedFields::routes('index_route', fn (RouteInput $input, string $code, string $language) => $input
+                        ->label(__('Shared index page URL in :language', ['language' => $language]))->placeholderFrom('index_route', '/{handle}')->span(2)->showWhen('index')
+                        ->rules([CollectionResource::LISTING_ROUTE])
+                        ->help(__('Its own address in :language, like /tag. Empty: the index page URL under :prefix.', ['language' => $language, 'prefix' => Locales::prefix($code) ?: '/']))
+                        ->links(fn (?Model $taxonomy): array => $taxonomy instanceof Taxonomy && $taxonomy->index_route !== null && ($url = $taxonomy->indexUrl($code)) !== null
+                            ? [Link::make('View on site', $url)->newTab()->showWhen('index')] : [])),
                     TextInput::make('template')->label('Term page template')->placeholder('cms.topic')->span(2)
                         ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
                         ->help('For shared and collections\' term pages. Empty: the first template that exists. A term can choose its own on its page.')
@@ -198,6 +225,77 @@ final class TaxonomyResource extends Resource
                         }
                     });
             }
+            array_push($fields, ...self::collectionIndexFields($collection, $pivot));
+        }
+
+        return $fields;
+    }
+
+    /**
+     * For a collection, shown while it's ticked: whether this taxonomy has
+     * an index page in it, and its URL (and each other language's),
+     * stored on the attachment (CollectionTaxonomy).
+     *
+     * @param  \Closure(Model): ?CollectionTaxonomy  $pivot
+     * @return list<Field>
+     */
+    private static function collectionIndexFields(Collection $collection, \Closure $pivot): array
+    {
+        $id = (string) $collection->id;
+        $example = CollectionTaxonomy::defaultIndexPath($collection, new Taxonomy(['handle' => '{handle}']));
+        $fields = [Toggle::make("index_page_{$id}")->label(__('Index page in :collection', ['collection' => $collection->title]))->span(2)->showWhen('collections', $id)
+            ->help(__('A page listing the terms :collection\'s entries have, like :url.', ['collection' => $collection->title, 'url' => $example]))
+            ->loadUsing(fn (Model $taxonomy): bool => ($p = $pivot($taxonomy)) instanceof CollectionTaxonomy ? $p->index_page : true)
+            ->saveUsing(fn (Model $taxonomy, mixed $on) => self::savePivot($taxonomy, $collection, ['index_page' => filter_var($on, FILTER_VALIDATE_BOOL)]))];
+        foreach (Locales::names() as $code => $language) {
+            $main = $code === Locales::default();
+            $field = $main ? "index_route_{$id}" : 'index_route_'.$id.'_'.preg_replace('/[^A-Za-z0-9]/', '_', $code);
+            $fields[] = TextInput::make($field)->span(2)->showWhen('collections', $id)
+                ->label($main ? __(':collection: index page URL', ['collection' => $collection->title]) : __(':collection: index page URL in :language', ['collection' => $collection->title, 'language' => $language]))
+                ->placeholder($main ? '{listing}/{handle}' : '')
+                ->rules(['nullable', 'string', 'max:255', CollectionResource::LISTING_ROUTE])
+                ->help($main ? __('Empty: under :collection\'s listing page, like :url.', ['collection' => $collection->title, 'url' => $example])
+                    : __('Its own address in :language. Empty: the one above, else under :collection\'s listing page there.', ['language' => $language, 'collection' => $collection->title]))
+                ->links(function (?Model $taxonomy) use ($collection, $code, $pivot): array {
+                    // From the attachment as stored (the site's routes may be cached).
+                    $p = $taxonomy instanceof Taxonomy ? $pivot($taxonomy) : null;
+                    $url = $p !== null && $p->index_page ? url(Locales::prefix($code).$p->indexPath($collection, $taxonomy, $code)) : null;
+
+                    return array_values(array_filter([
+                        $url !== null ? Link::make('View on site', $url)->newTab() : null,
+                        $url !== null && $code === Locales::default()
+                            ? Link::make('Edit index page', route('sunrice.admin.cms.taxonomies.index-page.edit', ['taxonomy' => $taxonomy->handle, 'collection' => $collection->handle], false)) : null,
+                    ]));
+                })
+                ->loadUsing(function (Model $taxonomy) use ($pivot, $main, $code): ?string {
+                    $p = $pivot($taxonomy);
+
+                    return $p === null ? null : ($main ? $p->index_route : ($p->index_routes[$code] ?? null));
+                })
+                ->saveUsing(function (Model $taxonomy, mixed $value) use ($collection, $main, $code, $field): void {
+                    $value = is_string($value) && trim($value) !== '' ? trim($value) : null;
+                    if (! $taxonomy instanceof Taxonomy) {
+                        return;
+                    }
+                    $p = $taxonomy->collections()->whereKey($collection->id)->first()?->getRelation('pivot');
+                    if (! $p instanceof CollectionTaxonomy) {
+                        return;
+                    }
+                    if ($value !== null && $p->index_page && ($other = RouteConflicts::forIndexPage($collection, $taxonomy, $code, $value)) !== null) {
+                        throw ValidationException::withMessages([$field => __(':title has this URL in :language already.', ['title' => $other, 'language' => Locales::name($code)])]);
+                    }
+                    if ($main) {
+                        self::savePivot($taxonomy, $collection, ['index_route' => $value]);
+                    } else {
+                        $own = $p->index_routes ?? [];
+                        if ($value === null) {
+                            unset($own[$code]);
+                        } else {
+                            $own[$code] = $value;
+                        }
+                        self::savePivot($taxonomy, $collection, ['index_routes' => $own === [] ? null : $own]);
+                    }
+                });
         }
 
         return $fields;

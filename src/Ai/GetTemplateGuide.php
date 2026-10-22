@@ -26,6 +26,7 @@ The site's templates are Blade views in `resources/views/cms/` (view names `cms.
 - Entry: the entry's own template (its Page settings) → the collection's `template` → `cms.{collection}` → `cms.entry` → `sunrice-cms::entry`.
 - Listing page: `cms.{collection}-listing` → `cms.listing` → `sunrice-cms::listing`.
 - Term page: the term's own template → the taxonomy's `template` → `cms.taxonomy-{taxonomy}` → `cms.term` → `sunrice-cms::term`.
+- Taxonomy index page (its terms): in a collection `cms.{collection}.{taxonomy}-index` → `cms.taxonomy-{taxonomy}-index` → `cms.taxonomy-index` → `sunrice-cms::taxonomy-index`.
 - Search page: `cms.search` → `sunrice-cms::search`. The homepage (Settings → Site) is an entry.
 
 So: one design for every entry of a collection: `{collection}.blade.php`; one page of its own: `pages/landing.blade.php`, then set the entry's template to `cms.pages.landing`. Own templates must start with `cms.`.
@@ -35,6 +36,7 @@ So: one design for every entry of a collection: `{collection}.blade.php`; one pa
 - Entries: `$entry` (the EntryTranslation: `->title`, `->url()`, `->published_at`, `->entry->collection`), `$title`, `$values` (fields by handle, ready for templates), `$richText` (handles of rich text fields), `$collection`, `$locale`, `$preview`.
 - Listing pages: `$collection`, `$entries` (a paginator: `{{ $entries->links() }}`), `$values`, `$richText`, `$title`, `$locale`, `$url`.
 - Term pages: `$term`, `$taxonomy`, `$entries` (paginator), `$values`, `$richText`, `$title`, `$locale`.
+- Taxonomy index pages: `$taxonomy`, `$collection` (null on the shared one), `$terms` (each `->title($locale)`, `->url($locale)`, `->entries_count`), `$values`, `$richText`, `$title`, `$locale`, `$url`.
 - Search: `$query`, `$results` (paginator), `$title`, `$locale`.
 
 ## In the layout
@@ -70,7 +72,7 @@ MD;
             'current' => Templates::map(),
             'templates' => Templates::files(),
             // Not GLOB_BRACE: some PHP builds (musl, Alpine) don't have it.
-            'defaults' => array_values(array_filter(['entry.blade.php', 'listing.blade.php', 'term.blade.php', 'search.blade.php'], fn (string $file): bool => is_file(dirname(__DIR__, 2).'/resources/views/'.$file))),
+            'defaults' => array_values(array_filter(['entry.blade.php', 'listing.blade.php', 'term.blade.php', 'taxonomy-index.blade.php', 'search.blade.php'], fn (string $file): bool => is_file(dirname(__DIR__, 2).'/resources/views/'.$file))),
             'can_write' => $writable = Templates::writable($this->user()),
             // Why not, since cms_write_template isn't listed then.
             'write_note' => $writable ? null : 'cms_write_template is only for super admins, on sites that allow it (sunrice-cms.ai.templates, SUNRICE_AI_TEMPLATES=true): templates run code on the server. Suggest the change to a developer instead.',

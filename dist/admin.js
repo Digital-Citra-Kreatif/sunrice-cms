@@ -1,36 +1,36 @@
-const Bs = globalThis.Sunrice;
-if (!Bs) throw new Error("[sunrice] This bundle needs the Sunrice admin panel (window.Sunrice is missing).");
-const e = Bs.modules["react/jsx-runtime"], Ls = globalThis.Sunrice;
+const Ls = globalThis.Sunrice;
 if (!Ls) throw new Error("[sunrice] This bundle needs the Sunrice admin panel (window.Sunrice is missing).");
-const $ = Ls.modules["@inertiajs/react"], hs = 3;
-function es() {
+const e = Ls.modules["react/jsx-runtime"], Is = globalThis.Sunrice;
+if (!Is) throw new Error("[sunrice] This bundle needs the Sunrice admin panel (window.Sunrice is missing).");
+const C = Is.modules["@inertiajs/react"], xs = 3;
+function ts() {
   const s = globalThis.Sunrice;
   if (!s)
     throw new Error("[sunrice] This script runs outside the Sunrice admin panel (window.Sunrice is missing).");
   return s;
 }
-function Ta(s) {
-  const a = es();
-  if (a.version !== hs)
-    throw new Error(`[sunrice] This plugin was built for admin runtime ${hs}, but the panel runs ${a.version}. Rebuild it with a matching @imajiner/admin-sdk.`);
+function La(s) {
+  const a = ts();
+  if (a.version !== xs)
+    throw new Error(`[sunrice] This plugin was built for admin runtime ${xs}, but the panel runs ${a.version}. Rebuild it with a matching @imajiner/admin-sdk.`);
   for (const [l, c] of Object.entries(s.pages ?? {}))
     a.registerPage(l, c);
 }
 function t(s, a = {}) {
-  return es().t(s, a);
+  return ts().t(s, a);
 }
-function A(s = "") {
-  return es().adminUrl(s);
+function I(s = "") {
+  return ts().adminUrl(s);
 }
-function te(s) {
+function ae(s) {
   return { draft: t("Draft"), scheduled: t("Scheduled"), published: t("Published") }[s];
 }
-function U(s, a) {
+function q(s, a) {
   if (!s) return "—";
   const l = new Date(s);
   return Number.isNaN(l.getTime()) ? "—" : l.toLocaleString(document.documentElement.lang || void 0, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 }
-function za(s, a = /* @__PURE__ */ new Date()) {
+function Ia(s, a = /* @__PURE__ */ new Date()) {
   const l = s ? new Date(s) : null;
   if (l && !Number.isNaN(l.getTime()) && l > a) return l;
   const c = new Date(a);
@@ -40,51 +40,51 @@ function As(s) {
   const a = (l) => String(l).padStart(2, "0");
   return `${s.getFullYear()}-${a(s.getMonth() + 1)}-${a(s.getDate())}T${a(s.getHours())}:${a(s.getMinutes())}`;
 }
-function Ma(s, a, l, c = Date.now()) {
+function Aa(s, a, l, c = Date.now()) {
   const i = a === "" ? null : new Date(a);
   if (i === null || Number.isNaN(i.getTime())) return { action: "now", at: null };
   const r = (m) => Math.floor(m / 6e4), d = l ? new Date(l).getTime() : null;
   if (s !== "draft" && d !== null && r(d) === r(i.getTime())) return { action: "now", at: null };
-  const h = i.toISOString();
-  return i.getTime() > c ? { action: "schedule", at: h } : { action: s === "draft" ? "backdate" : "redate", at: h };
+  const u = i.toISOString();
+  return i.getTime() > c ? { action: "schedule", at: u } : { action: s === "draft" ? "backdate" : "redate", at: u };
 }
-let Ye = {};
-function Ba(s) {
-  Ye = s ?? {};
+let Qe = {};
+function Ea(s) {
+  Qe = s ?? {};
 }
-function O(s, a) {
-  if (a === void 0 && Ye[s]) return Ye[s];
+function V(s, a) {
+  if (a === void 0 && Qe[s]) return Qe[s];
   try {
     return new Intl.DisplayNames(a ? [a] : void 0, { type: "language" }).of(s.replace("_", "-")) ?? s;
   } catch {
     return s;
   }
 }
-function xs(s) {
+function ps(s) {
   return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
-function La(s, a, l, c) {
-  const i = xs(a), r = s === i || s.startsWith(`${i}-`) && /^\d+$/.test(s.slice(i.length + 1));
-  return c && i !== "" && r ? xs(l) : s;
+function Fa(s, a, l, c) {
+  const i = ps(a), r = s === i || s.startsWith(`${i}-`) && /^\d+$/.test(s.slice(i.length + 1));
+  return c && i !== "" && r ? ps(l) : s;
 }
-function Is(s, a, l) {
+function Es(s, a, l) {
   return !s || a.trim() === "" || a.trim() === s ? null : l ? "redirects" : "breaks";
 }
-const Es = globalThis.Sunrice;
-if (!Es) throw new Error("[sunrice] This bundle needs the Sunrice admin panel (window.Sunrice is missing).");
-const T = Es.modules.react;
-const Aa = (s) => s?.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
-function Ia(s, a, l = []) {
+const Fs = globalThis.Sunrice;
+if (!Fs) throw new Error("[sunrice] This bundle needs the Sunrice admin panel (window.Sunrice is missing).");
+const M = Fs.modules.react;
+const Pa = (s) => s?.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+function Ha(s, a, l = []) {
   if (a == null)
     throw new Error("[lucide]: iconNode is required when icon name is used");
   return {
-    name: Aa(s),
+    name: Pa(s),
     size: 24,
     node: a,
     ...l.length > 0 ? { aliases: l } : {}
   };
 }
-const Ea = (s) => {
+const Oa = (s) => {
   let a = "", l = !1;
   for (const c of s) {
     if (c === "-" || c === "_" || c <= " ") {
@@ -95,12 +95,12 @@ const Ea = (s) => {
   }
   return a;
 };
-const Fa = (s) => {
-  const a = Ea(s);
+const Va = (s) => {
+  const a = Oa(s);
   return a.charAt(0).toUpperCase() + a.slice(1);
 };
-const Je = (...s) => s.filter((a, l, c) => !!a && a.trim() !== "" && c.indexOf(a) === l).join(" ").trim();
-const re = {
+const Ze = (...s) => s.filter((a, l, c) => !!a && a.trim() !== "" && c.indexOf(a) === l).join(" ").trim();
+const oe = {
   xmlns: "http://www.w3.org/2000/svg",
   width: 24,
   height: 24,
@@ -111,26 +111,26 @@ const re = {
   "stroke-linecap": "round",
   "stroke-linejoin": "round"
 };
-function Ie(s) {
+function Fe(s) {
   return s != null;
 }
-function Ha(s, a = {}) {
-  const l = a.attributeNames ?? {}, c = (u) => l[u] ?? u, i = s.size ?? s.width ?? re.width, r = s.size ?? s.height ?? re.height, d = s.aliases?.filter((u) => typeof u == "string" && u.trim() !== "").map((u) => `lucide-${u}`) ?? [], h = [...s.name ? [`lucide-${s.name}`] : [], ...d], m = a.className?.split(" ").filter(Boolean) ?? [], o = a.includeDefaultClasses === !1 ? Je(...m) : Je("lucide", ...h, ...m), g = a.absoluteStrokeWidth ? Number(a.strokeWidth ?? re["stroke-width"]) * Number(s.size ?? s.width ?? re.width) / Number(a.size ?? a.width ?? re.width) : a.strokeWidth ?? re["stroke-width"];
+function Ra(s, a = {}) {
+  const l = a.attributeNames ?? {}, c = (h) => l[h] ?? h, i = s.size ?? s.width ?? oe.width, r = s.size ?? s.height ?? oe.height, d = s.aliases?.filter((h) => typeof h == "string" && h.trim() !== "").map((h) => `lucide-${h}`) ?? [], u = [...s.name ? [`lucide-${s.name}`] : [], ...d], m = a.className?.split(" ").filter(Boolean) ?? [], o = a.includeDefaultClasses === !1 ? Ze(...m) : Ze("lucide", ...u, ...m), g = a.absoluteStrokeWidth ? Number(a.strokeWidth ?? oe["stroke-width"]) * Number(s.size ?? s.width ?? oe.width) / Number(a.size ?? a.width ?? oe.width) : a.strokeWidth ?? oe["stroke-width"];
   return [
     "svg",
     {
-      ...Object.entries(re).reduce((u, [v, y]) => (u[c(v)] = y, u), {}),
+      ...Object.entries(oe).reduce((h, [b, v]) => (h[c(b)] = v, h), {}),
       ..."color" in a && a.color && {
         [c("stroke")]: a.color
       },
-      ..."size" in a && Ie(a.size) && {
+      ..."size" in a && Fe(a.size) && {
         [c("width")]: a.size,
         [c("height")]: a.size
       },
-      ..."width" in a && Ie(a.width) && {
+      ..."width" in a && Fe(a.width) && {
         [c("width")]: a.width
       },
-      ..."height" in a && Ie(a.height) && {
+      ..."height" in a && Fe(a.height) && {
         [c("height")]: a.height
       },
       [c("stroke-width")]: g,
@@ -143,14 +143,14 @@ function Ha(s, a = {}) {
       } : {},
       ..."attributes" in a && a.attributes
     },
-    s.node.map((u) => {
-      const [v, y, f] = u, j = a.nonScalingStroke ? { [c("vector-effect")]: "non-scaling-stroke", ...y } : y;
-      return f ? [v, j, f] : [v, j];
+    s.node.map((h) => {
+      const [b, v, f] = h, j = a.nonScalingStroke ? { [c("vector-effect")]: "non-scaling-stroke", ...v } : v;
+      return f ? [b, j, f] : [b, j];
     })
   ];
 }
-function Pa(s, a = {}) {
-  return Ha(s, {
+function Ua(s, a = {}) {
+  return Ra(s, {
     ...a,
     attributeNames: {
       ...a.attributeNames,
@@ -162,12 +162,12 @@ function Pa(s, a = {}) {
     }
   });
 }
-const Oa = (s) => {
+const qa = (s) => {
   for (const a in s)
     if (a.startsWith("aria-") || a === "role" || a === "title")
       return !0;
   return !1;
-}, Va = T.createContext({}), Ra = () => T.useContext(Va), Ua = T.forwardRef(
+}, Ka = M.createContext({}), Wa = () => M.useContext(Ka), Ga = M.forwardRef(
   ({
     color: s,
     size: a,
@@ -176,7 +176,7 @@ const Oa = (s) => {
     strokeWidth: i,
     absoluteStrokeWidth: r,
     nonScalingStroke: d,
-    className: h = "",
+    className: u = "",
     children: m,
     iconNode: o = [],
     icon: g = {
@@ -185,50 +185,50 @@ const Oa = (s) => {
       size: 24
     },
     ...x
-  }, u) => {
+  }, h) => {
     const {
-      size: v = 24,
-      strokeWidth: y = 2,
+      size: b = 24,
+      strokeWidth: v = 2,
       absoluteStrokeWidth: f = !1,
       nonScalingStroke: j = !1,
-      color: C = "currentColor",
-      className: _ = ""
-    } = Ra() ?? {}, b = !!m || Oa(x), [p, M, S = []] = Pa(g, {
-      color: s ?? C,
-      width: l ?? a ?? v,
-      height: c ?? a ?? v,
-      strokeWidth: i ?? y,
+      color: _ = "currentColor",
+      className: T = ""
+    } = Wa() ?? {}, y = !!m || qa(x), [p, z, k = []] = Ua(g, {
+      color: s ?? _,
+      width: l ?? a ?? b,
+      height: c ?? a ?? b,
+      strokeWidth: i ?? v,
       absoluteStrokeWidth: r ?? f,
       nonScalingStroke: d ?? j,
-      className: Je(_, h),
-      hasA11yProp: b,
+      className: Ze(T, u),
+      hasA11yProp: y,
       attributes: x
     });
-    return T.createElement(
+    return M.createElement(
       p,
       {
-        ref: u,
-        ...M
+        ref: h,
+        ...z
       },
       [
-        ...S.map(([B, w]) => T.createElement(B, w)),
+        ...k.map(([F, L]) => M.createElement(F, L)),
         ...Array.isArray(m) ? m : [m]
       ]
     );
   }
 );
 function E(s, a = [], l = []) {
-  const c = typeof s == "string" ? Ia(s, a, l) : s, i = T.forwardRef(
-    ({ className: r, ...d }, h) => T.createElement(Ua, {
-      ref: h,
+  const c = typeof s == "string" ? Ha(s, a, l) : s, i = M.forwardRef(
+    ({ className: r, ...d }, u) => M.createElement(Ga, {
+      ref: u,
       icon: c,
       className: r,
       ...d
     })
   );
-  return c.name && (i.displayName = Fa(c.name)), i;
+  return c.name && (i.displayName = Va(c.name)), i;
 }
-const Fs = {
+const Ps = {
   name: "arrow-down",
   size: 24,
   node: [
@@ -236,9 +236,9 @@ const Fs = {
     ["path", { d: "m19 12-7 7-7-7", key: "1idqje" }]
   ]
 };
-Fs.node;
-const Hs = E(Fs);
-const Ps = {
+Ps.node;
+const Hs = E(Ps);
+const Os = {
   name: "arrow-up-down",
   size: 24,
   node: [
@@ -248,9 +248,9 @@ const Ps = {
     ["path", { d: "M7 4v16", key: "1glfcx" }]
   ]
 };
-Ps.node;
-const Os = E(Ps);
-const Vs = {
+Os.node;
+const Vs = E(Os);
+const Rs = {
   name: "arrow-up",
   size: 24,
   node: [
@@ -258,9 +258,9 @@ const Vs = {
     ["path", { d: "M12 19V5", key: "x0mq9r" }]
   ]
 };
-Vs.node;
-const Rs = E(Vs);
-const Us = {
+Rs.node;
+const Us = E(Rs);
+const qs = {
   name: "blocks",
   size: 24,
   node: [
@@ -274,9 +274,9 @@ const Us = {
     ["rect", { x: "14", y: "2", width: "8", height: "8", rx: "1", key: "88lufb" }]
   ]
 };
-Us.node;
-const qa = E(Us);
-const qs = {
+qs.node;
+const Ja = E(qs);
+const Ks = {
   name: "calendar-clock",
   size: 24,
   node: [
@@ -288,9 +288,9 @@ const qs = {
     ["circle", { cx: "16", cy: "16", r: "6", key: "qoo3c4" }]
   ]
 };
-qs.node;
-const Qe = E(qs);
-const Ks = {
+Ks.node;
+const Xe = E(Ks);
+const Ws = {
   name: "calendar",
   size: 24,
   node: [
@@ -300,37 +300,37 @@ const Ks = {
     ["path", { d: "M3 9h18", key: "1pudct" }]
   ]
 };
-Ks.node;
-const Ka = E(Ks);
-const Ws = {
+Ws.node;
+const Ya = E(Ws);
+const Gs = {
   name: "check",
   size: 24,
   node: [["path", { d: "M20 6 9 17l-5-5", key: "1gmf2c" }]]
 };
-Ws.node;
-const fe = E(Ws);
-const Gs = {
+Gs.node;
+const be = E(Gs);
+const Js = {
   name: "chevron-down",
   size: 24,
   node: [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]]
 };
-Gs.node;
-const Ys = E(Gs);
-const Js = {
+Js.node;
+const Ys = E(Js);
+const Qs = {
   name: "chevron-left",
   size: 24,
   node: [["path", { d: "m15 18-6-6 6-6", key: "1wnfg3" }]]
 };
-Js.node;
-const ss = E(Js);
-const Qs = {
+Qs.node;
+const as = E(Qs);
+const Zs = {
   name: "chevron-right",
   size: 24,
   node: [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]]
 };
-Qs.node;
-const ve = E(Qs);
-const Zs = {
+Zs.node;
+const Ne = E(Zs);
+const Xs = {
   name: "chevrons-down-up",
   size: 24,
   node: [
@@ -338,9 +338,9 @@ const Zs = {
     ["path", { d: "m7 4 5 5 5-5", key: "1kwcof" }]
   ]
 };
-Zs.node;
-const Wa = E(Zs);
-const Xs = {
+Xs.node;
+const Qa = E(Xs);
+const et = {
   name: "chevrons-up-down",
   size: 24,
   node: [
@@ -348,9 +348,9 @@ const Xs = {
     ["path", { d: "m7 9 5-5 5 5", key: "sgt6xg" }]
   ]
 };
-Xs.node;
-const Ga = E(Xs);
-const et = {
+et.node;
+const Za = E(et);
+const st = {
   name: "columns-3",
   size: 24,
   node: [
@@ -360,9 +360,9 @@ const et = {
   ],
   aliases: ["panels-left-right"]
 };
-et.node;
-const Ya = E(et);
-const st = {
+st.node;
+const Xa = E(st);
+const tt = {
   name: "copy",
   size: 24,
   node: [
@@ -370,9 +370,9 @@ const st = {
     ["path", { d: "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2", key: "zix9uf" }]
   ]
 };
-st.node;
-const tt = E(st);
-const at = {
+tt.node;
+const at = E(tt);
+const nt = {
   name: "download",
   size: 24,
   node: [
@@ -381,9 +381,9 @@ const at = {
     ["path", { d: "m7 10 5 5 5-5", key: "brsn70" }]
   ]
 };
-at.node;
-const nt = E(at);
-const lt = {
+nt.node;
+const lt = E(nt);
+const ct = {
   name: "ellipsis",
   size: 24,
   node: [
@@ -393,9 +393,9 @@ const lt = {
   ],
   aliases: ["more-horizontal"]
 };
-lt.node;
-const ct = E(lt);
-const rt = {
+ct.node;
+const rt = E(ct);
+const it = {
   name: "external-link",
   size: 24,
   node: [
@@ -404,9 +404,9 @@ const rt = {
     ["path", { d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6", key: "a6xqqp" }]
   ]
 };
-rt.node;
-const xe = E(rt);
-const it = {
+it.node;
+const ge = E(it);
+const ot = {
   name: "eye",
   size: 24,
   node: [
@@ -420,9 +420,9 @@ const it = {
     ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
   ]
 };
-it.node;
-const Ja = E(it);
-const ot = {
+ot.node;
+const en = E(ot);
+const dt = {
   name: "file-text",
   size: 24,
   node: [
@@ -439,9 +439,9 @@ const ot = {
     ["path", { d: "M16 17H8", key: "z1uh3a" }]
   ]
 };
-ot.node;
-const Qa = E(ot);
-const dt = {
+dt.node;
+const sn = E(dt);
+const mt = {
   name: "group",
   size: 24,
   node: [
@@ -453,9 +453,9 @@ const dt = {
     ["rect", { width: "7", height: "5", x: "10", y: "12", rx: "1", key: "1qlmkx" }]
   ]
 };
-dt.node;
-const Za = E(dt);
-const mt = {
+mt.node;
+const tn = E(mt);
+const ut = {
   name: "hash",
   size: 24,
   node: [
@@ -465,9 +465,9 @@ const mt = {
     ["line", { x1: "16", x2: "14", y1: "3", y2: "21", key: "weycgp" }]
   ]
 };
-mt.node;
-const Xa = E(mt);
-const ut = {
+ut.node;
+const an = E(ut);
+const ht = {
   name: "image",
   size: 24,
   node: [
@@ -476,9 +476,9 @@ const ut = {
     ["path", { d: "m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21", key: "1xmnt7" }]
   ]
 };
-ut.node;
-const en = E(ut);
-const ht = {
+ht.node;
+const nn = E(ht);
+const xt = {
   name: "inbox",
   size: 24,
   node: [
@@ -492,9 +492,9 @@ const ht = {
     ]
   ]
 };
-ht.node;
-const sn = E(ht);
-const xt = {
+xt.node;
+const ln = E(xt);
+const pt = {
   name: "languages",
   size: 24,
   node: [
@@ -506,9 +506,9 @@ const xt = {
     ["path", { d: "M14 18h6", key: "1m8k6r" }]
   ]
 };
-xt.node;
-const ps = E(xt);
-const pt = {
+pt.node;
+const gs = E(pt);
+const gt = {
   name: "layout-template",
   size: 24,
   node: [
@@ -517,9 +517,9 @@ const pt = {
     ["rect", { width: "5", height: "7", x: "16", y: "14", rx: "1", key: "q5h2i8" }]
   ]
 };
-pt.node;
-const gt = E(pt);
-const ft = {
+gt.node;
+const ft = E(gt);
+const jt = {
   name: "link-2",
   size: 24,
   node: [
@@ -528,9 +528,9 @@ const ft = {
     ["line", { x1: "8", x2: "16", y1: "12", y2: "12", key: "1jonct" }]
   ]
 };
-ft.node;
-const jt = E(ft);
-const bt = {
+jt.node;
+const bt = E(jt);
+const vt = {
   name: "list-indent-decrease",
   size: 24,
   node: [
@@ -541,9 +541,9 @@ const bt = {
   ],
   aliases: ["outdent", "indent-decrease"]
 };
-bt.node;
-const tn = E(bt);
-const vt = {
+vt.node;
+const cn = E(vt);
+const yt = {
   name: "list-indent-increase",
   size: 24,
   node: [
@@ -554,9 +554,22 @@ const vt = {
   ],
   aliases: ["indent", "indent-increase"]
 };
-vt.node;
-const an = E(vt);
-const yt = {
+yt.node;
+const rn = E(yt);
+const Nt = {
+  name: "list-tree",
+  size: 24,
+  node: [
+    ["path", { d: "M8 5h13", key: "1pao27" }],
+    ["path", { d: "M13 12h8", key: "h98zly" }],
+    ["path", { d: "M13 19h8", key: "c3s6r1" }],
+    ["path", { d: "M3 10a2 2 0 0 0 2 2h3", key: "1npucw" }],
+    ["path", { d: "M3 5v12a2 2 0 0 0 2 2h3", key: "x1gjn2" }]
+  ]
+};
+Nt.node;
+const on = E(Nt);
+const kt = {
   name: "list",
   size: 24,
   node: [
@@ -568,17 +581,17 @@ const yt = {
     ["path", { d: "M8 19h13", key: "m83p4d" }]
   ]
 };
-yt.node;
-const Nt = E(yt);
-const kt = {
+kt.node;
+const wt = E(kt);
+const St = {
   name: "loader-circle",
   size: 24,
   node: [["path", { d: "M21 12a9 9 0 1 1-6.219-8.56", key: "13zald" }]],
   aliases: ["loader-2"]
 };
-kt.node;
-const le = E(kt);
-const wt = {
+St.node;
+const ce = E(St);
+const Ct = {
   name: "message-square-reply",
   size: 24,
   node: [
@@ -593,9 +606,9 @@ const wt = {
     ["path", { d: "M17 14v-1a2 2 0 0 0-2-2H7", key: "1tkjnz" }]
   ]
 };
-wt.node;
-const St = E(wt);
-const Ct = {
+Ct.node;
+const $t = E(Ct);
+const _t = {
   name: "message-square",
   size: 24,
   node: [
@@ -608,9 +621,9 @@ const Ct = {
     ]
   ]
 };
-Ct.node;
-const nn = E(Ct);
-const $t = {
+_t.node;
+const dn = E(_t);
+const Dt = {
   name: "newspaper",
   size: 24,
   node: [
@@ -626,9 +639,9 @@ const $t = {
     ["rect", { width: "8", height: "4", x: "10", y: "6", rx: "1", key: "aywv1n" }]
   ]
 };
-$t.node;
-const ln = E($t);
-const _t = {
+Dt.node;
+const mn = E(Dt);
+const Tt = {
   name: "paperclip",
   size: 24,
   node: [
@@ -641,9 +654,9 @@ const _t = {
     ]
   ]
 };
-_t.node;
-const cn = E(_t);
-const Dt = {
+Tt.node;
+const un = E(Tt);
+const zt = {
   name: "pencil",
   size: 24,
   node: [
@@ -657,9 +670,9 @@ const Dt = {
     ["path", { d: "m15 5 4 4", key: "1mk7zo" }]
   ]
 };
-Dt.node;
-const Tt = E(Dt);
-const zt = {
+zt.node;
+const Mt = E(zt);
+const Bt = {
   name: "plus",
   size: 24,
   node: [
@@ -667,9 +680,9 @@ const zt = {
     ["path", { d: "M12 5v14", key: "s699le" }]
   ]
 };
-zt.node;
-const G = E(zt);
-const Mt = {
+Bt.node;
+const J = E(Bt);
+const Lt = {
   name: "puzzle",
   size: 24,
   node: [
@@ -682,9 +695,9 @@ const Mt = {
     ]
   ]
 };
-Mt.node;
-const rn = E(Mt);
-const Bt = {
+Lt.node;
+const hn = E(Lt);
+const It = {
   name: "repeat",
   size: 24,
   node: [
@@ -694,9 +707,9 @@ const Bt = {
     ["path", { d: "M21 13v1a4 4 0 0 1-4 4H3", key: "1rx37r" }]
   ]
 };
-Bt.node;
-const on = E(Bt);
-const Lt = {
+It.node;
+const xn = E(It);
+const At = {
   name: "rotate-ccw",
   size: 24,
   node: [
@@ -704,9 +717,9 @@ const Lt = {
     ["path", { d: "M3 3v5h5", key: "1xhq8a" }]
   ]
 };
-Lt.node;
-const je = E(Lt);
-const At = {
+At.node;
+const ve = E(At);
+const Et = {
   name: "search",
   size: 24,
   node: [
@@ -714,9 +727,9 @@ const At = {
     ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
   ]
 };
-At.node;
-const ye = E(At);
-const It = {
+Et.node;
+const ke = E(Et);
+const Ft = {
   name: "send",
   size: 24,
   node: [
@@ -730,9 +743,9 @@ const It = {
     ["path", { d: "m21.854 2.147-10.94 10.939", key: "12cjpa" }]
   ]
 };
-It.node;
-const dn = E(It);
-const Et = {
+Ft.node;
+const pn = E(Ft);
+const Pt = {
   name: "settings-2",
   size: 24,
   node: [
@@ -742,9 +755,9 @@ const Et = {
     ["circle", { cx: "7", cy: "7", r: "3", key: "dfmy0x" }]
   ]
 };
-Et.node;
-const ts = E(Et);
-const Ft = {
+Pt.node;
+const Ie = E(Pt);
+const Ht = {
   name: "shapes",
   size: 24,
   node: [
@@ -759,9 +772,9 @@ const Ft = {
     ["circle", { cx: "17.5", cy: "17.5", r: "3.5", key: "w3z12y" }]
   ]
 };
-Ft.node;
-const mn = E(Ft);
-const Ht = {
+Ht.node;
+const gn = E(Ht);
+const Ot = {
   name: "shield-alert",
   size: 24,
   node: [
@@ -776,9 +789,9 @@ const Ht = {
     ["path", { d: "M12 16h.01", key: "1drbdi" }]
   ]
 };
-Ht.node;
-const Ze = E(Ht);
-const Pt = {
+Ot.node;
+const es = E(Ot);
+const Vt = {
   name: "tag",
   size: 24,
   node: [
@@ -792,9 +805,9 @@ const Pt = {
     ["circle", { cx: "7.5", cy: "7.5", r: ".5", fill: "currentColor", key: "kqv944" }]
   ]
 };
-Pt.node;
-const un = E(Pt);
-const Ot = {
+Vt.node;
+const fn = E(Vt);
+const Rt = {
   name: "tags",
   size: 24,
   node: [
@@ -812,9 +825,9 @@ const Ot = {
     ["circle", { cx: "10.5", cy: "6.5", r: ".5", fill: "currentColor", key: "12ikhr" }]
   ]
 };
-Ot.node;
-const hn = E(Ot);
-const Vt = {
+Rt.node;
+const Ut = E(Rt);
+const qt = {
   name: "text-align-start",
   size: 24,
   node: [
@@ -824,9 +837,9 @@ const Vt = {
   ],
   aliases: ["text", "align-left"]
 };
-Vt.node;
-const xn = E(Vt);
-const Rt = {
+qt.node;
+const jn = E(qt);
+const Kt = {
   name: "toggle-left",
   size: 24,
   node: [
@@ -834,9 +847,9 @@ const Rt = {
     ["rect", { width: "20", height: "14", x: "2", y: "5", rx: "7", key: "g7kal2" }]
   ]
 };
-Rt.node;
-const pn = E(Rt);
-const Ut = {
+Kt.node;
+const bn = E(Kt);
+const Wt = {
   name: "trash",
   size: 24,
   node: [
@@ -848,9 +861,9 @@ const Ut = {
   ],
   aliases: ["trash-2"]
 };
-Ut.node;
-const q = E(Ut);
-const qt = {
+Wt.node;
+const K = E(Wt);
+const Gt = {
   name: "triangle-alert",
   size: 24,
   node: [
@@ -866,9 +879,9 @@ const qt = {
   ],
   aliases: ["alert-triangle"]
 };
-qt.node;
-const gn = E(qt);
-const Kt = {
+Gt.node;
+const vn = E(Gt);
+const Jt = {
   name: "type",
   size: 24,
   node: [
@@ -877,9 +890,9 @@ const Kt = {
     ["path", { d: "M9 20h6", key: "s66wpe" }]
   ]
 };
-Kt.node;
-const fn = E(Kt);
-const Wt = {
+Jt.node;
+const yn = E(Jt);
+const Yt = {
   name: "undo-2",
   size: 24,
   node: [
@@ -887,9 +900,9 @@ const Wt = {
     ["path", { d: "M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11", key: "f3b9sd" }]
   ]
 };
-Wt.node;
-const ze = E(Wt);
-const Gt = {
+Yt.node;
+const Me = E(Yt);
+const Qt = {
   name: "x",
   size: 24,
   node: [
@@ -897,18 +910,18 @@ const Gt = {
     ["path", { d: "m6 6 12 12", key: "d8bk6v" }]
   ]
 };
-Gt.node;
-const Ne = E(Gt), Yt = globalThis.Sunrice;
-if (!Yt) throw new Error("[sunrice] This bundle needs the Sunrice admin panel (window.Sunrice is missing).");
-const n = Yt.modules["@imajiner/admin-sdk/ui"];
-function Jt({ id: s, children: a }) {
+Qt.node;
+const we = E(Qt), Zt = globalThis.Sunrice;
+if (!Zt) throw new Error("[sunrice] This bundle needs the Sunrice admin panel (window.Sunrice is missing).");
+const n = Zt.modules["@imajiner/admin-sdk/ui"];
+function Xt({ id: s, children: a }) {
   return /* @__PURE__ */ e.jsxs("p", { id: s, className: "cms:flex cms:items-start cms:gap-2 cms:rounded-md cms:border cms:border-amber-500/40 cms:bg-amber-500/10 cms:px-3 cms:py-2 cms:text-sm cms:text-amber-900 cms:dark:text-amber-200", children: [
-    /* @__PURE__ */ e.jsx(gn, { className: "cms:mt-0.5 cms:size-4 cms:shrink-0", "aria-hidden": !0 }),
+    /* @__PURE__ */ e.jsx(vn, { className: "cms:mt-0.5 cms:size-4 cms:shrink-0", "aria-hidden": !0 }),
     /* @__PURE__ */ e.jsx("span", { className: "cms:min-w-0 cms:[overflow-wrap:anywhere] cms:[&_code]:rounded cms:[&_code]:bg-amber-500/15 cms:[&_code]:px-1 cms:[&_code]:font-mono cms:[&_code]:text-[0.8125rem]", children: a })
   ] });
 }
-function ce() {
-  const [s, a] = T.useState(null), l = /* @__PURE__ */ e.jsx(n.Dialog, { open: s !== null, onOpenChange: (c) => !c && a(null), children: /* @__PURE__ */ e.jsxs(n.DialogContent, { children: [
+function re() {
+  const [s, a] = M.useState(null), l = /* @__PURE__ */ e.jsx(n.Dialog, { open: s !== null, onOpenChange: (c) => !c && a(null), children: /* @__PURE__ */ e.jsxs(n.DialogContent, { children: [
     /* @__PURE__ */ e.jsxs(n.DialogHeader, { children: [
       /* @__PURE__ */ e.jsx(n.DialogTitle, { children: t("Are you sure?") }),
       /* @__PURE__ */ e.jsx(n.DialogDescription, { children: s?.message })
@@ -922,100 +935,100 @@ function ce() {
   ] }) });
   return [(c, i, r = "Delete") => a({ message: c, onConfirm: i, label: r }), l];
 }
-function ie(s) {
+function de(s) {
   return s && typeof s == "object" && !Array.isArray(s) ? s : {};
 }
-function jn(s, a) {
+function Nn(s, a) {
   if (typeof s != "string" || s === "") return "";
   const l = /^(\d{4}-\d{2}-\d{2})(?:[T ](\d{2}:\d{2}))?/.exec(s);
   return l ? a ? `${l[1]}T${l[2] ?? "00:00"}` : l[1] ?? "" : "";
 }
-function gs(s) {
+function fs(s) {
   return s === "" ? null : s;
 }
-function bn(s) {
+function kn(s) {
   const a = typeof s == "number" ? s : typeof s == "string" && s.trim() !== "" ? Number(s) : NaN;
   return !Number.isFinite(a) || Math.abs(a) < 1e4 ? null : new Intl.NumberFormat("en", { maximumFractionDigits: 20 }).format(a);
 }
-function vn(s, a, l, c) {
+function wn(s, a, l, c) {
   return a || s.some((i) => ["none", ""].includes(i.label.trim().toLowerCase()) || i.value.trim().toLowerCase() === "none") ? !1 : !l || !c;
 }
-function Me(s) {
-  return s.some((a) => a.shared === !0 || Me(a.fields ?? []) || (a.blocks ?? []).some((l) => Me(l.fields)));
+function Be(s) {
+  return s.some((a) => a.shared === !0 || Be(a.fields ?? []) || (a.blocks ?? []).some((l) => Be(l.fields)));
 }
-function yn() {
+function Sn() {
   return { _hidden: !1 };
 }
-function as(s, a, l = 60) {
+function ns(s, a, l = 60) {
   for (const c of s) {
     const i = a[c.handle];
     let r = null;
-    ["text", "textarea", "email", "url"].includes(c.type) && typeof i == "string" ? r = i : c.type === "rich_text" && typeof i == "string" ? r = i.replace(/<[^>]*>/g, " ") : c.type === "group" && Array.isArray(c.fields) && (r = as(c.fields, ie(i), l));
+    ["text", "textarea", "email", "url"].includes(c.type) && typeof i == "string" ? r = i : c.type === "rich_text" && typeof i == "string" ? r = i.replace(/<[^>]*>/g, " ") : c.type === "group" && Array.isArray(c.fields) && (r = ns(c.fields, de(i), l));
     const d = (r ?? "").replace(/\s+/g, " ").trim();
     if (d !== "") return d.length > l ? `${d.slice(0, l - 1).trimEnd()}…` : d;
   }
   return null;
 }
-function Nn(s) {
+function Cn(s) {
   return { type: s, hidden: !1, values: {} };
 }
-function kn(s) {
+function $n(s) {
   const a = s.replace(/[\u0000- \u007f]+/g, ""), l = /^([a-zA-Z][a-zA-Z0-9+.-]*):/.exec(a);
   return l ? ["http", "https", "mailto", "tel"].includes(l[1].toLowerCase()) : !a.includes("\\");
 }
-function Qt({ ids: s, search: a, collections: l }) {
+function ea({ ids: s, search: a, collections: l }) {
   const c = new URLSearchParams();
   for (const i of s ?? []) c.append("ids[]", String(i));
   a && c.set("search", a);
   for (const i of l) c.append("collections[]", i);
   return c.toString();
 }
-let wn = 0;
-function Sn(s, a) {
-  return s.length === a ? s.slice() : s.length < a ? [...s, ...Array.from({ length: a - s.length }, () => `k${++wn}`)] : s.slice(0, a);
+let _n = 0;
+function Dn(s, a) {
+  return s.length === a ? s.slice() : s.length < a ? [...s, ...Array.from({ length: a - s.length }, () => `k${++_n}`)] : s.slice(0, a);
 }
-function Cn({ taxonomy: s, q: a, ids: l }) {
+function Tn({ taxonomy: s, q: a, ids: l }) {
   const c = new URLSearchParams({ taxonomy: s });
   a && c.set("q", a);
   for (const i of l ?? []) c.append("ids[]", String(i));
   return c.toString();
 }
-async function fs(s) {
-  const a = await fetch(`${A("cms/entries/picker")}?${Qt(s)}`, { headers: { Accept: "application/json" }, credentials: "same-origin" });
+async function js(s) {
+  const a = await fetch(`${I("cms/entries/picker")}?${ea(s)}`, { headers: { Accept: "application/json" }, credentials: "same-origin" });
   if (!a.ok) throw new Error(String(a.status));
   const l = await a.json();
   return { items: l.items, unavailable: l.unavailable ?? [] };
 }
-function $n(s) {
+function zn(s) {
   return s.length < 2 ? s[0] ?? "" : t(":items and :last", { items: s.slice(0, -1).join(", "), last: s[s.length - 1] });
 }
-function ke({ id: s, value: a, multiple: l, max: c, collections: i, invalid: r, onChange: d, emptyHint: h }) {
-  const m = a === null ? [] : Array.isArray(a) ? a : [a], [o, g] = T.useState({}), [x, u] = T.useState(""), [v, y] = T.useState(!1), [f, j] = T.useState(null), [C, _] = T.useState([]), [b, p] = T.useState(!1), M = l && c !== null && m.length >= c, S = m.filter((D) => !o[D]).join(",");
-  T.useEffect(() => {
-    S !== "" && fs({ ids: S.split(",").map(Number), collections: i }).then(({ items: D }) => g((P) => ({ ...P, ...Object.fromEntries(D.map((N) => [N.id, N])) }))).catch(() => p(!0));
-  }, [S]), T.useEffect(() => {
-    if (!v) {
+function Se({ id: s, value: a, multiple: l, max: c, collections: i, invalid: r, onChange: d, emptyHint: u }) {
+  const m = a === null ? [] : Array.isArray(a) ? a : [a], [o, g] = M.useState({}), [x, h] = M.useState(""), [b, v] = M.useState(!1), [f, j] = M.useState(null), [_, T] = M.useState([]), [y, p] = M.useState(!1), z = l && c !== null && m.length >= c, k = m.filter((S) => !o[S]).join(",");
+  M.useEffect(() => {
+    k !== "" && js({ ids: k.split(",").map(Number), collections: i }).then(({ items: S }) => g((P) => ({ ...P, ...Object.fromEntries(S.map((N) => [N.id, N])) }))).catch(() => p(!0));
+  }, [k]), M.useEffect(() => {
+    if (!b) {
       j(null);
       return;
     }
-    const D = window.setTimeout(() => {
-      fs({ search: x.trim(), collections: i }).then((P) => {
-        j(P.items), _(P.unavailable), p(!1);
+    const S = window.setTimeout(() => {
+      js({ search: x.trim(), collections: i }).then((P) => {
+        j(P.items), T(P.unavailable), p(!1);
       }).catch(() => p(!0));
     }, x.trim() === "" ? 0 : 250);
-    return () => window.clearTimeout(D);
-  }, [x, v]);
-  const B = (D) => {
-    g((P) => ({ ...P, [D.id]: D })), d(l ? [...m, D.id] : D.id), u("");
-  }, w = (D) => d(l ? D : D[0] ?? null);
+    return () => window.clearTimeout(S);
+  }, [x, b]);
+  const F = (S) => {
+    g((P) => ({ ...P, [S.id]: S })), d(l ? [...m, S.id] : S.id), h("");
+  }, L = (S) => d(l ? S : S[0] ?? null);
   return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
-    m.length > 0 && /* @__PURE__ */ e.jsx(n.SortableList, { items: m, getId: (D) => D, getLabel: (D) => o[D]?.title ?? `Entry #${D}`, onReorder: (D) => w(D), disabled: !l, className: "cms:gap-1", children: (D, { handle: P }) => {
-      const N = o[D];
+    m.length > 0 && /* @__PURE__ */ e.jsx(n.SortableList, { items: m, getId: (S) => S, getLabel: (S) => o[S]?.title ?? `Entry #${S}`, onReorder: (S) => L(S), disabled: !l, className: "cms:gap-1", children: (S, { handle: P }) => {
+      const N = o[S];
       return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-center cms:gap-2 cms:rounded-md cms:border cms:bg-card cms:px-2 cms:py-1 cms:text-sm", children: [
-        l && /* @__PURE__ */ e.jsx(n.SortableHandle, { ...P, label: t("Move :title", { title: N?.title ?? D }) }),
-        /* @__PURE__ */ e.jsx("span", { className: `cms:min-w-0 cms:flex-1 cms:truncate ${l ? "" : "cms:pl-1"}`, children: N ? N.title : t("Entry #:id", { id: D }) }),
+        l && /* @__PURE__ */ e.jsx(n.SortableHandle, { ...P, label: t("Move :title", { title: N?.title ?? S }) }),
+        /* @__PURE__ */ e.jsx("span", { className: `cms:min-w-0 cms:flex-1 cms:truncate ${l ? "" : "cms:pl-1"}`, children: N ? N.title : t("Entry #:id", { id: S }) }),
         N && /* @__PURE__ */ e.jsx("span", { className: "cms:text-xs cms:text-muted-foreground", children: N.collection }),
-        N && /* @__PURE__ */ e.jsx(n.Badge, { variant: N.status === "published" ? "success" : "secondary", children: te(N.status) }),
+        N && /* @__PURE__ */ e.jsx(n.Badge, { variant: N.status === "published" ? "success" : "secondary", children: ae(N.status) }),
         /* @__PURE__ */ e.jsx(
           n.Button,
           {
@@ -1023,15 +1036,15 @@ function ke({ id: s, value: a, multiple: l, max: c, collections: i, invalid: r, 
             variant: "ghost",
             size: "icon",
             className: "cms:size-7",
-            "aria-label": t("Remove :title", { title: N?.title ?? D }),
-            onClick: () => w(m.filter((L) => L !== D)),
-            children: /* @__PURE__ */ e.jsx(Ne, {})
+            "aria-label": t("Remove :title", { title: N?.title ?? S }),
+            onClick: () => L(m.filter((D) => D !== S)),
+            children: /* @__PURE__ */ e.jsx(we, {})
           }
         )
       ] });
     } }),
-    !M && (l || m.length === 0) && /* @__PURE__ */ e.jsxs("div", { className: "cms:relative cms:max-w-md", children: [
-      /* @__PURE__ */ e.jsx(ye, { className: "cms:absolute cms:top-1/2 cms:left-3 cms:size-4 cms:-translate-y-1/2 cms:text-muted-foreground" }),
+    !z && (l || m.length === 0) && /* @__PURE__ */ e.jsxs("div", { className: "cms:relative cms:max-w-md", children: [
+      /* @__PURE__ */ e.jsx(ke, { className: "cms:absolute cms:top-1/2 cms:left-3 cms:size-4 cms:-translate-y-1/2 cms:text-muted-foreground" }),
       /* @__PURE__ */ e.jsx(
         n.Input,
         {
@@ -1042,66 +1055,66 @@ function ke({ id: s, value: a, multiple: l, max: c, collections: i, invalid: r, 
           value: x,
           autoComplete: "off",
           "aria-expanded": f !== null,
-          onFocus: () => y(!0),
-          onBlur: () => y(!1),
-          onKeyDown: (D) => {
-            D.key === "Escape" && v && (D.preventDefault(), y(!1));
+          onFocus: () => v(!0),
+          onBlur: () => v(!1),
+          onKeyDown: (S) => {
+            S.key === "Escape" && b && (S.preventDefault(), v(!1));
           },
-          onChange: (D) => {
-            u(D.target.value), y(!0);
+          onChange: (S) => {
+            h(S.target.value), v(!0);
           }
         }
       ),
       f !== null && /* @__PURE__ */ e.jsxs("ul", { role: "listbox", "aria-label": t("Matching entries"), className: "cms:absolute cms:z-10 cms:mt-1 cms:max-h-64 cms:w-full cms:overflow-auto cms:rounded-md cms:border cms:bg-card cms:p-1 cms:shadow-md", children: [
-        f.filter((D) => !m.includes(D.id)).length === 0 && /* @__PURE__ */ e.jsxs("li", { className: "cms:p-2 cms:text-sm cms:text-muted-foreground", children: [
+        f.filter((S) => !m.includes(S.id)).length === 0 && /* @__PURE__ */ e.jsxs("li", { className: "cms:p-2 cms:text-sm cms:text-muted-foreground", children: [
           x.trim() === "" ? t("No entries yet.") : t("No entries match."),
-          h && /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
+          u && /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
             " ",
-            h
+            u
           ] })
         ] }),
-        C.length > 0 && /* @__PURE__ */ e.jsx("li", { className: "cms:p-2 cms:text-sm cms:text-muted-foreground", children: t("Your role can't see entries of :collections: ask an editor to link them.", { collections: $n(C) }) }),
-        f.filter((D) => !m.includes(D.id)).map((D) => /* @__PURE__ */ e.jsx("li", { role: "option", "aria-selected": !1, children: /* @__PURE__ */ e.jsxs(
+        _.length > 0 && /* @__PURE__ */ e.jsx("li", { className: "cms:p-2 cms:text-sm cms:text-muted-foreground", children: t("Your role can't see entries of :collections: ask an editor to link them.", { collections: zn(_) }) }),
+        f.filter((S) => !m.includes(S.id)).map((S) => /* @__PURE__ */ e.jsx("li", { role: "option", "aria-selected": !1, children: /* @__PURE__ */ e.jsxs(
           "button",
           {
             type: "button",
             className: "cms:flex cms:w-full cms:items-center cms:gap-2 cms:rounded cms:px-2 cms:py-1.5 cms:text-left cms:text-sm cms:hover:bg-accent",
             onMouseDown: (P) => P.preventDefault(),
-            onClick: () => B(D),
+            onClick: () => F(S),
             children: [
-              /* @__PURE__ */ e.jsx("span", { className: "cms:flex-1 cms:truncate", children: D.title }),
-              /* @__PURE__ */ e.jsx("span", { className: "cms:text-xs cms:text-muted-foreground", children: D.collection })
+              /* @__PURE__ */ e.jsx("span", { className: "cms:flex-1 cms:truncate", children: S.title }),
+              /* @__PURE__ */ e.jsx("span", { className: "cms:text-xs cms:text-muted-foreground", children: S.collection })
             ]
           }
-        ) }, D.id))
+        ) }, S.id))
       ] })
     ] }),
-    b && /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-destructive", children: t("Entries could not be loaded. Try again.") })
+    y && /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-destructive", children: t("Entries could not be loaded. Try again.") })
   ] });
 }
-const Zt = T.createContext({}), Ee = "__none";
-async function js(s) {
-  const a = await fetch(`${A("cms/terms/picker")}?${Cn(s)}`, { headers: { Accept: "application/json" }, credentials: "same-origin" });
+const sa = M.createContext({}), Pe = "__none";
+async function bs(s) {
+  const a = await fetch(`${I("cms/terms/picker")}?${Tn(s)}`, { headers: { Accept: "application/json" }, credentials: "same-origin" });
   if (!a.ok) throw new Error(String(a.status));
   return await a.json();
 }
-function Xt({ id: s, taxonomy: a, multiple: l, max: c, required: i, invalid: r, value: d, onChange: h }) {
-  const m = T.useContext(Zt), o = d === null ? [] : Array.isArray(d) ? d : [d], [g, x] = T.useState(null), [u, v] = T.useState(!1), [y, f] = T.useState(""), [j, C] = T.useState({}), [_, b] = T.useState(!1);
-  T.useEffect(() => {
+function ta({ id: s, taxonomy: a, multiple: l, max: c, required: i, invalid: r, value: d, onChange: u }) {
+  const m = M.useContext(sa), o = d === null ? [] : Array.isArray(d) ? d : [d], [g, x] = M.useState(null), [h, b] = M.useState(!1), [v, f] = M.useState(""), [j, _] = M.useState({}), [T, y] = M.useState(!1);
+  M.useEffect(() => {
     if (!a) return;
-    const N = y.trim(), L = window.setTimeout(() => {
-      js({ taxonomy: a, q: N }).then((V) => {
-        x(V.items), V.more && v(!0), b(!1);
-      }).catch(() => b(!0));
+    const N = v.trim(), D = window.setTimeout(() => {
+      bs({ taxonomy: a, q: N }).then(($) => {
+        x($.items), $.more && b(!0), y(!1);
+      }).catch(() => y(!0));
     }, N === "" ? 0 : 250);
-    return () => window.clearTimeout(L);
-  }, [a, y]);
-  const p = (N) => m[String(N)] ?? j[N] ?? g?.find((L) => L.id === N)?.label, M = g === null ? "" : o.filter((N) => p(N) === void 0).join(",");
-  if (T.useEffect(() => {
-    !a || M === "" || js({ taxonomy: a, ids: M.split(",").map(Number) }).then((N) => C((L) => ({ ...L, ...Object.fromEntries(N.items.map((V) => [V.id, V.label])) }))).catch(() => b(!0));
-  }, [a, M]), !a) return /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: t("Choose a taxonomy for this field in its blueprint.") });
-  if (g === null) return _ ? /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-destructive", children: t("Terms could not be loaded. Try again.") }) : /* @__PURE__ */ e.jsx(n.Skeleton, { className: "cms:h-9 cms:w-full cms:max-w-sm" });
-  const S = (N) => `${"— ".repeat(N.depth)}${N.label}`, B = l && c !== null && o.length >= c, w = (N) => h(l ? N : N[0] ?? null), D = u && o.length > 0 && /* @__PURE__ */ e.jsx("div", { className: "cms:flex cms:flex-wrap cms:gap-1.5", children: o.map((N) => /* @__PURE__ */ e.jsxs(n.Badge, { variant: "secondary", className: "cms:gap-1 cms:pr-1", children: [
+    return () => window.clearTimeout(D);
+  }, [a, v]);
+  const p = (N) => m[String(N)] ?? j[N] ?? g?.find((D) => D.id === N)?.label, z = g === null ? "" : o.filter((N) => p(N) === void 0).join(",");
+  if (M.useEffect(() => {
+    !a || z === "" || bs({ taxonomy: a, ids: z.split(",").map(Number) }).then((N) => _((D) => ({ ...D, ...Object.fromEntries(N.items.map(($) => [$.id, $.label])) }))).catch(() => y(!0));
+  }, [a, z]), !a) return /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: t("Choose a taxonomy for this field in its blueprint.") });
+  if (g === null) return T ? /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-destructive", children: t("Terms could not be loaded. Try again.") }) : /* @__PURE__ */ e.jsx(n.Skeleton, { className: "cms:h-9 cms:w-full cms:max-w-sm" });
+  const k = (N) => `${"— ".repeat(N.depth)}${N.label}`, F = l && c !== null && o.length >= c, L = (N) => u(l ? N : N[0] ?? null), S = h && o.length > 0 && /* @__PURE__ */ e.jsx("div", { className: "cms:flex cms:flex-wrap cms:gap-1.5", children: o.map((N) => /* @__PURE__ */ e.jsxs(n.Badge, { variant: "secondary", className: "cms:gap-1 cms:pr-1", children: [
     p(N) ?? t("Term #:id", { id: N }),
     !(i && !l) && /* @__PURE__ */ e.jsx(
       "button",
@@ -1109,12 +1122,12 @@ function Xt({ id: s, taxonomy: a, multiple: l, max: c, required: i, invalid: r, 
         type: "button",
         className: "cms:rounded-sm cms:p-0.5 cms:hover:bg-muted",
         "aria-label": t("Remove :title", { title: p(N) ?? N }),
-        onClick: () => w(o.filter((L) => L !== N)),
-        children: /* @__PURE__ */ e.jsx(Ne, { className: "cms:size-3" })
+        onClick: () => L(o.filter((D) => D !== N)),
+        children: /* @__PURE__ */ e.jsx(we, { className: "cms:size-3" })
       }
     )
-  ] }, N)) }), P = u && /* @__PURE__ */ e.jsxs("div", { className: "cms:relative cms:max-w-sm", children: [
-    /* @__PURE__ */ e.jsx(ye, { className: "cms:absolute cms:top-1/2 cms:left-3 cms:size-4 cms:-translate-y-1/2 cms:text-muted-foreground" }),
+  ] }, N)) }), P = h && /* @__PURE__ */ e.jsxs("div", { className: "cms:relative cms:max-w-sm", children: [
+    /* @__PURE__ */ e.jsx(ke, { className: "cms:absolute cms:top-1/2 cms:left-3 cms:size-4 cms:-translate-y-1/2 cms:text-muted-foreground" }),
     /* @__PURE__ */ e.jsx(
       n.Input,
       {
@@ -1123,37 +1136,37 @@ function Xt({ id: s, taxonomy: a, multiple: l, max: c, required: i, invalid: r, 
         placeholder: t("Search terms"),
         autoComplete: "off",
         "aria-invalid": r,
-        value: y,
+        value: v,
         onChange: (N) => f(N.target.value)
       }
     )
   ] });
-  if (!l && !u) {
-    const N = o[0], L = N === void 0 || g.some((V) => V.id === N);
-    return /* @__PURE__ */ e.jsxs(n.Select, { value: N === void 0 ? Ee : String(N), onValueChange: (V) => h(V === Ee ? null : Number(V)), children: [
+  if (!l && !h) {
+    const N = o[0], D = N === void 0 || g.some(($) => $.id === N);
+    return /* @__PURE__ */ e.jsxs(n.Select, { value: N === void 0 ? Pe : String(N), onValueChange: ($) => u($ === Pe ? null : Number($)), children: [
       /* @__PURE__ */ e.jsx(n.SelectTrigger, { id: s, className: "cms:w-full cms:max-w-sm", "aria-invalid": r, children: /* @__PURE__ */ e.jsx(n.SelectValue, { children: N === void 0 ? t("None") : p(N) ?? t("Term #:id", { id: N }) }) }),
       /* @__PURE__ */ e.jsxs(n.SelectContent, { children: [
-        !i && /* @__PURE__ */ e.jsx(n.SelectItem, { value: Ee, children: t("None") }),
-        !L && N !== void 0 && /* @__PURE__ */ e.jsx(n.SelectItem, { value: String(N), children: p(N) ?? t("Term #:id", { id: N }) }),
-        g.map((V) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: String(V.id), children: S(V) }, V.id))
+        !i && /* @__PURE__ */ e.jsx(n.SelectItem, { value: Pe, children: t("None") }),
+        !D && N !== void 0 && /* @__PURE__ */ e.jsx(n.SelectItem, { value: String(N), children: p(N) ?? t("Term #:id", { id: N }) }),
+        g.map(($) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: String($.id), children: k($) }, $.id))
       ] })
     ] });
   }
   return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
-    D,
+    S,
     P,
-    g.length === 0 ? /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: y.trim() ? t("No terms match.") : t("Nothing to choose from yet.") }) : l ? /* @__PURE__ */ e.jsx("div", { className: "cms:flex cms:max-h-72 cms:flex-col cms:gap-2 cms:overflow-auto", children: g.map((N) => {
-      const L = o.includes(N.id);
+    g.length === 0 ? /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: v.trim() ? t("No terms match.") : t("Nothing to choose from yet.") }) : l ? /* @__PURE__ */ e.jsx("div", { className: "cms:flex cms:max-h-72 cms:flex-col cms:gap-2 cms:overflow-auto", children: g.map((N) => {
+      const D = o.includes(N.id);
       return /* @__PURE__ */ e.jsxs("label", { className: "cms:flex cms:items-center cms:gap-2 cms:text-sm", children: [
         /* @__PURE__ */ e.jsx(
           n.Checkbox,
           {
-            checked: L,
-            disabled: !L && B,
-            onCheckedChange: (V) => w(V ? [...o, N.id] : o.filter((me) => me !== N.id))
+            checked: D,
+            disabled: !D && F,
+            onCheckedChange: ($) => L($ ? [...o, N.id] : o.filter((U) => U !== N.id))
           }
         ),
-        S(N)
+        k(N)
       ] }, N.id);
     }) }) : /* @__PURE__ */ e.jsx("div", { role: "listbox", "aria-label": t("Terms"), className: "cms:flex cms:max-h-72 cms:flex-col cms:overflow-auto", children: g.map((N) => /* @__PURE__ */ e.jsx(
       n.Button,
@@ -1164,60 +1177,60 @@ function Xt({ id: s, taxonomy: a, multiple: l, max: c, required: i, invalid: r, 
         className: "cms:justify-start",
         role: "option",
         "aria-selected": o[0] === N.id,
-        onClick: () => h(N.id),
-        children: S(N)
+        onClick: () => u(N.id),
+        children: k(N)
       },
       N.id
     )) })
   ] });
 }
-const ea = (s, a = {}) => s.replace(/:([A-Za-z_]+)/g, (l, c) => a[c] ?? l), _n = 5;
-let Dn = 0;
-const ns = () => `f${++Dn}`;
-function sa(s) {
+const aa = (s, a = {}) => s.replace(/:([A-Za-z_]+)/g, (l, c) => a[c] ?? l), Mn = 5;
+let Bn = 0;
+const ls = () => `f${++Bn}`;
+function na(s) {
   return s.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").replace(/^[0-9_]+/, "").slice(0, 64);
 }
-function ls(s) {
+function cs(s) {
   return s.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9_]+/g, "_").replace(/^[0-9_]+/, "").replace(/_{2,}/g, "_").slice(0, 64);
 }
-function ta(s, a) {
-  const l = new Set(a.map((r) => r.handle)), c = sa(s) || "field";
+function la(s, a) {
+  const l = new Set(a.map((r) => r.handle)), c = na(s) || "field";
   let i = c;
   for (let r = 2; l.has(i); r++)
     i = `${c}_${r}`;
   return i;
 }
-function aa(s) {
+function ca(s) {
   return (s ?? []).map(({ fields: a, ...l }) => ({
     ...l,
-    key: ns(),
-    fields: aa(a),
+    key: ls(),
+    fields: ca(a),
     handleTouched: !0,
     savedHandle: l.handle
   }));
 }
-function na(s, a) {
+function ra(s, a) {
   return s.map(({ key: l, handleTouched: c, savedHandle: i, fields: r, ...d }) => ({
     ...d,
-    validation: (d.validation ?? []).map((h) => h.trim()).filter((h) => h !== ""),
-    ...a(d.type) ? { fields: na(r, a) } : {}
+    validation: (d.validation ?? []).map((u) => u.trim()).filter((u) => u !== ""),
+    ...a(d.type) ? { fields: ra(r, a) } : {}
   }));
 }
-function Tn(s, a, l) {
-  return { key: ns(), type: s, label: a, handle: ta(a, l), required: !1, config: {}, fields: [], handleTouched: !1 };
+function Ln(s, a, l) {
+  return { key: ls(), type: s, label: a, handle: la(a, l), required: !1, config: {}, fields: [], handleTouched: !1 };
 }
-function Fe(s) {
+function He(s) {
   return s.type !== "fieldset" && s.savedHandle !== void 0 && s.savedHandle !== "" && s.handle !== s.savedHandle ? s.savedHandle : null;
 }
-function la(s) {
-  return s.map((a) => ({ ...a, savedHandle: a.handle, fields: la(a.fields) }));
+function ia(s) {
+  return s.map((a) => ({ ...a, savedHandle: a.handle, fields: ia(a.fields) }));
 }
-function bs(s, a, l) {
+function vs(s, a, l) {
   if (s.handleTouched) return { ...s, label: a };
   const c = l.filter((i) => i.key !== s.key);
-  return { ...s, label: a, handle: ta(a || s.type, c) };
+  return { ...s, label: a, handle: la(a || s.type, c) };
 }
-function oe(s, a) {
+function me(s, a) {
   const l = `${a}.`, c = {};
   for (const [i, r] of Object.entries(s))
     i.startsWith(l) && (c[i.slice(l.length)] = r);
@@ -1225,80 +1238,80 @@ function oe(s, a) {
 }
 function Y(s, a) {
   const l = s[a];
-  return { ...oe(s, a), ...l !== void 0 ? { "": l } : {} };
+  return { ...me(s, a), ...l !== void 0 ? { "": l } : {} };
 }
-function Le(s, a) {
+function Ae(s, a) {
   return Object.keys(s).filter((l) => l === a || l.startsWith(`${a}.`));
 }
-function we(s, a) {
+function Ce(s, a) {
   return Object.keys(s).some((l) => l === a || l.startsWith(`${a}.`));
 }
-function zn(s, a) {
+function In(s, a) {
   return a.filter((l) => l.key !== s.key && l.handle !== "" && l.type !== "fieldset");
 }
-function ca(s, a, l, c = ea) {
+function oa(s, a, l, c = aa) {
   return s.type === "fieldset" ? null : l?.includes(s.handle) ? c('":handle" is used by the content itself; choose another handle.', { handle: s.handle }) : s.handle !== "" && a.some((i) => i.key !== s.key && i.type !== "fieldset" && i.handle === s.handle) ? c('There is already a field ":handle" here.', { handle: s.handle }) : null;
 }
-function ra(s, a) {
+function da(s, a) {
   return typeof s.translatable == "boolean" ? s.translatable : a;
 }
-function Mn(s, a, l) {
+function An(s, a, l) {
   return { ...s, translatable: a === l ? null : a };
 }
-function Bn(s, a, l = []) {
-  const c = /* @__PURE__ */ new Set([...a.map((d) => d.handle), ...l]), i = `${(ls(s) || "field").slice(0, 56)}_copy`;
+function En(s, a, l = []) {
+  const c = /* @__PURE__ */ new Set([...a.map((d) => d.handle), ...l]), i = `${(cs(s) || "field").slice(0, 56)}_copy`;
   let r = i;
   for (let d = 2; c.has(r); d++)
     r = `${i}_${d}`;
   return r;
 }
-function ia(s) {
+function ma(s) {
   const { key: a, savedHandle: l, fields: c, ...i } = s;
-  return { ...structuredClone(i), key: ns(), fields: c.map(ia) };
+  return { ...structuredClone(i), key: ls(), fields: c.map(ma) };
 }
-function Ln(s, a, l = [], c = ea) {
+function Fn(s, a, l = [], c = aa) {
   const i = s[a];
   if (i === void 0) return null;
   const r = i.label || i.handle, d = {
-    ...ia(i),
+    ...ma(i),
     label: c(":label (copy)", { label: r }),
-    handle: i.type === "fieldset" ? i.handle : Bn(i.handle, s, l),
+    handle: i.type === "fieldset" ? i.handle : En(i.handle, s, l),
     handleTouched: !0
   };
   return { fields: [...s.slice(0, a + 1), d, ...s.slice(a + 1)], copy: d };
 }
-function An(s, a) {
+function Pn(s, a) {
   const l = s.condition;
   return !l || "rules" in l ? null : (l.operator === "filled" || l.operator === "equals" && (l.value === !0 || l.value === "true")) && a.some((i) => i.handle === l.field && i.type === "toggle") ? l.field : null;
 }
-function In(s) {
+function Hn(s) {
   const a = (i) => i.type === "number" || i.type === "text" && (i.instructions ?? "").length <= 60, l = {}, c = [];
   for (const i of s) {
-    const r = An(i, s);
+    const r = Pn(i, s);
     r === null ? c.push(i) : (l[r] ??= []).push(i);
   }
   return { options: c.filter((i) => !a(i)), limits: c.filter(a), dependents: l };
 }
-const He = [
+const Oe = [
   { value: "equals", label: "is", needsValue: !0 },
   { value: "not_equals", label: "is not", needsValue: !0 },
   { value: "filled", label: "is filled in", needsValue: !1 },
   { value: "empty", label: "is empty", needsValue: !1 }
 ];
-function vs(s) {
+function ys(s) {
   return s === !0 ? "true" : s === !1 ? "false" : typeof s == "string" || typeof s == "number" ? String(s) : "";
 }
-function oa(s) {
+function ua(s) {
   return s ? "rules" in s ? Array.isArray(s.rules) ? s.rules : [] : [s] : [];
 }
-function da(s) {
+function ha(s) {
   return s && "rules" in s && s.match === "any" ? "any" : "all";
 }
-function En(s, a) {
+function On(s, a) {
   return s.length === 0 ? null : s.length === 1 ? s[0] : { match: a, rules: s };
 }
-function ys(s, a) {
-  const l = a[s.field], c = l != null && l !== "" && l !== !1 && !(Array.isArray(l) && l.length === 0), i = (Array.isArray(l) ? l : [l]).map(vs).includes(vs(s.value));
+function Ns(s, a) {
+  const l = a[s.field], c = l != null && l !== "" && l !== !1 && !(Array.isArray(l) && l.length === 0), i = (Array.isArray(l) ? l : [l]).map(ys).includes(ys(s.value));
   switch (s.operator) {
     case "equals":
       return i;
@@ -1310,11 +1323,11 @@ function ys(s, a) {
       return !c;
   }
 }
-function cs(s, a) {
-  const l = oa(s.condition);
-  return l.length === 0 ? !0 : da(s.condition) === "any" ? l.some((c) => ys(c, a)) : l.every((c) => ys(c, a));
+function rs(s, a) {
+  const l = ua(s.condition);
+  return l.length === 0 ? !0 : ha(s.condition) === "any" ? l.some((c) => Ns(c, a)) : l.every((c) => Ns(c, a));
 }
-function Pe(s) {
+function Ve(s) {
   const a = s?.config ?? {};
   switch (s?.type) {
     case "select": {
@@ -1340,7 +1353,7 @@ function Pe(s) {
       return { kind: "text" };
   }
 }
-function Ns(s) {
+function ks(s) {
   switch (s.kind) {
     case "toggle":
       return !0;
@@ -1354,11 +1367,11 @@ function Ns(s) {
       return "";
   }
 }
-const Oe = "__none";
-function H({ message: s, id: a }) {
+const Re = "__none";
+function O({ message: s, id: a }) {
   return s ? /* @__PURE__ */ e.jsx("p", { id: a, className: "cms:text-sm cms:text-destructive", children: s }) : null;
 }
-function Ve(s) {
+function Ue(s) {
   const a = s.config?.options;
   return Array.isArray(a) ? a.flatMap((l) => {
     if (typeof l == "string") return [{ value: l, label: l }];
@@ -1369,14 +1382,14 @@ function Ve(s) {
     return [];
   }) : [];
 }
-const Fn = ["repeater", "group", "flexible", "link", "media", "rich_text", "entries"];
-function Be(s) {
+const Vn = ["repeater", "group", "flexible", "link", "media", "rich_text", "entries"];
+function Le(s) {
   if (s.label) return s.label;
   const a = s.handle.replace(/_/g, " ");
   return a.charAt(0).toUpperCase() + a.slice(1);
 }
-function ae({ field: s, value: a, onChange: l, errors: c, id: i, content: r = !1, fill: d = !1 }) {
-  const h = Be(s), m = Fn.includes(s.type) || ["select", "terms"].includes(s.type) && s.config?.multiple === !0, o = c[""] !== void 0;
+function ne({ field: s, value: a, onChange: l, errors: c, id: i, content: r = !1, fill: d = !1 }) {
+  const u = Le(s), m = Vn.includes(s.type) || ["select", "terms"].includes(s.type) && s.config?.multiple === !0, o = c[""] !== void 0;
   return /* @__PURE__ */ e.jsxs(
     "div",
     {
@@ -1385,20 +1398,20 @@ function ae({ field: s, value: a, onChange: l, errors: c, id: i, content: r = !1
       children: [
         s.type === "toggle" ? /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-center cms:gap-3", children: [
           /* @__PURE__ */ e.jsx(n.Switch, { id: i, checked: a === !0, onCheckedChange: (g) => l(g) }),
-          /* @__PURE__ */ e.jsx(n.Label, { htmlFor: i, children: h })
+          /* @__PURE__ */ e.jsx(n.Label, { htmlFor: i, children: u })
         ] }) : /* @__PURE__ */ e.jsxs(n.Label, { id: `${i}-label`, htmlFor: m ? void 0 : i, children: [
-          h,
+          u,
           s.required && /* @__PURE__ */ e.jsx("span", { className: "cms:text-destructive", children: " *" })
         ] }),
-        /* @__PURE__ */ e.jsx(Pn, { field: s, value: a, onChange: l, errors: c, id: i, content: r, fill: d }),
-        ["text", "textarea"].includes(s.type) && se(s, "max") !== void 0 && /* @__PURE__ */ e.jsx(Hn, { length: typeof a == "string" ? [...a].length : 0, max: se(s, "max") ?? 0 }),
+        /* @__PURE__ */ e.jsx(Un, { field: s, value: a, onChange: l, errors: c, id: i, content: r, fill: d }),
+        ["text", "textarea"].includes(s.type) && te(s, "max") !== void 0 && /* @__PURE__ */ e.jsx(Rn, { length: typeof a == "string" ? [...a].length : 0, max: te(s, "max") ?? 0 }),
         s.instructions && /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: s.instructions }),
-        /* @__PURE__ */ e.jsx(H, { message: c[""], id: `${i}-error` })
+        /* @__PURE__ */ e.jsx(O, { message: c[""], id: `${i}-error` })
       ]
     }
   );
 }
-function Hn({ length: s, max: a }) {
+function Rn({ length: s, max: a }) {
   const l = s > a;
   return /* @__PURE__ */ e.jsxs("p", { className: `cms:-mt-1 cms:self-end cms:text-xs cms:tabular-nums ${l ? "cms:font-medium cms:text-destructive" : "cms:text-muted-foreground"}`, children: [
     s,
@@ -1411,8 +1424,8 @@ function Hn({ length: s, max: a }) {
     ] })
   ] });
 }
-function Pn({ field: s, value: a, onChange: l, errors: c, id: i, content: r, fill: d = !1 }) {
-  const h = c[""] !== void 0;
+function Un({ field: s, value: a, onChange: l, errors: c, id: i, content: r, fill: d = !1 }) {
+  const u = c[""] !== void 0;
   switch (s.type) {
     case "toggle":
       return null;
@@ -1423,16 +1436,16 @@ function Pn({ field: s, value: a, onChange: l, errors: c, id: i, content: r, fil
         n.Textarea,
         {
           id: i,
-          "aria-invalid": h,
+          "aria-invalid": u,
           value: typeof a == "string" ? a : "",
-          rows: se(s, "rows") ?? 4,
+          rows: te(s, "rows") ?? 4,
           onChange: (m) => l(m.target.value)
         }
       );
     case "rich_text":
-      return /* @__PURE__ */ e.jsx(n.RichTextEditor, { id: i, labelledBy: `${i}-label`, invalid: h, value: typeof a == "string" ? a : "", onChange: l });
+      return /* @__PURE__ */ e.jsx(n.RichTextEditor, { id: i, labelledBy: `${i}-label`, invalid: u, value: typeof a == "string" ? a : "", onChange: l });
     case "number": {
-      const m = bn(a);
+      const m = kn(a);
       return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-wrap cms:items-center cms:gap-3", children: [
         /* @__PURE__ */ e.jsx(
           n.Input,
@@ -1440,13 +1453,13 @@ function Pn({ field: s, value: a, onChange: l, errors: c, id: i, content: r, fil
             id: i,
             type: "number",
             className: d ? "cms:w-full" : "cms:max-w-48",
-            placeholder: ks(s, "placeholder"),
-            "aria-invalid": h,
+            placeholder: ws(s, "placeholder"),
+            "aria-invalid": u,
             "aria-describedby": m ? `${i}-grouped` : void 0,
             value: typeof a == "number" ? String(a) : typeof a == "string" ? a : "",
-            min: se(s, "min"),
-            max: se(s, "max"),
-            step: se(s, "step") ?? "any",
+            min: te(s, "min"),
+            max: te(s, "max"),
+            step: te(s, "step") ?? "any",
             onChange: (o) => l(o.target.value === "" ? null : Number(o.target.value))
           }
         ),
@@ -1460,46 +1473,46 @@ function Pn({ field: s, value: a, onChange: l, errors: c, id: i, content: r, fil
         {
           id: i,
           withTime: m,
-          invalid: h,
+          invalid: u,
           required: s.required === !0,
-          value: gs(jn(a, m)),
-          onChange: (o) => l(gs(o ?? ""))
+          value: fs(Nn(a, m)),
+          onChange: (o) => l(fs(o ?? ""))
         }
       );
     }
     case "select":
       return s.config?.multiple === !0 ? /* @__PURE__ */ e.jsx(
-        Vn,
+        Kn,
         {
-          options: Ve(s),
+          options: Ue(s),
           value: Array.isArray(a) ? a.map(String) : [],
           onChange: l,
-          invalid: h,
+          invalid: u,
           empty: typeof s.config?.empty == "string" ? s.config.empty : void 0,
           inTickOrder: s.config?.in_tick_order === !0
         }
       ) : /* @__PURE__ */ e.jsx(
-        On,
+        qn,
         {
-          options: Ve(s),
+          options: Ue(s),
           value: typeof a == "string" ? a : null,
           onChange: l,
           id: i,
           fill: d,
-          empty: vn(Ve(s), s.required === !0, typeof s.config?.default == "string" && s.config.default !== "", typeof a == "string" && a !== "")
+          empty: wn(Ue(s), s.required === !0, typeof s.config?.default == "string" && s.config.default !== "", typeof a == "string" && a !== "")
         }
       );
     case "terms": {
       const m = s.config?.multiple === !0, o = Array.isArray(a) ? a.filter((g) => typeof g == "number") : typeof a == "number" ? a : null;
       return /* @__PURE__ */ e.jsx(
-        Xt,
+        ta,
         {
           id: i,
           taxonomy: typeof s.taxonomy == "string" ? s.taxonomy : null,
           multiple: m,
-          max: se(s, "max") ?? null,
+          max: te(s, "max") ?? null,
           required: s.required === !0,
-          invalid: h,
+          invalid: u,
           value: m ? Array.isArray(o) ? o : [] : typeof o == "number" ? o : null,
           onChange: l
         }
@@ -1507,95 +1520,95 @@ function Pn({ field: s, value: a, onChange: l, errors: c, id: i, content: r, fil
     }
     case "entries":
       return /* @__PURE__ */ e.jsx(
-        ke,
+        Se,
         {
           id: i,
-          invalid: h,
+          invalid: u,
           multiple: s.config?.multiple === !0,
-          max: se(s, "max") ?? null,
+          max: te(s, "max") ?? null,
           collections: s.collections ?? [],
           onChange: l,
           value: typeof a == "number" || Array.isArray(a) && a.every((m) => typeof m == "number") ? a : null
         }
       );
     case "link":
-      return /* @__PURE__ */ e.jsx(Rn, { label: Be(s), value: ie(a), onChange: l, errors: c, id: i, collections: s.collections ?? [] });
+      return /* @__PURE__ */ e.jsx(Wn, { label: Le(s), value: de(a), onChange: l, errors: c, id: i, collections: s.collections ?? [] });
     case "media":
       return /* @__PURE__ */ e.jsx(
         n.MediaPickerInput,
         {
           id: i,
-          invalid: h,
+          invalid: u,
           disabled: !1,
           multiple: s.config?.multiple === !0,
-          max: se(s, "max") ?? null,
+          max: te(s, "max") ?? null,
           types: Array.isArray(s.config?.types) ? s.config.types : [],
           value: typeof a == "number" || Array.isArray(a) && a.every((m) => typeof m == "number") ? a : null,
           onChange: l
         }
       );
     case "group":
-      return /* @__PURE__ */ e.jsx(de, { fields: s.fields ?? [], value: ie(a), onChange: l, errors: c, id: i, content: r });
+      return /* @__PURE__ */ e.jsx(ue, { fields: s.fields ?? [], value: de(a), onChange: l, errors: c, id: i, content: r });
     case "repeater":
-      return /* @__PURE__ */ e.jsx(Un, { field: s, value: Array.isArray(a) ? a : [], onChange: l, errors: c, id: i, content: r });
+      return /* @__PURE__ */ e.jsx(Gn, { field: s, value: Array.isArray(a) ? a : [], onChange: l, errors: c, id: i, content: r });
     case "flexible":
-      return /* @__PURE__ */ e.jsx(qn, { field: s, value: Array.isArray(a) ? a : [], onChange: l, errors: c, id: i });
+      return /* @__PURE__ */ e.jsx(Jn, { field: s, value: Array.isArray(a) ? a : [], onChange: l, errors: c, id: i });
     default:
       return /* @__PURE__ */ e.jsx(
         n.Input,
         {
           id: i,
-          "aria-invalid": h,
+          "aria-invalid": u,
           value: typeof a == "string" ? a : "",
-          placeholder: ks(s, "placeholder"),
+          placeholder: ws(s, "placeholder"),
           onChange: (m) => l(m.target.value)
         }
       );
   }
 }
-function se(s, a) {
+function te(s, a) {
   const l = s.config?.[a];
   return typeof l == "number" ? l : void 0;
 }
-function ks(s, a) {
+function ws(s, a) {
   const l = s.config?.[a];
   return typeof l == "string" ? l : void 0;
 }
-function de({ fields: s, value: a, onChange: l, errors: c, id: i, content: r, bare: d = !1 }) {
-  return /* @__PURE__ */ e.jsx("div", { className: d ? "cms:flex cms:flex-col cms:gap-6" : "cms:flex cms:flex-col cms:gap-4 cms:rounded-lg cms:border cms:p-4", children: s.filter((h) => cs(h, a)).map((h) => h.shared ? (
+function ue({ fields: s, value: a, onChange: l, errors: c, id: i, content: r, bare: d = !1 }) {
+  return /* @__PURE__ */ e.jsx("div", { className: d ? "cms:flex cms:flex-col cms:gap-6" : "cms:flex cms:flex-col cms:gap-4 cms:rounded-lg cms:border cms:p-4", children: s.filter((u) => rs(u, a)).map((u) => u.shared ? (
     // Greyed out; the form says once, at the top, where to edit shared fields.
-    /* @__PURE__ */ e.jsx("fieldset", { disabled: !0, className: "cms:flex cms:flex-col cms:gap-1 cms:opacity-60", title: t("Shared by all languages: edit it in the main language."), children: /* @__PURE__ */ e.jsx(ae, { id: `${i}-${h.handle}`, field: h, value: a[h.handle], content: r, errors: {}, onChange: () => {
-    } }) }, h.handle)
+    /* @__PURE__ */ e.jsx("fieldset", { disabled: !0, className: "cms:flex cms:flex-col cms:gap-1 cms:opacity-60", title: t("Shared by all languages: edit it in the main language."), children: /* @__PURE__ */ e.jsx(ne, { id: `${i}-${u.handle}`, field: u, value: a[u.handle], content: r, errors: {}, onChange: () => {
+    } }) }, u.handle)
   ) : /* @__PURE__ */ e.jsx(
-    ae,
+    ne,
     {
-      id: `${i}-${h.handle}`,
-      field: h,
-      value: a[h.handle],
+      id: `${i}-${u.handle}`,
+      field: u,
+      value: a[u.handle],
       content: r,
-      errors: Y(c, h.handle),
-      onChange: (m) => l({ ...a, [h.handle]: m })
+      errors: Y(c, u.handle),
+      onChange: (m) => l({ ...a, [u.handle]: m })
     },
-    h.handle
+    u.handle
   )) });
 }
-function On({ options: s, value: a, onChange: l, id: c, empty: i, fill: r = !1 }) {
-  return /* @__PURE__ */ e.jsxs(n.Select, { value: a ?? Oe, onValueChange: (d) => l(d === Oe ? null : d), children: [
+function qn({ options: s, value: a, onChange: l, id: c, empty: i, fill: r = !1 }) {
+  return /* @__PURE__ */ e.jsxs(n.Select, { value: a ?? Re, onValueChange: (d) => l(d === Re ? null : d), children: [
     /* @__PURE__ */ e.jsx(n.SelectTrigger, { id: c, className: r ? "cms:w-full" : "cms:w-full cms:max-w-sm", children: /* @__PURE__ */ e.jsx(n.SelectValue, {}) }),
     /* @__PURE__ */ e.jsxs(n.SelectContent, { children: [
-      i && /* @__PURE__ */ e.jsx(n.SelectItem, { value: Oe, children: t("None") }),
+      i && /* @__PURE__ */ e.jsx(n.SelectItem, { value: Re, children: t("None") }),
       s.map((d) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: d.value, children: d.label }, d.value))
     ] })
   ] });
 }
-function Vn({ options: s, value: a, onChange: l, empty: c, inTickOrder: i = !1, invalid: r = !1 }) {
+function Kn({ options: s, value: a, onChange: l, empty: c, inTickOrder: i = !1, invalid: r = !1 }) {
   return s.length === 0 ? /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: c ?? t("Nothing to choose from yet.") }) : /* @__PURE__ */ e.jsx("div", { className: "cms:flex cms:flex-col cms:gap-2", children: s.map((d) => /* @__PURE__ */ e.jsxs("label", { className: "cms:flex cms:items-center cms:gap-2 cms:text-sm", children: [
     /* @__PURE__ */ e.jsx(
       n.Checkbox,
       {
         checked: a.includes(d.value),
         "aria-invalid": r || void 0,
-        onCheckedChange: (h) => l(h ? i ? [...a.filter((m) => m !== d.value), d.value] : s.map((m) => m.value).filter((m) => m === d.value || a.includes(m)) : a.filter((m) => m !== d.value))
+        onCheckedChange: (u) => l(u ? i ? [...a.filter((m) => m !== d.value), d.value] : s.map((m) => m.value).filter((m) => m === d.value || a.includes(m)) : a.filter((m) => m !== d.value))
       }
     ),
     d.label,
@@ -1605,8 +1618,8 @@ function Vn({ options: s, value: a, onChange: l, empty: c, inTickOrder: i = !1, 
     ] })
   ] }, d.value)) });
 }
-function Rn({ label: s, value: a, onChange: l, errors: c, id: i, collections: r }) {
-  const d = a.type === "entry" ? "entry" : "url", h = (m) => {
+function Wn({ label: s, value: a, onChange: l, errors: c, id: i, collections: r }) {
+  const d = a.type === "entry" ? "entry" : "url", u = (m) => {
     const o = { ...a, type: d, ...m }, g = o.type === "entry" ? typeof o.entry_id != "number" : o.url === "" || o.url === void 0 || o.url === null;
     l(g ? o.label || o.new_tab ? o : null : o);
   };
@@ -1619,7 +1632,7 @@ function Rn({ label: s, value: a, onChange: l, errors: c, id: i, collections: r 
         role: "radio",
         "aria-checked": d === m,
         variant: d === m ? "secondary" : "ghost",
-        onClick: () => h({ type: m, url: m === "url" ? a.url : void 0, entry_id: m === "entry" ? a.entry_id : void 0 }),
+        onClick: () => u({ type: m, url: m === "url" ? a.url : void 0, entry_id: m === "entry" ? a.entry_id : void 0 }),
         children: t(m === "url" ? "Address" : "Entry")
       },
       m
@@ -1632,11 +1645,11 @@ function Rn({ label: s, value: a, onChange: l, errors: c, id: i, collections: r 
           "aria-label": t(":field: address", { field: s }),
           placeholder: t("https://… or /about"),
           value: typeof a.url == "string" ? a.url : "",
-          onChange: (m) => h({ url: m.target.value }),
+          onChange: (m) => u({ url: m.target.value }),
           "aria-invalid": c.url !== void 0
         }
       ) : /* @__PURE__ */ e.jsx(
-        ke,
+        Se,
         {
           id: i,
           invalid: c.entry_id !== void 0,
@@ -1644,7 +1657,7 @@ function Rn({ label: s, value: a, onChange: l, errors: c, id: i, collections: r 
           max: null,
           collections: r,
           value: typeof a.entry_id == "number" ? a.entry_id : null,
-          onChange: (m) => h({ entry_id: typeof m == "number" ? m : void 0 })
+          onChange: (m) => u({ entry_id: typeof m == "number" ? m : void 0 })
         }
       ),
       /* @__PURE__ */ e.jsx(
@@ -1653,23 +1666,23 @@ function Rn({ label: s, value: a, onChange: l, errors: c, id: i, collections: r 
           "aria-label": t(":field: link text", { field: s }),
           placeholder: t(d === "entry" ? "Link text (the entry's title)" : "Link text"),
           value: typeof a.label == "string" ? a.label : "",
-          onChange: (m) => h({ label: m.target.value })
+          onChange: (m) => u({ label: m.target.value })
         }
       ),
       /* @__PURE__ */ e.jsxs("label", { className: "cms:flex cms:h-9 cms:items-center cms:gap-2 cms:text-sm", children: [
-        /* @__PURE__ */ e.jsx(n.Checkbox, { checked: a.new_tab === !0, onCheckedChange: (m) => h({ new_tab: m }) }),
+        /* @__PURE__ */ e.jsx(n.Checkbox, { checked: a.new_tab === !0, onCheckedChange: (m) => u({ new_tab: m }) }),
         t("New tab")
       ] }),
-      /* @__PURE__ */ e.jsx("div", { className: "cms:md:col-span-3", children: /* @__PURE__ */ e.jsx(H, { message: c.url ?? c.entry_id ?? c.label ?? c.type }) })
+      /* @__PURE__ */ e.jsx("div", { className: "cms:md:col-span-3", children: /* @__PURE__ */ e.jsx(O, { message: c.url ?? c.entry_id ?? c.label ?? c.type }) })
     ] })
   ] });
 }
-function ws(s, a) {
+function Ss(s, a) {
   return !a && (s.fields ?? []).every((l) => l.type === "text");
 }
-function ma(s) {
-  const a = T.useRef([]);
-  return a.current = Sn(a.current, s), {
+function xa(s) {
+  const a = M.useRef([]);
+  return a.current = Dn(a.current, s), {
     keys: a.current,
     remove: (l) => {
       a.current = a.current.filter((c, i) => i !== l);
@@ -1679,8 +1692,8 @@ function ma(s) {
     }
   };
 }
-function ua() {
-  const [s, a] = T.useState(() => /* @__PURE__ */ new Set());
+function pa() {
+  const [s, a] = M.useState(() => /* @__PURE__ */ new Set());
   return {
     isCollapsed: (l, c) => !c && s.has(l),
     toggle: (l) => a((c) => {
@@ -1691,121 +1704,121 @@ function ua() {
     anyOpen: (l) => l.some((c) => !s.has(c))
   };
 }
-function ha({ keys: s, folding: a }) {
+function ga({ keys: s, folding: a }) {
   if (s.length < 2) return null;
   const l = a.anyOpen(s);
   return /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "ghost", size: "sm", onClick: () => a.setAll(s, l), children: [
-    l ? /* @__PURE__ */ e.jsx(Wa, {}) : /* @__PURE__ */ e.jsx(Ga, {}),
+    l ? /* @__PURE__ */ e.jsx(Qa, {}) : /* @__PURE__ */ e.jsx(Za, {}),
     " ",
     t(l ? "Collapse all" : "Expand all")
   ] });
 }
-function Un({ field: s, value: a, onChange: l, errors: c, id: i, content: r = !1 }) {
-  const d = s.fields ?? [], h = a.map(ie), m = ma(h.length), o = (f, j) => l(h.map((C, _) => _ === f ? j : C)), g = (f) => {
-    m.remove(f), l(h.filter((j, C) => C !== f));
-  }, x = s.label ? s.label.toLowerCase().replace(/s$/, "") : t("row"), u = x.charAt(0).toUpperCase() + x.slice(1), v = h.map((f, j) => ({ row: f, index: j, key: m.keys[j] ?? String(j) })), y = ua();
+function Gn({ field: s, value: a, onChange: l, errors: c, id: i, content: r = !1 }) {
+  const d = s.fields ?? [], u = a.map(de), m = xa(u.length), o = (f, j) => l(u.map((_, T) => T === f ? j : _)), g = (f) => {
+    m.remove(f), l(u.filter((j, _) => _ !== f));
+  }, x = s.label ? s.label.toLowerCase().replace(/s$/, "") : t("row"), h = x.charAt(0).toUpperCase() + x.slice(1), b = u.map((f, j) => ({ row: f, index: j, key: m.keys[j] ?? String(j) })), v = pa();
   return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
     /* @__PURE__ */ e.jsx(
       n.SortableList,
       {
-        items: v,
+        items: b,
         getId: (f) => f.key,
         getLabel: (f) => `${x} ${f.index + 1}`,
-        onReorder: (f, j, C) => {
-          m.move(j, C), l(f.map((_) => _.row));
+        onReorder: (f, j, _) => {
+          m.move(j, _), l(f.map((T) => T.row));
         },
-        children: ({ row: f, index: j, key: C }, { handle: _ }) => ws(s, r) ? /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-start cms:gap-2", children: [
-          /* @__PURE__ */ e.jsx(n.SortableHandle, { ..._, label: t("Move :item :number", { item: x, number: j + 1 }), className: "cms:mt-1" }),
-          d.map((b) => /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-1 cms:flex-col cms:gap-1", children: [
+        children: ({ row: f, index: j, key: _ }, { handle: T }) => Ss(s, r) ? /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-start cms:gap-2", children: [
+          /* @__PURE__ */ e.jsx(n.SortableHandle, { ...T, label: t("Move :item :number", { item: x, number: j + 1 }), className: "cms:mt-1" }),
+          d.map((y) => /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-1 cms:flex-col cms:gap-1", children: [
             /* @__PURE__ */ e.jsx(
               n.Input,
               {
-                "aria-label": b.label || b.handle,
-                placeholder: b.label || b.handle,
-                value: typeof f[b.handle] == "string" ? f[b.handle] : "",
-                onChange: (p) => o(j, { ...f, [b.handle]: p.target.value })
+                "aria-label": y.label || y.handle,
+                placeholder: y.label || y.handle,
+                value: typeof f[y.handle] == "string" ? f[y.handle] : "",
+                onChange: (p) => o(j, { ...f, [y.handle]: p.target.value })
               }
             ),
-            /* @__PURE__ */ e.jsx(H, { message: c[`${j}.${b.handle}`] })
-          ] }, b.handle)),
-          /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "ghost", size: "icon", "aria-label": t("Remove :item :number", { item: x, number: j + 1 }), onClick: () => g(j), children: /* @__PURE__ */ e.jsx(q, {}) })
+            /* @__PURE__ */ e.jsx(O, { message: c[`${j}.${y.handle}`] })
+          ] }, y.handle)),
+          /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "ghost", size: "icon", "aria-label": t("Remove :item :number", { item: x, number: j + 1 }), onClick: () => g(j), children: /* @__PURE__ */ e.jsx(K, {}) })
         ] }) : (() => {
-          const b = Y(c, String(j)), p = y.isCollapsed(C, Object.keys(b).length > 0);
+          const y = Y(c, String(j)), p = v.isCollapsed(_, Object.keys(y).length > 0);
           return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
             /* @__PURE__ */ e.jsx(
-              xa,
+              fa,
               {
-                label: `${u} ${j + 1}`,
-                summary: as(d, f),
-                handle: _,
+                label: `${h} ${j + 1}`,
+                summary: ns(d, f),
+                handle: T,
                 onRemove: () => g(j),
                 collapsed: p,
-                onToggle: () => y.toggle(C),
+                onToggle: () => v.toggle(_),
                 controls: `${i}-${j}-fields`,
                 hidden: r ? f._hidden === !0 : void 0,
-                onHidden: (M) => o(j, { ...f, _hidden: M })
+                onHidden: (z) => o(j, { ...f, _hidden: z })
               }
             ),
-            /* @__PURE__ */ e.jsx("div", { id: `${i}-${j}-fields`, hidden: p, children: !p && /* @__PURE__ */ e.jsx(de, { fields: d, value: f, onChange: (M) => o(j, M), errors: b, id: `${i}-${j}`, content: r }) })
+            /* @__PURE__ */ e.jsx("div", { id: `${i}-${j}-fields`, hidden: p, children: !p && /* @__PURE__ */ e.jsx(ue, { fields: d, value: f, onChange: (z) => o(j, z), errors: y, id: `${i}-${j}`, content: r }) })
           ] });
         })()
       }
     ),
     /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-wrap cms:items-center cms:gap-2", children: [
-      /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "outline", size: "sm", onClick: () => l([...h, r ? yn() : {}]), children: [
-        /* @__PURE__ */ e.jsx(G, {}),
+      /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "outline", size: "sm", onClick: () => l([...u, r ? Sn() : {}]), children: [
+        /* @__PURE__ */ e.jsx(J, {}),
         " ",
         t("Add :item", { item: x })
       ] }),
-      !ws(s, r) && /* @__PURE__ */ e.jsx(ha, { keys: v.map((f) => f.key), folding: y })
+      !Ss(s, r) && /* @__PURE__ */ e.jsx(ga, { keys: b.map((f) => f.key), folding: v })
     ] })
   ] });
 }
-function qn({ field: s, value: a, onChange: l, errors: c, id: i }) {
-  const r = s.blocks ?? [], d = a.map(ie), h = ma(d.length), m = (u, v) => l(d.map((y, f) => f === u ? v : y)), o = (u) => {
-    h.remove(u), l(d.filter((v, y) => y !== u));
-  }, g = d.map((u, v) => ({ block: u, index: v, key: h.keys[v] ?? String(v) })), x = ua();
+function Jn({ field: s, value: a, onChange: l, errors: c, id: i }) {
+  const r = s.blocks ?? [], d = a.map(de), u = xa(d.length), m = (h, b) => l(d.map((v, f) => f === h ? b : v)), o = (h) => {
+    u.remove(h), l(d.filter((b, v) => v !== h));
+  }, g = d.map((h, b) => ({ block: h, index: b, key: u.keys[b] ?? String(b) })), x = pa();
   return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-3", children: [
     /* @__PURE__ */ e.jsx(
       n.SortableList,
       {
         items: g,
-        getId: (u) => u.key,
+        getId: (h) => h.key,
         className: "cms:gap-3",
-        getLabel: (u) => t(":type block", { type: r.find((v) => v.type === u.block.type)?.label ?? String(u.block.type) }),
-        onReorder: (u, v, y) => {
-          h.move(v, y), l(u.map((f) => f.block));
+        getLabel: (h) => t(":type block", { type: r.find((b) => b.type === h.block.type)?.label ?? String(h.block.type) }),
+        onReorder: (h, b, v) => {
+          u.move(b, v), l(h.map((f) => f.block));
         },
-        children: ({ block: u, index: v, key: y }, { handle: f }) => {
-          const j = r.find((b) => b.type === u.type), C = Y(c, `${v}.values`), _ = x.isCollapsed(y, Object.keys(C).length > 0 || c[`${v}.type`] !== void 0);
+        children: ({ block: h, index: b, key: v }, { handle: f }) => {
+          const j = r.find((y) => y.type === h.type), _ = Y(c, `${b}.values`), T = x.isCollapsed(v, Object.keys(_).length > 0 || c[`${b}.type`] !== void 0);
           return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
             /* @__PURE__ */ e.jsx(
-              xa,
+              fa,
               {
-                label: j?.label ?? String(u.type),
-                summary: j ? as(j.fields, ie(u.values)) : null,
+                label: j?.label ?? String(h.type),
+                summary: j ? ns(j.fields, de(h.values)) : null,
                 badge: !0,
                 handle: f,
-                onRemove: () => o(v),
-                collapsed: _,
-                onToggle: () => x.toggle(y),
-                controls: `${i}-${v}-fields`,
-                hidden: u.hidden === !0,
-                onHidden: (b) => m(v, { ...u, hidden: b })
+                onRemove: () => o(b),
+                collapsed: T,
+                onToggle: () => x.toggle(v),
+                controls: `${i}-${b}-fields`,
+                hidden: h.hidden === !0,
+                onHidden: (y) => m(b, { ...h, hidden: y })
               }
             ),
-            /* @__PURE__ */ e.jsx("div", { id: `${i}-${v}-fields`, hidden: _, children: _ ? null : j ? /* @__PURE__ */ e.jsx(
-              de,
+            /* @__PURE__ */ e.jsx("div", { id: `${i}-${b}-fields`, hidden: T, children: T ? null : j ? /* @__PURE__ */ e.jsx(
+              ue,
               {
                 fields: j.fields,
-                value: ie(u.values),
-                onChange: (b) => m(v, { ...u, values: b }),
-                errors: C,
-                id: `${i}-${v}`,
+                value: de(h.values),
+                onChange: (y) => m(b, { ...h, values: y }),
+                errors: _,
+                id: `${i}-${b}`,
                 content: !0
               }
             ) : /* @__PURE__ */ e.jsx("p", { className: "cms:rounded-lg cms:border cms:p-4 cms:text-sm cms:text-muted-foreground", children: t("This kind of block no longer exists. Its values are kept.") }) }),
-            /* @__PURE__ */ e.jsx(H, { message: c[`${v}.type`] })
+            /* @__PURE__ */ e.jsx(O, { message: c[`${b}.type`] })
           ] });
         }
       }
@@ -1813,18 +1826,18 @@ function qn({ field: s, value: a, onChange: l, errors: c, id: i }) {
     /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-wrap cms:items-center cms:gap-2", children: [
       /* @__PURE__ */ e.jsxs(n.DropdownMenu, { children: [
         /* @__PURE__ */ e.jsx(n.DropdownMenuTrigger, { asChild: !0, children: /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "outline", size: "sm", disabled: r.length === 0, children: [
-          /* @__PURE__ */ e.jsx(G, {}),
+          /* @__PURE__ */ e.jsx(J, {}),
           " ",
           t("Add block")
         ] }) }),
-        /* @__PURE__ */ e.jsx(n.DropdownMenuContent, { align: "start", children: r.map((u) => /* @__PURE__ */ e.jsx(n.DropdownMenuItem, { onSelect: () => l([...d, Nn(u.type)]), children: u.label }, u.type)) })
+        /* @__PURE__ */ e.jsx(n.DropdownMenuContent, { align: "start", children: r.map((h) => /* @__PURE__ */ e.jsx(n.DropdownMenuItem, { onSelect: () => l([...d, Cn(h.type)]), children: h.label }, h.type)) })
       ] }),
-      /* @__PURE__ */ e.jsx(ha, { keys: g.map((u) => u.key), folding: x })
+      /* @__PURE__ */ e.jsx(ga, { keys: g.map((h) => h.key), folding: x })
     ] })
   ] });
 }
-function xa({ label: s, summary: a, badge: l = !1, handle: c, onRemove: i, collapsed: r, onToggle: d, controls: h, hidden: m, onHidden: o }) {
-  const g = r ? ve : Ys, x = a ? `${s}: ${a}` : s;
+function fa({ label: s, summary: a, badge: l = !1, handle: c, onRemove: i, collapsed: r, onToggle: d, controls: u, hidden: m, onHidden: o }) {
+  const g = r ? Ne : Ys, x = a ? `${s}: ${a}` : s;
   return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-center cms:gap-2", children: [
     /* @__PURE__ */ e.jsx(n.SortableHandle, { ...c, label: t("Move :title", { title: x }) }),
     /* @__PURE__ */ e.jsxs(
@@ -1833,7 +1846,7 @@ function xa({ label: s, summary: a, badge: l = !1, handle: c, onRemove: i, colla
         type: "button",
         onClick: d,
         "aria-expanded": !r,
-        "aria-controls": h,
+        "aria-controls": u,
         className: "cms:flex cms:min-w-0 cms:flex-1 cms:items-center cms:gap-2 cms:rounded-md cms:text-left cms:outline-none cms:focus-visible:ring-2 cms:focus-visible:ring-ring",
         children: [
           /* @__PURE__ */ e.jsx(g, { className: "cms:size-4 cms:shrink-0 cms:text-muted-foreground", "aria-hidden": !0 }),
@@ -1844,7 +1857,7 @@ function xa({ label: s, summary: a, badge: l = !1, handle: c, onRemove: i, colla
       }
     ),
     m !== void 0 && /* @__PURE__ */ e.jsxs("label", { className: "cms:flex cms:shrink-0 cms:items-center cms:gap-2 cms:text-sm cms:text-muted-foreground", title: t("Off: kept here, but left out of the page"), children: [
-      /* @__PURE__ */ e.jsx(n.Switch, { checked: !m, onCheckedChange: (u) => o(!u), "aria-label": t(":title: visible on site", { title: x }) }),
+      /* @__PURE__ */ e.jsx(n.Switch, { checked: !m, onCheckedChange: (h) => o(!h), "aria-label": t(":title: visible on site", { title: x }) }),
       t("Visible on site")
     ] }),
     /* @__PURE__ */ e.jsx(
@@ -1856,91 +1869,91 @@ function xa({ label: s, summary: a, badge: l = !1, handle: c, onRemove: i, colla
         className: "cms:size-8 cms:shrink-0 cms:text-destructive",
         "aria-label": t("Remove :title", { title: x }),
         onClick: i,
-        children: /* @__PURE__ */ e.jsx(q, {})
+        children: /* @__PURE__ */ e.jsx(K, {})
       }
     )
   ] });
 }
-function pa({ fields: s, onChange: a, types: l, errors: c, depth: i = 1, idPrefix: r = "field", reserved: d, locales: h = [] }) {
-  const [m, o] = T.useState(() => /* @__PURE__ */ new Set()), g = (j) => o((C) => {
-    const _ = new Set(C);
-    return _.has(j) ? _.delete(j) : _.add(j), _;
-  }), x = (j, C) => a(s.map((_, b) => b === j ? C : _)), u = (j) => {
-    const C = Tn(j.type, j.label, s);
-    a([...s, C]), o(/* @__PURE__ */ new Set([C.key]));
-  }, [v, y] = T.useState(""), f = (j) => {
-    const C = Ln(s, j, d, t);
-    C && (a(C.fields), o(/* @__PURE__ */ new Set([C.copy.key])), y(t(":title duplicated as :copy, below it.", { title: s[j]?.label || s[j]?.handle || "", copy: C.copy.label ?? C.copy.handle })));
+function ja({ fields: s, onChange: a, types: l, errors: c, depth: i = 1, idPrefix: r = "field", reserved: d, locales: u = [] }) {
+  const [m, o] = M.useState(() => /* @__PURE__ */ new Set()), g = (j) => o((_) => {
+    const T = new Set(_);
+    return T.has(j) ? T.delete(j) : T.add(j), T;
+  }), x = (j, _) => a(s.map((T, y) => y === j ? _ : T)), h = (j) => {
+    const _ = Ln(j.type, j.label, s);
+    a([...s, _]), o(/* @__PURE__ */ new Set([_.key]));
+  }, [b, v] = M.useState(""), f = (j) => {
+    const _ = Fn(s, j, d, t);
+    _ && (a(_.fields), o(/* @__PURE__ */ new Set([_.copy.key])), v(t(":title duplicated as :copy, below it.", { title: s[j]?.label || s[j]?.handle || "", copy: _.copy.label ?? _.copy.handle })));
   };
   return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
     s.length === 0 && /* @__PURE__ */ e.jsx("p", { className: "cms:rounded-lg cms:border cms:border-dashed cms:p-4 cms:text-sm cms:text-muted-foreground", children: t("No fields yet.") }),
     s.length > 1 && /* @__PURE__ */ e.jsx("div", { className: "cms:flex cms:justify-end", children: m.size > 0 ? /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "ghost", size: "sm", onClick: () => o(/* @__PURE__ */ new Set()), children: t("Close all") }) : /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "ghost", size: "sm", onClick: () => o(new Set(s.map((j) => j.key))), children: t("Open all") }) }),
-    /* @__PURE__ */ e.jsx(n.SortableList, { items: s, getId: (j) => j.key, getLabel: (j) => j.label || j.handle, onReorder: (j) => a(j), children: (j, { index: C, handle: _, isOverlay: b }) => {
-      const p = l.find((w) => w.type === j.type), M = we(c, String(C)) || ca(j, s, d) !== null, S = !b && (m.has(j.key) || M), B = `${r}-${j.key}`;
-      return /* @__PURE__ */ e.jsxs("div", { "data-invalid": M ? "true" : void 0, className: `cms:rounded-lg cms:border cms:bg-card ${M ? "cms:border-destructive" : ""}`, children: [
+    /* @__PURE__ */ e.jsx(n.SortableList, { items: s, getId: (j) => j.key, getLabel: (j) => j.label || j.handle, onReorder: (j) => a(j), children: (j, { index: _, handle: T, isOverlay: y }) => {
+      const p = l.find((L) => L.type === j.type), z = Ce(c, String(_)) || oa(j, s, d) !== null, k = !y && (m.has(j.key) || z), F = `${r}-${j.key}`;
+      return /* @__PURE__ */ e.jsxs("div", { "data-invalid": z ? "true" : void 0, className: `cms:rounded-lg cms:border cms:bg-card ${z ? "cms:border-destructive" : ""}`, children: [
         /* @__PURE__ */ e.jsx(
-          Wn,
+          Qn,
           {
             field: j,
             type: p,
-            index: C,
-            expanded: S,
-            controls: B,
-            handle: _,
-            shared: h.length > 0,
+            index: _,
+            expanded: k,
+            controls: F,
+            handle: T,
+            shared: u.length > 0,
             onToggle: () => g(j.key),
-            onDuplicate: () => f(C),
-            onRemove: () => a(s.filter((w, D) => D !== C))
+            onDuplicate: () => f(_),
+            onRemove: () => a(s.filter((L, S) => S !== _))
           }
         ),
-        S && /* @__PURE__ */ e.jsx(
-          Gn,
+        k && /* @__PURE__ */ e.jsx(
+          Zn,
           {
-            id: B,
+            id: F,
             field: j,
             type: p,
             siblings: s,
-            onChange: (w) => x(C, w),
+            onChange: (L) => x(_, L),
             types: l,
-            errors: oe(c, String(C)),
+            errors: me(c, String(_)),
             depth: i,
             reserved: d,
-            locales: h
+            locales: u
           }
         )
       ] });
     } }),
-    /* @__PURE__ */ e.jsx("p", { className: "cms:sr-only", "aria-live": "polite", children: v }),
+    /* @__PURE__ */ e.jsx("p", { className: "cms:sr-only", "aria-live": "polite", children: b }),
     /* @__PURE__ */ e.jsx("div", { children: /* @__PURE__ */ e.jsxs(n.DropdownMenu, { children: [
       /* @__PURE__ */ e.jsx(n.DropdownMenuTrigger, { asChild: !0, children: /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "outline", size: "sm", children: [
-        /* @__PURE__ */ e.jsx(G, {}),
+        /* @__PURE__ */ e.jsx(J, {}),
         " ",
         t("Add field")
       ] }) }),
-      /* @__PURE__ */ e.jsx(n.DropdownMenuContent, { align: "start", children: l.filter((j) => !j.hasChildren || i < _n).map((j) => /* @__PURE__ */ e.jsx(n.DropdownMenuItem, { onSelect: () => u(j), children: j.label }, j.type)) })
+      /* @__PURE__ */ e.jsx(n.DropdownMenuContent, { align: "start", children: l.filter((j) => !j.hasChildren || i < Mn).map((j) => /* @__PURE__ */ e.jsx(n.DropdownMenuItem, { onSelect: () => h(j), children: j.label }, j.type)) })
     ] }) })
   ] });
 }
-const Kn = {
-  text: fn,
-  textarea: xn,
-  rich_text: Qa,
-  number: Xa,
-  toggle: pn,
-  date: Ka,
-  select: Nt,
-  media: en,
-  entries: ln,
-  terms: hn,
-  link: jt,
-  group: Za,
-  repeater: on,
-  flexible: qa,
-  fieldset: rn,
-  file: cn
+const Yn = {
+  text: yn,
+  textarea: jn,
+  rich_text: sn,
+  number: an,
+  toggle: bn,
+  date: Ya,
+  select: wt,
+  media: nn,
+  entries: mn,
+  terms: Ut,
+  link: bt,
+  group: tn,
+  repeater: xn,
+  flexible: Ja,
+  fieldset: hn,
+  file: un
 };
-function Wn({ field: s, type: a, expanded: l, controls: c, handle: i, shared: r, onToggle: d, onDuplicate: h, onRemove: m }) {
-  const o = s.label || s.handle, g = Kn[s.type] ?? mn, x = s.type === "fieldset", u = x ? typeof s.config?.fieldset == "string" ? s.config.fieldset : "" : s.handle, v = r && !x && !ra(s, a?.translatable ?? !1);
+function Qn({ field: s, type: a, expanded: l, controls: c, handle: i, shared: r, onToggle: d, onDuplicate: u, onRemove: m }) {
+  const o = s.label || s.handle, g = Yn[s.type] ?? gn, x = s.type === "fieldset", h = x ? typeof s.config?.fieldset == "string" ? s.config.fieldset : "" : s.handle, b = r && !x && !da(s, a?.translatable ?? !1);
   return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-center cms:gap-1 cms:py-1.5 cms:pr-1.5 cms:pl-2", children: [
     /* @__PURE__ */ e.jsx(n.SortableHandle, { ...i, label: t("Move :title", { title: o }) }),
     /* @__PURE__ */ e.jsx(
@@ -1952,7 +1965,7 @@ function Wn({ field: s, type: a, expanded: l, controls: c, handle: i, shared: r,
         onClick: d,
         "aria-label": l ? t("Close :title", { title: o }) : t("Open :title", { title: o }),
         className: "cms:inline-flex cms:size-7 cms:shrink-0 cms:items-center cms:justify-center cms:rounded-md cms:text-muted-foreground cms:transition-colors hover:cms:bg-accent hover:cms:text-foreground focus-visible:cms:outline-none focus-visible:cms:ring-2 focus-visible:cms:ring-ring",
-        children: /* @__PURE__ */ e.jsx(ve, { "aria-hidden": !0, className: `cms:size-4 cms:transition-transform cms:duration-200 ${l ? "cms:rotate-90" : ""}` })
+        children: /* @__PURE__ */ e.jsx(Ne, { "aria-hidden": !0, className: `cms:size-4 cms:transition-transform cms:duration-200 ${l ? "cms:rotate-90" : ""}` })
       }
     ),
     /* @__PURE__ */ e.jsxs("div", { role: "presentation", onClick: d, className: "cms:flex cms:min-w-0 cms:flex-1 cms:cursor-pointer cms:flex-wrap cms:items-center cms:gap-x-2.5 cms:gap-y-1 cms:py-0.5", children: [
@@ -1962,11 +1975,11 @@ function Wn({ field: s, type: a, expanded: l, controls: c, handle: i, shared: r,
       ] }),
       /* @__PURE__ */ e.jsxs("span", { className: "cms:flex cms:min-w-0 cms:max-w-full cms:flex-col cms:gap-x-2 cms:sm:flex-row cms:sm:items-baseline", children: [
         /* @__PURE__ */ e.jsx("span", { className: "cms:truncate cms:font-medium", children: o }),
-        u !== "" && u !== o && /* @__PURE__ */ e.jsx("code", { className: "cms:truncate cms:text-xs cms:text-muted-foreground", title: t(x ? "Fieldset" : "Handle"), children: u })
+        h !== "" && h !== o && /* @__PURE__ */ e.jsx("code", { className: "cms:truncate cms:text-xs cms:text-muted-foreground", title: t(x ? "Fieldset" : "Handle"), children: h })
       ] }),
-      (s.required || v || s.condition || a?.hasChildren && s.fields.length > 0 && !l) && /* @__PURE__ */ e.jsxs("span", { className: "cms:flex cms:flex-wrap cms:items-center cms:gap-1", children: [
+      (s.required || b || s.condition || a?.hasChildren && s.fields.length > 0 && !l) && /* @__PURE__ */ e.jsxs("span", { className: "cms:flex cms:flex-wrap cms:items-center cms:gap-1", children: [
         s.required && /* @__PURE__ */ e.jsx(n.Badge, { variant: "outline", className: "cms:font-normal", children: t("Required") }),
-        v && /* @__PURE__ */ e.jsx(n.Badge, { variant: "outline", className: "cms:font-normal", title: t("One value shared by every language."), children: t("Shared") }),
+        b && /* @__PURE__ */ e.jsx(n.Badge, { variant: "outline", className: "cms:font-normal", title: t("One value shared by every language."), children: t("Shared") }),
         s.condition && /* @__PURE__ */ e.jsx(n.Badge, { variant: "outline", className: "cms:font-normal", children: t("Conditional") }),
         a?.hasChildren && s.fields.length > 0 && !l && /* @__PURE__ */ e.jsx("span", { className: "cms:text-xs cms:text-muted-foreground", children: t(":count inside", { count: s.fields.length }) })
       ] })
@@ -1980,8 +1993,8 @@ function Wn({ field: s, type: a, expanded: l, controls: c, handle: i, shared: r,
         className: "cms:size-8 cms:text-muted-foreground hover:cms:text-foreground",
         "aria-label": t("Duplicate :title", { title: o }),
         title: t("Duplicate :title", { title: o }),
-        onClick: h,
-        children: /* @__PURE__ */ e.jsx(tt, {})
+        onClick: u,
+        children: /* @__PURE__ */ e.jsx(at, {})
       }
     ),
     /* @__PURE__ */ e.jsx(
@@ -1994,23 +2007,23 @@ function Wn({ field: s, type: a, expanded: l, controls: c, handle: i, shared: r,
         "aria-label": t("Remove :title", { title: o }),
         title: t("Remove :title", { title: o }),
         onClick: m,
-        children: /* @__PURE__ */ e.jsx(q, {})
+        children: /* @__PURE__ */ e.jsx(K, {})
       }
     )
   ] });
 }
-function Gn({ id: s, field: a, type: l, siblings: c, onChange: i, types: r, errors: d, depth: h, reserved: m, locales: o }) {
-  const g = a.config ?? {}, x = ca(a, c, m, t);
+function Zn({ id: s, field: a, type: l, siblings: c, onChange: i, types: r, errors: d, depth: u, reserved: m, locales: o }) {
+  const g = a.config ?? {}, x = oa(a, c, m, t);
   if (a.type === "fieldset")
     return /* @__PURE__ */ e.jsxs("div", { id: s, className: "cms:flex cms:flex-col cms:gap-4 cms:border-t cms:p-4", children: [
       /* @__PURE__ */ e.jsxs("div", { className: "cms:grid cms:gap-4 cms:md:grid-cols-2", children: [
         /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
           /* @__PURE__ */ e.jsx(n.Label, { htmlFor: `${s}-label`, children: t("Label") }),
-          /* @__PURE__ */ e.jsx(n.Input, { id: `${s}-label`, value: a.label ?? "", onChange: (f) => i(bs(a, f.target.value, c)) }),
+          /* @__PURE__ */ e.jsx(n.Input, { id: `${s}-label`, value: a.label ?? "", onChange: (f) => i(vs(a, f.target.value, c)) }),
           /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: t("Only shown here, in the builder.") })
         ] }),
         l?.settings.map((f) => /* @__PURE__ */ e.jsx(
-          ae,
+          ne,
           {
             id: `${s}-config-${f.handle}`,
             field: f,
@@ -2021,28 +2034,28 @@ function Gn({ id: s, field: a, type: l, siblings: c, onChange: i, types: r, erro
           f.handle
         ))
       ] }),
-      /* @__PURE__ */ e.jsx(H, { message: d.handle ?? d.type })
+      /* @__PURE__ */ e.jsx(O, { message: d.handle ?? d.type })
     ] });
-  const u = In(l?.settings ?? []), v = (f, j = !1) => /* @__PURE__ */ e.jsx(
-    ae,
+  const h = Hn(l?.settings ?? []), b = (f, j = !1) => /* @__PURE__ */ e.jsx(
+    ne,
     {
       id: `${s}-config-${f.handle}`,
       field: f,
       value: g[f.handle],
       fill: j,
       errors: Y(d, `config.${f.handle}`),
-      onChange: (C) => i({ ...a, config: { ...g, [f.handle]: C } })
+      onChange: (_) => i({ ...a, config: { ...g, [f.handle]: _ } })
     },
     f.handle
-  ), y = d.validation ?? Object.entries(d).find(([f]) => f.startsWith("validation."))?.[1];
+  ), v = d.validation ?? Object.entries(d).find(([f]) => f.startsWith("validation."))?.[1];
   return /* @__PURE__ */ e.jsxs("div", { id: s, className: "cms:flex cms:flex-col cms:gap-5 cms:border-t cms:p-4", children: [
     !l && /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-destructive", children: t(`The field type ":type" isn't registered. Its data is kept; register the type or remove the field.`, { type: a.type }) }),
-    /* @__PURE__ */ e.jsxs(Te, { title: t("Basics"), children: [
+    /* @__PURE__ */ e.jsxs(ze, { title: t("Basics"), children: [
       /* @__PURE__ */ e.jsxs("div", { className: "cms:grid cms:items-start cms:gap-4 cms:md:grid-cols-2", children: [
         /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:min-w-0 cms:flex-col cms:gap-2", children: [
           /* @__PURE__ */ e.jsx(n.Label, { htmlFor: `${s}-label`, children: t("Label") }),
-          /* @__PURE__ */ e.jsx(n.Input, { id: `${s}-label`, value: a.label ?? "", onChange: (f) => i(bs(a, f.target.value, c)) }),
-          /* @__PURE__ */ e.jsx(H, { message: d.label })
+          /* @__PURE__ */ e.jsx(n.Input, { id: `${s}-label`, value: a.label ?? "", onChange: (f) => i(vs(a, f.target.value, c)) }),
+          /* @__PURE__ */ e.jsx(O, { message: d.label })
         ] }),
         /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:min-w-0 cms:flex-col cms:gap-2", children: [
           /* @__PURE__ */ e.jsx(n.Label, { htmlFor: `${s}-handle`, children: t("Handle") }),
@@ -2052,15 +2065,15 @@ function Gn({ id: s, field: a, type: l, siblings: c, onChange: i, types: r, erro
               id: `${s}-handle`,
               className: "cms:font-mono",
               value: a.handle,
-              onChange: (f) => i({ ...a, handle: ls(f.target.value), handleTouched: !0 })
+              onChange: (f) => i({ ...a, handle: cs(f.target.value), handleTouched: !0 })
             }
           ),
-          Fe(a) === null && /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: t("How templates read it. Renaming it hides values saved under the old one.") }),
-          /* @__PURE__ */ e.jsx("div", { "aria-live": "polite", children: Fe(a) !== null && /* @__PURE__ */ e.jsx(Jt, { children: Ss(
+          He(a) === null && /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: t("How templates read it. Renaming it hides values saved under the old one.") }),
+          /* @__PURE__ */ e.jsx("div", { "aria-live": "polite", children: He(a) !== null && /* @__PURE__ */ e.jsx(Xt, { children: Cs(
             t("Content saved under :old won't show under :new, and templates reading :old get nothing. To rename it with its content: put back :old, save, then run :command."),
-            { old: Fe(a) ?? "", new: a.handle || "…", command: "php artisan sunrice:rename-field" }
+            { old: He(a) ?? "", new: a.handle || "…", command: "php artisan sunrice:rename-field" }
           ) }) }),
-          /* @__PURE__ */ e.jsx(H, { message: d.handle ?? x ?? void 0 })
+          /* @__PURE__ */ e.jsx(O, { message: d.handle ?? x ?? void 0 })
         ] })
       ] }),
       /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
@@ -2074,7 +2087,7 @@ function Gn({ id: s, field: a, type: l, siblings: c, onChange: i, types: r, erro
             onChange: (f) => i({ ...a, instructions: f.target.value || null })
           }
         ),
-        /* @__PURE__ */ e.jsx(H, { message: d.instructions })
+        /* @__PURE__ */ e.jsx(O, { message: d.instructions })
       ] }),
       /* @__PURE__ */ e.jsxs("div", { className: "cms:grid cms:items-start cms:gap-4 cms:md:grid-cols-2", children: [
         /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:h-9 cms:items-center cms:gap-3 cms:md:h-auto", children: [
@@ -2087,9 +2100,9 @@ function Gn({ id: s, field: a, type: l, siblings: c, onChange: i, types: r, erro
               n.Switch,
               {
                 id: `${s}-translatable`,
-                checked: ra(a, l?.translatable ?? !1),
+                checked: da(a, l?.translatable ?? !1),
                 "aria-describedby": `${s}-translatable-help`,
-                onCheckedChange: (f) => i(Mn(a, f, l?.translatable ?? !1))
+                onCheckedChange: (f) => i(An(a, f, l?.translatable ?? !1))
               }
             ),
             /* @__PURE__ */ e.jsx(n.Label, { htmlFor: `${s}-translatable`, children: t("Translatable") })
@@ -2098,22 +2111,22 @@ function Gn({ id: s, field: a, type: l, siblings: c, onChange: i, types: r, erro
         ] })
       ] })
     ] }),
-    u.options.length > 0 && /* @__PURE__ */ e.jsx(Te, { title: t("Options"), children: u.options.map((f) => (u.dependents[f.handle]?.length ?? 0) > 0 ? /* @__PURE__ */ e.jsx(
-      Yn,
+    h.options.length > 0 && /* @__PURE__ */ e.jsx(ze, { title: t("Options"), children: h.options.map((f) => (h.dependents[f.handle]?.length ?? 0) > 0 ? /* @__PURE__ */ e.jsx(
+      Xn,
       {
         id: s,
         toggle: f,
-        dependents: u.dependents[f.handle] ?? [],
+        dependents: h.dependents[f.handle] ?? [],
         config: g,
         errors: d,
         onChange: (j) => i({ ...a, config: { ...g, ...j } })
       },
       f.handle
-    ) : v(f, !0)) }),
-    u.limits.length > 0 && /* @__PURE__ */ e.jsx(Te, { title: t("Limits and defaults"), children: /* @__PURE__ */ e.jsx("div", { className: "cms:grid cms:grid-cols-1 cms:items-start cms:gap-4 cms:min-[420px]:grid-cols-2 cms:lg:grid-cols-4", children: u.limits.map((f) => /* @__PURE__ */ e.jsx("div", { className: "cms:min-w-0", children: v(f, !0) }, f.handle)) }) }),
-    /* @__PURE__ */ e.jsx(Zn, { id: s, field: a, siblings: c, onChange: i, errors: oe(d, "condition") }),
-    o.length > 0 && /* @__PURE__ */ e.jsx(Jn, { id: s, field: a, locales: o, onChange: i, errors: oe(d, "translations") }),
-    /* @__PURE__ */ e.jsxs("details", { className: "cms:group cms:rounded-lg cms:border cms:p-3", open: (a.validation ?? []).some((f) => f.trim() !== "") || y !== void 0, children: [
+    ) : b(f, !0)) }),
+    h.limits.length > 0 && /* @__PURE__ */ e.jsx(ze, { title: t("Limits and defaults"), children: /* @__PURE__ */ e.jsx("div", { className: "cms:grid cms:grid-cols-1 cms:items-start cms:gap-4 cms:min-[420px]:grid-cols-2 cms:lg:grid-cols-4", children: h.limits.map((f) => /* @__PURE__ */ e.jsx("div", { className: "cms:min-w-0", children: b(f, !0) }, f.handle)) }) }),
+    /* @__PURE__ */ e.jsx(tl, { id: s, field: a, siblings: c, onChange: i, errors: me(d, "condition") }),
+    o.length > 0 && /* @__PURE__ */ e.jsx(el, { id: s, field: a, locales: o, onChange: i, errors: me(d, "translations") }),
+    /* @__PURE__ */ e.jsxs("details", { className: "cms:group cms:rounded-lg cms:border cms:p-3", open: (a.validation ?? []).some((f) => f.trim() !== "") || v !== void 0, children: [
       /* @__PURE__ */ e.jsx("summary", { className: "cms:cursor-pointer cms:text-sm cms:font-medium", children: t("Advanced") }),
       /* @__PURE__ */ e.jsxs("div", { className: "cms:mt-3 cms:flex cms:flex-col cms:gap-2", children: [
         /* @__PURE__ */ e.jsx(n.Label, { htmlFor: `${s}-validation`, children: t("Extra rules") }),
@@ -2129,36 +2142,36 @@ function Gn({ id: s, field: a, type: l, siblings: c, onChange: i, types: r, erro
 `) })
           }
         ),
-        /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: Ss(t("Optional checks, one per line, such as :email or :max (for developers: Laravel validation rules)."), { email: "email", max: "max:100" }) }),
-        /* @__PURE__ */ e.jsx(H, { message: y })
+        /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: Cs(t("Optional checks, one per line, such as :email or :max (for developers: Laravel validation rules)."), { email: "email", max: "max:100" }) }),
+        /* @__PURE__ */ e.jsx(O, { message: v })
       ] })
     ] }),
     l?.hasChildren && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
       /* @__PURE__ */ e.jsx(n.Label, { children: t("Fields inside") }),
       /* @__PURE__ */ e.jsx(
-        pa,
+        ja,
         {
           fields: a.fields,
           onChange: (f) => i({ ...a, fields: f }),
           types: r,
-          errors: oe(d, "fields"),
-          depth: h + 1,
+          errors: me(d, "fields"),
+          depth: u + 1,
           idPrefix: s,
           locales: o
         }
       ),
-      /* @__PURE__ */ e.jsx(H, { message: d.fields })
+      /* @__PURE__ */ e.jsx(O, { message: d.fields })
     ] }),
-    /* @__PURE__ */ e.jsx(H, { message: d.type })
+    /* @__PURE__ */ e.jsx(O, { message: d.type })
   ] });
 }
-function Yn({ id: s, toggle: a, dependents: l, config: c, errors: i, onChange: r }) {
-  const d = c[a.handle] === !0, h = `${s}-config-${a.handle}`, m = [a, ...l].map((o) => Y(i, `config.${o.handle}`)[""]).filter((o) => o !== void 0);
+function Xn({ id: s, toggle: a, dependents: l, config: c, errors: i, onChange: r }) {
+  const d = c[a.handle] === !0, u = `${s}-config-${a.handle}`, m = [a, ...l].map((o) => Y(i, `config.${o.handle}`)[""]).filter((o) => o !== void 0);
   return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
     /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:min-h-9 cms:flex-wrap cms:items-center cms:gap-x-6 cms:gap-y-2", children: [
       /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-center cms:gap-3", children: [
-        /* @__PURE__ */ e.jsx(n.Switch, { id: h, checked: d, onCheckedChange: (o) => r({ [a.handle]: o }) }),
-        /* @__PURE__ */ e.jsx(n.Label, { htmlFor: h, children: a.label || a.handle })
+        /* @__PURE__ */ e.jsx(n.Switch, { id: u, checked: d, onCheckedChange: (o) => r({ [a.handle]: o }) }),
+        /* @__PURE__ */ e.jsx(n.Label, { htmlFor: u, children: a.label || a.handle })
       ] }),
       d && l.map((o) => {
         const g = `${s}-config-${o.handle}`, x = c[o.handle];
@@ -2176,26 +2189,26 @@ function Yn({ id: s, toggle: a, dependents: l, config: c, errors: i, onChange: r
               max: typeof o.config?.max == "number" ? o.config.max : void 0,
               step: typeof o.config?.step == "number" ? o.config.step : "any",
               value: typeof x == "number" || typeof x == "string" ? String(x) : "",
-              onChange: (u) => r({ [o.handle]: u.target.value === "" ? null : Number(u.target.value) })
+              onChange: (h) => r({ [o.handle]: h.target.value === "" ? null : Number(h.target.value) })
             }
           ),
           o.instructions && /* @__PURE__ */ e.jsx("span", { id: `${g}-help`, className: "cms:text-sm cms:text-muted-foreground", children: o.instructions })
-        ] }, o.handle) : /* @__PURE__ */ e.jsx("div", { className: "cms:basis-full", children: /* @__PURE__ */ e.jsx(ae, { id: g, field: o, value: x, fill: !0, errors: Y(i, `config.${o.handle}`), onChange: (u) => r({ [o.handle]: u }) }) }, o.handle);
+        ] }, o.handle) : /* @__PURE__ */ e.jsx("div", { className: "cms:basis-full", children: /* @__PURE__ */ e.jsx(ne, { id: g, field: o, value: x, fill: !0, errors: Y(i, `config.${o.handle}`), onChange: (h) => r({ [o.handle]: h }) }) }, o.handle);
       })
     ] }),
     a.instructions && /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: a.instructions }),
-    m.map((o) => /* @__PURE__ */ e.jsx(H, { message: o }, o))
+    m.map((o) => /* @__PURE__ */ e.jsx(O, { message: o }, o))
   ] });
 }
-function Te({ title: s, children: a }) {
-  const l = T.useId();
+function ze({ title: s, children: a }) {
+  const l = M.useId();
   return /* @__PURE__ */ e.jsxs("section", { "aria-labelledby": l, className: "cms:flex cms:flex-col cms:gap-4", children: [
     /* @__PURE__ */ e.jsx("h4", { id: l, className: "cms:text-xs cms:font-semibold cms:uppercase cms:tracking-wide cms:text-muted-foreground", children: s }),
     a
   ] });
 }
-function Jn({ id: s, field: a, locales: l, onChange: c, errors: i }) {
-  const r = a.translations ?? {}, d = a.type === "select" && Array.isArray(a.config?.options) ? a.config.options.filter((o) => typeof o?.value == "string" && o.value !== "") : [], h = (o, g) => {
+function el({ id: s, field: a, locales: l, onChange: c, errors: i }) {
+  const r = a.translations ?? {}, d = a.type === "select" && Array.isArray(a.config?.options) ? a.config.options.filter((o) => typeof o?.value == "string" && o.value !== "") : [], u = (o, g) => {
     const x = { ...r, [o]: { ...r[o], ...g } };
     c({ ...a, translations: x });
   }, m = Object.entries(i).find(([, o]) => o)?.[1];
@@ -2215,7 +2228,7 @@ function Jn({ id: s, field: a, locales: l, onChange: c, errors: i }) {
             id: `${s}-label-${o}`,
             value: r[o]?.label ?? "",
             placeholder: a.label ?? "",
-            onChange: (x) => h(o, { label: x.target.value })
+            onChange: (x) => u(o, { label: x.target.value })
           }
         )
       ] }),
@@ -2231,7 +2244,7 @@ function Jn({ id: s, field: a, locales: l, onChange: c, errors: i }) {
             id: `${s}-instructions-${o}`,
             value: r[o]?.instructions ?? "",
             placeholder: a.instructions ?? "",
-            onChange: (x) => h(o, { instructions: x.target.value })
+            onChange: (x) => u(o, { instructions: x.target.value })
           }
         )
       ] }),
@@ -2242,24 +2255,24 @@ function Jn({ id: s, field: a, locales: l, onChange: c, errors: i }) {
           ")"
         ] }),
         /* @__PURE__ */ e.jsx("div", { className: "cms:grid cms:gap-2 cms:sm:grid-cols-2", children: d.map((x) => {
-          const u = String(x.value);
+          const h = String(x.value);
           return /* @__PURE__ */ e.jsx(
             n.Input,
             {
-              "aria-label": `${u} (${g})`,
-              value: r[o]?.options?.[u] ?? "",
-              placeholder: typeof x.label == "string" && x.label !== "" ? x.label : u,
-              onChange: (v) => h(o, { options: { ...r[o]?.options, [u]: v.target.value } })
+              "aria-label": `${h} (${g})`,
+              value: r[o]?.options?.[h] ?? "",
+              placeholder: typeof x.label == "string" && x.label !== "" ? x.label : h,
+              onChange: (b) => u(o, { options: { ...r[o]?.options, [h]: b.target.value } })
             },
-            u
+            h
           );
         }) })
       ] })
     ] }, o)) }),
-    /* @__PURE__ */ e.jsx(H, { message: m })
+    /* @__PURE__ */ e.jsx(O, { message: m })
   ] });
 }
-function Qn(s) {
+function sl(s) {
   switch (s) {
     case "equals":
       return t("is");
@@ -2271,19 +2284,19 @@ function Qn(s) {
       return t("is empty");
   }
 }
-function Zn({ id: s, field: a, siblings: l, onChange: c, errors: i }) {
-  const r = zn(a, l), d = oa(a.condition), h = da(a.condition), m = (u, v = h) => c({ ...a, condition: En(u, v) }), o = (u, v) => m(d.map((y, f) => f === u ? { ...y, ...v } : y)), g = () => {
-    const u = r.find((v) => !d.some((y) => y.field === v.handle)) ?? r[0];
-    u && m([...d, { field: u.handle, operator: "equals", value: Ns(Pe(u)) }]);
-  }, x = (u) => {
-    const v = d.length > 1 || "rules" in (a.condition ?? {}) ? oe(i, `rules.${u}`) : i;
-    return v.field ?? v.operator ?? v.value;
+function tl({ id: s, field: a, siblings: l, onChange: c, errors: i }) {
+  const r = In(a, l), d = ua(a.condition), u = ha(a.condition), m = (h, b = u) => c({ ...a, condition: On(h, b) }), o = (h, b) => m(d.map((v, f) => f === h ? { ...v, ...b } : v)), g = () => {
+    const h = r.find((b) => !d.some((v) => v.field === b.handle)) ?? r[0];
+    h && m([...d, { field: h.handle, operator: "equals", value: ks(Ve(h)) }]);
+  }, x = (h) => {
+    const b = d.length > 1 || "rules" in (a.condition ?? {}) ? me(i, `rules.${h}`) : i;
+    return b.field ?? b.operator ?? b.value;
   };
-  return r.length === 0 && d.length === 0 ? null : /* @__PURE__ */ e.jsxs(Te, { title: t("Visibility"), children: [
+  return r.length === 0 && d.length === 0 ? null : /* @__PURE__ */ e.jsxs(ze, { title: t("Visibility"), children: [
     d.length === 0 ? /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: t("Always shown.") }) : /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
       d.length > 1 && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-wrap cms:items-center cms:gap-2 cms:text-sm", children: [
         /* @__PURE__ */ e.jsx("span", { id: `${s}-match-label`, children: t("Show when") }),
-        /* @__PURE__ */ e.jsxs(n.Select, { value: h, onValueChange: (u) => m(d, u === "any" ? "any" : "all"), children: [
+        /* @__PURE__ */ e.jsxs(n.Select, { value: u, onValueChange: (h) => m(d, h === "any" ? "any" : "all"), children: [
           /* @__PURE__ */ e.jsx(n.SelectTrigger, { "aria-labelledby": `${s}-match-label`, className: "cms:h-8 cms:w-auto", children: /* @__PURE__ */ e.jsx(n.SelectValue, {}) }),
           /* @__PURE__ */ e.jsxs(n.SelectContent, { children: [
             /* @__PURE__ */ e.jsx(n.SelectItem, { value: "all", children: t("All of these") }),
@@ -2292,30 +2305,30 @@ function Zn({ id: s, field: a, siblings: l, onChange: c, errors: i }) {
         ] }),
         /* @__PURE__ */ e.jsx("span", { children: t("are true:") })
       ] }),
-      /* @__PURE__ */ e.jsx("ul", { className: "cms:flex cms:flex-col cms:gap-2", children: d.map((u, v) => {
-        const y = l.find((_) => _.handle === u.field && _.key !== a.key), f = He.find((_) => _.value === u.operator) ?? He[0], j = Pe(y), C = x(v);
+      /* @__PURE__ */ e.jsx("ul", { className: "cms:flex cms:flex-col cms:gap-2", children: d.map((h, b) => {
+        const v = l.find((T) => T.handle === h.field && T.key !== a.key), f = Oe.find((T) => T.value === h.operator) ?? Oe[0], j = Ve(v), _ = x(b);
         return /* @__PURE__ */ e.jsxs("li", { className: "cms:flex cms:flex-col cms:gap-1", children: [
           /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-wrap cms:items-start cms:gap-2", children: [
-            /* @__PURE__ */ e.jsx("span", { className: "cms:flex cms:h-9 cms:w-20 cms:shrink-0 cms:items-center cms:text-sm cms:text-muted-foreground", children: t(v === 0 ? "Only when" : h === "any" ? "or" : "and") }),
-            /* @__PURE__ */ e.jsxs(n.Select, { value: u.field, onValueChange: (_) => {
-              const b = l.find((p) => p.handle === _);
-              o(v, { field: _, value: Ns(Pe(b)) });
+            /* @__PURE__ */ e.jsx("span", { className: "cms:flex cms:h-9 cms:w-20 cms:shrink-0 cms:items-center cms:text-sm cms:text-muted-foreground", children: t(b === 0 ? "Only when" : u === "any" ? "or" : "and") }),
+            /* @__PURE__ */ e.jsxs(n.Select, { value: h.field, onValueChange: (T) => {
+              const y = l.find((p) => p.handle === T);
+              o(b, { field: T, value: ks(Ve(y)) });
             }, children: [
-              /* @__PURE__ */ e.jsx(n.SelectTrigger, { id: v === 0 ? `${s}-condition` : void 0, "aria-label": t("Field"), className: "cms:w-48", children: /* @__PURE__ */ e.jsx(n.SelectValue, { placeholder: u.field }) }),
-              /* @__PURE__ */ e.jsx(n.SelectContent, { children: r.map((_) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: _.handle, children: _.label || _.handle }, _.key)) })
+              /* @__PURE__ */ e.jsx(n.SelectTrigger, { id: b === 0 ? `${s}-condition` : void 0, "aria-label": t("Field"), className: "cms:w-48", children: /* @__PURE__ */ e.jsx(n.SelectValue, { placeholder: h.field }) }),
+              /* @__PURE__ */ e.jsx(n.SelectContent, { children: r.map((T) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: T.handle, children: T.label || T.handle }, T.key)) })
             ] }),
-            /* @__PURE__ */ e.jsxs(n.Select, { value: f.value, onValueChange: (_) => o(v, { operator: _ }), children: [
+            /* @__PURE__ */ e.jsxs(n.Select, { value: f.value, onValueChange: (T) => o(b, { operator: T }), children: [
               /* @__PURE__ */ e.jsx(n.SelectTrigger, { "aria-label": t("How to compare"), className: "cms:w-36", children: /* @__PURE__ */ e.jsx(n.SelectValue, {}) }),
-              /* @__PURE__ */ e.jsx(n.SelectContent, { children: He.map((_) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: _.value, children: Qn(_.value) }, _.value)) })
+              /* @__PURE__ */ e.jsx(n.SelectContent, { children: Oe.map((T) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: T.value, children: sl(T.value) }, T.value)) })
             ] }),
             f.needsValue && /* @__PURE__ */ e.jsx("div", { className: "cms:min-w-48 cms:flex-1 cms:sm:max-w-72", children: /* @__PURE__ */ e.jsx(
-              Xn,
+              al,
               {
-                id: `${s}-rule-${v}-value`,
+                id: `${s}-rule-${b}-value`,
                 input: j,
-                value: u.value ?? null,
-                invalid: C !== void 0,
-                onChange: (_) => o(v, { value: _ })
+                value: h.value ?? null,
+                invalid: _ !== void 0,
+                onChange: (T) => o(b, { value: T })
               }
             ) }),
             /* @__PURE__ */ e.jsx(
@@ -2325,27 +2338,27 @@ function Zn({ id: s, field: a, siblings: l, onChange: c, errors: i }) {
                 variant: "ghost",
                 size: "icon",
                 className: "cms:ml-auto cms:size-9 cms:text-muted-foreground hover:cms:text-destructive",
-                "aria-label": t("Remove condition :number", { number: String(v + 1) }),
+                "aria-label": t("Remove condition :number", { number: String(b + 1) }),
                 title: t("Remove condition"),
-                onClick: () => m(d.filter((_, b) => b !== v)),
-                children: /* @__PURE__ */ e.jsx(Ne, {})
+                onClick: () => m(d.filter((T, y) => y !== b)),
+                children: /* @__PURE__ */ e.jsx(we, {})
               }
             )
           ] }),
-          /* @__PURE__ */ e.jsx(H, { message: C })
-        ] }, v);
+          /* @__PURE__ */ e.jsx(O, { message: _ })
+        ] }, b);
       }) })
     ] }),
     r.length > 0 && /* @__PURE__ */ e.jsx("div", { children: /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "outline", size: "sm", onClick: g, children: [
-      /* @__PURE__ */ e.jsx(G, {}),
+      /* @__PURE__ */ e.jsx(J, {}),
       " ",
       t("Add condition")
     ] }) }),
     d.length > 0 && /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: t("A hidden field isn't required, and keeps what it had.") }),
-    /* @__PURE__ */ e.jsx(H, { message: i[""] ?? i.rules ?? i.match })
+    /* @__PURE__ */ e.jsx(O, { message: i[""] ?? i.rules ?? i.match })
   ] });
 }
-function Xn({ id: s, input: a, value: l, invalid: c, onChange: i }) {
+function al({ id: s, input: a, value: l, invalid: c, onChange: i }) {
   switch (a.kind) {
     case "options":
       return /* @__PURE__ */ e.jsxs(n.Select, { value: typeof l == "string" && l !== "" ? l : void 0, onValueChange: (r) => i(r), children: [
@@ -2362,7 +2375,7 @@ function Xn({ id: s, input: a, value: l, invalid: c, onChange: i }) {
       ] });
     case "terms":
       return a.taxonomy === null ? /* @__PURE__ */ e.jsx(n.Input, { id: s, "aria-label": t("Value"), "aria-invalid": c, disabled: !0, placeholder: t("Choose the field's taxonomy first") }) : /* @__PURE__ */ e.jsx(
-        Xt,
+        ta,
         {
           id: s,
           taxonomy: a.taxonomy,
@@ -2376,7 +2389,7 @@ function Xn({ id: s, input: a, value: l, invalid: c, onChange: i }) {
       );
     case "entries":
       return /* @__PURE__ */ e.jsx(
-        ke,
+        Se,
         {
           id: s,
           multiple: !1,
@@ -2414,16 +2427,16 @@ function Xn({ id: s, input: a, value: l, invalid: c, onChange: i }) {
       );
   }
 }
-function Ss(s, a) {
+function Cs(s, a) {
   return s.split(/(:[a-z_]+)/).map((l, c) => {
     const i = a[l.slice(1)];
     return l.startsWith(":") && i !== void 0 ? /* @__PURE__ */ e.jsx("code", { children: i }, c) : l;
   });
 }
-function el(s, a) {
+function nl(s, a) {
   return t(s === "fieldset" ? a ? "A short name for this fieldset, set when it was created: flexible blocks keep it with what they hold." : "A short name for this fieldset. It can't change later: flexible blocks keep it with what they hold." : a ? "A short name for this blueprint. Changing it updates the collections, taxonomies, global sets, forms and entries that use it." : "A short name for this blueprint, used by the collections, taxonomies, global sets and forms that pick it.");
 }
-function sl({ kind: s, handle: a }) {
+function ll({ kind: s, handle: a }) {
   const l = a !== "" ? a : s === "fieldset" ? "address" : "article", c = s === "fieldset" ? `['type' => 'fieldset', 'config' => ['fieldset' => '${l}']]` : `Blueprint::where('handle', '${l}')`;
   return /* @__PURE__ */ e.jsxs("p", { className: "cms:text-sm cms:text-muted-foreground", children: [
     /* @__PURE__ */ e.jsx("span", { className: "cms:font-medium", children: t("For developers:") }),
@@ -2433,55 +2446,55 @@ function sl({ kind: s, handle: a }) {
     /* @__PURE__ */ e.jsx("code", { className: "cms:rounded cms:bg-muted cms:px-1 cms:py-0.5 cms:font-mono cms:text-[0.8125rem] cms:break-words cms:text-foreground", children: c })
   ] });
 }
-function Cs({ kind: s = "blueprint", blueprint: a, fieldTypes: l, locales: c = [], usedBy: i = [], reserved: r = [] }) {
-  const d = s === "fieldset", h = A(d ? "cms/fieldsets" : "cms/blueprints"), m = a ? a.title : t(d ? "New fieldset" : "New blueprint");
-  n.useBreadcrumbs([{ label: t(d ? "Fieldsets" : "Blueprints"), href: h }, { label: m }]);
-  const [o, g] = ce(), x = $.useForm({ title: a?.title ?? "", handle: a?.handle ?? "" }), [u, v] = T.useState(a !== null), [y, f] = T.useState(() => aa(a?.fields)), j = (D) => l.find((P) => P.type === D)?.hasChildren === !0, C = x.errors, [_, b] = T.useState(() => JSON.stringify(y)), p = x.isDirty || JSON.stringify(y) !== _, M = () => {
+function $s({ kind: s = "blueprint", blueprint: a, fieldTypes: l, locales: c = [], usedBy: i = [], reserved: r = [] }) {
+  const d = s === "fieldset", u = I(d ? "cms/fieldsets" : "cms/blueprints"), m = a ? a.title : t(d ? "New fieldset" : "New blueprint");
+  n.useBreadcrumbs([{ label: t(d ? "Fieldsets" : "Blueprints"), href: u }, { label: m }]);
+  const [o, g] = re(), x = C.useForm({ title: a?.title ?? "", handle: a?.handle ?? "" }), [h, b] = M.useState(a !== null), [v, f] = M.useState(() => ca(a?.fields)), j = (S) => l.find((P) => P.type === S)?.hasChildren === !0, _ = x.errors, [T, y] = M.useState(() => JSON.stringify(v)), p = x.isDirty || JSON.stringify(v) !== T, z = () => {
     x.setDefaults();
-    const D = la(y);
-    f(D), b(JSON.stringify(D));
-  }, S = () => {
+    const S = ia(v);
+    f(S), y(JSON.stringify(S));
+  }, k = () => {
     if (x.processing) return;
     x.transform((P) => ({
       // A blueprint's handle can change (RenameBlueprint); a fieldset's can't: flexible blocks store it.
       ...a ? s === "blueprint" ? { title: P.title, handle: P.handle } : { title: P.title } : P,
-      fields: na(y, j)
+      fields: ra(v, j)
     }));
-    const D = () => window.requestAnimationFrame(() => document.querySelector('[data-invalid="true"]')?.scrollIntoView({ block: "center", behavior: "smooth" }));
-    a ? x.put(`${h}/${a.handle}`, { preserveScroll: !0, onSuccess: M, onError: D }) : x.post(h, { onSuccess: M, onError: D });
-  }, B = (D) => {
-    D.preventDefault(), S();
+    const S = () => window.requestAnimationFrame(() => document.querySelector('[data-invalid="true"]')?.scrollIntoView({ block: "center", behavior: "smooth" }));
+    a ? x.put(`${u}/${a.handle}`, { preserveScroll: !0, onSuccess: z, onError: S }) : x.post(u, { onSuccess: z, onError: S });
+  }, F = (S) => {
+    S.preventDefault(), k();
   };
-  n.useUnsavedChanges(p, S);
-  const w = () => a && o(
+  n.useUnsavedChanges(p, k);
+  const L = () => a && o(
     d ? t('Delete the fieldset ":title"? Content keeps its values.', { title: a.title }) : t('Delete the blueprint ":title"? Content keeps its values.', { title: a.title }),
-    () => $.router.delete(`${h}/${a.handle}`, { preserveScroll: !0 })
+    () => C.router.delete(`${u}/${a.handle}`, { preserveScroll: !0 })
   );
-  return /* @__PURE__ */ e.jsxs("form", { onSubmit: B, className: "cms:flex cms:max-w-5xl cms:flex-col cms:gap-6", children: [
-    /* @__PURE__ */ e.jsx($.Head, { title: m }),
+  return /* @__PURE__ */ e.jsxs("form", { onSubmit: F, className: "cms:flex cms:max-w-5xl cms:flex-col cms:gap-6", children: [
+    /* @__PURE__ */ e.jsx(C.Head, { title: m }),
     g,
     /* @__PURE__ */ e.jsx(
       n.PageHeader,
       {
         title: m,
-        back: { href: h, label: t(d ? "Back to fieldsets" : "Back to blueprints") },
+        back: { href: u, label: t(d ? "Back to fieldsets" : "Back to blueprints") },
         actions: /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
-          a && /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "outline", size: "icon", className: "cms:text-destructive", "aria-label": t("Delete :title", { title: m }), onClick: w, children: /* @__PURE__ */ e.jsx(q, {}) }),
+          a && /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "outline", size: "icon", className: "cms:text-destructive", "aria-label": t("Delete :title", { title: m }), onClick: L, children: /* @__PURE__ */ e.jsx(K, {}) }),
           /* @__PURE__ */ e.jsxs(n.Button, { type: "submit", disabled: x.processing, children: [
-            x.processing && /* @__PURE__ */ e.jsx(le, { className: "cms:animate-spin" }),
+            x.processing && /* @__PURE__ */ e.jsx(ce, { className: "cms:animate-spin" }),
             t(a ? "Save" : d ? "Create fieldset" : "Create blueprint")
           ] })
         ] })
       }
     ),
-    /* @__PURE__ */ e.jsx(H, { message: C.blueprint ?? C.fieldset }),
+    /* @__PURE__ */ e.jsx(O, { message: _.blueprint ?? _.fieldset }),
     /* @__PURE__ */ e.jsx(n.Card, { children: /* @__PURE__ */ e.jsxs(n.CardContent, { className: "cms:grid cms:gap-4 cms:md:grid-cols-2", children: [
       /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
         /* @__PURE__ */ e.jsx(n.Label, { htmlFor: "title", children: t("Title") }),
-        /* @__PURE__ */ e.jsx(n.Input, { id: "title", value: x.data.title, required: !0, onChange: (D) => {
-          x.setData((P) => ({ ...P, title: D.target.value, handle: u ? P.handle : sa(D.target.value) }));
+        /* @__PURE__ */ e.jsx(n.Input, { id: "title", value: x.data.title, required: !0, onChange: (S) => {
+          x.setData((P) => ({ ...P, title: S.target.value, handle: h ? P.handle : na(S.target.value) }));
         } }),
-        /* @__PURE__ */ e.jsx(H, { message: C.title })
+        /* @__PURE__ */ e.jsx(O, { message: _.title })
       ] }),
       /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
         /* @__PURE__ */ e.jsx(n.Label, { htmlFor: "handle", children: t("Handle") }),
@@ -2494,34 +2507,34 @@ function Cs({ kind: s = "blueprint", blueprint: a, fieldTypes: l, locales: c = [
             disabled: a !== null && s === "fieldset",
             required: !0,
             spellCheck: !1,
-            onChange: (D) => {
-              v(!0), x.setData("handle", ls(D.target.value));
+            onChange: (S) => {
+              b(!0), x.setData("handle", cs(S.target.value));
             }
           }
         ),
-        /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: el(s, a !== null) }),
-        /* @__PURE__ */ e.jsx(sl, { kind: s, handle: x.data.handle }),
-        /* @__PURE__ */ e.jsx("div", { "aria-live": "polite", children: a !== null && s === "blueprint" && x.data.handle !== "" && x.data.handle !== a.handle && /* @__PURE__ */ e.jsx(Jt, { id: "handle-warning", children: t(`Changing the handle can break code. Sunrice updates the collections, taxonomies, global sets, forms and entries that use ":old". You update code that names it (Blueprint::where('handle', ':old')) and structure exports made before.`, { old: a.handle }) }) }),
-        /* @__PURE__ */ e.jsx(H, { message: C.handle })
+        /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: nl(s, a !== null) }),
+        /* @__PURE__ */ e.jsx(ll, { kind: s, handle: x.data.handle }),
+        /* @__PURE__ */ e.jsx("div", { "aria-live": "polite", children: a !== null && s === "blueprint" && x.data.handle !== "" && x.data.handle !== a.handle && /* @__PURE__ */ e.jsx(Xt, { id: "handle-warning", children: t(`Changing the handle can break code. Sunrice updates the collections, taxonomies, global sets, forms and entries that use ":old". You update code that names it (Blueprint::where('handle', ':old')) and structure exports made before.`, { old: a.handle }) }) }),
+        /* @__PURE__ */ e.jsx(O, { message: _.handle })
       ] })
     ] }) }),
     i.length > 0 && /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: t("Used by :list. Changes show there at once.", { list: i.join(", ") }) }),
     /* @__PURE__ */ e.jsxs("section", { className: "cms:flex cms:flex-col cms:gap-3", "aria-labelledby": "fields-heading", children: [
       /* @__PURE__ */ e.jsx("h2", { id: "fields-heading", className: "cms:text-lg cms:font-medium", children: t("Fields") }),
-      /* @__PURE__ */ e.jsx(pa, { fields: y, onChange: f, types: l, errors: oe(C, "fields"), reserved: s === "blueprint" ? r : void 0, locales: c.slice(1) }),
-      /* @__PURE__ */ e.jsx(H, { message: C.fields })
+      /* @__PURE__ */ e.jsx(ja, { fields: v, onChange: f, types: l, errors: me(_, "fields"), reserved: s === "blueprint" ? r : void 0, locales: c.slice(1) }),
+      /* @__PURE__ */ e.jsx(O, { message: _.fields })
     ] })
   ] });
 }
-function ga({ kind: s, base: a, rows: l, intro: c }) {
+function ba({ kind: s, base: a, rows: l, intro: c }) {
   const i = s === "blueprint", r = t(i ? "Blueprints" : "Fieldsets");
   n.useBreadcrumbs([{ label: r }]);
-  const [d, h] = ce();
+  const [d, u] = re();
   return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-6", children: [
-    /* @__PURE__ */ e.jsx($.Head, { title: r }),
-    h,
-    /* @__PURE__ */ e.jsx(n.PageHeader, { title: r, description: c, actions: /* @__PURE__ */ e.jsx(n.Button, { asChild: !0, children: /* @__PURE__ */ e.jsxs($.Link, { href: `${a}/create`, children: [
-      /* @__PURE__ */ e.jsx(G, {}),
+    /* @__PURE__ */ e.jsx(C.Head, { title: r }),
+    u,
+    /* @__PURE__ */ e.jsx(n.PageHeader, { title: r, description: c, actions: /* @__PURE__ */ e.jsx(n.Button, { asChild: !0, children: /* @__PURE__ */ e.jsxs(C.Link, { href: `${a}/create`, children: [
+      /* @__PURE__ */ e.jsx(J, {}),
       " ",
       t(i ? "New blueprint" : "New fieldset")
     ] }) }) }),
@@ -2536,7 +2549,7 @@ function ga({ kind: s, base: a, rows: l, intro: c }) {
       /* @__PURE__ */ e.jsxs(n.TableBody, { children: [
         l.length === 0 && /* @__PURE__ */ e.jsx(n.TableRow, { children: /* @__PURE__ */ e.jsx(n.TableCell, { colSpan: 5, className: "cms:py-8 cms:text-center cms:text-muted-foreground", children: t(i ? "No blueprints yet." : "No fieldsets yet.") }) }),
         l.map((m) => /* @__PURE__ */ e.jsxs(n.TableRow, { children: [
-          /* @__PURE__ */ e.jsx(n.TableCell, { children: /* @__PURE__ */ e.jsx($.Link, { href: `${a}/${m.handle}/edit`, className: "cms:font-medium cms:hover:underline", children: m.title }) }),
+          /* @__PURE__ */ e.jsx(n.TableCell, { children: /* @__PURE__ */ e.jsx(C.Link, { href: `${a}/${m.handle}/edit`, className: "cms:font-medium cms:hover:underline", children: m.title }) }),
           /* @__PURE__ */ e.jsx(n.TableCell, { children: /* @__PURE__ */ e.jsx("code", { className: "cms:text-xs", children: m.handle }) }),
           /* @__PURE__ */ e.jsx(n.TableCell, { children: m.fields }),
           m.usedBy && /* @__PURE__ */ e.jsx(n.TableCell, { className: "cms:text-muted-foreground", children: m.usedBy.join(", ") || "—" }),
@@ -2549,9 +2562,9 @@ function ga({ kind: s, base: a, rows: l, intro: c }) {
               "aria-label": t("Delete :title", { title: m.title }),
               onClick: () => d(
                 i ? t('Delete the blueprint ":title"? Content keeps its values.', { title: m.title }) : t('Delete the fieldset ":title"? Content keeps its values.', { title: m.title }),
-                () => $.router.delete(`${a}/${m.handle}`, { preserveScroll: !0 })
+                () => C.router.delete(`${a}/${m.handle}`, { preserveScroll: !0 })
               ),
-              children: /* @__PURE__ */ e.jsx(q, {})
+              children: /* @__PURE__ */ e.jsx(K, {})
             }
           ) })
         ] }, m.id))
@@ -2559,29 +2572,29 @@ function ga({ kind: s, base: a, rows: l, intro: c }) {
     ] }) })
   ] });
 }
-function tl({ blueprints: s }) {
-  const a = $.usePage().props.errors;
+function cl({ blueprints: s }) {
+  const a = C.usePage().props.errors;
   return /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
-    /* @__PURE__ */ e.jsx(H, { message: a.blueprint }),
+    /* @__PURE__ */ e.jsx(O, { message: a.blueprint }),
     /* @__PURE__ */ e.jsx(
-      ga,
+      ba,
       {
         kind: "blueprint",
-        base: A("cms/blueprints"),
+        base: I("cms/blueprints"),
         rows: s,
         intro: t("The fields editors fill in, for each kind of content.")
       }
     )
   ] });
 }
-const Re = (s) => s.includes("::") ? s : `${s.replace(/\./g, "/")}.blade.php`;
-function al(s, a) {
+const qe = (s) => s.includes("::") ? s : `${s.replace(/\./g, "/")}.blade.php`;
+function rl(s, a) {
   const l = s.trim();
   return l !== "" ? a?.own?.view === l && !a.own.exists ? null : l : a?.fallbacks.find((c) => c.exists)?.view ?? null;
 }
-function Ue({ file: s }) {
+function Ke({ file: s }) {
   const a = s.split("/");
-  return /* @__PURE__ */ e.jsx("code", { className: "cms:whitespace-normal cms:break-normal", children: a.map((l, c) => /* @__PURE__ */ e.jsxs(T.Fragment, { children: [
+  return /* @__PURE__ */ e.jsx("code", { className: "cms:whitespace-normal cms:break-normal", children: a.map((l, c) => /* @__PURE__ */ e.jsxs(M.Fragment, { children: [
     l,
     c < a.length - 1 && /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
       "/",
@@ -2589,39 +2602,39 @@ function Ue({ file: s }) {
     ] })
   ] }, c)) });
 }
-function fa({ example: s, empty: a, value: l = "", lookup: c = null }) {
-  const i = l.trim(), r = al(l, c), d = c?.fallbacks ?? [], h = /* @__PURE__ */ e.jsx("span", { className: "cms:ml-1 cms:rounded cms:bg-muted cms:px-1 cms:text-[0.65rem] cms:font-medium cms:text-foreground", children: t("in use") });
+function va({ example: s, empty: a, value: l = "", lookup: c = null }) {
+  const i = l.trim(), r = rl(l, c), d = c?.fallbacks ?? [], u = /* @__PURE__ */ e.jsx("span", { className: "cms:ml-1 cms:rounded cms:bg-muted cms:px-1 cms:text-[0.65rem] cms:font-medium cms:text-foreground", children: t("in use") });
   return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-1 cms:text-xs cms:leading-relaxed cms:text-muted-foreground", children: [
     /* @__PURE__ */ e.jsx("p", { children: a }),
     /* @__PURE__ */ e.jsxs("details", { className: "cms:group", children: [
       /* @__PURE__ */ e.jsx("summary", { className: "cms:w-fit cms:cursor-pointer cms:select-none cms:rounded-sm cms:underline-offset-4 hover:cms:underline focus-visible:cms:outline-2 focus-visible:cms:outline-ring", children: t("Which file?") }),
       /* @__PURE__ */ e.jsxs("div", { className: "cms:mt-1.5 cms:flex cms:flex-col cms:gap-1.5", children: [
         i !== "" && /* @__PURE__ */ e.jsxs("p", { children: [
-          /* @__PURE__ */ e.jsx(Ue, { file: Re(i) }),
-          c?.own?.view === i ? c.own.exists ? h : /* @__PURE__ */ e.jsx("span", { className: "cms:ml-1 cms:text-destructive", children: t("not found") }) : null
+          /* @__PURE__ */ e.jsx(Ke, { file: qe(i) }),
+          c?.own?.view === i ? c.own.exists ? u : /* @__PURE__ */ e.jsx("span", { className: "cms:ml-1 cms:text-destructive", children: t("not found") }) : null
         ] }),
         /* @__PURE__ */ e.jsx("p", { children: t(i !== "" ? "Without it, the first that exists:" : "The first that exists:") }),
         /* @__PURE__ */ e.jsxs("ol", { className: "cms:ml-4 cms:list-decimal cms:space-y-0.5", children: [
           d.map((m) => /* @__PURE__ */ e.jsxs("li", { children: [
-            /* @__PURE__ */ e.jsx(Ue, { file: Re(m.view) }),
-            r === m.view && i === "" && h
+            /* @__PURE__ */ e.jsx(Ke, { file: qe(m.view) }),
+            r === m.view && i === "" && u
           ] }, m.view)),
           /* @__PURE__ */ e.jsxs("li", { children: [
             t("the built-in template"),
-            r === null && h
+            r === null && u
           ] })
         ] }),
-        /* @__PURE__ */ e.jsx("p", { children: t("Files are under resources/views; a name like :example is :file.", { example: "\0", file: "" }).split(/(\u0000|\u0001)/).map((m, o) => m === "\0" ? /* @__PURE__ */ e.jsx("code", { children: s }, o) : m === "" ? /* @__PURE__ */ e.jsx(Ue, { file: Re(s) }, o) : m) })
+        /* @__PURE__ */ e.jsx("p", { children: t("Files are under resources/views; a name like :example is :file.", { example: "\0", file: "" }).split(/(\u0000|\u0001)/).map((m, o) => m === "\0" ? /* @__PURE__ */ e.jsx("code", { children: s }, o) : m === "" ? /* @__PURE__ */ e.jsx(Ke, { file: qe(s) }, o) : m) })
       ] })
     ] })
   ] });
 }
-const $s = { preserveScroll: !0, preserveState: !0 };
-function nl({ entryId: s, comments: a }) {
-  const [l, c] = T.useState(null), [i, r] = T.useState(""), [d, h] = T.useState(!1), m = (g, x) => $.router.post(A(`cms/comments/${g}/status`), { status: x }, $s), o = (g) => $.router.post(A(`cms/comments/${g}/reply`), { body: i }, {
-    ...$s,
-    onStart: () => h(!0),
-    onFinish: () => h(!1),
+const _s = { preserveScroll: !0, preserveState: !0 };
+function il({ entryId: s, comments: a }) {
+  const [l, c] = M.useState(null), [i, r] = M.useState(""), [d, u] = M.useState(!1), m = (g, x) => C.router.post(I(`cms/comments/${g}/status`), { status: x }, _s), o = (g) => C.router.post(I(`cms/comments/${g}/reply`), { body: i }, {
+    ..._s,
+    onStart: () => u(!0),
+    onFinish: () => u(!1),
     onSuccess: () => {
       c(null), r("");
     }
@@ -2644,17 +2657,17 @@ function nl({ entryId: s, comments: a }) {
           ] }),
           /* @__PURE__ */ e.jsx("p", { className: "cms:line-clamp-3 cms:break-words cms:whitespace-pre-line", children: g.excerpt }),
           /* @__PURE__ */ e.jsxs("div", { className: "cms:text-xs cms:text-muted-foreground", children: [
-            U(g.createdAt),
+            q(g.createdAt),
             g.reply ? ` · ${t("a reply")}` : ""
           ] }),
           a.canModerate && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-wrap cms:gap-1", children: [
             g.status === "pending" && /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "outline", size: "sm", onClick: () => m(g.id, "approved"), children: [
-              /* @__PURE__ */ e.jsx(fe, {}),
+              /* @__PURE__ */ e.jsx(be, {}),
               " ",
               t("Approve")
             ] }),
             /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "ghost", size: "sm", onClick: () => m(g.id, "spam"), children: [
-              /* @__PURE__ */ e.jsx(Ze, {}),
+              /* @__PURE__ */ e.jsx(es, {}),
               " ",
               t("Spam")
             ] }),
@@ -2669,7 +2682,7 @@ function nl({ entryId: s, comments: a }) {
                   c(l === g.id ? null : g.id), r("");
                 },
                 children: [
-                  /* @__PURE__ */ e.jsx(St, {}),
+                  /* @__PURE__ */ e.jsx($t, {}),
                   " ",
                   t("Reply")
                 ]
@@ -2692,7 +2705,7 @@ function nl({ entryId: s, comments: a }) {
             ] })
           ] })
         ] }, g.id)),
-        /* @__PURE__ */ e.jsx("a", { href: A(`cms/comments?entry=${s}`), className: "cms:text-sm cms:font-medium cms:underline-offset-4 cms:hover:underline", children: t("All comments on this entry") })
+        /* @__PURE__ */ e.jsx("a", { href: I(`cms/comments?entry=${s}`), className: "cms:text-sm cms:font-medium cms:underline-offset-4 cms:hover:underline", children: t("All comments on this entry") })
       ] }) : /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
         /* @__PURE__ */ e.jsx(n.Skeleton, { className: "cms:h-10" }),
         /* @__PURE__ */ e.jsx(n.Skeleton, { className: "cms:h-10" })
@@ -2700,72 +2713,72 @@ function nl({ entryId: s, comments: a }) {
     }
   );
 }
-const ja = "cms:flex cms:flex-col cms:gap-1 cms:opacity-60";
-function rs({ fields: s, values: a, onChange: l, errors: c, storageKey: i, shared: r = [], sharedValues: d = {}, sharedNote: h, disabled: m = !1 }) {
+const ya = "cms:flex cms:flex-col cms:gap-1 cms:opacity-60";
+function is({ fields: s, values: a, onChange: l, errors: c, storageKey: i, shared: r = [], sharedValues: d = {}, sharedNote: u, disabled: m = !1 }) {
   const o = [], g = { ...d, ...a };
-  for (const u of s.filter((v) => cs(v, g))) {
-    const v = o[o.length - 1];
-    u.type === "group" ? o.push(u) : Array.isArray(v) ? v.push(u) : o.push([u]);
+  for (const h of s.filter((b) => rs(b, g))) {
+    const b = o[o.length - 1];
+    h.type === "group" ? o.push(h) : Array.isArray(b) ? b.push(h) : o.push([h]);
   }
-  const x = h && (r.length > 0 || Me(s)) ? /* @__PURE__ */ e.jsx("p", { role: "note", className: "cms:rounded-lg cms:border cms:border-dashed cms:px-3 cms:py-2 cms:text-sm cms:text-muted-foreground", children: h }) : null;
+  const x = u && (r.length > 0 || Be(s)) ? /* @__PURE__ */ e.jsx("p", { role: "note", className: "cms:rounded-lg cms:border cms:border-dashed cms:px-3 cms:py-2 cms:text-sm cms:text-muted-foreground", children: u }) : null;
   return /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
     x,
-    o.map((u) => {
-      if (Array.isArray(u))
-        return /* @__PURE__ */ e.jsx(n.Card, { children: /* @__PURE__ */ e.jsx(n.CardContent, { children: /* @__PURE__ */ e.jsx("fieldset", { disabled: m, className: "cms:flex cms:min-w-0 cms:flex-col cms:gap-6", children: u.map((j) => r.includes(j.handle) ? /* @__PURE__ */ e.jsx("fieldset", { disabled: !0, className: ja, title: t("Shared by all languages"), children: /* @__PURE__ */ e.jsx(ae, { id: `data-${j.handle}`, field: j, content: !0, value: d[j.handle], errors: {}, onChange: () => {
+    o.map((h) => {
+      if (Array.isArray(h))
+        return /* @__PURE__ */ e.jsx(n.Card, { children: /* @__PURE__ */ e.jsx(n.CardContent, { children: /* @__PURE__ */ e.jsx("fieldset", { disabled: m, className: "cms:flex cms:min-w-0 cms:flex-col cms:gap-6", children: h.map((j) => r.includes(j.handle) ? /* @__PURE__ */ e.jsx("fieldset", { disabled: !0, className: ya, title: t("Shared by all languages"), children: /* @__PURE__ */ e.jsx(ne, { id: `data-${j.handle}`, field: j, content: !0, value: d[j.handle], errors: {}, onChange: () => {
         } }) }, j.handle) : /* @__PURE__ */ e.jsx(
-          ae,
+          ne,
           {
             id: `data-${j.handle}`,
             field: j,
             content: !0,
             value: a[j.handle],
             errors: Y(c, `data.${j.handle}`),
-            onChange: (C) => l(j.handle, C)
+            onChange: (_) => l(j.handle, _)
           },
           j.handle
-        )) }) }) }, `fields-${u[0]?.handle ?? ""}`);
-      const v = r.includes(u.handle), y = (v ? d : a)[u.handle], f = Y(c, `data.${u.handle}`);
+        )) }) }) }, `fields-${h[0]?.handle ?? ""}`);
+      const b = r.includes(h.handle), v = (b ? d : a)[h.handle], f = Y(c, `data.${h.handle}`);
       return /* @__PURE__ */ e.jsx(
         n.CollapsibleCard,
         {
-          title: Be(u),
+          title: Le(h),
           titleClassName: "cms:text-base",
-          description: u.instructions ?? void 0,
-          storageKey: `${i}:${u.handle}`,
-          hasErrors: !v && we(c, `data.${u.handle}`),
+          description: h.instructions ?? void 0,
+          storageKey: `${i}:${h.handle}`,
+          hasErrors: !b && Ce(c, `data.${h.handle}`),
           children: /* @__PURE__ */ e.jsxs(
             "fieldset",
             {
-              disabled: v || m,
+              disabled: b || m,
               role: "group",
-              "aria-label": Be(u),
-              className: `cms:flex cms:flex-col cms:gap-2 ${v ? "cms:opacity-60" : ""}`,
-              title: v ? t("Shared by all languages") : void 0,
+              "aria-label": Le(h),
+              className: `cms:flex cms:flex-col cms:gap-2 ${b ? "cms:opacity-60" : ""}`,
+              title: b ? t("Shared by all languages") : void 0,
               children: [
                 /* @__PURE__ */ e.jsx(
-                  de,
+                  ue,
                   {
                     bare: !0,
-                    fields: u.fields ?? [],
-                    id: `data-${u.handle}`,
+                    fields: h.fields ?? [],
+                    id: `data-${h.handle}`,
                     content: !0,
-                    errors: v ? {} : f,
-                    value: y && typeof y == "object" && !Array.isArray(y) ? y : {},
-                    onChange: (j) => l(u.handle, j)
+                    errors: b ? {} : f,
+                    value: v && typeof v == "object" && !Array.isArray(v) ? v : {},
+                    onChange: (j) => l(h.handle, j)
                   }
                 ),
-                /* @__PURE__ */ e.jsx(H, { message: v ? void 0 : f[""] })
+                /* @__PURE__ */ e.jsx(O, { message: b ? void 0 : f[""] })
               ]
             }
           )
         },
-        u.handle
+        h.handle
       );
     })
   ] });
 }
-function ba({ note: s, redirectsUrl: a }) {
+function Na({ note: s, redirectsUrl: a }) {
   return /* @__PURE__ */ e.jsx("div", { "aria-live": "polite", children: s !== null && /* @__PURE__ */ e.jsxs("p", { className: "cms:text-xs cms:text-muted-foreground", children: [
     t(s === "redirects" ? "Once published, the old address redirects to the new one." : "The old address will stop working (404) unless a redirect is added."),
     s === "breaks" && a && /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
@@ -2774,7 +2787,7 @@ function ba({ note: s, redirectsUrl: a }) {
     ] })
   ] }) });
 }
-function is() {
+function os() {
   return [
     { handle: "title", type: "text", label: t("Meta title"), instructions: t("Empty: the title."), config: { max: 255 } },
     { handle: "description", type: "textarea", label: t("Meta description"), instructions: t("A sentence or two for search results."), config: { max: 500 } },
@@ -2783,71 +2796,71 @@ function is() {
     { handle: "noindex", type: "toggle", label: t("Hide from search engines (noindex)") }
   ];
 }
-function _s(s) {
+function Ds(s) {
   if (s.length === 0) return "";
   const a = s.slice(0, 5).map((l) => l.label).join("; ");
   return ` ${s.length > 5 ? t("It's used by :list and :count more: those links will show nothing.", { list: a, count: s.length - 5 }) : t("It's used by :list: those links will show nothing.", { list: a })}`;
 }
-function ll(s) {
+function ol(s) {
   const { entry: a } = s;
-  return /* @__PURE__ */ e.jsx(cl, { ...s }, a ? `${a.id}:${a.locale}:${a.version}:${a.status}:${a.trashed}:${a.publishedAt}` : "new");
+  return /* @__PURE__ */ e.jsx(dl, { ...s }, a ? `${a.id}:${a.locale}:${a.version}:${a.status}:${a.trashed}:${a.publishedAt}` : "new");
 }
-function cl({ collection: s, fields: a, locales: l = [], shared: c = [], sharedValues: i = {}, entry: r, values: d, revisions: h, comments: m, termLabels: o, usedBy: g = [], undoRestore: x = null, machineTranslate: u = null, machineTranslateMissing: v = !1, settings: y, blueprints: f = [], blueprintUrl: j = null, homepage: C, redirectsUrl: _ = null, templates: b = null, can: p }) {
-  const M = A(`cms/collections/${s.handle}/entries`), S = r ? A(`cms/entries/${r.id}`) : M, B = r ? d.title : t("New entry");
-  n.useBreadcrumbs([{ label: s.title, href: M }, { label: B }]);
-  const [w, D] = ce(), [P, N] = T.useState(!1), L = r?.publishedAt ? As(new Date(r.publishedAt)) : "", [V, me] = T.useState(L);
-  T.useEffect(() => me(L), [L]);
-  const [Se, pe] = T.useState(null), [ue, he] = T.useState(!1), I = $.useForm({
+function dl({ collection: s, fields: a, locales: l = [], shared: c = [], sharedValues: i = {}, entry: r, values: d, revisions: u, comments: m, termLabels: o, usedBy: g = [], undoRestore: x = null, machineTranslate: h = null, machineTranslateMissing: b = !1, settings: v, blueprints: f = [], blueprintUrl: j = null, homepage: _, redirectsUrl: T = null, templates: y = null, can: p }) {
+  const z = I(`cms/collections/${s.handle}/entries`), k = r ? I(`cms/entries/${r.id}`) : z, F = r ? d.title : t("New entry");
+  n.useBreadcrumbs([{ label: s.title, href: z }, { label: F }]);
+  const [L, S] = re(), [P, N] = M.useState(!1), D = r?.publishedAt ? As(new Date(r.publishedAt)) : "", [$, U] = M.useState(D);
+  M.useEffect(() => U(D), [D]);
+  const [he, ie] = M.useState(null), [xe, pe] = M.useState(!1), A = C.useForm({
     ...d,
     seo: d.seo ?? {},
     locale: r?.locale ?? null,
     version: r?.version ?? null,
     publish: !1,
     published_at: null,
-    parent_id: y?.parentId ?? null,
-    template: y?.template ?? "",
-    comments_closed: y?.commentsClosed === !0
-  }), Ce = (z) => I.setData((R) => ({ ...R, ...z })), Z = r ? { locale: r.locale } : {}, k = l.find((z) => z.main)?.code, F = I.errors, K = $.usePage().props.errors ?? {}, X = (z) => {
-    const R = Le(F, z);
-    R.length > 0 && I.clearErrors(...R);
-  }, ee = r !== null && r.status !== "draft" && !r.hasUnpublishedChanges && !I.isDirty, $e = Ma(r?.status ?? "draft", V, r?.publishedAt ?? null), ms = r === null ? p.create : p.update && !r.trashed, ge = r?.status === "scheduled", us = (z) => {
-    if (y || r === null) return z;
-    const { parent_id: R, template: Q, comments_closed: ac, ...Da } = z;
-    return Da;
-  }, Ae = (z = !1, R = null) => {
-    I.transform((Q) => ({ ...us(Q), publish: z, published_at: R })), r ? I.put(S, { preserveScroll: !0, onSuccess: () => N(!1) }) : I.post(S);
-  }, Ca = () => {
-    I.transform((z) => ({ ...us(z), version: null, publish: !1, published_at: null })), I.put(S, { preserveScroll: !0 });
-  }, W = n.useEditLock({
+    parent_id: v?.parentId ?? null,
+    template: v?.template ?? "",
+    comments_closed: v?.commentsClosed === !0
+  }), $e = (B) => A.setData((R) => ({ ...R, ...B })), X = r ? { locale: r.locale } : {}, w = l.find((B) => B.main)?.code, H = A.errors, W = C.usePage().props.errors ?? {}, ee = (B) => {
+    const R = Ae(H, B);
+    R.length > 0 && A.clearErrors(...R);
+  }, se = r !== null && r.status !== "draft" && !r.hasUnpublishedChanges && !A.isDirty, _e = Aa(r?.status ?? "draft", $, r?.publishedAt ?? null), us = r === null ? p.create : p.update && !r.trashed, fe = r?.status === "scheduled", hs = (B) => {
+    if (v || r === null) return B;
+    const { parent_id: R, template: Z, comments_closed: ic, ...Ba } = B;
+    return Ba;
+  }, Ee = (B = !1, R = null) => {
+    A.transform((Z) => ({ ...hs(Z), publish: B, published_at: R })), r ? A.put(k, { preserveScroll: !0, onSuccess: () => N(!1) }) : A.post(k);
+  }, Ta = () => {
+    A.transform((B) => ({ ...hs(B), version: null, publish: !1, published_at: null })), A.put(k, { preserveScroll: !0 });
+  }, G = n.useEditLock({
     type: "cms.entry",
     id: r?.id,
     locale: r?.locale,
-    enabled: r !== null && ms,
+    enabled: r !== null && us,
     noun: t("entry"),
-    leaveTo: M,
-    getUnsaved: () => I.isDirty ? { title: I.data.title, slug: I.data.slug, data: I.data.data, seo: I.data.seo } : null
-  }), J = ms && !W.readOnly, $a = async (z) => {
-    const R = await W.loadKept(z);
-    I.setData((Q) => ({ ...Q, title: R.title ?? Q.title, slug: R.slug ?? Q.slug, data: R.data ?? Q.data, seo: R.seo ?? Q.seo }));
+    leaveTo: z,
+    getUnsaved: () => A.isDirty ? { title: A.data.title, slug: A.data.slug, data: A.data.data, seo: A.data.seo } : null
+  }), Q = us && !G.readOnly, za = async (B) => {
+    const R = await G.loadKept(B);
+    A.setData((Z) => ({ ...Z, title: R.title ?? Z.title, slug: R.slug ?? Z.slug, data: R.data ?? Z.data, seo: R.seo ?? Z.seo }));
   };
-  n.useUnsavedChanges(I.isDirty && !W.takenOver, J ? () => I.processing || Ae() : void 0);
-  const _a = () => {
-    const z = () => $.router.post(`${S}/review`, Z, { preserveScroll: !0 });
-    I.isDirty ? (I.transform((R) => ({ ...R, publish: !1, published_at: null })), I.put(S, { preserveScroll: !0, onSuccess: z })) : z();
-  }, _e = (z = null) => {
-    p.update ? Ae(!0, z) : r && $.router.post(`${S}/publish`, { ...Z, published_at: z }, { preserveScroll: !0, onSuccess: () => N(!1) });
+  n.useUnsavedChanges(A.isDirty && !G.takenOver, Q ? () => A.processing || Ee() : void 0);
+  const Ma = () => {
+    const B = () => C.router.post(`${k}/review`, X, { preserveScroll: !0 });
+    A.isDirty ? (A.transform((R) => ({ ...R, publish: !1, published_at: null })), A.put(k, { preserveScroll: !0, onSuccess: B })) : B();
+  }, De = (B = null) => {
+    p.update ? Ee(!0, B) : r && C.router.post(`${k}/publish`, { ...X, published_at: B }, { preserveScroll: !0, onSuccess: () => N(!1) });
   };
-  return /* @__PURE__ */ e.jsxs("form", { noValidate: !0, onSubmit: (z) => {
-    z.preventDefault(), Ae();
+  return /* @__PURE__ */ e.jsxs("form", { noValidate: !0, onSubmit: (B) => {
+    B.preventDefault(), Ee();
   }, className: "cms:flex cms:flex-col cms:gap-6", children: [
-    /* @__PURE__ */ e.jsx($.Head, { title: B }),
-    D,
-    W.dialogs,
+    /* @__PURE__ */ e.jsx(C.Head, { title: F }),
+    S,
+    G.dialogs,
     /* @__PURE__ */ e.jsxs(
       n.PageHeader,
       {
-        title: B,
-        back: { href: M, label: t("Back to :title", { title: s.title }) },
+        title: F,
+        back: { href: z, label: t("Back to :title", { title: s.title }) },
         actions: /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
           r && !r.trashed && s.pages !== !1 && /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "ghost", asChild: !0, children: /* @__PURE__ */ e.jsxs(
             "a",
@@ -2855,21 +2868,21 @@ function cl({ collection: s, fields: a, locales: l = [], shared: c = [], sharedV
               href: r.previewUrl,
               target: "_blank",
               rel: "noopener noreferrer",
-              title: I.isDirty ? t("Shows the saved draft: save first to see your changes.") : t("Shows the saved draft."),
+              title: A.isDirty ? t("Shows the saved draft: save first to see your changes.") : t("Shows the saved draft."),
               children: [
-                /* @__PURE__ */ e.jsx(Ja, {}),
+                /* @__PURE__ */ e.jsx(en, {}),
                 " ",
                 t("Preview")
               ]
             }
           ) }),
           r?.url && /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "ghost", asChild: !0, children: /* @__PURE__ */ e.jsxs("a", { href: r.url, target: "_blank", rel: "noopener noreferrer", children: [
-            /* @__PURE__ */ e.jsx(xe, {}),
+            /* @__PURE__ */ e.jsx(ge, {}),
             " ",
             t("View page")
           ] }) }),
-          r?.trashed && p.delete && /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "outline", onClick: () => $.router.post(`${S}/restore`, {}, { preserveScroll: !0 }), children: [
-            /* @__PURE__ */ e.jsx(je, {}),
+          r?.trashed && p.delete && /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "outline", onClick: () => C.router.post(`${k}/restore`, {}, { preserveScroll: !0 }), children: [
+            /* @__PURE__ */ e.jsx(ve, {}),
             " ",
             t("Restore")
           ] }),
@@ -2879,52 +2892,52 @@ function cl({ collection: s, fields: a, locales: l = [], shared: c = [], sharedV
               type: "button",
               variant: "outline",
               className: "cms:text-destructive",
-              onClick: () => w(
-                t(`Permanently delete ":title" in every language, with its revisions? This can't be undone.`, { title: d.title }) + _s(g),
-                () => $.router.delete(`${S}/force`, { data: g.length > 0 ? { force: 1 } : {} })
+              onClick: () => L(
+                t(`Permanently delete ":title" in every language, with its revisions? This can't be undone.`, { title: d.title }) + Ds(g),
+                () => C.router.delete(`${k}/force`, { data: g.length > 0 ? { force: 1 } : {} })
               ),
               children: [
-                /* @__PURE__ */ e.jsx(q, {}),
+                /* @__PURE__ */ e.jsx(K, {}),
                 " ",
                 t("Permanently delete")
               ]
             }
           ),
-          r && !r.trashed && (p.create || p.delete && !W.readOnly || J && u !== null || j) && /* @__PURE__ */ e.jsxs(n.DropdownMenu, { children: [
-            /* @__PURE__ */ e.jsx(n.DropdownMenuTrigger, { asChild: !0, children: /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "outline", size: "icon", "aria-label": t("More actions"), children: /* @__PURE__ */ e.jsx(ct, {}) }) }),
+          r && !r.trashed && (p.create || p.delete && !G.readOnly || Q && h !== null || j) && /* @__PURE__ */ e.jsxs(n.DropdownMenu, { children: [
+            /* @__PURE__ */ e.jsx(n.DropdownMenuTrigger, { asChild: !0, children: /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "outline", size: "icon", "aria-label": t("More actions"), children: /* @__PURE__ */ e.jsx(rt, {}) }) }),
             /* @__PURE__ */ e.jsxs(n.DropdownMenuContent, { align: "end", className: "cms:min-w-52", children: [
-              J && u !== null && /* @__PURE__ */ e.jsxs(
+              Q && h !== null && /* @__PURE__ */ e.jsxs(
                 n.DropdownMenuItem,
                 {
-                  disabled: I.processing || I.isDirty,
-                  title: I.isDirty ? void 0 : t("Fill in what isn't translated yet, into the draft"),
-                  onSelect: () => $.router.post(A(`cms/entries/${r.id}/translations/${r.locale}/translate`), { version: r.version }, { preserveScroll: !0 }),
+                  disabled: A.processing || A.isDirty,
+                  title: A.isDirty ? void 0 : t("Fill in what isn't translated yet, into the draft"),
+                  onSelect: () => C.router.post(I(`cms/entries/${r.id}/translations/${r.locale}/translate`), { version: r.version }, { preserveScroll: !0 }),
                   children: [
-                    /* @__PURE__ */ e.jsx(ps, {}),
+                    /* @__PURE__ */ e.jsx(gs, {}),
                     " ",
-                    I.isDirty ? t("Save to translate") : t("Translate from :language", { language: l.find((z) => z.main)?.name ?? (k ? O(k) : t("the main language")) })
+                    A.isDirty ? t("Save to translate") : t("Translate from :language", { language: l.find((B) => B.main)?.name ?? (w ? V(w) : t("the main language")) })
                   ]
                 }
               ),
-              p.create && /* @__PURE__ */ e.jsxs(n.DropdownMenuItem, { title: t("Copy every language as a new draft"), onSelect: () => $.router.post(`${S}/duplicate`), children: [
-                /* @__PURE__ */ e.jsx(tt, {}),
+              p.create && /* @__PURE__ */ e.jsxs(n.DropdownMenuItem, { title: t("Copy every language as a new draft"), onSelect: () => C.router.post(`${k}/duplicate`), children: [
+                /* @__PURE__ */ e.jsx(at, {}),
                 " ",
                 t("Duplicate")
               ] }),
-              j && /* @__PURE__ */ e.jsx(n.DropdownMenuItem, { asChild: !0, children: /* @__PURE__ */ e.jsxs($.Link, { href: j, children: [
-                /* @__PURE__ */ e.jsx(gt, {}),
+              j && /* @__PURE__ */ e.jsx(n.DropdownMenuItem, { asChild: !0, children: /* @__PURE__ */ e.jsxs(C.Link, { href: j, children: [
+                /* @__PURE__ */ e.jsx(ft, {}),
                 " ",
                 t("Edit blueprint")
               ] }) }),
-              p.delete && !W.readOnly && /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
+              p.delete && !G.readOnly && /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
                 /* @__PURE__ */ e.jsx(n.DropdownMenuSeparator, {}),
                 /* @__PURE__ */ e.jsxs(
                   n.DropdownMenuItem,
                   {
                     className: "cms:text-destructive",
-                    onSelect: () => w(t('Move ":title" to the trash? It comes off the site; you can restore it.', { title: d.title }) + _s(g), () => $.router.delete(S), t("Move to trash")),
+                    onSelect: () => L(t('Move ":title" to the trash? It comes off the site; you can restore it.', { title: d.title }) + Ds(g), () => C.router.delete(k), t("Move to trash")),
                     children: [
-                      /* @__PURE__ */ e.jsx(q, {}),
+                      /* @__PURE__ */ e.jsx(K, {}),
                       " ",
                       t("Move to trash")
                     ]
@@ -2933,122 +2946,122 @@ function cl({ collection: s, fields: a, locales: l = [], shared: c = [], sharedV
               ] })
             ] })
           ] }),
-          r && J && v && /* @__PURE__ */ e.jsxs("span", { title: t("Machine translation isn't set up on this site: ask your developer (SUNRICE_TRANSLATE_DRIVER, see Help → Developer docs → Machine translation)."), children: [
+          r && Q && b && /* @__PURE__ */ e.jsxs("span", { title: t("Machine translation isn't set up on this site: ask your developer (SUNRICE_TRANSLATE_DRIVER, see Help → Developer docs → Machine translation)."), children: [
             /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "outline", disabled: !0, "aria-describedby": "machine-translate-missing", children: [
-              /* @__PURE__ */ e.jsx(ps, {}),
+              /* @__PURE__ */ e.jsx(gs, {}),
               " ",
-              t("Translate from :language", { language: l.find((z) => z.main)?.name ?? (k ? O(k) : t("the main language")) })
+              t("Translate from :language", { language: l.find((B) => B.main)?.name ?? (w ? V(w) : t("the main language")) })
             ] }),
             /* @__PURE__ */ e.jsx("span", { id: "machine-translate-missing", className: "cms:sr-only", children: t("Machine translation isn't set up on this site: ask your developer.") })
           ] }),
-          J && /* @__PURE__ */ e.jsxs(n.Button, { type: "submit", variant: r ? "outline" : "default", disabled: I.processing, children: [
-            I.processing && /* @__PURE__ */ e.jsx(le, { className: "cms:animate-spin" }),
+          Q && /* @__PURE__ */ e.jsxs(n.Button, { type: "submit", variant: r ? "outline" : "default", disabled: A.processing, children: [
+            A.processing && /* @__PURE__ */ e.jsx(ce, { className: "cms:animate-spin" }),
             t(r ? "Save draft" : "Create draft")
           ] }),
-          r && !r.trashed && J && !p.publish && (r.status === "draft" || r.hasUnpublishedChanges || I.isDirty) && /* @__PURE__ */ e.jsxs(
+          r && !r.trashed && Q && !p.publish && (r.status === "draft" || r.hasUnpublishedChanges || A.isDirty) && /* @__PURE__ */ e.jsxs(
             n.Button,
             {
               type: "button",
-              disabled: I.processing,
-              onClick: _a,
+              disabled: A.processing,
+              onClick: Ma,
               title: r.review ? t("Already sent; sending again tells them again") : t("Ask those who can publish to review it"),
               children: [
-                /* @__PURE__ */ e.jsx(dn, {}),
+                /* @__PURE__ */ e.jsx(pn, {}),
                 " ",
                 r.review ? t("Send for review again") : t("Submit for review")
               ]
             }
           ),
-          r && !r.trashed && p.publish && !W.readOnly && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex", children: [
-            ge && ee ? /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "outline", className: "cms:rounded-r-none", disabled: I.processing, title: t("Change the date"), onClick: () => N(!0), children: [
-              /* @__PURE__ */ e.jsx(Qe, {}),
+          r && !r.trashed && p.publish && !G.readOnly && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex", children: [
+            fe && se ? /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "outline", className: "cms:rounded-r-none", disabled: A.processing, title: t("Change the date"), onClick: () => N(!0), children: [
+              /* @__PURE__ */ e.jsx(Xe, {}),
               " ",
-              t("Scheduled for :date", { date: U(r.publishedAt) })
-            ] }) : /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: ee ? "outline" : "default", className: "cms:rounded-r-none cms:disabled:opacity-100", disabled: I.processing || ee, onClick: () => _e($e.at), children: [
-              ee && /* @__PURE__ */ e.jsx(fe, { className: "cms:text-emerald-600 cms:dark:text-emerald-400" }),
-              ee ? t("Published") : $e.action === "schedule" ? t("Schedule") : $e.action === "backdate" ? t("Publish now, back-dated") : r.status === "draft" ? t("Publish") : t("Publish changes")
+              t("Scheduled for :date", { date: q(r.publishedAt) })
+            ] }) : /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: se ? "outline" : "default", className: "cms:rounded-r-none cms:disabled:opacity-100", disabled: A.processing || se, onClick: () => De(_e.at), children: [
+              se && /* @__PURE__ */ e.jsx(be, { className: "cms:text-emerald-600 cms:dark:text-emerald-400" }),
+              se ? t("Published") : _e.action === "schedule" ? t("Schedule") : _e.action === "backdate" ? t("Publish now, back-dated") : r.status === "draft" ? t("Publish") : t("Publish changes")
             ] }),
             /* @__PURE__ */ e.jsxs(n.DropdownMenu, { children: [
-              /* @__PURE__ */ e.jsx(n.DropdownMenuTrigger, { asChild: !0, children: /* @__PURE__ */ e.jsx(n.Button, { type: "button", size: "icon", variant: ee ? "outline" : "default", className: ee ? "cms:-ml-px cms:rounded-l-none" : "cms:rounded-l-none cms:border-l cms:border-primary-foreground/20", "aria-label": t("More publishing options"), children: /* @__PURE__ */ e.jsx(Ys, {}) }) }),
+              /* @__PURE__ */ e.jsx(n.DropdownMenuTrigger, { asChild: !0, children: /* @__PURE__ */ e.jsx(n.Button, { type: "button", size: "icon", variant: se ? "outline" : "default", className: se ? "cms:-ml-px cms:rounded-l-none" : "cms:rounded-l-none cms:border-l cms:border-primary-foreground/20", "aria-label": t("More publishing options"), children: /* @__PURE__ */ e.jsx(Ys, {}) }) }),
               /* @__PURE__ */ e.jsxs(n.DropdownMenuContent, { align: "end", children: [
                 /* @__PURE__ */ e.jsxs(n.DropdownMenuItem, { onSelect: () => N(!0), children: [
-                  /* @__PURE__ */ e.jsx(Qe, {}),
+                  /* @__PURE__ */ e.jsx(Xe, {}),
                   " ",
-                  t(ge ? "Change the date…" : "Publish on a date…")
+                  t(fe ? "Change the date…" : "Publish on a date…")
                 ] }),
-                ge && /* @__PURE__ */ e.jsx(n.DropdownMenuItem, { onSelect: () => _e((/* @__PURE__ */ new Date()).toISOString()), children: t("Publish now") }),
+                fe && /* @__PURE__ */ e.jsx(n.DropdownMenuItem, { onSelect: () => De((/* @__PURE__ */ new Date()).toISOString()), children: t("Publish now") }),
                 r.status !== "draft" && /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
                   /* @__PURE__ */ e.jsx(n.DropdownMenuSeparator, {}),
-                  /* @__PURE__ */ e.jsx(n.DropdownMenuItem, { onSelect: () => $.router.post(`${S}/unpublish`, Z, { preserveScroll: !0 }), children: t(ge ? "Unschedule (back to draft)" : "Unpublish") })
+                  /* @__PURE__ */ e.jsx(n.DropdownMenuItem, { onSelect: () => C.router.post(`${k}/unpublish`, X, { preserveScroll: !0 }), children: t(fe ? "Unschedule (back to draft)" : "Unpublish") })
                 ] })
               ] })
             ] })
           ] })
         ] }),
         children: [
-          r && /* @__PURE__ */ e.jsx(n.Badge, { variant: r.status === "published" ? "success" : "secondary", children: r.trashed ? t("In the trash") : te(r.status) }),
-          r?.review && !r.trashed && /* @__PURE__ */ e.jsx(n.Badge, { variant: "warning", title: r.review.by ? t(":name sent it on :date", { name: r.review.by, date: U(r.review.requestedAt) }) : t("Sent on :date", { date: U(r.review.requestedAt) }), children: t("Waiting for review") }),
-          I.isDirty && /* @__PURE__ */ e.jsx("span", { className: "cms:text-sm cms:text-muted-foreground", children: t("Unsaved changes") })
+          r && /* @__PURE__ */ e.jsx(n.Badge, { variant: r.status === "published" ? "success" : "secondary", children: r.trashed ? t("In the trash") : ae(r.status) }),
+          r?.review && !r.trashed && /* @__PURE__ */ e.jsx(n.Badge, { variant: "warning", title: r.review.by ? t(":name sent it on :date", { name: r.review.by, date: q(r.review.requestedAt) }) : t("Sent on :date", { date: q(r.review.requestedAt) }), children: t("Waiting for review") }),
+          A.isDirty && /* @__PURE__ */ e.jsx("span", { className: "cms:text-sm cms:text-muted-foreground", children: t("Unsaved changes") })
         ]
       }
     ),
     r && l.length > 1 && /* @__PURE__ */ e.jsx(
-      il,
+      ul,
       {
-        entryUrl: S,
-        editUrl: `${M}/${r.id}/edit`,
+        entryUrl: k,
+        editUrl: `${z}/${r.id}/edit`,
         current: r.locale,
         locales: l,
         canAdd: (p.create || p.translate === !0) && !r.trashed,
         canRemove: p.delete && !r.isMain && !r.trashed,
-        onRemove: () => w(
-          t('Remove the :language translation of ":title"? Its revisions go with it.', { language: O(r.locale), title: d.title }),
-          () => $.router.delete(`${S}/translations/${r.locale}`)
+        onRemove: () => L(
+          t('Remove the :language translation of ":title"? Its revisions go with it.', { language: V(r.locale), title: d.title }),
+          () => C.router.delete(`${k}/translations/${r.locale}`)
         )
       }
     ),
-    /* @__PURE__ */ e.jsx(n.ViewingNotice, { by: W.viewingBy, onTakeOver: W.requestTakeOver }),
-    /* @__PURE__ */ e.jsx(n.KeptEditsNotice, { kept: W.kept, disabled: !J, onLoad: (z) => {
-      $a(z);
-    }, onDiscard: (z) => {
-      W.discardKept(z);
+    /* @__PURE__ */ e.jsx(n.ViewingNotice, { by: G.viewingBy, onTakeOver: G.requestTakeOver }),
+    /* @__PURE__ */ e.jsx(n.KeptEditsNotice, { kept: G.kept, disabled: !Q, onLoad: (B) => {
+      za(B);
+    }, onDiscard: (B) => {
+      G.discardKept(B);
     } }),
-    F.version && /* @__PURE__ */ e.jsxs("div", { role: "alert", className: "cms:flex cms:flex-wrap cms:items-center cms:justify-between cms:gap-3 cms:rounded-lg cms:border cms:border-destructive cms:p-3 cms:text-sm cms:text-destructive", children: [
-      /* @__PURE__ */ e.jsx("span", { children: F.version }),
+    H.version && /* @__PURE__ */ e.jsxs("div", { role: "alert", className: "cms:flex cms:flex-wrap cms:items-center cms:justify-between cms:gap-3 cms:rounded-lg cms:border cms:border-destructive cms:p-3 cms:text-sm cms:text-destructive", children: [
+      /* @__PURE__ */ e.jsx("span", { children: H.version }),
       /* @__PURE__ */ e.jsxs("span", { className: "cms:flex cms:gap-2", children: [
-        /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "outline", size: "sm", onClick: () => $.router.reload(), children: t("Load theirs") }),
+        /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "outline", size: "sm", onClick: () => C.router.reload(), children: t("Load theirs") }),
         /* @__PURE__ */ e.jsx(
           n.Button,
           {
             type: "button",
             variant: "destructive",
             size: "sm",
-            disabled: I.processing,
-            onClick: () => w(t("Save your version over theirs? Their changes are replaced (their earlier published versions stay in the revisions)."), Ca),
+            disabled: A.processing,
+            onClick: () => L(t("Save your version over theirs? Their changes are replaced (their earlier published versions stay in the revisions)."), Ta),
             children: t("Save mine anyway")
           }
         )
       ] })
     ] }),
-    (F.entry || F.published_at || K.published_at || K.homepage) && /* @__PURE__ */ e.jsx("p", { role: "alert", className: "cms:text-sm cms:text-destructive", children: F.entry ?? F.published_at ?? K.published_at ?? K.homepage }),
+    (H.entry || H.published_at || W.published_at || W.homepage) && /* @__PURE__ */ e.jsx("p", { role: "alert", className: "cms:text-sm cms:text-destructive", children: H.entry ?? H.published_at ?? W.published_at ?? W.homepage }),
     /* @__PURE__ */ e.jsxs("div", { className: "cms:grid cms:gap-6 cms:lg:grid-cols-[minmax(0,1fr)_18rem]", children: [
       /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:min-w-0 cms:flex-col cms:gap-6", children: [
-        /* @__PURE__ */ e.jsx(n.Card, { children: /* @__PURE__ */ e.jsx(n.CardContent, { children: /* @__PURE__ */ e.jsxs("fieldset", { disabled: !J, className: "cms:grid cms:gap-4 cms:md:grid-cols-[2fr_1fr]", children: [
+        /* @__PURE__ */ e.jsx(n.Card, { children: /* @__PURE__ */ e.jsx(n.CardContent, { children: /* @__PURE__ */ e.jsxs("fieldset", { disabled: !Q, className: "cms:grid cms:gap-4 cms:md:grid-cols-[2fr_1fr]", children: [
           /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
             /* @__PURE__ */ e.jsx(n.Label, { htmlFor: "title", children: t("Title") }),
             /* @__PURE__ */ e.jsx(
               n.Input,
               {
                 id: "title",
-                value: I.data.title,
-                "aria-invalid": F.title !== void 0,
-                onChange: (z) => {
-                  const R = z.target.value;
-                  I.setData((Q) => ({ ...Q, title: R, slug: La(Q.slug, Q.title, R, r !== null && r.publishedAt === null && r.status === "draft") })), X("title");
+                value: A.data.title,
+                "aria-invalid": H.title !== void 0,
+                onChange: (B) => {
+                  const R = B.target.value;
+                  A.setData((Z) => ({ ...Z, title: R, slug: Fa(Z.slug, Z.title, R, r !== null && r.publishedAt === null && r.status === "draft") })), ee("title");
                 }
               }
             ),
-            /* @__PURE__ */ e.jsx(H, { message: F.title })
+            /* @__PURE__ */ e.jsx(O, { message: H.title })
           ] }),
           /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
             /* @__PURE__ */ e.jsx(n.Label, { htmlFor: "slug", children: t("Slug") }),
@@ -3057,68 +3070,68 @@ function cl({ collection: s, fields: a, locales: l = [], shared: c = [], sharedV
               {
                 id: "slug",
                 className: "cms:font-mono",
-                value: I.data.slug,
+                value: A.data.slug,
                 placeholder: t("Made from the title"),
-                "aria-invalid": F.slug !== void 0,
-                onChange: (z) => {
-                  I.setData("slug", z.target.value), X("slug");
+                "aria-invalid": H.slug !== void 0,
+                onChange: (B) => {
+                  A.setData("slug", B.target.value), ee("slug");
                 }
               }
             ),
-            /* @__PURE__ */ e.jsx(ba, { note: Is(r?.publishedSlug, I.data.slug, r !== null && r.status !== "draft"), redirectsUrl: _ }),
-            /* @__PURE__ */ e.jsx(H, { message: F.slug })
+            /* @__PURE__ */ e.jsx(Na, { note: Es(r?.publishedSlug, A.data.slug, r !== null && r.status !== "draft"), redirectsUrl: T }),
+            /* @__PURE__ */ e.jsx(O, { message: H.slug })
           ] })
         ] }) }) }),
-        /* @__PURE__ */ e.jsx(Zt.Provider, { value: Array.isArray(o) || !o ? {} : o, children: /* @__PURE__ */ e.jsx(
-          rs,
+        /* @__PURE__ */ e.jsx(sa.Provider, { value: Array.isArray(o) || !o ? {} : o, children: /* @__PURE__ */ e.jsx(
+          is,
           {
-            disabled: !J,
+            disabled: !Q,
             fields: a,
-            values: I.data.data,
-            errors: F,
+            values: A.data.data,
+            errors: H,
             storageKey: `cms:entry:${s.handle}`,
             shared: c,
             sharedValues: i,
-            sharedNote: k ? t("Shared by all languages: the greyed-out fields are edited in :language.", { language: O(k) }) : t("Shared by all languages: the greyed-out fields are edited in the main language."),
-            onChange: (z, R) => {
-              I.setData("data", { ...I.data.data, [z]: R }), X(`data.${z}`);
+            sharedNote: w ? t("Shared by all languages: the greyed-out fields are edited in :language.", { language: V(w) }) : t("Shared by all languages: the greyed-out fields are edited in the main language."),
+            onChange: (B, R) => {
+              A.setData("data", { ...A.data.data, [B]: R }), ee(`data.${B}`);
             }
           }
         ) }),
-        /* @__PURE__ */ e.jsx(n.CollapsibleCard, { title: t("SEO"), description: t("How this entry appears in search results and shared links."), titleClassName: "cms:text-base", storageKey: "cms:entry:seo", hasErrors: we(F, "seo"), children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !J, className: "cms:min-w-0", children: /* @__PURE__ */ e.jsx(
-          de,
+        /* @__PURE__ */ e.jsx(n.CollapsibleCard, { title: t("SEO"), description: t("How this entry appears in search results and shared links."), titleClassName: "cms:text-base", storageKey: "cms:entry:seo", hasErrors: Ce(H, "seo"), children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !Q, className: "cms:min-w-0", children: /* @__PURE__ */ e.jsx(
+          ue,
           {
             bare: !0,
             id: "seo",
-            fields: is(),
-            value: I.data.seo,
-            errors: Y(F, "seo"),
-            onChange: (z) => {
-              I.setData("seo", z), X("seo");
+            fields: os(),
+            value: A.data.seo,
+            errors: Y(H, "seo"),
+            onChange: (B) => {
+              A.setData("seo", B), ee("seo");
             }
           }
         ) }) })
       ] }),
-      !r && s.hierarchical && /* @__PURE__ */ e.jsx("aside", { className: "cms:flex cms:flex-col cms:gap-4", children: /* @__PURE__ */ e.jsx(n.CollapsibleCard, { title: "Page settings", titleClassName: "cms:text-base", storageKey: "cms:entry:page-settings", hasErrors: F.parent_id !== void 0, children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !J, className: "cms:flex cms:flex-col cms:gap-4 cms:text-sm", children: /* @__PURE__ */ e.jsx(va, { collection: s, value: I.data.parent_id, error: F.parent_id, onChange: (z) => Ce({ parent_id: z }) }) }) }) }),
+      !r && s.hierarchical && /* @__PURE__ */ e.jsx("aside", { className: "cms:flex cms:flex-col cms:gap-4", children: /* @__PURE__ */ e.jsx(n.CollapsibleCard, { title: "Page settings", titleClassName: "cms:text-base", storageKey: "cms:entry:page-settings", hasErrors: H.parent_id !== void 0, children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !Q, className: "cms:flex cms:flex-col cms:gap-4 cms:text-sm", children: /* @__PURE__ */ e.jsx(ka, { collection: s, value: A.data.parent_id, error: H.parent_id, onChange: (B) => $e({ parent_id: B }) }) }) }) }),
       r && /* @__PURE__ */ e.jsxs("aside", { className: "cms:flex cms:flex-col cms:gap-4", children: [
         /* @__PURE__ */ e.jsxs(n.CollapsibleCard, { title: t("Status"), titleClassName: "cms:text-base", storageKey: "cms:entry:status", contentClassName: "cms:flex cms:flex-col cms:gap-3 cms:text-sm", children: [
           /* @__PURE__ */ e.jsxs("dl", { className: "cms:flex cms:flex-col cms:gap-2", children: [
             /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-center cms:justify-between cms:gap-3", children: [
               /* @__PURE__ */ e.jsx("dt", { className: "cms:text-muted-foreground", children: t("Status") }),
-              /* @__PURE__ */ e.jsx("dd", { children: /* @__PURE__ */ e.jsx(n.Badge, { variant: r.status === "published" ? "success" : "secondary", children: r.trashed ? t("In the trash") : te(r.status) }) })
+              /* @__PURE__ */ e.jsx("dd", { children: /* @__PURE__ */ e.jsx(n.Badge, { variant: r.status === "published" ? "success" : "secondary", children: r.trashed ? t("In the trash") : ae(r.status) }) })
             ] }),
             r.status !== "draft" && r.publishedAt && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-baseline cms:justify-between cms:gap-3", children: [
               /* @__PURE__ */ e.jsx("dt", { className: "cms:text-muted-foreground", children: r.status === "scheduled" ? t("Scheduled for") : t("Published") }),
-              /* @__PURE__ */ e.jsx("dd", { className: "cms:text-right cms:tabular-nums", children: U(r.publishedAt) })
+              /* @__PURE__ */ e.jsx("dd", { className: "cms:text-right cms:tabular-nums", children: q(r.publishedAt) })
             ] })
           ] }),
           r.review && /* @__PURE__ */ e.jsxs("p", { className: "cms:text-muted-foreground", children: [
-            r.review.by ? t("Sent for review by :name · :date.", { name: r.review.by, date: U(r.review.requestedAt) }) : t("Sent for review · :date.", { date: U(r.review.requestedAt) }),
+            r.review.by ? t("Sent for review by :name · :date.", { name: r.review.by, date: q(r.review.requestedAt) }) : t("Sent for review · :date.", { date: q(r.review.requestedAt) }),
             p.publish ? ` ${t("Publishing it answers the request.")}` : ""
           ] }),
-          r.review && !r.trashed && (r.review.mine || p.publish && !W.readOnly) && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-wrap cms:gap-2", children: [
-            p.publish && !W.readOnly && /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "outline", size: "sm", disabled: I.processing, onClick: () => he(!0), children: [
-              /* @__PURE__ */ e.jsx(ze, {}),
+          r.review && !r.trashed && (r.review.mine || p.publish && !G.readOnly) && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-wrap cms:gap-2", children: [
+            p.publish && !G.readOnly && /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "outline", size: "sm", disabled: A.processing, onClick: () => pe(!0), children: [
+              /* @__PURE__ */ e.jsx(Me, {}),
               " ",
               t("Send back…")
             ] }),
@@ -3128,133 +3141,133 @@ function cl({ collection: s, fields: a, locales: l = [], shared: c = [], sharedV
                 type: "button",
                 variant: "outline",
                 size: "sm",
-                disabled: I.processing,
+                disabled: A.processing,
                 title: t("Take the request back, to keep working on it"),
-                onClick: () => $.router.post(`${S}/review/withdraw`, Z, { preserveScroll: !0 }),
+                onClick: () => C.router.post(`${k}/review/withdraw`, X, { preserveScroll: !0 }),
                 children: t("Withdraw the request")
               }
             )
           ] }),
-          !r.trashed && p.publish && !W.readOnly && /* @__PURE__ */ e.jsx(
-            ol,
+          !r.trashed && p.publish && !G.readOnly && /* @__PURE__ */ e.jsx(
+            hl,
             {
               status: r.status,
-              value: V,
-              onChange: me,
-              dated: $e,
-              processing: I.processing,
-              onPublish: (z) => _e(z),
-              onUnpublish: () => $.router.post(`${S}/unpublish`, Z, { preserveScroll: !0 })
+              value: $,
+              onChange: U,
+              dated: _e,
+              processing: A.processing,
+              onPublish: (B) => De(B),
+              onUnpublish: () => C.router.post(`${k}/unpublish`, X, { preserveScroll: !0 })
             }
           ),
           r.status !== "draft" && r.hasUnpublishedChanges && /* @__PURE__ */ e.jsx("p", { className: "cms:text-muted-foreground", children: t("The draft has changes the site doesn't show yet.") }),
-          C?.is && /* @__PURE__ */ e.jsx("p", { className: "cms:text-muted-foreground", children: t("This is the site's homepage.") }),
-          C && !C.is && C.can && r.status === "published" && !r.trashed && /* @__PURE__ */ e.jsx(
+          _?.is && /* @__PURE__ */ e.jsx("p", { className: "cms:text-muted-foreground", children: t("This is the site's homepage.") }),
+          _ && !_.is && _.can && r.status === "published" && !r.trashed && /* @__PURE__ */ e.jsx(
             n.Button,
             {
               type: "button",
               variant: "outline",
               size: "sm",
               className: "cms:mt-1 cms:self-start",
-              onClick: () => w(
-                (C.current ? t('Make ":title" the homepage? Visitors to / will see it instead of ":current".', { title: d.title, current: C.current }) : t('Make ":title" the homepage? Visitors to / will see it.', { title: d.title })) + " " + t("Its own address will lead to / as well."),
-                () => $.router.post(`${S}/homepage`, {}, { preserveScroll: !0 }),
+              onClick: () => L(
+                (_.current ? t('Make ":title" the homepage? Visitors to / will see it instead of ":current".', { title: d.title, current: _.current }) : t('Make ":title" the homepage? Visitors to / will see it.', { title: d.title })) + " " + t("Its own address will lead to / as well."),
+                () => C.router.post(`${k}/homepage`, {}, { preserveScroll: !0 }),
                 t("Make this the homepage")
               ),
               children: t("Make this the homepage")
             }
           ),
-          l.find((z) => z.code === r.locale)?.outdated && /* @__PURE__ */ e.jsx("p", { className: "cms:text-amber-700 cms:dark:text-amber-400", children: k ? t("The :language version changed since this translation was last saved.", { language: O(k) }) : t("The main version changed since this translation was last saved.") })
+          l.find((B) => B.code === r.locale)?.outdated && /* @__PURE__ */ e.jsx("p", { className: "cms:text-amber-700 cms:dark:text-amber-400", children: w ? t("The :language version changed since this translation was last saved.", { language: V(w) }) : t("The main version changed since this translation was last saved.") })
         ] }),
         /* @__PURE__ */ e.jsxs(n.CollapsibleCard, { title: t("Used by"), titleClassName: "cms:text-base", storageKey: "cms:entry:used-by", contentClassName: "cms:flex cms:flex-col cms:gap-1 cms:text-sm", children: [
           g.length === 0 && /* @__PURE__ */ e.jsx("p", { className: "cms:text-muted-foreground", children: t("No other content links here.") }),
-          g.map((z) => /* @__PURE__ */ e.jsxs("div", { className: "cms:min-w-0", children: [
-            z.url ? /* @__PURE__ */ e.jsx("a", { href: z.url, className: "cms:block cms:truncate cms:underline-offset-4 cms:hover:underline", children: z.label }) : /* @__PURE__ */ e.jsx("span", { className: "cms:block cms:truncate", children: z.label }),
-            /* @__PURE__ */ e.jsx("span", { className: "cms:text-xs cms:text-muted-foreground", title: z.field, children: z.fieldLabel ?? z.field })
-          ] }, `${z.label}:${z.field}`))
+          g.map((B) => /* @__PURE__ */ e.jsxs("div", { className: "cms:min-w-0", children: [
+            B.url ? /* @__PURE__ */ e.jsx("a", { href: B.url, className: "cms:block cms:truncate cms:underline-offset-4 cms:hover:underline", children: B.label }) : /* @__PURE__ */ e.jsx("span", { className: "cms:block cms:truncate", children: B.label }),
+            /* @__PURE__ */ e.jsx("span", { className: "cms:text-xs cms:text-muted-foreground", title: B.field, children: B.fieldLabel ?? B.field })
+          ] }, `${B.label}:${B.field}`))
         ] }),
-        y && /* @__PURE__ */ e.jsx(
-          ul,
+        v && /* @__PURE__ */ e.jsx(
+          gl,
           {
-            entryUrl: S,
+            entryUrl: k,
             collection: s,
-            settings: y,
-            templates: b,
+            settings: v,
+            templates: y,
             blueprints: f,
-            disabled: !J,
-            values: I.data,
-            errors: F,
-            onChange: Ce,
-            draftDirty: I.isDirty
+            disabled: !Q,
+            values: A.data,
+            errors: H,
+            onChange: $e,
+            draftDirty: A.isDirty
           }
         ),
-        m !== null && s.comments && /* @__PURE__ */ e.jsx(nl, { entryId: r.id, comments: m }),
+        m !== null && s.comments && /* @__PURE__ */ e.jsx(il, { entryId: r.id, comments: m }),
         /* @__PURE__ */ e.jsxs(n.CollapsibleCard, { title: t("Revisions"), titleClassName: "cms:text-base", storageKey: "cms:entry:revisions", contentClassName: "cms:flex cms:flex-col cms:gap-2 cms:text-sm", children: [
-          x !== null && p.update && /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "outline", size: "sm", onClick: () => $.router.post(A(`cms/entries/${r.id}/translations/${r.locale}/undo-restore`), {}, { preserveScroll: !0 }), children: [
-            /* @__PURE__ */ e.jsx(ze, {}),
+          x !== null && p.update && /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "outline", size: "sm", onClick: () => C.router.post(I(`cms/entries/${r.id}/translations/${r.locale}/undo-restore`), {}, { preserveScroll: !0 }), children: [
+            /* @__PURE__ */ e.jsx(Me, {}),
             " ",
             t("Undo the restore")
           ] }),
-          /* @__PURE__ */ e.jsx($.Deferred, { data: "revisions", fallback: /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
+          /* @__PURE__ */ e.jsx(C.Deferred, { data: "revisions", fallback: /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
             /* @__PURE__ */ e.jsx(n.Skeleton, { className: "cms:h-8" }),
             /* @__PURE__ */ e.jsx(n.Skeleton, { className: "cms:h-8" })
           ] }), children: /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
-            (h ?? []).length === 0 && /* @__PURE__ */ e.jsx("p", { className: "cms:text-muted-foreground", children: t("Each publish keeps one.") }),
-            (h ?? []).map((z) => /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-1 cms:border-b cms:border-border/60 cms:pb-2 cms:last:border-b-0 cms:last:pb-0", children: [
+            (u ?? []).length === 0 && /* @__PURE__ */ e.jsx("p", { className: "cms:text-muted-foreground", children: t("Each publish keeps one.") }),
+            (u ?? []).map((B) => /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-1 cms:border-b cms:border-border/60 cms:pb-2 cms:last:border-b-0 cms:last:pb-0", children: [
               /* @__PURE__ */ e.jsxs("div", { className: "cms:min-w-0", children: [
-                /* @__PURE__ */ e.jsx("div", { className: "cms:truncate", children: z.title }),
+                /* @__PURE__ */ e.jsx("div", { className: "cms:truncate", children: B.title }),
                 /* @__PURE__ */ e.jsxs("div", { className: "cms:text-xs cms:text-muted-foreground", children: [
-                  U(z.createdAt),
-                  z.author ? ` · ${z.author}` : ""
+                  q(B.createdAt),
+                  B.author ? ` · ${B.author}` : ""
                 ] }),
-                /* @__PURE__ */ e.jsx("div", { className: "cms:text-xs cms:text-muted-foreground", children: z.changed === null ? t("First kept version") : z.changed.length === 0 ? t("No field changed") : t("Changed: :fields", { fields: z.changed.join(", ") }) })
+                /* @__PURE__ */ e.jsx("div", { className: "cms:text-xs cms:text-muted-foreground", children: B.changed === null ? t("First kept version") : B.changed.length === 0 ? t("No field changed") : t("Changed: :fields", { fields: B.changed.join(", ") }) })
               ] }),
               /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:gap-1", children: [
-                /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "ghost", size: "sm", onClick: () => pe(z), children: t("Compare") }),
+                /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "ghost", size: "sm", onClick: () => ie(B), children: t("Compare") }),
                 p.update && !r.trashed && /* @__PURE__ */ e.jsx(
                   n.Button,
                   {
                     type: "button",
                     variant: "ghost",
                     size: "sm",
-                    onClick: () => $.router.post(A(`cms/entries/${r.id}/revisions/${z.id}/restore`), {}, { preserveScroll: !0 }),
+                    onClick: () => C.router.post(I(`cms/entries/${r.id}/revisions/${B.id}/restore`), {}, { preserveScroll: !0 }),
                     children: t("Restore")
                   }
                 )
               ] })
-            ] }, z.id))
+            ] }, B.id))
           ] }) })
         ] })
       ] })
     ] }),
     r?.review && /* @__PURE__ */ e.jsx(
-      rl,
+      ml,
       {
-        open: ue,
-        onClose: () => he(!1),
+        open: xe,
+        onClose: () => pe(!1),
         by: r.review.by,
-        onSend: (z, R) => $.router.post(`${S}/review/send-back`, { ...Z, note: z }, { preserveScroll: !0, onSuccess: () => {
-          he(!1), R();
+        onSend: (B, R) => C.router.post(`${k}/review/send-back`, { ...X, note: B }, { preserveScroll: !0, onSuccess: () => {
+          pe(!1), R();
         }, onError: R })
       }
     ),
-    /* @__PURE__ */ e.jsx(ml, { entryId: r?.id ?? 0, revision: Se, onClose: () => pe(null), dirty: I.isDirty }),
+    /* @__PURE__ */ e.jsx(pl, { entryId: r?.id ?? 0, revision: he, onClose: () => ie(null), dirty: A.isDirty }),
     /* @__PURE__ */ e.jsx(
-      dl,
+      xl,
       {
         open: P,
         onClose: () => N(!1),
-        processing: I.processing,
-        rescheduling: ge,
+        processing: A.processing,
+        rescheduling: fe,
         current: r?.publishedAt ?? null,
-        onSchedule: (z) => _e(z)
+        onSchedule: (B) => De(B)
       }
     )
   ] });
 }
-function rl({ open: s, onClose: a, by: l, onSend: c }) {
-  const [i, r] = T.useState(""), [d, h] = T.useState(!1), m = $.usePage().props.errors ?? {};
-  return T.useEffect(() => {
+function ml({ open: s, onClose: a, by: l, onSend: c }) {
+  const [i, r] = M.useState(""), [d, u] = M.useState(!1), m = C.usePage().props.errors ?? {};
+  return M.useEffect(() => {
     s && r("");
   }, [s]), /* @__PURE__ */ e.jsx(n.Dialog, { open: s, onOpenChange: (o) => !o && !d && a(), children: /* @__PURE__ */ e.jsxs(n.DialogContent, { children: [
     /* @__PURE__ */ e.jsxs(n.DialogHeader, { children: [
@@ -3275,33 +3288,33 @@ function rl({ open: s, onClose: a, by: l, onSend: c }) {
           onChange: (o) => r(o.target.value)
         }
       ),
-      /* @__PURE__ */ e.jsx(H, { message: m.note })
+      /* @__PURE__ */ e.jsx(O, { message: m.note })
     ] }),
     /* @__PURE__ */ e.jsxs(n.DialogFooter, { children: [
       /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "outline", disabled: d, onClick: a, children: t("Cancel") }),
       /* @__PURE__ */ e.jsxs(n.Button, { type: "button", disabled: d, onClick: () => {
-        h(!0), c(i, () => h(!1));
+        u(!0), c(i, () => u(!1));
       }, children: [
-        d && /* @__PURE__ */ e.jsx(le, { className: "cms:animate-spin" }),
+        d && /* @__PURE__ */ e.jsx(ce, { className: "cms:animate-spin" }),
         " ",
         t("Send back")
       ] })
     ] })
   ] }) });
 }
-function il({ entryUrl: s, editUrl: a, current: l, locales: c, canAdd: i, canRemove: r, onRemove: d }) {
-  const h = c.filter((o) => o.status !== null), m = c.filter((o) => o.status === null);
+function ul({ entryUrl: s, editUrl: a, current: l, locales: c, canAdd: i, canRemove: r, onRemove: d }) {
+  const u = c.filter((o) => o.status !== null), m = c.filter((o) => o.status === null);
   return /* @__PURE__ */ e.jsxs("nav", { "aria-label": t("Languages"), className: "cms:flex cms:flex-wrap cms:items-center cms:gap-2", children: [
-    /* @__PURE__ */ e.jsx("div", { className: "cms:inline-flex cms:items-center cms:gap-0.5 cms:rounded-md cms:bg-muted cms:p-0.5", children: h.map((o) => {
-      const g = o.code === l, x = o.main ? t(":language (main)", { language: o.name ?? O(o.code) }) : o.name ?? O(o.code), u = o.status ? te(o.status) : "", v = o.outdated ? t(":language: :status, outdated (the main language changed since)", { language: x, status: u }) : t(":language: :status", { language: x, status: u });
+    /* @__PURE__ */ e.jsx("div", { className: "cms:inline-flex cms:items-center cms:gap-0.5 cms:rounded-md cms:bg-muted cms:p-0.5", children: u.map((o) => {
+      const g = o.code === l, x = o.main ? t(":language (main)", { language: o.name ?? V(o.code) }) : o.name ?? V(o.code), h = o.status ? ae(o.status) : "", b = o.outdated ? t(":language: :status, outdated (the main language changed since)", { language: x, status: h }) : t(":language: :status", { language: x, status: h });
       return /* @__PURE__ */ e.jsxs(
         "button",
         {
           type: "button",
-          title: v,
-          "aria-label": v,
+          title: b,
+          "aria-label": b,
           "aria-current": g ? "page" : void 0,
-          onClick: () => !g && $.router.get(a, { locale: o.code }),
+          onClick: () => !g && C.router.get(a, { locale: o.code }),
           className: `cms:relative cms:inline-flex cms:h-7 cms:min-w-10 cms:items-center cms:justify-center cms:gap-1.5 cms:rounded cms:px-2.5 cms:text-xs cms:font-semibold cms:tracking-wide cms:uppercase cms:transition-colors ${g ? "cms:bg-card cms:text-foreground cms:shadow-xs" : "cms:text-muted-foreground cms:hover:text-foreground"}`,
           children: [
             o.code,
@@ -3318,10 +3331,10 @@ function il({ entryUrl: s, editUrl: a, current: l, locales: c, canAdd: i, canRem
         variant: "outline",
         size: "sm",
         className: "cms:h-8 cms:border-dashed cms:text-xs cms:uppercase",
-        title: t("Add :language", { language: o.name ?? O(o.code) }),
-        onClick: () => $.router.post(`${s}/translations`, { locale: o.code }),
+        title: t("Add :language", { language: o.name ?? V(o.code) }),
+        onClick: () => C.router.post(`${s}/translations`, { locale: o.code }),
         children: [
-          /* @__PURE__ */ e.jsx(G, {}),
+          /* @__PURE__ */ e.jsx(J, {}),
           " ",
           o.code
         ]
@@ -3331,8 +3344,8 @@ function il({ entryUrl: s, editUrl: a, current: l, locales: c, canAdd: i, canRem
     r && /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "ghost", size: "sm", className: "cms:ml-auto cms:text-destructive", onClick: d, children: t("Remove this language") })
   ] });
 }
-function ol({ status: s, value: a, onChange: l, dated: c, processing: i, onPublish: r, onUnpublish: d }) {
-  const h = c.action !== "now", m = {
+function hl({ status: s, value: a, onChange: l, dated: c, processing: i, onPublish: r, onUnpublish: d }) {
+  const u = c.action !== "now", m = {
     now: t("Publish"),
     schedule: t(s === "scheduled" ? "Reschedule" : "Schedule"),
     backdate: t("Publish now, back-dated"),
@@ -3343,8 +3356,8 @@ function ol({ status: s, value: a, onChange: l, dated: c, processing: i, onPubli
     /* @__PURE__ */ e.jsx(n.DatePicker, { id: "entry-published-at", withTime: !0, className: "cms:max-w-none", value: a || null, onChange: (o) => l(o ?? "") }),
     /* @__PURE__ */ e.jsx("p", { className: "cms:text-xs cms:text-muted-foreground", children: t(s === "draft" ? "Empty: now. A date in the future schedules it." : "The date shown as published. A date in the future takes it off the site until then.") }),
     /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-wrap cms:gap-2", children: [
-      (s === "draft" || h) && /* @__PURE__ */ e.jsxs(n.Button, { type: "button", size: "sm", disabled: i, onClick: () => r(c.at), children: [
-        /* @__PURE__ */ e.jsx(Qe, {}),
+      (s === "draft" || u) && /* @__PURE__ */ e.jsxs(n.Button, { type: "button", size: "sm", disabled: i, onClick: () => r(c.at), children: [
+        /* @__PURE__ */ e.jsx(Xe, {}),
         " ",
         m
       ] }),
@@ -3352,10 +3365,10 @@ function ol({ status: s, value: a, onChange: l, dated: c, processing: i, onPubli
     ] })
   ] });
 }
-function dl({ open: s, onClose: a, onSchedule: l, current: c, processing: i, rescheduling: r }) {
-  const [d, h] = T.useState("");
-  T.useEffect(() => {
-    s && h(As(za(c)));
+function xl({ open: s, onClose: a, onSchedule: l, current: c, processing: i, rescheduling: r }) {
+  const [d, u] = M.useState("");
+  M.useEffect(() => {
+    s && u(As(Ia(c)));
   }, [s, c]);
   const m = d === "" ? null : new Date(d), o = m !== null && m.getTime() <= Date.now();
   return /* @__PURE__ */ e.jsx(n.Dialog, { open: s, onOpenChange: (g) => !g && a(), children: /* @__PURE__ */ e.jsxs(n.DialogContent, { children: [
@@ -3365,9 +3378,9 @@ function dl({ open: s, onClose: a, onSchedule: l, current: c, processing: i, res
     ] }),
     /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
       /* @__PURE__ */ e.jsx(n.Label, { htmlFor: "published-at", children: t("Date and time") }),
-      /* @__PURE__ */ e.jsx(n.DatePicker, { id: "published-at", withTime: !0, required: !0, className: "cms:max-w-none", value: d || null, onChange: (g) => h(g ?? "") }),
+      /* @__PURE__ */ e.jsx(n.DatePicker, { id: "published-at", withTime: !0, required: !0, className: "cms:max-w-none", value: d || null, onChange: (g) => u(g ?? "") }),
       /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: t("In your time zone.") }),
-      o && /* @__PURE__ */ e.jsx("p", { role: "alert", className: "cms:text-sm cms:text-amber-700 cms:dark:text-amber-400", children: t("This date has passed: the entry goes live now, dated :date.", { date: U(m.toISOString()) }) })
+      o && /* @__PURE__ */ e.jsx("p", { role: "alert", className: "cms:text-sm cms:text-amber-700 cms:dark:text-amber-400", children: t("This date has passed: the entry goes live now, dated :date.", { date: q(m.toISOString()) }) })
     ] }),
     /* @__PURE__ */ e.jsxs(n.DialogFooter, { children: [
       /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "outline", onClick: a, children: t("Cancel") }),
@@ -3375,15 +3388,15 @@ function dl({ open: s, onClose: a, onSchedule: l, current: c, processing: i, res
     ] })
   ] }) });
 }
-function ml({ entryId: s, revision: a, onClose: l, dirty: c }) {
-  const [i, r] = T.useState(null), [d, h] = T.useState(!1);
-  return T.useEffect(() => {
-    if (r(null), h(!1), !a) return;
+function pl({ entryId: s, revision: a, onClose: l, dirty: c }) {
+  const [i, r] = M.useState(null), [d, u] = M.useState(!1);
+  return M.useEffect(() => {
+    if (r(null), u(!1), !a) return;
     let m = !0;
-    return fetch(A(`cms/entries/${s}/revisions/${a.id}/compare`), { headers: { Accept: "application/json" }, credentials: "same-origin" }).then((o) => o.ok ? o.json() : Promise.reject(new Error(String(o.status)))).then((o) => {
+    return fetch(I(`cms/entries/${s}/revisions/${a.id}/compare`), { headers: { Accept: "application/json" }, credentials: "same-origin" }).then((o) => o.ok ? o.json() : Promise.reject(new Error(String(o.status)))).then((o) => {
       m && r(o.fields);
     }).catch(() => {
-      m && h(!0);
+      m && u(!0);
     }), () => {
       m = !1;
     };
@@ -3391,7 +3404,7 @@ function ml({ entryId: s, revision: a, onClose: l, dirty: c }) {
     /* @__PURE__ */ e.jsxs(n.DialogHeader, { children: [
       /* @__PURE__ */ e.jsx(n.DialogTitle, { children: t("Compare with the draft") }),
       /* @__PURE__ */ e.jsxs(n.DialogDescription, { children: [
-        a ? a.author ? t("The version published :date by :name, beside the saved draft.", { date: U(a.createdAt), name: a.author }) : t("The version published :date, beside the saved draft.", { date: U(a.createdAt) }) : "",
+        a ? a.author ? t("The version published :date by :name, beside the saved draft.", { date: q(a.createdAt), name: a.author }) : t("The version published :date, beside the saved draft.", { date: q(a.createdAt) }) : "",
         c ? ` ${t("Your unsaved changes aren't included.")}` : ""
       ] })
     ] }),
@@ -3417,11 +3430,11 @@ function ml({ entryId: s, revision: a, onClose: l, dirty: c }) {
     /* @__PURE__ */ e.jsx(n.DialogFooter, { children: /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "outline", onClick: l, children: t("Close") }) })
   ] }) });
 }
-function va({ collection: s, value: a, error: l, onChange: c }) {
+function ka({ collection: s, value: a, error: l, onChange: c }) {
   return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
     /* @__PURE__ */ e.jsx(n.Label, { htmlFor: "parent", children: t("Parent") }),
     /* @__PURE__ */ e.jsx(
-      ke,
+      Se,
       {
         id: "parent",
         multiple: !1,
@@ -3432,18 +3445,18 @@ function va({ collection: s, value: a, error: l, onChange: c }) {
         onChange: (i) => c(typeof i == "number" ? i : null)
       }
     ),
-    /* @__PURE__ */ e.jsx(H, { message: l })
+    /* @__PURE__ */ e.jsx(O, { message: l })
   ] });
 }
-function ul({ entryUrl: s, collection: a, settings: l, templates: c, blueprints: i, disabled: r, values: d, errors: h, onChange: m, draftDirty: o }) {
-  const g = i.length > 1 ? l.blueprint ?? i[0].handle : void 0, x = $.useForm({ blueprint: g ?? "" }), u = x.errors.blueprint, v = ["parent_id", "template", "comments_closed"].some((y) => h[y] !== void 0) || u !== void 0;
-  return /* @__PURE__ */ e.jsx(n.CollapsibleCard, { title: t("Page settings"), titleClassName: "cms:text-base", storageKey: "cms:entry:page-settings", hasErrors: v, children: /* @__PURE__ */ e.jsxs("fieldset", { disabled: r, className: "cms:flex cms:flex-col cms:gap-4 cms:text-sm", children: [
-    a.hierarchical && /* @__PURE__ */ e.jsx(va, { collection: a, value: d.parent_id, error: h.parent_id, onChange: (y) => m({ parent_id: y }) }),
+function gl({ entryUrl: s, collection: a, settings: l, templates: c, blueprints: i, disabled: r, values: d, errors: u, onChange: m, draftDirty: o }) {
+  const g = i.length > 1 ? l.blueprint ?? i[0].handle : void 0, x = C.useForm({ blueprint: g ?? "" }), h = x.errors.blueprint, b = ["parent_id", "template", "comments_closed"].some((v) => u[v] !== void 0) || h !== void 0;
+  return /* @__PURE__ */ e.jsx(n.CollapsibleCard, { title: t("Page settings"), titleClassName: "cms:text-base", storageKey: "cms:entry:page-settings", hasErrors: b, children: /* @__PURE__ */ e.jsxs("fieldset", { disabled: r, className: "cms:flex cms:flex-col cms:gap-4 cms:text-sm", children: [
+    a.hierarchical && /* @__PURE__ */ e.jsx(ka, { collection: a, value: d.parent_id, error: u.parent_id, onChange: (v) => m({ parent_id: v }) }),
     i.length > 1 && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
       /* @__PURE__ */ e.jsx(n.Label, { htmlFor: "blueprint", children: t("Blueprint") }),
-      /* @__PURE__ */ e.jsxs(n.Select, { value: x.data.blueprint, onValueChange: (y) => x.setData("blueprint", y), children: [
-        /* @__PURE__ */ e.jsx(n.SelectTrigger, { id: "blueprint", "aria-invalid": u !== void 0, children: /* @__PURE__ */ e.jsx(n.SelectValue, {}) }),
-        /* @__PURE__ */ e.jsx(n.SelectContent, { children: i.map((y) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: y.handle, children: y.title }, y.handle)) })
+      /* @__PURE__ */ e.jsxs(n.Select, { value: x.data.blueprint, onValueChange: (v) => x.setData("blueprint", v), children: [
+        /* @__PURE__ */ e.jsx(n.SelectTrigger, { id: "blueprint", "aria-invalid": h !== void 0, children: /* @__PURE__ */ e.jsx(n.SelectValue, {}) }),
+        /* @__PURE__ */ e.jsx(n.SelectContent, { children: i.map((v) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: v.handle, children: v.title }, v.handle)) })
       ] }),
       x.data.blueprint !== g && /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
         /* @__PURE__ */ e.jsx("p", { className: "cms:text-muted-foreground", children: t("The fields change in every language; values of fields both blueprints have are kept. The editor reloads.") }),
@@ -3459,7 +3472,7 @@ function ul({ entryUrl: s, collection: a, settings: l, templates: c, blueprints:
           }
         )
       ] }),
-      /* @__PURE__ */ e.jsx(H, { message: u })
+      /* @__PURE__ */ e.jsx(O, { message: h })
     ] }),
     /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
       /* @__PURE__ */ e.jsx(n.Label, { htmlFor: "template", children: t("Template") }),
@@ -3470,70 +3483,70 @@ function ul({ entryUrl: s, collection: a, settings: l, templates: c, blueprints:
           className: "cms:font-mono",
           placeholder: `cms.${a.handle}-landing`,
           value: d.template,
-          onChange: (y) => m({ template: y.target.value }),
-          "aria-invalid": h.template !== void 0
+          onChange: (v) => m({ template: v.target.value }),
+          "aria-invalid": u.template !== void 0
         }
       ),
-      /* @__PURE__ */ e.jsx(fa, { example: `cms.${a.handle}-landing`, empty: t("Leave empty to use the collection's template."), value: d.template, lookup: c }),
-      /* @__PURE__ */ e.jsx(H, { message: h.template })
+      /* @__PURE__ */ e.jsx(va, { example: `cms.${a.handle}-landing`, empty: t("Leave empty to use the collection's template."), value: d.template, lookup: c }),
+      /* @__PURE__ */ e.jsx(O, { message: u.template })
     ] }),
     a.comments && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-center cms:gap-3", children: [
-      /* @__PURE__ */ e.jsx(n.Switch, { id: "comments-open", checked: !d.comments_closed, onCheckedChange: (y) => m({ comments_closed: !y }) }),
+      /* @__PURE__ */ e.jsx(n.Switch, { id: "comments-open", checked: !d.comments_closed, onCheckedChange: (v) => m({ comments_closed: !v }) }),
       /* @__PURE__ */ e.jsx(n.Label, { htmlFor: "comments-open", children: t("Accept new comments") }),
-      /* @__PURE__ */ e.jsx("a", { href: A(`cms/comments?entry=${s.split("/").slice(-1)[0]}`), className: "cms:ml-auto cms:text-muted-foreground cms:underline-offset-4 hover:cms:underline", children: t("Comments") })
+      /* @__PURE__ */ e.jsx("a", { href: I(`cms/comments?entry=${s.split("/").slice(-1)[0]}`), className: "cms:ml-auto cms:text-muted-foreground cms:underline-offset-4 hover:cms:underline", children: t("Comments") })
     ] })
   ] }) });
 }
-function Xe(s, a) {
+function ss(s, a) {
   const l = s[a]?.depth ?? 0;
   let c = a + 1;
   for (; c < s.length && s[c].depth > l; ) c++;
   return c;
 }
-function ne(s, a) {
-  const l = a < 0 ? 0 : a + 1, c = a < 0 ? s.length : Xe(s, a), i = a < 0 ? 0 : (s[a]?.depth ?? 0) + 1, r = [];
+function le(s, a) {
+  const l = a < 0 ? 0 : a + 1, c = a < 0 ? s.length : ss(s, a), i = a < 0 ? 0 : (s[a]?.depth ?? 0) + 1, r = [];
   for (let d = l; d < c; d++)
     s[d].depth === i && r.push(d);
   return r;
 }
-function os(s, a, l) {
-  const c = ne(s, a);
-  if (l.length !== c.length || [...l].sort((h, m) => h - m).some((h, m) => h !== c[m]) || c.length === 0) return s.slice();
-  const i = c[0], r = Xe(s, c[c.length - 1]), d = l.flatMap((h) => s.slice(h, Xe(s, h)));
+function ds(s, a, l) {
+  const c = le(s, a);
+  if (l.length !== c.length || [...l].sort((u, m) => u - m).some((u, m) => u !== c[m]) || c.length === 0) return s.slice();
+  const i = c[0], r = ss(s, c[c.length - 1]), d = l.flatMap((u) => s.slice(u, ss(s, u)));
   return [...s.slice(0, i), ...d, ...s.slice(r)];
 }
-function hl(s, a) {
-  const l = new Set(s.map((h) => h.id)), c = /* @__PURE__ */ new Map();
-  for (const h of s) {
-    const m = a(h), o = m != null && l.has(m) ? m : null;
-    c.set(o, [...c.get(o) ?? [], h]);
+function fl(s, a) {
+  const l = new Set(s.map((u) => u.id)), c = /* @__PURE__ */ new Map();
+  for (const u of s) {
+    const m = a(u), o = m != null && l.has(m) ? m : null;
+    c.set(o, [...c.get(o) ?? [], u]);
   }
-  const i = [], r = /* @__PURE__ */ new Set(), d = (h, m) => {
-    for (const o of c.get(h) ?? [])
+  const i = [], r = /* @__PURE__ */ new Set(), d = (u, m) => {
+    for (const o of c.get(u) ?? [])
       r.has(o.id) || (r.add(o.id), i.push({ ...o, depth: m }), d(o.id, m + 1));
   };
   d(null, 0);
-  for (const h of s)
-    r.has(h.id) || (r.add(h.id), i.push({ ...h, depth: 0 }), d(h.id, 1));
+  for (const u of s)
+    r.has(u.id) || (r.add(u.id), i.push({ ...u, depth: 0 }), d(u.id, 1));
   return i;
 }
-function xl({ collection: s, rows: a, hierarchical: l = !1 }) {
-  const c = T.useCallback(
-    (m) => hl(m, (o) => l ? o.parentId : null),
+function jl({ collection: s, rows: a, hierarchical: l = !1 }) {
+  const c = M.useCallback(
+    (m) => fl(m, (o) => l ? o.parentId : null),
     [l]
-  ), [i, r] = T.useState(() => c(a));
-  T.useEffect(() => r(c(a)), [a, c]);
+  ), [i, r] = M.useState(() => c(a));
+  M.useEffect(() => r(c(a)), [a, c]);
   const d = (m, o) => {
-    const g = os(i, m, o), x = ne(g, m).map((u) => g[u].id);
-    r(g), $.router.post(
-      A("cms/entries/reorder"),
+    const g = ds(i, m, o), x = le(g, m).map((h) => g[h].id);
+    r(g), C.router.post(
+      I("cms/entries/reorder"),
       { collection: s, ids: x, parent_id: m < 0 ? null : i[m]?.id ?? null },
       { preserveScroll: !0, preserveState: !0, onError: () => r(c(a)) }
     );
-  }, h = (m) => /* @__PURE__ */ e.jsx(
+  }, u = (m) => /* @__PURE__ */ e.jsx(
     n.SortableList,
     {
-      items: ne(i, m),
+      items: le(i, m),
       getId: (o) => i[o].id,
       getLabel: (o) => i[o].title,
       onReorder: (o) => d(m, o),
@@ -3544,23 +3557,23 @@ function xl({ collection: s, rows: a, hierarchical: l = !1 }) {
           /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-center cms:gap-2 cms:rounded-lg cms:border cms:border-border/70 cms:bg-card cms:p-2 cms:text-sm", children: [
             /* @__PURE__ */ e.jsx(n.SortableHandle, { ...g, label: t("Move :title", { title: x.title }) }),
             /* @__PURE__ */ e.jsx("span", { className: "cms:min-w-0 cms:flex-1 cms:truncate cms:font-medium", children: x.title }),
-            /* @__PURE__ */ e.jsx(n.Badge, { variant: x.status === "published" ? "success" : "secondary", children: te(x.status) })
+            /* @__PURE__ */ e.jsx(n.Badge, { variant: x.status === "published" ? "success" : "secondary", children: ae(x.status) })
           ] }),
-          ne(i, o).length > 0 && h(o)
+          le(i, o).length > 0 && u(o)
         ] });
       }
     }
   );
   return /* @__PURE__ */ e.jsxs(n.Card, { className: "cms:p-2", children: [
     l && /* @__PURE__ */ e.jsx("p", { className: "cms:px-1 cms:pb-1 cms:text-xs cms:text-muted-foreground", children: t("Entries move among those at their level, with what's under them. To put one under another, choose its Parent in its Page settings.") }),
-    h(-1)
+    u(-1)
   ] });
 }
-function pl(s, a, l) {
+function bl(s, a, l) {
   const c = { ...s, ...a }, i = Object.fromEntries(Object.entries(c.terms).filter(([, d]) => d !== "")), r = {};
   return c.search && (r.search = c.search), c.status && (r.status = c.status), c.author && (r.author = c.author), Object.keys(i).length > 0 && (r.terms = i), c.locale && c.locale !== l && (r.locale = c.locale), c.sort && (r.sort = c.sort), r.per_page = c.perPage, r;
 }
-function gl(s) {
+function vl(s) {
   const a = new URLSearchParams();
   for (const [l, c] of Object.entries(s))
     if (typeof c == "object")
@@ -3569,29 +3582,29 @@ function gl(s) {
       a.set(l, String(c));
   return a.toString();
 }
-function fl(s, a) {
+function yl(s, a) {
   return s === a ? `-${a}` : s === `-${a}` ? "" : a;
 }
-function jl(s, a) {
+function Nl(s, a) {
   return s === a ? "asc" : s === `-${a}` ? "desc" : null;
 }
-function Ds(s) {
+function Ts(s) {
   return [s.search, s.status, s.author, ...Object.values(s.terms)].filter((a) => a !== "").length;
 }
-const qe = "__all", bl = () => [
+const We = "__all", kl = () => [
   { value: "draft", label: t("Drafts") },
   { value: "published", label: t("Published") },
   { value: "scheduled", label: t("Scheduled") },
   { value: "trashed", label: t("Trash") }
 ];
-function vl(s) {
+function wl(s) {
   const { collection: a, entries: l, query: c } = s;
   return n.useBreadcrumbs([{ label: a ? a.title : t("Entries") }]), !a || !l || !c ? /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-4", children: [
-    /* @__PURE__ */ e.jsx($.Head, { title: t("Entries") }),
+    /* @__PURE__ */ e.jsx(C.Head, { title: t("Entries") }),
     /* @__PURE__ */ e.jsx(n.PageHeader, { title: t("Entries"), description: t("There are no collections yet. Create one under Structure → Collections, then come back to write its entries.") })
-  ] }) : /* @__PURE__ */ e.jsx(yl, { ...s, collection: a, entries: l, query: c });
+  ] }) : /* @__PURE__ */ e.jsx(Sl, { ...s, collection: a, entries: l, query: c });
 }
-function yl({
+function Sl({
   collection: s,
   collections: a,
   entries: l,
@@ -3599,207 +3612,207 @@ function yl({
   columns: i = [],
   filters: r = { authors: [], taxonomies: [], locales: [] },
   links: d = [],
-  manualOrder: h = !1,
+  manualOrder: u = !1,
   perPageOptions: m = [10, 25, 50, 100],
   preferencesKey: o,
   trashedCount: g = 0,
   can: x
 }) {
-  const u = A(`cms/collections/${s.handle}/entries`), v = r.locales[0] ?? c.locale, [y, f] = T.useState(c.search), [j, C] = T.useState([]), [_, b] = T.useState(!1), [p, M] = ce(), { setColumns: S, setPerPage: B } = n.useTablePreferences(o ?? `table.cms.entries.${s.handle}`, { columns: c.columns, perPage: c.perPage });
-  T.useEffect(() => C([]), [l]);
-  const w = c.status === "trashed", D = Ds(c) > 0, P = i.filter((k) => c.columns.includes(k.key)), N = (k = {}) => pl(c, k, v), L = (k) => $.router.get(u, N(k), { preserveState: !0, preserveScroll: !0, replace: !0 });
-  T.useEffect(() => {
-    if (y === c.search) return;
-    const k = window.setTimeout(() => L({ search: y }), 300);
-    return () => window.clearTimeout(k);
-  }, [y]);
-  const V = w ? x?.delete ? [{ action: "restore", label: t("Restore") }, { action: "delete", label: t("Permanently delete"), danger: !0 }] : [] : [
+  const h = I(`cms/collections/${s.handle}/entries`), b = r.locales[0] ?? c.locale, [v, f] = M.useState(c.search), [j, _] = M.useState([]), [T, y] = M.useState(!1), [p, z] = re(), { setColumns: k, setPerPage: F } = n.useTablePreferences(o ?? `table.cms.entries.${s.handle}`, { columns: c.columns, perPage: c.perPage });
+  M.useEffect(() => _([]), [l]);
+  const L = c.status === "trashed", S = Ts(c) > 0, P = i.filter((w) => c.columns.includes(w.key)), N = (w = {}) => bl(c, w, b), D = (w) => C.router.get(h, N(w), { preserveState: !0, preserveScroll: !0, replace: !0 });
+  M.useEffect(() => {
+    if (v === c.search) return;
+    const w = window.setTimeout(() => D({ search: v }), 300);
+    return () => window.clearTimeout(w);
+  }, [v]);
+  const $ = L ? x?.delete ? [{ action: "restore", label: t("Restore") }, { action: "delete", label: t("Permanently delete"), danger: !0 }] : [] : [
     ...x?.publish ? [{ action: "publish", label: t("Publish") }, { action: "unpublish", label: t("Unpublish") }] : [],
     ...x?.delete ? [{ action: "trash", label: t("Move to the trash"), danger: !0 }] : []
-  ], me = (k, F, K = !1) => {
-    const X = () => $.router.post(`${u}/bulk`, { action: k, ids: j }, { preserveScroll: !0 });
-    if (K) {
-      const ee = j.length === 1 ? t(":action: 1 entry?", { action: F }) : t(":action: :count entries?", { action: F, count: j.length });
+  ], U = (w, H, W = !1) => {
+    const ee = () => C.router.post(`${h}/bulk`, { action: w, ids: j }, { preserveScroll: !0 });
+    if (W) {
+      const se = j.length === 1 ? t(":action: 1 entry?", { action: H }) : t(":action: :count entries?", { action: H, count: j.length });
       p(
-        `${ee} ${t(k === "delete" ? "This can't be undone." : "They come off the site; you can restore them.")}`,
-        X,
-        t(k === "trash" ? "Move to trash" : "Delete")
+        `${se} ${t(w === "delete" ? "This can't be undone." : "They come off the site; you can restore them.")}`,
+        ee,
+        t(w === "trash" ? "Move to trash" : "Delete")
       );
     } else
-      X();
-  }, Se = async (k) => {
-    const F = new Set(c.columns);
-    F.has(k) ? F.delete(k) : F.add(k), await S(i.map((K) => K.key).filter((K) => F.has(K))), $.router.reload({ only: ["entries", "query"] });
-  }, pe = () => {
-    f(""), L({ search: "", status: "", author: "", terms: {} });
-  }, ue = h && !!x?.update, he = ue && l !== null && l.lastPage <= 1 && l.data.length > 1, I = w && !!x?.delete, Ce = 1 + P.length + (V.length > 0 ? 1 : 0) + (ue ? 1 : 0) + (I ? 1 : 0), Z = gl(N());
+      ee();
+  }, he = async (w) => {
+    const H = new Set(c.columns);
+    H.has(w) ? H.delete(w) : H.add(w), await k(i.map((W) => W.key).filter((W) => H.has(W))), C.router.reload({ only: ["entries", "query"] });
+  }, ie = () => {
+    f(""), D({ search: "", status: "", author: "", terms: {} });
+  }, xe = u && !!x?.update, pe = xe && l !== null && l.lastPage <= 1 && l.data.length > 1, A = L && !!x?.delete, $e = 1 + P.length + ($.length > 0 ? 1 : 0) + (xe ? 1 : 0) + (A ? 1 : 0), X = vl(N());
   return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-6", children: [
-    /* @__PURE__ */ e.jsx($.Head, { title: s.title }),
-    M,
+    /* @__PURE__ */ e.jsx(C.Head, { title: s.title }),
+    z,
     /* @__PURE__ */ e.jsx(
       n.PageHeader,
       {
-        title: w ? /* @__PURE__ */ e.jsx(n.TrashTitle, { children: s.title }) : s.title,
-        primary: x?.create && !w && /* @__PURE__ */ e.jsx(n.Button, { asChild: !0, children: /* @__PURE__ */ e.jsxs($.Link, { href: `${u}/create`, children: [
-          /* @__PURE__ */ e.jsx(G, {}),
+        title: L ? /* @__PURE__ */ e.jsx(n.TrashTitle, { children: s.title }) : s.title,
+        primary: x?.create && !L && /* @__PURE__ */ e.jsx(n.Button, { asChild: !0, children: /* @__PURE__ */ e.jsxs(C.Link, { href: `${h}/create`, children: [
+          /* @__PURE__ */ e.jsx(J, {}),
           " ",
           t("New entry")
         ] }) }),
         menu: [
-          ...l.total > 0 && x?.export ? [{ label: t("Export CSV"), href: `${u}/export${Z ? `?${Z}` : ""}`, download: !0, icon: /* @__PURE__ */ e.jsx(nt, {}) }] : [],
-          ...d.map((k) => ({ label: k.label, href: k.href, external: k.external, group: k.group }))
+          ...l.total > 0 && x?.export ? [{ label: t("Export CSV"), href: `${h}/export${X ? `?${X}` : ""}`, download: !0, icon: /* @__PURE__ */ e.jsx(lt, {}) }] : [],
+          ...d.map((w) => ({ label: w.label, href: w.href, external: w.external, group: w.group }))
         ],
-        children: a.length > 1 && /* @__PURE__ */ e.jsxs(n.Select, { value: s.handle, onValueChange: (k) => $.router.get(A(`cms/collections/${k}/entries`)), children: [
+        children: a.length > 1 && /* @__PURE__ */ e.jsxs(n.Select, { value: s.handle, onValueChange: (w) => C.router.get(I(`cms/collections/${w}/entries`)), children: [
           /* @__PURE__ */ e.jsx(n.SelectTrigger, { className: "cms:w-48", "aria-label": t("Collection"), children: /* @__PURE__ */ e.jsx(n.SelectValue, {}) }),
-          /* @__PURE__ */ e.jsx(n.SelectContent, { children: a.map((k) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: k.handle, children: k.title }, k.handle)) })
+          /* @__PURE__ */ e.jsx(n.SelectContent, { children: a.map((w) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: w.handle, children: w.title }, w.handle)) })
         ] })
       }
     ),
-    w && /* @__PURE__ */ e.jsx(n.TrashBanner, { items: t("entries"), onBack: () => L({ status: "" }) }),
+    L && /* @__PURE__ */ e.jsx(n.TrashBanner, { items: t("entries"), onBack: () => D({ status: "" }) }),
     /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-wrap cms:items-center cms:gap-2", children: [
       /* @__PURE__ */ e.jsxs("div", { className: "cms:relative cms:w-full cms:max-w-xs", children: [
-        /* @__PURE__ */ e.jsx(ye, { className: "cms:pointer-events-none cms:absolute cms:top-1/2 cms:left-3 cms:size-4 cms:-translate-y-1/2 cms:text-muted-foreground" }),
+        /* @__PURE__ */ e.jsx(ke, { className: "cms:pointer-events-none cms:absolute cms:top-1/2 cms:left-3 cms:size-4 cms:-translate-y-1/2 cms:text-muted-foreground" }),
         /* @__PURE__ */ e.jsx(
           n.Input,
           {
             className: "cms:pl-9",
             placeholder: t("Search titles, slugs or #id"),
             "aria-label": t("Search entries"),
-            value: y,
-            onChange: (k) => f(k.target.value)
+            value: v,
+            onChange: (w) => f(w.target.value)
           }
         )
       ] }),
-      /* @__PURE__ */ e.jsx(Ke, { label: t("Status"), value: c.status, options: bl(), onChange: (k) => L({ status: k }) }),
-      r.authors.length > 0 && /* @__PURE__ */ e.jsx(Ke, { label: t("Author"), value: c.author, options: r.authors, onChange: (k) => L({ author: k }) }),
-      r.taxonomies.filter((k) => k.terms.length > 0).map((k) => /* @__PURE__ */ e.jsx(
-        Ke,
+      /* @__PURE__ */ e.jsx(Ge, { label: t("Status"), value: c.status, options: kl(), onChange: (w) => D({ status: w }) }),
+      r.authors.length > 0 && /* @__PURE__ */ e.jsx(Ge, { label: t("Author"), value: c.author, options: r.authors, onChange: (w) => D({ author: w }) }),
+      r.taxonomies.filter((w) => w.terms.length > 0).map((w) => /* @__PURE__ */ e.jsx(
+        Ge,
         {
-          label: k.title,
-          value: c.terms[k.handle] ?? "",
-          options: k.terms.map((F) => ({ value: F.value, label: `${"— ".repeat(F.depth)}${F.label}` })),
-          onChange: (F) => L({ terms: { ...c.terms, [k.handle]: F } })
+          label: w.title,
+          value: c.terms[w.handle] ?? "",
+          options: w.terms.map((H) => ({ value: H.value, label: `${"— ".repeat(H.depth)}${H.label}` })),
+          onChange: (H) => D({ terms: { ...c.terms, [w.handle]: H } })
         },
-        k.handle
+        w.handle
       )),
-      r.locales.length > 1 && /* @__PURE__ */ e.jsxs(n.Select, { value: c.locale, onValueChange: (k) => L({ locale: k }), children: [
+      r.locales.length > 1 && /* @__PURE__ */ e.jsxs(n.Select, { value: c.locale, onValueChange: (w) => D({ locale: w }), children: [
         /* @__PURE__ */ e.jsx(n.SelectTrigger, { className: "cms:w-auto cms:min-w-40 cms:max-w-72", "aria-label": t("Language"), children: /* @__PURE__ */ e.jsx(n.SelectValue, {}) }),
-        /* @__PURE__ */ e.jsx(n.SelectContent, { children: r.locales.map((k) => /* @__PURE__ */ e.jsxs(n.SelectItem, { value: k, children: [
-          O(k),
-          k === v ? ` ${t("(main)")}` : ""
-        ] }, k)) })
+        /* @__PURE__ */ e.jsx(n.SelectContent, { children: r.locales.map((w) => /* @__PURE__ */ e.jsxs(n.SelectItem, { value: w, children: [
+          V(w),
+          w === b ? ` ${t("(main)")}` : ""
+        ] }, w)) })
       ] }),
-      D && /* @__PURE__ */ e.jsxs(n.Button, { variant: "ghost", size: "sm", onClick: pe, children: [
-        /* @__PURE__ */ e.jsx(Ne, {}),
+      S && /* @__PURE__ */ e.jsxs(n.Button, { variant: "ghost", size: "sm", onClick: ie, children: [
+        /* @__PURE__ */ e.jsx(we, {}),
         " ",
         t("Clear")
       ] }),
       /* @__PURE__ */ e.jsxs("div", { className: "cms:ml-auto cms:flex cms:flex-wrap cms:items-center cms:gap-2", children: [
-        j.length > 0 && V.length > 0 && /* @__PURE__ */ e.jsxs("div", { role: "toolbar", "aria-label": t("Selected entries"), className: "cms:flex cms:flex-wrap cms:items-center cms:gap-2", children: [
+        j.length > 0 && $.length > 0 && /* @__PURE__ */ e.jsxs("div", { role: "toolbar", "aria-label": t("Selected entries"), className: "cms:flex cms:flex-wrap cms:items-center cms:gap-2", children: [
           /* @__PURE__ */ e.jsx("span", { className: "cms:text-sm cms:text-muted-foreground", children: t(":count selected", { count: j.length }) }),
-          V.map((k) => /* @__PURE__ */ e.jsx(n.Button, { size: "sm", variant: k.danger ? "destructive" : "outline", onClick: () => me(k.action, k.label, k.danger), children: k.label }, k.action))
+          $.map((w) => /* @__PURE__ */ e.jsx(n.Button, { size: "sm", variant: w.danger ? "destructive" : "outline", onClick: () => U(w.action, w.label, w.danger), children: w.label }, w.action))
         ] }),
-        he && /* @__PURE__ */ e.jsxs(n.Button, { variant: _ ? "secondary" : "outline", "aria-pressed": _, onClick: () => b(!_), children: [
-          /* @__PURE__ */ e.jsx(Os, {}),
+        pe && /* @__PURE__ */ e.jsxs(n.Button, { variant: T ? "secondary" : "outline", "aria-pressed": T, onClick: () => y(!T), children: [
+          /* @__PURE__ */ e.jsx(Vs, {}),
           " ",
-          t(_ ? "Done" : "Reorder")
+          t(T ? "Done" : "Reorder")
         ] }),
         i.length > 0 && /* @__PURE__ */ e.jsxs(n.DropdownMenu, { children: [
           /* @__PURE__ */ e.jsx(n.DropdownMenuTrigger, { asChild: !0, children: /* @__PURE__ */ e.jsxs(n.Button, { variant: "outline", children: [
-            /* @__PURE__ */ e.jsx(Ya, {}),
+            /* @__PURE__ */ e.jsx(Xa, {}),
             " ",
             t("Columns")
           ] }) }),
           /* @__PURE__ */ e.jsxs(n.DropdownMenuContent, { align: "end", className: "cms:max-h-96 cms:overflow-y-auto", children: [
             /* @__PURE__ */ e.jsx(n.DropdownMenuLabel, { children: t("Columns") }),
-            i.filter((k) => !k.field).map((k) => /* @__PURE__ */ e.jsx(
+            i.filter((w) => !w.field).map((w) => /* @__PURE__ */ e.jsx(
               n.DropdownMenuCheckboxItem,
               {
-                checked: c.columns.includes(k.key),
-                onSelect: (F) => F.preventDefault(),
+                checked: c.columns.includes(w.key),
+                onSelect: (H) => H.preventDefault(),
                 onCheckedChange: () => {
-                  Se(k.key);
+                  he(w.key);
                 },
-                children: k.label
+                children: w.label
               },
-              k.key
+              w.key
             )),
-            i.some((k) => k.field) && /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
+            i.some((w) => w.field) && /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
               /* @__PURE__ */ e.jsx(n.DropdownMenuSeparator, {}),
               /* @__PURE__ */ e.jsx(n.DropdownMenuLabel, { children: t("Fields") }),
-              i.filter((k) => k.field).map((k) => /* @__PURE__ */ e.jsx(
+              i.filter((w) => w.field).map((w) => /* @__PURE__ */ e.jsx(
                 n.DropdownMenuCheckboxItem,
                 {
-                  checked: c.columns.includes(k.key),
-                  onSelect: (F) => F.preventDefault(),
+                  checked: c.columns.includes(w.key),
+                  onSelect: (H) => H.preventDefault(),
                   onCheckedChange: () => {
-                    Se(k.key);
+                    he(w.key);
                   },
-                  children: k.label
+                  children: w.label
                 },
-                k.key
+                w.key
               ))
             ] })
           ] })
         ] })
       ] })
     ] }),
-    _ && he ? /* @__PURE__ */ e.jsx(xl, { collection: s.handle, rows: l.data, hierarchical: s.hierarchical === !0 }) : /* @__PURE__ */ e.jsxs(n.Card, { className: "cms:gap-0 cms:overflow-hidden cms:py-0", children: [
+    T && pe ? /* @__PURE__ */ e.jsx(jl, { collection: s.handle, rows: l.data, hierarchical: s.hierarchical === !0 }) : /* @__PURE__ */ e.jsxs(n.Card, { className: "cms:gap-0 cms:overflow-hidden cms:py-0", children: [
       /* @__PURE__ */ e.jsxs(n.Table, { children: [
         /* @__PURE__ */ e.jsx(n.TableHeader, { className: "cms:bg-muted/60", children: /* @__PURE__ */ e.jsxs(n.TableRow, { className: "cms:hover:bg-transparent", children: [
-          V.length > 0 && /* @__PURE__ */ e.jsx(n.TableHead, { className: "cms:w-10", children: /* @__PURE__ */ e.jsx(
+          $.length > 0 && /* @__PURE__ */ e.jsx(n.TableHead, { className: "cms:w-10", children: /* @__PURE__ */ e.jsx(
             n.Checkbox,
             {
               "aria-label": t("Select all on this page"),
               checked: l.data.length > 0 && j.length === l.data.length,
-              onCheckedChange: (k) => C(k ? l.data.map((F) => F.id) : [])
+              onCheckedChange: (w) => _(w ? l.data.map((H) => H.id) : [])
             }
           ) }),
-          /* @__PURE__ */ e.jsx(Ts, { label: t("Title"), sortKey: "title", sort: c.sort, onSort: (k) => L({ sort: k }) }),
-          P.map((k) => k.sortable ? /* @__PURE__ */ e.jsx(Ts, { label: k.label, sortKey: k.key, sort: c.sort, onSort: (F) => L({ sort: F }) }, k.key) : /* @__PURE__ */ e.jsx(n.TableHead, { children: k.label }, k.key)),
-          ue && /* @__PURE__ */ e.jsx(n.TableHead, { className: "cms:w-px", children: /* @__PURE__ */ e.jsx("span", { className: "cms:sr-only", children: t("Order") }) }),
-          I && /* @__PURE__ */ e.jsx(n.TableHead, { className: "cms:w-px", children: /* @__PURE__ */ e.jsx("span", { className: "cms:sr-only", children: t("Restore") }) })
+          /* @__PURE__ */ e.jsx(zs, { label: t("Title"), sortKey: "title", sort: c.sort, onSort: (w) => D({ sort: w }) }),
+          P.map((w) => w.sortable ? /* @__PURE__ */ e.jsx(zs, { label: w.label, sortKey: w.key, sort: c.sort, onSort: (H) => D({ sort: H }) }, w.key) : /* @__PURE__ */ e.jsx(n.TableHead, { children: w.label }, w.key)),
+          xe && /* @__PURE__ */ e.jsx(n.TableHead, { className: "cms:w-px", children: /* @__PURE__ */ e.jsx("span", { className: "cms:sr-only", children: t("Order") }) }),
+          A && /* @__PURE__ */ e.jsx(n.TableHead, { className: "cms:w-px", children: /* @__PURE__ */ e.jsx("span", { className: "cms:sr-only", children: t("Restore") }) })
         ] }) }),
         /* @__PURE__ */ e.jsxs(n.TableBody, { children: [
-          l.data.length === 0 && /* @__PURE__ */ e.jsx(n.TableRow, { className: "cms:hover:bg-transparent", children: /* @__PURE__ */ e.jsxs(n.TableCell, { colSpan: Ce, className: "cms:h-32 cms:text-center cms:text-muted-foreground", children: [
-            /* @__PURE__ */ e.jsx(wl, { trashed: w, filtered: Ds(w ? { ...c, status: "" } : c) > 0, canCreate: !!x?.create, createUrl: `${u}/create`, onClear: pe }),
-            !w && /* @__PURE__ */ e.jsx("div", { className: "cms:mt-2", children: /* @__PURE__ */ e.jsx(n.TrashHint, { count: g, onShow: () => L({ status: "trashed" }) }) })
+          l.data.length === 0 && /* @__PURE__ */ e.jsx(n.TableRow, { className: "cms:hover:bg-transparent", children: /* @__PURE__ */ e.jsxs(n.TableCell, { colSpan: $e, className: "cms:h-32 cms:text-center cms:text-muted-foreground", children: [
+            /* @__PURE__ */ e.jsx(_l, { trashed: L, filtered: Ts(L ? { ...c, status: "" } : c) > 0, canCreate: !!x?.create, createUrl: `${h}/create`, onClear: ie }),
+            !L && /* @__PURE__ */ e.jsx("div", { className: "cms:mt-2", children: /* @__PURE__ */ e.jsx(n.TrashHint, { count: g, onShow: () => D({ status: "trashed" }) }) })
           ] }) }),
-          l.data.map((k, F) => /* @__PURE__ */ e.jsxs(n.TableRow, { className: w ? "sunrice-row-in cms:text-muted-foreground" : "sunrice-row-in", style: { "--i": F }, "data-state": j.includes(k.id) ? "selected" : void 0, children: [
-            V.length > 0 && /* @__PURE__ */ e.jsx(n.TableCell, { children: /* @__PURE__ */ e.jsx(
+          l.data.map((w, H) => /* @__PURE__ */ e.jsxs(n.TableRow, { className: L ? "sunrice-row-in cms:text-muted-foreground" : "sunrice-row-in", style: { "--i": H }, "data-state": j.includes(w.id) ? "selected" : void 0, children: [
+            $.length > 0 && /* @__PURE__ */ e.jsx(n.TableCell, { children: /* @__PURE__ */ e.jsx(
               n.Checkbox,
               {
-                "aria-label": t("Select :title", { title: k.title }),
-                checked: j.includes(k.id),
-                onCheckedChange: (K) => C(K ? [...j, k.id] : j.filter((X) => X !== k.id))
+                "aria-label": t("Select :title", { title: w.title }),
+                checked: j.includes(w.id),
+                onCheckedChange: (W) => _(W ? [...j, w.id] : j.filter((ee) => ee !== w.id))
               }
             ) }),
             /* @__PURE__ */ e.jsxs(n.TableCell, { children: [
               /* @__PURE__ */ e.jsx(
-                $.Link,
+                C.Link,
                 {
-                  href: A(`cms/collections/${s.handle}/entries/${k.id}/edit${c.locale !== v ? `?locale=${encodeURIComponent(c.locale)}` : ""}`),
+                  href: I(`cms/collections/${s.handle}/entries/${w.id}/edit${c.locale !== b ? `?locale=${encodeURIComponent(c.locale)}` : ""}`),
                   className: "cms:font-medium cms:underline-offset-4 cms:hover:underline",
-                  children: k.title
+                  children: w.title
                 }
               ),
-              (!c.columns.includes("slug") && k.path || k.parent) && /* @__PURE__ */ e.jsx("div", { className: "cms:text-xs cms:text-muted-foreground", children: [c.columns.includes("slug") ? null : k.path, k.parent ? t("under :parent", { parent: k.parent }) : null].filter(Boolean).join(" · ") })
+              (!c.columns.includes("slug") && w.path || w.parent) && /* @__PURE__ */ e.jsx("div", { className: "cms:text-xs cms:text-muted-foreground", children: [c.columns.includes("slug") ? null : w.path, w.parent ? t("under :parent", { parent: w.parent }) : null].filter(Boolean).join(" · ") })
             ] }),
-            P.map((K) => /* @__PURE__ */ e.jsx(n.TableCell, { className: K.key === "status" ? "" : "cms:text-muted-foreground", children: /* @__PURE__ */ e.jsx("div", { className: "cms:max-w-72 cms:truncate", children: /* @__PURE__ */ e.jsx(Nl, { row: k, column: K }) }) }, K.key)),
-            ue && /* @__PURE__ */ e.jsx(n.TableCell, { className: "cms:w-px", children: /* @__PURE__ */ e.jsxs("span", { className: "cms:flex", children: [
-              /* @__PURE__ */ e.jsx(n.Button, { variant: "ghost", size: "icon", "aria-label": t("Move :title up", { title: k.title }), onClick: () => $.router.post(A(`cms/entries/${k.id}/move`), { direction: "up" }, { preserveScroll: !0 }), children: /* @__PURE__ */ e.jsx(Rs, {}) }),
-              /* @__PURE__ */ e.jsx(n.Button, { variant: "ghost", size: "icon", "aria-label": t("Move :title down", { title: k.title }), onClick: () => $.router.post(A(`cms/entries/${k.id}/move`), { direction: "down" }, { preserveScroll: !0 }), children: /* @__PURE__ */ e.jsx(Hs, {}) })
+            P.map((W) => /* @__PURE__ */ e.jsx(n.TableCell, { className: W.key === "status" ? "" : "cms:text-muted-foreground", children: /* @__PURE__ */ e.jsx("div", { className: "cms:max-w-72 cms:truncate", children: /* @__PURE__ */ e.jsx(Cl, { row: w, column: W }) }) }, W.key)),
+            xe && /* @__PURE__ */ e.jsx(n.TableCell, { className: "cms:w-px", children: /* @__PURE__ */ e.jsxs("span", { className: "cms:flex", children: [
+              /* @__PURE__ */ e.jsx(n.Button, { variant: "ghost", size: "icon", "aria-label": t("Move :title up", { title: w.title }), onClick: () => C.router.post(I(`cms/entries/${w.id}/move`), { direction: "up" }, { preserveScroll: !0 }), children: /* @__PURE__ */ e.jsx(Us, {}) }),
+              /* @__PURE__ */ e.jsx(n.Button, { variant: "ghost", size: "icon", "aria-label": t("Move :title down", { title: w.title }), onClick: () => C.router.post(I(`cms/entries/${w.id}/move`), { direction: "down" }, { preserveScroll: !0 }), children: /* @__PURE__ */ e.jsx(Hs, {}) })
             ] }) }),
-            I && /* @__PURE__ */ e.jsx(n.TableCell, { className: "cms:w-px", children: /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:justify-end cms:gap-2", children: [
+            A && /* @__PURE__ */ e.jsx(n.TableCell, { className: "cms:w-px", children: /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:justify-end cms:gap-2", children: [
               /* @__PURE__ */ e.jsxs(
                 n.Button,
                 {
                   variant: "outline",
                   size: "sm",
-                  "aria-label": t("Restore :title", { title: k.title }),
-                  onClick: () => $.router.post(A(`cms/entries/${k.id}/restore`), {}, { preserveScroll: !0 }),
+                  "aria-label": t("Restore :title", { title: w.title }),
+                  onClick: () => C.router.post(I(`cms/entries/${w.id}/restore`), {}, { preserveScroll: !0 }),
                   children: [
-                    /* @__PURE__ */ e.jsx(je, {}),
+                    /* @__PURE__ */ e.jsx(ve, {}),
                     " ",
                     t("Restore")
                   ]
@@ -3811,31 +3824,31 @@ function yl({
                   variant: "ghost",
                   size: "sm",
                   className: "cms:text-destructive cms:hover:text-destructive",
-                  "aria-label": t("Permanently delete :title", { title: k.title }),
+                  "aria-label": t("Permanently delete :title", { title: w.title }),
                   onClick: () => p(
-                    t("Permanently delete :title? This can't be undone.", { title: k.title }),
-                    () => $.router.post(`${u}/bulk`, { action: "delete", ids: [k.id] }, { preserveScroll: !0 }),
+                    t("Permanently delete :title? This can't be undone.", { title: w.title }),
+                    () => C.router.post(`${h}/bulk`, { action: "delete", ids: [w.id] }, { preserveScroll: !0 }),
                     t("Delete")
                   ),
                   children: [
-                    /* @__PURE__ */ e.jsx(q, {}),
+                    /* @__PURE__ */ e.jsx(K, {}),
                     " ",
                     t("Permanently delete")
                   ]
                 }
               )
             ] }) })
-          ] }, k.id))
+          ] }, w.id))
         ] })
       ] }),
       /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-wrap cms:items-center cms:justify-between cms:gap-4 cms:border-t cms:px-6 cms:py-3 cms:text-sm cms:text-muted-foreground", children: [
         /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-center cms:gap-4", children: [
           /* @__PURE__ */ e.jsx("span", { children: l.total === 0 ? t("No entries") : t(":from–:to of :total", { from: l.from, to: l.to, total: l.total }) }),
-          /* @__PURE__ */ e.jsxs(n.Select, { value: String(c.perPage), onValueChange: (k) => {
-            B(Number(k)), L({ perPage: Number(k) });
+          /* @__PURE__ */ e.jsxs(n.Select, { value: String(c.perPage), onValueChange: (w) => {
+            F(Number(w)), D({ perPage: Number(w) });
           }, children: [
             /* @__PURE__ */ e.jsx(n.SelectTrigger, { className: "cms:h-8 cms:w-auto", "aria-label": t("Entries per page"), children: /* @__PURE__ */ e.jsx(n.SelectValue, {}) }),
-            /* @__PURE__ */ e.jsx(n.SelectContent, { children: m.map((k) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: String(k), children: t(":count per page", { count: k }) }, k)) })
+            /* @__PURE__ */ e.jsx(n.SelectContent, { children: m.map((w) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: String(w), children: t(":count per page", { count: w }) }, w)) })
           ] })
         ] }),
         l.lastPage > 1 && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-center cms:gap-2", children: [
@@ -3848,8 +3861,8 @@ function yl({
               className: "cms:size-8",
               "aria-label": t("Previous page"),
               disabled: !l.prev_page_url,
-              onClick: () => l.prev_page_url && $.router.get(l.prev_page_url, {}, { preserveScroll: !0 }),
-              children: /* @__PURE__ */ e.jsx(ss, {})
+              onClick: () => l.prev_page_url && C.router.get(l.prev_page_url, {}, { preserveScroll: !0 }),
+              children: /* @__PURE__ */ e.jsx(as, {})
             }
           ),
           /* @__PURE__ */ e.jsx(
@@ -3860,8 +3873,8 @@ function yl({
               className: "cms:size-8",
               "aria-label": t("Next page"),
               disabled: !l.next_page_url,
-              onClick: () => l.next_page_url && $.router.get(l.next_page_url, {}, { preserveScroll: !0 }),
-              children: /* @__PURE__ */ e.jsx(ve, {})
+              onClick: () => l.next_page_url && C.router.get(l.next_page_url, {}, { preserveScroll: !0 }),
+              children: /* @__PURE__ */ e.jsx(Ne, {})
             }
           )
         ] })
@@ -3869,46 +3882,46 @@ function yl({
     ] })
   ] });
 }
-function Ke({ label: s, value: a, options: l, onChange: c }) {
-  return /* @__PURE__ */ e.jsxs(n.Select, { value: a === "" ? qe : a, onValueChange: (i) => c(i === qe ? "" : i), children: [
+function Ge({ label: s, value: a, options: l, onChange: c }) {
+  return /* @__PURE__ */ e.jsxs(n.Select, { value: a === "" ? We : a, onValueChange: (i) => c(i === We ? "" : i), children: [
     /* @__PURE__ */ e.jsx(n.SelectTrigger, { className: "cms:w-auto cms:min-w-40 cms:max-w-72", title: s, "aria-label": s, children: /* @__PURE__ */ e.jsx(n.SelectValue, { placeholder: s }) }),
     /* @__PURE__ */ e.jsxs(n.SelectContent, { children: [
-      /* @__PURE__ */ e.jsx(n.SelectItem, { value: qe, children: t(":filter: all", { filter: s }) }),
+      /* @__PURE__ */ e.jsx(n.SelectItem, { value: We, children: t(":filter: all", { filter: s }) }),
       l.map((i) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: i.value, children: i.label }, i.value))
     ] })
   ] });
 }
-function Ts({ label: s, sortKey: a, sort: l, onSort: c }) {
-  const i = jl(l, a);
+function zs({ label: s, sortKey: a, sort: l, onSort: c }) {
+  const i = Nl(l, a);
   return /* @__PURE__ */ e.jsx(n.TableHead, { "aria-sort": i === "asc" ? "ascending" : i === "desc" ? "descending" : void 0, children: /* @__PURE__ */ e.jsxs(
     "button",
     {
       type: "button",
-      onClick: () => c(fl(l, a)),
+      onClick: () => c(yl(l, a)),
       className: "cms:-ml-2 cms:inline-flex cms:h-8 cms:items-center cms:gap-1 cms:rounded-md cms:px-2 cms:hover:bg-accent cms:hover:text-accent-foreground",
       children: [
         s,
-        i === "asc" ? /* @__PURE__ */ e.jsx(Rs, { className: "cms:size-3" }) : i === "desc" ? /* @__PURE__ */ e.jsx(Hs, { className: "cms:size-3" }) : /* @__PURE__ */ e.jsx(Os, { className: "cms:size-3 cms:opacity-40" })
+        i === "asc" ? /* @__PURE__ */ e.jsx(Us, { className: "cms:size-3" }) : i === "desc" ? /* @__PURE__ */ e.jsx(Hs, { className: "cms:size-3" }) : /* @__PURE__ */ e.jsx(Vs, { className: "cms:size-3 cms:opacity-40" })
       ]
     }
   ) });
 }
-function Nl({ row: s, column: a }) {
+function Cl({ row: s, column: a }) {
   switch (a.key) {
     case "slug":
       return /* @__PURE__ */ e.jsx("span", { className: "cms:font-mono", children: s.slug });
     case "status":
       return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-wrap cms:items-center cms:gap-1", children: [
-        s.trashed ? /* @__PURE__ */ e.jsx(n.Badge, { variant: "outline", className: "cms:text-destructive", title: t(":status before it was trashed", { status: te(s.status) }), children: t("Trashed") }) : /* @__PURE__ */ e.jsx(n.Badge, { variant: s.status === "published" ? "success" : "secondary", children: te(s.status) }),
+        s.trashed ? /* @__PURE__ */ e.jsx(n.Badge, { variant: "outline", className: "cms:text-destructive", title: t(":status before it was trashed", { status: ae(s.status) }), children: t("Trashed") }) : /* @__PURE__ */ e.jsx(n.Badge, { variant: s.status === "published" ? "success" : "secondary", children: ae(s.status) }),
         s.locales.length > 1 && s.locales.filter((l) => !l.main).map((l) => {
-          const c = kl(l);
+          const c = $l(l);
           return /* @__PURE__ */ e.jsxs(
             n.Badge,
             {
               variant: c.variant,
               className: c.className,
-              title: t(":language: :status", { language: O(l.code), status: c.title }),
-              "aria-label": t(":language: :status", { language: O(l.code), status: c.title }),
+              title: t(":language: :status", { language: V(l.code), status: c.title }),
+              "aria-label": t(":language: :status", { language: V(l.code), status: c.title }),
               children: [
                 l.code.toUpperCase(),
                 c.word && /* @__PURE__ */ e.jsx("span", { className: "cms:font-normal", children: c.word })
@@ -3921,42 +3934,42 @@ function Nl({ row: s, column: a }) {
     case "author":
       return /* @__PURE__ */ e.jsx(e.Fragment, { children: s.author ?? "—" });
     case "published_at":
-      return /* @__PURE__ */ e.jsx(e.Fragment, { children: U(s.publishedAt) });
+      return /* @__PURE__ */ e.jsx(e.Fragment, { children: q(s.publishedAt) });
     case "updated_at":
-      return /* @__PURE__ */ e.jsx(e.Fragment, { children: U(s.updatedAt) });
+      return /* @__PURE__ */ e.jsx(e.Fragment, { children: q(s.updatedAt) });
     case "created_at":
-      return /* @__PURE__ */ e.jsx(e.Fragment, { children: U(s.createdAt) });
+      return /* @__PURE__ */ e.jsx(e.Fragment, { children: q(s.createdAt) });
     default:
       return /* @__PURE__ */ e.jsx("span", { title: s.cells[a.key] ?? void 0, children: s.cells[a.key] ?? "—" });
   }
 }
-function kl(s) {
-  return s.status === null ? { variant: "outline", className: "cms:border-dashed cms:text-muted-foreground", word: t("missing"), title: t("not translated") } : s.outdated ? { variant: "warning", className: "", word: t("outdated"), title: t(":status, outdated: the main language changed since", { status: te(s.status) }) } : s.status === "published" ? { variant: "secondary", className: "", word: null, title: t("Published") } : { variant: "outline", className: "", word: s.status === "scheduled" ? t("scheduled") : t("draft"), title: te(s.status) };
+function $l(s) {
+  return s.status === null ? { variant: "outline", className: "cms:border-dashed cms:text-muted-foreground", word: t("missing"), title: t("not translated") } : s.outdated ? { variant: "warning", className: "", word: t("outdated"), title: t(":status, outdated: the main language changed since", { status: ae(s.status) }) } : s.status === "published" ? { variant: "secondary", className: "", word: null, title: t("Published") } : { variant: "outline", className: "", word: s.status === "scheduled" ? t("scheduled") : t("draft"), title: ae(s.status) };
 }
-function wl({ trashed: s, filtered: a, canCreate: l, createUrl: c, onClear: i }) {
+function _l({ trashed: s, filtered: a, canCreate: l, createUrl: c, onClear: i }) {
   return a ? /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:items-center cms:gap-2", children: [
     /* @__PURE__ */ e.jsx("span", { children: t("Nothing matches these filters.") }),
     /* @__PURE__ */ e.jsxs(n.Button, { variant: "outline", size: "sm", onClick: i, children: [
-      /* @__PURE__ */ e.jsx(Ne, {}),
+      /* @__PURE__ */ e.jsx(we, {}),
       " ",
       t("Clear filters")
     ] })
   ] }) : s ? /* @__PURE__ */ e.jsx(e.Fragment, { children: t("The trash is empty.") }) : /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:items-center cms:gap-2", children: [
     /* @__PURE__ */ e.jsx("span", { children: t("No entries yet.") }),
-    l && /* @__PURE__ */ e.jsx(n.Button, { size: "sm", asChild: !0, children: /* @__PURE__ */ e.jsxs($.Link, { href: c, children: [
-      /* @__PURE__ */ e.jsx(G, {}),
+    l && /* @__PURE__ */ e.jsx(n.Button, { size: "sm", asChild: !0, children: /* @__PURE__ */ e.jsxs(C.Link, { href: c, children: [
+      /* @__PURE__ */ e.jsx(J, {}),
       " ",
       t("Write the first one")
     ] }) })
   ] });
 }
-function ds({ message: s, processing: a, onSaveMine: l }) {
-  const [c, i] = ce();
+function ms({ message: s, processing: a, onSaveMine: l }) {
+  const [c, i] = re();
   return s ? /* @__PURE__ */ e.jsxs("div", { role: "alert", className: "cms:flex cms:flex-wrap cms:items-center cms:justify-between cms:gap-3 cms:rounded-lg cms:border cms:border-destructive cms:p-3 cms:text-sm cms:text-destructive", children: [
     i,
     /* @__PURE__ */ e.jsx("span", { children: s }),
     /* @__PURE__ */ e.jsxs("span", { className: "cms:flex cms:gap-2", children: [
-      /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "outline", size: "sm", onClick: () => $.router.reload(), children: t("Load theirs") }),
+      /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "outline", size: "sm", onClick: () => C.router.reload(), children: t("Load theirs") }),
       /* @__PURE__ */ e.jsx(
         n.Button,
         {
@@ -3971,28 +3984,28 @@ function ds({ message: s, processing: a, onSaveMine: l }) {
     ] })
   ] }) : null;
 }
-function Sl(s, a, l, c, i) {
-  const r = a[0], d = s === r ? c(":language (main)", { language: i(s) }) : i(s), h = a.filter((m) => m !== s).map(i).join(", ");
-  return l !== null && !l.includes(s) ? c("Editing: :language, not translated yet", { language: d }) : h === "" ? c("Editing: :language", { language: d }) : c("Editing: :language — switch to edit :others", { language: d, others: h });
+function Dl(s, a, l, c, i) {
+  const r = a[0], d = s === r ? c(":language (main)", { language: i(s) }) : i(s), u = a.filter((m) => m !== s).map(i).join(", ");
+  return l !== null && !l.includes(s) ? c("Editing: :language, not translated yet", { language: d }) : u === "" ? c("Editing: :language", { language: d }) : c("Editing: :language — switch to edit :others", { language: d, others: u });
 }
-function ya({ current: s, locales: a, translated: l, onSwitch: c }) {
+function wa({ current: s, locales: a, translated: l, onSwitch: c }) {
   if (a.length < 2) return null;
-  const i = Sl(s, a, l, t, O);
+  const i = Dl(s, a, l, t, V);
   return /* @__PURE__ */ e.jsxs("nav", { "aria-label": t("Languages"), className: "cms:flex cms:flex-wrap cms:items-center cms:gap-x-3 cms:gap-y-2", children: [
     /* @__PURE__ */ e.jsx("div", { className: "cms:inline-flex cms:items-center cms:gap-0.5 cms:rounded-md cms:bg-muted cms:p-0.5", children: a.map((r, d) => {
-      const h = r === s, m = l === null || l.includes(r), o = d === 0 ? t(":language (main)", { language: O(r) }) : O(r), g = m ? o : t(":language: not translated yet", { language: o });
+      const u = r === s, m = l === null || l.includes(r), o = d === 0 ? t(":language (main)", { language: V(r) }) : V(r), g = m ? o : t(":language: not translated yet", { language: o });
       return /* @__PURE__ */ e.jsxs(
         "button",
         {
           type: "button",
           title: g,
           "aria-label": g,
-          "aria-current": h ? "page" : void 0,
-          onClick: () => !h && c(r),
-          className: `cms:inline-flex cms:h-7 cms:min-w-10 cms:items-center cms:justify-center cms:gap-1 cms:rounded cms:px-2.5 cms:text-xs cms:font-semibold cms:tracking-wide cms:uppercase cms:transition-colors ${h ? "cms:bg-card cms:text-foreground cms:shadow-xs" : "cms:text-muted-foreground cms:hover:text-foreground"} ${m ? "" : "cms:italic cms:opacity-70"}`,
+          "aria-current": u ? "page" : void 0,
+          onClick: () => !u && c(r),
+          className: `cms:inline-flex cms:h-7 cms:min-w-10 cms:items-center cms:justify-center cms:gap-1 cms:rounded cms:px-2.5 cms:text-xs cms:font-semibold cms:tracking-wide cms:uppercase cms:transition-colors ${u ? "cms:bg-card cms:text-foreground cms:shadow-xs" : "cms:text-muted-foreground cms:hover:text-foreground"} ${m ? "" : "cms:italic cms:opacity-70"}`,
           children: [
             r,
-            m && l !== null && /* @__PURE__ */ e.jsx(fe, { "aria-hidden": !0, className: "cms:size-3 cms:text-emerald-600" })
+            m && l !== null && /* @__PURE__ */ e.jsx(be, { "aria-hidden": !0, className: "cms:size-3 cms:text-emerald-600" })
           ]
         },
         r
@@ -4001,128 +4014,171 @@ function ya({ current: s, locales: a, translated: l, onSwitch: c }) {
     /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", "aria-live": "polite", children: i })
   ] });
 }
-function Cl(s) {
-  return /* @__PURE__ */ e.jsx($l, { ...s }, `${s.locale}:${s.version}:${JSON.stringify([s.values, s.seo])}`);
+function Sa(s) {
+  return /* @__PURE__ */ e.jsx(Tl, { ...s }, `${s.editUrl}:${JSON.stringify(s.params ?? {})}:${s.locale}:${s.version}:${JSON.stringify([s.values, s.seo])}`);
 }
-function $l({ collection: s, fields: a, locale: l, locales: c, translated: i = [], shared: r, values: d, seo: h, version: m, can: o }) {
-  const g = A(`cms/collections/${s.handle}/listing`), x = A(`cms/collections/${s.handle}/entries`);
-  n.useBreadcrumbs([{ label: s.title, href: x }, { label: t("Listing page") }]);
-  const u = $.useForm({ locale: l, data: d, seo: h ?? {}, version: m }), v = u.errors, y = (b) => {
-    const p = Le(v, b);
-    p.length > 0 && u.clearErrors(...p);
-  }, f = c[0], j = o.update, C = () => u.processing || u.put(g, { preserveScroll: !0 }), _ = () => {
-    u.transform((b) => ({ ...b, version: null })), u.put(g, { preserveScroll: !0 });
+function Tl({
+  title: s,
+  breadcrumbs: a,
+  back: l,
+  saveUrl: c,
+  editUrl: i,
+  params: r = {},
+  viewUrl: d,
+  empty: u,
+  seoDescription: m,
+  storageKey: o,
+  menu: g,
+  children: x,
+  fields: h,
+  locale: b,
+  locales: v,
+  translated: f = [],
+  shared: j,
+  values: _,
+  seo: T,
+  version: y,
+  can: p
+}) {
+  n.useBreadcrumbs(a);
+  const z = C.useForm({ locale: b, data: _, seo: T ?? {}, version: y }), k = z.errors, F = (D) => {
+    const $ = Ae(k, D);
+    $.length > 0 && z.clearErrors(...$);
+  }, L = v[0], S = p.update, P = () => {
+    z.processing || (z.transform((D) => ({ ...D, ...r })), z.put(c, { preserveScroll: !0 }));
+  }, N = () => {
+    z.transform((D) => ({ ...D, ...r, version: null })), z.put(c, { preserveScroll: !0 });
   };
-  return n.useUnsavedChanges(u.isDirty, j ? C : void 0), /* @__PURE__ */ e.jsxs("form", { noValidate: !0, onSubmit: (b) => {
-    b.preventDefault(), C();
+  return n.useUnsavedChanges(z.isDirty, S ? P : void 0), /* @__PURE__ */ e.jsxs("form", { noValidate: !0, onSubmit: (D) => {
+    D.preventDefault(), P();
   }, className: "cms:flex cms:max-w-5xl cms:flex-col cms:gap-6", children: [
-    /* @__PURE__ */ e.jsx($.Head, { title: t(":title: listing page", { title: s.title }) }),
+    /* @__PURE__ */ e.jsx(C.Head, { title: s }),
     /* @__PURE__ */ e.jsx(
       n.PageHeader,
       {
-        title: t(":title: listing page", { title: s.title }),
-        back: { href: x, label: t("Back to :title", { title: s.title }) },
+        title: s,
+        back: l,
+        menu: g,
         actions: /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
-          s.url && /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "ghost", asChild: !0, children: /* @__PURE__ */ e.jsxs("a", { href: s.url, target: "_blank", rel: "noopener noreferrer", children: [
-            /* @__PURE__ */ e.jsx(xe, {}),
+          d && /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "ghost", asChild: !0, children: /* @__PURE__ */ e.jsxs("a", { href: d, target: "_blank", rel: "noopener noreferrer", children: [
+            /* @__PURE__ */ e.jsx(ge, {}),
             " ",
             t("View")
           ] }) }),
-          j && /* @__PURE__ */ e.jsxs(n.Button, { type: "submit", disabled: u.processing, children: [
-            u.processing && /* @__PURE__ */ e.jsx(le, { className: "cms:animate-spin" }),
+          S && /* @__PURE__ */ e.jsxs(n.Button, { type: "submit", disabled: z.processing, children: [
+            z.processing && /* @__PURE__ */ e.jsx(ce, { className: "cms:animate-spin" }),
             " ",
             t("Save")
           ] })
         ] }),
-        children: u.isDirty && /* @__PURE__ */ e.jsx("span", { className: "cms:text-sm cms:text-muted-foreground", children: t("Unsaved changes") })
+        children: z.isDirty && /* @__PURE__ */ e.jsx("span", { className: "cms:text-sm cms:text-muted-foreground", children: t("Unsaved changes") })
       }
     ),
-    /* @__PURE__ */ e.jsx(ya, { current: l, locales: c, translated: i, onSwitch: (b) => $.router.get(g, { locale: b }) }),
-    /* @__PURE__ */ e.jsxs("fieldset", { disabled: !j, className: "cms:flex cms:flex-col cms:gap-6", children: [
-      /* @__PURE__ */ e.jsx(ds, { message: v.version, processing: u.processing, onSaveMine: _ }),
-      a.length === 0 ? /* @__PURE__ */ e.jsx("p", { className: "cms:text-muted-foreground", children: t("The listing page has no fields of its own: choose a listing blueprint for the collection under Structure → Collections.") }) : /* @__PURE__ */ e.jsx(n.Card, { children: /* @__PURE__ */ e.jsxs(n.CardContent, { className: "cms:flex cms:flex-col cms:gap-6", children: [
-        (r.length > 0 || Me(a)) && /* @__PURE__ */ e.jsx("p", { role: "note", className: "cms:rounded-lg cms:border cms:border-dashed cms:px-3 cms:py-2 cms:text-sm cms:text-muted-foreground", children: f ? t("Shared by all languages: the greyed-out fields are edited in :language.", { language: O(f) }) : t("Shared by all languages: the greyed-out fields are edited in the main language.") }),
-        a.filter((b) => cs(b, { ...d, ...u.data.data })).map((b) => r.includes(b.handle) ? /* @__PURE__ */ e.jsx("fieldset", { disabled: !0, className: ja, title: t("Shared by all languages"), children: /* @__PURE__ */ e.jsx(ae, { id: `data-${b.handle}`, field: b, content: !0, value: d[b.handle], errors: {}, onChange: () => {
-        } }) }, b.handle) : /* @__PURE__ */ e.jsx(
-          ae,
+    x,
+    /* @__PURE__ */ e.jsx(wa, { current: b, locales: v, translated: f, onSwitch: (D) => C.router.get(i, { ...r, locale: D }) }),
+    /* @__PURE__ */ e.jsxs("fieldset", { disabled: !S, className: "cms:flex cms:flex-col cms:gap-6", children: [
+      /* @__PURE__ */ e.jsx(ms, { message: k.version, processing: z.processing, onSaveMine: N }),
+      h.length === 0 ? /* @__PURE__ */ e.jsx("p", { className: "cms:text-muted-foreground", children: u }) : /* @__PURE__ */ e.jsx(n.Card, { children: /* @__PURE__ */ e.jsxs(n.CardContent, { className: "cms:flex cms:flex-col cms:gap-6", children: [
+        (j.length > 0 || Be(h)) && /* @__PURE__ */ e.jsx("p", { role: "note", className: "cms:rounded-lg cms:border cms:border-dashed cms:px-3 cms:py-2 cms:text-sm cms:text-muted-foreground", children: L ? t("Shared by all languages: the greyed-out fields are edited in :language.", { language: V(L) }) : t("Shared by all languages: the greyed-out fields are edited in the main language.") }),
+        h.filter((D) => rs(D, { ..._, ...z.data.data })).map((D) => j.includes(D.handle) ? /* @__PURE__ */ e.jsx("fieldset", { disabled: !0, className: ya, title: t("Shared by all languages"), children: /* @__PURE__ */ e.jsx(ne, { id: `data-${D.handle}`, field: D, content: !0, value: _[D.handle], errors: {}, onChange: () => {
+        } }) }, D.handle) : /* @__PURE__ */ e.jsx(
+          ne,
           {
-            id: `data-${b.handle}`,
-            field: b,
+            id: `data-${D.handle}`,
+            field: D,
             content: !0,
-            value: u.data.data[b.handle],
-            errors: Y(v, `data.${b.handle}`),
-            onChange: (p) => {
-              u.setData("data", { ...u.data.data, [b.handle]: p }), y(`data.${b.handle}`);
+            value: z.data.data[D.handle],
+            errors: Y(k, `data.${D.handle}`),
+            onChange: ($) => {
+              z.setData("data", { ...z.data.data, [D.handle]: $ }), F(`data.${D.handle}`);
             }
           },
-          b.handle
+          D.handle
         ))
       ] }) })
     ] }),
-    /* @__PURE__ */ e.jsx(n.CollapsibleCard, { title: t("SEO"), description: t("How the listing page appears in search results and shared links."), titleClassName: "cms:text-base", storageKey: "cms:listing:seo", hasErrors: we(v, "seo"), children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !j, className: "cms:min-w-0", children: /* @__PURE__ */ e.jsx(de, { bare: !0, id: "seo", fields: is(), value: u.data.seo, errors: Y(v, "seo"), onChange: (b) => {
-      u.setData("seo", b), y("seo");
+    /* @__PURE__ */ e.jsx(n.CollapsibleCard, { title: t("SEO"), description: m, titleClassName: "cms:text-base", storageKey: o, hasErrors: Ce(k, "seo"), children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !S, className: "cms:min-w-0", children: /* @__PURE__ */ e.jsx(ue, { bare: !0, id: "seo", fields: os(), value: z.data.seo, errors: Y(k, "seo"), onChange: (D) => {
+      z.setData("seo", D), F("seo");
     } }) }) })
   ] });
 }
-function _l({ fieldsets: s }) {
-  const a = $.usePage().props.errors;
+function zl({ collection: s, ...a }) {
+  const l = I(`cms/collections/${s.handle}/entries`);
+  return /* @__PURE__ */ e.jsx(
+    Sa,
+    {
+      ...a,
+      title: t(":title: listing page", { title: s.title }),
+      breadcrumbs: [{ label: s.title, href: l }, { label: t("Listing page") }],
+      back: { href: l, label: t("Back to :title", { title: s.title }) },
+      saveUrl: I(`cms/collections/${s.handle}/listing`),
+      editUrl: I(`cms/collections/${s.handle}/listing/edit`),
+      viewUrl: s.url,
+      empty: t("The listing page has no fields of its own: choose a listing blueprint for the collection under Structure → Collections."),
+      seoDescription: t("How the listing page appears in search results and shared links."),
+      storageKey: "cms:listing:seo"
+    }
+  );
+}
+function Ml({ fieldsets: s }) {
+  const a = C.usePage().props.errors;
   return /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
-    /* @__PURE__ */ e.jsx(H, { message: a.fieldset }),
+    /* @__PURE__ */ e.jsx(O, { message: a.fieldset }),
     /* @__PURE__ */ e.jsx(
-      ga,
+      ba,
       {
         kind: "fieldset",
-        base: A("cms/fieldsets"),
+        base: I("cms/fieldsets"),
         rows: s,
         intro: t("Fields shared between blueprints, and the kinds of block of flexible fields.")
       }
     )
   ] });
 }
-function Dl(s) {
-  return /* @__PURE__ */ e.jsx(Tl, { ...s }, `${s.locale}:${s.version}:${JSON.stringify(s.values)}`);
+function Bl(s) {
+  return /* @__PURE__ */ e.jsx(Ll, { ...s }, `${s.locale}:${s.version}:${JSON.stringify(s.values)}`);
 }
-function Tl({ set: s, fields: a, locale: l, locales: c, shared: i, values: r, version: d, can: h, settings: m }) {
-  const o = A(`cms/globals/${s.handle}/values`);
-  n.useBreadcrumbs([{ label: t("Globals"), href: A("cms/globals") }, { label: s.title }]);
-  const g = $.useForm({ locale: l, data: r, version: d }), x = g.errors, u = (b) => {
-    const p = Le(x, b);
+function Ll({ set: s, fields: a, locale: l, locales: c, shared: i, values: r, version: d, can: u, settings: m }) {
+  const o = I(`cms/globals/${s.handle}/values`);
+  n.useBreadcrumbs([{ label: t("Globals"), href: I("cms/globals") }, { label: s.title }]);
+  const g = C.useForm({ locale: l, data: r, version: d }), x = g.errors, h = (y) => {
+    const p = Ae(x, y);
     p.length > 0 && g.clearErrors(...p);
-  }, v = c[0], y = n.useEditLock({
+  }, b = c[0], v = n.useEditLock({
     type: "cms.global",
     id: s.id,
     locale: l,
-    enabled: h.update,
+    enabled: u.update,
     noun: t("global set"),
-    leaveTo: A("cms/globals"),
+    leaveTo: I("cms/globals"),
     getUnsaved: () => g.isDirty ? { data: g.data.data } : null
-  }), f = h.update && !y.readOnly, j = () => g.processing || g.put(o, { preserveScroll: !0 }), C = () => {
-    g.transform((b) => ({ ...b, version: null })), g.put(o, { preserveScroll: !0 });
-  }, _ = async (b) => {
-    const p = await y.loadKept(b);
+  }), f = u.update && !v.readOnly, j = () => g.processing || g.put(o, { preserveScroll: !0 }), _ = () => {
+    g.transform((y) => ({ ...y, version: null })), g.put(o, { preserveScroll: !0 });
+  }, T = async (y) => {
+    const p = await v.loadKept(y);
     p.data && typeof p.data == "object" && g.setData("data", p.data);
   };
-  return n.useUnsavedChanges(g.isDirty && !y.takenOver, f ? j : void 0), /* @__PURE__ */ e.jsxs("form", { noValidate: !0, onSubmit: (b) => {
-    b.preventDefault(), j();
+  return n.useUnsavedChanges(g.isDirty && !v.takenOver, f ? j : void 0), /* @__PURE__ */ e.jsxs("form", { noValidate: !0, onSubmit: (y) => {
+    y.preventDefault(), j();
   }, className: "cms:flex cms:max-w-5xl cms:flex-col cms:gap-6", children: [
-    /* @__PURE__ */ e.jsx($.Head, { title: s.title }),
-    y.dialogs,
+    /* @__PURE__ */ e.jsx(C.Head, { title: s.title }),
+    v.dialogs,
     /* @__PURE__ */ e.jsx(
       n.PageHeader,
       {
         title: s.title,
-        menu: m ? [{ label: t("Settings"), href: m, icon: /* @__PURE__ */ e.jsx(ts, {}) }] : [],
-        back: { href: A("cms/globals"), label: t("Back to globals") },
+        menu: m ? [{ label: t("Settings"), href: m, icon: /* @__PURE__ */ e.jsx(Ie, {}) }] : [],
+        back: { href: I("cms/globals"), label: t("Back to globals") },
         actions: /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
-          c.length > 1 && /* @__PURE__ */ e.jsxs(n.Select, { value: l, onValueChange: (b) => $.router.get(o, { locale: b }), children: [
+          c.length > 1 && /* @__PURE__ */ e.jsxs(n.Select, { value: l, onValueChange: (y) => C.router.get(o, { locale: y }), children: [
             /* @__PURE__ */ e.jsx(n.SelectTrigger, { className: "cms:w-48", "aria-label": t("Language"), children: /* @__PURE__ */ e.jsx(n.SelectValue, {}) }),
-            /* @__PURE__ */ e.jsx(n.SelectContent, { children: c.map((b, p) => /* @__PURE__ */ e.jsxs(n.SelectItem, { value: b, children: [
-              O(b),
+            /* @__PURE__ */ e.jsx(n.SelectContent, { children: c.map((y, p) => /* @__PURE__ */ e.jsxs(n.SelectItem, { value: y, children: [
+              V(y),
               p === 0 ? ` ${t("(main)")}` : ""
-            ] }, b)) })
+            ] }, y)) })
           ] }),
           f && /* @__PURE__ */ e.jsxs(n.Button, { type: "submit", disabled: g.processing, children: [
-            g.processing && /* @__PURE__ */ e.jsx(le, { className: "cms:animate-spin" }),
+            g.processing && /* @__PURE__ */ e.jsx(ce, { className: "cms:animate-spin" }),
             " ",
             t("Save")
           ] })
@@ -4131,16 +4187,16 @@ function Tl({ set: s, fields: a, locale: l, locales: c, shared: i, values: r, ve
       }
     ),
     a.length === 0 ? /* @__PURE__ */ e.jsx("p", { className: "cms:text-muted-foreground", children: t("This global set has no fields: choose a blueprint for it in its Settings.") }) : /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-4", children: [
-      /* @__PURE__ */ e.jsx(n.ViewingNotice, { by: y.viewingBy, onTakeOver: y.requestTakeOver }),
-      v && l !== v && /* @__PURE__ */ e.jsx("p", { className: "cms:rounded-lg cms:border cms:bg-muted/40 cms:p-3 cms:text-sm cms:text-muted-foreground", role: "note", children: d === null ? t("Not saved in :language yet: these are the :main values, which the site shows meanwhile. Translate them, then save.", { language: O(l), main: O(v) }) : t("A field left empty shows the :main value on the site.", { main: O(v) }) }),
-      /* @__PURE__ */ e.jsx(ds, { message: x.version, processing: g.processing, onSaveMine: C }),
-      /* @__PURE__ */ e.jsx(n.KeptEditsNotice, { kept: y.kept, disabled: !f, onLoad: (b) => {
-        _(b);
-      }, onDiscard: (b) => {
-        y.discardKept(b);
+      /* @__PURE__ */ e.jsx(n.ViewingNotice, { by: v.viewingBy, onTakeOver: v.requestTakeOver }),
+      b && l !== b && /* @__PURE__ */ e.jsx("p", { className: "cms:rounded-lg cms:border cms:bg-muted/40 cms:p-3 cms:text-sm cms:text-muted-foreground", role: "note", children: d === null ? t("Not saved in :language yet: these are the :main values, which the site shows meanwhile. Translate them, then save.", { language: V(l), main: V(b) }) : t("A field left empty shows the :main value on the site.", { main: V(b) }) }),
+      /* @__PURE__ */ e.jsx(ms, { message: x.version, processing: g.processing, onSaveMine: _ }),
+      /* @__PURE__ */ e.jsx(n.KeptEditsNotice, { kept: v.kept, disabled: !f, onLoad: (y) => {
+        T(y);
+      }, onDiscard: (y) => {
+        v.discardKept(y);
       } }),
       /* @__PURE__ */ e.jsx(
-        rs,
+        is,
         {
           disabled: !f,
           fields: a,
@@ -4149,20 +4205,20 @@ function Tl({ set: s, fields: a, locale: l, locales: c, shared: i, values: r, ve
           storageKey: `cms:global:${s.handle}`,
           shared: i,
           sharedValues: r,
-          sharedNote: v ? t("Shared by all languages: the greyed-out fields are edited in :language.", { language: O(v) }) : t("Shared by all languages: the greyed-out fields are edited in the main language."),
-          onChange: (b, p) => {
-            g.setData("data", { ...g.data.data, [b]: p }), u(`data.${b}`);
+          sharedNote: b ? t("Shared by all languages: the greyed-out fields are edited in :language.", { language: V(b) }) : t("Shared by all languages: the greyed-out fields are edited in the main language."),
+          onChange: (y, p) => {
+            g.setData("data", { ...g.data.data, [y]: p }), h(`data.${y}`);
           }
         }
       )
     ] })
   ] });
 }
-let Na = 0;
-function ka(s, a = 0) {
-  return s.flatMap(({ children: l, ...c }) => [{ ...c, key: `m${++Na}`, depth: a }, ...ka(l ?? [], a + 1)]);
+let Ca = 0;
+function $a(s, a = 0) {
+  return s.flatMap(({ children: l, ...c }) => [{ ...c, key: `m${++Ca}`, depth: a }, ...$a(l ?? [], a + 1)]);
 }
-function zl(s) {
+function Il(s) {
   const a = [], l = [{ depth: -1, children: a }];
   for (const { key: c, depth: i, ...r } of s) {
     for (; l.length > 1 && l[l.length - 1].depth >= i; ) l.pop();
@@ -4171,230 +4227,239 @@ function zl(s) {
   }
   return a;
 }
-function be(s, a) {
+function ye(s, a) {
   const l = s[a]?.depth ?? 0;
   let c = a + 1;
   for (; c < s.length && s[c].depth > l; ) c++;
   return c;
 }
-function wa(s, a, l) {
-  const c = be(s, a);
+function _a(s, a, l) {
+  const c = ye(s, a);
   return s.map((i, r) => r >= a && r < c ? { ...i, depth: i.depth + l } : i);
 }
-function Ml(s, a, l) {
+function Al(s, a, l) {
   const c = s[a], i = s[a - 1];
-  return !c || !i || c.depth > i.depth || Math.max(...s.slice(a, be(s, a)).map((d) => d.depth)) + 1 > l - 1 ? s : wa(s, a, 1);
+  return !c || !i || c.depth > i.depth || Math.max(...s.slice(a, ye(s, a)).map((d) => d.depth)) + 1 > l - 1 ? s : _a(s, a, 1);
 }
-function Bl(s, a) {
+function El(s, a) {
   const l = s[a];
   if (!l || l.depth === 0) return s;
   let c = a - 1;
   for (; c > 0 && s[c].depth >= l.depth; ) c--;
-  const i = be(s, a), r = be(s, c), d = wa(s, a, -1).slice(a, i);
+  const i = ye(s, a), r = ye(s, c), d = _a(s, a, -1).slice(a, i);
   return [...s.slice(0, a), ...s.slice(i, r), ...d, ...s.slice(r)];
 }
-function Ll(s, a) {
-  return [...s.slice(0, a), ...s.slice(be(s, a))];
+function Fl(s, a) {
+  return [...s.slice(0, a), ...s.slice(ye(s, a))];
 }
-function De(s) {
-  return { key: `m${++Na}`, depth: 0, entry_id: null, term_id: null, collection_id: null, target: null, url: null, labels: {}, new_tab: !1, query: null, ...s };
+function je(s) {
+  return { key: `m${++Ca}`, depth: 0, entry_id: null, term_id: null, taxonomy_id: null, collection_id: null, target: null, url: null, labels: {}, new_tab: !1, query: null, ...s };
 }
-function Al(s) {
+function Pl(s) {
   return s.url !== null || s.collection_id !== null && (s.query ?? "").trim() !== "" ? "main" : "title";
 }
-function Il({ menu: s, items: a, locales: l, limits: c, terms: i, listings: r, can: d, settings: h }) {
-  const m = A(`cms/menus/${s.handle}/links`);
-  n.useBreadcrumbs([{ label: t("Menus"), href: A("cms/menus") }, { label: s.title }]);
-  const [o, g] = T.useState(() => ka(a)), [x, u] = T.useState(null), v = $.useForm({ items: a }), y = v.errors, [f, j] = T.useState(!1), C = l[0] ?? "en", _ = (B) => {
-    g(B), j(!0);
-  }, b = (B, w) => _(o.map((D, P) => P === B ? { ...D, ...w } : D)), p = () => {
-    v.processing || (v.transform(() => ({ items: zl(o).map(Sa) })), v.put(m, { preserveScroll: !0, onSuccess: () => j(!1) }));
-  }, M = (B) => {
-    B.preventDefault(), p();
+function Hl({ menu: s, items: a, locales: l, limits: c, terms: i, listings: r, indexes: d = [], can: u, settings: m }) {
+  const o = I(`cms/menus/${s.handle}/links`);
+  n.useBreadcrumbs([{ label: t("Menus"), href: I("cms/menus") }, { label: s.title }]);
+  const [g, x] = M.useState(() => $a(a)), [h, b] = M.useState(null), v = C.useForm({ items: a }), f = v.errors, [j, _] = M.useState(!1), T = l[0] ?? "en", y = (L) => {
+    x(L), _(!0);
+  }, p = (L, S) => y(g.map((P, N) => N === L ? { ...P, ...S } : P)), z = () => {
+    v.processing || (v.transform(() => ({ items: Il(g).map(Da) })), v.put(o, { preserveScroll: !0, onSuccess: () => _(!1) }));
+  }, k = (L) => {
+    L.preventDefault(), z();
   };
-  n.useUnsavedChanges(f, d.update ? p : void 0);
-  const S = (B) => /* @__PURE__ */ e.jsx(
+  n.useUnsavedChanges(j, u.update ? z : void 0);
+  const F = (L) => /* @__PURE__ */ e.jsx(
     n.SortableList,
     {
-      items: ne(o, B),
-      getId: (w) => o[w].key,
-      getLabel: (w) => o[w].labels[C] || o[w].target?.title || o[w].url || "link",
-      disabled: !d.update,
-      onReorder: (w) => _(os(o, B, w)),
-      className: B < 0 ? "cms:gap-1" : "cms:mt-1 cms:gap-1 cms:pl-6",
-      children: (w, { handle: D, isOverlay: P }) => {
-        const N = o[w];
-        return /* @__PURE__ */ e.jsxs("div", { className: `cms:rounded-lg cms:border cms:bg-card ${P ? "" : "cms:border-border/70"}`, children: [
+      items: le(g, L),
+      getId: (S) => g[S].key,
+      getLabel: (S) => g[S].labels[T] || g[S].target?.title || g[S].url || "link",
+      disabled: !u.update,
+      onReorder: (S) => y(ds(g, L, S)),
+      className: L < 0 ? "cms:gap-1" : "cms:mt-1 cms:gap-1 cms:pl-6",
+      children: (S, { handle: P, isOverlay: N }) => {
+        const D = g[S];
+        return /* @__PURE__ */ e.jsxs("div", { className: `cms:rounded-lg cms:border cms:bg-card ${N ? "" : "cms:border-border/70"}`, children: [
           /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-start cms:gap-2 cms:p-2", children: [
-            d.update && /* @__PURE__ */ e.jsx("div", { className: "cms:flex cms:h-10 cms:shrink-0 cms:items-center", children: /* @__PURE__ */ e.jsx(n.SortableHandle, { ...D, label: t("Move :title", { title: N.labels[C] || N.target?.title || N.url || t("link") }) }) }),
+            u.update && /* @__PURE__ */ e.jsx("div", { className: "cms:flex cms:h-10 cms:shrink-0 cms:items-center", children: /* @__PURE__ */ e.jsx(n.SortableHandle, { ...P, label: t("Move :title", { title: D.labels[T] || D.target?.title || D.url || t("link") }) }) }),
             /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:min-w-0 cms:flex-1 cms:flex-col cms:gap-2", children: [
               /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-wrap cms:items-center cms:gap-2", children: [
                 /* @__PURE__ */ e.jsx(
                   n.Input,
                   {
-                    "aria-label": t("Label (:language)", { language: O(C) }),
+                    "aria-label": t("Label (:language)", { language: V(T) }),
                     className: "cms:w-full cms:sm:max-w-xs",
-                    disabled: !d.update,
-                    placeholder: N.target?.title ?? t("Label"),
-                    value: N.labels[C] ?? "",
-                    onChange: (L) => b(w, { labels: { ...N.labels, [C]: L.target.value } })
+                    disabled: !u.update,
+                    placeholder: D.target?.title ?? t("Label"),
+                    value: D.labels[T] ?? "",
+                    onChange: ($) => p(S, { labels: { ...D.labels, [T]: $.target.value } })
                   }
                 ),
-                /* @__PURE__ */ e.jsx("span", { className: "cms:min-w-32 cms:flex-1 cms:truncate cms:text-sm cms:text-muted-foreground", children: N.url !== null ? N.url : /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
-                  N.target ? `${N.target.kind}: ${N.target.title}` : t("Gone"),
+                /* @__PURE__ */ e.jsx("span", { className: "cms:min-w-32 cms:flex-1 cms:truncate cms:text-sm cms:text-muted-foreground", children: D.url !== null ? D.url : /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
+                  D.target ? `${D.target.kind}: ${D.target.title}` : t("Gone"),
                   " ",
-                  (!N.target || !N.target.live) && /* @__PURE__ */ e.jsx(n.Badge, { variant: "outline", children: t("Not on the site") })
+                  (!D.target || !D.target.live) && /* @__PURE__ */ e.jsx(n.Badge, { variant: "outline", children: t("Not on the site") })
                 ] }) }),
-                d.update && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-center", children: [
+                u.update && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-center", children: [
                   /* @__PURE__ */ e.jsxs("label", { className: "cms:mr-2 cms:flex cms:items-center cms:gap-1.5 cms:text-sm", children: [
-                    /* @__PURE__ */ e.jsx(n.Checkbox, { checked: N.new_tab, onCheckedChange: (L) => b(w, { new_tab: L }) }),
+                    /* @__PURE__ */ e.jsx(n.Checkbox, { checked: D.new_tab, onCheckedChange: ($) => p(S, { new_tab: $ }) }),
                     " ",
                     t("New tab")
                   ] }),
-                  /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "ghost", size: "icon", className: "cms:size-8", "aria-label": t("Outdent"), disabled: N.depth === 0, onClick: () => _(Bl(o, w)), children: /* @__PURE__ */ e.jsx(tn, {}) }),
-                  /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "ghost", size: "icon", className: "cms:size-8", "aria-label": t("Indent"), onClick: () => _(Ml(o, w, c.depth)), children: /* @__PURE__ */ e.jsx(an, {}) }),
-                  /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "ghost", size: "icon", className: "cms:size-8 cms:text-destructive", "aria-label": t("Remove, with what's under it"), onClick: () => _(Ll(o, w)), children: /* @__PURE__ */ e.jsx(q, {}) })
+                  /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "ghost", size: "icon", className: "cms:size-8", "aria-label": t("Outdent"), disabled: D.depth === 0, onClick: () => y(El(g, S)), children: /* @__PURE__ */ e.jsx(cn, {}) }),
+                  /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "ghost", size: "icon", className: "cms:size-8", "aria-label": t("Indent"), onClick: () => y(Al(g, S, c.depth)), children: /* @__PURE__ */ e.jsx(rn, {}) }),
+                  /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "ghost", size: "icon", className: "cms:size-8 cms:text-destructive", "aria-label": t("Remove, with what's under it"), onClick: () => y(Fl(g, S)), children: /* @__PURE__ */ e.jsx(K, {}) })
                 ] })
               ] }),
-              N.collection_id !== null && N.term_id === null && /* @__PURE__ */ e.jsx(
+              D.collection_id !== null && D.term_id === null && !D.taxonomy_id && /* @__PURE__ */ e.jsx(
                 n.Input,
                 {
                   "aria-label": t("Filters"),
                   className: "cms:w-full cms:sm:max-w-md cms:font-mono",
-                  disabled: !d.update,
+                  disabled: !u.update,
                   placeholder: t("Filters (optional): :example", { example: "filter=value" }),
-                  value: N.query ?? "",
-                  onChange: (L) => b(w, { query: L.target.value })
+                  value: D.query ?? "",
+                  onChange: ($) => p(S, { query: $.target.value })
                 }
               ),
-              l.length > 1 && /* @__PURE__ */ e.jsx("div", { className: "cms:flex cms:flex-wrap cms:gap-2", children: l.slice(1).map((L) => /* @__PURE__ */ e.jsx(
+              l.length > 1 && /* @__PURE__ */ e.jsx("div", { className: "cms:flex cms:flex-wrap cms:gap-2", children: l.slice(1).map(($) => /* @__PURE__ */ e.jsx(
                 n.Input,
                 {
-                  "aria-label": t("Label (:language)", { language: O(L) }),
+                  "aria-label": t("Label (:language)", { language: V($) }),
                   className: "cms:w-full cms:sm:max-w-xs",
-                  disabled: !d.update,
-                  placeholder: Al(N) === "title" ? t(":language: its title there, else as :main", { language: O(L), main: O(C) }) : t(":language: as :main", { language: O(L), main: O(C) }),
-                  value: N.labels[L] ?? "",
-                  onChange: (V) => b(w, { labels: { ...N.labels, [L]: V.target.value } })
+                  disabled: !u.update,
+                  placeholder: Pl(D) === "title" ? t(":language: its title there, else as :main", { language: V($), main: V(T) }) : t(":language: as :main", { language: V($), main: V(T) }),
+                  value: D.labels[$] ?? "",
+                  onChange: (U) => p(S, { labels: { ...D.labels, [$]: U.target.value } })
                 },
-                L
+                $
               )) })
             ] })
           ] }),
-          !P && ne(o, w).length > 0 && /* @__PURE__ */ e.jsx("div", { className: "cms:px-2 cms:pb-2", children: S(w) })
+          !N && le(g, S).length > 0 && /* @__PURE__ */ e.jsx("div", { className: "cms:px-2 cms:pb-2", children: F(S) })
         ] });
       }
     }
   );
-  return /* @__PURE__ */ e.jsxs("form", { onSubmit: M, className: "cms:flex cms:max-w-5xl cms:flex-col cms:gap-6", children: [
-    /* @__PURE__ */ e.jsx($.Head, { title: s.title }),
+  return /* @__PURE__ */ e.jsxs("form", { onSubmit: k, className: "cms:flex cms:max-w-5xl cms:flex-col cms:gap-6", children: [
+    /* @__PURE__ */ e.jsx(C.Head, { title: s.title }),
     /* @__PURE__ */ e.jsx(
       n.PageHeader,
       {
         title: s.title,
-        menu: h ? [{ label: t("Settings"), href: h, icon: /* @__PURE__ */ e.jsx(ts, {}) }] : [],
-        back: { href: A("cms/menus"), label: t("Back to menus") },
-        actions: d.update && /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
-          /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "outline", disabled: o.length >= c.items, onClick: () => u("entry"), children: [
-            /* @__PURE__ */ e.jsx(G, {}),
+        menu: m ? [{ label: t("Settings"), href: m, icon: /* @__PURE__ */ e.jsx(Ie, {}) }] : [],
+        back: { href: I("cms/menus"), label: t("Back to menus") },
+        actions: u.update && /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
+          /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "outline", disabled: g.length >= c.items, onClick: () => b("entry"), children: [
+            /* @__PURE__ */ e.jsx(J, {}),
             " ",
             t("Entry")
           ] }),
-          i.length > 0 && /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "outline", disabled: o.length >= c.items, onClick: () => u("term"), children: [
-            /* @__PURE__ */ e.jsx(un, {}),
+          i.length > 0 && /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "outline", disabled: g.length >= c.items, onClick: () => b("term"), children: [
+            /* @__PURE__ */ e.jsx(fn, {}),
             " ",
             t("Term")
           ] }),
-          r.length > 0 && /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "outline", disabled: o.length >= c.items, onClick: () => u("listing"), children: [
-            /* @__PURE__ */ e.jsx(Nt, {}),
+          r.length > 0 && /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "outline", disabled: g.length >= c.items, onClick: () => b("listing"), children: [
+            /* @__PURE__ */ e.jsx(wt, {}),
             " ",
             t("Listing")
           ] }),
-          /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "outline", disabled: o.length >= c.items, onClick: () => u("url"), children: [
-            /* @__PURE__ */ e.jsx(jt, {}),
+          d.length > 0 && /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "outline", disabled: g.length >= c.items, onClick: () => b("index"), children: [
+            /* @__PURE__ */ e.jsx(Ut, {}),
+            " ",
+            t("Taxonomy index")
+          ] }),
+          /* @__PURE__ */ e.jsxs(n.Button, { type: "button", variant: "outline", disabled: g.length >= c.items, onClick: () => b("url"), children: [
+            /* @__PURE__ */ e.jsx(bt, {}),
             " ",
             t("Link")
           ] }),
           /* @__PURE__ */ e.jsxs(n.Button, { type: "submit", disabled: v.processing, children: [
-            v.processing && /* @__PURE__ */ e.jsx(le, { className: "cms:animate-spin" }),
+            v.processing && /* @__PURE__ */ e.jsx(ce, { className: "cms:animate-spin" }),
             " ",
             t("Save")
           ] })
         ] }),
-        children: f && /* @__PURE__ */ e.jsx("span", { className: "cms:text-sm cms:text-muted-foreground", children: t("Unsaved changes") })
+        children: j && /* @__PURE__ */ e.jsx("span", { className: "cms:text-sm cms:text-muted-foreground", children: t("Unsaved changes") })
       }
     ),
-    /* @__PURE__ */ e.jsx(H, { message: y.items }),
-    Object.keys(y).some((B) => B.startsWith("items.")) && /* @__PURE__ */ e.jsx("p", { role: "alert", className: "cms:text-sm cms:text-destructive", children: t("Some links need fixing: :error", { error: Object.values(y).filter(Boolean)[0] }) }),
-    /* @__PURE__ */ e.jsx(n.Card, { className: "cms:p-2", children: o.length === 0 ? /* @__PURE__ */ e.jsx("p", { className: "cms:p-4 cms:text-center cms:text-muted-foreground", children: t("No links yet. Add an entry or a link.") }) : S(-1) }),
-    /* @__PURE__ */ e.jsx(Pl, { kind: x, terms: i, listings: r, onClose: () => u(null), onAdd: (B) => {
-      _([...o, B]), u(null);
-    }, main: C })
+    /* @__PURE__ */ e.jsx(O, { message: f.items }),
+    Object.keys(f).some((L) => L.startsWith("items.")) && /* @__PURE__ */ e.jsx("p", { role: "alert", className: "cms:text-sm cms:text-destructive", children: t("Some links need fixing: :error", { error: Object.values(f).filter(Boolean)[0] }) }),
+    /* @__PURE__ */ e.jsx(n.Card, { className: "cms:p-2", children: g.length === 0 ? /* @__PURE__ */ e.jsx("p", { className: "cms:p-4 cms:text-center cms:text-muted-foreground", children: t("No links yet. Add an entry or a link.") }) : F(-1) }),
+    /* @__PURE__ */ e.jsx(Ul, { kind: h, terms: i, listings: r, indexes: d, onClose: () => b(null), onAdd: (L) => {
+      y([...g, L]), b(null);
+    }, main: T })
   ] });
 }
-function Sa({ target: s, children: a, ...l }) {
-  return { ...l, children: a.map(Sa) };
+function Da({ target: s, children: a, ...l }) {
+  return { ...l, children: a.map(Da) };
 }
-const El = () => t("A menu links to entries that already exist: create the page first (Content → Entries), then add it here, or add a web address instead."), Fl = () => ({ entry: t("Link to an entry"), term: t("Link to a term's page"), listing: t("Link to a listing page"), url: t("Link to an address") }), Hl = () => ({
+const Ol = () => t("A menu links to entries that already exist: create the page first (Content → Entries), then add it here, or add a web address instead."), Vl = () => ({ entry: t("Link to an entry"), term: t("Link to a term's page"), listing: t("Link to a listing page"), index: t("Link to a taxonomy's index page"), url: t("Link to an address") }), Rl = () => ({
   entry: t("It follows the entry: its title (unless you give a label) and its address in each language. It shows only while the entry is on the site."),
   term: t("The page listing the term's entries, in each language. Its title is the label unless you give one."),
   listing: t("The collection's listing page, in each language, optionally with filters. The collection's title is the label unless you give one."),
+  index: t("The page listing a taxonomy's terms, in each language. The taxonomy's title is the label unless you give one."),
   url: t("A web address, a path on this site (/contact), mailto: or tel:.")
 });
-function Pl({ kind: s, terms: a, listings: l, onClose: c, onAdd: i, main: r }) {
-  const [d, h] = T.useState(null), [m, o] = T.useState(""), [g, x] = T.useState(""), [u, v] = T.useState(""), [y, f] = T.useState(""), [j, C] = T.useState("");
-  T.useEffect(() => {
-    h(null), o(""), x(""), v(""), f(""), C("");
-  }, [s]), T.useEffect(() => C(""), [m]);
-  const _ = s === "term" ? a.find((w) => String(w.id) === m) : void 0, b = _?.pages.find((w) => String(w.collection ?? "") === j) ?? _?.pages[0], p = g.trim() === "" || kn(g.trim()), M = u.trim() ? { [r]: u.trim() } : {}, S = async () => {
-    if (s === "entry" && d !== null) {
-      const w = await fetch(`${A("cms/entries/picker")}?${Qt({ ids: [d], collections: [] })}`, { headers: { Accept: "application/json" }, credentials: "same-origin" }), D = w.ok ? (await w.json()).items[0] : void 0;
-      i(De({ entry_id: d, target: D ? { title: D.title, kind: D.collection, live: D.status === "published" } : null, labels: M }));
-    } else if (s === "term" && m !== "") {
-      const w = a.find((N) => String(N.id) === m), D = b?.collection ?? null, P = D === null ? t("Shared page") : b?.title ?? "";
-      i(De({ term_id: Number(m), collection_id: D, target: w ? { title: w.title, kind: `${w.taxonomy} · ${P}`, live: !0 } : null, labels: M }));
-    } else if (s === "listing" && m !== "") {
-      const w = l.find((D) => String(D.id) === m);
-      i(De({ collection_id: Number(m), target: w ? { title: w.title, kind: t("Listing page"), live: !0 } : null, labels: M, query: y.trim().replace(/^\?/, "") || null }));
-    } else s === "url" && g.trim() !== "" && p && u.trim() !== "" && i(De({ url: g.trim(), labels: M }));
-  }, B = s === "entry" ? d !== null : s === "url" ? g.trim() !== "" && p && u.trim() !== "" : m !== "";
-  return /* @__PURE__ */ e.jsx(n.Dialog, { open: s !== null, onOpenChange: (w) => !w && c(), children: /* @__PURE__ */ e.jsxs(n.DialogContent, { children: [
+function Ul({ kind: s, terms: a, listings: l, indexes: c, onClose: i, onAdd: r, main: d }) {
+  const [u, m] = M.useState(null), [o, g] = M.useState(""), [x, h] = M.useState(""), [b, v] = M.useState(""), [f, j] = M.useState(""), [_, T] = M.useState("");
+  M.useEffect(() => {
+    m(null), g(""), h(""), v(""), j(""), T("");
+  }, [s]), M.useEffect(() => T(""), [o]);
+  const y = s === "term" ? a.find(($) => String($.id) === o) : void 0, p = y?.pages.find(($) => String($.collection ?? "") === _) ?? y?.pages[0], z = s === "index" ? c.find(($) => String($.id) === o) : void 0, k = z?.pages.find(($) => String($.collection ?? "") === _) ?? z?.pages[0], F = y ?? z, L = y ? p : k, S = x.trim() === "" || $n(x.trim()), P = b.trim() ? { [d]: b.trim() } : {}, N = async () => {
+    if (s === "entry" && u !== null) {
+      const $ = await fetch(`${I("cms/entries/picker")}?${ea({ ids: [u], collections: [] })}`, { headers: { Accept: "application/json" }, credentials: "same-origin" }), U = $.ok ? (await $.json()).items[0] : void 0;
+      r(je({ entry_id: u, target: U ? { title: U.title, kind: U.collection, live: U.status === "published" } : null, labels: P }));
+    } else if (s === "term" && o !== "") {
+      const $ = a.find((ie) => String(ie.id) === o), U = p?.collection ?? null, he = U === null ? t("Shared page") : p?.title ?? "";
+      r(je({ term_id: Number(o), collection_id: U, target: $ ? { title: $.title, kind: `${$.taxonomy} · ${he}`, live: !0 } : null, labels: P }));
+    } else if (s === "index" && o !== "" && z) {
+      const $ = k?.collection ?? null, U = $ === null ? t(":taxonomy · Index page", { taxonomy: z.title }) : t(":taxonomy · :collection index", { taxonomy: z.title, collection: k?.title ?? "" });
+      r(je({ taxonomy_id: z.id, collection_id: $, target: { title: z.title, kind: U, live: !0 }, labels: P }));
+    } else if (s === "listing" && o !== "") {
+      const $ = l.find((U) => String(U.id) === o);
+      r(je({ collection_id: Number(o), target: $ ? { title: $.title, kind: t("Listing page"), live: !0 } : null, labels: P, query: f.trim().replace(/^\?/, "") || null }));
+    } else s === "url" && x.trim() !== "" && S && b.trim() !== "" && r(je({ url: x.trim(), labels: P }));
+  }, D = s === "entry" ? u !== null : s === "url" ? x.trim() !== "" && S && b.trim() !== "" : o !== "";
+  return /* @__PURE__ */ e.jsx(n.Dialog, { open: s !== null, onOpenChange: ($) => !$ && i(), children: /* @__PURE__ */ e.jsxs(n.DialogContent, { children: [
     /* @__PURE__ */ e.jsxs(n.DialogHeader, { children: [
-      /* @__PURE__ */ e.jsx(n.DialogTitle, { children: s ? Fl()[s] : "" }),
-      /* @__PURE__ */ e.jsx(n.DialogDescription, { children: s ? Hl()[s] : "" })
+      /* @__PURE__ */ e.jsx(n.DialogTitle, { children: s ? Vl()[s] : "" }),
+      /* @__PURE__ */ e.jsx(n.DialogDescription, { children: s ? Rl()[s] : "" })
     ] }),
     /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-3", children: [
       s === "entry" && /* @__PURE__ */ e.jsx(
-        ke,
+        Se,
         {
           id: "menu-entry",
-          value: d,
+          value: u,
           multiple: !1,
           max: null,
           collections: [],
           invalid: !1,
-          emptyHint: El(),
-          onChange: (w) => h(typeof w == "number" ? w : null)
+          emptyHint: Ol(),
+          onChange: ($) => m(typeof $ == "number" ? $ : null)
         }
       ),
-      (s === "term" || s === "listing") && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
-        /* @__PURE__ */ e.jsx(n.Label, { htmlFor: "menu-target", children: t(s === "term" ? "Term" : "Collection") }),
-        /* @__PURE__ */ e.jsxs(n.Select, { value: m, onValueChange: o, children: [
+      (s === "term" || s === "listing" || s === "index") && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
+        /* @__PURE__ */ e.jsx(n.Label, { htmlFor: "menu-target", children: t(s === "term" ? "Term" : s === "index" ? "Taxonomy" : "Collection") }),
+        /* @__PURE__ */ e.jsxs(n.Select, { value: o, onValueChange: g, children: [
           /* @__PURE__ */ e.jsx(n.SelectTrigger, { id: "menu-target", children: /* @__PURE__ */ e.jsx(n.SelectValue, { placeholder: t("Choose…") }) }),
-          /* @__PURE__ */ e.jsx(n.SelectContent, { children: s === "term" ? a.map((w) => /* @__PURE__ */ e.jsxs(n.SelectItem, { value: String(w.id), children: [
-            w.taxonomy,
+          /* @__PURE__ */ e.jsx(n.SelectContent, { children: s === "term" ? a.map(($) => /* @__PURE__ */ e.jsxs(n.SelectItem, { value: String($.id), children: [
+            $.taxonomy,
             ": ",
-            w.title
-          ] }, w.id)) : l.map((w) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: String(w.id), children: w.title }, w.id)) })
+            $.title
+          ] }, $.id)) : (s === "index" ? c : l).map(($) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: String($.id), children: $.title }, $.id)) })
         ] })
       ] }),
-      _ && _.pages.length > 0 && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
+      F && F.pages.length > 0 && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
         /* @__PURE__ */ e.jsx(n.Label, { htmlFor: "menu-term-page", children: t("Page") }),
-        /* @__PURE__ */ e.jsxs(n.Select, { value: String(b?.collection ?? "") || "__all", onValueChange: (w) => C(w === "__all" ? "" : w), children: [
+        /* @__PURE__ */ e.jsxs(n.Select, { value: String(L?.collection ?? "") || "__all", onValueChange: ($) => T($ === "__all" ? "" : $), children: [
           /* @__PURE__ */ e.jsx(n.SelectTrigger, { id: "menu-term-page", children: /* @__PURE__ */ e.jsx(n.SelectValue, {}) }),
-          /* @__PURE__ */ e.jsx(n.SelectContent, { children: _.pages.map((w) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: w.collection === null ? "__all" : String(w.collection), children: w.collection === null ? w.title : t(":collection only", { collection: w.title }) }, w.collection ?? "__all")) })
+          /* @__PURE__ */ e.jsx(n.SelectContent, { children: F.pages.map(($) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: $.collection === null ? "__all" : String($.collection), children: $.collection === null ? $.title : t(":collection only", { collection: $.title }) }, $.collection ?? "__all")) })
         ] }),
-        /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: t("The shared page lists the term's entries from every collection; a collection's page only its own.") })
+        /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: t(y ? "The shared page lists the term's entries from every collection; a collection's page only its own." : "The shared index lists all the taxonomy's terms; a collection's only those its entries have.") })
       ] }),
       s === "listing" && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
         /* @__PURE__ */ e.jsx(n.Label, { htmlFor: "menu-query", children: t("Filters (optional)") }),
@@ -4403,9 +4468,9 @@ function Pl({ kind: s, terms: a, listings: l, onClose: c, onAdd: i, main: r }) {
           {
             id: "menu-query",
             className: "cms:font-mono",
-            value: y,
+            value: f,
             placeholder: "filter=value&other=value",
-            onChange: (w) => f(w.target.value)
+            onChange: ($) => j($.target.value)
           }
         ),
         /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: t("What the listing page's filters put after the ? in its address. Each language's link gets them, and a term may be named by its slug in any language.") })
@@ -4416,60 +4481,60 @@ function Pl({ kind: s, terms: a, listings: l, onClose: c, onAdd: i, main: r }) {
           n.Input,
           {
             id: "menu-url",
-            value: g,
+            value: x,
             placeholder: t("https://… or /contact"),
-            "aria-invalid": !p,
-            onChange: (w) => x(w.target.value)
+            "aria-invalid": !S,
+            onChange: ($) => h($.target.value)
           }
         ),
-        !p && /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-destructive", children: t("This address could run code; use https://, a path, mailto: or tel:.") })
+        !S && /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-destructive", children: t("This address could run code; use https://, a path, mailto: or tel:.") })
       ] }),
       /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
         /* @__PURE__ */ e.jsx(n.Label, { htmlFor: "menu-label", children: t(s === "url" ? "Label" : "Label (optional)") }),
-        /* @__PURE__ */ e.jsx(n.Input, { id: "menu-label", value: u, onChange: (w) => v(w.target.value) })
+        /* @__PURE__ */ e.jsx(n.Input, { id: "menu-label", value: b, onChange: ($) => v($.target.value) })
       ] })
     ] }),
     /* @__PURE__ */ e.jsxs(n.DialogFooter, { children: [
-      /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "outline", onClick: c, children: t("Cancel") }),
+      /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "outline", onClick: i, children: t("Cancel") }),
       /* @__PURE__ */ e.jsx(n.Button, { type: "button", onClick: () => {
-        S();
-      }, disabled: !B, children: t("Add") })
+        N();
+      }, disabled: !D, children: t("Add") })
     ] })
   ] }) });
 }
-const Ol = () => [
+const ql = () => [
   { value: "all", label: t("All") },
   { value: "pending", label: t("Pending") },
   { value: "approved", label: t("Approved") },
   { value: "spam", label: t("Spam") },
   { value: "trashed", label: t("Trash") }
-], Vl = (s) => ({ pending: t("Pending"), approved: t("Approved"), spam: t("Spam") })[s];
-function Rl({ tab: s, counts: a, filters: l, collections: c, comments: i, can: r, errors: d = {} }) {
-  n.useBreadcrumbs([{ label: t("Comments"), href: A("cms/comments") }]);
-  const [h, m] = T.useState(l.search), [o, g] = T.useState([]), [x, u] = T.useState(null), [v, y] = ce(), f = (p) => {
-    const M = { status: s, search: l.search, collection: l.collection, ...p };
-    $.router.get(A("cms/comments"), {
-      ...M.status !== "all" ? { status: M.status } : {},
-      ...M.search ? { search: M.search } : {},
-      ...M.collection ? { collection: M.collection } : {},
+], Kl = (s) => ({ pending: t("Pending"), approved: t("Approved"), spam: t("Spam") })[s];
+function Wl({ tab: s, counts: a, filters: l, collections: c, comments: i, can: r, errors: d = {} }) {
+  n.useBreadcrumbs([{ label: t("Comments"), href: I("cms/comments") }]);
+  const [u, m] = M.useState(l.search), [o, g] = M.useState([]), [x, h] = M.useState(null), [b, v] = re(), f = (p) => {
+    const z = { status: s, search: l.search, collection: l.collection, ...p };
+    C.router.get(I("cms/comments"), {
+      ...z.status !== "all" ? { status: z.status } : {},
+      ...z.search ? { search: z.search } : {},
+      ...z.collection ? { collection: z.collection } : {},
       ...l.entry ? { entry: l.entry } : {}
     }, { preserveState: !0, replace: !0, onSuccess: () => g([]) });
   };
-  T.useEffect(() => {
-    if (h === l.search) return;
-    const p = window.setTimeout(() => f({ search: h }), 300);
+  M.useEffect(() => {
+    if (u === l.search) return;
+    const p = window.setTimeout(() => f({ search: u }), 300);
     return () => window.clearTimeout(p);
-  }, [h]);
-  const j = (p, M = {}) => $.router.post(A(p), M, { preserveScroll: !0, onSuccess: () => g([]) }), C = (p, M) => j(`cms/comments/${p.id}/status`, { status: M }), _ = (p) => {
-    const M = () => j("cms/comments/bulk", { action: p, ids: o });
-    p === "delete" ? v(o.length === 1 ? t("Permanently delete 1 comment? This can't be undone.") : t("Permanently delete :count comments? This can't be undone.", { count: o.length }), M) : M();
-  }, b = i.data.length > 0 && o.length === i.data.length;
+  }, [u]);
+  const j = (p, z = {}) => C.router.post(I(p), z, { preserveScroll: !0, onSuccess: () => g([]) }), _ = (p, z) => j(`cms/comments/${p.id}/status`, { status: z }), T = (p) => {
+    const z = () => j("cms/comments/bulk", { action: p, ids: o });
+    p === "delete" ? b(o.length === 1 ? t("Permanently delete 1 comment? This can't be undone.") : t("Permanently delete :count comments? This can't be undone.", { count: o.length }), z) : z();
+  }, y = i.data.length > 0 && o.length === i.data.length;
   return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-6", children: [
-    /* @__PURE__ */ e.jsx($.Head, { title: t("Comments") }),
+    /* @__PURE__ */ e.jsx(C.Head, { title: t("Comments") }),
     /* @__PURE__ */ e.jsx(n.PageHeader, { title: t("Comments") }),
     /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-wrap cms:items-center cms:gap-2", children: [
       /* @__PURE__ */ e.jsxs("div", { className: "cms:relative cms:w-full cms:sm:w-64", children: [
-        /* @__PURE__ */ e.jsx(ye, { className: "cms:pointer-events-none cms:absolute cms:top-1/2 cms:left-3 cms:size-4 cms:-translate-y-1/2 cms:text-muted-foreground" }),
+        /* @__PURE__ */ e.jsx(ke, { className: "cms:pointer-events-none cms:absolute cms:top-1/2 cms:left-3 cms:size-4 cms:-translate-y-1/2 cms:text-muted-foreground" }),
         /* @__PURE__ */ e.jsx(
           n.Input,
           {
@@ -4477,7 +4542,7 @@ function Rl({ tab: s, counts: a, filters: l, collections: c, comments: i, can: r
             placeholder: t("Search text, name or email"),
             "aria-label": t("Search comments"),
             className: "cms:pl-9",
-            value: h,
+            value: u,
             onChange: (p) => m(p.target.value)
           }
         )
@@ -4493,9 +4558,9 @@ function Rl({ tab: s, counts: a, filters: l, collections: c, comments: i, can: r
     l.entry !== null && /* @__PURE__ */ e.jsxs("p", { className: "cms:text-sm cms:text-muted-foreground", children: [
       t("Comments on one entry."),
       " ",
-      /* @__PURE__ */ e.jsx("button", { type: "button", className: "cms:underline cms:underline-offset-4", onClick: () => $.router.get(A("cms/comments")), children: t("Show all") })
+      /* @__PURE__ */ e.jsx("button", { type: "button", className: "cms:underline cms:underline-offset-4", onClick: () => C.router.get(I("cms/comments")), children: t("Show all") })
     ] }),
-    /* @__PURE__ */ e.jsx(n.Tabs, { value: s, onValueChange: (p) => f({ status: p }), children: /* @__PURE__ */ e.jsx(n.TabsList, { className: "cms:h-auto cms:flex-wrap cms:justify-start", children: Ol().map((p) => /* @__PURE__ */ e.jsxs(n.TabsTrigger, { value: p.value, title: p.value === "all" ? t("Everything but the trash") : void 0, children: [
+    /* @__PURE__ */ e.jsx(n.Tabs, { value: s, onValueChange: (p) => f({ status: p }), children: /* @__PURE__ */ e.jsx(n.TabsList, { className: "cms:h-auto cms:flex-wrap cms:justify-start", children: ql().map((p) => /* @__PURE__ */ e.jsxs(n.TabsTrigger, { value: p.value, title: p.value === "all" ? t("Everything but the trash") : void 0, children: [
       p.label,
       " ",
       /* @__PURE__ */ e.jsx("span", { className: "cms:ml-1 cms:text-muted-foreground", children: a[p.value] })
@@ -4503,47 +4568,47 @@ function Rl({ tab: s, counts: a, filters: l, collections: c, comments: i, can: r
     o.length > 0 && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-wrap cms:items-center cms:gap-2 cms:text-sm", role: "toolbar", "aria-label": t("With the selected comments"), children: [
       /* @__PURE__ */ e.jsx("span", { className: "cms:text-muted-foreground", children: t(":count selected", { count: o.length }) }),
       r.moderate && s !== "trashed" && /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
-        /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "outline", onClick: () => _("approve"), children: [
-          /* @__PURE__ */ e.jsx(fe, {}),
+        /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "outline", onClick: () => T("approve"), children: [
+          /* @__PURE__ */ e.jsx(be, {}),
           " ",
           t("Approve")
         ] }),
-        /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "outline", onClick: () => _("unapprove"), children: [
-          /* @__PURE__ */ e.jsx(ze, {}),
+        /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "outline", onClick: () => T("unapprove"), children: [
+          /* @__PURE__ */ e.jsx(Me, {}),
           " ",
           t("Unapprove")
         ] }),
-        /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "outline", onClick: () => _("spam"), children: [
-          /* @__PURE__ */ e.jsx(Ze, {}),
+        /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "outline", onClick: () => T("spam"), children: [
+          /* @__PURE__ */ e.jsx(es, {}),
           " ",
           t("Spam")
         ] })
       ] }),
-      r.delete && s !== "trashed" && /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "outline", onClick: () => _("trash"), children: [
-        /* @__PURE__ */ e.jsx(q, {}),
+      r.delete && s !== "trashed" && /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "outline", onClick: () => T("trash"), children: [
+        /* @__PURE__ */ e.jsx(K, {}),
         " ",
         t("Move to trash")
       ] }),
       r.delete && s === "trashed" && /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
-        /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "outline", onClick: () => _("restore"), children: [
-          /* @__PURE__ */ e.jsx(je, {}),
+        /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "outline", onClick: () => T("restore"), children: [
+          /* @__PURE__ */ e.jsx(ve, {}),
           " ",
           t("Restore")
         ] }),
-        /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "destructive", onClick: () => _("delete"), children: [
-          /* @__PURE__ */ e.jsx(q, {}),
+        /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "destructive", onClick: () => T("delete"), children: [
+          /* @__PURE__ */ e.jsx(K, {}),
           " ",
           t("Permanently delete")
         ] })
       ] })
     ] }),
     i.data.length === 0 ? /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:items-center cms:gap-3 cms:rounded-xl cms:border cms:border-dashed cms:px-6 cms:py-16 cms:text-center", children: [
-      /* @__PURE__ */ e.jsx("span", { className: "cms:grid cms:size-10 cms:place-items-center cms:rounded-full cms:bg-muted cms:text-muted-foreground", children: /* @__PURE__ */ e.jsx(nn, { className: "cms:size-4" }) }),
+      /* @__PURE__ */ e.jsx("span", { className: "cms:grid cms:size-10 cms:place-items-center cms:rounded-full cms:bg-muted cms:text-muted-foreground", children: /* @__PURE__ */ e.jsx(dn, { className: "cms:size-4" }) }),
       /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: l.search ? t("No comments match.") : t("No comments here.") }),
       s !== "trashed" && /* @__PURE__ */ e.jsx(n.TrashHint, { count: a.trashed ?? 0, onShow: () => f({ status: "trashed" }) })
     ] }) : /* @__PURE__ */ e.jsxs(n.Card, { className: "cms:divide-y cms:p-0", children: [
       /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-center cms:gap-3 cms:px-4 cms:py-2 cms:text-sm cms:text-muted-foreground", children: [
-        /* @__PURE__ */ e.jsx(n.Checkbox, { checked: b, "aria-label": t("Select all"), onCheckedChange: (p) => g(p ? i.data.map((M) => M.id) : []) }),
+        /* @__PURE__ */ e.jsx(n.Checkbox, { checked: y, "aria-label": t("Select all"), onCheckedChange: (p) => g(p ? i.data.map((z) => z.id) : []) }),
         /* @__PURE__ */ e.jsx("span", { children: t(":from–:to of :total", { from: i.from, to: i.to, total: i.total }) })
       ] }),
       i.data.map((p) => /* @__PURE__ */ e.jsxs("article", { className: "cms:flex cms:gap-3 cms:px-4 cms:py-4", "aria-labelledby": `comment-${p.id}-author`, children: [
@@ -4552,7 +4617,7 @@ function Rl({ tab: s, counts: a, filters: l, collections: c, comments: i, can: r
           {
             checked: o.includes(p.id),
             "aria-label": t("Select :author's comment", { author: p.author }),
-            onCheckedChange: (M) => g(M ? [...o, p.id] : o.filter((S) => S !== p.id))
+            onCheckedChange: (z) => g(z ? [...o, p.id] : o.filter((k) => k !== p.id))
           }
         ),
         /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:min-w-0 cms:flex-1 cms:flex-col cms:gap-2", children: [
@@ -4560,9 +4625,9 @@ function Rl({ tab: s, counts: a, filters: l, collections: c, comments: i, can: r
             /* @__PURE__ */ e.jsx("span", { id: `comment-${p.id}-author`, className: "cms:font-medium", children: p.author }),
             p.email && /* @__PURE__ */ e.jsx("span", { className: "cms:text-muted-foreground", children: p.email }),
             p.member && /* @__PURE__ */ e.jsx(n.Badge, { variant: "outline", children: t("Signed in") }),
-            !p.trashed && /* @__PURE__ */ e.jsx(n.Badge, { variant: p.status === "approved" ? "success" : p.status === "spam" ? "destructive" : "warning", children: Vl(p.status) }),
+            !p.trashed && /* @__PURE__ */ e.jsx(n.Badge, { variant: p.status === "approved" ? "success" : p.status === "spam" ? "destructive" : "warning", children: Kl(p.status) }),
             /* @__PURE__ */ e.jsxs("span", { className: "cms:text-muted-foreground", children: [
-              p.createdAt ? U(p.createdAt) : "",
+              p.createdAt ? q(p.createdAt) : "",
               " · ",
               p.locale.toUpperCase()
             ] })
@@ -4573,7 +4638,7 @@ function Rl({ tab: s, counts: a, filters: l, collections: c, comments: i, can: r
             p.entry.url ? /* @__PURE__ */ e.jsxs("a", { href: p.entry.url, target: "_blank", rel: "noreferrer", className: "cms:underline-offset-4 hover:cms:underline", children: [
               p.entry.title,
               " ",
-              /* @__PURE__ */ e.jsx(xe, { className: "cms:inline cms:size-3" })
+              /* @__PURE__ */ e.jsx(ge, { className: "cms:inline cms:size-3" })
             ] }) : p.entry.title,
             p.parent && /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
               " · ",
@@ -4583,48 +4648,48 @@ function Rl({ tab: s, counts: a, filters: l, collections: c, comments: i, can: r
           /* @__PURE__ */ e.jsx("p", { className: "cms:whitespace-pre-wrap cms:break-words", children: p.body }),
           /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-wrap cms:gap-1", children: [
             r.moderate && !p.trashed && /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
-              p.status !== "approved" && /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "ghost", onClick: () => C(p, "approved"), children: [
-                /* @__PURE__ */ e.jsx(fe, {}),
+              p.status !== "approved" && /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "ghost", onClick: () => _(p, "approved"), children: [
+                /* @__PURE__ */ e.jsx(be, {}),
                 " ",
                 t("Approve")
               ] }),
-              p.status === "approved" && /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "ghost", onClick: () => C(p, "pending"), children: [
-                /* @__PURE__ */ e.jsx(ze, {}),
+              p.status === "approved" && /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "ghost", onClick: () => _(p, "pending"), children: [
+                /* @__PURE__ */ e.jsx(Me, {}),
                 " ",
                 t("Unapprove")
               ] }),
-              p.status !== "spam" && /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "ghost", onClick: () => C(p, "spam"), children: [
-                /* @__PURE__ */ e.jsx(Ze, {}),
+              p.status !== "spam" && /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "ghost", onClick: () => _(p, "spam"), children: [
+                /* @__PURE__ */ e.jsx(es, {}),
                 " ",
                 t("Spam")
               ] }),
-              p.status !== "spam" && /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "ghost", onClick: () => u({ row: p, mode: "reply" }), children: [
-                /* @__PURE__ */ e.jsx(St, {}),
+              p.status !== "spam" && /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "ghost", onClick: () => h({ row: p, mode: "reply" }), children: [
+                /* @__PURE__ */ e.jsx($t, {}),
                 " ",
                 t("Reply")
               ] }),
-              /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "ghost", onClick: () => u({ row: p, mode: "edit" }), children: [
-                /* @__PURE__ */ e.jsx(Tt, {}),
+              /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "ghost", onClick: () => h({ row: p, mode: "edit" }), children: [
+                /* @__PURE__ */ e.jsx(Mt, {}),
                 " ",
                 t("Edit")
               ] })
             ] }),
-            r.delete && !p.trashed && /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "ghost", onClick: () => $.router.delete(A(`cms/comments/${p.id}`), { preserveScroll: !0 }), children: [
-              /* @__PURE__ */ e.jsx(q, {}),
+            r.delete && !p.trashed && /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "ghost", onClick: () => C.router.delete(I(`cms/comments/${p.id}`), { preserveScroll: !0 }), children: [
+              /* @__PURE__ */ e.jsx(K, {}),
               " ",
               t("Move to trash")
             ] }),
             r.delete && p.trashed && /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
               /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "ghost", onClick: () => j(`cms/comments/${p.id}/restore`), children: [
-                /* @__PURE__ */ e.jsx(je, {}),
+                /* @__PURE__ */ e.jsx(ve, {}),
                 " ",
                 t("Restore")
               ] }),
-              /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "ghost", onClick: () => v(
+              /* @__PURE__ */ e.jsxs(n.Button, { size: "sm", variant: "ghost", onClick: () => b(
                 t("Permanently delete this comment? Replies to it stay."),
-                () => $.router.delete(A(`cms/comments/${p.id}/force`), { preserveScroll: !0 })
+                () => C.router.delete(I(`cms/comments/${p.id}/force`), { preserveScroll: !0 })
               ), children: [
-                /* @__PURE__ */ e.jsx(q, {}),
+                /* @__PURE__ */ e.jsx(K, {}),
                 " ",
                 t("Permanently delete")
               ] })
@@ -4634,26 +4699,26 @@ function Rl({ tab: s, counts: a, filters: l, collections: c, comments: i, can: r
       ] }, p.id))
     ] }),
     (i.prev_page_url || i.next_page_url) && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:justify-end cms:gap-2", children: [
-      /* @__PURE__ */ e.jsxs(n.Button, { variant: "outline", size: "sm", disabled: !i.prev_page_url, onClick: () => i.prev_page_url && $.router.get(i.prev_page_url), children: [
-        /* @__PURE__ */ e.jsx(ss, {}),
+      /* @__PURE__ */ e.jsxs(n.Button, { variant: "outline", size: "sm", disabled: !i.prev_page_url, onClick: () => i.prev_page_url && C.router.get(i.prev_page_url), children: [
+        /* @__PURE__ */ e.jsx(as, {}),
         " ",
         t("Newer")
       ] }),
-      /* @__PURE__ */ e.jsxs(n.Button, { variant: "outline", size: "sm", disabled: !i.next_page_url, onClick: () => i.next_page_url && $.router.get(i.next_page_url), children: [
+      /* @__PURE__ */ e.jsxs(n.Button, { variant: "outline", size: "sm", disabled: !i.next_page_url, onClick: () => i.next_page_url && C.router.get(i.next_page_url), children: [
         t("Older"),
         " ",
-        /* @__PURE__ */ e.jsx(ve, {})
+        /* @__PURE__ */ e.jsx(Ne, {})
       ] })
     ] }),
-    x && /* @__PURE__ */ e.jsx(Ul, { row: x.row, mode: x.mode, error: d.body, onClose: () => u(null) }, `${x.mode}-${x.row.id}`),
-    y
+    x && /* @__PURE__ */ e.jsx(Gl, { row: x.row, mode: x.mode, error: d.body, onClose: () => h(null) }, `${x.mode}-${x.row.id}`),
+    v
   ] });
 }
-function Ul({ row: s, mode: a, error: l, onClose: c }) {
-  const [i, r] = T.useState(a === "edit" ? s.body : ""), [d, h] = T.useState(!1), m = () => {
-    h(!0);
-    const o = { preserveScroll: !0, onSuccess: c, onFinish: () => h(!1) };
-    a === "reply" ? $.router.post(A(`cms/comments/${s.id}/reply`), { body: i }, o) : $.router.put(A(`cms/comments/${s.id}`), { body: i }, o);
+function Gl({ row: s, mode: a, error: l, onClose: c }) {
+  const [i, r] = M.useState(a === "edit" ? s.body : ""), [d, u] = M.useState(!1), m = () => {
+    u(!0);
+    const o = { preserveScroll: !0, onSuccess: c, onFinish: () => u(!1) };
+    a === "reply" ? C.router.post(I(`cms/comments/${s.id}/reply`), { body: i }, o) : C.router.put(I(`cms/comments/${s.id}`), { body: i }, o);
   };
   return /* @__PURE__ */ e.jsx(n.Dialog, { open: !0, onOpenChange: (o) => !o && c(), children: /* @__PURE__ */ e.jsxs(n.DialogContent, { children: [
     /* @__PURE__ */ e.jsxs(n.DialogHeader, { children: [
@@ -4671,52 +4736,52 @@ function Ul({ row: s, mode: a, error: l, onClose: c }) {
         onChange: (o) => r(o.target.value)
       }
     ),
-    /* @__PURE__ */ e.jsx(H, { message: l }),
+    /* @__PURE__ */ e.jsx(O, { message: l }),
     /* @__PURE__ */ e.jsxs(n.DialogFooter, { children: [
       /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "outline", onClick: c, children: t("Cancel") }),
       /* @__PURE__ */ e.jsx(n.Button, { type: "button", disabled: i.trim() === "" || d, onClick: m, children: t(a === "reply" ? "Post reply" : "Save") })
     ] })
   ] }) });
 }
-const ql = () => [
+const Jl = () => [
   { role: "title", label: t("Meta title"), automatic: t("Automatic (the title)") },
   { role: "description", label: t("Meta description"), automatic: t("Automatic (nothing)") },
   { role: "image", label: t("Share image"), automatic: t("Automatic (nothing)") }
-], We = "__auto";
-function Kl({ site: s, siteName: a, collections: l, taxonomies: c, settingsNav: i }) {
-  n.useBreadcrumbs([{ label: t("Settings"), href: A("settings") }, { label: t("SEO") }]);
-  const r = [...l ?? [], ...c ?? []], d = $.useForm({
+], Je = "__auto";
+function Yl({ site: s, siteName: a, collections: l, taxonomies: c, settingsNav: i }) {
+  n.useBreadcrumbs([{ label: t("Settings"), href: I("settings") }, { label: t("SEO") }]);
+  const r = [...l ?? [], ...c ?? []], d = C.useForm({
     site: { ...s },
-    mappings: r.map((u) => ({ kind: u.kind, id: u.id, title: u.chosen.title ?? "", description: u.chosen.description ?? "", image: u.chosen.image ?? "" }))
-  }), h = d.errors, m = () => d.put(A("cms/seo"), { preserveScroll: !0, onSuccess: () => d.setDefaults() });
+    mappings: r.map((h) => ({ kind: h.kind, id: h.id, title: h.chosen.title ?? "", description: h.chosen.description ?? "", image: h.chosen.image ?? "" }))
+  }), u = d.errors, m = () => d.put(I("cms/seo"), { preserveScroll: !0, onSuccess: () => d.setDefaults() });
   n.useUnsavedChanges(d.isDirty, m);
-  const o = (u, v) => d.setData("site", { ...d.data.site, [u]: v }), g = (u, v, y) => d.setData("mappings", d.data.mappings.map((f, j) => j === u ? { ...f, [v]: y } : f)), x = (u, v, y, f, j) => /* @__PURE__ */ e.jsxs(n.CollapsibleCard, { title: v, description: y, titleClassName: "cms:text-base", storageKey: `cms:seo:${u}`, contentClassName: "cms:flex cms:flex-col cms:divide-y cms:divide-border/60", children: [
+  const o = (h, b) => d.setData("site", { ...d.data.site, [h]: b }), g = (h, b, v) => d.setData("mappings", d.data.mappings.map((f, j) => j === h ? { ...f, [b]: v } : f)), x = (h, b, v, f, j) => /* @__PURE__ */ e.jsxs(n.CollapsibleCard, { title: b, description: v, titleClassName: "cms:text-base", storageKey: `cms:seo:${h}`, contentClassName: "cms:flex cms:flex-col cms:divide-y cms:divide-border/60", children: [
     f.length === 0 && /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: t("None yet.") }),
-    f.map((C, _) => {
-      const b = j + _;
+    f.map((_, T) => {
+      const y = j + T;
       return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-3 cms:py-4 cms:first:pt-0 cms:last:pb-0", children: [
         /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-baseline cms:justify-between cms:gap-3", children: [
-          /* @__PURE__ */ e.jsx("h3", { className: "cms:font-medium", children: C.title }),
-          /* @__PURE__ */ e.jsx("span", { className: "cms:text-xs cms:text-muted-foreground", children: C.blueprint ? t("Blueprint: :name", { name: C.blueprint }) : t("No blueprint") })
+          /* @__PURE__ */ e.jsx("h3", { className: "cms:font-medium", children: _.title }),
+          /* @__PURE__ */ e.jsx("span", { className: "cms:text-xs cms:text-muted-foreground", children: _.blueprint ? t("Blueprint: :name", { name: _.blueprint }) : t("No blueprint") })
         ] }),
-        /* @__PURE__ */ e.jsx("div", { className: "cms:grid cms:gap-3 cms:sm:grid-cols-3", children: ql().map(({ role: p, label: M, automatic: S }) => /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:min-w-0 cms:flex-col cms:gap-1.5", children: [
-          /* @__PURE__ */ e.jsx(n.Label, { htmlFor: `seo-${b}-${p}`, className: "cms:text-xs", children: M }),
-          /* @__PURE__ */ e.jsxs(n.Select, { value: d.data.mappings[b]?.[p] || We, onValueChange: (B) => g(b, p, B === We ? "" : B), children: [
-            /* @__PURE__ */ e.jsx(n.SelectTrigger, { id: `seo-${b}-${p}`, className: "cms:w-full", children: /* @__PURE__ */ e.jsx(n.SelectValue, {}) }),
+        /* @__PURE__ */ e.jsx("div", { className: "cms:grid cms:gap-3 cms:sm:grid-cols-3", children: Jl().map(({ role: p, label: z, automatic: k }) => /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:min-w-0 cms:flex-col cms:gap-1.5", children: [
+          /* @__PURE__ */ e.jsx(n.Label, { htmlFor: `seo-${y}-${p}`, className: "cms:text-xs", children: z }),
+          /* @__PURE__ */ e.jsxs(n.Select, { value: d.data.mappings[y]?.[p] || Je, onValueChange: (F) => g(y, p, F === Je ? "" : F), children: [
+            /* @__PURE__ */ e.jsx(n.SelectTrigger, { id: `seo-${y}-${p}`, className: "cms:w-full", children: /* @__PURE__ */ e.jsx(n.SelectValue, {}) }),
             /* @__PURE__ */ e.jsxs(n.SelectContent, { children: [
-              /* @__PURE__ */ e.jsx(n.SelectItem, { value: We, children: S }),
-              C.options[p].map((B) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: B.value, children: B.label }, B.value))
+              /* @__PURE__ */ e.jsx(n.SelectItem, { value: Je, children: k }),
+              _.options[p].map((F) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: F.value, children: F.label }, F.value))
             ] })
           ] }),
-          /* @__PURE__ */ e.jsx(H, { message: h[`mappings.${b}.${p}`] })
+          /* @__PURE__ */ e.jsx(O, { message: u[`mappings.${y}.${p}`] })
         ] }, p)) })
-      ] }, `${C.kind}-${C.id}`);
+      ] }, `${_.kind}-${_.id}`);
     })
   ] });
-  return /* @__PURE__ */ e.jsx(n.SettingsLayout, { items: i, current: "cms-seo", children: /* @__PURE__ */ e.jsxs("form", { onSubmit: (u) => {
-    u.preventDefault(), m();
+  return /* @__PURE__ */ e.jsx(n.SettingsLayout, { items: i, current: "cms-seo", children: /* @__PURE__ */ e.jsxs("form", { onSubmit: (h) => {
+    h.preventDefault(), m();
   }, className: "cms:flex cms:flex-col cms:gap-6", children: [
-    /* @__PURE__ */ e.jsx($.Head, { title: t("SEO") }),
+    /* @__PURE__ */ e.jsx(C.Head, { title: t("SEO") }),
     /* @__PURE__ */ e.jsx(
       n.PageHeader,
       {
@@ -4727,7 +4792,7 @@ function Kl({ site: s, siteName: a, collections: l, taxonomies: c, settingsNav: 
     ),
     /* @__PURE__ */ e.jsxs(n.CollapsibleCard, { title: t("Search engines and sharing"), titleClassName: "cms:text-base", storageKey: "cms:seo:site", contentClassName: "cms:flex cms:flex-col cms:gap-5", children: [
       /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-start cms:gap-3", children: [
-        /* @__PURE__ */ e.jsx(n.Switch, { id: "seo-noindex", checked: d.data.site.noindex, onCheckedChange: (u) => o("noindex", u) }),
+        /* @__PURE__ */ e.jsx(n.Switch, { id: "seo-noindex", checked: d.data.site.noindex, onCheckedChange: (h) => o("noindex", h) }),
         /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-0.5", children: [
           /* @__PURE__ */ e.jsx(n.Label, { htmlFor: "seo-noindex", children: t("Hide the whole site from search engines") }),
           /* @__PURE__ */ e.jsx("p", { className: "cms:text-xs cms:text-muted-foreground", children: t("Every page asks not to be indexed and the sitemap is empty. For a site still being built, or staging.") })
@@ -4735,7 +4800,7 @@ function Kl({ site: s, siteName: a, collections: l, taxonomies: c, settingsNav: 
       ] }),
       /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-wrap cms:items-start cms:justify-between cms:gap-4", children: [
         /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-start cms:gap-3", children: [
-          /* @__PURE__ */ e.jsx(n.Switch, { id: "seo-append", checked: d.data.site.appendName, onCheckedChange: (u) => o("appendName", u) }),
+          /* @__PURE__ */ e.jsx(n.Switch, { id: "seo-append", checked: d.data.site.appendName, onCheckedChange: (h) => o("appendName", h) }),
           /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-0.5", children: [
             /* @__PURE__ */ e.jsx(n.Label, { htmlFor: "seo-append", children: t("Add the site name to page titles") }),
             /* @__PURE__ */ e.jsx("p", { className: "cms:text-xs cms:text-muted-foreground", children: t('The browser tab and search results show ":example". Share previews keep the bare title.', { example: `${t("About")} ${d.data.site.separator || "|"} ${a}` }) })
@@ -4751,7 +4816,7 @@ function Kl({ site: s, siteName: a, collections: l, taxonomies: c, settingsNav: 
               maxLength: 5,
               disabled: !d.data.site.appendName,
               value: d.data.site.separator,
-              onChange: (u) => o("separator", u.target.value)
+              onChange: (h) => o("separator", h.target.value)
             }
           )
         ] })
@@ -4765,10 +4830,10 @@ function Kl({ site: s, siteName: a, collections: l, taxonomies: c, settingsNav: 
             placeholder: "@acme",
             maxLength: 16,
             value: d.data.site.twitter,
-            onChange: (u) => o("twitter", u.target.value)
+            onChange: (h) => o("twitter", h.target.value)
           }
         ),
-        /* @__PURE__ */ e.jsx(H, { message: h["site.twitter"] })
+        /* @__PURE__ */ e.jsx(O, { message: u["site.twitter"] })
       ] }),
       /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-1.5", children: [
         /* @__PURE__ */ e.jsx(n.Label, { htmlFor: "seo-image", children: t("Default share image") }),
@@ -4776,17 +4841,17 @@ function Kl({ site: s, siteName: a, collections: l, taxonomies: c, settingsNav: 
           n.MediaPickerInput,
           {
             id: "seo-image",
-            invalid: h["site.image"] !== void 0,
+            invalid: u["site.image"] !== void 0,
             disabled: !1,
             multiple: !1,
             max: null,
             types: ["image"],
             value: d.data.site.image,
-            onChange: (u) => o("image", typeof u == "number" ? u : null)
+            onChange: (h) => o("image", typeof h == "number" ? h : null)
           }
         ),
         /* @__PURE__ */ e.jsx("p", { className: "cms:text-xs cms:text-muted-foreground", children: t("Shown when a page is shared and has no image of its own.") }),
-        /* @__PURE__ */ e.jsx(H, { message: h["site.image"] })
+        /* @__PURE__ */ e.jsx(O, { message: u["site.image"] })
       ] })
     ] }),
     r.length > 0 && /* @__PURE__ */ e.jsxs("section", { className: "cms:flex cms:flex-col cms:gap-1", children: [
@@ -4798,39 +4863,39 @@ function Kl({ site: s, siteName: a, collections: l, taxonomies: c, settingsNav: 
     /* @__PURE__ */ e.jsx("p", { className: "cms:text-xs cms:text-muted-foreground", children: t("Meta title: a text field. Meta description: a text or textarea field, cut to 300 characters. Share image: the first image of a media field.") })
   ] }) });
 }
-const Wl = 3;
-function Gl({ form: s, forms: a, submissions: l, can: c, createForm: i = null }) {
-  n.useBreadcrumbs([{ label: t("Submissions"), href: A("cms/submissions") }, ...s ? [{ label: s.title }] : []]);
-  const [r, d] = T.useState(null), [h, m] = ce();
+const Ql = 3;
+function Zl({ form: s, forms: a, submissions: l, can: c, createForm: i = null }) {
+  n.useBreadcrumbs([{ label: t("Submissions"), href: I("cms/submissions") }, ...s ? [{ label: s.title }] : []]);
+  const [r, d] = M.useState(null), [u, m] = re();
   if (!s || !l)
     return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-4", children: [
-      /* @__PURE__ */ e.jsx($.Head, { title: t("Submissions") }),
+      /* @__PURE__ */ e.jsx(C.Head, { title: t("Submissions") }),
       /* @__PURE__ */ e.jsx(n.PageHeader, { title: t("Submissions"), description: t("What visitors send through the site's forms.") }),
       /* @__PURE__ */ e.jsxs(n.Card, { className: "cms:flex cms:flex-col cms:items-center cms:gap-3 cms:px-6 cms:py-14 cms:text-center", children: [
-        /* @__PURE__ */ e.jsx(sn, { className: "cms:size-8 cms:text-muted-foreground" }),
+        /* @__PURE__ */ e.jsx(ln, { className: "cms:size-8 cms:text-muted-foreground" }),
         /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-1", children: [
           /* @__PURE__ */ e.jsx("p", { className: "cms:font-medium", children: t("No forms yet") }),
           /* @__PURE__ */ e.jsx("p", { className: "cms:max-w-sm cms:text-sm cms:text-muted-foreground", children: t(i ? "Create a form, put it on a page, and what visitors send shows up here." : "Once someone creates a form and puts it on a page, what visitors send shows up here.") })
         ] }),
-        i && /* @__PURE__ */ e.jsx(n.Button, { asChild: !0, children: /* @__PURE__ */ e.jsxs($.Link, { href: i, children: [
-          /* @__PURE__ */ e.jsx(G, {}),
+        i && /* @__PURE__ */ e.jsx(n.Button, { asChild: !0, children: /* @__PURE__ */ e.jsxs(C.Link, { href: i, children: [
+          /* @__PURE__ */ e.jsx(J, {}),
           " ",
           t("Create a form")
         ] }) })
       ] })
     ] });
-  const o = (l.data[0]?.rows ?? []).slice(0, Wl), g = (x) => h(
+  const o = (l.data[0]?.rows ?? []).slice(0, Ql), g = (x) => u(
     t("Permanently delete this submission? It can't be restored."),
-    () => $.router.delete(A(`cms/submissions/${x.id}`), { preserveScroll: !0, onSuccess: () => d(null) })
+    () => C.router.delete(I(`cms/submissions/${x.id}`), { preserveScroll: !0, onSuccess: () => d(null) })
   );
   return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-6", children: [
-    /* @__PURE__ */ e.jsx($.Head, { title: t(":form submissions", { form: s.title }) }),
+    /* @__PURE__ */ e.jsx(C.Head, { title: t(":form submissions", { form: s.title }) }),
     /* @__PURE__ */ e.jsx(
       n.PageHeader,
       {
         title: s.title,
-        menu: l.total > 0 && c.export ? [{ label: t("Export CSV"), href: A(`cms/forms/${s.handle}/submissions/export`), download: !0, icon: /* @__PURE__ */ e.jsx(nt, {}) }] : [],
-        children: a.length > 1 && /* @__PURE__ */ e.jsxs(n.Select, { value: s.handle, onValueChange: (x) => $.router.get(A(`cms/forms/${x}/submissions`)), children: [
+        menu: l.total > 0 && c.export ? [{ label: t("Export CSV"), href: I(`cms/forms/${s.handle}/submissions/export`), download: !0, icon: /* @__PURE__ */ e.jsx(lt, {}) }] : [],
+        children: a.length > 1 && /* @__PURE__ */ e.jsxs(n.Select, { value: s.handle, onValueChange: (x) => C.router.get(I(`cms/forms/${x}/submissions`)), children: [
           /* @__PURE__ */ e.jsx(n.SelectTrigger, { className: "cms:w-56", "aria-label": t("Form"), children: /* @__PURE__ */ e.jsx(n.SelectValue, {}) }),
           /* @__PURE__ */ e.jsx(n.SelectContent, { children: a.map((x) => /* @__PURE__ */ e.jsxs(n.SelectItem, { value: x.handle, children: [
             x.title,
@@ -4849,8 +4914,8 @@ function Gl({ form: s, forms: a, submissions: l, can: c, createForm: i = null })
       /* @__PURE__ */ e.jsxs(n.TableBody, { children: [
         l.data.length === 0 && /* @__PURE__ */ e.jsx(n.TableRow, { children: /* @__PURE__ */ e.jsx(n.TableCell, { colSpan: o.length + 1, className: "cms:py-8 cms:text-center cms:text-muted-foreground", children: t("Nothing sent yet.") }) }),
         l.data.map((x) => /* @__PURE__ */ e.jsxs(n.TableRow, { children: [
-          /* @__PURE__ */ e.jsx(n.TableCell, { className: "cms:whitespace-nowrap", children: /* @__PURE__ */ e.jsx("button", { type: "button", className: "cms:font-medium cms:hover:underline", onClick: () => d(x), children: U(x.createdAt) }) }),
-          o.map((u) => /* @__PURE__ */ e.jsx(n.TableCell, { className: "cms:max-w-64 cms:truncate", children: x.rows.find((v) => v.handle === u.handle)?.value }, u.handle))
+          /* @__PURE__ */ e.jsx(n.TableCell, { className: "cms:whitespace-nowrap", children: /* @__PURE__ */ e.jsx("button", { type: "button", className: "cms:font-medium cms:hover:underline", onClick: () => d(x), children: q(x.createdAt) }) }),
+          o.map((h) => /* @__PURE__ */ e.jsx(n.TableCell, { className: "cms:max-w-64 cms:truncate", children: x.rows.find((b) => b.handle === h.handle)?.value }, h.handle))
         ] }, x.id))
       ] })
     ] }) }),
@@ -4864,8 +4929,8 @@ function Gl({ form: s, forms: a, submissions: l, can: c, createForm: i = null })
             size: "icon",
             "aria-label": t("Previous page"),
             disabled: !l.prev_page_url,
-            onClick: () => l.prev_page_url && $.router.get(l.prev_page_url, {}, { preserveScroll: !0 }),
-            children: /* @__PURE__ */ e.jsx(ss, {})
+            onClick: () => l.prev_page_url && C.router.get(l.prev_page_url, {}, { preserveScroll: !0 }),
+            children: /* @__PURE__ */ e.jsx(as, {})
           }
         ),
         /* @__PURE__ */ e.jsx(
@@ -4875,8 +4940,8 @@ function Gl({ form: s, forms: a, submissions: l, can: c, createForm: i = null })
             size: "icon",
             "aria-label": t("Next page"),
             disabled: !l.next_page_url,
-            onClick: () => l.next_page_url && $.router.get(l.next_page_url, {}, { preserveScroll: !0 }),
-            children: /* @__PURE__ */ e.jsx(ve, {})
+            onClick: () => l.next_page_url && C.router.get(l.next_page_url, {}, { preserveScroll: !0 }),
+            children: /* @__PURE__ */ e.jsx(Ne, {})
           }
         )
       ] })
@@ -4885,21 +4950,21 @@ function Gl({ form: s, forms: a, submissions: l, can: c, createForm: i = null })
       /* @__PURE__ */ e.jsxs(n.DialogHeader, { children: [
         /* @__PURE__ */ e.jsx(n.DialogTitle, { children: s.title }),
         /* @__PURE__ */ e.jsxs(n.DialogDescription, { children: [
-          t("Sent :date", { date: U(r?.createdAt ?? null) }),
+          t("Sent :date", { date: q(r?.createdAt ?? null) }),
           " · ",
           r?.locale.toUpperCase()
         ] })
       ] }),
       /* @__PURE__ */ e.jsx("dl", { className: "cms:flex cms:flex-col cms:gap-3 cms:text-sm", children: r?.rows.map((x) => /* @__PURE__ */ e.jsxs("div", { children: [
         /* @__PURE__ */ e.jsx("dt", { className: "cms:font-medium", children: x.label }),
-        /* @__PURE__ */ e.jsx("dd", { className: "cms:whitespace-pre-wrap cms:break-words cms:text-muted-foreground", children: x.files && x.files.length > 0 ? /* @__PURE__ */ e.jsx("ul", { className: "cms:flex cms:flex-col cms:gap-1", children: x.files.map((u) => /* @__PURE__ */ e.jsx("li", { children: /* @__PURE__ */ e.jsx("a", { href: u.url, className: "cms:underline cms:underline-offset-4 hover:cms:text-foreground", download: !0, children: u.name }) }, u.url)) }) : x.file ? /* @__PURE__ */ e.jsx("a", { href: x.file, className: "cms:underline cms:underline-offset-4 hover:cms:text-foreground", download: !0, children: x.value }) : x.value || "—" })
+        /* @__PURE__ */ e.jsx("dd", { className: "cms:whitespace-pre-wrap cms:break-words cms:text-muted-foreground", children: x.files && x.files.length > 0 ? /* @__PURE__ */ e.jsx("ul", { className: "cms:flex cms:flex-col cms:gap-1", children: x.files.map((h) => /* @__PURE__ */ e.jsx("li", { children: /* @__PURE__ */ e.jsx("a", { href: h.url, className: "cms:underline cms:underline-offset-4 hover:cms:text-foreground", download: !0, children: h.name }) }, h.url)) }) : x.file ? /* @__PURE__ */ e.jsx("a", { href: x.file, className: "cms:underline cms:underline-offset-4 hover:cms:text-foreground", download: !0, children: x.value }) : x.value || "—" })
       ] }, x.handle)) }),
-      r && (r.visitor.ip || r.visitor.userAgent || r.visitor.referrer) && /* @__PURE__ */ e.jsx("dl", { className: "cms:flex cms:flex-col cms:gap-3 cms:border-t cms:pt-3 cms:text-sm", children: [[t("IP address"), r.visitor.ip], [t("Browser"), r.visitor.userAgent], [t("Sent from"), r.visitor.referrer]].map(([x, u]) => u && /* @__PURE__ */ e.jsxs("div", { children: [
+      r && (r.visitor.ip || r.visitor.userAgent || r.visitor.referrer) && /* @__PURE__ */ e.jsx("dl", { className: "cms:flex cms:flex-col cms:gap-3 cms:border-t cms:pt-3 cms:text-sm", children: [[t("IP address"), r.visitor.ip], [t("Browser"), r.visitor.userAgent], [t("Sent from"), r.visitor.referrer]].map(([x, h]) => h && /* @__PURE__ */ e.jsxs("div", { children: [
         /* @__PURE__ */ e.jsx("dt", { className: "cms:font-medium", children: x }),
-        /* @__PURE__ */ e.jsx("dd", { className: "cms:break-all cms:text-muted-foreground", children: u })
+        /* @__PURE__ */ e.jsx("dd", { className: "cms:break-all cms:text-muted-foreground", children: h })
       ] }, x)) }),
       c.delete && r && /* @__PURE__ */ e.jsx(n.DialogFooter, { children: /* @__PURE__ */ e.jsxs(n.Button, { variant: "destructive", onClick: () => g(r), children: [
-        /* @__PURE__ */ e.jsx(q, {}),
+        /* @__PURE__ */ e.jsx(K, {}),
         " ",
         t("Delete")
       ] }) })
@@ -4907,14 +4972,14 @@ function Gl({ form: s, forms: a, submissions: l, can: c, createForm: i = null })
     m
   ] });
 }
-const Ge = "__top";
-function Yl(s) {
-  return /* @__PURE__ */ e.jsx(Jl, { ...s }, `${s.term?.id ?? "new"}:${s.locale}:${s.version}:${JSON.stringify([s.values, s.seo, s.term?.template, s.parentId])}`);
+const Ye = "__top";
+function Xl(s) {
+  return /* @__PURE__ */ e.jsx(ec, { ...s }, `${s.term?.id ?? "new"}:${s.locale}:${s.version}:${JSON.stringify([s.values, s.seo, s.term?.template, s.parentId])}`);
 }
-function Jl({ taxonomy: s, term: a, parentId: l = null, terms: c = [], translated: i, fields: r, locale: d, locales: h, shared: m, sharedValues: o, values: g, seo: x, version: u, usedBy: v = [], redirectsUrl: y = null, templates: f = null }) {
-  const j = A(`cms/taxonomies/${s.handle}/terms`), C = a ? A(`cms/terms/${a.id}/content`) : j, _ = a ? a.title : t("New term");
-  n.useBreadcrumbs([{ label: s.title, href: `${j}?locale=${d}` }, { label: _ }]);
-  const b = $.useForm({
+function ec({ taxonomy: s, term: a, parentId: l = null, terms: c = [], translated: i, fields: r, locale: d, locales: u, shared: m, sharedValues: o, values: g, seo: x, version: h, usedBy: b = [], redirectsUrl: v = null, templates: f = null }) {
+  const j = I(`cms/taxonomies/${s.handle}/terms`), _ = a ? I(`cms/terms/${a.id}/content`) : j, T = a ? a.title : t("New term");
+  n.useBreadcrumbs([{ label: s.title, href: `${j}?locale=${d}` }, { label: T }]);
+  const y = C.useForm({
     locale: d,
     title: a?.ownTitle ?? "",
     slug: a?.slug ?? "",
@@ -4922,87 +4987,87 @@ function Jl({ taxonomy: s, term: a, parentId: l = null, terms: c = [], translate
     data: g,
     seo: x ?? {},
     template: a?.template ?? "",
-    version: u
-  }), p = b.errors, M = (N) => {
-    const L = Le(p, N);
-    L.length > 0 && b.clearErrors(...L);
-  }, S = () => b.processing || (a ? b.put(C, { preserveScroll: !0 }) : b.post(C)), B = () => {
-    b.transform((N) => ({ ...N, version: null })), b.put(C, { preserveScroll: !0 });
-  }, w = n.useEditLock({
+    version: h
+  }), p = y.errors, z = (N) => {
+    const D = Ae(p, N);
+    D.length > 0 && y.clearErrors(...D);
+  }, k = () => y.processing || (a ? y.put(_, { preserveScroll: !0 }) : y.post(_)), F = () => {
+    y.transform((N) => ({ ...N, version: null })), y.put(_, { preserveScroll: !0 });
+  }, L = n.useEditLock({
     type: "cms.term",
     id: a?.id,
     locale: d,
     enabled: a !== null && i,
     noun: t("term"),
     leaveTo: `${j}?locale=${d}`,
-    getUnsaved: () => b.isDirty ? { data: b.data.data, seo: b.data.seo, template: b.data.template } : null
-  }), D = !w.readOnly, P = async (N) => {
-    const L = await w.loadKept(N);
-    b.setData((V) => ({
-      ...V,
-      data: L.data && typeof L.data == "object" ? L.data : V.data,
-      seo: L.seo && typeof L.seo == "object" ? L.seo : V.seo,
-      template: typeof L.template == "string" ? L.template : V.template
+    getUnsaved: () => y.isDirty ? { data: y.data.data, seo: y.data.seo, template: y.data.template } : null
+  }), S = !L.readOnly, P = async (N) => {
+    const D = await L.loadKept(N);
+    y.setData(($) => ({
+      ...$,
+      data: D.data && typeof D.data == "object" ? D.data : $.data,
+      seo: D.seo && typeof D.seo == "object" ? D.seo : $.seo,
+      template: typeof D.template == "string" ? D.template : $.template
     }));
   };
-  return n.useUnsavedChanges(b.isDirty && !w.takenOver, D ? S : void 0), /* @__PURE__ */ e.jsxs("form", { noValidate: !0, onSubmit: (N) => {
-    N.preventDefault(), S();
+  return n.useUnsavedChanges(y.isDirty && !L.takenOver, S ? k : void 0), /* @__PURE__ */ e.jsxs("form", { noValidate: !0, onSubmit: (N) => {
+    N.preventDefault(), k();
   }, className: "cms:flex cms:flex-col cms:gap-6", children: [
-    /* @__PURE__ */ e.jsx($.Head, { title: a ? a.title : t("New term · :taxonomy", { taxonomy: s.title }) }),
-    w.dialogs,
+    /* @__PURE__ */ e.jsx(C.Head, { title: a ? a.title : t("New term · :taxonomy", { taxonomy: s.title }) }),
+    L.dialogs,
     /* @__PURE__ */ e.jsx(
       n.PageHeader,
       {
-        title: _,
+        title: T,
         back: { href: `${j}?locale=${d}`, label: t("Back to :title", { title: s.title }) },
         actions: /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
           a?.url && /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "ghost", asChild: !0, children: /* @__PURE__ */ e.jsxs("a", { href: a.url, target: "_blank", rel: "noopener noreferrer", children: [
-            /* @__PURE__ */ e.jsx(xe, {}),
+            /* @__PURE__ */ e.jsx(ge, {}),
             " ",
             t("View page")
           ] }) }),
-          D && /* @__PURE__ */ e.jsxs(n.Button, { type: "submit", disabled: b.processing, children: [
-            b.processing && /* @__PURE__ */ e.jsx(le, { className: "cms:animate-spin" }),
+          S && /* @__PURE__ */ e.jsxs(n.Button, { type: "submit", disabled: y.processing, children: [
+            y.processing && /* @__PURE__ */ e.jsx(ce, { className: "cms:animate-spin" }),
             " ",
             t(a ? "Save" : "Create term")
           ] })
         ] }),
-        children: b.isDirty && /* @__PURE__ */ e.jsx("span", { className: "cms:text-sm cms:text-muted-foreground", children: t("Unsaved changes") })
+        children: y.isDirty && /* @__PURE__ */ e.jsx("span", { className: "cms:text-sm cms:text-muted-foreground", children: t("Unsaved changes") })
       }
     ),
     /* @__PURE__ */ e.jsxs("div", { className: "cms:grid cms:items-start cms:gap-6 cms:lg:grid-cols-[minmax(0,1fr)_20rem]", children: [
       /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:min-w-0 cms:flex-col cms:gap-6", children: [
         /* @__PURE__ */ e.jsx(
-          ya,
+          wa,
           {
             current: d,
-            locales: h,
+            locales: u,
             translated: a ? a.translatedIn ?? null : [d],
-            onSwitch: (N) => $.router.get(a ? `${j}/${a.id}/edit` : `${j}/create`, { locale: N, ...a === null && b.data.parent_id !== null ? { parent: b.data.parent_id } : {} })
+            onSwitch: (N) => C.router.get(a ? `${j}/${a.id}/edit` : `${j}/create`, { locale: N, ...a === null && y.data.parent_id !== null ? { parent: y.data.parent_id } : {} })
           }
         ),
-        /* @__PURE__ */ e.jsx(n.ViewingNotice, { by: w.viewingBy, onTakeOver: w.requestTakeOver }),
-        a === null && h.length > 1 && /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: t("In :language. Translate it here afterwards: switch the language and give it a title there.", { language: O(d) }) }),
-        !i && /* @__PURE__ */ e.jsx("p", { className: "cms:rounded-lg cms:border cms:bg-muted/40 cms:p-3 cms:text-sm cms:text-muted-foreground", role: "note", children: t("Not in :language yet: the site shows the :main term meanwhile. Give it a title in :language and save to add it.", { language: O(d), main: O(h[0] ?? "en") }) }),
-        /* @__PURE__ */ e.jsxs("fieldset", { disabled: !D, className: "cms:grid cms:min-w-0 cms:gap-4 cms:sm:grid-cols-2", children: [
+        /* @__PURE__ */ e.jsx(n.ViewingNotice, { by: L.viewingBy, onTakeOver: L.requestTakeOver }),
+        a === null && u.length > 1 && /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: t("In :language. Translate it here afterwards: switch the language and give it a title there.", { language: V(d) }) }),
+        !i && /* @__PURE__ */ e.jsx("p", { className: "cms:rounded-lg cms:border cms:bg-muted/40 cms:p-3 cms:text-sm cms:text-muted-foreground", role: "note", children: t("Not in :language yet: the site shows the :main term meanwhile. Give it a title in :language and save to add it.", { language: V(d), main: V(u[0] ?? "en") }) }),
+        /* @__PURE__ */ e.jsxs("fieldset", { disabled: !S, className: "cms:grid cms:min-w-0 cms:gap-4 cms:sm:grid-cols-2", children: [
           /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
             /* @__PURE__ */ e.jsx(n.Label, { htmlFor: "term-title", children: t("Title") }),
             /* @__PURE__ */ e.jsx(
               n.Input,
               {
                 id: "term-title",
-                value: b.data.title,
+                value: y.data.title,
                 required: !0,
                 autoFocus: a === null,
                 placeholder: a?.mainTitle ?? "",
                 maxLength: 255,
                 "aria-invalid": p.title !== void 0,
                 onChange: (N) => {
-                  b.setData("title", N.target.value), M("title");
+                  y.setData("title", N.target.value), z("title");
                 }
               }
             ),
-            /* @__PURE__ */ e.jsx(H, { message: p.title })
+            /* @__PURE__ */ e.jsx(O, { message: p.title })
           ] }),
           /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
             /* @__PURE__ */ e.jsx(n.Label, { htmlFor: "term-slug", children: t("Slug") }),
@@ -5011,31 +5076,31 @@ function Jl({ taxonomy: s, term: a, parentId: l = null, terms: c = [], translate
               {
                 id: "term-slug",
                 className: "cms:font-mono",
-                value: b.data.slug,
+                value: y.data.slug,
                 placeholder: t("Made from the title"),
                 maxLength: 200,
                 "aria-invalid": p.slug !== void 0,
                 onChange: (N) => {
-                  b.setData("slug", N.target.value), M("slug");
+                  y.setData("slug", N.target.value), z("slug");
                 }
               }
             ),
-            /* @__PURE__ */ e.jsx(ba, { note: Is(a?.hasPage ? a.slug : null, b.data.slug, !1), redirectsUrl: y }),
-            /* @__PURE__ */ e.jsx(H, { message: p.slug })
+            /* @__PURE__ */ e.jsx(Na, { note: Es(a?.hasPage ? a.slug : null, y.data.slug, !1), redirectsUrl: v }),
+            /* @__PURE__ */ e.jsx(O, { message: p.slug })
           ] }),
           s.hierarchical && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2 cms:sm:col-span-2", children: [
             /* @__PURE__ */ e.jsx(n.Label, { htmlFor: "term-parent", children: t("Under") }),
             /* @__PURE__ */ e.jsxs(
               n.Select,
               {
-                value: b.data.parent_id === null ? Ge : String(b.data.parent_id),
+                value: y.data.parent_id === null ? Ye : String(y.data.parent_id),
                 onValueChange: (N) => {
-                  b.setData("parent_id", N === Ge ? null : Number(N)), M("parent_id");
+                  y.setData("parent_id", N === Ye ? null : Number(N)), z("parent_id");
                 },
                 children: [
                   /* @__PURE__ */ e.jsx(n.SelectTrigger, { id: "term-parent", className: "cms:sm:w-1/2", "aria-invalid": p.parent_id !== void 0, children: /* @__PURE__ */ e.jsx(n.SelectValue, {}) }),
                   /* @__PURE__ */ e.jsxs(n.SelectContent, { children: [
-                    /* @__PURE__ */ e.jsx(n.SelectItem, { value: Ge, children: t("Top level") }),
+                    /* @__PURE__ */ e.jsx(n.SelectItem, { value: Ye, children: t("Top level") }),
                     c.map((N) => /* @__PURE__ */ e.jsxs(n.SelectItem, { value: String(N.id), children: [
                       "— ".repeat(N.depth),
                       N.title
@@ -5044,33 +5109,33 @@ function Jl({ taxonomy: s, term: a, parentId: l = null, terms: c = [], translate
                 ]
               }
             ),
-            /* @__PURE__ */ e.jsx(H, { message: p.parent_id })
+            /* @__PURE__ */ e.jsx(O, { message: p.parent_id })
           ] })
         ] }),
-        /* @__PURE__ */ e.jsx(n.KeptEditsNotice, { kept: w.kept, disabled: !D, onLoad: (N) => {
+        /* @__PURE__ */ e.jsx(n.KeptEditsNotice, { kept: L.kept, disabled: !S, onLoad: (N) => {
           P(N);
         }, onDiscard: (N) => {
-          w.discardKept(N);
+          L.discardKept(N);
         } }),
-        /* @__PURE__ */ e.jsx(ds, { message: p.version, processing: b.processing, onSaveMine: B }),
+        /* @__PURE__ */ e.jsx(ms, { message: p.version, processing: y.processing, onSaveMine: F }),
         /* @__PURE__ */ e.jsx(
-          rs,
+          is,
           {
-            disabled: !D,
+            disabled: !S,
             fields: r,
-            values: b.data.data,
+            values: y.data.data,
             errors: p,
             storageKey: `cms:term:${s.handle}`,
             shared: m,
             sharedValues: o,
-            sharedNote: t("Shared by all languages: the greyed-out fields are edited in :language.", { language: O(h[0] ?? "en") }),
-            onChange: (N, L) => {
-              b.setData("data", { ...b.data.data, [N]: L }), M(`data.${N}`);
+            sharedNote: t("Shared by all languages: the greyed-out fields are edited in :language.", { language: V(u[0] ?? "en") }),
+            onChange: (N, D) => {
+              y.setData("data", { ...y.data.data, [N]: D }), z(`data.${N}`);
             }
           }
         ),
-        /* @__PURE__ */ e.jsx(n.CollapsibleCard, { title: t("SEO"), description: t("How this term's page appears in search results and shared links."), titleClassName: "cms:text-base", storageKey: "cms:term:seo", hasErrors: we(p, "seo"), children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !D, className: "cms:min-w-0", children: /* @__PURE__ */ e.jsx(de, { bare: !0, id: "seo", fields: is(), value: b.data.seo, errors: Y(p, "seo"), onChange: (N) => {
-          b.setData("seo", N), M("seo");
+        /* @__PURE__ */ e.jsx(n.CollapsibleCard, { title: t("SEO"), description: t("How this term's page appears in search results and shared links."), titleClassName: "cms:text-base", storageKey: "cms:term:seo", hasErrors: Ce(p, "seo"), children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !S, className: "cms:min-w-0", children: /* @__PURE__ */ e.jsx(ue, { bare: !0, id: "seo", fields: os(), value: y.data.seo, errors: Y(p, "seo"), onChange: (N) => {
+          y.setData("seo", N), z("seo");
         } }) }) })
       ] }),
       /* @__PURE__ */ e.jsxs("aside", { className: "cms:flex cms:min-w-0 cms:flex-col cms:gap-6", children: [
@@ -5082,7 +5147,7 @@ function Jl({ taxonomy: s, term: a, parentId: l = null, terms: c = [], translate
             storageKey: "cms:term:page-settings",
             hasErrors: p.template !== void 0,
             contentClassName: "cms:flex cms:flex-col cms:gap-2",
-            children: /* @__PURE__ */ e.jsxs("fieldset", { disabled: !D, className: "cms:flex cms:min-w-0 cms:flex-col cms:gap-2", children: [
+            children: /* @__PURE__ */ e.jsxs("fieldset", { disabled: !S, className: "cms:flex cms:min-w-0 cms:flex-col cms:gap-2", children: [
               /* @__PURE__ */ e.jsx(n.Label, { htmlFor: "template", children: t("Template") }),
               /* @__PURE__ */ e.jsx(
                 n.Input,
@@ -5090,19 +5155,19 @@ function Jl({ taxonomy: s, term: a, parentId: l = null, terms: c = [], translate
                   id: "template",
                   className: "cms:font-mono",
                   placeholder: `cms.${s.handle}-special`,
-                  value: b.data.template,
-                  onChange: (N) => b.setData("template", N.target.value),
+                  value: y.data.template,
+                  onChange: (N) => y.setData("template", N.target.value),
                   "aria-invalid": p.template !== void 0
                 }
               ),
-              /* @__PURE__ */ e.jsx(fa, { example: `cms.${s.handle}-special`, empty: t("Leave empty to use the taxonomy's template."), value: b.data.template, lookup: f }),
-              /* @__PURE__ */ e.jsx(H, { message: p.template })
+              /* @__PURE__ */ e.jsx(va, { example: `cms.${s.handle}-special`, empty: t("Leave empty to use the taxonomy's template."), value: y.data.template, lookup: f }),
+              /* @__PURE__ */ e.jsx(O, { message: p.template })
             ] })
           }
         ),
         a && /* @__PURE__ */ e.jsxs(n.CollapsibleCard, { title: t("Used by"), titleClassName: "cms:text-base", storageKey: "cms:term:used-by", contentClassName: "cms:flex cms:flex-col cms:gap-1 cms:text-sm", children: [
-          v.length === 0 && /* @__PURE__ */ e.jsx("p", { className: "cms:text-muted-foreground", children: t("No content links here through its fields.") }),
-          v.map((N) => /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-baseline cms:gap-2", children: [
+          b.length === 0 && /* @__PURE__ */ e.jsx("p", { className: "cms:text-muted-foreground", children: t("No content links here through its fields.") }),
+          b.map((N) => /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-baseline cms:gap-2", children: [
             N.url ? /* @__PURE__ */ e.jsx("a", { href: N.url, className: "cms:truncate cms:underline-offset-4 cms:hover:underline", children: N.label }) : /* @__PURE__ */ e.jsx("span", { className: "cms:truncate", children: N.label }),
             /* @__PURE__ */ e.jsx("span", { className: "cms:text-xs cms:text-muted-foreground", title: N.field, children: N.fieldLabel ?? N.field })
           ] }, `${N.label}:${N.field}`))
@@ -5111,46 +5176,46 @@ function Jl({ taxonomy: s, term: a, parentId: l = null, terms: c = [], translate
     ] })
   ] });
 }
-function zs(s = []) {
+function Ms(s = []) {
   if (s.length === 0) return "";
   const a = s.slice(0, 5).join("; ");
   return ` ${s.length > 5 ? t("It's used by :list and :count more.", { list: a, count: s.length - 5 }) : t("It's used by :list.", { list: a })}`;
 }
-function Ql({ taxonomy: s, taxonomies: a, terms: l, locales: c, locale: i, trashed: r = !1, trashedCount: d = 0 }) {
+function sc({ taxonomy: s, taxonomies: a, terms: l, locales: c, locale: i, trashed: r = !1, trashedCount: d = 0 }) {
   n.useBreadcrumbs([{ label: s ? s.title : t("Terms") }]);
-  const [h, m] = ce(), [o, g] = T.useState(""), [x, u] = T.useState(l);
-  if (T.useEffect(() => u(l), [l]), !s)
+  const [u, m] = re(), [o, g] = M.useState(""), [x, h] = M.useState(l);
+  if (M.useEffect(() => h(l), [l]), !s)
     return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-4", children: [
-      /* @__PURE__ */ e.jsx($.Head, { title: t("Terms") }),
+      /* @__PURE__ */ e.jsx(C.Head, { title: t("Terms") }),
       /* @__PURE__ */ e.jsx(n.PageHeader, { title: t("Terms"), description: t("There are no taxonomies yet. Create one under Structure → Taxonomies (categories, tags…), then add its terms here.") })
     ] });
-  const v = A(`cms/taxonomies/${s.handle}/terms`), y = (S) => A(`cms/taxonomies/${s.handle}/terms/${S.id}/edit`) + `?locale=${encodeURIComponent(i)}`, f = (S, B) => {
-    const w = B.map((D) => x[D].id);
-    u(os(x, S, B)), $.router.post(
-      A("cms/terms/reorder"),
-      { taxonomy: s.handle, ids: w, parent_id: S < 0 ? null : x[S].id },
-      { preserveScroll: !0, preserveState: !0, onError: () => u(l) }
+  const b = I(`cms/taxonomies/${s.handle}/terms`), v = (k) => I(`cms/taxonomies/${s.handle}/terms/${k.id}/edit`) + `?locale=${encodeURIComponent(i)}`, f = (k, F) => {
+    const L = F.map((S) => x[S].id);
+    h(ds(x, k, F)), C.router.post(
+      I("cms/terms/reorder"),
+      { taxonomy: s.handle, ids: L, parent_id: k < 0 ? null : x[k].id },
+      { preserveScroll: !0, preserveState: !0, onError: () => h(l) }
     );
-  }, j = (S) => h(
-    t('Move ":title" to the trash, with the terms under it? It comes off the site; you can restore it.', { title: S.fallback }) + zs(S.usedBy),
-    () => $.router.delete(A(`cms/terms/${S.id}`), { preserveScroll: !0 }),
+  }, j = (k) => u(
+    t('Move ":title" to the trash, with the terms under it? It comes off the site; you can restore it.', { title: k.fallback }) + Ms(k.usedBy),
+    () => C.router.delete(I(`cms/terms/${k.id}`), { preserveScroll: !0 }),
     t("Move to trash")
-  ), C = o.trim().toLowerCase(), _ = C === "" ? null : x.filter((S) => `${S.title ?? S.fallback} ${S.slug ?? ""}`.toLowerCase().includes(C)), b = s.collections ?? [], p = (S, B, w) => /* @__PURE__ */ e.jsxs("div", { className: `${Ms} cms:border-t cms:border-border/60 cms:px-3 cms:py-2`, children: [
-    /* @__PURE__ */ e.jsx("span", { className: "cms:flex cms:justify-center", children: B && !r && /* @__PURE__ */ e.jsx(n.SortableHandle, { ...B, label: t("Move :title", { title: S.fallback }) }) }),
-    /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:min-w-0 cms:items-center cms:gap-2", style: { paddingLeft: w * 20 }, children: [
-      w > 0 && /* @__PURE__ */ e.jsx("span", { className: "cms:text-muted-foreground", "aria-hidden": !0, children: "└" }),
-      r ? /* @__PURE__ */ e.jsx("span", { className: "cms:truncate cms:font-medium", children: S.title ?? S.fallback }) : (
+  ), _ = o.trim().toLowerCase(), T = _ === "" ? null : x.filter((k) => `${k.title ?? k.fallback} ${k.slug ?? ""}`.toLowerCase().includes(_)), y = s.collections ?? [], p = (k, F, L) => /* @__PURE__ */ e.jsxs("div", { className: `${Bs} cms:border-t cms:border-border/60 cms:px-3 cms:py-2`, children: [
+    /* @__PURE__ */ e.jsx("span", { className: "cms:flex cms:justify-center", children: F && !r && /* @__PURE__ */ e.jsx(n.SortableHandle, { ...F, label: t("Move :title", { title: k.fallback }) }) }),
+    /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:min-w-0 cms:items-center cms:gap-2", style: { paddingLeft: L * 20 }, children: [
+      L > 0 && /* @__PURE__ */ e.jsx("span", { className: "cms:text-muted-foreground", "aria-hidden": !0, children: "└" }),
+      r ? /* @__PURE__ */ e.jsx("span", { className: "cms:truncate cms:font-medium", children: k.title ?? k.fallback }) : (
         // The term's editor, in the language shown (untranslated: give it a title there to add it).
-        /* @__PURE__ */ e.jsx($.Link, { href: y(S), className: "cms:truncate cms:text-left cms:font-medium cms:underline-offset-4 cms:hover:underline", children: S.title ?? /* @__PURE__ */ e.jsx("span", { className: "cms:font-normal cms:text-muted-foreground cms:italic", children: t(":title · not translated", { title: S.fallback }) }) })
+        /* @__PURE__ */ e.jsx(C.Link, { href: v(k), className: "cms:truncate cms:text-left cms:font-medium cms:underline-offset-4 cms:hover:underline", children: k.title ?? /* @__PURE__ */ e.jsx("span", { className: "cms:font-normal cms:text-muted-foreground cms:italic", children: t(":title · not translated", { title: k.fallback }) }) })
       ),
-      S.url && /* @__PURE__ */ e.jsx("a", { href: S.url, target: "_blank", rel: "noopener noreferrer", className: "cms:text-muted-foreground cms:hover:text-foreground", "aria-label": t("View page"), title: t("View page"), children: /* @__PURE__ */ e.jsx(xe, { className: "cms:size-3.5" }) })
+      k.url && /* @__PURE__ */ e.jsx("a", { href: k.url, target: "_blank", rel: "noopener noreferrer", className: "cms:text-muted-foreground cms:hover:text-foreground", "aria-label": t("View page"), title: t("View page"), children: /* @__PURE__ */ e.jsx(ge, { className: "cms:size-3.5" }) })
     ] }),
-    /* @__PURE__ */ e.jsx("code", { className: "cms:hidden cms:truncate cms:text-xs cms:text-muted-foreground cms:md:block", children: S.slug ?? "—" }),
-    /* @__PURE__ */ e.jsx("span", { className: "cms:hidden cms:text-sm cms:text-muted-foreground cms:tabular-nums cms:md:block", children: S.entries ?? 0 }),
-    /* @__PURE__ */ e.jsx("span", { className: "cms:hidden cms:text-sm cms:text-muted-foreground cms:md:block", children: Zl(S.createdAt) }),
+    /* @__PURE__ */ e.jsx("code", { className: "cms:hidden cms:truncate cms:text-xs cms:text-muted-foreground cms:md:block", children: k.slug ?? "—" }),
+    /* @__PURE__ */ e.jsx("span", { className: "cms:hidden cms:text-sm cms:text-muted-foreground cms:tabular-nums cms:md:block", children: k.entries ?? 0 }),
+    /* @__PURE__ */ e.jsx("span", { className: "cms:hidden cms:text-sm cms:text-muted-foreground cms:md:block", children: tc(k.createdAt) }),
     /* @__PURE__ */ e.jsx("div", { className: "cms:flex cms:justify-end", children: r ? /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:gap-1", children: [
-      /* @__PURE__ */ e.jsxs(n.Button, { variant: "outline", size: "sm", onClick: () => $.router.post(A(`cms/terms/${S.id}/restore`), {}, { preserveScroll: !0 }), children: [
-        /* @__PURE__ */ e.jsx(je, {}),
+      /* @__PURE__ */ e.jsxs(n.Button, { variant: "outline", size: "sm", onClick: () => C.router.post(I(`cms/terms/${k.id}/restore`), {}, { preserveScroll: !0 }), children: [
+        /* @__PURE__ */ e.jsx(ve, {}),
         " ",
         t("Restore")
       ] }),
@@ -5160,69 +5225,70 @@ function Ql({ taxonomy: s, taxonomies: a, terms: l, locales: c, locale: i, trash
           variant: "ghost",
           size: "sm",
           className: "cms:text-destructive",
-          onClick: () => h(
-            t('Permanently delete ":title" in every language? Entries lose it.', { title: S.fallback }) + zs(S.usedBy),
-            () => $.router.delete(A(`cms/terms/${S.id}/force`), { preserveScroll: !0, data: (S.usedBy ?? []).length > 0 ? { force: 1 } : {} })
+          onClick: () => u(
+            t('Permanently delete ":title" in every language? Entries lose it.', { title: k.fallback }) + Ms(k.usedBy),
+            () => C.router.delete(I(`cms/terms/${k.id}/force`), { preserveScroll: !0, data: (k.usedBy ?? []).length > 0 ? { force: 1 } : {} })
           ),
           children: [
-            /* @__PURE__ */ e.jsx(q, {}),
+            /* @__PURE__ */ e.jsx(K, {}),
             " ",
             t("Permanently delete")
           ]
         }
       )
     ] }) : /* @__PURE__ */ e.jsxs(n.DropdownMenu, { children: [
-      /* @__PURE__ */ e.jsx(n.DropdownMenuTrigger, { asChild: !0, children: /* @__PURE__ */ e.jsx(n.Button, { variant: "ghost", size: "icon", className: "cms:size-8", "aria-label": t("Actions for :title", { title: S.fallback }), children: /* @__PURE__ */ e.jsx(ct, {}) }) }),
+      /* @__PURE__ */ e.jsx(n.DropdownMenuTrigger, { asChild: !0, children: /* @__PURE__ */ e.jsx(n.Button, { variant: "ghost", size: "icon", className: "cms:size-8", "aria-label": t("Actions for :title", { title: k.fallback }), children: /* @__PURE__ */ e.jsx(rt, {}) }) }),
       /* @__PURE__ */ e.jsxs(n.DropdownMenuContent, { align: "end", children: [
-        /* @__PURE__ */ e.jsx(n.DropdownMenuItem, { asChild: !0, children: /* @__PURE__ */ e.jsxs($.Link, { href: y(S), children: [
-          /* @__PURE__ */ e.jsx(Tt, {}),
+        /* @__PURE__ */ e.jsx(n.DropdownMenuItem, { asChild: !0, children: /* @__PURE__ */ e.jsxs(C.Link, { href: v(k), children: [
+          /* @__PURE__ */ e.jsx(Mt, {}),
           " ",
           t("Edit")
         ] }) }),
-        s.hierarchical && S.title !== null && /* @__PURE__ */ e.jsx(n.DropdownMenuItem, { asChild: !0, children: /* @__PURE__ */ e.jsxs($.Link, { href: `${v}/create?locale=${encodeURIComponent(i)}&parent=${S.id}`, children: [
-          /* @__PURE__ */ e.jsx(G, {}),
+        s.hierarchical && k.title !== null && /* @__PURE__ */ e.jsx(n.DropdownMenuItem, { asChild: !0, children: /* @__PURE__ */ e.jsxs(C.Link, { href: `${b}/create?locale=${encodeURIComponent(i)}&parent=${k.id}`, children: [
+          /* @__PURE__ */ e.jsx(J, {}),
           " ",
           t("Add a term under it")
         ] }) }),
         /* @__PURE__ */ e.jsx(n.DropdownMenuSeparator, {}),
-        /* @__PURE__ */ e.jsxs(n.DropdownMenuItem, { className: "cms:text-destructive", onSelect: () => j(S), children: [
-          /* @__PURE__ */ e.jsx(q, {}),
+        /* @__PURE__ */ e.jsxs(n.DropdownMenuItem, { className: "cms:text-destructive", onSelect: () => j(k), children: [
+          /* @__PURE__ */ e.jsx(K, {}),
           " ",
           t("Move to trash")
         ] })
       ] })
     ] }) })
-  ] }), M = (S) => /* @__PURE__ */ e.jsx(n.SortableList, { items: ne(x, S), getId: (B) => x[B].id, getLabel: (B) => x[B].title ?? x[B].fallback, disabled: r, onReorder: (B) => f(S, B), className: "cms:gap-0", children: (B, { handle: w, isOverlay: D }) => /* @__PURE__ */ e.jsxs("div", { className: D ? "cms:rounded-md cms:bg-card cms:shadow-md" : "", children: [
-    p(x[B], w, x[B].depth),
-    !D && !r && ne(x, B).length > 0 && M(B)
+  ] }), z = (k) => /* @__PURE__ */ e.jsx(n.SortableList, { items: le(x, k), getId: (F) => x[F].id, getLabel: (F) => x[F].title ?? x[F].fallback, disabled: r, onReorder: (F) => f(k, F), className: "cms:gap-0", children: (F, { handle: L, isOverlay: S }) => /* @__PURE__ */ e.jsxs("div", { className: S ? "cms:rounded-md cms:bg-card cms:shadow-md" : "", children: [
+    p(x[F], L, x[F].depth),
+    !S && !r && le(x, F).length > 0 && z(F)
   ] }) });
   return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-4", children: [
-    /* @__PURE__ */ e.jsx($.Head, { title: s.title }),
+    /* @__PURE__ */ e.jsx(C.Head, { title: s.title }),
     m,
     /* @__PURE__ */ e.jsx(
       n.PageHeader,
       {
         title: r ? /* @__PURE__ */ e.jsx(n.TrashTitle, { children: s.title }) : s.title,
-        primary: !r && /* @__PURE__ */ e.jsx(n.Button, { asChild: !0, children: /* @__PURE__ */ e.jsxs($.Link, { href: `${v}/create?locale=${encodeURIComponent(i)}`, children: [
-          /* @__PURE__ */ e.jsx(G, {}),
+        primary: !r && /* @__PURE__ */ e.jsx(n.Button, { asChild: !0, children: /* @__PURE__ */ e.jsxs(C.Link, { href: `${b}/create?locale=${encodeURIComponent(i)}`, children: [
+          /* @__PURE__ */ e.jsx(J, {}),
           " ",
           t("New term")
         ] }) }),
         menu: [
-          ...b.map((S) => ({ label: S.title, href: S.url, group: t("Used by collections") })),
-          ...s.settings ? [{ label: t("Taxonomy settings"), href: s.settings, icon: /* @__PURE__ */ e.jsx(ts, {}), group: t("Structure") }] : [],
-          ...s.blueprint ? [{ label: t("Edit blueprint"), href: s.blueprint, icon: /* @__PURE__ */ e.jsx(gt, {}), group: t("Structure") }] : []
+          ...y.map((k) => ({ label: k.title, href: k.url, group: t("Used by collections") })),
+          ...(s.indexPages ?? []).map((k) => ({ label: k.collection === null ? t("Index page") : t("Index page: :collection", { collection: k.title }), href: k.url, icon: /* @__PURE__ */ e.jsx(on, {}), group: t("Pages") })),
+          ...s.settings ? [{ label: t("Taxonomy settings"), href: s.settings, icon: /* @__PURE__ */ e.jsx(Ie, {}), group: t("Structure") }] : [],
+          ...s.blueprint ? [{ label: t("Edit blueprint"), href: s.blueprint, icon: /* @__PURE__ */ e.jsx(ft, {}), group: t("Structure") }] : []
         ],
-        children: a.length > 1 && /* @__PURE__ */ e.jsxs(n.Select, { value: s.handle, onValueChange: (S) => $.router.get(A(`cms/taxonomies/${S}/terms`)), children: [
+        children: a.length > 1 && /* @__PURE__ */ e.jsxs(n.Select, { value: s.handle, onValueChange: (k) => C.router.get(I(`cms/taxonomies/${k}/terms`)), children: [
           /* @__PURE__ */ e.jsx(n.SelectTrigger, { className: "cms:w-48", "aria-label": t("Taxonomy"), children: /* @__PURE__ */ e.jsx(n.SelectValue, {}) }),
-          /* @__PURE__ */ e.jsx(n.SelectContent, { children: a.map((S) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: S.handle, children: S.title }, S.handle)) })
+          /* @__PURE__ */ e.jsx(n.SelectContent, { children: a.map((k) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: k.handle, children: k.title }, k.handle)) })
         ] })
       }
     ),
-    r && /* @__PURE__ */ e.jsx(n.TrashBanner, { items: t("terms"), onBack: () => $.router.get(v, { locale: i }), backLabel: t("Back to terms") }),
+    r && /* @__PURE__ */ e.jsx(n.TrashBanner, { items: t("terms"), onBack: () => C.router.get(b, { locale: i }), backLabel: t("Back to terms") }),
     /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-wrap cms:items-center cms:gap-3", children: [
       /* @__PURE__ */ e.jsxs("div", { className: "cms:relative cms:w-full cms:max-w-xs", children: [
-        /* @__PURE__ */ e.jsx(ye, { className: "cms:pointer-events-none cms:absolute cms:top-1/2 cms:left-3 cms:size-4 cms:-translate-y-1/2 cms:text-muted-foreground" }),
+        /* @__PURE__ */ e.jsx(ke, { className: "cms:pointer-events-none cms:absolute cms:top-1/2 cms:left-3 cms:size-4 cms:-translate-y-1/2 cms:text-muted-foreground" }),
         /* @__PURE__ */ e.jsx(
           n.Input,
           {
@@ -5230,23 +5296,23 @@ function Ql({ taxonomy: s, taxonomies: a, terms: l, locales: c, locale: i, trash
             placeholder: t("Search terms…"),
             "aria-label": t("Search terms"),
             value: o,
-            onChange: (S) => g(S.target.value)
+            onChange: (k) => g(k.target.value)
           }
         )
       ] }),
-      c.length > 1 && /* @__PURE__ */ e.jsxs(n.Select, { value: i, onValueChange: (S) => $.router.get(v, { locale: S, ...r ? { status: "trashed" } : {} }), children: [
+      c.length > 1 && /* @__PURE__ */ e.jsxs(n.Select, { value: i, onValueChange: (k) => C.router.get(b, { locale: k, ...r ? { status: "trashed" } : {} }), children: [
         /* @__PURE__ */ e.jsx(n.SelectTrigger, { className: "cms:w-40", "aria-label": t("Language"), children: /* @__PURE__ */ e.jsx(n.SelectValue, {}) }),
-        /* @__PURE__ */ e.jsx(n.SelectContent, { children: c.map((S) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: S, children: O(S) }, S)) })
+        /* @__PURE__ */ e.jsx(n.SelectContent, { children: c.map((k) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: k, children: V(k) }, k)) })
       ] }),
-      !r && /* @__PURE__ */ e.jsxs(n.Button, { variant: "ghost", className: "cms:ml-auto cms:order-last", onClick: () => $.router.get(v, { locale: i, status: "trashed" }), children: [
-        /* @__PURE__ */ e.jsx(q, {}),
+      !r && /* @__PURE__ */ e.jsxs(n.Button, { variant: "ghost", className: "cms:ml-auto cms:order-last", onClick: () => C.router.get(b, { locale: i, status: "trashed" }), children: [
+        /* @__PURE__ */ e.jsx(K, {}),
         " ",
         t("Trash")
       ] }),
-      !r && x.length > 1 && !_ && /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: s.hierarchical ? t("Drag terms to set their order; a term's parent is set in its editor (Under).") : t("Drag terms to set their order.") })
+      !r && x.length > 1 && !T && /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: s.hierarchical ? t("Drag terms to set their order; a term's parent is set in its editor (Under).") : t("Drag terms to set their order.") })
     ] }),
     /* @__PURE__ */ e.jsxs(n.Card, { className: "cms:gap-0 cms:overflow-hidden cms:py-0", children: [
-      /* @__PURE__ */ e.jsxs("div", { className: `${Ms} cms:bg-muted/60 cms:px-3 cms:py-2.5 cms:text-sm cms:font-medium cms:text-muted-foreground`, children: [
+      /* @__PURE__ */ e.jsxs("div", { className: `${Bs} cms:bg-muted/60 cms:px-3 cms:py-2.5 cms:text-sm cms:font-medium cms:text-muted-foreground`, children: [
         /* @__PURE__ */ e.jsx("span", {}),
         /* @__PURE__ */ e.jsx("span", { children: t("Title") }),
         /* @__PURE__ */ e.jsx("span", { className: "cms:hidden cms:md:block", children: t("Slug") }),
@@ -5256,82 +5322,107 @@ function Ql({ taxonomy: s, taxonomies: a, terms: l, locales: c, locale: i, trash
       ] }),
       x.length === 0 ? /* @__PURE__ */ e.jsx("div", { className: "cms:flex cms:flex-col cms:items-center cms:gap-3 cms:border-t cms:border-border/60 cms:p-10 cms:text-center cms:text-muted-foreground", children: r ? t("The trash is empty.") : /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
         t("No terms yet."),
-        /* @__PURE__ */ e.jsx(n.Button, { size: "sm", asChild: !0, children: /* @__PURE__ */ e.jsxs($.Link, { href: `${v}/create?locale=${encodeURIComponent(i)}`, children: [
-          /* @__PURE__ */ e.jsx(G, {}),
+        /* @__PURE__ */ e.jsx(n.Button, { size: "sm", asChild: !0, children: /* @__PURE__ */ e.jsxs(C.Link, { href: `${b}/create?locale=${encodeURIComponent(i)}`, children: [
+          /* @__PURE__ */ e.jsx(J, {}),
           " ",
           t("New term")
         ] }) }),
-        /* @__PURE__ */ e.jsx(n.TrashHint, { count: d, onShow: () => $.router.get(v, { locale: i, status: "trashed" }) })
-      ] }) }) : _ ? _.length === 0 ? /* @__PURE__ */ e.jsx("p", { className: "cms:border-t cms:border-border/60 cms:p-8 cms:text-center cms:text-muted-foreground", children: t("No terms match “:search”.", { search: o }) }) : _.map((S) => /* @__PURE__ */ e.jsx(T.Fragment, { children: p(S, null, 0) }, S.id)) : r ? x.map((S) => /* @__PURE__ */ e.jsx(T.Fragment, { children: p(S, null, 0) }, S.id)) : M(-1)
+        /* @__PURE__ */ e.jsx(n.TrashHint, { count: d, onShow: () => C.router.get(b, { locale: i, status: "trashed" }) })
+      ] }) }) : T ? T.length === 0 ? /* @__PURE__ */ e.jsx("p", { className: "cms:border-t cms:border-border/60 cms:p-8 cms:text-center cms:text-muted-foreground", children: t("No terms match “:search”.", { search: o }) }) : T.map((k) => /* @__PURE__ */ e.jsx(M.Fragment, { children: p(k, null, 0) }, k.id)) : r ? x.map((k) => /* @__PURE__ */ e.jsx(M.Fragment, { children: p(k, null, 0) }, k.id)) : z(-1)
     ] })
   ] });
 }
-const Ms = "cms:grid cms:items-center cms:gap-3 cms:grid-cols-[1.5rem_1fr_2.5rem] cms:md:grid-cols-[1.5rem_minmax(0,2fr)_minmax(0,1.2fr)_5rem_7rem_2.5rem]";
-function Zl(s) {
+const Bs = "cms:grid cms:items-center cms:gap-3 cms:grid-cols-[1.5rem_1fr_2.5rem] cms:md:grid-cols-[1.5rem_minmax(0,2fr)_minmax(0,1.2fr)_5rem_7rem_2.5rem]";
+function tc(s) {
   if (!s) return "—";
   const a = new Date(s);
   return Number.isNaN(a.getTime()) ? "—" : a.toLocaleDateString(document.documentElement.lang || void 0, { day: "numeric", month: "short", year: "numeric" });
 }
-function Xl(s) {
+const Te = "__shared";
+function ac({ taxonomy: s, collection: a, url: l, pages: c, settings: i, ...r }) {
+  const d = I(`cms/taxonomies/${s.handle}/terms`), u = I(`cms/taxonomies/${s.handle}/index-page/edit`), m = a ? t("Index page: :collection", { collection: a.title }) : t("Index page");
+  return /* @__PURE__ */ e.jsx(
+    Sa,
+    {
+      ...r,
+      title: `${s.title}: ${m}`,
+      breadcrumbs: [{ label: s.title, href: d }, { label: m }],
+      back: { href: d, label: t("Back to :title", { title: s.title }) },
+      saveUrl: I(`cms/taxonomies/${s.handle}/index-page`),
+      editUrl: u,
+      params: a ? { collection: a.handle } : {},
+      viewUrl: l,
+      empty: t("The index page has no fields of its own: choose its fields (Index page fields) in the taxonomy's settings under Structure → Taxonomies."),
+      seoDescription: t("How the index page appears in search results and shared links."),
+      storageKey: "cms:taxonomy-index:seo",
+      menu: i ? [{ label: t("Taxonomy settings"), href: i, icon: /* @__PURE__ */ e.jsx(Ie, {}) }] : [],
+      children: c.length > 1 && /* @__PURE__ */ e.jsxs(n.Select, { value: a?.handle ?? Te, onValueChange: (o) => C.router.get(u, { ...o === Te ? {} : { collection: o }, locale: r.locale }), children: [
+        /* @__PURE__ */ e.jsx(n.SelectTrigger, { className: "cms:w-64", "aria-label": t("Page"), children: /* @__PURE__ */ e.jsx(n.SelectValue, {}) }),
+        /* @__PURE__ */ e.jsx(n.SelectContent, { children: c.map((o) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: o.collection ?? Te, children: o.collection === null ? t("Shared index (all collections)") : t(":collection only", { collection: o.title }) }, o.collection ?? Te)) })
+      ] })
+    }
+  );
+}
+function nc(s) {
   return { done: s.filter((a) => a.trim() !== "").length, total: s.length };
 }
-function ec({ locale: s, main: a, locales: l, sections: c }) {
-  const i = A("cms/translations");
+function lc({ locale: s, main: a, locales: l, sections: c }) {
+  const i = I("cms/translations");
   n.useBreadcrumbs([{ label: t("Translations") }]);
-  const r = l.find((y) => y.code === s)?.name ?? O(s), d = $.useForm({
+  const r = l.find((v) => v.code === s)?.name ?? V(s), d = C.useForm({
     locale: s,
-    texts: Object.fromEntries(c.flatMap((y) => y.texts.map((f) => [f.key, f.value])))
-  }), [h, m] = T.useState(!1), o = d.errors, g = () => d.put(i, { preserveScroll: !0, onSuccess: () => d.setDefaults() });
+    texts: Object.fromEntries(c.flatMap((v) => v.texts.map((f) => [f.key, f.value])))
+  }), [u, m] = M.useState(!1), o = d.errors, g = () => d.put(i, { preserveScroll: !0, onSuccess: () => d.setDefaults() });
   n.useUnsavedChanges(d.isDirty, g);
-  const x = (y, f) => d.setData("texts", { ...d.data.texts, [y]: f }), u = Xl(c.flatMap((y) => y.texts.map((f) => d.data.texts[f.key] ?? ""))), v = c.map((y) => ({ ...y, texts: h ? y.texts.filter((f) => f.value.trim() === "") : y.texts })).filter((y) => y.texts.length > 0);
-  return /* @__PURE__ */ e.jsxs("form", { onSubmit: (y) => {
-    y.preventDefault(), g();
+  const x = (v, f) => d.setData("texts", { ...d.data.texts, [v]: f }), h = nc(c.flatMap((v) => v.texts.map((f) => d.data.texts[f.key] ?? ""))), b = c.map((v) => ({ ...v, texts: u ? v.texts.filter((f) => f.value.trim() === "") : v.texts })).filter((v) => v.texts.length > 0);
+  return /* @__PURE__ */ e.jsxs("form", { onSubmit: (v) => {
+    v.preventDefault(), g();
   }, className: "cms:flex cms:max-w-5xl cms:flex-col cms:gap-6", children: [
-    /* @__PURE__ */ e.jsx($.Head, { title: t("Translations") }),
+    /* @__PURE__ */ e.jsx(C.Head, { title: t("Translations") }),
     /* @__PURE__ */ e.jsx(
       n.PageHeader,
       {
         title: t("Translations"),
-        description: t("Translate the site's own texts that aren't entries: they show on listing pages, forms and menus. Left empty, the :main text shows.", { main: O(a) })
+        description: t("Translate the site's own texts that aren't entries: they show on listing pages, forms and menus. Left empty, the :main text shows.", { main: V(a) })
       }
     ),
     /* @__PURE__ */ e.jsx(n.Card, { className: "cms:sticky cms:top-16 cms:z-10 cms:py-3 cms:shadow-sm", children: /* @__PURE__ */ e.jsxs(n.CardContent, { className: "cms:flex cms:flex-wrap cms:items-center cms:gap-x-4 cms:gap-y-2", children: [
-      l.length > 1 ? /* @__PURE__ */ e.jsxs(n.Select, { value: s, onValueChange: (y) => $.router.get(i, { locale: y }), children: [
+      l.length > 1 ? /* @__PURE__ */ e.jsxs(n.Select, { value: s, onValueChange: (v) => C.router.get(i, { locale: v }), children: [
         /* @__PURE__ */ e.jsx(n.SelectTrigger, { "aria-label": t("Language"), className: "cms:w-48", children: /* @__PURE__ */ e.jsx(n.SelectValue, {}) }),
-        /* @__PURE__ */ e.jsx(n.SelectContent, { children: l.map((y) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: y.code, children: y.name }, y.code)) })
+        /* @__PURE__ */ e.jsx(n.SelectContent, { children: l.map((v) => /* @__PURE__ */ e.jsx(n.SelectItem, { value: v.code, children: v.name }, v.code)) })
       ] }) : /* @__PURE__ */ e.jsx("span", { className: "cms:font-medium", children: r }),
-      /* @__PURE__ */ e.jsx("span", { className: "cms:text-sm cms:text-muted-foreground", "aria-live": "polite", children: t(":done of :total translated into :language", { done: u.done, total: u.total, language: r }) }),
+      /* @__PURE__ */ e.jsx("span", { className: "cms:text-sm cms:text-muted-foreground", "aria-live": "polite", children: t(":done of :total translated into :language", { done: h.done, total: h.total, language: r }) }),
       /* @__PURE__ */ e.jsxs("span", { className: "cms:flex cms:items-center cms:gap-2", children: [
-        /* @__PURE__ */ e.jsx(n.Switch, { id: "untranslated-only", checked: h, onCheckedChange: (y) => m(y) }),
+        /* @__PURE__ */ e.jsx(n.Switch, { id: "untranslated-only", checked: u, onCheckedChange: (v) => m(v) }),
         /* @__PURE__ */ e.jsx(n.Label, { htmlFor: "untranslated-only", className: "cms:font-normal", children: t("Only untranslated") })
       ] }),
       /* @__PURE__ */ e.jsxs("span", { className: "cms:ml-auto cms:flex cms:items-center cms:gap-3", children: [
         d.isDirty && /* @__PURE__ */ e.jsx("span", { className: "cms:text-sm cms:text-muted-foreground", children: t("Unsaved changes") }),
         /* @__PURE__ */ e.jsxs(n.Button, { type: "submit", disabled: d.processing, children: [
-          d.processing && /* @__PURE__ */ e.jsx(le, { className: "cms:animate-spin" }),
+          d.processing && /* @__PURE__ */ e.jsx(ce, { className: "cms:animate-spin" }),
           " ",
           t("Save")
         ] })
       ] })
     ] }) }),
-    /* @__PURE__ */ e.jsx(H, { message: o.locale }),
-    v.length === 0 && /* @__PURE__ */ e.jsx("p", { className: "cms:py-8 cms:text-center cms:text-sm cms:text-muted-foreground", children: h ? t("Everything is translated into :language.", { language: r }) : t("Nothing to translate yet.") }),
-    v.map((y) => /* @__PURE__ */ e.jsx(
+    /* @__PURE__ */ e.jsx(O, { message: o.locale }),
+    b.length === 0 && /* @__PURE__ */ e.jsx("p", { className: "cms:py-8 cms:text-center cms:text-sm cms:text-muted-foreground", children: u ? t("Everything is translated into :language.", { language: r }) : t("Nothing to translate yet.") }),
+    b.map((v) => /* @__PURE__ */ e.jsx(
       n.CollapsibleCard,
       {
-        title: y.hint ? /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
-          y.title,
+        title: v.hint ? /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
+          v.title,
           " ",
           /* @__PURE__ */ e.jsxs("span", { className: "cms:font-normal cms:text-muted-foreground", children: [
             "· ",
-            y.hint
+            v.hint
           ] })
-        ] }) : y.title,
+        ] }) : v.title,
         titleClassName: "cms:text-base",
-        storageKey: `cms:translations:${y.key}`,
+        storageKey: `cms:translations:${v.key}`,
         contentClassName: "cms:flex cms:flex-col cms:divide-y cms:divide-border/60",
-        children: y.texts.map((f) => {
-          const j = `text-${f.key.replace(/[^A-Za-z0-9_-]/g, "-")}`, C = o[`texts.${f.key}`], _ = d.data.texts[f.key] ?? "";
+        children: v.texts.map((f) => {
+          const j = `text-${f.key.replace(/[^A-Za-z0-9_-]/g, "-")}`, _ = o[`texts.${f.key}`], T = d.data.texts[f.key] ?? "";
           return /* @__PURE__ */ e.jsxs("div", { className: "cms:grid cms:gap-2 cms:py-3 cms:first:pt-0 cms:last:pb-0 cms:md:grid-cols-2 cms:md:gap-4", children: [
             /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:min-w-0 cms:flex-col cms:gap-0.5", children: [
               /* @__PURE__ */ e.jsx(n.Label, { htmlFor: j, lang: a, className: "cms:break-words cms:whitespace-pre-line", children: f.source }),
@@ -5339,7 +5430,7 @@ function ec({ locale: s, main: a, locales: l, sections: c }) {
                 f.label && /* @__PURE__ */ e.jsx("span", { children: f.label }),
                 f.url && /* @__PURE__ */ e.jsxs("a", { href: f.url, target: "_blank", rel: "noopener noreferrer", className: "cms:inline-flex cms:items-center cms:gap-1 cms:underline-offset-4 cms:hover:text-foreground cms:hover:underline", children: [
                   t("View"),
-                  /* @__PURE__ */ e.jsx(xe, { className: "cms:size-3", "aria-hidden": !0 })
+                  /* @__PURE__ */ e.jsx(ge, { className: "cms:size-3", "aria-hidden": !0 })
                 ] })
               ] })
             ] }),
@@ -5350,55 +5441,56 @@ function ec({ locale: s, main: a, locales: l, sections: c }) {
                   id: j,
                   rows: 2,
                   lang: s,
-                  value: _,
-                  "aria-invalid": C !== void 0,
+                  value: T,
+                  "aria-invalid": _ !== void 0,
                   "aria-description": t("In :language", { language: r }),
-                  onChange: (b) => x(f.key, b.target.value)
+                  onChange: (y) => x(f.key, y.target.value)
                 }
               ) : /* @__PURE__ */ e.jsx(
                 n.Input,
                 {
                   id: j,
                   lang: s,
-                  value: _,
-                  "aria-invalid": C !== void 0,
+                  value: T,
+                  "aria-invalid": _ !== void 0,
                   "aria-description": t("In :language", { language: r }),
-                  onChange: (b) => x(f.key, b.target.value)
+                  onChange: (y) => x(f.key, y.target.value)
                 }
               ),
-              /* @__PURE__ */ e.jsx(H, { message: C })
+              /* @__PURE__ */ e.jsx(O, { message: _ })
             ] })
           ] }, f.key);
         })
       },
-      y.key
+      v.key
     ))
   ] });
 }
-function sc(s) {
+function cc(s) {
   return function(l) {
-    const c = $.usePage().props.cms;
-    return Ba(c?.locales), /* @__PURE__ */ e.jsx(s, { ...l });
+    const c = C.usePage().props.cms;
+    return Ea(c?.locales), /* @__PURE__ */ e.jsx(s, { ...l });
   };
 }
-const tc = {
-  "Cms/Blueprints/Index": tl,
-  "Cms/Blueprints/Edit": Cs,
-  "Cms/Fieldsets/Index": _l,
+const rc = {
+  "Cms/Blueprints/Index": cl,
+  "Cms/Blueprints/Edit": $s,
+  "Cms/Fieldsets/Index": Ml,
   // A fieldset is edited like a blueprint.
-  "Cms/Fieldsets/Edit": Cs,
-  "Cms/Entries/Index": vl,
-  "Cms/Entries/Edit": ll,
-  "Cms/Listing/Edit": Cl,
-  "Cms/Terms/Index": Ql,
-  "Cms/Translations/Edit": ec,
-  "Cms/Terms/Edit": Yl,
-  "Cms/Globals/Edit": Dl,
-  "Cms/Menus/Edit": Il,
-  "Cms/Comments/Index": Rl,
-  "Cms/Seo/Edit": Kl,
-  "Cms/Submissions/Index": Gl
+  "Cms/Fieldsets/Edit": $s,
+  "Cms/Entries/Index": wl,
+  "Cms/Entries/Edit": ol,
+  "Cms/Listing/Edit": zl,
+  "Cms/Terms/Index": sc,
+  "Cms/TaxonomyIndex/Edit": ac,
+  "Cms/Translations/Edit": lc,
+  "Cms/Terms/Edit": Xl,
+  "Cms/Globals/Edit": Bl,
+  "Cms/Menus/Edit": Hl,
+  "Cms/Comments/Index": Wl,
+  "Cms/Seo/Edit": Yl,
+  "Cms/Submissions/Index": Zl
 };
-Ta({
-  pages: Object.fromEntries(Object.entries(tc).map(([s, a]) => [s, sc(a)]))
+La({
+  pages: Object.fromEntries(Object.entries(rc).map(([s, a]) => [s, cc(a)]))
 });

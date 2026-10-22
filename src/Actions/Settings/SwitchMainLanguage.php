@@ -12,6 +12,7 @@ use Sunrice\Cms\Actions\Entries\EntryInput;
 use Sunrice\Cms\Fields\Schema;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\CollectionListing;
+use Sunrice\Cms\Models\CollectionTaxonomy;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Form;
@@ -19,6 +20,7 @@ use Sunrice\Cms\Models\GlobalValue;
 use Sunrice\Cms\Models\MenuItem;
 use Sunrice\Cms\Models\Redirect;
 use Sunrice\Cms\Models\Taxonomy;
+use Sunrice\Cms\Models\TaxonomyListing;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Settings\LocaleSettings;
@@ -31,7 +33,7 @@ use Throwable;
  * Makes another content language the main one once content exists
  * (`php artisan sunrice:switch-main-language`), so nothing is lost:
  *
- * - Entries (live and draft), terms, globals and listing pages: the
+ * - Entries (live and draft), terms, globals, listing pages and taxonomy index pages: the
  *   values all languages share move from the old main language to the
  *   new one, which then holds them (shared fields in translated rows and
  *   blocks too, for entries); the old main language keeps only its text.
@@ -75,7 +77,7 @@ final class SwitchMainLanguage
             'missing_terms' => TermTranslation::query()->where('locale', $from)
                 ->whereNotIn('term_id', TermTranslation::query()->select('term_id')->where('locale', $to))->count(),
             'globals' => GlobalValue::query()->where('locale', $from)->count(),
-            'listings' => CollectionListing::query()->where('locale', $from)->count(),
+            'listings' => CollectionListing::query()->where('locale', $from)->count() + TaxonomyListing::query()->where('locale', $from)->count(),
         ];
     }
 
@@ -111,6 +113,10 @@ final class SwitchMainLanguage
                 $this->counts['listings'] = $this->values(CollectionListing::query()->where('locale', $from)->with('collection')->get()->all(), $to,
                     fn (CollectionListing $listing): Schema => $listing->collection->listingSchema(),
                     fn (CollectionListing $listing): CollectionListing => CollectionListing::query()->firstOrNew(['collection_id' => $listing->collection_id, 'locale' => $to], ['data' => []]));
+                // Taxonomy index pages count as listing pages.
+                $this->counts['listings'] += $this->values(TaxonomyListing::query()->where('locale', $from)->with('taxonomy')->get()->all(), $to,
+                    fn (TaxonomyListing $page): Schema => $page->taxonomy->indexSchema(),
+                    fn (TaxonomyListing $page): TaxonomyListing => TaxonomyListing::query()->firstOrNew(['taxonomy_id' => $page->taxonomy_id, 'collection_id' => $page->collection_id, 'locale' => $to], ['data' => []]));
                 $this->counts['menu_items'] = $this->menus($from, $to);
                 $this->texts($from, $to);
                 $this->counts['redirects'] = $this->redirects($from, $to);
@@ -249,9 +255,9 @@ final class SwitchMainLanguage
     }
 
     /**
-     * Globals or listing pages: the shared values move to the new main language's row.
+     * Globals, listing pages or taxonomy index pages: the shared values move to the new main language's row.
      *
-     * @template T of GlobalValue|CollectionListing
+     * @template T of GlobalValue|CollectionListing|TaxonomyListing
      *
      * @param  array<int, T>  $rows  the old main language's
      * @param  \Closure(T): Schema  $schema
@@ -267,7 +273,7 @@ final class SwitchMainLanguage
     }
 
     /** Top-level shared fields from the old main language's row to the new one's (terms, globals, listing pages). */
-    private function moveShared(Schema $schema, TermTranslation|GlobalValue|CollectionListing $old, TermTranslation|GlobalValue|CollectionListing $new): void
+    private function moveShared(Schema $schema, TermTranslation|GlobalValue|CollectionListing|TaxonomyListing $old, TermTranslation|GlobalValue|CollectionListing|TaxonomyListing $new): void
     {
         $shared = array_flip($schema->shared());
         $oldData = $old->data ?? [];
@@ -344,6 +350,7 @@ final class SwitchMainLanguage
      */
     private function patterns(string $from, string $to): void
     {
+        $this->pivotPatterns($from, $to);
         $changes = [];
         foreach ([Collection::query()->withTrashed(), Taxonomy::query()->withTrashed()] as $query) {
             foreach ($query->whereNotNull('routes')->get() as $record) {
@@ -372,6 +379,44 @@ final class SwitchMainLanguage
                 $record->setOwnRoute($to, null, $attribute)->setOwnRoute($from, $old, $attribute);
             }
             $record->save();
+        }
+    }
+
+    /**
+     * Taxonomies' term page patterns and index page addresses in
+     * collections (CollectionTaxonomy): the new main language's own become
+     * the ones set, and the old main language keeps what it had as its
+     * own (the default worked out now, before the collections' patterns
+     * swap, when none was set).
+     */
+    private function pivotPatterns(string $from, string $to): void
+    {
+        foreach (Taxonomy::query()->withTrashed()->with(['collections' => fn ($q) => $q->withTrashed()])->get() as $taxonomy) {
+            foreach ($taxonomy->collections as $collection) {
+                $pivot = $collection->getRelation('pivot');
+                if (! $pivot instanceof CollectionTaxonomy) {
+                    continue;
+                }
+                $changes = [];
+                foreach ([['term_route', 'term_routes'], ['index_route', 'index_routes']] as [$main, $own]) {
+                    $routes = $pivot->getAttribute($own);
+                    $routes = is_array($routes) ? $routes : [];
+                    $new = $routes[$to] ?? null;
+                    if (! is_string($new) || $new === '') {
+                        continue;
+                    }
+                    $old = $pivot->getAttribute($main);
+                    $old = is_string($old) && $old !== '' ? $old
+                        : ($main === 'term_route' ? CollectionTaxonomy::defaultPattern($collection, $taxonomy, $from) : CollectionTaxonomy::defaultIndexPath($collection, $taxonomy, $from));
+                    unset($routes[$to]);
+                    $routes[$from] = $old;
+                    $changes[$main] = $new;
+                    $changes[$own] = $routes;
+                }
+                if ($changes !== []) {
+                    $taxonomy->collections()->updateExistingPivot($collection->id, $changes);
+                }
+            }
         }
     }
 

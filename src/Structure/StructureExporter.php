@@ -20,6 +20,7 @@ use Sunrice\Cms\Models\Menu;
 use Sunrice\Cms\Models\MenuItem;
 use Sunrice\Cms\Models\Redirect;
 use Sunrice\Cms\Models\Taxonomy;
+use Sunrice\Cms\Models\TaxonomyListing;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Support\Locales;
@@ -27,7 +28,7 @@ use Sunrice\Cms\Support\Locales;
 /**
  * The site's structure as an array StructureImporter takes (and
  * `sunrice:export-structure` writes as JSON): fieldsets, blueprints,
- * collections with their listing pages, taxonomies, global sets, forms,
+ * collections with their listing pages, taxonomies with their index pages, global sets, forms,
  * menus and redirects, by handle. With $content, also terms, entries
  * (drafts, every language) and global values. Records point at each
  * other by handle and slug ("pages/about"), not by id, and so do field
@@ -65,8 +66,10 @@ final class StructureExporter
                 ...($c->translations !== null ? ['translations' => $c->translations] : []),
                 ...($c->routes !== null ? ['routes' => $c->routes] : []),
             ])->all(),
-            'taxonomies' => Taxonomy::query()->with('collections')->orderBy('handle')->get()->map(fn (Taxonomy $t): array => [
+            'taxonomies' => Taxonomy::query()->with('collections', 'listings')->orderBy('handle')->get()->map(fn (Taxonomy $t): array => [
                 ...array_diff_key($t->only(StructureImporter::TAXONOMY), ['translations' => true, 'routes' => true]),
+                // The shared index page's fields, per language.
+                ...(($shared = $this->indexValues($t, null)) !== [] ? ['listings' => (object) $shared] : []),
                 'collections' => $t->collections->pluck('handle')->sort()->values()->all(),
                 ...($t->collections->isNotEmpty() ? ['collection_pages' => (object) $this->collectionPages($t)] : []),
                 ...($t->translations !== null ? ['translations' => $t->translations] : []),
@@ -146,7 +149,7 @@ final class StructureExporter
         $trashed = fn (BelongsTo $query) => $query->withoutGlobalScope(SoftDeletingScope::class);
         foreach (Menu::query()->with([
             'items.entry' => $trashed, 'items.entry.collection' => $trashed, 'items.entry.translations',
-            'items.term' => $trashed, 'items.term.taxonomy' => $trashed, 'items.term.translations', 'items.collection' => $trashed,
+            'items.term' => $trashed, 'items.term.taxonomy' => $trashed, 'items.term.translations', 'items.collection' => $trashed, 'items.taxonomy' => $trashed,
         ])->orderBy('handle')->get() as $menu) {
             $menus[] = ['handle' => $menu->handle, 'title' => $menu->title, 'items' => $this->items($menu->items->all(), null)];
         }
@@ -164,7 +167,11 @@ final class StructureExporter
         foreach (collect($items)->where('parent_id', $parent)->sortBy('sort_order') as $item) {
             $target = match (true) {
                 $item->entry_id !== null => $item->entry === null ? null : ['entry' => $item->entry->collection->handle.'/'.self::entrySlug($item->entry)],
-                $item->term_id !== null => $item->term === null ? null : ['term' => $item->term->taxonomy->handle.'/'.self::mainSlug($item->term)],
+                $item->term_id !== null => $item->term === null ? null : ['term' => $item->term->taxonomy->handle.'/'.self::mainSlug($item->term)]
+                    + ($item->collection !== null ? ['collection' => $item->collection->handle] : []),
+                // A taxonomy's index page: the shared one, or a collection's.
+                $item->taxonomy_id !== null => $item->taxonomy === null || ($item->collection_id !== null && $item->collection === null) ? null
+                    : ['index' => $item->taxonomy->handle] + ($item->collection !== null ? ['collection' => $item->collection->handle] : []),
                 $item->collection_id !== null => $item->collection === null ? null : ['collection' => $item->collection->handle],
                 $item->url !== null => ['url' => $item->url],
                 default => null,
@@ -189,8 +196,21 @@ final class StructureExporter
     }
 
     /**
-     * Each attached collection's term pages: whether it has them, and its
-     * own URL patterns when it has some.
+     * An index page's fields per language (the shared one's: collection
+     * null), written portably.
+     *
+     * @return array<string, array<mixed>>
+     */
+    private function indexValues(Taxonomy $taxonomy, ?int $collection): array
+    {
+        return $taxonomy->listings->filter(fn (TaxonomyListing $page): bool => $page->collection_id === $collection)->sortBy('locale')
+            ->mapWithKeys(fn (TaxonomyListing $page): array => [$page->locale => $this->references->portable($taxonomy->indexSchema(), $page->data) ?? []])->all();
+    }
+
+    /**
+     * Each attached collection's term pages and index page: whether it has
+     * them, their own URL patterns when it has some, and the index page's
+     * fields.
      *
      * @return array<string, array<string, mixed>>
      */
@@ -200,9 +220,14 @@ final class StructureExporter
         foreach ($taxonomy->collections->sortBy('handle') as $collection) {
             $pivot = $collection->getRelation('pivot');
             if ($pivot instanceof CollectionTaxonomy) {
+                $values = $this->indexValues($taxonomy, $collection->id);
                 $pages[$collection->handle] = ['pages' => $pivot->term_pages]
                     + ($pivot->term_route !== null ? ['route' => $pivot->term_route] : [])
-                    + ($pivot->term_routes !== null ? ['routes' => $pivot->term_routes] : []);
+                    + ($pivot->term_routes !== null ? ['routes' => $pivot->term_routes] : [])
+                    + ['index' => $pivot->index_page]
+                    + ($pivot->index_route !== null ? ['index_route' => $pivot->index_route] : [])
+                    + ($pivot->index_routes !== null ? ['index_routes' => $pivot->index_routes] : [])
+                    + ($values !== [] ? ['listings' => (object) $values] : []);
             }
         }
 

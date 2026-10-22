@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sunrice\Cms\Site;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -17,6 +18,7 @@ use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
+use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Query\EntryPaginator;
 use Sunrice\Cms\Settings\SiteSettings;
@@ -48,6 +50,11 @@ final class SiteController
         $listing = $site->listing($request->path());
         if ($listing !== null) {
             return $this->renderListing($listing, $request);
+        }
+        // Taxonomies' index pages (/tags, /books/tags): fixed too.
+        $index = $site->taxonomyIndex($request->path());
+        if ($index !== null) {
+            return $this->renderIndex($index);
         }
         $page = $site->match($request->path());
         // The address's language: another than the page's when it stands in for a translation (Site::fallback()).
@@ -265,6 +272,59 @@ final class SiteController
             'richText' => array_values(array_map(fn (Field $field): string => $field->handle, array_filter($schema->fields(), fn (Field $field): bool => $field->type === 'rich_text'))),
             'locale' => $listing->locale,
             'url' => $collection->listingUrl($listing->locale),
+        ]));
+    }
+
+    /**
+     * A taxonomy's index page: its terms (out of the trash), in their
+     * order, each with how many live entries it has in the language
+     * (`entries_count`) and its page; a collection's lists only the terms
+     * its entries have, counted there, linking to their pages in it when
+     * it has term pages (Term::url() follows the page shown).
+     */
+    private function renderIndex(TaxonomyIndex $index): Response
+    {
+        $locale = $index->locale;
+        app()->setLocale($locale);
+        $taxonomy = $index->taxonomy;
+        $collection = $index->collection;
+        $taxonomy->load('listings');
+        /** @param Builder<Entry> $entries */
+        $live = fn (Builder $entries) => $entries->when($collection !== null, fn (Builder $q) => $q->where('sunrice_entries.collection_id', $collection?->id))
+            ->whereHas('translations', fn (Builder $q) => $q->whereIn('id', EntryTranslation::query()->live()->shownIn($locale)->select('id')));
+        $terms = Term::query()->where('taxonomy_id', $taxonomy->id)->with('translations')->withCount(['entries' => $live])
+            ->when($collection !== null, fn ($q) => $q->whereHas('entries', $live))
+            ->orderBy('sort_order')->orderBy('id')->get();
+        // Their links need no queries of their own.
+        foreach ($terms as $term) {
+            $term->setRelation('taxonomy', $taxonomy);
+            foreach ($term->translations as $translation) {
+                $translation->setRelation('term', $term);
+            }
+        }
+        $schema = $taxonomy->indexSchema();
+
+        // In a collection cms.{collection}.{taxonomy}-index, then cms.taxonomy-{handle}-index, cms.taxonomy-index, the CMS's plain one.
+        $view = 'sunrice-cms::taxonomy-index';
+        foreach (array_filter([$collection !== null ? "cms.{$collection->handle}.{$taxonomy->handle}-index" : null, "cms.taxonomy-{$taxonomy->handle}-index", 'cms.taxonomy-index']) as $candidate) {
+            if (View::exists($candidate)) {
+                $view = $candidate;
+
+                break;
+            }
+        }
+        $view = (new Page(Page::TAXONOMY, $locale, $view, collection: $collection, taxonomy: $taxonomy))->share()->view;
+
+        return $this->hidden(self::renderView($view, [
+            'taxonomy' => $taxonomy,
+            // The collection whose index page this is; null on the shared one.
+            'collection' => $collection,
+            'title' => $taxonomy->titleIn($locale),
+            'terms' => $terms,
+            'values' => $schema->hydrate($taxonomy->indexData($locale, $collection, $schema), new HydrationContext($locale)),
+            'richText' => array_values(array_map(fn (Field $field): string => $field->handle, array_filter($schema->fields(), fn (Field $field): bool => $field->type === 'rich_text'))),
+            'locale' => $locale,
+            'url' => $taxonomy->indexUrl($locale, $collection),
         ]));
     }
 

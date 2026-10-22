@@ -12,8 +12,10 @@ use Sunrice\Cms\Models\Taxonomy;
  * Whether something else has a URL pattern in a language already: another
  * collection (or taxonomy) of the same kind, its own there, else its main
  * one; for entry and term page patterns also the other kind's, and
- * taxonomies' term pages in collections (/books/tags/{slug}). Two of them
- * with the same pattern in a language would share its addresses.
+ * taxonomies' term pages in collections (/books/tags/{slug}); for listing
+ * pages and taxonomies' index pages (fixed addresses) each other, and
+ * index pages in collections (/books/tags). Two of them with the same
+ * pattern in a language would share its addresses.
  *
  * @internal
  */
@@ -33,7 +35,8 @@ final class RouteConflicts
             }
         }
         if ($attribute !== 'route') {
-            return null;
+            // Listing pages and taxonomies' index pages: fixed addresses, which must differ from each other.
+            return self::fixedPages($locale, $pattern, $record instanceof Collection ? 'listing_route' : 'index_route', $record->exists ? $record->id : null);
         }
         // Entries' and shared term pages' patterns against each other, and both against collections' term pages.
         $others = $record instanceof Collection ? Taxonomy::query()->withTrashed() : Collection::query()->withTrashed();
@@ -62,6 +65,49 @@ final class RouteConflicts
         }
 
         return self::termPages($locale, $pattern, [$collection->id, $taxonomy->id]);
+    }
+
+    /**
+     * What else has an address for a taxonomy's index page in a collection
+     * in a language: listing pages, shared index pages and other
+     * collections' index pages.
+     */
+    public static function forIndexPage(Collection $collection, Taxonomy $taxonomy, string $locale, string $path): ?string
+    {
+        return self::fixedPages($locale, $path, except: [$collection->id, $taxonomy->id]);
+    }
+
+    /**
+     * What has a fixed address in a language: a collection's listing page,
+     * a taxonomy's shared index page, or its index page in a collection
+     * ("Books · Tags"), but the one left out (an attribute's record by id,
+     * or a collection's and a taxonomy's pair).
+     *
+     * @param  'listing_route'|'index_route'|null  $attribute
+     * @param  array{0: int, 1: int}|null  $except
+     */
+    private static function fixedPages(string $locale, string $path, ?string $attribute = null, ?int $id = null, ?array $except = null): ?string
+    {
+        foreach (Collection::query()->withTrashed()->whereNotNull('listing_route')->get() as $collection) {
+            if (! ($attribute === 'listing_route' && $collection->id === $id) && $collection->routeIn($locale, 'listing_route') === $path) {
+                return $collection->title;
+            }
+        }
+        foreach (Taxonomy::query()->withTrashed()->whereNotNull('index_route')->get() as $taxonomy) {
+            if (! ($attribute === 'index_route' && $taxonomy->id === $id) && $taxonomy->routeIn($locale, 'index_route') === $path) {
+                return $taxonomy->title;
+            }
+        }
+        foreach (Taxonomy::query()->withTrashed()->with(['collections' => fn ($q) => $q->withTrashed()->wherePivot('index_page', true)])->get() as $taxonomy) {
+            foreach ($taxonomy->collections as $collection) {
+                $pivot = $collection->getRelation('pivot');
+                if ($pivot instanceof CollectionTaxonomy && $except !== [$collection->id, $taxonomy->id] && $pivot->indexPath($collection, $taxonomy, $locale) === $path) {
+                    return $collection->title.' · '.$taxonomy->title;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**

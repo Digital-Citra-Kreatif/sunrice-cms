@@ -30,6 +30,7 @@ use Sunrice\Cms\Models\GlobalValue;
 use Sunrice\Cms\Models\Revision;
 use Sunrice\Cms\Models\Submission;
 use Sunrice\Cms\Models\Taxonomy;
+use Sunrice\Cms\Models\TaxonomyListing;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Support\References;
 use Sunrice\Cms\Support\SearchText;
@@ -39,7 +40,7 @@ use Sunrice\Cms\Support\SiteCache;
  * Renames a field of a blueprint or a fieldset, also inside groups and
  * repeaters ("hero.title"), and moves what content stores under the old
  * handle to the new one: entries (draft, live and revisions), terms,
- * global sets, listing pages and form submissions, wherever the field is,
+ * global sets, listing pages, taxonomy index pages and form submissions, wherever the field is,
  * a fieldset's fields included in blueprints or used as flexible blocks
  * too. References and search text are rebuilt for what changed. With
  * $dryRun nothing is written; the counts say what would change.
@@ -360,6 +361,7 @@ final class RenameFieldHandle
         $this->each(GlobalValue::query()->with('globalSet')->whereIn('global_set_id', GlobalSet::query()->where('blueprint', $blueprint)->select('id')), ['data'], $rename, $dryRun, $counts['globals'],
             fn (GlobalValue $value) => References::global($value));
         $this->each(CollectionListing::query()->whereIn('collection_id', Collection::withTrashed()->where('listing_blueprint', $blueprint)->select('id')), ['data'], $rename, $dryRun, $counts['listings']);
+        $this->each(TaxonomyListing::query()->whereIn('taxonomy_id', Taxonomy::withTrashed()->where('index_blueprint', $blueprint)->select('id')), ['data'], $rename, $dryRun, $counts['listings']);
         $this->each(Submission::query()->whereIn('form_id', Form::query()->where('blueprint', $blueprint)->select('id')), ['data'], $rename, $dryRun, $counts['submissions']);
     }
 

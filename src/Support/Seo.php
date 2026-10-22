@@ -14,6 +14,7 @@ use Sunrice\Admin\Media\Media;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Taxonomy;
+use Sunrice\Cms\Models\TaxonomyListing;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Site\Page;
@@ -185,6 +186,42 @@ final class Seo
     }
 
     /**
+     * The URLs of a taxonomy index page's languages by locale (with
+     * "x-default"): the shared one's, or a collection's; none with only
+     * one language.
+     *
+     * @return array<string, string>
+     */
+    public static function indexAlternates(Taxonomy $taxonomy, ?Collection $collection = null): array
+    {
+        $alternates = [];
+        foreach (Locales::all() as $other) {
+            if (($url = $taxonomy->indexUrl($other, $collection)) !== null) {
+                $alternates[$other] = $url;
+            }
+        }
+
+        return self::withDefault($alternates);
+    }
+
+    /**
+     * The same for a taxonomy's index page (the shared one, or with a
+     * collection that collection's): its SEO (the page's own, per
+     * language: TaxonomyListing data under "seo") or the taxonomy's title,
+     * in each language.
+     *
+     * @return SeoTags
+     */
+    public static function forTaxonomyIndex(Taxonomy $taxonomy, ?Collection $collection, string $locale): array
+    {
+        $own = $taxonomy->listings->first(fn (TaxonomyListing $listing): bool => $listing->locale === $locale && $listing->collection_id === $collection?->id)?->data[self::KEY] ?? null;
+        $seo = is_array($own) ? $own : [];
+
+        return self::tags($seo, is_string($seo['title'] ?? null) ? $seo['title'] : $taxonomy->titleIn($locale), false, $taxonomy->indexUrl($locale, $collection),
+            self::indexAlternates($taxonomy, $collection), $locale, 'website', is_string($seo['title'] ?? null));
+    }
+
+    /**
      * The SEO card's values, with what it leaves empty taken from the
      * fields the collection or taxonomy names: a text field's text as the
      * title, a text or textarea field's as the description (plain, at most
@@ -264,6 +301,7 @@ final class Seo
             $page?->entry !== null => self::for($page->entry, $page->preview),
             $page?->term !== null && $page->fallback => ['alternates' => []] + self::forTerm($page->term, $page->pageNumber),
             $page?->term !== null => self::forTerm($page->term, $page->pageNumber),
+            $page?->taxonomy !== null => self::forTaxonomyIndex($page->taxonomy, $page->collection, $page->locale),
             $page?->collection !== null => self::forListing($page->collection, $page->locale, $page->pageNumber),
             // Search results aren't pages to index.
             $page?->type === Page::SEARCH => self::tags(['noindex' => true], $title ?? 'Search', false, null, [], $page->locale, 'website', $title !== null),

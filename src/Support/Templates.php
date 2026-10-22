@@ -139,6 +139,12 @@ final class Templates
             $taxonomies[$t->handle] = ['note' => 'A term\'s own template comes first.', ...$chain([$t->template, "cms.taxonomy-{$t->handle}", 'cms.term'], 'sunrice-cms::term')];
         }
 
-        return ['collections' => $collections, 'taxonomies' => $taxonomies, 'search' => $chain(['cms.search'], 'sunrice-cms::search')];
+        // Taxonomies' index pages: the shared one's chain; in a collection, cms.{collection}.{handle}-index comes first.
+        $indexes = [];
+        foreach (Taxonomy::query()->where(fn ($q) => $q->whereNotNull('index_route')->orWhereHas('collections', fn ($q) => $q->where('sunrice_collection_taxonomy.index_page', true)))->orderBy('title')->get() as $t) {
+            $indexes[$t->handle] = ['note' => 'In a collection, cms.{collection}.'.$t->handle.'-index comes first.', ...$chain(["cms.taxonomy-{$t->handle}-index", 'cms.taxonomy-index'], 'sunrice-cms::taxonomy-index')];
+        }
+
+        return ['collections' => $collections, 'taxonomies' => $taxonomies, 'taxonomy_indexes' => $indexes, 'search' => $chain(['cms.search'], 'sunrice-cms::search')];
     }
 }

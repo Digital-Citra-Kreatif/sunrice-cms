@@ -29,6 +29,7 @@ use Sunrice\Cms\Http\Controllers\EntryController;
 use Sunrice\Cms\Http\Controllers\EntryManageController;
 use Sunrice\Cms\Http\Controllers\FieldsetController;
 use Sunrice\Cms\Http\Controllers\GlobalsController;
+use Sunrice\Cms\Http\Controllers\IndexPageController;
 use Sunrice\Cms\Http\Controllers\LanguageController;
 use Sunrice\Cms\Http\Controllers\ListingController;
 use Sunrice\Cms\Http\Controllers\MenuController;
@@ -261,6 +262,11 @@ final class CmsPlugin extends BasePlugin
                     Route::post('entries/{entry}/translations/{locale}/translate', 'translate')->name('entries.translations.translate')->middleware($guard('entries', 'update'));
                     Route::post('entries/{entry}/revisions/{revision}/restore', 'restoreRevision')->name('entries.revisions.restore')->middleware($guard('entries', 'update'));
                     Route::get('entries/{entry}/revisions/{revision}/compare', 'compareRevision')->name('entries.revisions.compare')->middleware($guard('entries', 'view'));
+                });
+                // A taxonomy's index pages (the shared one, or ?collection=books): behind its terms permissions.
+                Route::name('taxonomies.index-page.')->controller(IndexPageController::class)->group(function () use ($guard): void {
+                    Route::get('taxonomies/{taxonomy:handle}/index-page/edit', 'edit')->name('edit')->middleware($guard('terms', 'view'));
+                    Route::put('taxonomies/{taxonomy:handle}/index-page', 'update')->name('update')->middleware($guard('terms', 'update'));
                 });
                 Route::name('collections.listing.')->controller(ListingController::class)->group(function () use ($guard): void {
                     Route::get('collections/{collection:handle}/listing/edit', 'edit')->name('edit')->middleware($guard('entries', 'view'));

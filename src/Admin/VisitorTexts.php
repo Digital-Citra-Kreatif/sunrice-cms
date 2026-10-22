@@ -43,7 +43,7 @@ final class VisitorTexts
             self::text('site|description', self::say('What pages say about the site when they don\'t say their own'), $site->description, self::siteDescription($site, $locale), true, url(Locales::prefix($locale) ?: '/')),
         ]];
 
-        // Only titles visitors read: collections with a listing page, taxonomies with term pages.
+        // Only titles visitors read: collections with a listing page, taxonomies with shared term or index pages.
         $collections = Collection::query()->whereNotNull('listing_route')->orderBy('title')->orderBy('handle')->get();
         $titles = [];
         foreach ($collections as $collection) {
@@ -53,7 +53,7 @@ final class VisitorTexts
         if ($titles !== []) {
             $sections[] = ['key' => 'titles', 'title' => self::say('Listing page titles'), 'texts' => $titles];
         }
-        $taxonomies = Taxonomy::query()->whereNotNull('route')->orderBy('title')->orderBy('handle')->get();
+        $taxonomies = Taxonomy::query()->where(fn ($q) => $q->whereNotNull('route')->orWhereNotNull('index_route'))->orderBy('title')->orderBy('handle')->get();
         $titles = [];
         foreach ($taxonomies as $taxonomy) {
             $titles[] = self::text("taxonomy|{$taxonomy->id}|title", self::same($taxonomies->pluck('title')->values()->all(), $taxonomy->title, $taxonomy->handle),

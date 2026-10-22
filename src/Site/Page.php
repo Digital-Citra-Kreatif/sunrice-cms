@@ -9,12 +9,15 @@ use Illuminate\Support\Str;
 use Sunrice\Admin\Panel;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\EntryTranslation;
+use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Support\Locales;
 
 /**
  * The site page being shown, for layouts: `Cms::page()` (null outside the
- * CMS's pages), `Cms::bodyClass()` and `Cms::localeUrls()`. `$fallback`:
+ * CMS's pages), `Cms::bodyClass()` and `Cms::localeUrls()`. A taxonomy's
+ * index page (TAXONOMY) has `$taxonomy`, and `$collection` when it's that
+ * collection's (/books/tags), else it's the shared one. `$fallback`:
  * the entry or term is the main language's, shown in a language it isn't
  * translated into (`$locale`). `$draft`: an editor looking at the live
  * page's unpublished changes (`?draft`; `$preview` too).
@@ -31,10 +34,13 @@ final readonly class Page
 
     public const SEARCH = 'search';
 
+    /** A taxonomy's index page: its terms, linking to their pages. */
+    public const TAXONOMY = 'taxonomy';
+
     private const KEY = 'sunrice-cms.page';
 
     /**
-     * @param  self::ENTRY|self::LISTING|self::TERM|self::SEARCH  $type
+     * @param  self::ENTRY|self::LISTING|self::TERM|self::SEARCH|self::TAXONOMY  $type
      */
     public function __construct(
         public string $type,
@@ -48,6 +54,7 @@ final readonly class Page
         public int $pageNumber = 1,
         public bool $fallback = false,
         public bool $draft = false,
+        public ?Taxonomy $taxonomy = null,
     ) {}
 
     public static function current(): ?self
@@ -95,7 +102,7 @@ final readonly class Page
     /** The same page rendered with another view. */
     public function withView(string $view): self
     {
-        return new self($this->type, $this->locale, $view, $this->entry, $this->collection, $this->term, $this->preview, $this->home, $this->pageNumber, $this->fallback, $this->draft);
+        return new self($this->type, $this->locale, $view, $this->entry, $this->collection, $this->term, $this->preview, $this->home, $this->pageNumber, $this->fallback, $this->draft, $this->taxonomy);
     }
 
     /**
@@ -105,6 +112,7 @@ final readonly class Page
      *   listing   page-listing collection-{handle} [paged paged-{n}]
      *   term      page-term [collection-{handle}] taxonomy-{handle} term-{id} term-{slug} [paged paged-{n}] (collection-: a collection's term page)
      *   search    page-search [paged paged-{n}]
+     *   taxonomy  page-taxonomy [collection-{handle}] taxonomy-{handle} (a taxonomy's index page; collection-: a collection's)
      *   always    template-{view} lang-{locale} [logged-in]
      *
      * @param  list<string>  $classes
@@ -125,6 +133,9 @@ final readonly class Page
             if (($parent = $this->entry->entry->parent_id) !== null) {
                 array_push($own, 'has-parent', 'parent-'.$parent);
             }
+        }
+        if ($this->taxonomy !== null) {
+            $own[] = 'taxonomy-'.$this->taxonomy->handle;
         }
         if ($this->term !== null) {
             array_push($own, 'taxonomy-'.$this->term->term->taxonomy->handle, 'term-'.$this->term->term_id, 'term-'.$this->term->slug);
@@ -193,6 +204,12 @@ final readonly class Page
             $query = http_build_query(array_filter([Search::NAME => is_string($q) ? $q : null, 'page' => $this->pageNumber > 1 ? $this->pageNumber : null]));
             foreach (Locales::all() as $locale) {
                 $urls[$locale] = Search::url($locale).($query === '' ? '' : "?{$query}");
+            }
+        } elseif ($this->taxonomy !== null) {
+            foreach (Locales::all() as $locale) {
+                if (($url = $this->taxonomy->indexUrl($locale, $this->collection)) !== null) {
+                    $urls[$locale] = $this->paged($url);
+                }
             }
         } elseif ($this->collection !== null) {
             foreach (Locales::all() as $locale) {

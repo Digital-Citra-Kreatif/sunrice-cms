@@ -16,7 +16,7 @@ use Sunrice\Cms\Site\Site;
  * Structured data (schema.org, as JSON-LD) for a page's head, so search
  * engines know what it is: the website (with its search box) and who
  * publishes it on every page; entries as articles or web pages (the
- * collection's `schema_type`) with breadcrumbs; listing and term pages as
+ * collection's `schema_type`) with breadcrumbs; listing, term and taxonomy index pages as
  * collection pages; search pages as search results. Printed by
  * <x-sunrice-cms::seo />, which takes more nodes from templates
  * (`:schema="[…]"`). Off in Settings → Site.
@@ -175,6 +175,12 @@ final class StructuredData
         } elseif ($page->term !== null) {
             $node = ['@type' => 'CollectionPage', ...$node, 'name' => $page->term->title];
             $crumbs = [[$page->term->title, $url]];
+        } elseif ($page->taxonomy !== null) {
+            // A collection's index page sits under its listing page, when it has one.
+            $node = ['@type' => 'CollectionPage', ...$node, 'name' => $page->taxonomy->titleIn($page->locale)];
+            $in = $page->collection;
+            $listing = $in?->listingUrl($page->locale);
+            $crumbs = [...($in !== null && $listing !== null ? [[$in->titleIn($page->locale), $listing]] : []), [$page->taxonomy->titleIn($page->locale), $url]];
         } elseif ($page->collection !== null) {
             $node = ['@type' => 'CollectionPage', ...$node, 'name' => $page->collection->titleIn($page->locale)];
             $crumbs = [[$page->collection->titleIn($page->locale), $url]];

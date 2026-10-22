@@ -15,7 +15,8 @@ use Sunrice\Cms\Models\Taxonomy;
 
 /**
  * Deletes a blueprint nothing uses: no collection (for its entries, as one
- * of its other blueprints, or for its listing page), entry, taxonomy,
+ * of its other blueprints, or for its listing page), entry, taxonomy (for
+ * its terms or its index pages),
  * global set or form, counting those in the trash.
  *
  * @api
@@ -40,7 +41,8 @@ final class DeleteBlueprint
     /**
      * What uses the blueprint, named: collections (for their entries, as
      * one of their other blueprints, or for their listing pages), entries
-     * that chose it, taxonomies, global sets and forms. Collections and
+     * that chose it, taxonomies (for their terms or index pages), global
+     * sets and forms. Collections and
      * taxonomies in the trash count (marked so): restoring one needs it.
      *
      * @return list<string>
@@ -71,8 +73,13 @@ final class DeleteBlueprint
                 $users[] = trans_choice('{1} an entry of ":title"|[2,*] :count entries of ":title"', is_numeric($count) ? (int) $count : 0, ['title' => $collection->title]);
             }
         }
-        foreach (Taxonomy::query()->withTrashed()->where('blueprint', $handle)->orderBy('title')->get() as $taxonomy) {
-            $users[] = $trashed($taxonomy, __('the taxonomy ":title"', ['title' => $taxonomy->title]));
+        foreach (Taxonomy::query()->withTrashed()->where(fn ($query) => $query->where('blueprint', $handle)->orWhere('index_blueprint', $handle))->orderBy('title')->get() as $taxonomy) {
+            if ($taxonomy->blueprint === $handle) {
+                $users[] = $trashed($taxonomy, __('the taxonomy ":title"', ['title' => $taxonomy->title]));
+            }
+            if ($taxonomy->index_blueprint === $handle) {
+                $users[] = $trashed($taxonomy, __('the index pages of ":title"', ['title' => $taxonomy->title]));
+            }
         }
         foreach (GlobalSet::query()->where('blueprint', $handle)->orderBy('title')->get() as $set) {
             $users[] = __('the global set ":title"', ['title' => $set->title]);

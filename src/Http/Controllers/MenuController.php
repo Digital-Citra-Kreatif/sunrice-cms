@@ -13,6 +13,7 @@ use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\CollectionTaxonomy;
 use Sunrice\Cms\Models\Menu;
 use Sunrice\Cms\Models\MenuItem;
+use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Support\Locales;
 
@@ -27,7 +28,7 @@ final class MenuController
 {
     public function edit(Request $request, Menu $menu): Response
     {
-        $menu->load('items.entry.translations', 'items.entry.collection', 'items.term.translations', 'items.term.taxonomy.collections', 'items.collection');
+        $menu->load('items.entry.translations', 'items.entry.collection', 'items.term.translations', 'items.term.taxonomy.collections', 'items.collection', 'items.taxonomy.collections');
 
         return Inertia::render('Cms/Menus/Edit', [
             'menu' => ['handle' => $menu->handle, 'title' => $menu->title],
@@ -40,6 +41,10 @@ final class MenuController
                 ->map(fn (Term $term): array => ['id' => $term->id, 'title' => $term->title(), 'taxonomy' => $term->taxonomy->title, 'pages' => self::termPages($term)])->all(),
             'listings' => Collection::query()->whereNotNull('listing_route')->orderBy('title')->get()
                 ->map(fn (Collection $collection): array => ['id' => $collection->id, 'title' => $collection->title])->all(),
+            // Taxonomies with index pages: the shared one (collection null) and their collections'.
+            'indexes' => Taxonomy::query()->with('collections')->orderBy('title')->get()
+                ->map(fn (Taxonomy $taxonomy): array => ['id' => $taxonomy->id, 'title' => $taxonomy->title, 'pages' => self::indexPages($taxonomy)])
+                ->filter(fn (array $taxonomy): bool => $taxonomy['pages'] !== [])->values()->all(),
             'can' => ['update' => $request->user()?->can('cms.menus.update') ?? false],
             // Its title and handle.
             'settings' => $request->user()?->can('cms.menus.update') === true ? route('sunrice.admin.cms.menus.edit', $menu->handle) : null,
@@ -74,9 +79,37 @@ final class MenuController
         return $pages;
     }
 
+    /**
+     * A taxonomy's index pages, for the editor to choose from: the shared
+     * one (collection null) and its collections' (CollectionTaxonomy).
+     *
+     * @return list<array{collection: int|null, title: string}>
+     */
+    private static function indexPages(Taxonomy $taxonomy): array
+    {
+        $pages = $taxonomy->index_route !== null ? [['collection' => null, 'title' => __('Shared index (all collections)')]] : [];
+        foreach ($taxonomy->collections as $collection) {
+            $pivot = $collection->getRelation('pivot');
+            if ($pivot instanceof CollectionTaxonomy && $pivot->index_page) {
+                $pages[] = ['collection' => $collection->id, 'title' => $collection->title];
+            }
+        }
+
+        return $pages;
+    }
+
     /** @return array{title: string, kind: string, live: bool}|null */
     private static function target(MenuItem $item): ?array
     {
+        if ($item->taxonomy !== null) {
+            $taxonomy = $item->taxonomy;
+            $in = $item->collection;
+            $live = ! $taxonomy->trashed() && ($in === null ? $item->collection_id === null && $taxonomy->index_route !== null
+                : ! $in->trashed() && $taxonomy->collections->contains(fn (Collection $c): bool => $c->id === $in->id && $c->getRelation('pivot') instanceof CollectionTaxonomy && $c->getRelation('pivot')->index_page));
+            $kind = $in === null ? __(':taxonomy · Index page', ['taxonomy' => $taxonomy->title]) : __(':taxonomy · :collection index', ['taxonomy' => $taxonomy->title, 'collection' => $in->title]);
+
+            return ['title' => $taxonomy->title, 'kind' => $kind, 'live' => $live];
+        }
         if ($item->entry !== null) {
             $main = $item->entry->mainTranslation();
 
@@ -110,6 +143,7 @@ final class MenuController
                 $tree[] = [
                     'entry_id' => $item->entry_id,
                     'term_id' => $item->term_id,
+                    'taxonomy_id' => $item->taxonomy_id,
                     'collection_id' => $item->collection_id,
                     // For the editor: what it links to, and whether the site shows it.
                     'target' => self::target($item),

@@ -65,7 +65,10 @@ final class TermController
                 // Its terms' blueprint, for those who may edit blueprints.
                 'blueprint' => EntryList::blueprintLinks($request->user() instanceof Authorizable ? $request->user() : null, array_filter([$taxonomy->blueprint]))[0]['href'] ?? null,
                 'collections' => $taxonomy->collections()->orderBy('title')->get(['sunrice_collections.handle', 'sunrice_collections.title'])
-                    ->map(fn (Collection $collection): array => ['title' => $collection->title, 'url' => route('sunrice.admin.cms.collections.entries.index', $collection->handle)])->all()],
+                    ->map(fn (Collection $collection): array => ['title' => $collection->title, 'url' => route('sunrice.admin.cms.collections.entries.index', $collection->handle)])->all(),
+                // Its index pages' fields: the shared one's, and each collection's.
+                'indexPages' => array_map(fn (array $page): array => ['title' => $page['title'], 'collection' => $page['collection'],
+                    'url' => route('sunrice.admin.cms.taxonomies.index-page.edit', array_filter(['taxonomy' => $taxonomy->handle, 'collection' => $page['collection']]))], IndexPageController::pages($taxonomy))],
             'trashed' => $trashed,
             // Outside the trash, how many are in it, for an empty list to say so.
             'trashedCount' => $trashed ? 0 : Term::onlyTrashed()->where('taxonomy_id', $taxonomy->id)->count(),

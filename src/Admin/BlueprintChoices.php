@@ -13,7 +13,7 @@ use Sunrice\Cms\Models\Taxonomy;
 
 /**
  * The blueprints a picker offers, by what it's for: content (entries,
- * listing pages, terms), a global set or a form. A blueprint already used
+ * listing pages, terms, taxonomy index pages), a global set or a form. A blueprint already used
  * for one of them isn't offered for the others (a form's fields make no
  * sense as a global set's); unused ones, and the one the record has, are.
  *
@@ -65,8 +65,10 @@ final class BlueprintChoices
                 $add($handle, self::CONTENT);
             }
         }
-        foreach (Taxonomy::withTrashed()->pluck('blueprint') as $handle) {
-            $add($handle, self::CONTENT);
+        foreach (Taxonomy::withTrashed()->get(['blueprint', 'index_blueprint']) as $taxonomy) {
+            foreach ([$taxonomy->blueprint, $taxonomy->index_blueprint] as $handle) {
+                $add($handle, self::CONTENT);
+            }
         }
         foreach (GlobalSet::query()->pluck('blueprint') as $handle) {
             $add($handle, self::GLOBAL);

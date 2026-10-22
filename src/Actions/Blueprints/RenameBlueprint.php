@@ -20,7 +20,8 @@ use Sunrice\Cms\Support\HandleRule;
 /**
  * Changes a blueprint's handle, and with it every place that names it:
  * collections (their blueprint, other blueprints and listing page fields,
- * deleted ones too), taxonomies, global sets, forms and the entries that
+ * deleted ones too), taxonomies (their terms' and index pages' fields),
+ * global sets, forms and the entries that
  * picked it in their Page settings. Content keeps its values.
  *
  *     app(RenameBlueprint::class)->handle($blueprint, 'property');
@@ -56,7 +57,9 @@ final class RenameBlueprint
                     $collection->save();
                 }
             }
-            Taxonomy::withTrashed()->where('blueprint', $old)->update(['blueprint' => $handle]);
+            foreach (['blueprint', 'index_blueprint'] as $column) {
+                Taxonomy::withTrashed()->where($column, $old)->update([$column => $handle]);
+            }
             GlobalSet::query()->where('blueprint', $old)->update(['blueprint' => $handle]);
             Form::query()->where('blueprint', $old)->update(['blueprint' => $handle]);
             Entry::withTrashed()->where('blueprint', $old)->update(['blueprint' => $handle]);

@@ -43,6 +43,9 @@ final class RestoreDeleted
         if (is_string($taxonomy->route) && $taxonomy->route !== '' && Taxonomy::query()->where('route', $taxonomy->route)->exists()) {
             throw ValidationException::withMessages(['route' => __('Another taxonomy has its term pages URL (:address) now: change that one first.', ['address' => $taxonomy->route])]);
         }
+        if (is_string($taxonomy->index_route) && $taxonomy->index_route !== '' && Taxonomy::query()->where('index_route', $taxonomy->index_route)->exists()) {
+            throw ValidationException::withMessages(['index_route' => __('Another taxonomy has its index page URL (:address) now: change that one first.', ['address' => $taxonomy->index_route])]);
+        }
         $taxonomy->restore();
     }
 }

@@ -19,17 +19,20 @@ use Sunrice\Cms\Support\SiteCache;
  * The public site: which entry a path shows, and entries' URLs. The main
  * language has no prefix; others start with their code (/id/blog/kopi).
  *
+ * @phpstan-type RouteType 'collection'|'taxonomy'|'collection-terms'|'collection-index'
+ * @phpstan-type RouteRecord array{type: RouteType, id: int, collection: int|null, route: string|null, listing: string|null, index: string|null, own: array<string, array<string, string>>, previous: array<string, array<string, list<string>>>}
+ *
  * @api
  */
 final class Site
 {
-    /** @var list<array{type: 'collection'|'taxonomy'|'collection-terms', id: int, collection: int|null, route: string|null, listing: string|null, own: array<string, array<string, string>>, previous: array<string, array<string, list<string>>>}>|null collections' and taxonomies' patterns, and taxonomies' term pages in collections (collection-terms: id is the taxonomy's), as cached */
+    /** @var list<RouteRecord>|null collections' and taxonomies' patterns, and taxonomies' term pages and index pages in collections (collection-terms, collection-index: id is the taxonomy's), as cached */
     private ?array $routes = null;
 
-    /** @var array<string, list<array{0: 'collection'|'taxonomy'|'collection-terms', 1: int, 2: RoutePattern, 3: int|null}>> each language's patterns, most specific first */
+    /** @var array<string, list<array{0: RouteType, 1: int, 2: RoutePattern, 3: int|null}>> each language's patterns, most specific first */
     private array $patterns = [];
 
-    /** @var array<string, list<array{0: 'collection'|'taxonomy'|'collection-terms', 1: int, 2: RoutePattern, 3: int|null}>> the patterns each language's addresses had before */
+    /** @var array<string, list<array{0: RouteType, 1: int, 2: RoutePattern, 3: int|null}>> the patterns each language's addresses had before */
     private array $oldPatterns = [];
 
     /** The homepage entry's id, once read (false: not read yet). */
@@ -161,6 +164,12 @@ final class Site
         if ($listing !== null) {
             return Collection::query()->find($listing)?->listingUrl($locale);
         }
+        $index = $this->indexRoutes(old: true)[$locale][$rest] ?? null;
+        if ($index !== null) {
+            $collection = $index[1] === null ? null : Collection::query()->find($index[1]);
+
+            return $index[1] !== null && $collection === null ? null : Taxonomy::query()->find($index[0])?->indexUrl($locale, $collection);
+        }
         foreach ($this->oldPatterns($locale) as [$type, $id, $pattern]) {
             $matched = $pattern->match($rest);
             $url = $matched === null ? null : ($type !== 'collection' ? $this->termAt($id, $locale, $matched['slug']) : $this->entryAt($id, $locale, $matched['slug']));
@@ -268,7 +277,7 @@ final class Site
      * Taxonomies' term pages in collections, by taxonomy and collection id
      * (collections in id order), as cached.
      *
-     * @return array<int, array<int, array{type: 'collection'|'taxonomy'|'collection-terms', id: int, collection: int|null, route: string|null, listing: string|null, own: array<string, array<string, string>>, previous: array<string, array<string, list<string>>>}>>
+     * @return array<int, array<int, RouteRecord>>
      */
     public function collectionTerms(): array
     {
@@ -280,6 +289,57 @@ final class Site
         }
 
         return $found;
+    }
+
+    /**
+     * Taxonomies' index pages in collections, by taxonomy and collection id
+     * (collections in id order), as cached.
+     *
+     * @return array<int, array<int, RouteRecord>>
+     */
+    public function collectionIndexes(): array
+    {
+        $found = [];
+        foreach ($this->routes() as $record) {
+            if ($record['type'] === 'collection-index' && $record['collection'] !== null) {
+                $found[$record['id']][$record['collection']] = $record;
+            }
+        }
+
+        return $found;
+    }
+
+    /**
+     * The URL of a taxonomy's index page in a language: the shared one
+     * (/tags), or a collection's (/books/tags); null when it's off.
+     */
+    public function indexUrl(Taxonomy $taxonomy, ?Collection $collection, string $locale): ?string
+    {
+        if ($collection === null) {
+            $path = $taxonomy->routeIn($locale, 'index_route');
+        } else {
+            $record = $this->collectionIndexes()[$taxonomy->id][$collection->id] ?? null;
+            $path = $record === null ? null : (self::own($record, $locale, 'index_route') ?? $record['index']);
+        }
+
+        return $path === null ? null : url(Locales::prefix($locale).$path);
+    }
+
+    /** The taxonomy index page at a path (the shared one, or a collection's), and the language. */
+    public function taxonomyIndex(string $path): ?TaxonomyIndex
+    {
+        [$locale, $rest] = $this->splitLocale('/'.trim($path, '/'));
+        if ($rest === '/') {
+            return null;
+        }
+        $found = $this->indexRoutes()[$locale][$rest] ?? null;
+        if ($found === null) {
+            return null;
+        }
+        $taxonomy = Taxonomy::query()->find($found[0]);
+        $collection = $found[1] === null ? null : Collection::query()->find($found[1]);
+
+        return $taxonomy === null || ($found[1] !== null && $collection === null) ? null : new TaxonomyIndex($taxonomy, $collection, $locale);
     }
 
     /**
@@ -642,38 +702,42 @@ final class Site
      * Collections' and taxonomies' patterns in every language, read once
      * (and cached until one changes).
      *
-     * @return list<array{type: 'collection'|'taxonomy'|'collection-terms', id: int, collection: int|null, route: string|null, listing: string|null, own: array<string, array<string, string>>, previous: array<string, array<string, list<string>>>}>
+     * @return list<RouteRecord>
      */
     private function routes(): array
     {
         if ($this->routes === null) {
-            /** @var list<array{type: 'collection'|'taxonomy'|'collection-terms', id: int, collection: int|null, route: string|null, listing: string|null, own: array<string, array<string, string>>, previous: array<string, array<string, list<string>>>}> $routes */
+            /** @var list<RouteRecord> $routes */
             $routes = app(SiteCache::class)->remember('language-routes', function (): array {
                 $routes = [];
                 $columns = ['id', 'route', 'routes', 'previous_routes'];
                 foreach (Collection::query()->where(fn ($q) => $q->whereNotNull('route')->orWhereNotNull('listing_route'))->orderBy('id')->get([...$columns, 'listing_route']) as $collection) {
-                    $routes[] = ['type' => 'collection', 'id' => $collection->id, 'collection' => null, 'route' => $collection->route, 'listing' => $collection->listing_route, 'own' => $collection->routes ?? [], 'previous' => $collection->previous_routes ?? []];
+                    $routes[] = ['type' => 'collection', 'id' => $collection->id, 'collection' => null, 'route' => $collection->route, 'listing' => $collection->listing_route, 'index' => null, 'own' => $collection->routes ?? [], 'previous' => $collection->previous_routes ?? []];
                 }
-                foreach (Taxonomy::query()->whereNotNull('route')->orderBy('id')->get($columns) as $taxonomy) {
-                    $routes[] = ['type' => 'taxonomy', 'id' => $taxonomy->id, 'collection' => null, 'route' => $taxonomy->route, 'listing' => null, 'own' => $taxonomy->routes ?? [], 'previous' => $taxonomy->previous_routes ?? []];
+                foreach (Taxonomy::query()->where(fn ($q) => $q->whereNotNull('route')->orWhereNotNull('index_route'))->orderBy('id')->get([...$columns, 'index_route']) as $taxonomy) {
+                    $routes[] = ['type' => 'taxonomy', 'id' => $taxonomy->id, 'collection' => null, 'route' => $taxonomy->route, 'listing' => null, 'index' => $taxonomy->index_route, 'own' => $taxonomy->routes ?? [], 'previous' => $taxonomy->previous_routes ?? []];
                 }
-                // Term pages in collections: each language's pattern worked out now (they follow the collection's listing page).
-                $taxonomies = Taxonomy::query()->orderBy('id')->with(['collections' => fn ($q) => $q->wherePivot('term_pages', true)->orderBy('sunrice_collections.id')])->get();
+                // Term pages and index pages in collections: each language's pattern worked out now (they follow the collection's listing page).
+                $taxonomies = Taxonomy::query()->orderBy('id')->with(['collections' => fn ($q) => $q->where(fn ($q) => $q->where('sunrice_collection_taxonomy.term_pages', true)->orWhere('sunrice_collection_taxonomy.index_page', true))->orderBy('sunrice_collections.id')])->get();
                 foreach ($taxonomies as $taxonomy) {
                     foreach ($taxonomy->collections as $collection) {
                         $pivot = $collection->getRelation('pivot');
                         if (! $pivot instanceof CollectionTaxonomy) {
                             continue;
                         }
-                        $main = $pivot->pattern($collection, $taxonomy, Locales::default());
-                        $own = [];
-                        foreach (Locales::all() as $locale) {
-                            $pattern = $pivot->pattern($collection, $taxonomy, $locale);
-                            if ($locale !== Locales::default() && $pattern !== $main) {
-                                $own[$locale] = ['route' => $pattern];
+                        foreach (array_filter(['collection-terms' => $pivot->term_pages, 'collection-index' => $pivot->index_page]) as $type => $on) {
+                            $path = fn (string $locale): string => $type === 'collection-terms' ? $pivot->pattern($collection, $taxonomy, $locale) : $pivot->indexPath($collection, $taxonomy, $locale);
+                            $attribute = $type === 'collection-terms' ? 'route' : 'index_route';
+                            $main = $path(Locales::default());
+                            $own = [];
+                            foreach (Locales::all() as $locale) {
+                                if ($locale !== Locales::default() && ($pattern = $path($locale)) !== $main) {
+                                    $own[$locale] = [$attribute => $pattern];
+                                }
                             }
+                            $routes[] = ['type' => $type, 'id' => $taxonomy->id, 'collection' => $collection->id, 'route' => $type === 'collection-terms' ? $main : null,
+                                'listing' => null, 'index' => $type === 'collection-index' ? $main : null, 'own' => $own, 'previous' => []];
                         }
-                        $routes[] = ['type' => 'collection-terms', 'id' => $taxonomy->id, 'collection' => $collection->id, 'route' => $main, 'listing' => null, 'own' => $own, 'previous' => []];
                     }
                 }
 
@@ -712,7 +776,7 @@ final class Site
         return array_values(array_unique(array_filter($old, fn (string $pattern): bool => $pattern !== '' && $pattern !== $now)));
     }
 
-    /** @return list<array{0: 'collection'|'taxonomy'|'collection-terms', 1: int, 2: RoutePattern, 3: int|null}> a language's patterns, most specific first */
+    /** @return list<array{0: RouteType, 1: int, 2: RoutePattern, 3: int|null}> a language's patterns, most specific first */
     private function patterns(string $locale): array
     {
         if (! isset($this->patterns[$locale])) {
@@ -728,7 +792,7 @@ final class Site
         return $this->patterns[$locale];
     }
 
-    /** @return list<array{0: 'collection'|'taxonomy'|'collection-terms', 1: int, 2: RoutePattern, 3: int|null}> the patterns a language's addresses had before, most specific first */
+    /** @return list<array{0: RouteType, 1: int, 2: RoutePattern, 3: int|null}> the patterns a language's addresses had before, most specific first */
     private function oldPatterns(string $locale): array
     {
         if (! isset($this->oldPatterns[$locale])) {
@@ -745,8 +809,8 @@ final class Site
     }
 
     /**
-     * @param  list<array{0: 'collection'|'taxonomy'|'collection-terms', 1: int, 2: RoutePattern, 3: int|null}>  $patterns
-     * @return list<array{0: 'collection'|'taxonomy'|'collection-terms', 1: int, 2: RoutePattern, 3: int|null}>
+     * @param  list<array{0: RouteType, 1: int, 2: RoutePattern, 3: int|null}>  $patterns
+     * @return list<array{0: RouteType, 1: int, 2: RoutePattern, 3: int|null}>
      */
     private static function bySpecificity(array $patterns): array
     {
@@ -772,6 +836,30 @@ final class Site
             foreach (Locales::all() as $locale) {
                 foreach ($old ? self::old($record, $locale, 'listing_route', $record['listing']) : [self::own($record, $locale, 'listing_route') ?? $record['listing']] as $path) {
                     $paths[$locale][$path] ??= $record['id'];
+                }
+            }
+        }
+
+        return $paths;
+    }
+
+    /**
+     * Taxonomy index pages' paths in each language, with their taxonomy's
+     * and collection's ids (null: the shared page); with $old, the paths
+     * they had before.
+     *
+     * @return array<string, array<string, array{0: int, 1: int|null}>>
+     */
+    private function indexRoutes(bool $old = false): array
+    {
+        $paths = [];
+        foreach ($this->routes() as $record) {
+            if ($record['index'] === null) {
+                continue;
+            }
+            foreach (Locales::all() as $locale) {
+                foreach ($old ? self::old($record, $locale, 'index_route', $record['index']) : [self::own($record, $locale, 'index_route') ?? $record['index']] as $path) {
+                    $paths[$locale][$path] ??= [$record['id'], $record['collection']];
                 }
             }
         }
