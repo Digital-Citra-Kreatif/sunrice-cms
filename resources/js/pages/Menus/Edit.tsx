@@ -18,7 +18,8 @@ interface Props {
     items: MenuNode[];
     locales: string[];
     limits: { depth: number; items: number };
-    terms: { id: number; title: string; taxonomy: string }[];
+    /** Terms with pages: the shared page (collection null) and their collections' term pages. */
+    terms: { id: number; title: string; taxonomy: string; pages: { collection: number | null; title: string }[] }[];
     listings: { id: number; title: string }[];
     can: { update: boolean };
     /** Its title and handle (the menu's resource), when the user may change them. */
@@ -84,7 +85,7 @@ export default function MenuEdit({ menu, items: initial, locales, limits, terms,
                                     </div>
                                 )}
                             </div>
-                            {item.collection_id !== null && (
+                            {item.collection_id !== null && item.term_id === null && (
                                 <Input aria-label={t('Filters')} className="cms:w-full cms:sm:max-w-md cms:font-mono" disabled={!can.update}
                                     placeholder={t('Filters (optional): :example', { example: 'filter=value' })} value={item.query ?? ''}
                                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => update(index, { query: e.target.value })} />
@@ -172,7 +173,12 @@ function AddDialog({ kind, terms, listings, onClose, onAdd, main }: {
     const [address, setAddress] = React.useState('');
     const [label, setLabel] = React.useState('');
     const [query, setQuery] = React.useState('');
-    React.useEffect(() => { setEntryId(null); setChoice(''); setAddress(''); setLabel(''); setQuery(''); }, [kind]);
+    // A term's page: which one, when it has several ("" for the first).
+    const [page, setPage] = React.useState('');
+    React.useEffect(() => { setEntryId(null); setChoice(''); setAddress(''); setLabel(''); setQuery(''); setPage(''); }, [kind]);
+    React.useEffect(() => setPage(''), [choice]);
+    const chosenTerm = kind === 'term' ? terms.find((each) => String(each.id) === choice) : undefined;
+    const termPage = chosenTerm?.pages.find((each) => String(each.collection ?? '') === page) ?? chosenTerm?.pages[0];
     const safe = address.trim() === '' || isSafeUrl(address.trim());
     const labels = label.trim() ? { [main]: label.trim() } : {};
 
@@ -183,7 +189,9 @@ function AddDialog({ kind, terms, listings, onClose, onAdd, main }: {
             onAdd(newItem({ entry_id: entryId, target: found ? { title: found.title, kind: found.collection, live: found.status === 'published' } : null, labels }));
         } else if (kind === 'term' && choice !== '') {
             const term = terms.find((each) => String(each.id) === choice);
-            onAdd(newItem({ term_id: Number(choice), target: term ? { title: term.title, kind: term.taxonomy, live: true } : null, labels }));
+            const collection = termPage?.collection ?? null;
+            const page = collection === null ? t('Shared page') : (termPage?.title ?? '');
+            onAdd(newItem({ term_id: Number(choice), collection_id: collection, target: term ? { title: term.title, kind: `${term.taxonomy} · ${page}`, live: true } : null, labels }));
         } else if (kind === 'listing' && choice !== '') {
             const listing = listings.find((l) => String(l.id) === choice);
             onAdd(newItem({ collection_id: Number(choice), target: listing ? { title: listing.title, kind: t('Listing page'), live: true } : null, labels, query: query.trim().replace(/^\?/, '') || null }));
@@ -216,6 +224,18 @@ function AddDialog({ kind, terms, listings, onClose, onAdd, main }: {
                                         : listings.map((l) => <SelectItem key={l.id} value={String(l.id)}>{l.title}</SelectItem>)}
                                 </SelectContent>
                             </Select>
+                        </div>
+                    )}
+                    {chosenTerm && chosenTerm.pages.length > 0 && (
+                        <div className="cms:flex cms:flex-col cms:gap-2">
+                            <Label htmlFor="menu-term-page">{t('Page')}</Label>
+                            <Select value={String(termPage?.collection ?? '') || '__all'} onValueChange={(value: string) => setPage(value === '__all' ? '' : value)}>
+                                <SelectTrigger id="menu-term-page"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    {chosenTerm.pages.map((each) => <SelectItem key={each.collection ?? '__all'} value={each.collection === null ? '__all' : String(each.collection)}>{each.collection === null ? each.title : t(':collection only', { collection: each.title })}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                            <p className="cms:text-sm cms:text-muted-foreground">{t('The shared page lists the term\'s entries from every collection; a collection\'s page only its own.')}</p>
                         </div>
                     )}
                     {kind === 'listing' && (

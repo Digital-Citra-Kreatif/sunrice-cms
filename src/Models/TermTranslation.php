@@ -34,6 +34,13 @@ class TermTranslation extends Model
 
     protected $guarded = [];
 
+    /**
+     * The collection whose term page this is (/books/tags/featured: only
+     * its entries), or null for the shared one. Set by the site for the
+     * page shown; url() follows it. Never stored.
+     */
+    public ?Collection $scope = null;
+
     /** @return array<string, string> */
     protected function casts(): array
     {
@@ -46,10 +53,22 @@ class TermTranslation extends Model
         return $this->belongsTo(Term::class)->withTrashed();
     }
 
-    /** Its page, or null when the taxonomy has no pages. */
+    /**
+     * Its page, or null when it has none: in its scope's collection when
+     * set, else as Site::termUrl() chooses (the shared page, else the
+     * page's collection's or the first collection's).
+     */
     public function url(): ?string
     {
         return app(Site::class)->termUrl($this);
+    }
+
+    /** The same translation, for the term page in a collection (null: the shared one). */
+    public function in(?Collection $collection): static
+    {
+        $this->scope = $collection;
+
+        return $this;
     }
 
     /**

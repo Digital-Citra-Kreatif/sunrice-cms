@@ -145,6 +145,18 @@ final class Sitemap
             }
             yield $xml.self::links(Seo::termAlternates($term)).'</url>';
         }
+        // Term pages in collections, for terms with entries there.
+        foreach ($this->collectionTerms() as [$collection, $term]) {
+            $seo = $term->data[Seo::KEY] ?? null;
+            if ((is_array($seo) && ($seo['noindex'] ?? false) === true) || ($url = $term->in($collection)->url()) === null) {
+                continue;
+            }
+            $xml = '<url><loc>'.e(AppUrl::url($url)).'</loc>';
+            if ($term->updated_at !== null) {
+                $xml .= '<lastmod>'.$term->updated_at->toAtomString().'</lastmod>';
+            }
+            yield $xml.self::links(Seo::termAlternates($term)).'</url>';
+        }
         // Listing pages, in every language.
         foreach (Collection::query()->whereNotNull('listing_route')->orderBy('id')->get() as $collection) {
             $links = self::links(Seo::listingAlternates($collection));
@@ -183,10 +195,41 @@ final class Sitemap
                 yield ['url' => AppUrl::url($url), 'collection' => null];
             }
         }
+        foreach ($this->collectionTerms($locale) as [$collection, $term]) {
+            $seo = $term->data[Seo::KEY] ?? null;
+            if (! (is_array($seo) && ($seo['noindex'] ?? false) === true) && ($url = $term->in($collection)->url()) !== null) {
+                yield ['url' => AppUrl::url($url), 'collection' => $collection->handle];
+            }
+        }
         foreach (Collection::query()->whereNotNull('listing_route')->orderBy('id')->get() as $collection) {
             foreach (Locales::all() as $code) {
                 if (($locale === null || $locale === $code) && ($url = $collection->listingUrl($code)) !== null) {
                     yield ['url' => AppUrl::url($url), 'collection' => $collection->handle];
+                }
+            }
+        }
+    }
+
+    /**
+     * Each taxonomy's terms with live entries in a collection where its
+     * terms have pages, with that collection (one language, or all).
+     *
+     * @return Generator<int, array{0: Collection, 1: TermTranslation}>
+     */
+    private function collectionTerms(?string $locale = null): Generator
+    {
+        foreach (app(Site::class)->collectionTerms() as $taxonomy => $collections) {
+            foreach (array_keys($collections) as $id) {
+                $collection = Collection::query()->find($id);
+                if ($collection === null) {
+                    continue;
+                }
+                $terms = TermTranslation::query()->where('taxonomy_id', $taxonomy)
+                    ->whereHas('term', fn ($q) => $q->withoutTrashed()->whereHas('entries', fn ($q) => $q->where('collection_id', $id)
+                        ->whereHas('translations', fn ($q) => $q->live())))
+                    ->when($locale !== null, fn ($q) => $q->where('locale', $locale))->with('term.taxonomy', 'term.translations')->lazyById(500);
+                foreach ($terms as $term) {
+                    yield [$collection, $term];
                 }
             }
         }

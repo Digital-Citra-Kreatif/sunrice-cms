@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\CollectionListing;
+use Sunrice\Cms\Models\CollectionTaxonomy;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Fieldset;
@@ -67,6 +68,7 @@ final class StructureExporter
             'taxonomies' => Taxonomy::query()->with('collections')->orderBy('handle')->get()->map(fn (Taxonomy $t): array => [
                 ...array_diff_key($t->only(StructureImporter::TAXONOMY), ['translations' => true, 'routes' => true]),
                 'collections' => $t->collections->pluck('handle')->sort()->values()->all(),
+                ...($t->collections->isNotEmpty() ? ['collection_pages' => (object) $this->collectionPages($t)] : []),
                 ...($t->translations !== null ? ['translations' => $t->translations] : []),
                 ...($t->routes !== null ? ['routes' => $t->routes] : []),
             ])->all(),
@@ -184,5 +186,26 @@ final class StructureExporter
     private static function mainSlug(Term $term): string
     {
         return $term->translations->firstWhere('locale', Locales::default())->slug ?? $term->translation()->slug ?? (string) $term->id;
+    }
+
+    /**
+     * Each attached collection's term pages: whether it has them, and its
+     * own URL patterns when it has some.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    private function collectionPages(Taxonomy $taxonomy): array
+    {
+        $pages = [];
+        foreach ($taxonomy->collections->sortBy('handle') as $collection) {
+            $pivot = $collection->getRelation('pivot');
+            if ($pivot instanceof CollectionTaxonomy) {
+                $pages[$collection->handle] = ['pages' => $pivot->term_pages]
+                    + ($pivot->term_route !== null ? ['route' => $pivot->term_route] : [])
+                    + ($pivot->term_routes !== null ? ['routes' => $pivot->term_routes] : []);
+            }
+        }
+
+        return $pages;
     }
 }

@@ -86,7 +86,7 @@ The file is JSON with a section per kind, each item by handle, and records point
     "collections": [{"handle": "blog", "title": "Blog", "blueprint": "post", "dated": true, "route": "/blog/{slug}",
         "listing_route": "/blog", "listing_blueprint": "page", "per_page": 10, "listings": {"en": {"intro": "News"}},
         "routes": {"id": {"route": "/artikel/{slug}", "listing_route": "/artikel"}}, ...}],
-    "taxonomies": [{"handle": "topics", "title": "Topics", "hierarchical": true, "collections": ["blog"], "routes": {"id": {"route": "/topik/{slug}"}}, ...}],
+    "taxonomies": [{"handle": "topics", "title": "Topics", "hierarchical": true, "collections": ["blog"], "collection_pages": {"blog": {"pages": true, "route": "/blog/topics/{slug}"}}, "routes": {"id": {"route": "/topik/{slug}"}}, ...}],
     "globals": [{"handle": "site", "title": "Site", "blueprint": "site_info", "values": {"en": {...}}}],
     "forms": [{"handle": "contact", "title": "Contact", "blueprint": "contact_form", "notify": ["team@example.com"], ...}],
     "menus": [{"handle": "main", "title": "Main", "items": [
@@ -101,7 +101,7 @@ The file is JSON with a section per kind, each item by handle, and records point
 }
 ```
 
-Every setting of a collection, taxonomy, global set and form is in the file, "SEO from fields" (`seo_title_field`, `seo_description_field`, `seo_image_field`) and a form's `notify_roles` included (`StructureImporter::COLLECTION`, `TAXONOMY`, `GLOBAL_SET` and `FORM` list them), and the other languages' own URL patterns (`routes`, only when there are some; [translated URLs](site.md#translated-urls)), checked on import like the admin checks them. The patterns a language had before (`previous_routes`, `StructureImporter::NOT_CARRIED`) are the site's own history and stay out: an import that changes a pattern keeps the site's old one to redirect from.
+Every setting of a collection, taxonomy, global set and form is in the file, "SEO from fields" (`seo_title_field`, `seo_description_field`, `seo_image_field`) and a form's `notify_roles` included (`StructureImporter::COLLECTION`, `TAXONOMY`, `GLOBAL_SET` and `FORM` list them), and the other languages' own URL patterns (`routes`, only when there are some; [translated URLs](site.md#translated-urls)), checked on import like the admin checks them. A taxonomy's `collection_pages` holds each attached collection's [term pages](taxonomies.md#term-pages-and-fields) (`pages`, and its own `route` and `routes` when it has some); a collection it doesn't name keeps its own (new ones get them). The patterns a language had before (`previous_routes`, `StructureImporter::NOT_CARRIED`) are the site's own history and stay out: an import that changes a pattern keeps the site's old one to redirect from.
 
 Menu links point at entries and terms by collection or taxonomy and slug in the main language (`"entry": "pages/about"`), those in the trash included, so they're found on another site by slug; links whose entry or term was permanently deleted are left out. A structure file written before the pages existed has no links to them, and importing it leaves a menu's links to them alone.
 

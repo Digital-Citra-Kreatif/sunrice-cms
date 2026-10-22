@@ -198,8 +198,9 @@ final class Menus
                 return null;
             }
             $translation = $term->translations->firstWhere('locale', $locale) ?? $term->translation();
-            $translation?->setRelation('term', $term);
-            $url = $translation === null ? null : app(Site::class)->termUrlIn($translation, $locale);
+            // With a collection: its term page there (/books/tags/featured); without, the same page wherever the menu shows.
+            $translation?->setRelation('term', $term)->in($item->collection_id !== null ? $item->collection : null);
+            $url = $translation === null ? null : app(Site::class)->termUrlIn($translation, $locale, followPage: false);
 
             return $url === null ? null : ['label' => $own ?? ($translation->locale === $locale ? $translation->title : ($main ?? $translation->title)), 'url' => $url];
         }

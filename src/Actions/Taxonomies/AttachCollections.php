@@ -12,6 +12,7 @@ use Sunrice\Cms\Fields\Types\TermsField;
 use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Taxonomy;
+use Sunrice\Cms\Support\SiteCache;
 
 /**
  * The collections whose entries a taxonomy groups. A collection attached
@@ -42,6 +43,10 @@ final class AttachCollections
             $taxonomy->collections()->sync($ids);
             $attached = array_values(array_diff($ids, $before));
             $detached = array_values(array_diff($before, $ids));
+            if ($attached !== [] || $detached !== []) {
+                // Its terms have pages in collections it's attached to (CollectionTaxonomy::$term_pages, on for new ones).
+                app(SiteCache::class)->changed('term pages');
+            }
 
             $added = [];
             foreach (self::blueprintsOf($attached) as $blueprint) {

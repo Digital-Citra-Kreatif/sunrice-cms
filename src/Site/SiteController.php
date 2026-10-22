@@ -175,17 +175,23 @@ final class SiteController
         ]));
     }
 
-    /** A term's page: its fields and the live entries with it, newest first. */
+    /**
+     * A term's page: its fields and the live entries with it, newest first;
+     * on a collection's term page (/books/tags/featured), only that
+     * collection's.
+     */
     private function renderTerm(TermTranslation $translation, string $locale): Response
     {
         $fallback = $locale !== $translation->locale;
         app()->setLocale($locale);
         $term = $translation->term;
         $taxonomy = $term->taxonomy;
+        $collection = $translation->scope;
         // Run when the template first uses $entries: those of the term and, in a hierarchy, of the terms under it.
-        $entries = new LazyEntries(function () use ($term, $taxonomy, $locale): LengthAwarePaginator {
+        $entries = new LazyEntries(function () use ($term, $taxonomy, $locale, $collection): LengthAwarePaginator {
             $terms = [$term->id, ...($taxonomy->hierarchical ? $term->descendantIds() : [])];
             $entries = EntryPaginator::from(EntryTranslation::query()->live()->with(self::listed($locale))->shownIn($locale)
+                ->when($collection !== null, fn ($q) => $q->where('collection_id', $collection?->id))
                 ->whereHas('entry.terms', fn ($q) => $q->whereIn('sunrice_terms.id', $terms))
                 ->orderByDesc('published_at')->orderByDesc('id')->paginate(10))->withQueryString();
             // Hydrated together: the first values() loads what all of them point at.
@@ -193,8 +199,9 @@ final class SiteController
 
             return $entries;
         });
+        // The term's own, then (in a collection) cms.{collection}.{taxonomy}, the taxonomy's, cms.taxonomy-{handle}, cms.term, the CMS's plain one.
         $view = 'sunrice-cms::term';
-        foreach (array_filter([self::own($term->template), $taxonomy->template, "cms.taxonomy-{$taxonomy->handle}", 'cms.term']) as $candidate) {
+        foreach (array_filter([self::own($term->template), $collection !== null ? "cms.{$collection->handle}.{$taxonomy->handle}" : null, $taxonomy->template, "cms.taxonomy-{$taxonomy->handle}", 'cms.term']) as $candidate) {
             if (View::exists($candidate)) {
                 $view = $candidate;
 
@@ -202,11 +209,13 @@ final class SiteController
             }
         }
         $schema = $taxonomy->schema();
-        $view = (new Page(Page::TERM, $locale, $view, term: $translation, pageNumber: self::pageNumber(), fallback: $fallback))->share()->view;
+        $view = (new Page(Page::TERM, $locale, $view, collection: $collection, term: $translation, pageNumber: self::pageNumber(), fallback: $fallback))->share()->view;
 
         return $this->hidden(self::renderView($view, [
             'term' => $translation,
             'taxonomy' => $taxonomy,
+            // The collection whose term page this is; null on the shared one.
+            'collection' => $collection,
             'title' => $translation->title,
             'entries' => $entries,
             'values' => $translation->values(),

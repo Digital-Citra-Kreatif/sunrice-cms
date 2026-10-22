@@ -31,6 +31,7 @@ use Sunrice\Cms\Globals;
 use Sunrice\Cms\Menus;
 use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Collection;
+use Sunrice\Cms\Models\CollectionTaxonomy;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Fieldset;
@@ -365,9 +366,15 @@ final class StructureImporter
             ...array_fill_keys(self::SEO_FIELDS, self::FIELD_HANDLE),
             'collections' => ['sometimes', 'array'],
             'collections.*' => ['string', Rule::exists((new Collection)->getTable(), 'handle')],
+            'collection_pages' => ['sometimes', 'array'],
+            'collection_pages.*' => ['array:pages,route,routes'],
+            'collection_pages.*.pages' => ['sometimes', 'boolean'],
+            'collection_pages.*.route' => ['nullable', 'string', 'max:255', self::routeRule()],
+            'collection_pages.*.routes' => ['nullable', 'array'],
+            'collection_pages.*.routes.*' => ['string', 'max:255', self::routeRule()],
             ...self::TRANSLATIONS,
         ])->validate();
-        $before = $existing === null ? null : [...$existing->only(self::TAXONOMY), 'collections' => $existing->collections()->pluck('handle')->sort()->values()->all()];
+        $before = $existing === null ? null : [...$existing->only(self::TAXONOMY), 'collections' => self::collectionPages($existing)];
         $taxonomy = $existing ?? new Taxonomy;
         self::checkRoutes($taxonomy, $validated, ['route']);
         $taxonomy->fill(array_intersect_key($validated, array_flip(array_diff(self::TAXONOMY, ['routes']))));
@@ -376,7 +383,33 @@ final class StructureImporter
         if (array_key_exists('collections', $validated)) {
             $taxonomy->collections()->sync(Collection::query()->whereIn('handle', $validated['collections'])->pluck('id')->all());
         }
-        $this->report->add('taxonomy', $taxonomy->handle, $this->status($before, [...$taxonomy->only(self::TAXONOMY), 'collections' => $taxonomy->collections()->pluck('handle')->sort()->values()->all()]));
+        // Each attached collection's term pages; those not named keep theirs.
+        if (is_array($validated['collection_pages'] ?? null)) {
+            $ids = $taxonomy->collections()->pluck('sunrice_collections.id', 'handle');
+            foreach ($validated['collection_pages'] as $handle => $pages) {
+                if (isset($ids[$handle]) && is_array($pages)) {
+                    $taxonomy->collections()->updateExistingPivot($ids[$handle], [
+                        'term_pages' => (bool) ($pages['pages'] ?? true),
+                        'term_route' => is_string($pages['route'] ?? null) && $pages['route'] !== '' ? $pages['route'] : null,
+                        'term_routes' => is_array($pages['routes'] ?? null) && $pages['routes'] !== [] ? $pages['routes'] : null,
+                    ]);
+                }
+            }
+        }
+        $this->report->add('taxonomy', $taxonomy->handle, $this->status($before, [...$taxonomy->only(self::TAXONOMY), 'collections' => self::collectionPages($taxonomy)]));
+    }
+
+    /**
+     * The collections a taxonomy is attached to with their term pages, to
+     * tell whether an import changed them.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    private static function collectionPages(Taxonomy $taxonomy): array
+    {
+        return $taxonomy->collections()->orderBy('handle')->get()
+            ->mapWithKeys(fn (Collection $c): array => [$c->handle => $c->getRelation('pivot') instanceof CollectionTaxonomy ? $c->getRelation('pivot')->only(['term_pages', 'term_route', 'term_routes']) : []])
+            ->all();
     }
 
     /** @param array<mixed> $item */

@@ -16,7 +16,7 @@ Set a collection's URL under Structure → Collections: a path with `{slug}` onc
 
 ### Translated URLs
 
-By default only the prefix tells languages apart: `/books/{slug}` and `/id/books/{slug}`, `/books` and `/id/books`; slugs are translated, the fixed parts aren't. Each language can have its own pattern instead, under its prefix: **Entry URL in …**, **Listing page URL in …** (Structure → Collections) and **Term page URL in …** (Structure → Taxonomies), shown next to the main fields when the site has more than one language, with the main pattern as placeholder. `/buku/{slug}` and `/buku` for Indonesian give `/id/buku/halo` and `/id/buku`. Empty: the main pattern under the prefix, as before.
+By default only the prefix tells languages apart: `/books/{slug}` and `/id/books/{slug}`, `/books` and `/id/books`; slugs are translated, the fixed parts aren't. Each language can have its own pattern instead, under its prefix: **Entry URL in …**, **Listing page URL in …** (Structure → Collections) and **Shared term page URL in …** and each collection's **term page URL in …** (Structure → Taxonomies), shown next to the main fields when the site has more than one language, with the main pattern as placeholder. `/buku/{slug}` and `/buku` for Indonesian give `/id/buku/halo` and `/id/buku`. Empty: the main pattern under the prefix, as before.
 
 - They're checked like the main ones: a collection's entry URL may hold the same kind of `{field}` parameters (each an Entries field of its blueprint), a term page URL only `{slug}`, a listing URL fixed segments. No two collections (or two taxonomies) may have the same pattern in a language, counting a language's own pattern and the main pattern of those without one; that goes for the main field too.
 - The site matches each language's own patterns, and only in that language: `/id/buku/halo` is the books collection in Indonesian, `/buku/hello` is nothing. Specificity is as for the main patterns, among the patterns of that language (most specific first, collections before taxonomies, listing pages before any `{slug}`).
@@ -101,7 +101,7 @@ It copies them into `resources/views/cms/`, where the rules above pick them up, 
 | `cms/layout.blade.php` | every page (`@extends('cms.layout')`, `@section('content')`, `@push('head')`) | `<x-sunrice-cms::seo>`, site code, the `main` and `footer` menus, the language switcher, a footer (the `footer` global's `text`), `@bodyClass`, a skip link |
 | `cms/entry.blade.php` | any entry | the title, date and fields; a note on [untranslated pages](#untranslated-pages); comments |
 | `cms/listing.blade.php` | listing pages | the listing's fields, cards, pagination |
-| `cms/term.blade.php` | term pages | the term's fields and its entries |
+| `cms/term.blade.php` | term pages | the term's fields and its entries (`cms/{collection}/{taxonomy}.blade.php` first for a collection's term pages) |
 | `cms/search.blade.php` | the search page | the search box, results |
 | `cms/comment-unsubscribe.blade.php` | a reply email's "stop these emails" link | the confirm button, then the done message, in the layout ([Comments](comments.md)) |
 | `cms/partials/fields.blade.php` | the pages above | text, rich text, images, galleries, links and flexible blocks, by kind |
@@ -186,7 +186,7 @@ Code there runs in every visitor's browser, so give the permission only to peopl
 @endforeach
 ```
 
-- `Cms::bodyClass($extra)`: what the page is, for CSS and scripts. Entries: `page-entry collection-{handle} entry-{id} entry-{slug}`, with `home`, `has-parent parent-{id}` and `is-preview` when they apply; listing pages: `page-listing collection-{handle}`; term pages: `page-term taxonomy-{handle} term-{id} term-{slug}`; pages past the first: `paged paged-{n}`; always `template-{view} lang-{locale}`, and `logged-in` for people signed in to the panel. On your app's own pages: `lang-{locale}` and your extras.
+- `Cms::bodyClass($extra)`: what the page is, for CSS and scripts. Entries: `page-entry collection-{handle} entry-{id} entry-{slug}`, with `home`, `has-parent parent-{id}` and `is-preview` when they apply; listing pages: `page-listing collection-{handle}`; term pages: `page-term taxonomy-{handle} term-{id} term-{slug}`, with `collection-{handle}` on a collection's; pages past the first: `paged paged-{n}`; always `template-{view} lang-{locale}`, and `logged-in` for people signed in to the panel. On your app's own pages: `lang-{locale}` and your extras.
 - `Cms::localeUrls()`: the page shown in each language it's live in (and, with the [main-language fallback](#untranslated-pages), the others), in the order of `sunrice-cms.locales`, for a language switcher (none on your app's own pages); a listing's or term page's keep its query string (filters, sort, page).
 - `Cms::page()`: the page shown (`Sunrice\Cms\Site\Page`: `type`, `locale`, `view`, `entry`, `collection`, `term`, `preview`, `home`, `pageNumber`, `fallback`; `contentLocale()` and `langAttribute()`), or null.
 

@@ -19,12 +19,13 @@ app(SaveMenu::class)->handle($menu, [
     ]],
     ['url' => 'https://shop.example.com', 'labels' => ['en' => 'Shop'], 'new_tab' => true],
     ['term_id' => $news->id],                         // the term's page
+    ['term_id' => $news->id, 'collection_id' => $books->id], // its page in a collection
     ['collection_id' => $blog->id, 'labels' => ['en' => 'Blog']],   // the listing page
     ['collection_id' => $homes->id, 'query' => 'listing_type=for-sale', 'labels' => ['en' => 'For sale', 'id' => 'Dijual']],
 ]);
 ```
 
-A listing page's link may carry **filters** (`query`, *Filters* in the editor): a query string added to the listing's address in every language (`/properties?listing_type=for-sale`, `/id/properties?listing_type=for-sale`). The names are those the listing template's [`<x-sunrice-cms::entry-filter>`](site.md#filtering-entries) declares (its `filters`, and `sort`, `page`); a terms filter takes a term's slug in any language, or its id, so one link works in every language. It's kept re-encoded (`city[]=a` as `city%5B0%5D=a`), and only listing links take it.
+A term link goes to the term's [usual page](taxonomies.md#term-pages-and-fields); with `collection_id`, to its page in that collection. The editor's *Page* offers **Shared page (all collections)** when its taxonomy has shared term pages and **{collection} only** for each collection whose term pages are on, and the list says which ("Tags · Shared page", "Tags · Books"); the link goes to its page in that collection, which must have term pages for its taxonomy. A listing page's link may carry **filters** (`query`, *Filters* in the editor): a query string added to the listing's address in every language (`/properties?listing_type=for-sale`, `/id/properties?listing_type=for-sale`). The names are those the listing template's [`<x-sunrice-cms::entry-filter>`](site.md#filtering-entries) declares (its `filters`, and `sort`, `page`); a terms filter takes a term's slug in any language, or its id, so one link works in every language. It's kept re-encoded (`city[]=a` as `city%5B0%5D=a`), and only listing links take it.
 
 ## In templates
 

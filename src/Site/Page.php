@@ -103,7 +103,7 @@ final readonly class Page
      *
      *   entry     page-entry collection-{handle} entry-{id} entry-{slug} [home] [has-parent parent-{id}] [is-preview | is-draft]
      *   listing   page-listing collection-{handle} [paged paged-{n}]
-     *   term      page-term taxonomy-{handle} term-{id} term-{slug} [paged paged-{n}]
+     *   term      page-term [collection-{handle}] taxonomy-{handle} term-{id} term-{slug} [paged paged-{n}] (collection-: a collection's term page)
      *   search    page-search [paged paged-{n}]
      *   always    template-{view} lang-{locale} [logged-in]
      *
@@ -175,15 +175,16 @@ final readonly class Page
         } elseif ($this->term !== null) {
             $term = $this->term->term;
             $site = app(Site::class);
+            // A collection's term page stays in that collection in every language.
             foreach ($term->translations as $translation) {
-                $translation->setRelation('term', $term);
+                $translation->setRelation('term', $term)->in($this->term->scope);
                 if (($url = $translation->url()) !== null) {
                     $urls[$translation->locale] = $this->paged($url);
                 }
             }
             $main = $term->translations->firstWhere('locale', Locales::default());
             foreach (Locales::all() as $locale) {
-                if (! isset($urls[$locale]) && $main !== null && Site::fallback() && ($url = $site->termUrlIn($main, $locale)) !== null) {
+                if (! isset($urls[$locale]) && $main !== null && Site::fallback() && ($url = $site->termUrlIn($main->in($this->term->scope), $locale)) !== null) {
                     $urls[$locale] = $this->paged($url);
                 }
             }

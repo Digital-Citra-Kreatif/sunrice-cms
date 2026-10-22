@@ -136,7 +136,8 @@ final class Seo
         $term = $translation->term;
         $alternates = [];
         foreach ($term->translations as $other) {
-            $other->setRelation('term', $term);
+            // The same page in each language: a collection's term page stays in that collection.
+            $other->setRelation('term', $term)->in($translation->scope);
             if (($url = $other->url()) !== null) {
                 $alternates[$other->locale] = self::paged($url, $page);
             }
@@ -173,7 +174,7 @@ final class Seo
      */
     public static function forListing(Collection $collection, string $locale, ?int $page = null): array
     {
-        $page ??= self::shownPage(fn (Page $shown): bool => $shown->collection?->is($collection) === true && $shown->locale === $locale);
+        $page ??= self::shownPage(fn (Page $shown): bool => $shown->type === Page::LISTING && $shown->collection?->is($collection) === true && $shown->locale === $locale);
         $own = $collection->listings->firstWhere('locale', $locale)?->data[self::KEY] ?? null;
         $seo = is_array($own) ? $own : [];
 

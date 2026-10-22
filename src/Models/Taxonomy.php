@@ -25,7 +25,7 @@ use Sunrice\Cms\Support\SiteRecords;
  * @property string $title in the main language (titleIn() for the others)
  * @property array<string, array<string, string>>|null $translations what visitors read in the other languages: {"id": {"title": "Lokasi"}}
  * @property bool $hierarchical terms can have a parent
- * @property string|null $route term pages' URL pattern ("/topics/{slug}") in the main language (routeIn() for the others); none: no pages
+ * @property string|null $route shared term pages' URL pattern ("/topics/{slug}": each term's entries from every collection) in the main language (routeIn() for the others); none: no shared pages (collections may still have theirs: CollectionTaxonomy)
  * @property array<string, array<string, string>>|null $routes the other languages' own patterns: {"id": {"route": "/topik/{slug}"}} (HasLanguageRoutes)
  * @property array<string, array<string, list<string>>>|null $previous_routes the patterns they had before, which redirect
  * @property string|null $blueprint terms' own fields
@@ -70,10 +70,16 @@ class Taxonomy extends Model
         return ['hierarchical' => 'boolean', 'translations' => 'array', 'routes' => 'array', 'previous_routes' => 'array'];
     }
 
-    /** @return BelongsToMany<Collection, $this> */
+    /**
+     * The collections whose entries it groups; `pivot` says whether its
+     * terms have pages in each (CollectionTaxonomy).
+     *
+     * @return BelongsToMany<Collection, $this, CollectionTaxonomy>
+     */
     public function collections(): BelongsToMany
     {
-        return $this->belongsToMany(Collection::class, 'sunrice_collection_taxonomy');
+        return $this->belongsToMany(Collection::class, 'sunrice_collection_taxonomy')->using(CollectionTaxonomy::class)
+            ->withPivot(['term_pages', 'term_route', 'term_routes']);
     }
 
     /** @return HasMany<Term, $this> */

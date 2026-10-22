@@ -81,12 +81,19 @@ final class SaveMenu
             $count++;
             $key = "{$path}.{$index}";
             $rules[$key] = ['array'];
-            // One target: an entry, a term's page, a listing page or an address.
+            // One target: an entry, a term's page (with a collection: its page there), a listing page or an address.
             $targets = ["{$key}.entry_id", "{$key}.term_id", "{$key}.collection_id", "{$key}.url"];
-            $others = fn (string $target): string => 'prohibits:'.implode(',', array_diff($targets, [$target]));
+            $others = fn (string $target, string ...$also): string => 'prohibits:'.implode(',', array_diff($targets, [$target, ...$also]));
             $rules["{$key}.entry_id"] = ['required_without_all:'.implode(',', array_diff($targets, ["{$key}.entry_id"])), 'nullable', $others("{$key}.entry_id"), 'integer', 'exists:'.(new Entry)->getTable().',id'];
-            $rules["{$key}.term_id"] = ['nullable', $others("{$key}.term_id"), 'integer', 'exists:'.(new Term)->getTable().',id'];
-            $rules["{$key}.collection_id"] = ['nullable', $others("{$key}.collection_id"), 'integer', 'exists:'.(new Collection)->getTable().',id'];
+            $rules["{$key}.term_id"] = ['nullable', $others("{$key}.term_id", "{$key}.collection_id"), 'integer', 'exists:'.(new Term)->getTable().',id'];
+            $rules["{$key}.collection_id"] = ['nullable', $others("{$key}.collection_id", "{$key}.term_id"), 'integer', 'exists:'.(new Collection)->getTable().',id',
+                function (string $attribute, mixed $value, \Closure $fail) use ($item): void {
+                    // A term's page in a collection: only where its taxonomy's terms have pages.
+                    $term = is_array($item) && is_numeric($item['term_id'] ?? null) ? Term::query()->find((int) $item['term_id']) : null;
+                    if ($term !== null && is_numeric($value) && ! $term->taxonomy->collections()->wherePivot('term_pages', true)->whereKey((int) $value)->exists()) {
+                        $fail(__('Its terms have no pages in that collection.'));
+                    }
+                }];
             $rules["{$key}.url"] = ['nullable', $others("{$key}.url"), 'string', 'max:2048', SafeUrl::rule()];
             $rules["{$key}.labels"] = ['nullable', 'array'];
             foreach (Locales::all() as $locale) {
@@ -95,7 +102,7 @@ final class SaveMenu
             // An address has no title to fall back on.
             $rules["{$key}.labels.".Locales::default()][] = "required_with:{$key}.url";
             $rules["{$key}.query"] = ['nullable', 'string', 'max:500', function (string $attribute, mixed $value, \Closure $fail) use ($item): void {
-                if (! is_array($item) || ! is_numeric($item['collection_id'] ?? null)) {
+                if (! is_array($item) || ! is_numeric($item['collection_id'] ?? null) || is_numeric($item['term_id'] ?? null)) {
                     $fail(__('Only a link to a listing page takes filters.'));
                 } elseif (self::queryString($value) === null) {
                     $fail(__('Write the filters as on the listing page\'s address: listing_type=for-sale&city=jakarta.'));

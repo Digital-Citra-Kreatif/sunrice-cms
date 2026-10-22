@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Sunrice\Cms\Models;
 use Sunrice\Cms\Site\Site;
 use Sunrice\Cms\Support\Locales;
 
@@ -111,20 +112,49 @@ class Term extends Model
     /**
      * The term's page in a language: its translation's, else (with the
      * main-language fallback) the main language's at that language's
-     * address. Null: its taxonomy has no pages, or it has no page there.
+     * address. In a collection (a model or handle), its page there
+     * (/books/tags/featured, only that collection's entries); without one,
+     * the shared page, else the page shown's collection's, else the first
+     * collection's (Site::termUrl()). Null: no such page.
      */
-    public function url(?string $locale = null): ?string
+    public function url(?string $locale = null, Models\Collection|string|null $collection = null): ?string
     {
         $locale ??= Locales::current();
+        if (is_string($collection)) {
+            $collection = $this->taxonomy->collections->firstWhere('handle', $collection);
+            if ($collection === null) {
+                return null;
+            }
+        }
         $translation = $this->translations->firstWhere('locale', $locale);
         if ($translation === null && $locale !== Locales::default() && Site::fallback()) {
             $main = $this->translations->firstWhere('locale', Locales::default());
             $main?->setRelation('term', $this);
 
-            return $main === null ? null : app(Site::class)->termUrlIn($main, $locale);
+            return $main === null ? null : self::scoped($main, $collection, fn () => app(Site::class)->termUrlIn($main, $locale));
         }
 
-        return $translation?->url();
+        return $translation === null ? null : self::scoped($translation, $collection, fn () => $translation->url());
+    }
+
+    /**
+     * A URL worked out with a translation scoped to a collection, leaving
+     * it as it was (it's shared with the term's other uses).
+     *
+     * @param  \Closure(): ?string  $url
+     */
+    private static function scoped(TermTranslation $translation, ?Models\Collection $collection, \Closure $url): ?string
+    {
+        if ($collection === null) {
+            return $url();
+        }
+        $before = $translation->scope;
+        $translation->scope = $collection;
+        try {
+            return $url();
+        } finally {
+            $translation->scope = $before;
+        }
     }
 
     /** The title in a language (falling back to the main one). */

@@ -128,10 +128,16 @@ class Collection extends Model
         return $this->hasMany(Entry::class);
     }
 
-    /** @return BelongsToMany<Taxonomy, $this> */
+    /**
+     * The taxonomies grouping its entries; `pivot` says whether their
+     * terms have pages in it (CollectionTaxonomy).
+     *
+     * @return BelongsToMany<Taxonomy, $this, CollectionTaxonomy>
+     */
     public function taxonomies(): BelongsToMany
     {
-        return $this->belongsToMany(Taxonomy::class, 'sunrice_collection_taxonomy');
+        return $this->belongsToMany(Taxonomy::class, 'sunrice_collection_taxonomy')->using(CollectionTaxonomy::class)
+            ->withPivot(['term_pages', 'term_route', 'term_routes']);
     }
 
     /** The fields of its entries (none without a blueprint), loaded once. */
