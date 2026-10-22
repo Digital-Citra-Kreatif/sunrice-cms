@@ -9,12 +9,14 @@ use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
 use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Models\ContentReference;
+use Sunrice\Cms\Models\MenuItem;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Support\References;
 
 /**
  * Deletes a term in all languages. Terms under it move up to its parent;
- * entries keep the id in their fields, which then show nothing for it.
+ * entries keep the id in their fields, which then show nothing for it;
+ * menu links to it are left out.
  * A term other content points at (Term::referencedBy()) is refused unless
  * forced.
  *
@@ -37,6 +39,8 @@ final class DeleteTerm
             // Explicitly, not by the foreign keys' cascade: not every connection enforces them.
             $term->translations()->delete();
             $term->entries()->detach();
+            // Its menu links lose every target, so they're left out like an entry's that's gone: the foreign key alone would leave a term link in a collection pointing at the collection's listing page.
+            MenuItem::query()->where('term_id', $term->id)->update(['term_id' => null, 'collection_id' => null]);
             $term->forceDelete();
             References::forget(ContentReference::TERM, $term->id);
         });

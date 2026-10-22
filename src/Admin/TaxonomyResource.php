@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sunrice\Cms\Admin;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Resources\Forms\CheckboxList;
@@ -28,6 +29,7 @@ use Sunrice\Cms\Models\CollectionTaxonomy;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Site\RouteConflicts;
 use Sunrice\Cms\Site\RoutePatternRule;
+use Sunrice\Cms\Site\TemplateRule;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\SiteCache;
 
@@ -41,6 +43,9 @@ use Sunrice\Cms\Support\SiteCache;
 final class TaxonomyResource extends Resource
 {
     protected static string $model = Taxonomy::class;
+
+    /** @var \WeakMap<Taxonomy, list<int>>|null the collections a save just ticked, by taxonomy, for savePivots() */
+    private static ?\WeakMap $attached = null;
 
     public static function navigationGroup(): string
     {
@@ -86,13 +91,17 @@ final class TaxonomyResource extends Resource
                 Toggle::make('hierarchical')->label('Nested terms')->span(2)->help('Terms can sit under other terms, like subcategories.'),
                 CheckboxList::make('collections')->span(2)
                     ->help('Ticking a collection adds a terms field for this taxonomy to its blueprints (when they have none), so editors choose terms on its entries, and its entries list filters by them.')
-                    ->verbatim()->options(fn () => Collection::query()->orderBy('title')->get()->mapWithKeys(fn (Collection $c): array => [(string) $c->id => $c->title])->all())
-                    ->loadUsing(fn (Model $taxonomy): array => $taxonomy instanceof Taxonomy
-                        ? $taxonomy->collections()->get(['sunrice_collections.id'])->map(fn (Collection $c): string => (string) $c->id)->all()
+                    ->verbatim()->options(fn () => self::collections()->mapWithKeys(fn (Collection $c): array => [(string) $c->id => $c->title])->all())
+                    ->loadUsing(fn (Model $taxonomy): array => $taxonomy instanceof Taxonomy && $taxonomy->exists
+                        ? $taxonomy->loadMissing('collections')->collections->map(fn (Collection $c): string => (string) $c->id)->values()->all()
                         : [])
                     ->saveUsing(function (Model $taxonomy, mixed $ids): void {
                         if ($taxonomy instanceof Taxonomy) {
-                            app(AttachCollections::class)->handle($taxonomy, array_values(array_map(intval(...), array_filter(is_array($ids) ? $ids : [], is_numeric(...)))), request()->boolean('remove_term_fields'));
+                            // Their URLs are checked with the form's values for them (savePivots()).
+                            $result = app(AttachCollections::class)->handle($taxonomy, array_values(array_map(intval(...), array_filter(is_array($ids) ? $ids : [], is_numeric(...)))), request()->boolean('remove_term_fields'), checkRoutes: false);
+                            self::$attached ??= new \WeakMap;
+                            self::$attached[$taxonomy] = $result['attached'];
+                            $taxonomy->unsetRelation('collections');
                         }
                     }),
                 // Asked only once the collections change: read by the collections' saveUsing, never stored.
@@ -110,7 +119,7 @@ final class TaxonomyResource extends Resource
                         Link::make('Edit', route('sunrice.admin.cms.blueprints.index', [], false).'/{index_blueprint}/edit')->showWhen('index_blueprint'),
                     ]),
                 TextInput::make('index_template')->label('Index page template')->placeholder('cms.tag-cloud')->span(2)
-                    ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
+                    ->rules([new TemplateRule('cms.tag-cloud')])
                     ->help('For its index pages, the shared one and each collection\'s. Empty: the first template that exists.')
                     ->helpDetails('Which file?', TemplateHelp::files(['cms.taxonomies.{handle}.index', 'cms.taxonomies.index'], 'cms.tag-cloud')."\n".__('In a collection, :file is tried first.', ['file' => '`cms/collections/{collection}/{handle}/index.blade.php`'])),
             ]),
@@ -133,7 +142,11 @@ final class TaxonomyResource extends Resource
                     Toggle::make('pages')->label('Shared term pages')->default(false)->span(2)
                         ->help('Worth it when several collections share this taxonomy. With one, its collection\'s term pages list the same entries.')
                         ->loadUsing(fn (Model $taxonomy): bool => $taxonomy->getAttribute('route') !== null)
-                        ->saveUsing(fn (Model $taxonomy, mixed $on) => CollectionResource::switchPage($taxonomy, 'route', $on, '/{handle}/{slug}')),
+                        // Saved after the collections' term and index page fields, which it writes (savePivots()).
+                        ->saveUsing(function (Model $taxonomy, mixed $on): void {
+                            self::savePivots($taxonomy);
+                            CollectionResource::switchPage($taxonomy, 'route', $on, '/{handle}/{slug}');
+                        }),
                     RouteInput::make('route')->language(null, 'route')->label('Shared term page URL')->placeholder('/{handle}/{slug}')->unique()->span(2)->showWhen('pages')
                         ->rules([new RoutePatternRule(parameters: false)])
                         ->help('Like /topics/{slug}. Empty: /{handle}/{slug}.'),
@@ -161,7 +174,7 @@ final class TaxonomyResource extends Resource
                         ->links(fn (?Model $taxonomy): array => $taxonomy instanceof Taxonomy && $taxonomy->index_route !== null && ($url = $taxonomy->indexUrl($code)) !== null
                             ? [Link::make('View on site', $url)->newTab()->showWhen('index')] : [])),
                     TextInput::make('template')->label('Term page template')->placeholder('cms.topic')->span(2)
-                        ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
+                        ->rules([new TemplateRule('cms.topic')])
                         ->help('For shared and collections\' term pages. Empty: the first template that exists. A term can choose its own on its page.')
                         ->helpDetails('Which file?', TemplateHelp::files(['cms.taxonomies.{handle}.show', 'cms.taxonomies.show'], 'cms.topic')."\n".__('Before this template, :file is tried for the term with that slug in the main language.', ['file' => '`cms/taxonomies/{handle}/{slug}.blade.php`'])."\n".__('In a collection, :slug and then :file are tried first.', ['slug' => '`cms/collections/{collection}/{handle}/{slug}.blade.php`', 'file' => '`cms/collections/{collection}/{handle}/show.blade.php`'])),
                 ]),
@@ -171,64 +184,36 @@ final class TaxonomyResource extends Resource
     /**
      * For each collection, shown while it's ticked: whether this
      * taxonomy's terms have pages in it, and their URL (and each other
-     * language's), stored on the attachment (CollectionTaxonomy).
+     * language's), stored on the attachment (CollectionTaxonomy). Read
+     * from the attachments as loaded; saving sets the values there, and
+     * the shared term pages' switch, saved after them, writes each
+     * attachment once (savePivots()).
      *
      * @return list<Field>
      */
     private static function collectionTermFields(): array
     {
         $fields = [];
-        foreach (Collection::query()->orderBy('title')->get() as $collection) {
+        foreach (self::collections() as $collection) {
             $id = (string) $collection->id;
-            $pivot = function (Model $taxonomy) use ($collection): ?CollectionTaxonomy {
-                $p = $taxonomy instanceof Taxonomy && $taxonomy->exists ? $taxonomy->collections()->whereKey($collection->id)->first()?->getRelation('pivot') : null;
-
-                return $p instanceof CollectionTaxonomy ? $p : null;
-            };
             $fields[] = Toggle::make("term_pages_{$id}")->label(__('Term pages in :collection', ['collection' => $collection->title]))->span(2)->showWhen('collections', $id)
                 ->help(__('A page per term with only :collection\'s entries, like :url.', ['collection' => $collection->title, 'url' => str_replace('{slug}', 'featured', CollectionTaxonomy::defaultPattern($collection, new Taxonomy(['handle' => '{handle}'])))]))
-                ->loadUsing(fn (Model $taxonomy): bool => ($p = $pivot($taxonomy)) instanceof CollectionTaxonomy ? $p->term_pages : true)
-                ->saveUsing(fn (Model $taxonomy, mixed $on) => self::savePivot($taxonomy, $collection, ['term_pages' => filter_var($on, FILTER_VALIDATE_BOOL)]));
+                ->loadUsing(fn (Model $taxonomy): bool => self::pivot($taxonomy, $collection)->term_pages ?? true)
+                ->saveUsing(function (Model $taxonomy, mixed $on) use ($collection): void {
+                    self::pivot($taxonomy, $collection)?->setAttribute('term_pages', filter_var($on, FILTER_VALIDATE_BOOL));
+                });
             foreach (Locales::names() as $code => $language) {
                 $main = $code === Locales::default();
-                $field = $main ? "term_route_{$id}" : 'term_route_'.$id.'_'.preg_replace('/[^A-Za-z0-9]/', '_', $code);
-                $fields[] = TextInput::make($field)->span(2)->showWhen('collections', $id)
+                $fields[] = TextInput::make(self::pivotField('term', $collection, $code))->span(2)->showWhen('collections', $id)
                     ->label($main ? __(':collection: term page URL', ['collection' => $collection->title]) : __(':collection: term page URL in :language', ['collection' => $collection->title, 'language' => $language]))
                     ->placeholder($main ? '{listing}/{handle}/{slug}' : '')
                     ->rules(['nullable', 'string', 'max:255', new RoutePatternRule(parameters: false)])
                     ->help($main ? __('Empty: under :collection\'s listing page, like :url.', ['collection' => $collection->title, 'url' => CollectionTaxonomy::defaultPattern($collection, new Taxonomy(['handle' => '{handle}']))])
                         : __('Its own address in :language. Empty: the one above, else under :collection\'s listing page there.', ['language' => $language, 'collection' => $collection->title]))
-                    ->loadUsing(function (Model $taxonomy) use ($pivot, $main, $code): ?string {
-                        $p = $pivot($taxonomy);
-
-                        return $p === null ? null : ($main ? $p->term_route : ($p->term_routes[$code] ?? null));
-                    })
-                    ->saveUsing(function (Model $taxonomy, mixed $value) use ($collection, $main, $code, $field): void {
-                        $value = is_string($value) && trim($value) !== '' ? trim($value) : null;
-                        if (! $taxonomy instanceof Taxonomy) {
-                            return;
-                        }
-                        $p = $taxonomy->collections()->whereKey($collection->id)->first()?->getRelation('pivot');
-                        if (! $p instanceof CollectionTaxonomy) {
-                            return;
-                        }
-                        if ($value !== null && $p->term_pages && ($other = RouteConflicts::forTermPages($collection, $taxonomy, $code, $value)) !== null) {
-                            throw ValidationException::withMessages([$field => __(':title has this URL in :language already.', ['title' => $other, 'language' => Locales::name($code)])]);
-                        }
-                        if ($main) {
-                            self::savePivot($taxonomy, $collection, ['term_route' => $value]);
-                        } else {
-                            $own = $p->term_routes ?? [];
-                            if ($value === null) {
-                                unset($own[$code]);
-                            } else {
-                                $own[$code] = $value;
-                            }
-                            self::savePivot($taxonomy, $collection, ['term_routes' => $own === [] ? null : $own]);
-                        }
-                    });
+                    ->loadUsing(fn (Model $taxonomy): ?string => self::pivotRoute(self::pivot($taxonomy, $collection), 'term', $code))
+                    ->saveUsing(fn (Model $taxonomy, mixed $value) => self::setPivotRoute(self::pivot($taxonomy, $collection), 'term', $code, $value));
             }
-            array_push($fields, ...self::collectionIndexFields($collection, $pivot));
+            array_push($fields, ...self::collectionIndexFields($collection));
         }
 
         return $fields;
@@ -237,84 +222,176 @@ final class TaxonomyResource extends Resource
     /**
      * For a collection, shown while it's ticked: whether this taxonomy has
      * an index page in it, and its URL (and each other language's),
-     * stored on the attachment (CollectionTaxonomy).
+     * stored on the attachment (CollectionTaxonomy), as term pages are.
      *
-     * @param  \Closure(Model): ?CollectionTaxonomy  $pivot
      * @return list<Field>
      */
-    private static function collectionIndexFields(Collection $collection, \Closure $pivot): array
+    private static function collectionIndexFields(Collection $collection): array
     {
         $id = (string) $collection->id;
         $example = CollectionTaxonomy::defaultIndexPath($collection, new Taxonomy(['handle' => '{handle}']));
         $fields = [Toggle::make("index_page_{$id}")->label(__('Index page in :collection', ['collection' => $collection->title]))->span(2)->showWhen('collections', $id)
             ->help(__('A page listing the terms :collection\'s entries have, like :url.', ['collection' => $collection->title, 'url' => $example]))
-            ->loadUsing(fn (Model $taxonomy): bool => ($p = $pivot($taxonomy)) instanceof CollectionTaxonomy ? $p->index_page : true)
-            ->saveUsing(fn (Model $taxonomy, mixed $on) => self::savePivot($taxonomy, $collection, ['index_page' => filter_var($on, FILTER_VALIDATE_BOOL)]))];
+            ->loadUsing(fn (Model $taxonomy): bool => self::pivot($taxonomy, $collection)->index_page ?? true)
+            ->saveUsing(function (Model $taxonomy, mixed $on) use ($collection): void {
+                self::pivot($taxonomy, $collection)?->setAttribute('index_page', filter_var($on, FILTER_VALIDATE_BOOL));
+            })];
         foreach (Locales::names() as $code => $language) {
             $main = $code === Locales::default();
-            $field = $main ? "index_route_{$id}" : 'index_route_'.$id.'_'.preg_replace('/[^A-Za-z0-9]/', '_', $code);
-            $fields[] = TextInput::make($field)->span(2)->showWhen('collections', $id)
+            $fields[] = TextInput::make(self::pivotField('index', $collection, $code))->span(2)->showWhen('collections', $id)
                 ->label($main ? __(':collection: index page URL', ['collection' => $collection->title]) : __(':collection: index page URL in :language', ['collection' => $collection->title, 'language' => $language]))
                 ->placeholder($main ? '{listing}/{handle}' : '')
                 ->rules(['nullable', 'string', 'max:255', CollectionResource::LISTING_ROUTE])
                 ->help($main ? __('Empty: under :collection\'s listing page, like :url.', ['collection' => $collection->title, 'url' => $example])
                     : __('Its own address in :language. Empty: the one above, else under :collection\'s listing page there.', ['language' => $language, 'collection' => $collection->title]))
-                ->links(function (?Model $taxonomy) use ($collection, $code, $pivot): array {
+                ->links(function (?Model $taxonomy) use ($collection, $code): array {
                     // From the attachment as stored (the site's routes may be cached).
-                    $p = $taxonomy instanceof Taxonomy ? $pivot($taxonomy) : null;
-                    $url = $p !== null && $p->index_page ? url(Locales::prefix($code).$p->indexPath($collection, $taxonomy, $code)) : null;
+                    $p = $taxonomy instanceof Taxonomy ? self::pivot($taxonomy, $collection) : null;
+                    $url = $taxonomy instanceof Taxonomy && $p !== null && $p->index_page ? url(Locales::prefix($code).$p->indexPath($collection, $taxonomy, $code)) : null;
 
                     return array_values(array_filter([
                         $url !== null ? Link::make('View on site', $url)->newTab() : null,
-                        $url !== null && $code === Locales::default()
+                        $taxonomy instanceof Taxonomy && $url !== null && $code === Locales::default()
                             ? Link::make('Edit index page', route('sunrice.admin.cms.taxonomies.index-page.edit', ['taxonomy' => $taxonomy->handle, 'collection' => $collection->handle], false)) : null,
                     ]));
                 })
-                ->loadUsing(function (Model $taxonomy) use ($pivot, $main, $code): ?string {
-                    $p = $pivot($taxonomy);
-
-                    return $p === null ? null : ($main ? $p->index_route : ($p->index_routes[$code] ?? null));
-                })
-                ->saveUsing(function (Model $taxonomy, mixed $value) use ($collection, $main, $code, $field): void {
-                    $value = is_string($value) && trim($value) !== '' ? trim($value) : null;
-                    if (! $taxonomy instanceof Taxonomy) {
-                        return;
-                    }
-                    $p = $taxonomy->collections()->whereKey($collection->id)->first()?->getRelation('pivot');
-                    if (! $p instanceof CollectionTaxonomy) {
-                        return;
-                    }
-                    if ($value !== null && $p->index_page && ($other = RouteConflicts::forIndexPage($collection, $taxonomy, $code, $value)) !== null) {
-                        throw ValidationException::withMessages([$field => __(':title has this URL in :language already.', ['title' => $other, 'language' => Locales::name($code)])]);
-                    }
-                    if ($main) {
-                        self::savePivot($taxonomy, $collection, ['index_route' => $value]);
-                    } else {
-                        $own = $p->index_routes ?? [];
-                        if ($value === null) {
-                            unset($own[$code]);
-                        } else {
-                            $own[$code] = $value;
-                        }
-                        self::savePivot($taxonomy, $collection, ['index_routes' => $own === [] ? null : $own]);
-                    }
-                });
+                ->loadUsing(fn (Model $taxonomy): ?string => self::pivotRoute(self::pivot($taxonomy, $collection), 'index', $code))
+                ->saveUsing(fn (Model $taxonomy, mixed $value) => self::setPivotRoute(self::pivot($taxonomy, $collection), 'index', $code, $value));
         }
 
         return $fields;
     }
 
     /**
-     * Writes a taxonomy's attachment to a collection (when attached), and
-     * the site's routes start again.
+     * Every collection, by title: read once per request, however many
+     * times the form is built.
      *
-     * @param  array<string, mixed>  $values
+     * @return EloquentCollection<int, Collection>
      */
-    private static function savePivot(Model $taxonomy, Collection $collection, array $values): void
+    private static function collections(): EloquentCollection
     {
-        if ($taxonomy instanceof Taxonomy && $taxonomy->collections()->whereKey($collection->id)->exists()) {
-            $taxonomy->collections()->updateExistingPivot($collection->id, $values);
-            app(SiteCache::class)->changed('term pages');
+        $request = request();
+        $collections = $request->attributes->get(self::class.'.collections');
+        if (! $collections instanceof EloquentCollection) {
+            $collections = Collection::query()->orderBy('title')->get();
+            $request->attributes->set(self::class.'.collections', $collections);
+        }
+
+        /** @var EloquentCollection<int, Collection> $collections */
+        return $collections;
+    }
+
+    /** A taxonomy's attachment to a collection, from its collections as loaded (one query for all); null when not attached. */
+    private static function pivot(Model $taxonomy, Collection $collection): ?CollectionTaxonomy
+    {
+        if (! $taxonomy instanceof Taxonomy || ! $taxonomy->exists) {
+            return null;
+        }
+        $pivot = $taxonomy->loadMissing('collections')->collections->firstWhere('id', $collection->id)?->getRelation('pivot');
+
+        return $pivot instanceof CollectionTaxonomy ? $pivot : null;
+    }
+
+    /**
+     * The form field of a collection's term page pattern (`term`) or index
+     * page URL (`index`) in a language: term_route_3, index_route_3_id.
+     *
+     * @param  'term'|'index'  $page
+     */
+    private static function pivotField(string $page, Collection $collection, string $locale): string
+    {
+        $field = "{$page}_route_{$collection->id}";
+
+        return $locale === Locales::default() ? $field : $field.'_'.preg_replace('/[^A-Za-z0-9]/', '_', $locale);
+    }
+
+    /**
+     * An attachment's own term page pattern or index page URL in a language.
+     *
+     * @param  'term'|'index'  $page
+     */
+    private static function pivotRoute(?CollectionTaxonomy $pivot, string $page, string $locale): ?string
+    {
+        if ($pivot === null) {
+            return null;
+        }
+        $main = $locale === Locales::default();
+
+        return $page === 'term'
+            ? ($main ? $pivot->term_route : ($pivot->term_routes[$locale] ?? null))
+            : ($main ? $pivot->index_route : ($pivot->index_routes[$locale] ?? null));
+    }
+
+    /**
+     * Sets an attachment's own term page pattern or index page URL in a
+     * language, as loaded (savePivots() writes it): another language's
+     * goes into term_routes or index_routes with the others'.
+     *
+     * @param  'term'|'index'  $page
+     */
+    private static function setPivotRoute(?CollectionTaxonomy $pivot, string $page, string $locale, mixed $value): void
+    {
+        if ($pivot === null) {
+            return;
+        }
+        $value = is_string($value) && trim($value) !== '' ? trim($value) : null;
+        if ($locale === Locales::default()) {
+            $pivot->setAttribute("{$page}_route", $value);
+
+            return;
+        }
+        $own = ($page === 'term' ? $pivot->term_routes : $pivot->index_routes) ?? [];
+        if ($value === null) {
+            unset($own[$locale]);
+        } else {
+            $own[$locale] = $value;
+        }
+        $pivot->setAttribute("{$page}_routes", $own === [] ? null : $own);
+    }
+
+    /**
+     * Writes what the form changed on the taxonomy's attachments, one
+     * update per attachment and none when nothing changed, then refuses
+     * term or index pages (switched on) whose URL, as set or by default,
+     * something else has in a language, when they changed or the
+     * collection was just ticked. The site's routes start again once.
+     *
+     * @throws ValidationException
+     */
+    private static function savePivots(Model $taxonomy): void
+    {
+        if (! $taxonomy instanceof Taxonomy || ! $taxonomy->relationLoaded('collections')) {
+            return;
+        }
+        $attached = self::$attached[$taxonomy] ?? [];
+        self::$attached?->offsetUnset($taxonomy);
+        $check = [];
+        foreach ($taxonomy->collections as $collection) {
+            $pivot = $collection->getRelation('pivot');
+            if (! $pivot instanceof CollectionTaxonomy) {
+                continue;
+            }
+            if ($pivot->isDirty()) {
+                $pivot->save();
+                $check[] = $collection;
+            } elseif (in_array($collection->id, $attached, true)) {
+                $check[] = $collection;
+            }
+        }
+        if ($check === []) {
+            return;
+        }
+        app(SiteCache::class)->changed('term pages');
+        // Once all are written, so two swapping their URLs don't clash with each other.
+        $errors = [];
+        foreach ($check as $collection) {
+            $pivot = $collection->getRelation('pivot');
+            if ($pivot instanceof CollectionTaxonomy && ($clash = RouteConflicts::forAttachment($collection, $taxonomy, $pivot)) !== null) {
+                $errors[self::pivotField($clash['page'], $collection, $clash['locale'])] = __(':title has this URL in :language already.', ['title' => $clash['title'], 'language' => Locales::name($clash['locale'])]);
+            }
+        }
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
         }
     }
 

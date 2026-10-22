@@ -22,6 +22,7 @@ use Sunrice\Cms\Actions\Collections\PurgeDeleted;
 use Sunrice\Cms\Actions\Collections\RestoreDeleted;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Site\RoutePatternRule;
+use Sunrice\Cms\Site\TemplateRule;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\StructuredData;
 
@@ -98,7 +99,7 @@ final class CollectionResource extends Resource
                     Toggle::make('comments')->label('Allow comments')->showWhen('pages')
                         ->help('Visitors can comment on its entries.'),
                     TextInput::make('template')->label('Entry template')->placeholder('cms.article')->showWhen('pages')
-                        ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
+                        ->rules([new TemplateRule('cms.article')])
                         ->help('Empty: the first template that exists. An entry can choose its own in its Page settings.')
                         ->helpDetails('Which file?', TemplateHelp::files(['cms.collections.{handle}.show', 'cms.collections.show'], 'cms.article')."\n".__('Before this template, :file is tried for the entry with that slug in the main language.', ['file' => '`cms/collections/{handle}/{slug}.blade.php`'])),
                     Select::make('schema_type')->label('Structured data type')->options(StructuredData::ENTRY_TYPES)->showWhen('pages')
@@ -132,7 +133,7 @@ final class CollectionResource extends Resource
                         ]),
                     NumberInput::make('per_page')->label('Entries per page')->integer()->min(1)->max(100)->default(10)->showWhen('listing'),
                     TextInput::make('listing_template')->label('Listing page template')->placeholder('cms.blog-home')->span(2)->showWhen('listing')
-                        ->rules(['regex:/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/'])
+                        ->rules([new TemplateRule('cms.blog-home')])
                         ->help('Empty: the first template that exists.')
                         ->helpDetails('Which file?', TemplateHelp::files(['cms.collections.{handle}.index', 'cms.collections.index'], 'cms.blog-home')),
                 ]),

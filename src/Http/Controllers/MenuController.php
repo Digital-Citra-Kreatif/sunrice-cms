@@ -119,7 +119,8 @@ final class MenuController
             $in = $item->collection;
             $taxonomy = $item->term->taxonomy;
             $withPages = $taxonomy->collections->filter(fn (Collection $c): bool => $c->getRelation('pivot') instanceof CollectionTaxonomy && $c->getRelation('pivot')->term_pages);
-            $pages = $in === null ? $taxonomy->route !== null || $withPages->isNotEmpty() : $withPages->contains('id', $in->id);
+            // In a collection that's gone (or in the trash): not shown.
+            $pages = $in === null ? $item->collection_id === null && ($taxonomy->route !== null || $withPages->isNotEmpty()) : ! $in->trashed() && $withPages->contains('id', $in->id);
             $kind = $in !== null ? $taxonomy->title.' · '.$in->title : ($taxonomy->route !== null ? __(':taxonomy · Shared page', ['taxonomy' => $taxonomy->title]) : $taxonomy->title);
 
             return ['title' => $item->term->title(), 'kind' => $kind, 'live' => ! $item->term->trashed() && $pages];

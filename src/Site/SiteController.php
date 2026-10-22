@@ -275,8 +275,9 @@ final class SiteController
         $collection = $index->collection;
         $taxonomy->load('listings');
         /** @param Builder<Entry> $entries */
-        $live = fn (Builder $entries) => $entries->when($collection !== null, fn (Builder $q) => $q->where('sunrice_entries.collection_id', $collection?->id))
-            ->whereHas('translations', fn (Builder $q) => $q->whereIn('id', EntryTranslation::query()->live()->shownIn($locale)->select('id')));
+        // The collection is picked among the live translations (by their index, once), not on each entry of each term.
+        $live = fn (Builder $entries) => $entries->whereHas('translations', fn (Builder $q) => $q->whereIn('id', EntryTranslation::query()->live()->shownIn($locale)
+            ->when($collection !== null, fn (Builder $q) => $q->where('sunrice_entry_translations.collection_id', $collection?->id))->select('id')));
         $terms = Term::query()->where('taxonomy_id', $taxonomy->id)->with('translations')->withCount(['entries' => $live])
             ->when($collection !== null, fn ($q) => $q->whereHas('entries', $live))
             ->orderBy('sort_order')->orderBy('id')->get();

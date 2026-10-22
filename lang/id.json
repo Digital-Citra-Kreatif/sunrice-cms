@@ -1144,5 +1144,6 @@
     "For its index pages, the shared one and each collection's. Empty: the first template that exists.": "Untuk halaman indeksnya, yang bersama dan milik tiap koleksi. Kosong: template pertama yang ada.",
     "Before this template, :file is tried for the entry with that slug in the main language.": "Sebelum template ini, :file dicoba untuk entri dengan slug itu di bahasa utama.",
     "Before this template, :file is tried for the term with that slug in the main language.": "Sebelum template ini, :file dicoba untuk term dengan slug itu di bahasa utama.",
-    "In a collection, :slug and then :file are tried first.": "Dalam sebuah koleksi, :slug lalu :file dicoba lebih dulu."
+    "In a collection, :slug and then :file are tried first.": "Dalam sebuah koleksi, :slug lalu :file dicoba lebih dulu.",
+    ":title has the URL :url in :language already.": ":title sudah memakai URL :url dalam :language."
 }

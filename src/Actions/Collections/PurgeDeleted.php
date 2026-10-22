@@ -11,12 +11,14 @@ use Sunrice\Cms\Actions\Entries\ForceDeleteEntry;
 use Sunrice\Cms\Actions\Terms\DeleteTerm;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
+use Sunrice\Cms\Models\MenuItem;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 
 /**
  * Deletes a deleted collection or taxonomy permanently, with the entries or
- * terms it kept (trashed ones too), which frees its handle. Used by
+ * terms it kept (trashed ones too), which frees its handle; menu links
+ * to it, or to its pages, are left out. Used by
  * `sunrice:orphans --purge` and the trash's Permanently delete in
  * Structure → Collections and Taxonomies.
  *
@@ -67,6 +69,8 @@ final class PurgeDeleted
                 $count++;
             });
             $collection->listings()->delete();
+            // Its menu links (listing page, and term and index pages in it) lose every target, so they're left out, never another collection's or the shared pages instead.
+            MenuItem::query()->where('collection_id', $collection->id)->update(['collection_id' => null, 'term_id' => null, 'taxonomy_id' => null]);
             $collection->taxonomies()->detach();
             $collection->forceDelete();
         });
@@ -91,6 +95,8 @@ final class PurgeDeleted
                     $count++;
                 }
             }
+            // Its index page links lose every target, so they're left out, never a collection's listing page instead.
+            MenuItem::query()->where('taxonomy_id', $taxonomy->id)->update(['taxonomy_id' => null, 'collection_id' => null]);
             $taxonomy->collections()->detach();
             $taxonomy->forceDelete();
         });

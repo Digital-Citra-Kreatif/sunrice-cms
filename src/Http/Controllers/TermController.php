@@ -22,6 +22,7 @@ use Sunrice\Cms\Admin\TemplateHelp;
 use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Fields\Types\TermsField;
 use Sunrice\Cms\Models\Collection;
+use Sunrice\Cms\Models\CollectionTaxonomy;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
@@ -59,6 +60,7 @@ final class TermController
         $terms = Term::query()->when($trashed, fn ($q) => $q->onlyTrashed())->with('translations')->withCount('entries')->where('taxonomy_id', $taxonomy->id)->orderBy('sort_order')->orderBy('id')->get();
         // Where each is used, to warn before trashing or deleting it.
         $usedBy = References::usedByMany(Reference::TERM, array_values(array_map(fn (Term $term): int => $term->id, $terms->all())));
+        $pages = $taxonomy->hasTermPages();
 
         return Inertia::render('Cms/Terms/Index', [
             'taxonomy' => ['handle' => $taxonomy->handle, 'title' => $taxonomy->title, 'hierarchical' => $taxonomy->hierarchical,
@@ -76,7 +78,7 @@ final class TermController
             'taxonomies' => Taxonomy::query()->orderBy('title')->get()->filter(fn (Taxonomy $t): bool => Access::terms($request->user(), 'view', $t))->values()->map(fn (Taxonomy $t): array => ['handle' => $t->handle, 'title' => $t->title])->all(),
             'locales' => Locales::all(),
             'locale' => $locale,
-            'terms' => array_map(function (array $item) use ($locale, $usedBy, $taxonomy): array {
+            'terms' => array_map(function (array $item) use ($locale, $usedBy, $pages): array {
                 [$term, $depth] = $item;
                 $translation = $term->translations->firstWhere('locale', $locale);
 
@@ -91,7 +93,8 @@ final class TermController
                     'fallback' => $term->title(),
                     'entries' => $term->entries_count ?? 0,
                     'createdAt' => $term->created_at?->toIso8601String(),
-                    'url' => $translation !== null && $taxonomy->route !== null ? $term->url($locale) : null,
+                    // Its usual page: the shared one, else a collection's.
+                    'url' => $translation !== null && $pages ? $term->url($locale) : null,
                     'usedBy' => array_map(fn (array $use): string => $use['label'], $usedBy[$term->id] ?? []),
                 ];
             }, $trashed ? array_map(fn (Term $t): array => [$t, 0], array_values($terms->all())) : TermsField::tree(array_values($terms->all()), null, 0)),
@@ -130,6 +133,27 @@ final class TermController
     }
 
     /**
+     * The views tried for a term's pages, in order: each collection's
+     * with term pages first (cms/collections/{c}/{t}/…), then the
+     * shared ones.
+     *
+     * @return list<string>
+     */
+    private static function termViews(Taxonomy $taxonomy, ?string $slug): array
+    {
+        $shared = TemplateLookup::term($taxonomy, null, $slug);
+        $views = [];
+        // Loaded once: hasTermPages() reads them too.
+        foreach ($taxonomy->loadMissing('collections')->collections->sortBy('title') as $collection) {
+            if (($pivot = $collection->getRelation('pivot')) instanceof CollectionTaxonomy && $pivot->term_pages) {
+                array_push($views, ...array_diff(TemplateLookup::term($taxonomy, $collection, $slug), $shared));
+            }
+        }
+
+        return array_values(array_unique([...$views, ...$shared]));
+    }
+
+    /**
      * What the term editor needs either way: the taxonomy, the languages,
      * the fields, where a term can go (never under itself or a term under
      * it) and the templates tried.
@@ -163,9 +187,9 @@ final class TermController
             // The views tried for its page, in order, and which exist (Template → Which file?).
             'templates' => [
                 'own' => $term === null ? null : (TemplateHelp::lookup([$term->template])[0] ?? null),
-                'fallbacks' => TemplateHelp::lookup(TemplateLookup::term($taxonomy, null, $term?->translation(Locales::default())?->slug)),
+                'fallbacks' => TemplateHelp::lookup(self::termViews($taxonomy, $term?->translation(Locales::default())?->slug)),
             ],
-            'hasPages' => $taxonomy->route !== null,
+            'hasPages' => $taxonomy->hasTermPages(),
             'fields' => $taxonomy->schema()->toAdmin(),
             'locale' => $locale,
             'locales' => Locales::all(),
@@ -252,7 +276,7 @@ final class TermController
                 // This language's own title and slug, edited here too (empty: not translated yet).
                 'ownTitle' => $translation?->title, 'slug' => $translation?->slug, 'mainTitle' => $main?->title,
                 // Whether the term has a page of its own, whose address a new slug moves (nothing redirects from the old one).
-                'hasPage' => $taxonomy->route !== null && $translation !== null && ! $term->trashed(),
+                'hasPage' => $translation !== null && ! $term->trashed() && $taxonomy->hasTermPages(),
                 // The languages it has a title in, for the language switch.
                 'translatedIn' => $term->translations->map(fn (TermTranslation $each): string => $each->locale)->values()->all()],
             'parentId' => $term->parent_id,

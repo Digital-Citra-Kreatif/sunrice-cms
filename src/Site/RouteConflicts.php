@@ -7,6 +7,7 @@ namespace Sunrice\Cms\Site;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\CollectionTaxonomy;
 use Sunrice\Cms\Models\Taxonomy;
+use Sunrice\Cms\Support\Locales;
 
 /**
  * Whether something else has a URL pattern in a language already: another
@@ -75,6 +76,29 @@ final class RouteConflicts
     public static function forIndexPage(Collection $collection, Taxonomy $taxonomy, string $locale, string $path): ?string
     {
         return self::fixedPages($locale, $path, except: [$collection->id, $taxonomy->id]);
+    }
+
+    /**
+     * What clashes with a taxonomy's pages in a collection as attached
+     * (`$pivot`, maybe not saved yet): its term pages' pattern and its
+     * index page's address, while switched on, as set or by default, in
+     * every language. The first clash: which page, the language, the URL
+     * and what else has it.
+     *
+     * @return array{page: 'term'|'index', locale: string, url: string, title: string}|null
+     */
+    public static function forAttachment(Collection $collection, Taxonomy $taxonomy, CollectionTaxonomy $pivot): ?array
+    {
+        foreach (Locales::all() as $locale) {
+            if ($pivot->term_pages && ($title = self::forTermPages($collection, $taxonomy, $locale, $url = $pivot->pattern($collection, $taxonomy, $locale))) !== null) {
+                return ['page' => 'term', 'locale' => $locale, 'url' => $url, 'title' => $title];
+            }
+            if ($pivot->index_page && ($title = self::forIndexPage($collection, $taxonomy, $locale, $url = $pivot->indexPath($collection, $taxonomy, $locale))) !== null) {
+                return ['page' => 'index', 'locale' => $locale, 'url' => $url, 'title' => $title];
+            }
+        }
+
+        return null;
     }
 
     /**

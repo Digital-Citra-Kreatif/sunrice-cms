@@ -50,6 +50,7 @@ use Sunrice\Cms\Site\RedirectRule;
 use Sunrice\Cms\Site\RouteConflicts;
 use Sunrice\Cms\Site\RoutePattern;
 use Sunrice\Cms\Site\RoutePatternRule;
+use Sunrice\Cms\Site\TemplateRule;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\SafeUrl;
 use Sunrice\Cms\Support\Seo;
@@ -311,8 +312,8 @@ final class StructureImporter
             ...self::routesRules(['route' => new RoutePatternRule, 'listing_route' => 'regex:#^(/[a-z0-9\-_]+)+$#']),
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
             'schema_type' => ['nullable', 'string', Rule::in(array_keys(StructuredData::ENTRY_TYPES))],
-            'template' => self::TEMPLATE,
-            'listing_template' => self::TEMPLATE,
+            'template' => [...self::TEMPLATE, new TemplateRule('cms.article')],
+            'listing_template' => [...self::TEMPLATE, new TemplateRule('cms.blog-home')],
             ...array_fill_keys(self::SEO_FIELDS, self::FIELD_HANDLE),
             ...self::TRANSLATIONS,
         ])->validate();
@@ -369,8 +370,8 @@ final class StructureImporter
             'blueprint' => ['nullable', 'string', Rule::exists((new Blueprint)->getTable(), 'handle')],
             'index_blueprint' => ['nullable', 'string', Rule::exists((new Blueprint)->getTable(), 'handle')],
             'listings' => ['sometimes', 'nullable', 'array'],
-            'template' => self::TEMPLATE,
-            'index_template' => self::TEMPLATE,
+            'template' => [...self::TEMPLATE, new TemplateRule('cms.topic')],
+            'index_template' => [...self::TEMPLATE, new TemplateRule('cms.tag-cloud')],
             ...array_fill_keys(self::SEO_FIELDS, self::FIELD_HANDLE),
             'collections' => ['sometimes', 'array'],
             'collections.*' => ['string', Rule::exists((new Collection)->getTable(), 'handle')],
@@ -414,7 +415,10 @@ final class StructureImporter
                     ]);
                 }
             }
-            self::checkIndexPages($taxonomy);
+        }
+        // Those just ticked too, at their default URLs.
+        if (array_key_exists('collections', $validated) || is_array($validated['collection_pages'] ?? null)) {
+            self::checkCollectionPages($taxonomy);
         }
         $this->report->add('taxonomy', $taxonomy->handle, $this->status($before, [...$taxonomy->only(self::TAXONOMY), 'collections' => self::collectionPages($taxonomy)]));
     }
@@ -433,23 +437,16 @@ final class StructureImporter
     }
 
     /**
-     * No collection's index page of a taxonomy may have an address a
-     * listing page or another index page has, in any language
-     * (RouteConflicts).
+     * No collection's term pages or index page of a taxonomy may have an
+     * address something else has, in any language (RouteConflicts).
      */
-    private static function checkIndexPages(Taxonomy $taxonomy): void
+    private static function checkCollectionPages(Taxonomy $taxonomy): void
     {
         $errors = [];
-        foreach ($taxonomy->collections()->wherePivot('index_page', true)->get() as $collection) {
+        foreach ($taxonomy->collections()->get() as $collection) {
             $pivot = $collection->getRelation('pivot');
-            if (! $pivot instanceof CollectionTaxonomy) {
-                continue;
-            }
-            foreach (Locales::all() as $locale) {
-                $path = $pivot->indexPath($collection, $taxonomy, $locale);
-                if (($other = RouteConflicts::forIndexPage($collection, $taxonomy, $locale, $path)) !== null) {
-                    $errors["collection_pages.{$collection->handle}.index_route"] = "{$other} has the address {$path} in {$locale} already.";
-                }
+            if ($pivot instanceof CollectionTaxonomy && ($clash = RouteConflicts::forAttachment($collection, $taxonomy, $pivot)) !== null) {
+                $errors["collection_pages.{$collection->handle}.".($clash['page'] === 'term' ? 'route' : 'index_route')] = "{$clash['title']} has the address {$clash['url']} in {$clash['locale']} already.";
             }
         }
         if ($errors !== []) {

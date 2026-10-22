@@ -11,7 +11,10 @@ use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\Types\TermsField;
 use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Collection;
+use Sunrice\Cms\Models\CollectionTaxonomy;
 use Sunrice\Cms\Models\Taxonomy;
+use Sunrice\Cms\Site\RouteConflicts;
+use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\SiteCache;
 
 /**
@@ -22,7 +25,9 @@ use Sunrice\Cms\Support\SiteCache;
  * allowed, saved like any blueprint change (SaveBlueprint). A collection
  * detached keeps that field, with what its entries chose, unless
  * `$removeFields` (then the field goes from blueprints no attached
- * collection still uses; the values stay stored, out of sight).
+ * collection still uses; the values stay stored, out of sight). A
+ * collection attached whose term or index page (on by default) would
+ * have a URL something else has is refused.
  *
  * @api
  */
@@ -32,13 +37,14 @@ final class AttachCollections
 
     /**
      * @param  list<int>  $ids  the collections to attach, all of them
-     * @return array{added: list<string>, removed: list<string>} the blueprints (titles) given or relieved of a field
+     * @param  bool  $checkRoutes  false when the caller checks the new attachments' URLs itself (with its own values for them)
+     * @return array{added: list<string>, removed: list<string>, attached: list<int>} the blueprints (titles) given or relieved of a field, and the collections newly attached
      *
-     * @throws ValidationException
+     * @throws ValidationException when a newly attached collection's term or index page (on by default) would have a URL something else has
      */
-    public function handle(Taxonomy $taxonomy, array $ids, bool $removeFields = false): array
+    public function handle(Taxonomy $taxonomy, array $ids, bool $removeFields = false, bool $checkRoutes = true): array
     {
-        return DB::transaction(function () use ($taxonomy, $ids, $removeFields): array {
+        return DB::transaction(function () use ($taxonomy, $ids, $removeFields, $checkRoutes): array {
             $before = $taxonomy->collections()->pluck('sunrice_collections.id')->map(fn (mixed $id): int => is_numeric($id) ? (int) $id : 0)->all();
             $taxonomy->collections()->sync($ids);
             $attached = array_values(array_diff($ids, $before));
@@ -46,6 +52,9 @@ final class AttachCollections
             if ($attached !== [] || $detached !== []) {
                 // Its terms have pages in collections it's attached to (CollectionTaxonomy::$term_pages, on for new ones).
                 app(SiteCache::class)->changed('term pages');
+            }
+            if ($checkRoutes && $attached !== []) {
+                self::checkRoutes($taxonomy, $attached);
             }
 
             $added = [];
@@ -71,8 +80,26 @@ final class AttachCollections
                 }
             }
 
-            return ['added' => $added, 'removed' => $removed];
+            return ['added' => $added, 'removed' => $removed, 'attached' => $attached];
         });
+    }
+
+    /**
+     * Refuses newly attached collections whose term or index pages for
+     * the taxonomy would have a URL something else has (RouteConflicts).
+     *
+     * @param  list<int>  $ids
+     *
+     * @throws ValidationException
+     */
+    private static function checkRoutes(Taxonomy $taxonomy, array $ids): void
+    {
+        foreach ($taxonomy->collections()->whereIn('sunrice_collections.id', $ids)->get() as $collection) {
+            $pivot = $collection->getRelation('pivot');
+            if ($pivot instanceof CollectionTaxonomy && ($clash = RouteConflicts::forAttachment($collection, $taxonomy, $pivot)) !== null) {
+                throw ValidationException::withMessages(['collections' => __(':title has the URL :url in :language already.', ['title' => $clash['title'], 'url' => $clash['url'], 'language' => Locales::name($clash['locale'])])]);
+            }
+        }
     }
 
     /**

@@ -276,8 +276,9 @@ final class Sitemap
                     continue;
                 }
                 $terms = TermTranslation::query()->where('taxonomy_id', $taxonomy)
-                    ->whereHas('term', fn ($q) => $q->withoutTrashed()->whereHas('entries', fn ($q) => $q->where('collection_id', $id)
-                        ->whereHas('translations', fn ($q) => $q->live())))
+                    // The collection is picked among the live translations (by their index, once), not on each entry of each term.
+                    ->whereHas('term', fn ($q) => $q->withoutTrashed()->whereHas('entries', fn ($q) => $q
+                        ->whereHas('translations', fn ($q) => $q->whereIn('id', EntryTranslation::query()->live()->where('sunrice_entry_translations.collection_id', $id)->select('id')))))
                     ->when($locale !== null, fn ($q) => $q->where('locale', $locale))->with('term.taxonomy', 'term.translations')->lazyById(500);
                 foreach ($terms as $term) {
                     yield [$collection, $term];

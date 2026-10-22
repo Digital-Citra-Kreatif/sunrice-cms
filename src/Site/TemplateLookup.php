@@ -25,8 +25,8 @@ use Sunrice\Cms\Support\Locales;
  *
  * A slug view is the main language's slug of the entry or term, so one
  * file serves every language; `index` and `show` never select one. The
- * templates picked in the CMS come first; an entry's or term's own only
- * under the site's template prefixes.
+ * templates picked in the CMS come first, only under the site's template
+ * prefixes (a stored one outside them is ignored).
  *
  * @internal
  */
@@ -55,7 +55,7 @@ final class TemplateLookup
     {
         $c = $collection->handle;
 
-        return self::views([self::own($own), self::slugged("cms.collections.{$c}", $slug), $collection->template, "cms.collections.{$c}.show", 'cms.collections.show']);
+        return self::views([self::own($own), self::slugged("cms.collections.{$c}", $slug), self::own($collection->template), "cms.collections.{$c}.show", 'cms.collections.show']);
     }
 
     /**
@@ -65,7 +65,7 @@ final class TemplateLookup
      */
     public static function listing(Collection $collection): array
     {
-        return self::views([$collection->listing_template, "cms.collections.{$collection->handle}.index", 'cms.collections.index']);
+        return self::views([self::own($collection->listing_template), "cms.collections.{$collection->handle}.index", 'cms.collections.index']);
     }
 
     /**
@@ -79,7 +79,7 @@ final class TemplateLookup
         $t = $taxonomy->handle;
         $in = $collection === null ? [] : [self::slugged("cms.collections.{$collection->handle}.{$t}", $slug), "cms.collections.{$collection->handle}.{$t}.show"];
 
-        return self::views([self::own($own), ...$in, self::slugged("cms.taxonomies.{$t}", $slug), $taxonomy->template, "cms.taxonomies.{$t}.show", 'cms.taxonomies.show']);
+        return self::views([self::own($own), ...$in, self::slugged("cms.taxonomies.{$t}", $slug), self::own($taxonomy->template), "cms.taxonomies.{$t}.show", 'cms.taxonomies.show']);
     }
 
     /**
@@ -92,7 +92,7 @@ final class TemplateLookup
     {
         $t = $taxonomy->handle;
 
-        return self::views([$taxonomy->index_template, $collection === null ? null : "cms.collections.{$collection->handle}.{$t}.index", "cms.taxonomies.{$t}.index", 'cms.taxonomies.index']);
+        return self::views([self::own($taxonomy->index_template), $collection === null ? null : "cms.collections.{$collection->handle}.{$t}.index", "cms.taxonomies.{$t}.index", 'cms.taxonomies.index']);
     }
 
     /** The main language's slug of an entry (its live one, else its draft's), which picks its slug view. */
@@ -137,7 +137,7 @@ final class TemplateLookup
         return $slug !== null && $slug !== 'index' && $slug !== 'show' && preg_match(self::SLUG, $slug) === 1 ? "{$folder}.{$slug}" : null;
     }
 
-    /** An entry's or term's own template, only under the site's template prefixes (never another view of the app). */
+    /** A template picked in the CMS (an entry's, term's, collection's or taxonomy's), only under the site's template prefixes (never another view of the app). */
     private static function own(?string $template): ?string
     {
         return $template !== null && $template !== '' && SaveEntrySettings::allowed($template) ? $template : null;

@@ -126,7 +126,8 @@ final class Templates
             ]);
         }
         $taxonomies = [];
-        foreach (Taxonomy::query()->whereNotNull('route')->orderBy('title')->get() as $t) {
+        // Those whose terms have pages: shared ones, or in a collection.
+        foreach (Taxonomy::query()->where(fn ($q) => $q->whereNotNull('route')->orWhereHas('collections', fn ($q) => $q->where('sunrice_collection_taxonomy.term_pages', true)))->orderBy('title')->get() as $t) {
             $taxonomies[$t->handle] = ['note' => "A term's own template comes first, then cms.taxonomies.{$t->handle}.{slug} for the term with that main-language slug. On a collection's term page, cms.collections.{collection}.{$t->handle}.{slug} and cms.collections.{collection}.{$t->handle}.show come right after the term's own.", ...self::chain($lookup, TemplateLookup::term($t, null, null), TemplateLookup::TERM)];
         }
 

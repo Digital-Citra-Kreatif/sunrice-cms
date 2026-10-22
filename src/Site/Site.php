@@ -170,9 +170,9 @@ final class Site
 
             return $index[1] !== null && $collection === null ? null : Taxonomy::query()->find($index[0])?->indexUrl($locale, $collection);
         }
-        foreach ($this->oldPatterns($locale) as [$type, $id, $pattern]) {
+        foreach ($this->oldPatterns($locale) as [$type, $id, $pattern, $collection]) {
             $matched = $pattern->match($rest);
-            $url = $matched === null ? null : ($type !== 'collection' ? $this->termAt($id, $locale, $matched['slug']) : $this->entryAt($id, $locale, $matched['slug']));
+            $url = $matched === null ? null : ($type !== 'collection' ? $this->termAt($id, $collection, $locale, $matched['slug']) : $this->entryAt($id, $locale, $matched['slug']));
             if ($url !== null && $url !== url($path)) {
                 return $url;
             }
@@ -197,12 +197,21 @@ final class Site
         return $there !== null ? $there->setRelation('entry', $main->entry)->url() : ($this->isFallbackFor($main, $locale) ? $this->urlIn($main, $locale) : null);
     }
 
-    /** The address in a language of the term with a slug there (or the main language's standing in), if it has one. */
-    private function termAt(int $taxonomy, string $locale, string $slug): ?string
+    /**
+     * The address in a language of the term with a slug there (or the
+     * main language's standing in), if it has one: its page in a
+     * collection (`$collection`, an id) when the old pattern was that
+     * collection's term pages', else its usual one.
+     */
+    private function termAt(int $taxonomy, ?int $collection, string $locale, string $slug): ?string
     {
+        $scope = $collection === null ? null : Collection::query()->find($collection);
+        if ($collection !== null && $scope === null) {
+            return null;
+        }
         $own = $this->termQuery()->where('taxonomy_id', $taxonomy)->where('locale', $locale)->where('slug', $slug)->first();
         if ($own !== null) {
-            return $own->url();
+            return $own->in($scope)->url();
         }
         $main = $locale === Locales::default() ? null : $this->termQuery()->where('taxonomy_id', $taxonomy)->where('locale', Locales::default())->where('slug', $slug)->first();
         if ($main === null) {
@@ -210,10 +219,10 @@ final class Site
         }
         $there = $main->term->translations->firstWhere('locale', $locale);
         if ($there !== null) {
-            return $there->setRelation('term', $main->term)->url();
+            return $there->setRelation('term', $main->term)->in($scope)->url();
         }
 
-        return $this->fallsBack($locale) ? $this->termUrl($main, $locale) : null;
+        return $this->fallsBack($locale) ? $this->termUrl($main->in($scope), $locale) : null;
     }
 
     /** Whether pages not translated into a language show the main language's there (`sunrice-cms.site.fallback`). */

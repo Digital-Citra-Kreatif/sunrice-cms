@@ -195,7 +195,8 @@ final class Menus
         if ($item->term_id !== null) {
             // A term's page, in this language or else the main one.
             $term = $item->term;
-            if ($term === null || $term->trashed()) {
+            // In a collection that's gone (or in the trash): left out, not another collection's page.
+            if ($term === null || $term->trashed() || ($item->collection_id !== null && ($item->collection === null || $item->collection->trashed()))) {
                 return null;
             }
             $translation = $term->translations->firstWhere('locale', $locale) ?? $term->translation();

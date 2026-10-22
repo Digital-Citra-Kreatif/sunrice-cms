@@ -125,6 +125,23 @@ class Taxonomy extends Model
         return $data;
     }
 
+    /**
+     * Whether its terms have pages: shared ones, or in a collection it's
+     * attached to (read now, not from the site's cache; from its
+     * collections when they're loaded).
+     */
+    public function hasTermPages(): bool
+    {
+        if ($this->route !== null) {
+            return true;
+        }
+        if ($this->relationLoaded('collections')) {
+            return $this->collections->contains(fn (Collection $collection): bool => ($pivot = $collection->getRelation('pivot')) instanceof CollectionTaxonomy && $pivot->term_pages);
+        }
+
+        return $this->collections()->wherePivot('term_pages', true)->exists();
+    }
+
     /** Whether it has an index page: the shared one, or with a collection that collection's (read now, not from the site's cache). */
     public function hasIndexPage(?Collection $collection = null): bool
     {
