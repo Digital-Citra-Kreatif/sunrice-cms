@@ -30,6 +30,11 @@ use Sunrice\Cms\Settings\CacheSettings;
  * Config `sunrice-cms.cache`: `enabled`, `store` (null: the default)
  * and `ttl` (seconds; Settings → Cache can set it in minutes).
  *
+ * Within a request (it's scoped) a value is read from the store once,
+ * and what nearly every page reads (the language routes, blueprints,
+ * fieldsets and global sets) comes in one read with the first: few round trips on a
+ * database or Redis store.
+ *
  * @api
  */
 final class SiteCache
@@ -47,8 +52,19 @@ final class SiteCache
 
     private const VERSION = 'sunrice-cms:content-version:';
 
+    /** What nearly every page reads, by area: read together, once, before the first. */
+    private const EVERY_PAGE = [self::ROUTES => ['language-routes'], self::PAGES => ['records:blueprints', 'records:fieldsets', 'records:global-sets', 'records:global-values']];
+
+    /** Values kept in memory at most (a preload run renders many pages in one process). */
+    private const KEPT = 500;
+
     /** @var array<string, int>|null */
     private ?array $versions = null;
+
+    /** @var array<string, mixed> this request's values by full key */
+    private array $read = [];
+
+    private bool $preloaded = false;
 
     public static function enabled(): bool
     {
@@ -71,7 +87,35 @@ final class SiteCache
             return $make();
         }
 
-        return $this->store()->remember($this->key($key, $area), $ttl ?? self::ttl(), $make);
+        if (! $this->preloaded) {
+            $this->preload();
+        }
+        $full = $this->key($key, $area);
+        if (array_key_exists($full, $this->read)) {
+            return $this->read[$full];
+        }
+        if (count($this->read) >= self::KEPT) {
+            $this->read = [];
+        }
+
+        return $this->read[$full] = $this->store()->remember($full, $ttl ?? self::ttl(), $make);
+    }
+
+    /** Reads what nearly every page needs in one go (what isn't cached yet is made when asked). */
+    private function preload(): void
+    {
+        $this->preloaded = true;
+        $keys = [];
+        foreach (self::EVERY_PAGE as $area => $names) {
+            foreach ($names as $name) {
+                $keys[] = $this->key($name, $area);
+            }
+        }
+        foreach ($this->store()->many($keys) as $full => $value) {
+            if (is_string($full) && $value !== null) {
+                $this->read[$full] = $value;
+            }
+        }
     }
 
     /** The full cache key of `$key` in an area's content version. */
@@ -112,6 +156,8 @@ final class SiteCache
                 }
                 // Read again when next asked.
                 $this->versions = null;
+                $this->read = [];
+                $this->preloaded = false;
             }
             ContentChanged::dispatch($what);
         });

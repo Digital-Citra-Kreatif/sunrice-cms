@@ -73,9 +73,19 @@ final class SiteRecords
         return $manager instanceof DatabaseTransactionsManager ? $manager->callbackApplicableTransactions()->isNotEmpty() : DB::transactionLevel() > 0;
     }
 
-    /** A blueprint by handle, from the site cache. */
+    /** A blueprint by handle, from the site cache: all of them under one key, as a page reads several. */
     public static function blueprint(?string $handle): ?Blueprint
     {
-        return $handle === null ? null : self::one('blueprint:'.$handle, Blueprint::class, fn (): ?Blueprint => Blueprint::query()->where('handle', $handle)->first());
+        if ($handle === null) {
+            return null;
+        }
+        if (self::inTransaction()) {
+            return Blueprint::query()->where('handle', $handle)->first();
+        }
+        /** @var array<string, array<string, mixed>> $rows */
+        $rows = app(SiteCache::class)->remember('records:blueprints', fn (): array => Blueprint::query()->get()
+            ->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->getAttributes()])->all());
+
+        return isset($rows[$handle]) ? Blueprint::hydrate([$rows[$handle]])->first() : null;
     }
 }

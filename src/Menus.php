@@ -43,13 +43,17 @@ final class Menus
         $locale ??= Locales::current();
         $key = "{$handle}:{$locale}";
         if (! array_key_exists($key, $this->resolved)) {
-            // Its links are full URLs: per host.
-            $this->resolved[$key] = app(SiteCache::class)->remember('menu:'.sha1(url('/').'|'.$key), function () use ($handle, $locale): array {
-                $menu = Menu::query()->where('handle', $handle)
-                    ->with('items.entry.translations', 'items.entry.collection', 'items.term.translations', 'items.term.taxonomy', 'items.collection', 'items.taxonomy')->first();
+            // All the menus in a language under one key (a page shows several). Their links are full URLs: per host.
+            /** @var array<string, list<array{label: string, url: string, new_tab: bool, children: list<mixed>}>> $menus */
+            $menus = app(SiteCache::class)->remember('menus:'.sha1(url('/').'|'.$locale), function () use ($locale): array {
+                $menus = [];
+                foreach (Menu::query()->with('items.entry.translations', 'items.entry.collection', 'items.term.translations', 'items.term.taxonomy', 'items.collection', 'items.taxonomy')->get() as $menu) {
+                    $menus[$menu->handle] = $this->tree($menu->items->all(), null, $locale);
+                }
 
-                return $menu === null ? [] : $this->tree($menu->items->all(), null, $locale);
+                return $menus;
             }, SiteCache::MENUS);
+            $this->resolved[$key] = $menus[$handle] ?? [];
         }
 
         // Which link is the page shown: per request, so not cached with them.

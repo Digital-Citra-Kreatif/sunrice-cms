@@ -453,6 +453,10 @@ final class EntryList
      */
     public static function locales(Entry $entry): array
     {
+        // isOutdated() reads the entry back from each translation: this one, not a query per translation.
+        foreach ($entry->translations as $other) {
+            $other->setRelation('entry', $entry);
+        }
         $main = $entry->mainTranslation();
         $codes = $entry->collection->translatable ? Locales::all() : array_values(array_filter(Locales::all(), fn (string $code): bool => $entry->translation($code) !== null));
 
