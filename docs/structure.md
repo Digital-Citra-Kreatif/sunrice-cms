@@ -136,7 +136,7 @@ $report->counts();
 
 ## Leftovers
 
-Deleting a collection or a taxonomy keeps its entries or terms out of sight, and its handle taken, so it can be brought back. Their lists (Structure → Collections, Structure → Taxonomies) have a **Trash** with **Restore** (`cms.collections.delete`, `cms.taxonomies.delete`; `CollectionResource::restoreRecord()`), refused when another one took its address meanwhile (`Actions\Collections\RestoreDeleted`).
+Deleting a collection or a taxonomy keeps its entries or terms out of sight, and its handle taken, so it can be brought back. Their lists (Structure → Collections, Structure → Taxonomies) have a **Trash** with **Restore** (`cms.collections.delete`, `cms.taxonomies.delete`; `CollectionResource::restoreRecord()`), refused when another one took its address meanwhile (`Actions\Collections\RestoreDeleted`), and **Permanently delete**, which deletes it with its entries or terms and frees its handle (`forceDeleteRecord()`, through `PurgeDeleted`).
 
 `sunrice:orphans` lists what's left over:
 

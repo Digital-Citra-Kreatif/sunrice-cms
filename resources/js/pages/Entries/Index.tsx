@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import {
-    ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Columns3, Download, Plus, RotateCcw, Search, X,
+    ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Columns3, Download, Plus, RotateCcw, Search, Trash2, X,
 } from 'lucide-react';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { EntryReorderList } from '@/components/EntryReorderList.tsx';
@@ -9,7 +9,7 @@ import { adminUrl, t } from '@imajiner/admin-sdk';
 import {
     Badge, Button, Card, Checkbox, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel,
     DropdownMenuSeparator, DropdownMenuTrigger, Input, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table,
-    TableBody, TableCell, TableHead, TableHeader, TableRow, TrashHint, useBreadcrumbs, useTablePreferences,
+    TableBody, TableCell, TableHead, TableHeader, TableRow, TrashBanner, TrashHint, TrashTitle, useBreadcrumbs, useTablePreferences,
 } from '@imajiner/admin-sdk/ui';
 import { type EntryLocale, type EntryStatus, formatDate, localeName, statusLabel } from '@/lib/entries.ts';
 import {
@@ -172,7 +172,7 @@ function EntryList({
             <Head title={collection.title} />
             {confirmDialog}
             <PageHeader
-                title={collection.title}
+                title={trashed ? <TrashTitle>{collection.title}</TrashTitle> : collection.title}
                 primary={can?.create && !trashed && <Button asChild><Link href={`${base}/create`}><Plus /> {t('New entry')}</Link></Button>}
                 menu={[
                     ...(entries.total > 0 && can?.export
@@ -190,6 +190,7 @@ function EntryList({
                     </Select>
                 )}
             </PageHeader>
+            {trashed && <TrashBanner items={t('entries')} onBack={() => visit({ status: '' })} />}
 
             <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
                 <div className="cms:relative cms:w-full cms:max-w-xs">
@@ -288,7 +289,7 @@ function EntryList({
                             </TableRow>
                         )}
                         {entries.data.map((row, i) => (
-                            <TableRow key={row.id} className="sunrice-row-in" style={{ '--i': i } as React.CSSProperties} data-state={selected.includes(row.id) ? 'selected' : undefined}>
+                            <TableRow key={row.id} className={trashed ? 'sunrice-row-in cms:text-muted-foreground' : 'sunrice-row-in'} style={{ '--i': i } as React.CSSProperties} data-state={selected.includes(row.id) ? 'selected' : undefined}>
                                 {bulkActions.length > 0 && (
                                     <TableCell>
                                         <Checkbox aria-label={t('Select :title', { title: row.title })} checked={selected.includes(row.id)}
@@ -321,10 +322,17 @@ function EntryList({
                                 )}
                                 {restorable && (
                                     <TableCell className="cms:w-px">
-                                        <Button variant="outline" size="sm" aria-label={`Restore ${row.title}`}
-                                            onClick={() => router.post(adminUrl(`cms/entries/${row.id}/restore`), {}, { preserveScroll: true })}>
-                                            <RotateCcw /> Restore
-                                        </Button>
+                                        <div className="cms:flex cms:justify-end cms:gap-2">
+                                            <Button variant="outline" size="sm" aria-label={t('Restore :title', { title: row.title })}
+                                                onClick={() => router.post(adminUrl(`cms/entries/${row.id}/restore`), {}, { preserveScroll: true })}>
+                                                <RotateCcw /> {t('Restore')}
+                                            </Button>
+                                            <Button variant="ghost" size="sm" className="cms:text-destructive cms:hover:text-destructive" aria-label={t('Permanently delete :title', { title: row.title })}
+                                                onClick={() => confirm(t('Permanently delete :title? This can\'t be undone.', { title: row.title }),
+                                                    () => router.post(`${base}/bulk`, { action: 'delete', ids: [row.id] }, { preserveScroll: true }), t('Delete'))}>
+                                                <Trash2 /> {t('Permanently delete')}
+                                            </Button>
+                                        </div>
                                     </TableCell>
                                 )}
                             </TableRow>

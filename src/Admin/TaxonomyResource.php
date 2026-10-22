@@ -19,6 +19,7 @@ use Sunrice\Admin\Resources\Tables\ActionFailed;
 use Sunrice\Admin\Resources\Tables\Column;
 use Sunrice\Admin\Resources\Tables\Table;
 use Sunrice\Admin\Support\Card;
+use Sunrice\Cms\Actions\Collections\PurgeDeleted;
 use Sunrice\Cms\Actions\Collections\RestoreDeleted;
 use Sunrice\Cms\Actions\Taxonomies\AttachCollections;
 use Sunrice\Cms\Models\Collection;
@@ -152,6 +153,14 @@ final class TaxonomyResource extends Resource
             } catch (ValidationException $e) {
                 throw new ActionFailed(implode(' ', $e->validator->errors()->all()));
             }
+        }
+    }
+
+    /** Permanently deleted from the trash: with the terms it kept (PurgeDeleted), which frees its handle. */
+    public static function forceDeleteRecord(Model $record): void
+    {
+        if ($record instanceof Taxonomy) {
+            app(PurgeDeleted::class)->taxonomy($record);
         }
     }
 }

@@ -18,6 +18,7 @@ use Sunrice\Admin\Resources\Resource;
 use Sunrice\Admin\Resources\Tables\ActionFailed;
 use Sunrice\Admin\Resources\Tables\Column;
 use Sunrice\Admin\Resources\Tables\Table;
+use Sunrice\Cms\Actions\Collections\PurgeDeleted;
 use Sunrice\Cms\Actions\Collections\RestoreDeleted;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Site\RoutePatternRule;
@@ -177,6 +178,14 @@ final class CollectionResource extends Resource
             } catch (ValidationException $e) {
                 throw new ActionFailed(implode(' ', $e->validator->errors()->all()));
             }
+        }
+    }
+
+    /** Permanently deleted from the trash: with the entries it kept (PurgeDeleted), which frees its handle. */
+    public static function forceDeleteRecord(Model $record): void
+    {
+        if ($record instanceof Collection) {
+            app(PurgeDeleted::class)->collection($record);
         }
     }
 }

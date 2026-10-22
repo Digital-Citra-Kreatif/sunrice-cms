@@ -50,7 +50,7 @@ Saat Anda memberi suatu bahasa URL sendiri (atau mengubahnya), alamat lamanya te
 
 Setelah disimpan, kartu-kartu di formulir menautkan ke tujuan berikutnya: **Lihat entri** (Halaman entri), **Lihat di situs** ↗ dan **Sunting halaman daftar** (Halaman daftar, yang terakhir bila punya blueprint). Di bawah pengaturan template atau URL halaman daftar, **File yang mana?** membuka daftar file template yang dicoba, untuk developer Anda.
 
-Menghapus koleksi tidak menghapus entrinya: entri hilang dari panel dan situs web. Tombol **Tempat sampah** di daftar menampilkan koleksi yang dihapus, dengan **Pulihkan** untuk mengembalikannya. Menghapusnya secara permanen, beserta entrinya, dilakukan oleh developer (`sunrice:orphans --purge`), sehingga kekeliruan di panel selalu bisa dibatalkan.
+Menghapus koleksi tidak menghapus entrinya: entri hilang dari panel dan situs web. Tombol **Tempat sampah** di daftar menampilkan koleksi yang dihapus, dengan **Pulihkan** untuk mengembalikannya dan **Hapus permanen** untuk menghapusnya selamanya, beserta semua entrinya, sehingga handle-nya bisa dipakai koleksi baru. Ini tidak bisa dibatalkan, jadi panel bertanya dulu. Taksonomi bekerja dengan cara yang sama, beserta istilahnya.
 
 Setiap koleksi mendapat izinnya sendiri (melihat, membuat, menyunting, menerbitkan, menghapus, dan mengekspor entrinya), sehingga sebuah peran bisa dibatasi hanya ke *Blog*, misalnya. Lihat [Pengguna dan peran](guide:panel/users-roles).
 

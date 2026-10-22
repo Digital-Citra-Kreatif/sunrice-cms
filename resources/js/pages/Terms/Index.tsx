@@ -5,7 +5,7 @@ import { adminUrl, t } from '@imajiner/admin-sdk';
 import {
     Button, Card, DropdownMenu, DropdownMenuContent, DropdownMenuItem,
     DropdownMenuSeparator, DropdownMenuTrigger, Input, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-    SortableHandle, type SortableHandleProps, SortableList, TrashHint, useBreadcrumbs,
+    SortableHandle, type SortableHandleProps, SortableList, TrashBanner, TrashHint, TrashTitle, useBreadcrumbs,
 } from '@imajiner/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { localeName } from '@/lib/entries.ts';
@@ -155,7 +155,7 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
             <Head title={taxonomy.title} />
             {confirmDialog}
             <PageHeader
-                title={trashed ? t(':title — trash', { title: taxonomy.title }) : taxonomy.title}
+                title={trashed ? <TrashTitle>{taxonomy.title}</TrashTitle> : taxonomy.title}
                 primary={!trashed && <Button asChild><Link href={`${base}/create?locale=${encodeURIComponent(locale)}`}><Plus /> {t('New term')}</Link></Button>}
                 menu={[
                     ...collections.map((c) => ({ label: c.title, href: c.url, group: t('Used by collections') })),
@@ -170,6 +170,7 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
                     </Select>
                 )}
             </PageHeader>
+            {trashed && <TrashBanner items={t('terms')} onBack={() => router.get(base, { locale })} backLabel={t('Back to terms')} />}
 
             <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-3">
                 <div className="cms:relative cms:w-full cms:max-w-xs">
@@ -183,10 +184,11 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
                         <SelectContent>{locales.map((code) => <SelectItem key={code} value={code}>{localeName(code)}</SelectItem>)}</SelectContent>
                     </Select>
                 )}
-                <Button variant={trashed ? 'secondary' : 'ghost'} className="cms:ml-auto cms:order-last"
-                    onClick={() => router.get(base, trashed ? { locale } : { locale, status: 'trashed' })}>
-                    {trashed ? t('Back to terms') : <><Trash2 /> {t('Trash')}</>}
-                </Button>
+                {!trashed && (
+                    <Button variant="ghost" className="cms:ml-auto cms:order-last" onClick={() => router.get(base, { locale, status: 'trashed' })}>
+                        <Trash2 /> {t('Trash')}
+                    </Button>
+                )}
                 {!trashed && rows.length > 1 && !found && (
                     <p className="cms:text-sm cms:text-muted-foreground">{taxonomy.hierarchical ? t('Drag terms to set their order; a term\'s parent is set in its editor (Under).') : t('Drag terms to set their order.')}</p>
                 )}

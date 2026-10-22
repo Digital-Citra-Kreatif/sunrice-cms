@@ -50,7 +50,7 @@ When you give a language its own URL (or change it), its old addresses keep work
 
 Once saved, the form's cards link where you'd go next: **View entries** (Entry pages), **View on site** ↗ and **Edit listing page** (Listing page, the latter when it has a blueprint). Under a template setting or the listing page's URL, **Which file?** opens the list of template files tried, for your developer.
 
-Deleting a collection doesn't delete its entries: they leave the panel and the website. The list's **Trash** shows deleted collections, with **Restore** to bring one back. Deleting them permanently, with their entries, is for a developer (`sunrice:orphans --purge`), so a slip in the panel can always be undone.
+Deleting a collection doesn't delete its entries: they leave the panel and the website. The list's **Trash** shows deleted collections, with **Restore** to bring one back and **Permanently delete** to remove it for good, with all its entries, which frees its handle for a new collection. That can't be undone, so the panel asks first. Taxonomies work the same way, with their terms.
 
 Each collection gets its own permissions (view, create, edit, publish, delete and export its entries), so a role can be limited to the *Blog*, for example. See [Users and roles](guide:panel/users-roles).
 

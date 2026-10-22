@@ -27,7 +27,7 @@ use Sunrice\Cms\Actions\Collections\SaveCollection;
 $articles = app(SaveCollection::class)->handle(['handle' => 'articles', 'title' => 'Articles', 'blueprint' => 'article', 'dated' => true]);
 ```
 
-Deleting a collection (`DeleteCollection`) doesn't erase its entries: they leave the admin and the site. The list's **Trash** (`?status=trashed`) shows deleted collections with **Restore**, and `sunrice:orphans --purge` deletes them permanently, freeing their handles ([leftovers](structure.md#leftovers)). To rename a field without losing its values, use `sunrice:rename-field` ([renaming a field](structure.md#renaming-a-field)).
+Deleting a collection (`DeleteCollection`) doesn't erase its entries: they leave the admin and the site. The list's **Trash** (`?status=trashed`) shows deleted collections with **Restore** and **Permanently delete** (with their entries); `sunrice:orphans --purge` deletes them all permanently. Either frees their handles ([leftovers](structure.md#leftovers)). To rename a field without losing its values, use `sunrice:rename-field` ([renaming a field](structure.md#renaming-a-field)).
 
 ### Per-entry blueprints
 

@@ -17,7 +17,8 @@ use Sunrice\Cms\Models\Term;
 /**
  * Deletes a deleted collection or taxonomy permanently, with the entries or
  * terms it kept (trashed ones too), which frees its handle. Used by
- * `sunrice:orphans --purge`.
+ * `sunrice:orphans --purge` and the trash's Permanently delete in
+ * Structure → Collections and Taxonomies.
  *
  * @api
  */
