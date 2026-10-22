@@ -27,7 +27,7 @@ app(DeleteTerm::class)->handle($term, force: true);
 
 The editors ask first and then force; bulk deletes skip entries in use. An entry that only points at itself doesn't count.
 
-References are rebuilt from what is stored with `php artisan sunrice:references` (`--dry-run` only counts): every entry translation (draft and live, in the trash too), term translation and global value, in chunks, as a save would record them, with the media library's usages of entries and global sets too. Run it after changing content in the database directly or importing it some other way. Migrating does it once for content saved before references were recorded (migration `000022` runs it after `000019`), so `php artisan migrate` fills them in on an existing site. In code:
+References are rebuilt from what is stored with `php artisan sunrice:references` (`--dry-run` only counts): every entry translation (draft and live, in the trash too), term translation and global value, in chunks, as a save would record them, with the media library's usages of entries and global sets too. Run it after changing content in the database directly or importing it some other way. In code:
 
 ```php
 use Sunrice\Cms\Actions\References\RebuildReferences;

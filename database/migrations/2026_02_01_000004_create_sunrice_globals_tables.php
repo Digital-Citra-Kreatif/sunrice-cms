@@ -25,6 +25,8 @@ return new class extends Migration
             $table->foreignId('global_set_id')->constrained('sunrice_global_sets')->cascadeOnDelete();
             $table->string('locale', 16);
             $table->json('data');
+            // Counted up on each save: a save over someone else's newer one is refused.
+            $table->unsignedInteger('version')->default(1);
             $table->timestamps();
             $table->unique(['global_set_id', 'locale']);
         });

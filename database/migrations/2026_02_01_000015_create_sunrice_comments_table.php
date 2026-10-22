@@ -10,14 +10,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('sunrice_collections', function (Blueprint $table): void {
-            // Visitors may comment on its entries.
-            $table->boolean('comments')->default(false);
-        });
-        Schema::table('sunrice_entries', function (Blueprint $table): void {
-            // This entry takes no new comments (its approved ones stay).
-            $table->boolean('comments_closed')->default(false);
-        });
+        // Visitors' comments on entries (collections' `comments`, entries' `comments_closed`).
         Schema::create('sunrice_comments', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('entry_id')->constrained('sunrice_entries')->cascadeOnDelete();
@@ -38,17 +31,14 @@ return new class extends Migration
             $table->softDeletes();
             $table->index(['entry_id', 'status'], 'sunrice_comments_entry_status_index');
             $table->index(['status', 'created_at'], 'sunrice_comments_status_created_index');
+            $table->index('parent_id');
+            $table->index('author_email');
+            $table->index('deleted_at');
         });
     }
 
     public function down(): void
     {
         Schema::dropIfExists('sunrice_comments');
-        Schema::table('sunrice_entries', function (Blueprint $table): void {
-            $table->dropColumn('comments_closed');
-        });
-        Schema::table('sunrice_collections', function (Blueprint $table): void {
-            $table->dropColumn('comments');
-        });
     }
 };

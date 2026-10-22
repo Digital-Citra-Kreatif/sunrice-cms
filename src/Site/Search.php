@@ -23,8 +23,8 @@ use Sunrice\Cms\Support\SiteCache;
  * first, then newest first. Used by the search page (/search?q=…) and
  * <x-sunrice-cms::search>.
  *
- * Each database searches its own way, with the index of migration
- * 000017: MySQL and MariaDB a FULLTEXT index (whole words, natural
+ * Each database searches its own way, with the index the collections
+ * migration (000002) makes: MySQL and MariaDB a FULLTEXT index (whole words, natural
  * language mode), Postgres a GIN index on the words (the 'simple'
  * dictionary), SQLite (development) a LIKE scan matching what's typed
  * literally (% and _ aren't wildcards). The same search within a minute
@@ -132,7 +132,7 @@ final class Search
         $operator = $driver === 'pgsql' ? 'ILIKE' : 'LIKE';
         match ($driver) {
             'mysql', 'mariadb' => $builder->whereFullText(['title', 'search_text'], $query),
-            // The expression of the index in migration 000017, exactly.
+            // The expression of the index in migration 000002, exactly.
             'pgsql' => $builder->whereRaw("to_tsvector('simple', coalesce(title, '') || ' ' || coalesce(search_text, '')) @@ plainto_tsquery('simple', ?)", [$query]),
             default => $builder->where(fn (Builder $q) => $q->whereRaw("title LIKE ? ESCAPE '!'", [$like])->orWhereRaw("search_text LIKE ? ESCAPE '!'", [$like])),
         };

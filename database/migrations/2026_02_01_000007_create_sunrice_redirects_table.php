@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('from_path', 512)->unique();
             $table->string('to_url', 2048);
             $table->unsignedSmallInteger('status')->default(301);
+            // Also from the same path in each language's prefix (/listings and /id/listings).
+            $table->boolean('every_language')->default(false);
             $table->timestamps();
         });
     }
