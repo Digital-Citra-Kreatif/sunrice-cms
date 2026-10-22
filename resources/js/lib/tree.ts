@@ -47,18 +47,6 @@ export function reorderLevel<T extends Depthed>(items: readonly T[], parent: num
 }
 
 /**
- * The ids of the moved item and its siblings (same parent), in the order
- * they now stand in `items`: what to save after a drag in a flat list.
- */
-export function siblingOrder<T extends { id: number }>(items: readonly T[], moved: number, parentOf: (item: T) => number | null): number[] {
-    const item = items.find((other) => other.id === moved);
-    if (!item) return [];
-    const parent = parentOf(item);
-
-    return items.filter((other) => parentOf(other) === parent).map((other) => other.id);
-}
-
-/**
  * Items with parents (by id), as a flat list in any order, in tree order
  * with depths: each level keeps the order the items came in. Items whose
  * parent isn't in the list (or that are in a loop) go to the top level.

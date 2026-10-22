@@ -307,7 +307,7 @@ function EntryList({
                                 {visible.map((column) => (
                                     <TableCell key={column.key} className={column.key === 'status' ? '' : 'cms:text-muted-foreground'}>
                                         <div className="cms:max-w-72 cms:truncate">
-                                            <CellValue row={row} column={column} mainLocale={mainLocale} />
+                                            <CellValue row={row} column={column} />
                                         </div>
                                     </TableCell>
                                 ))}
@@ -383,7 +383,7 @@ function SortableHead({ label, sortKey, sort, onSort }: { label: string; sortKey
     );
 }
 
-function CellValue({ row, column, mainLocale }: { row: Row; column: Column; mainLocale: string }) {
+function CellValue({ row, column }: { row: Row; column: Column }) {
     switch (column.key) {
         case 'slug':
             return <span className="cms:font-mono">{row.slug}</span>;

@@ -50,9 +50,6 @@ export function cleanHandle(typed: string): string {
         .slice(0, 64);
 }
 
-/** The same as cleanHandle ("Contact-Person" → "contact_person"). */
-export const handleInput = cleanHandle;
-
 /** A handle not yet used on this level: "text", then "text_2"… */
 export function uniqueHandle(base: string, siblings: { handle: string }[]): string {
     const taken = new Set(siblings.map((field) => field.handle));
@@ -100,17 +97,6 @@ export function renamedFrom(field: Pick<BuilderField, 'handle' | 'type' | 'saved
 /** The fields once saved: their handles now are the ones content keeps values under. */
 export function markSaved(fields: BuilderField[]): BuilderField[] {
     return fields.map((field) => ({ ...field, savedHandle: field.handle, fields: markSaved(field.fields) }));
-}
-
-/** Moves the item at `from` one place up (-1) or down (+1); out of range does nothing. */
-export function move<T>(items: T[], from: number, by: -1 | 1): T[] {
-    const to = from + by;
-    if (from < 0 || from >= items.length || to < 0 || to >= items.length) return items;
-    const copy = items.slice();
-    const [item] = copy.splice(from, 1) as [T];
-    copy.splice(to, 0, item);
-
-    return copy;
 }
 
 /** Changes the label, and the handle with it while nobody typed one. */

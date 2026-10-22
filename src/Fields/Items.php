@@ -25,11 +25,6 @@ final class Items extends Collection
         return $this->first(fn (mixed $item): bool => self::keyOf($item) === $key);
     }
 
-    public function hasKey(string $key): bool
-    {
-        return $this->byKey($key) !== null;
-    }
-
     private static function keyOf(mixed $item): ?string
     {
         if ($item instanceof Block) {

@@ -84,26 +84,6 @@ export function outdent(items: FlatItem[], index: number): FlatItem[] {
     return [...items.slice(0, index), ...items.slice(end, parentEnd), ...block, ...items.slice(parentEnd)];
 }
 
-/** Moves an item (with its children) past its previous (-1) or next (+1) sibling. */
-export function moveItem(items: FlatItem[], index: number, by: -1 | 1): FlatItem[] {
-    const item = items[index];
-    if (!item) return items;
-    const end = subtreeEnd(items, index);
-    const block = items.slice(index, end);
-    if (by === -1) {
-        let sibling = index - 1;
-        while (sibling >= 0 && items[sibling]!.depth > item.depth) sibling--;
-        if (sibling < 0 || items[sibling]!.depth !== item.depth) return items;
-
-        return [...items.slice(0, sibling), ...block, ...items.slice(sibling, index), ...items.slice(end)];
-    }
-    const sibling = items[end];
-    if (!sibling || sibling.depth !== item.depth) return items;
-    const siblingEnd = subtreeEnd(items, end);
-
-    return [...items.slice(0, index), ...items.slice(end, siblingEnd), ...block, ...items.slice(siblingEnd)];
-}
-
 export function removeItem(items: FlatItem[], index: number): FlatItem[] {
     return [...items.slice(0, index), ...items.slice(subtreeEnd(items, index))];
 }

@@ -3784,7 +3784,7 @@ function yl({
               ),
               (!c.columns.includes("slug") && k.path || k.parent) && /* @__PURE__ */ e.jsx("div", { className: "cms:text-xs cms:text-muted-foreground", children: [c.columns.includes("slug") ? null : k.path, k.parent ? t("under :parent", { parent: k.parent }) : null].filter(Boolean).join(" · ") })
             ] }),
-            P.map((q) => /* @__PURE__ */ e.jsx(n.TableCell, { className: q.key === "status" ? "" : "cms:text-muted-foreground", children: /* @__PURE__ */ e.jsx("div", { className: "cms:max-w-72 cms:truncate", children: /* @__PURE__ */ e.jsx(Nl, { row: k, column: q, mainLocale: v }) }) }, q.key)),
+            P.map((q) => /* @__PURE__ */ e.jsx(n.TableCell, { className: q.key === "status" ? "" : "cms:text-muted-foreground", children: /* @__PURE__ */ e.jsx("div", { className: "cms:max-w-72 cms:truncate", children: /* @__PURE__ */ e.jsx(Nl, { row: k, column: q }) }) }, q.key)),
             ue && /* @__PURE__ */ e.jsx(n.TableCell, { className: "cms:w-px", children: /* @__PURE__ */ e.jsxs("span", { className: "cms:flex", children: [
               /* @__PURE__ */ e.jsx(n.Button, { variant: "ghost", size: "icon", "aria-label": t("Move :title up", { title: k.title }), onClick: () => C.router.post(A(`cms/entries/${k.id}/move`), { direction: "up" }, { preserveScroll: !0 }), children: /* @__PURE__ */ e.jsx(Rs, {}) }),
               /* @__PURE__ */ e.jsx(n.Button, { variant: "ghost", size: "icon", "aria-label": t("Move :title down", { title: k.title }), onClick: () => C.router.post(A(`cms/entries/${k.id}/move`), { direction: "down" }, { preserveScroll: !0 }), children: /* @__PURE__ */ e.jsx(Hs, {}) })
@@ -3870,28 +3870,28 @@ function Ts({ label: s, sortKey: a, sort: l, onSort: c }) {
     }
   ) });
 }
-function Nl({ row: s, column: a, mainLocale: l }) {
+function Nl({ row: s, column: a }) {
   switch (a.key) {
     case "slug":
       return /* @__PURE__ */ e.jsx("span", { className: "cms:font-mono", children: s.slug });
     case "status":
       return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-wrap cms:items-center cms:gap-1", children: [
         s.trashed ? /* @__PURE__ */ e.jsx(n.Badge, { variant: "outline", className: "cms:text-destructive", title: t(":status before it was trashed", { status: te(s.status) }), children: t("Trashed") }) : /* @__PURE__ */ e.jsx(n.Badge, { variant: s.status === "published" ? "success" : "secondary", children: te(s.status) }),
-        s.locales.length > 1 && s.locales.filter((c) => !c.main).map((c) => {
-          const i = kl(c);
+        s.locales.length > 1 && s.locales.filter((l) => !l.main).map((l) => {
+          const c = kl(l);
           return /* @__PURE__ */ e.jsxs(
             n.Badge,
             {
-              variant: i.variant,
-              className: i.className,
-              title: t(":language: :status", { language: O(c.code), status: i.title }),
-              "aria-label": t(":language: :status", { language: O(c.code), status: i.title }),
+              variant: c.variant,
+              className: c.className,
+              title: t(":language: :status", { language: O(l.code), status: c.title }),
+              "aria-label": t(":language: :status", { language: O(l.code), status: c.title }),
               children: [
-                c.code.toUpperCase(),
-                i.word && /* @__PURE__ */ e.jsx("span", { className: "cms:font-normal", children: i.word })
+                l.code.toUpperCase(),
+                c.word && /* @__PURE__ */ e.jsx("span", { className: "cms:font-normal", children: c.word })
               ]
             },
-            c.code
+            l.code
           );
         })
       ] });

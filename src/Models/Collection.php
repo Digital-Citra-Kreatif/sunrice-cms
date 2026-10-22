@@ -134,12 +134,6 @@ class Collection extends Model
         return $this->belongsToMany(Taxonomy::class, 'sunrice_collection_taxonomy');
     }
 
-    /** The blueprint, or null when it has none or it was deleted. */
-    public function blueprintModel(): ?Blueprint
-    {
-        return $this->blueprint === null ? null : Blueprint::query()->where('handle', $this->blueprint)->first();
-    }
-
     /** The fields of its entries (none without a blueprint), loaded once. */
     public function schema(): Schema
     {

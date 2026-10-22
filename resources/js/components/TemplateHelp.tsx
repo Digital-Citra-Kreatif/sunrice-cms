@@ -13,9 +13,6 @@ export interface TemplateLookup {
     fallbacks: TemplateFile[];
 }
 
-/** cms.article → resources/views/cms/article.blade.php */
-export const viewFile = (view: string) => `resources/views/${shortViewFile(view)}`;
-
 /** cms.article → cms/article.blade.php, under resources/views (a package's "pkg::x.y" stays as it is). */
 export const shortViewFile = (view: string) => (view.includes('::') ? view : `${view.replace(/\./g, '/')}.blade.php`);
 
