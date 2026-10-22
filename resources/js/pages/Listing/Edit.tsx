@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import { ExternalLink, LoaderCircle } from 'lucide-react';
 import { adminUrl, t } from '@sunrice/admin-sdk';

@@ -44,12 +44,6 @@ final class LazyEntries implements Arrayable, ArrayAccess, Countable, Htmlable, 
     /** @param  Closure(): Paginated<int, EntryTranslation>  $query */
     public function __construct(private readonly Closure $query) {}
 
-    /** Whether the query ran. */
-    public function loaded(): bool
-    {
-        return $this->paginator !== null;
-    }
-
     /** @return Paginated<int, EntryTranslation> */
     public function paginator(): Paginated
     {

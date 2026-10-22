@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { router } from '@inertiajs/react';
 import { t } from '@sunrice/admin-sdk';
 import { Button } from '@sunrice/admin-sdk/ui';

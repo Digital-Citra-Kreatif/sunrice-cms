@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import { IndentDecrease, IndentIncrease, Link2, List, LoaderCircle, Plus, Settings2, Tag, Trash2 } from 'lucide-react';
 import { adminUrl, t } from '@sunrice/admin-sdk';
 import {
