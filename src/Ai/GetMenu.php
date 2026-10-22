@@ -15,7 +15,7 @@ use Sunrice\Cms\Models\MenuItem;
 use Sunrice\Cms\Support\Locales;
 
 #[IsReadOnly]
-#[Description('Read a menu: its items as stored, as a tree (id, entry_id, term_id or collection_id (a listing page, with "query": its filters, "listing_type=for-sale") or url, labels by language (empty: the target\'s title), new_tab, children), ready to change and send back to cms_save_menu; and as the site shows it in a language (labels and URLs; links to pages not on the site left out). Without "handle": the menus.')]
+#[Description('Read a menu: its items as stored, as a tree (id; a target: entry_id, term_id (its page; with collection_id, its page in that collection), taxonomy_id (its shared index page; with collection_id, that collection\'s), collection_id alone (a listing page, with "query": its filters, "listing_type=for-sale") or url; labels by language (empty: the target\'s title), new_tab, children), ready to change and send back to cms_save_menu; and as the site shows it in a language (labels and URLs; links to pages not on the site left out). Without "handle": the menus.')]
 final class GetMenu extends CmsTool
 {
     protected string $name = 'cms_get_menu';
@@ -58,6 +58,7 @@ final class GetMenu extends CmsTool
                     'id' => $item->id,
                     'entry_id' => $item->entry_id,
                     'term_id' => $item->term_id,
+                    'taxonomy_id' => $item->taxonomy_id,
                     'collection_id' => $item->collection_id,
                     'url' => $item->url,
                     'labels' => $item->labels,

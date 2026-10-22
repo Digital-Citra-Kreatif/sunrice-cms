@@ -11,7 +11,7 @@ use Laravel\Mcp\Server\Attributes\Description;
 use Sunrice\Cms\Actions\Menus\SaveMenu as Save;
 use Sunrice\Cms\Models\Menu;
 
-#[Description('Replace a menu\'s items with a tree (send every item: what\'s left out is removed). An item: one target, "entry_id", "term_id" (its page), "collection_id" (its listing page; "query" adds its filters in every language, "listing_type=for-sale") or "url"; "labels" by language (needed for a url; empty: the target\'s title); "new_tab"; "children" (three levels at most). Start from cms_get_menu\'s items. Live as soon as it\'s saved: ask first. Item ids change; to only reorder, use cms_reorder.')]
+#[Description('Replace a menu\'s items with a tree (send every item: what\'s left out is removed). An item: one target, "entry_id", "term_id" (its page; with "collection_id", its page in that collection, where its terms have pages), "taxonomy_id" (its shared index page; with "collection_id", that collection\'s index page; the page must be on), "collection_id" alone (its listing page; "query" adds its filters in every language, "listing_type=for-sale") or "url"; "labels" by language (needed for a url; empty: the target\'s title); "new_tab"; "children" (three levels at most). Start from cms_get_menu\'s items. Live as soon as it\'s saved: ask first. Item ids change; to only reorder, use cms_reorder.')]
 final class SaveMenu extends CmsTool
 {
     protected string $name = 'cms_save_menu';
@@ -58,7 +58,17 @@ final class SaveMenu extends CmsTool
     {
         return [
             'handle' => $schema->string()->required(),
-            'items' => $schema->array()->items($schema->object())->description('The whole tree.')->required(),
+            'items' => $schema->array()->items($schema->object([
+                'entry_id' => $schema->integer(),
+                'term_id' => $schema->integer()->description('A term\'s page; with collection_id, its page in that collection.'),
+                'taxonomy_id' => $schema->integer()->description('A taxonomy\'s shared index page; with collection_id, that collection\'s.'),
+                'collection_id' => $schema->integer()->description('Alone: the collection\'s listing page.'),
+                'url' => $schema->string(),
+                'labels' => $schema->object()->description('Language => label.'),
+                'new_tab' => $schema->boolean(),
+                'query' => $schema->string()->description('A listing page link\'s filters.'),
+                'children' => $schema->array()->items($schema->object()),
+            ]))->description('The whole tree.')->required(),
         ];
     }
 }

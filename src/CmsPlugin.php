@@ -293,14 +293,14 @@ final class CmsPlugin extends BasePlugin
             Ai\GetBlueprint::class, Ai\SaveBlueprint::class, Ai\FieldTypes::class,
             Ai\SeoAudit::class, Ai\RenderPage::class, Ai\GetTemplateGuide::class, Ai\ReadTemplate::class, Ai\WriteTemplate::class,
         )->aiInstructions(<<<'MD'
-            Content (the CMS): collections are kinds of content (pages, articles); each has a blueprint (its fields) and entries. An entry has a translation per language (title, slug, fields, SEO), edited as a draft and published to the site. Taxonomies hold terms; globals are site-wide values; menus are navigation; templates are Blade views.
+            Content (the CMS): collections are kinds of content (pages, articles); each has a blueprint (its fields) and entries. An entry has a translation per language (title, slug, fields, SEO), edited as a draft and published to the site. Taxonomies hold terms, with a page per term and an index page of its terms, shared and in each collection they group (cms_list_terms says which are on); globals are site-wide values; menus are navigation; templates are Blade views.
             - Find entries with cms_list_entries (no arguments lists the collections); read one with cms_get_entry, which shows its fields.
             - Write with cms_save_entry (only what you send changes): it saves the draft; the site changes only when it's published (cms_publish_entry, or "publish": true). Ask before publishing, unpublishing, trashing or deleting.
             - Lifecycle: cms_trash_entry, then cms_manage_entry (permanently delete, duplicate, set as the homepage); cms_entry_revisions lists, shows and restores published versions.
             - Order: cms_reorder for entries (collections with Manual order), terms and menu items.
-            - Other languages: cms_translate_entry adds one, then save it with "locale". Only translatable fields have a value per language; the rest are shared with the main language. The same for terms, globals and listing pages.
+            - Other languages: cms_translate_entry adds one, then save it with "locale". Only translatable fields have a value per language; the rest are shared with the main language. The same for terms, globals, listing pages and index pages.
             - Media fields take ids from list_media (upload_media adds files; give images alt text); terms fields ids from cms_list_terms; entries fields entry ids.
-            - Live as soon as saved (ask first): globals (cms_get_globals, cms_save_globals), listing pages (cms_get_listing, cms_save_listing), menus (cms_get_menu, cms_save_menu).
+            - Live as soon as saved (ask first): globals (cms_get_globals, cms_save_globals), listing pages and taxonomy index pages (cms_get_listing, cms_save_listing: "collection" for a collection's listing page, "taxonomy" for a taxonomy's index page, with "collection" for that collection's), menus (cms_get_menu, cms_save_menu).
             - Structure: cms_field_types, then cms_get_blueprint and cms_save_blueprint; collections, taxonomies, global sets, menus, redirects and forms themselves are resources (list_records, save_record).
             - Forms: cms_list_submissions, cms_delete_submissions (ask first).
             - SEO: cms_seo_audit, then fix with cms_save_entry ("seo") and update_media (alt text).

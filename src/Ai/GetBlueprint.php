@@ -12,9 +12,10 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Fieldset;
+use Sunrice\Cms\Models\Taxonomy;
 
 #[IsReadOnly]
-#[Description('Without "handle": the blueprints (the fields of collections, taxonomies, global sets, forms and listing pages) or, with "kind": "fieldset", the fieldsets (reusable groups of fields, also blocks). With one: its title and field definitions as saved, to change and send back whole to cms_save_blueprint. cms_field_types lists the field types and their settings.')]
+#[Description('Without "handle": the blueprints (the fields of collections, taxonomies, global sets, forms, listing pages and taxonomy index pages) with what uses them (handles of collections, listing_pages: collections, taxonomies, index_pages: taxonomies) or, with "kind": "fieldset", the fieldsets (reusable groups of fields, also blocks). With one: its title and field definitions as saved, to change and send back whole to cms_save_blueprint. cms_field_types lists the field types and their settings.')]
 final class GetBlueprint extends CmsTool
 {
     protected string $name = 'cms_get_blueprint';
@@ -32,13 +33,30 @@ final class GetBlueprint extends CmsTool
                 ->map(fn (Fieldset $f): array => ['handle' => $f->handle, 'title' => $f->title, 'fields' => count($f->fields)])->all()]);
         }
         if (! is_string($handle) || $handle === '') {
+            // What uses each blueprint: collections (their entries), listing pages, taxonomies (their terms) and taxonomy index pages.
             $usedBy = [];
-            foreach (Collection::query()->whereNotNull('blueprint')->orderBy('handle')->get(['handle', 'blueprint']) as $collection) {
-                $usedBy[(string) $collection->blueprint][] = $collection->handle;
+            $use = function (mixed $blueprint, string $what, string $handle) use (&$usedBy): void {
+                if (is_string($blueprint) && $blueprint !== '' && ! in_array($handle, $usedBy[$blueprint][$what] ?? [], true)) {
+                    $usedBy[$blueprint][$what][] = $handle;
+                }
+            };
+            foreach (Collection::query()->orderBy('handle')->get(['handle', 'blueprint', 'blueprints', 'listing_blueprint']) as $collection) {
+                foreach ([$collection->blueprint, ...($collection->blueprints ?? [])] as $blueprint) {
+                    $use($blueprint, 'collections', $collection->handle);
+                }
+                $use($collection->listing_blueprint, 'listing_pages', $collection->handle);
+            }
+            foreach (Taxonomy::query()->orderBy('handle')->get(['handle', 'blueprint', 'index_blueprint']) as $taxonomy) {
+                $use($taxonomy->blueprint, 'taxonomies', $taxonomy->handle);
+                $use($taxonomy->index_blueprint, 'index_pages', $taxonomy->handle);
             }
 
             return $this->json(['blueprints' => Blueprint::query()->orderBy('title')->get()
-                ->map(fn (Blueprint $b): array => ['handle' => $b->handle, 'title' => $b->title, 'fields' => count($b->fields), 'collections' => $usedBy[$b->handle] ?? []])->all()]);
+                ->map(fn (Blueprint $b): array => [
+                    'handle' => $b->handle, 'title' => $b->title, 'fields' => count($b->fields),
+                    'collections' => $usedBy[$b->handle]['collections'] ?? [], 'listing_pages' => $usedBy[$b->handle]['listing_pages'] ?? [],
+                    'taxonomies' => $usedBy[$b->handle]['taxonomies'] ?? [], 'index_pages' => $usedBy[$b->handle]['index_pages'] ?? [],
+                ])->all()]);
         }
         $model = $class::query()->where('handle', $handle)->first();
         if ($model === null) {
