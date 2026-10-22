@@ -1,7 +1,7 @@
 import { Head, router, useForm } from '@inertiajs/react';
 import { LoaderCircle, Settings2 } from 'lucide-react';
-import { adminUrl, t } from '@sunrice/admin-sdk';
-import { Button, KeptEditsNotice, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs, useEditLock, useUnsavedChanges, ViewingNotice } from '@sunrice/admin-sdk/ui';
+import { adminUrl, t } from '@imajiner/admin-sdk';
+import { Button, KeptEditsNotice, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs, useEditLock, useUnsavedChanges, ViewingNotice } from '@imajiner/admin-sdk/ui';
 import { FieldSections } from '@/components/FieldSections.tsx';
 import { VersionConflict } from '@/components/VersionConflict.tsx';
 import { errorKeysAt } from '@/lib/builder.ts';

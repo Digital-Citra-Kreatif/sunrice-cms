@@ -3,8 +3,8 @@ import { ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, Plus, Trash2
 import {
     Badge, Button, Checkbox, DatePicker, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input, Label, MediaPickerInput,
     moveItem, RichTextEditor, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SortableHandle, type SortableHandleProps, SortableList, Switch, Textarea,
-} from '@sunrice/admin-sdk/ui';
-import { t } from '@sunrice/admin-sdk';
+} from '@imajiner/admin-sdk/ui';
+import { t } from '@imajiner/admin-sdk';
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
 import { TermsPicker } from '@/components/TermsPicker.tsx';
 import { errorsAt } from '@/lib/builder.ts';

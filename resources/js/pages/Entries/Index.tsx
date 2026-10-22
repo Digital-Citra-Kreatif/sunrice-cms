@@ -5,12 +5,12 @@ import {
 } from 'lucide-react';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { EntryReorderList } from '@/components/EntryReorderList.tsx';
-import { adminUrl, t } from '@sunrice/admin-sdk';
+import { adminUrl, t } from '@imajiner/admin-sdk';
 import {
     Badge, Button, Card, Checkbox, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel,
     DropdownMenuSeparator, DropdownMenuTrigger, Input, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table,
     TableBody, TableCell, TableHead, TableHeader, TableRow, TrashHint, useBreadcrumbs, useTablePreferences,
-} from '@sunrice/admin-sdk/ui';
+} from '@imajiner/admin-sdk/ui';
 import { type EntryLocale, type EntryStatus, formatDate, localeName, statusLabel } from '@/lib/entries.ts';
 import {
     activeFilters, type EntryListQuery, entryListParams, entryListQueryString, nextSort, sortDirection,

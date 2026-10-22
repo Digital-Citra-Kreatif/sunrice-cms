@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { router } from '@inertiajs/react';
 import { Check, MessageSquareReply, ShieldAlert } from 'lucide-react';
-import { adminUrl, t } from '@sunrice/admin-sdk';
-import { Badge, Button, CollapsibleCard, Skeleton, Textarea } from '@sunrice/admin-sdk/ui';
+import { adminUrl, t } from '@imajiner/admin-sdk';
+import { Badge, Button, CollapsibleCard, Skeleton, Textarea } from '@imajiner/admin-sdk/ui';
 import { formatDate } from '@/lib/entries.ts';
 
 export interface EntryCommentsSummary {

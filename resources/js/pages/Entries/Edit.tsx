@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { Deferred, Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { CalendarClock, Check, ChevronDown, Copy, ExternalLink, Eye, Languages, LayoutTemplate, LoaderCircle, MoreHorizontal, Plus, RotateCcw, Send, Trash2, Undo2 } from 'lucide-react';
-import { adminUrl, t } from '@sunrice/admin-sdk';
+import { adminUrl, t } from '@imajiner/admin-sdk';
 import {
     Badge, Button, Card, CardContent, CollapsibleCard, DatePicker, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, Input, KeptEditsNotice, Label, PageHeader,
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Skeleton, Switch, Textarea, useBreadcrumbs, useEditLock, useUnsavedChanges, ViewingNotice,
-} from '@sunrice/admin-sdk/ui';
+} from '@imajiner/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { TemplateHelp, type TemplateLookup } from '@/components/TemplateHelp.tsx';
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';

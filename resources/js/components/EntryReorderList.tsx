@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { router } from '@inertiajs/react';
-import { adminUrl, t } from '@sunrice/admin-sdk';
-import { Badge, Card, SortableHandle, SortableList } from '@sunrice/admin-sdk/ui';
+import { adminUrl, t } from '@imajiner/admin-sdk';
+import { Badge, Card, SortableHandle, SortableList } from '@imajiner/admin-sdk/ui';
 import { type EntryStatus, statusLabel } from '@/lib/entries.ts';
 import { childIndexes, reorderLevel, treeOrder } from '@/lib/tree.ts';
 

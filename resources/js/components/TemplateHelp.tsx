@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { t } from '@sunrice/admin-sdk';
+import { t } from '@imajiner/admin-sdk';
 
 /** A view and whether its file exists, as the server found it. */
 export interface TemplateFile {

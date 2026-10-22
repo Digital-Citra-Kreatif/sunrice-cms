@@ -1,7 +1,7 @@
 {
     "private": true,
     "name": "@sunrice/cms-app",
-    "description": "The CMS's admin pages, a bundle built with @sunrice/admin-sdk into dist/ and shipped with the sunrice/cms Composer package.",
+    "description": "The CMS's admin pages, a bundle built with @imajiner/admin-sdk into dist/ and shipped with the sunrice/cms Composer package.",
     "type": "module",
     "scripts": {
         "dev": "vite build --watch",
@@ -10,7 +10,7 @@
     },
     "dependencies": {
         "@inertiajs/react": "^3.0.0",
-        "@sunrice/admin-sdk": "*",
+        "@imajiner/admin-sdk": "*",
         "lucide-react": "^1.52.0",
         "react": "^19.0.0"
     },

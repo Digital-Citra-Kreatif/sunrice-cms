@@ -1,5 +1,5 @@
-import { Card, CardContent, CollapsibleCard } from '@sunrice/admin-sdk/ui';
-import { t } from '@sunrice/admin-sdk';
+import { Card, CardContent, CollapsibleCard } from '@imajiner/admin-sdk/ui';
+import { t } from '@imajiner/admin-sdk';
 import { FieldError, FieldInput, Fields, labelOf } from '@/components/FieldInput.tsx';
 import { errorsAt, hasErrors } from '@/lib/builder.ts';
 import { isShown } from '@/lib/conditions.ts';

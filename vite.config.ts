@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
-import { sunrice } from '@sunrice/admin-sdk/vite';
+import { sunrice } from '@imajiner/admin-sdk/vite';
 import { resolve } from 'node:path';
 
 // dist/admin.js and dist/admin.css, published to public/vendor/sunrice-cms.

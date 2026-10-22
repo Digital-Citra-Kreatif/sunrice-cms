@@ -1,4 +1,4 @@
-import { t } from '@sunrice/admin-sdk';
+import { t } from '@imajiner/admin-sdk';
 
 export type EntryStatus = 'draft' | 'scheduled' | 'published';
 

@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import { LoaderCircle, Trash2 } from 'lucide-react';
-import { adminUrl, t } from '@sunrice/admin-sdk';
-import { Button, Card, CardContent, Input, Label, PageHeader, useBreadcrumbs, useUnsavedChanges } from '@sunrice/admin-sdk/ui';
+import { adminUrl, t } from '@imajiner/admin-sdk';
+import { Button, Card, CardContent, Input, Label, PageHeader, useBreadcrumbs, useUnsavedChanges } from '@imajiner/admin-sdk/ui';
 import { ChangeWarning } from '@/components/ChangeWarning.tsx';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { FieldBuilder } from '@/components/FieldBuilder.tsx';

@@ -6,8 +6,8 @@ import {
 import {
     Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input, Label,
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SortableHandle, SortableList, Switch, Textarea,
-} from '@sunrice/admin-sdk/ui';
-import { t } from '@sunrice/admin-sdk';
+} from '@imajiner/admin-sdk/ui';
+import { t } from '@imajiner/admin-sdk';
 import { ChangeWarning } from '@/components/ChangeWarning.tsx';
 import { FieldError, FieldInput } from '@/components/FieldInput.tsx';
 import { type BuilderField, cleanHandle, conditionChoices, settingGroups, duplicateField, errorsAt, errorsUnder, handleWarning, hasErrors, isTranslatable, MAX_DEPTH, newField, relabel, renamedFrom, type ReservedHandles, setTranslatable } from '@/lib/builder.ts';

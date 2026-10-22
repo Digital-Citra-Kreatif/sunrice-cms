@@ -3,8 +3,8 @@ import { Head, useForm } from '@inertiajs/react';
 import {
     Button, CollapsibleCard, Input, Label, MediaPickerInput, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SettingsLayout, Switch,
     useBreadcrumbs, useUnsavedChanges, type SettingsNavEntry,
-} from '@sunrice/admin-sdk/ui';
-import { adminUrl, t } from '@sunrice/admin-sdk';
+} from '@imajiner/admin-sdk/ui';
+import { adminUrl, t } from '@imajiner/admin-sdk';
 import { FieldError } from '@/components/FieldInput.tsx';
 
 type Role = 'title' | 'description' | 'image';

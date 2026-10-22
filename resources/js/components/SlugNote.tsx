@@ -1,4 +1,4 @@
-import { t } from '@sunrice/admin-sdk';
+import { t } from '@imajiner/admin-sdk';
 import type { slugNote } from '@/lib/entries.ts';
 
 /** A quiet note under a slug field whose new value moves a page's address (slugNote()). */

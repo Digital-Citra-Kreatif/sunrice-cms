@@ -12,7 +12,7 @@ function es() {
 function Ta(s) {
   const a = es();
   if (a.version !== hs)
-    throw new Error(`[sunrice] This plugin was built for admin runtime ${hs}, but the panel runs ${a.version}. Rebuild it with a matching @sunrice/admin-sdk.`);
+    throw new Error(`[sunrice] This plugin was built for admin runtime ${hs}, but the panel runs ${a.version}. Rebuild it with a matching @imajiner/admin-sdk.`);
   for (const [l, c] of Object.entries(s.pages ?? {}))
     a.registerPage(l, c);
 }
@@ -900,7 +900,7 @@ const Gt = {
 Gt.node;
 const Ne = E(Gt), Yt = globalThis.Sunrice;
 if (!Yt) throw new Error("[sunrice] This bundle needs the Sunrice admin panel (window.Sunrice is missing).");
-const n = Yt.modules["@sunrice/admin-sdk/ui"];
+const n = Yt.modules["@imajiner/admin-sdk/ui"];
 function Jt({ id: s, children: a }) {
   return /* @__PURE__ */ e.jsxs("p", { id: s, className: "cms:flex cms:items-start cms:gap-2 cms:rounded-md cms:border cms:border-amber-500/40 cms:bg-amber-500/10 cms:px-3 cms:py-2 cms:text-sm cms:text-amber-900 cms:dark:text-amber-200", children: [
     /* @__PURE__ */ e.jsx(gn, { className: "cms:mt-0.5 cms:size-4 cms:shrink-0", "aria-hidden": !0 }),

@@ -1,5 +1,5 @@
 import { Check } from 'lucide-react';
-import { t } from '@sunrice/admin-sdk';
+import { t } from '@imajiner/admin-sdk';
 import { localeName } from '@/lib/entries.ts';
 import { languageHint } from '@/lib/languages.ts';
 

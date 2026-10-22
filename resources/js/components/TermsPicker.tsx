@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Search, X } from 'lucide-react';
-import { adminUrl, t } from '@sunrice/admin-sdk';
-import { Badge, Button, Checkbox, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Skeleton } from '@sunrice/admin-sdk/ui';
+import { adminUrl, t } from '@imajiner/admin-sdk';
+import { Badge, Button, Checkbox, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Skeleton } from '@imajiner/admin-sdk/ui';
 import { termPickerQuery } from '@/lib/values.ts';
 
 export interface TermOption { id: number; label: string; depth: number }

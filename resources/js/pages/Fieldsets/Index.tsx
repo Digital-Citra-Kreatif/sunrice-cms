@@ -1,5 +1,5 @@
 import { usePage } from '@inertiajs/react';
-import { adminUrl, t } from '@sunrice/admin-sdk';
+import { adminUrl, t } from '@imajiner/admin-sdk';
 import { FieldError } from '@/components/FieldInput.tsx';
 import { type StructureRow, StructureList } from '@/components/StructureList.tsx';
 

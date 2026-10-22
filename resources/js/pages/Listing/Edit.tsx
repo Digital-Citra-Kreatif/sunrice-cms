@@ -1,7 +1,7 @@
 import { Head, router, useForm } from '@inertiajs/react';
 import { ExternalLink, LoaderCircle } from 'lucide-react';
-import { adminUrl, t } from '@sunrice/admin-sdk';
-import { Button, Card, CardContent, CollapsibleCard, PageHeader, useBreadcrumbs, useUnsavedChanges } from '@sunrice/admin-sdk/ui';
+import { adminUrl, t } from '@imajiner/admin-sdk';
+import { Button, Card, CardContent, CollapsibleCard, PageHeader, useBreadcrumbs, useUnsavedChanges } from '@imajiner/admin-sdk/ui';
 import { FieldInput, Fields } from '@/components/FieldInput.tsx';
 import { SHARED_FIELD } from '@/components/FieldSections.tsx';
 import { VersionConflict } from '@/components/VersionConflict.tsx';

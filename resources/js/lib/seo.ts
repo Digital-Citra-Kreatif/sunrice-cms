@@ -1,4 +1,4 @@
-import { t } from '@sunrice/admin-sdk';
+import { t } from '@imajiner/admin-sdk';
 import type { FieldDefinition } from '@/types.ts';
 
 /** The SEO card's fields (see Sunrice\\Cms\\Support\\Seo), edited with the field inputs, in the user's language. */

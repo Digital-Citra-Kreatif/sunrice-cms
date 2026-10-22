@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Search, X } from 'lucide-react';
-import { adminUrl, t } from '@sunrice/admin-sdk';
-import { Badge, Button, Input, SortableHandle, SortableList } from '@sunrice/admin-sdk/ui';
+import { adminUrl, t } from '@imajiner/admin-sdk';
+import { Badge, Button, Input, SortableHandle, SortableList } from '@imajiner/admin-sdk/ui';
 import { pickerQuery } from '@/lib/values.ts';
 import { type EntryStatus, statusLabel } from '@/lib/entries.ts';
 

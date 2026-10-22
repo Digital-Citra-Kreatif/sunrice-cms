@@ -1,6 +1,6 @@
 import { router } from '@inertiajs/react';
-import { t } from '@sunrice/admin-sdk';
-import { Button } from '@sunrice/admin-sdk/ui';
+import { t } from '@imajiner/admin-sdk';
+import { Button } from '@imajiner/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
 
 /**

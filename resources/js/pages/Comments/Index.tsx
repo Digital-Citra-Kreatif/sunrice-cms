@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { Head, router } from '@inertiajs/react';
 import { Check, ChevronLeft, ChevronRight, ExternalLink, MessageSquare, MessageSquareReply, Search, Pencil, RotateCcw, ShieldAlert, Trash2, Undo2 } from 'lucide-react';
-import { adminUrl, t } from '@sunrice/admin-sdk';
+import { adminUrl, t } from '@imajiner/admin-sdk';
 import {
     Badge, Button, Card, Checkbox, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input, PageHeader, Select,
     SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsList, TabsTrigger, Textarea, TrashHint, useBreadcrumbs,
-} from '@sunrice/admin-sdk/ui';
+} from '@imajiner/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { FieldError } from '@/components/FieldInput.tsx';
 import { formatDate } from '@/lib/entries.ts';

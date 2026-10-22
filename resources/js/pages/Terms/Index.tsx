@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { ExternalLink, LayoutTemplate, MoreHorizontal, Pencil, Plus, RotateCcw, Search, Settings2, Trash2 } from 'lucide-react';
-import { adminUrl, t } from '@sunrice/admin-sdk';
+import { adminUrl, t } from '@imajiner/admin-sdk';
 import {
     Button, Card, DropdownMenu, DropdownMenuContent, DropdownMenuItem,
     DropdownMenuSeparator, DropdownMenuTrigger, Input, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
     SortableHandle, type SortableHandleProps, SortableList, TrashHint, useBreadcrumbs,
-} from '@sunrice/admin-sdk/ui';
+} from '@imajiner/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { localeName } from '@/lib/entries.ts';
 import { childIndexes, reorderLevel } from '@/lib/tree.ts';

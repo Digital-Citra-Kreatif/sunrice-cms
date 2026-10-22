@@ -1,7 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Plus, Trash2 } from 'lucide-react';
-import { t } from '@sunrice/admin-sdk';
-import { Button, Card, PageHeader, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, useBreadcrumbs } from '@sunrice/admin-sdk/ui';
+import { t } from '@imajiner/admin-sdk';
+import { Button, Card, PageHeader, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, useBreadcrumbs } from '@imajiner/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
 
 export interface StructureRow {

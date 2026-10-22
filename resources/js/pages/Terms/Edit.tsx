@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import { ExternalLink, LoaderCircle } from 'lucide-react';
-import { adminUrl, t } from '@sunrice/admin-sdk';
+import { adminUrl, t } from '@imajiner/admin-sdk';
 import {
     Button, CollapsibleCard, Input, KeptEditsNotice, Label, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
     useBreadcrumbs, useEditLock, useUnsavedChanges, ViewingNotice,
-} from '@sunrice/admin-sdk/ui';
+} from '@imajiner/admin-sdk/ui';
 import { FieldError, Fields } from '@/components/FieldInput.tsx';
 import { FieldSections } from '@/components/FieldSections.tsx';
 import { SlugNote } from '@/components/SlugNote.tsx';

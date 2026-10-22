@@ -1,7 +1,7 @@
 import '../css/admin.css';
 import * as React from 'react';
 import { usePage } from '@inertiajs/react';
-import { definePlugin } from '@sunrice/admin-sdk';
+import { definePlugin } from '@imajiner/admin-sdk';
 import { setLocaleNames } from '@/lib/entries.ts';
 import BlueprintEdit from '@/pages/Blueprints/Edit.tsx';
 import BlueprintsIndex from '@/pages/Blueprints/Index.tsx';

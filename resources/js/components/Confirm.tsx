@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { t } from '@sunrice/admin-sdk';
-import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@sunrice/admin-sdk/ui';
+import { t } from '@imajiner/admin-sdk';
+import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@imajiner/admin-sdk/ui';
 
 /**
  * const [confirm, dialog] = useConfirm(); confirm('Delete it?', () => …); render {dialog}.
