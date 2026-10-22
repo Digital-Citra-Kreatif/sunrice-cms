@@ -95,7 +95,7 @@ A kept page is told apart by its host, path, language and only the query paramet
 
 Kept pages need responsecache's `Spatie\ResponseCache\Replacers\CsrfTokenReplacer` (in `responsecache.replacers`, where the package puts it): it swaps each visitor's own CSRF token into a page rendered for someone else. Without it every visitor would get the first one's token and no form would submit, so with `cache.pages` on, the CMS refuses to boot (`PanelMisconfigured`) if the replacer is missing from your published config. The CMS adds its own `Sunrice\Cms\Site\HoneypotReplacer` there too: it gives each visitor fresh [honeypot](forms.md) fields (the time the form was shown and the trap's random name), so the honeypot's "sent too fast" check counts from when the visitor got the page, not from when it was kept.
 
-A kept page still boots the framework and starts a session for each visitor (kept pages carry forms, and each visitor gets their own CSRF token), so a cookieless visit writes a session with the `database` session driver and responses say `Cache-Control: no-cache, private`. On a busy site use the `redis` or `file` session driver (or `cookie`), or put a CDN in front for pages without forms.
+A kept page still boots the framework and starts a session for each visitor (kept pages carry forms, and each visitor gets their own CSRF token), so a cookieless visit writes a session with the `database` session driver and responses say `Cache-Control: no-cache, private`. On a busy site use the `redis` or `file` session driver (or `cookie`), or put a CDN in front for pages without forms (see [CDNs and reverse proxies](#cdns-and-reverse-proxies)).
 
 Comments are read from the database on every render, so a comment changes nothing kept, except on a kept page that shows it: an approved comment appearing, changing or going starts a new version of the `pages` area. With *New comments* set to publish at once, that means visitors' comments do too (within their per-address limit), and only that area.
 
@@ -160,6 +160,22 @@ php artisan cache:clear
 ```
 
 (with `php artisan view:clear` if your deploy doesn't already), or wait `cache.ttl` at most. Then `php artisan sunrice:cache-preload` fills it again (or let **Preload after clearing the cache** do it). `cache:clear` also empties the app's default cache store; to keep that, use `php artisan responsecache:clear`, which empties only responsecache's store (`cache.store`, `file` by default, so give it a store of its own when that's the app's default) and doesn't touch the site's other caches.
+
+## CDNs and reverse proxies
+
+A CDN or caching proxy (Cloudflare, Fastly, Varnish, CloudFront …) in front of the site is fine for files, and fine for pages as long as it does what the site's headers say. The CMS keeps pages itself, in the whole-page cache above, and only for visitors who aren't signed in; it never tells a shared cache it may keep one:
+
+- Site pages, kept or not, say `Cache-Control: no-cache, private` (Laravel's default) and set the session cookie (`config('session.cookie')`, `laravel_session` by default) and `XSRF-TOKEN`: the site's routes run in the `web` middleware group, and pages carry forms with each visitor's own CSRF token.
+- Editors signed in to the panel get the same address with a draft banner, and `?draft` shows the unpublished changes; both say `Cache-Control: no-store, private`. So does a draft preview (`/cms-preview/{id}?…`, a signed link that expires, route `sunrice.cms.preview`), with `X-Robots-Tag: noindex, nofollow` too.
+
+So leave HTML to the origin: don't use a "cache everything" rule with an edge TTL that overrides the origin's headers. If you cache pages at the edge anyway:
+
+- Bypass the cache when the request has the session cookie or a "remember me" cookie (`remember_web_…`, Laravel's `remember_{guard}_{hash}` for the panel's guard), so signed-in editors never get, or leave behind, a page with their banner or drafts. Never store a response that sets a cookie: the next visitor would get the first one's session.
+- Never cache the panel (`/admin` and everything under it, or the path set with `$panel->path()`), previews (`/cms-preview/*`), any address with `?draft`, the site search with `?q=`, signed links (`/comments/{id}/unsubscribe`), or anything but `GET` and `HEAD` (form posts to `/forms/{handle}` and `/comments/{id}`).
+- Leave out pages with a form or comments: a page kept at the edge gives every visitor the first one's CSRF token and honeypot fields, and their submissions fail (419, page expired). The whole-page cache swaps in each visitor's own; an edge cache can't.
+- Purge the edge when the content changes: listen to `ContentChanged` (see [Events](#events)) and call your CDN's purge API from a queued listener, or keep edge lifetimes short.
+
+Files are another matter. Those with a hash in their name that changes with their content can be kept for a year (`Cache-Control: public, max-age=31536000, immutable`): the panel's under `/vendor/sunrice-admin/assets/` and your front end's Vite build under `/build/assets/`. Plugin bundles (`/vendor/sunrice-cms/` and other plugins') keep their names between versions, so give them a short lifetime. See [Compression and caching](../../admin/docs/installation.md#compression-and-caching) for the web server's side.
 
 ## Scheduled publishing
 
