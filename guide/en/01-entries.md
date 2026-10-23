@@ -48,7 +48,8 @@ Every entry has a **live version**, which visitors see, and **your changes**, wh
 
 The bar at the top of the editor always says which applies:
 
-- **Not published yet**: only people who can edit see it (it was never published, or it was taken off the site).
+- **Not published yet**: only people who can edit see it (it was never published).
+- **Taken off the site**: it was published, then unpublished; only people who can edit see it. **Publish again** puts it back with its date.
 - **Scheduled**: it goes live on the date shown.
 - **Live**: visitors see exactly what's in the editor.
 - **Live, with unpublished changes**: you saved changes, but visitors still see the version published on the date shown, by the person named. **View live page** opens what visitors see; **Compare with live** shows your changes beside it, field by field (removed words struck through, added ones highlighted); **Preview changes** shows your changes on the website; **Discard changes** throws your changes away and brings back the live version, after asking. Fields you changed have a small **Changed** beside their name.

@@ -40,7 +40,8 @@ export function localInputValue(date: Date): string {
 /**
  * What publishing does with the Publish date picked in the editor (the
  * date input's value, '' for none), compared with the one saved:
- * 'now' (no date, or the saved one), 'schedule' (a date to come),
+ * 'now' (no date, or the saved one: on an entry taken off the site, its
+ * past date, which publishing again keeps), 'schedule' (a date to come),
  * 'backdate' (a past date on a draft: published now, dated then) or
  * 'redate' (another past date on a published entry). Both Publish
  * buttons go by it, so neither ignores a picked date.
@@ -50,7 +51,7 @@ export function datedPublish(status: EntryStatus, picked: string, publishedAt: s
     if (chosen === null || Number.isNaN(chosen.getTime())) return { action: 'now', at: null };
     const minute = (time: number) => Math.floor(time / 60_000);
     const saved = publishedAt ? new Date(publishedAt).getTime() : null;
-    if (status !== 'draft' && saved !== null && minute(saved) === minute(chosen.getTime())) return { action: 'now', at: null };
+    if (saved !== null && minute(saved) === minute(chosen.getTime()) && (status !== 'draft' || chosen.getTime() <= now)) return { action: 'now', at: null };
     const at = chosen.toISOString();
     if (chosen.getTime() > now) return { action: 'schedule', at };
 

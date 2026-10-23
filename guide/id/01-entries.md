@@ -48,7 +48,8 @@ Setiap entri memiliki **versi tayang**, yang dilihat pengunjung, dan **perubahan
 
 Bilah di bagian atas penyunting selalu menunjukkan keadaannya:
 
-- **Belum diterbitkan**: hanya yang bisa menyunting yang melihatnya (belum pernah diterbitkan, atau sudah diturunkan dari situs).
+- **Belum diterbitkan**: hanya yang bisa menyunting yang melihatnya (belum pernah diterbitkan).
+- **Diturunkan dari situs**: pernah diterbitkan, lalu dibatalkan terbitnya; hanya yang bisa menyunting yang melihatnya. **Terbitkan lagi** menayangkannya kembali dengan tanggalnya.
 - **Terjadwal**: tayang pada tanggal yang ditunjukkan.
 - **Tayang**: pengunjung melihat persis yang ada di penyunting.
 - **Tayang, dengan perubahan yang belum diterbitkan**: Anda sudah menyimpan perubahan, tetapi pengunjung masih melihat versi yang diterbitkan pada tanggal yang ditunjukkan, oleh orang yang disebut. **Lihat halaman yang tayang** membuka yang dilihat pengunjung; **Bandingkan dengan yang tayang** menampilkan perubahan Anda di sampingnya, field demi field (kata yang dihapus dicoret, yang ditambahkan disorot); **Pratinjau perubahan** menampilkan perubahan Anda di situs; **Buang perubahan** membuang perubahan Anda dan mengembalikan versi tayang, setelah bertanya dulu. Field yang Anda ubah diberi tanda kecil **Berubah** di samping namanya.

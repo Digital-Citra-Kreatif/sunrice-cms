@@ -257,7 +257,7 @@ final class DashboardWidgets
             ->whereNull('sunrice_entries.deleted_at')
             ->select('sunrice_entry_translations.id', 'sunrice_entry_translations.entry_id', 'sunrice_entry_translations.locale', 'sunrice_entry_translations.status',
                 'sunrice_entry_translations.draft_title', 'sunrice_entry_translations.published_at', 'sunrice_entry_translations.updated_at',
-                // The live version and the draft, for "Live · changes pending" (a few rows: compared in PHP, as the editor does).
+                // The live version and the draft, for "Changes pending" (a few rows: compared in PHP, as the editor does).
                 'sunrice_entry_translations.title', 'sunrice_entry_translations.slug', 'sunrice_entry_translations.data',
                 'sunrice_entry_translations.draft_slug', 'sunrice_entry_translations.draft_data',
                 'sunrice_collections.title as collection_title', 'sunrice_collections.handle as collection_handle',
@@ -277,18 +277,20 @@ final class DashboardWidgets
         $collection = $translation->getAttribute('collection_title');
         $handle = $translation->getAttribute('collection_handle');
         $main = $translation->locale === Locales::default();
+        $pending = $status !== 'draft' && $translation->hasUnpublishedChanges();
 
         return [
             'title' => $translation->draft_title !== '' ? $translation->draft_title : "#{$translation->entry_id}",
             'meta' => (is_string($collection) ? $collection : '').(count(Locales::all()) > 1 ? ' · '.Str::upper($translation->locale) : ''),
             'url' => 'cms/collections/'.(is_string($handle) ? $handle : '').'/entries/'.$translation->entry_id.'/edit'.($main ? '' : '?locale='.urlencode($translation->locale)),
+            // As the entries list says it: "Changes pending" beside a published (live or scheduled) one, in its colour.
             'badge' => match ($status) {
-                'published' => $translation->hasUnpublishedChanges() ? __('Live · changes pending') : __('Live'),
-                'scheduled' => __('Scheduled'),
+                'published' => $pending ? __('Live · Changes pending') : __('Live'),
+                'scheduled' => $pending ? __('Scheduled · Changes pending') : __('Scheduled'),
                 default => __('Draft'),
             },
             'tone' => match ($status) {
-                'published' => 'success',
+                'published' => $pending ? 'warning' : 'success',
                 'scheduled' => 'warning',
                 default => 'neutral',
             },

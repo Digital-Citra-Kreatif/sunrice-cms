@@ -56,6 +56,7 @@ use Sunrice\Cms\Support\AdminUrls;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\References;
 use Sunrice\Cms\Support\Seo;
+use Sunrice\Cms\Support\TermParents;
 use Sunrice\Cms\Translation\TranslatorFactory;
 
 /**
@@ -338,7 +339,10 @@ final class EntryController
             $found = Term::query()->whereKey($ids)->where('taxonomy_id', $taxonomy->id)->pluck('id')->all();
             $labels = TermsField::labels(array_values(array_filter($ids, fn (int $id): bool => in_array($id, $found, true))));
 
-            return response()->json(['items' => array_map(fn (int $id, string $label): array => ['id' => $id, 'label' => $label, 'depth' => 0], array_keys($labels), $labels), 'more' => false]);
+            // With their parents' titles (`parents`, top first), for the chips' tooltips.
+            $parents = TermParents::of(array_keys($labels));
+
+            return response()->json(['items' => array_map(fn (int $id, string $label): array => ['id' => $id, 'label' => $label, 'depth' => 0, 'parents' => $parents[$id] ?? []], array_keys($labels), $labels), 'more' => false]);
         }
 
         return response()->json(TermsField::options($taxonomy, trim($input['q'] ?? ''), offset: (int) ($input['offset'] ?? 0)));
@@ -462,10 +466,13 @@ final class EntryController
                 ? Inertia::defer(fn (): array => self::comments($entry, $request))
                 : null,
             // The chosen terms' titles, so terms fields show them without asking (the options come from cms/term-picker).
-            'termLabels' => TermsField::labels([...array_map(fn (Reference $reference): int => $reference->id, array_filter(
+            'termLabels' => TermsField::labels($termIds = [...array_map(fn (Reference $reference): int => $reference->id, array_filter(
                 $schema->references($translation->completeData(true)),
                 fn (Reference $reference): bool => $reference->type === Reference::TERM,
             )), ...array_merge(...array_values($taxonomies['terms']))]),
+            // And their parents' titles, so a chosen term's tooltip says "News › Local" before its list is opened (TermsPicker):
+            // after the page shows, as only tooltips need them.
+            'termParents' => Inertia::defer(fn (): array => TermParents::of($termIds)),
             // Where other content points at it, to show and to warn before it goes.
             'usedBy' => References::usedBy(Reference::ENTRY, $entry->id),
             // A revision restore this session can be undone.

@@ -164,8 +164,9 @@ final class StructuredData
                 if ($translation->published_at !== null) {
                     $node['datePublished'] = $translation->published_at->toAtomString();
                 }
-                if ($translation->updated_at !== null) {
-                    $node['dateModified'] = $translation->updated_at->toAtomString();
+                // Last published: saving a draft doesn't change it.
+                if (($modified = $translation->liveUpdatedAt()) !== null) {
+                    $node['dateModified'] = $modified->toAtomString();
                 }
             }
             if ($seo['image'] !== null) {

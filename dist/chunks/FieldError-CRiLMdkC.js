@@ -1,4 +1,4 @@
-import { j as e } from "./admin-CBkX-z7V.js";
+import { j as e } from "./admin-yVJc9wzJ.js";
 function c({ message: t, id: r }) {
   return t ? /* @__PURE__ */ e.jsx("p", { id: r, className: "cms:text-sm cms:text-destructive", children: t }) : null;
 }

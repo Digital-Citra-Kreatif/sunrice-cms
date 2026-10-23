@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { usePage } from '@inertiajs/react';
 import { Check, ChevronsUpDown, Search, X } from 'lucide-react';
 import { adminUrl, t } from '@imajiner/admin-sdk';
 import { Button, Popover, PopoverContent, PopoverTrigger, Skeleton } from '@imajiner/admin-sdk/ui';
@@ -10,7 +11,15 @@ export type { TermOption } from '@/lib/term-picker.ts';
 /** The chosen terms' titles the page already has (the entry editor sends them), by id. */
 export const TermLabels = React.createContext<Record<string, string>>({});
 
-interface Page { items: TermOption[]; more: boolean }
+/** A term as the picker's list gives it; looked up by id, with its parents' titles (top first). */
+interface Page { items: (TermOption & { parents?: string[] })[]; more: boolean }
+
+/** The chosen terms' parents' titles the page has (the entry editor's `termParents`), by id. */
+function givenParents(props: Record<string, unknown>): Record<string, string[]> {
+    const parents = props.termParents;
+
+    return parents && typeof parents === 'object' && !Array.isArray(parents) ? parents as Record<string, string[]> : {};
+}
 
 async function fetchTerms(params: { taxonomy: string; q?: string; offset?: number; ids?: number[] }, signal?: AbortSignal): Promise<Page> {
     const response = await fetch(`${adminUrl('cms/terms/picker')}?${termPickerQuery(params)}`, { headers: { Accept: 'application/json' }, credentials: 'same-origin', signal });
@@ -40,6 +49,8 @@ interface Known { label: string; parents?: string[] }
  */
 export function TermsPicker({ id, taxonomy, multiple, max, required, invalid, value, onChange }: Props) {
     const given = React.useContext(TermLabels);
+    // So a chip's tooltip says "News › Local" before the list is opened.
+    const parentsGiven = givenParents(usePage().props as Record<string, unknown>);
     const ids = chosenIds(value);
     const [open, setOpen] = React.useState(false);
     const [search, setSearch] = React.useState('');
@@ -57,11 +68,11 @@ export function TermsPicker({ id, taxonomy, multiple, max, required, invalid, va
     const loaded = React.useRef<string | null>(null);
     const q = search.trim();
 
-    const remember = React.useCallback((items: TermOption[], tree: boolean) => {
+    const remember = React.useCallback((items: Page['items'], tree: boolean) => {
         const paths = tree ? parentPaths(items) : {};
         setKnown((current) => {
             const next = { ...current };
-            for (const item of items) next[item.id] = { label: item.label, parents: paths[item.id] ?? current[item.id]?.parents };
+            for (const item of items) next[item.id] = { label: item.label, parents: paths[item.id] ?? item.parents ?? current[item.id]?.parents };
             return next;
         });
     }, []);
@@ -209,7 +220,7 @@ export function TermsPicker({ id, taxonomy, multiple, max, required, invalid, va
             <div ref={box} data-invalid={invalid || undefined}
                 className="cms:flex cms:w-full cms:max-w-xl cms:min-w-0 cms:[contain:inline-size] cms:flex-wrap cms:items-center cms:gap-1 cms:rounded-md cms:border cms:border-input/80 cms:bg-card cms:p-1 cms:shadow-xs cms:data-invalid:border-destructive cms:dark:bg-input/20">
                 {ids.map((termId) => (
-                    <span key={termId} title={termPath(name(termId), known[termId]?.parents)}
+                    <span key={termId} title={termPath(name(termId), known[termId]?.parents ?? parentsGiven[String(termId)])}
                         className="cms:inline-flex cms:h-7 cms:max-w-full cms:min-w-0 cms:items-center cms:gap-0.5 cms:rounded-sm cms:bg-secondary cms:pl-2 cms:text-xs cms:font-medium cms:text-secondary-foreground">
                         <span className={`cms:min-w-0 cms:truncate ${removable ? '' : 'cms:pr-2'}`}>{name(termId)}</span>
                         {removable && (

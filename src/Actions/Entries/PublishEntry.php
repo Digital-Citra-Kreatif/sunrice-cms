@@ -90,6 +90,9 @@ final class PublishEntry
             if ($mainVersion !== null) {
                 $translation->main_version = $mainVersion;
             }
+            // The version its live content is, which discarding later changes goes back to (DiscardChanges).
+            $translation->live_version = $translation->version;
+            $translation->live_updated_at = now();
             $translation->save();
             // The entry's terms chosen since, every language's (SaveEntryTerms).
             $this->terms->handle($translation->entry);

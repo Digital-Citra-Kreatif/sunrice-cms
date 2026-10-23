@@ -314,7 +314,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                                 ) : (
                                     <Button type="button" variant={upToDate ? 'outline' : 'default'} className="cms:rounded-r-none cms:disabled:opacity-100" disabled={form.processing || upToDate} onClick={() => publish(dated.at)}>
                                         {upToDate && <Check className="cms:text-emerald-600 cms:dark:text-emerald-400" />}
-                                        {upToDate ? t('Published') : dated.action === 'schedule' ? t('Schedule') : dated.action === 'backdate' ? t('Publish now, back-dated') : entry.status === 'draft' ? t('Publish') : t('Publish changes')}
+                                        {upToDate ? t('Published') : dated.action === 'schedule' ? t('Schedule') : dated.action === 'backdate' ? t('Publish now, back-dated') : state === 'offline' ? t('Publish again') : entry.status === 'draft' ? t('Publish') : t('Publish changes')}
                                     </Button>
                                 )}
                                 <DropdownMenu>
@@ -751,7 +751,7 @@ function currentPhrase(state: EditorState): string {
 
 /**
  * The top of the editor: what visitors see, beside what the editor holds.
- * One of Not published yet, Scheduled, Live and Live with unpublished
+ * One of Not published yet, Taken off the site, Scheduled, Live and Live with unpublished
  * changes (or In the trash), in words, with what can be done about it:
  * the live page, Compare with live, Preview changes and Discard changes.
  * Publishing stays the header's button.
@@ -770,7 +770,7 @@ function StatusBar({ state, entry, dirty, actions, onCompare, onDiscard }: {
         : t('the version last published');
     const words: Record<EditorState, { title: string; text: string; tone: 'muted' | 'live' | 'pending' | 'scheduled' | 'trash' }> = {
         draft: { title: t('Not published yet'), text: t('Only people who can edit see it.'), tone: 'muted' },
-        offline: { title: t('Not published yet'), text: t('Taken off the site: only people who can edit see it.'), tone: 'muted' },
+        offline: { title: t('Taken off the site'), text: t('Only people who can edit see it.'), tone: 'muted' },
         scheduled: { title: t('Scheduled'), text: t('Goes live on :date.', { date: formatDate(entry.publishedAt) }), tone: 'scheduled' },
         'scheduled-changes': { title: t('Scheduled, with unpublished changes'), text: t('Goes live on :date with :version; your changes since aren\'t in it.', { date: formatDate(entry.publishedAt), version: since }), tone: 'pending' },
         live: { title: t('Live'), text: dirty ? t('Visitors see what was last published.') : t('Visitors see exactly this.'), tone: 'live' },
@@ -1000,9 +1000,11 @@ function PageSettings({ entryUrl, collection, settings, templates, blueprints, d
                         {blueprintForm.data.blueprint !== savedBlueprint && (
                             <>
                                 <p className="cms:text-muted-foreground">{t('The fields change in every language. Values of fields the new blueprint doesn\'t have stay saved and come back if you switch back. The editor reloads.')}</p>
-                                <Button type="button" size="sm" disabled={blueprintForm.processing || draftDirty} title={draftDirty ? t('Save your draft first') : undefined}
+                                <Button type="button" size="sm" className="cms:w-fit" disabled={blueprintForm.processing || draftDirty} aria-describedby={draftDirty ? 'blueprint-save-first' : undefined}
                                     // A new blueprint means new fields and versions: the editor starts afresh.
                                     onClick={() => blueprintForm.put(`${entryUrl}/settings`, { preserveScroll: true })}>{t('Change blueprint')}</Button>
+                                {/* Why it can't be pressed, in words: it needs the draft saved (the form's unsaved edits would be lost). */}
+                                {draftDirty && <p id="blueprint-save-first" className="cms:text-xs cms:text-amber-700 cms:dark:text-amber-400">{t('Save your draft first.')}</p>}
                             </>
                         )}
                         <FieldError message={blueprintError} />

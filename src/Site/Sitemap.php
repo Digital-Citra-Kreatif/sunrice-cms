@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Sunrice\Cms\Site;
 
 use Generator;
+use Illuminate\Database\Eloquent\Builder;
 use Sunrice\Admin\Support\AppUrl;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\TaxonomyListing;
+use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\Seo;
@@ -126,8 +128,8 @@ final class Sitemap
                 continue;
             }
             $xml = '<url><loc>'.e(AppUrl::url($url)).'</loc>';
-            if ($translation->updated_at !== null) {
-                $xml .= '<lastmod>'.$translation->updated_at->toAtomString().'</lastmod>';
+            if (($modified = $translation->liveUpdatedAt()) !== null) {
+                $xml .= '<lastmod>'.$modified->toAtomString().'</lastmod>';
             }
             yield $xml.self::links(Seo::alternates($translation)).'</url>';
         }
@@ -169,7 +171,8 @@ final class Sitemap
         foreach ($this->indexPages() as [$taxonomy, $collection]) {
             $links = self::links(Seo::indexAlternates($taxonomy, $collection));
             foreach (Locales::all() as $locale) {
-                if (! self::indexNoindex($taxonomy, $collection, $locale) && ($url = $taxonomy->indexUrl($locale, $collection)) !== null) {
+                if (! self::indexNoindex($taxonomy, $collection, $locale) && ($url = $taxonomy->indexUrl($locale, $collection)) !== null
+                    && ($collection === null || self::indexListsTerms($taxonomy, $collection, $locale))) {
                     yield '<url><loc>'.e(AppUrl::url($url)).'</loc>'.$links.'</url>';
                 }
             }
@@ -254,7 +257,8 @@ final class Sitemap
         }
         foreach ($this->indexPages() as [$taxonomy, $collection]) {
             foreach (Locales::all() as $code) {
-                if (($locale === null || $locale === $code) && ! self::indexNoindex($taxonomy, $collection, $code) && ($url = $taxonomy->indexUrl($code, $collection)) !== null) {
+                if (($locale === null || $locale === $code) && ! self::indexNoindex($taxonomy, $collection, $code) && ($url = $taxonomy->indexUrl($code, $collection)) !== null
+                    && ($collection === null || self::indexListsTerms($taxonomy, $collection, $code))) {
                     yield ['url' => AppUrl::url($url), 'collection' => $collection?->handle];
                 }
             }
@@ -263,7 +267,10 @@ final class Sitemap
 
     /**
      * Each taxonomy's terms with live entries in a collection where its
-     * terms have pages, with that collection (one language, or all).
+     * terms have pages, with that collection (one language, or all): in a
+     * language, those whose page there lists entries, as it shows them
+     * (EntryTranslation::shownIn(), so with the main-language fallback off
+     * an untranslated entry doesn't count).
      *
      * @return Generator<int, array{0: Collection, 1: TermTranslation}>
      */
@@ -275,16 +282,41 @@ final class Sitemap
                 if ($collection === null) {
                     continue;
                 }
-                $terms = TermTranslation::query()->where('taxonomy_id', $taxonomy)
-                    // The collection is picked among the live translations (by their index, once), not on each entry of each term.
-                    ->whereHas('term', fn ($q) => $q->withoutTrashed()->whereHas('entries', fn ($q) => $q
-                        ->whereHas('translations', fn ($q) => $q->whereIn('id', EntryTranslation::query()->live()->where('sunrice_entry_translations.collection_id', $id)->select('id')))))
-                    ->when($locale !== null, fn ($q) => $q->where('locale', $locale))->with('term.taxonomy', 'term.translations')->lazyById(500);
-                foreach ($terms as $term) {
-                    yield [$collection, $term];
+                foreach ($locale === null ? Locales::all() : [$locale] as $code) {
+                    $terms = TermTranslation::query()->where('taxonomy_id', $taxonomy)->where('locale', $code)
+                        // The collection is picked among the live translations (by their index, once), not on each entry of each term.
+                        ->whereHas('term', fn ($q) => $q->withoutTrashed()->whereHas('entries', fn ($q) => $q
+                            ->whereHas('translations', fn ($q) => $q->whereIn('id', self::shown($id, $code)))))
+                        ->with('term.taxonomy', 'term.translations')->lazyById(500);
+                    foreach ($terms as $term) {
+                        yield [$collection, $term];
+                    }
                 }
             }
         }
+    }
+
+    /**
+     * Whether a collection's index page lists any term in a language: one
+     * of its entries shown there (EntryTranslation::shownIn()) has a term
+     * of the taxonomy.
+     */
+    private static function indexListsTerms(Taxonomy $taxonomy, Collection $collection, string $locale): bool
+    {
+        return Term::query()->where('taxonomy_id', $taxonomy->id)
+            ->whereHas('entries', fn ($q) => $q->whereHas('translations', fn ($q) => $q->whereIn('id', self::shown($collection->id, $locale))))
+            ->exists();
+    }
+
+    /**
+     * The ids of a collection's live entry translations shown in a
+     * language, as its pages there list them.
+     *
+     * @return Builder<EntryTranslation>
+     */
+    private static function shown(int $collection, string $locale): Builder
+    {
+        return EntryTranslation::query()->live()->shownIn($locale)->where('sunrice_entry_translations.collection_id', $collection)->select('sunrice_entry_translations.id');
     }
 
     /**

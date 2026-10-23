@@ -39,6 +39,8 @@ use Sunrice\Cms\Support\SearchText;
  * @property Carbon|null $published_at
  * @property int $version
  * @property int|null $main_version the main translation's version when this one was made or last saved (another language than the main one)
+ * @property int|null $live_version its version when last published (DiscardChanges goes back to it)
+ * @property Carbon|null $live_updated_at when it was last published (liveUpdatedAt())
  * @property Carbon|null $review_requested_at when it was sent for review (RequestReview); null once published
  * @property int|null $review_requested_by who sent it for review (a user id)
  * @property Carbon|null $created_at
@@ -77,7 +79,7 @@ class EntryTranslation extends Model
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['data' => 'array', 'draft_data' => 'array', 'published_at' => 'datetime', 'version' => 'integer', 'main_version' => 'integer', 'review_requested_at' => 'datetime', 'review_requested_by' => 'integer'];
+        return ['data' => 'array', 'draft_data' => 'array', 'published_at' => 'datetime', 'version' => 'integer', 'main_version' => 'integer', 'live_version' => 'integer', 'live_updated_at' => 'datetime', 'review_requested_at' => 'datetime', 'review_requested_by' => 'integer'];
     }
 
     /** @return BelongsTo<Entry, $this> */
@@ -173,6 +175,21 @@ class EntryTranslation extends Model
         $site = app(Site::class);
 
         return $this->hydration !== null ? $site->urlIn($this, $this->hydration->locale) : $site->url($this);
+    }
+
+    /**
+     * When the live version last changed, for the site's "modified" dates
+     * (structured data, the sitemap): when it was last published, not
+     * when a draft was saved, and never before it went live.
+     */
+    public function liveUpdatedAt(): ?Carbon
+    {
+        $at = $this->live_updated_at ?? $this->updated_at;
+        if ($at === null || $this->published_at === null) {
+            return $at;
+        }
+
+        return $at->lt($this->published_at) ? $this->published_at : $at;
     }
 
     /** Whether this is the entry's main translation, which holds the shared fields. */

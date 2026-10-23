@@ -17,7 +17,9 @@ use Sunrice\Cms\Support\References;
  * the entry's terms its live ones (every language's: SaveEntryTerms). As
  * SaveDraft, with a version (the one the editor opened) it refuses to
  * discard over someone else's newer save. A translation never published
- * has no live version to go back to.
+ * has no live version to go back to. Discarding the main translation's
+ * changes, the other languages that were up to date with its live version
+ * are again (EntryTranslation::isOutdated()): the changes they missed are gone.
  *
  * @api
  */
@@ -49,6 +51,10 @@ final class DiscardChanges
             ]);
             if ($saved === 0) {
                 throw ValidationException::withMessages(['version' => __('Someone else saved this entry after you opened it. Reload to see their changes.')]);
+            }
+            if ($translation->live_version !== null && $translation->isMain()) {
+                EntryTranslation::query()->where('entry_id', $translation->entry_id)->whereKeyNot($translation->id)
+                    ->where('main_version', '>=', $translation->live_version)->update(['main_version' => (int) $expected + 1]);
             }
             $this->terms->discard($translation->entry);
         });

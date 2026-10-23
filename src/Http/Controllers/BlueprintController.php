@@ -14,7 +14,6 @@ use Sunrice\Cms\Actions\Blueprints\RenameBlueprint;
 use Sunrice\Cms\Actions\Blueprints\SaveBlueprint;
 use Sunrice\Cms\Admin\BuilderData;
 use Sunrice\Cms\Models\Blueprint;
-use Sunrice\Cms\Models\Collection;
 
 /**
  * Structure → Blueprints: the list and the builder. Behind
@@ -24,15 +23,10 @@ use Sunrice\Cms\Models\Collection;
  */
 final class BlueprintController
 {
-    public function index(): Response
+    public function index(DeleteBlueprint $delete): Response
     {
-        // One query for which collections use what, for their entries or as one of their other blueprints.
-        $usedBy = [];
-        foreach (Collection::query()->orderBy('title')->get(['title', 'blueprint', 'blueprints']) as $collection) {
-            foreach (array_unique(array_filter([$collection->blueprint, ...($collection->blueprints ?? [])], 'is_string')) as $handle) {
-                $usedBy[$handle][] = $collection->title;
-            }
-        }
+        // What uses each, as deleting it would say: collections, entries, taxonomies, global sets and forms.
+        $usedBy = $delete->usedByMany();
 
         return Inertia::render('Cms/Blueprints/Index', [
             'blueprints' => Blueprint::query()->orderBy('title')->get()->map(fn (Blueprint $blueprint): array => [

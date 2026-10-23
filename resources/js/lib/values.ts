@@ -53,14 +53,15 @@ export function newRow(): Record<string, unknown> {
 /**
  * What a repeater row or block says, to name it in its bar ("15 m saltwater
  * pool" rather than "Feature 2"): its first filled text field, else null.
- * Text inside groups counts; rich text is read without its tags.
+ * Text inside groups counts; rich text is read without its tags, its
+ * entities decoded (What&#039;s → What's), as text React escapes again.
  */
 export function itemSummary(fields: readonly { handle: string; type: string; fields?: unknown[] }[], values: Record<string, unknown>, max = 60): string | null {
     for (const field of fields) {
         const value = values[field.handle];
         let text: string | null = null;
         if (['text', 'textarea', 'email', 'url'].includes(field.type) && typeof value === 'string') text = value;
-        else if (field.type === 'rich_text' && typeof value === 'string') text = value.replace(/<[^>]*>/g, ' ');
+        else if (field.type === 'rich_text' && typeof value === 'string') text = decodeEntities(value.replace(/<[^>]*>/g, ' '));
         else if (field.type === 'group' && Array.isArray(field.fields)) {
             text = itemSummary(field.fields as { handle: string; type: string }[], asRecord(value), max);
         }
@@ -69,6 +70,25 @@ export function itemSummary(fields: readonly { handle: string; type: string; fie
     }
 
     return null;
+}
+
+const NAMED_ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+
+/**
+ * HTML's character references in text (after its tags are gone) as the
+ * characters they stand for: &amp;, &#039;, &#x27;… Unknown ones stay as
+ * they are. The result is text, never parsed as HTML again.
+ */
+export function decodeEntities(text: string): string {
+    return text.replace(/&(#x[0-9a-f]+|#[0-9]+|[a-z]+);/gi, (whole, name: string) => {
+        if (name[0] === '#') {
+            const code = name[1] === 'x' || name[1] === 'X' ? parseInt(name.slice(2), 16) : parseInt(name.slice(1), 10);
+
+            return Number.isInteger(code) && code > 0 && code <= 0x10ffff && (code < 0xd800 || code > 0xdfff) ? String.fromCodePoint(code) : whole;
+        }
+
+        return NAMED_ENTITIES[name.toLowerCase()] ?? whole;
+    });
 }
 
 /** A new flexible block of a kind (a fieldset's handle). */

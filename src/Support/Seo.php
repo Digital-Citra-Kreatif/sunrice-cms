@@ -95,7 +95,7 @@ final class Seo
             self::alternates($translation), $translation->locale, $article ? 'article' : 'website', is_string($seo['title'] ?? null));
         if ($article && ! $preview) {
             $tags['published_time'] = $translation->published_at?->toIso8601String();
-            $tags['modified_time'] = $translation->updated_at?->toIso8601String();
+            $tags['modified_time'] = $translation->liveUpdatedAt()?->toIso8601String();
         }
 
         return $tags;

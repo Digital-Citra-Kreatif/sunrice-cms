@@ -195,7 +195,7 @@ final class TaxonomyResource extends Resource
         $fields = [];
         foreach (self::collections() as $collection) {
             $id = (string) $collection->id;
-            $fields[] = Toggle::make("single_{$id}")->label(__(':collection: one term only', ['collection' => $collection->title]))->span(2)->showWhen('collections', $id)
+            $fields[] = Toggle::make("single_{$id}")->label('One term only')->group($collection->title)->span(2)->showWhen('collections', $id)
                 ->help(__('An entry of :collection has one term of this taxonomy at most, chosen from a list.', ['collection' => $collection->title]))
                 ->loadUsing(fn (Model $taxonomy): bool => self::pivot($taxonomy, $collection)->single ?? false)
                 ->saveUsing(function (Model $taxonomy, mixed $on) use ($collection): void {
@@ -203,19 +203,23 @@ final class TaxonomyResource extends Resource
                         self::pivot($taxonomy, $collection)?->setAttribute('single', filter_var($on, FILTER_VALIDATE_BOOL));
                     }
                 });
-            $fields[] = Toggle::make("term_pages_{$id}")->label(__('Term pages in :collection', ['collection' => $collection->title]))->span(2)->showWhen('collections', $id)
-                ->help(__('A page per term with only :collection\'s entries, like :url.', ['collection' => $collection->title, 'url' => str_replace('{slug}', 'featured', CollectionTaxonomy::defaultPattern($collection, new Taxonomy(['handle' => '{handle}'])))]))
+            $fields[] = Toggle::make("term_pages_{$id}")->label('Term pages')->group($collection->title)->span(2)->showWhen('collections', $id)
+                ->help(fn (?Model $taxonomy): string => __('A page per term with only :collection\'s entries, like :url.', ['collection' => $collection->title, 'url' => str_replace('{slug}', 'featured', CollectionTaxonomy::defaultPattern($collection, self::exampleTaxonomy($taxonomy)))]))
+                // On for a collection ticked when creating, as when attaching from the collection's form.
+                ->default(true)
                 ->loadUsing(fn (Model $taxonomy): bool => self::pivot($taxonomy, $collection)->term_pages ?? true)
                 ->saveUsing(function (Model $taxonomy, mixed $on) use ($collection): void {
-                    self::pivot($taxonomy, $collection)?->setAttribute('term_pages', filter_var($on, FILTER_VALIDATE_BOOL));
+                    if ($on !== null) {
+                        self::pivot($taxonomy, $collection)?->setAttribute('term_pages', filter_var($on, FILTER_VALIDATE_BOOL));
+                    }
                 });
             foreach (Locales::names() as $code => $language) {
                 $main = $code === Locales::default();
-                $fields[] = TextInput::make(self::pivotField('term', $collection, $code))->span(2)->showWhen('collections', $id)
-                    ->label($main ? __(':collection: term page URL', ['collection' => $collection->title]) : __(':collection: term page URL in :language', ['collection' => $collection->title, 'language' => $language]))
+                $fields[] = TextInput::make(self::pivotField('term', $collection, $code))->group($collection->title)->span(2)->showWhen('collections', $id)
+                    ->label($main ? __('Term page URL') : __('Term page URL in :language', ['language' => $language]))
                     ->placeholder($main ? '{listing}/{handle}/{slug}' : '')
                     ->rules(['nullable', 'string', 'max:255', new RoutePatternRule(parameters: false)])
-                    ->help($main ? __('Empty: under :collection\'s listing page, like :url.', ['collection' => $collection->title, 'url' => CollectionTaxonomy::defaultPattern($collection, new Taxonomy(['handle' => '{handle}']))])
+                    ->help(fn (?Model $taxonomy): string => $main ? __('Empty: under :collection\'s listing page, like :url.', ['collection' => $collection->title, 'url' => CollectionTaxonomy::defaultPattern($collection, self::exampleTaxonomy($taxonomy))])
                         : __('Its own address in :language. Empty: the one above, else under :collection\'s listing page there.', ['language' => $language, 'collection' => $collection->title]))
                     ->loadUsing(fn (Model $taxonomy): ?string => self::pivotRoute(self::pivot($taxonomy, $collection), 'term', $code))
                     ->saveUsing(fn (Model $taxonomy, mixed $value) => self::setPivotRoute(self::pivot($taxonomy, $collection), 'term', $code, $value));
@@ -236,20 +240,23 @@ final class TaxonomyResource extends Resource
     private static function collectionIndexFields(Collection $collection): array
     {
         $id = (string) $collection->id;
-        $example = CollectionTaxonomy::defaultIndexPath($collection, new Taxonomy(['handle' => '{handle}']));
-        $fields = [Toggle::make("index_page_{$id}")->label(__('Index page in :collection', ['collection' => $collection->title]))->span(2)->showWhen('collections', $id)
-            ->help(__('A page listing the terms :collection\'s entries have, like :url.', ['collection' => $collection->title, 'url' => $example]))
+        $example = fn (?Model $taxonomy): string => CollectionTaxonomy::defaultIndexPath($collection, self::exampleTaxonomy($taxonomy));
+        $fields = [Toggle::make("index_page_{$id}")->label('Index page')->group($collection->title)->span(2)->showWhen('collections', $id)
+            ->help(fn (?Model $taxonomy): string => __('A page listing the terms :collection\'s entries have, like :url.', ['collection' => $collection->title, 'url' => $example($taxonomy)]))
+            ->default(true)
             ->loadUsing(fn (Model $taxonomy): bool => self::pivot($taxonomy, $collection)->index_page ?? true)
             ->saveUsing(function (Model $taxonomy, mixed $on) use ($collection): void {
-                self::pivot($taxonomy, $collection)?->setAttribute('index_page', filter_var($on, FILTER_VALIDATE_BOOL));
+                if ($on !== null) {
+                    self::pivot($taxonomy, $collection)?->setAttribute('index_page', filter_var($on, FILTER_VALIDATE_BOOL));
+                }
             })];
         foreach (Locales::names() as $code => $language) {
             $main = $code === Locales::default();
-            $fields[] = TextInput::make(self::pivotField('index', $collection, $code))->span(2)->showWhen('collections', $id)
-                ->label($main ? __(':collection: index page URL', ['collection' => $collection->title]) : __(':collection: index page URL in :language', ['collection' => $collection->title, 'language' => $language]))
+            $fields[] = TextInput::make(self::pivotField('index', $collection, $code))->group($collection->title)->span(2)->showWhen('collections', $id)
+                ->label($main ? __('Index page URL') : __('Index page URL in :language', ['language' => $language]))
                 ->placeholder($main ? '{listing}/{handle}' : '')
                 ->rules(['nullable', 'string', 'max:255', CollectionResource::LISTING_ROUTE])
-                ->help($main ? __('Empty: under :collection\'s listing page, like :url.', ['collection' => $collection->title, 'url' => $example])
+                ->help(fn (?Model $taxonomy): string => $main ? __('Empty: under :collection\'s listing page, like :url.', ['collection' => $collection->title, 'url' => $example($taxonomy)])
                     : __('Its own address in :language. Empty: the one above, else under :collection\'s listing page there.', ['language' => $language, 'collection' => $collection->title]))
                 ->links(function (?Model $taxonomy) use ($collection, $code): array {
                     // From the attachment as stored (the site's routes may be cached).
@@ -267,6 +274,12 @@ final class TaxonomyResource extends Resource
         }
 
         return $fields;
+    }
+
+    /** The taxonomy the help's example URLs are for: the one being edited, else {handle} while creating one. */
+    private static function exampleTaxonomy(?Model $taxonomy): Taxonomy
+    {
+        return $taxonomy instanceof Taxonomy && $taxonomy->exists ? $taxonomy : new Taxonomy(['handle' => '{handle}']);
     }
 
     /**

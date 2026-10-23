@@ -27,8 +27,9 @@ export function isSafeHref(href: string): boolean {
     return /^(https?:\/\/[^/]|mailto:|tel:|\/(?![/\\])|#)/i.test(href);
 }
 
-// Code spans first (nothing inside them is Markdown), then links, bold, italic.
-const TOKEN = /`([^`\n]+)`|\[([^\]\n]+)\]\(([^()\s]+)\)|\*\*(?=\S)(.+?)(?<=\S)\*\*|\*(?=[^\s*])([^*\n]+?)(?<=\S)\*/;
+// Code spans first (nothing inside them is Markdown), then links (their address may hold
+// balanced parentheses, one level deep: /wiki/Sun_(star)), bold, italic.
+const TOKEN = /`([^`\n]+)`|\[([^\]\n]+)\]\(((?:[^()\s]|\([^()\s]*\))+)\)|\*\*(?=\S)(.+?)(?<=\S)\*\*|\*(?=[^\s*])([^*\n]+?)(?<=\S)\*/;
 
 /**
  * The text's HTML: `[label](url)` links, `**bold**`, `*italic*` and
