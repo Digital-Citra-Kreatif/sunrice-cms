@@ -1,6 +1,6 @@
 # Terms
 
-**Terms** group entries by topic: *News* and *Events* in a taxonomy called *Categories*, or *Jakarta* and *Bali* in *Places*. Visitors use them to find related content, and entries get them through a **Terms** field. Each taxonomy has its own item under **Taxonomies** in the sidebar.
+**Terms** group entries by topic: *News* and *Events* in a taxonomy called *Categories*, or *Jakarta* and *Bali* in *Places*. Visitors use them to find related content, and entries get them in the entry editor's **Taxonomies** card. Each taxonomy has its own item under **Taxonomies** in the sidebar.
 
 ## The terms list
 
@@ -35,7 +35,7 @@ One person edits a term in a language at a time: if a colleague has it open, you
 
 ## Giving entries their terms
 
-In the entry editor, a **Terms** field lets you pick from its taxonomy: the terms load when the field shows (a long list is searched instead), and you choose one or several, as the field allows. Terms are the same for every language of an entry.
+In the entry editor, the **Taxonomies** card has a list for each taxonomy of the entry's collection: tick its terms, or pick one where the collection allows only one term (a long list is searched instead). Terms are the same for every language of an entry, and go on the website when the entry is published (see [Entries](guide:website/entries)). A **Terms** field, if your developer added one, is something else: a link to a term (a "featured topic"), filled in like other fields.
 
 > [!TECHNICAL]
 > Taxonomies, their collections, term pages and fields are set up under Structure → Taxonomies. See [Taxonomies and terms](docs:cms/taxonomies).

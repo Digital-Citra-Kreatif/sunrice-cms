@@ -58,8 +58,8 @@ The Blade directive prints the whole attribute: `<body @bodyClass>` or `<body @b
 | `locale(string $locale)` | Another language than the current one. |
 | `preview(bool $preview = true)` | Every entry not in the trash, by its draft, as the site's preview shows it; never cached. |
 | `where(string $field, $operator, $value = null)` | A field, or `title`, `slug`, `published_at`, `parent_id`; operators `=`, `!=`, `<`, `>`, `<=`, `>=`, `in`, `not in`; `null` for "no value". Numbers and dates compare as such. |
-| `whereTerm($term, $terms = null, bool $includeChildren = false, ...$more)` | Entries with a term: `Term` models or ids, or a taxonomy handle and slugs (`whereTerm('topics', ['news', 'tips'])`). |
-| `whereFieldTerm(string $field, $terms, bool $includeChildren = false)` | The same, for one terms field. |
+| `whereTerm($term, $terms = null, bool $includeChildren = false, ...$more)` | Entries with a term (their own, live): `Term` models or ids, or a taxonomy handle and slugs (`whereTerm('topics', ['news', 'tips'])`). |
+| `whereFieldTerm(string $field, $terms, bool $includeChildren = false)` | Entries whose terms field holds a term. |
 | `whereEntry(string $field, $entries)` | Entries whose entries field links to an entry (or any of a list). |
 | `whereContains(string $field, array $values)` | Entries whose list field (a select with several choices) holds any of the values. |
 | `whereSlug(string $slug)` | The entry with that slug. |
@@ -76,4 +76,4 @@ The Blade directive prints the whole attribute: `<body @bodyClass>` or `<body @b
 | `paginate(int $perPage = 10, string $pageName = 'page')` | A paginator that keeps the rest of the query string. |
 | `toBase()` | The Eloquent query (`Builder<EntryTranslation>`) for anything else. |
 
-Each result is an `EntryTranslation`: `->title`, `->slug`, `->published_at`, `->url()`, `->values()` (its fields as templates get them), `->entry` (the `Entry`, with `->terms` and `->collection`), `->isOutdated()`. The entries of one result share a `HydrationContext`, so `values()` in a loop runs no queries of its own. Examples and the matching components (`<x-sunrice-cms::entries>`, `<x-sunrice-cms::entry-filter>`) are in [Querying entries](site.md#querying-entries).
+Each result is an `EntryTranslation`: `->title`, `->slug`, `->published_at`, `->url()`, `->values()` (its fields as templates get them), `->terms` and `->termsOf('topics')` (the entry's own terms, read for the whole result at once), `->entry` (the `Entry`, with `->terms`, its live terms, and `->collection`), `->isOutdated()`. The entries of one result share a `HydrationContext`, so `values()` in a loop runs no queries of its own. Examples and the matching components (`<x-sunrice-cms::entries>`, `<x-sunrice-cms::entry-filter>`) are in [Querying entries](site.md#querying-entries).

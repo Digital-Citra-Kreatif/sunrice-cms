@@ -101,11 +101,12 @@ final class TermsField extends FieldType
     /**
      * Terms to choose from, in tree order with their depth, titles in the
      * main language: all of a taxonomy's, or those whose title holds
-     * `$search`, at most `$limit` of them.
+     * `$search`, at most `$limit` of them from `$offset` on (`more` says
+     * whether others follow).
      *
      * @return array{items: list<array{id: int, label: string, depth: int}>, more: bool}
      */
-    public static function options(Taxonomy $taxonomy, string $search = '', int $limit = 100): array
+    public static function options(Taxonomy $taxonomy, string $search = '', int $limit = 100, int $offset = 0): array
     {
         $terms = Term::query()->with('translations')->where('taxonomy_id', $taxonomy->id)->orderBy('sort_order')->orderBy('id')
             ->when($search !== '', fn ($query) => $query->whereHas('translations', fn ($t) => $t->whereLike('title', '%'.addcslashes($search, '%_\\').'%')))
@@ -113,11 +114,12 @@ final class TermsField extends FieldType
         // A search lists what matches, flat; otherwise the tree.
         $ordered = $search !== '' ? array_map(fn (Term $term): array => [$term, 0], array_values($terms->all())) : self::tree(array_values($terms->all()), null, 0);
         $items = [];
-        foreach (array_slice($ordered, 0, $limit) as [$term, $depth]) {
+        $offset = max(0, $offset);
+        foreach (array_slice($ordered, $offset, $limit) as [$term, $depth]) {
             $items[] = ['id' => $term->id, 'label' => $term->title(), 'depth' => $depth];
         }
 
-        return ['items' => $items, 'more' => count($ordered) > $limit];
+        return ['items' => $items, 'more' => count($ordered) > $offset + $limit];
     }
 
     /**

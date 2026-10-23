@@ -1,6 +1,6 @@
 # Term
 
-**Term** mengelompokkan entri berdasarkan topik: *Berita* dan *Acara* dalam taksonomi bernama *Kategori*, atau *Jakarta* dan *Bali* dalam *Tempat*. Pengunjung memakainya untuk menemukan konten terkait, dan entri mendapatkannya lewat field **Term**. Setiap taksonomi punya item sendiri di bawah **Taksonomi** pada sidebar.
+**Term** mengelompokkan entri berdasarkan topik: *Berita* dan *Acara* dalam taksonomi bernama *Kategori*, atau *Jakarta* dan *Bali* dalam *Tempat*. Pengunjung memakainya untuk menemukan konten terkait, dan entri mendapatkannya di kartu **Taksonomi** pada penyunting entri. Setiap taksonomi punya item sendiri di bawah **Taksonomi** pada sidebar.
 
 ## Daftar term
 
@@ -35,7 +35,7 @@ Satu orang menyunting sebuah term dalam satu bahasa pada satu waktu: jika rekan 
 
 ## Memberi term pada entri
 
-Di penyunting entri, field **Term** memungkinkan Anda memilih dari taksonominya: term dimuat saat field tampil (daftar yang panjang dicari, bukan ditampilkan semua), dan Anda memilih satu atau beberapa, sesuai yang diizinkan field. Term sama untuk semua bahasa sebuah entri.
+Di penyunting entri, kartu **Taksonomi** punya satu daftar untuk setiap taksonomi koleksi entri itu: centang term-nya, atau pilih satu jika koleksi hanya mengizinkan satu term (daftar yang panjang dicari, bukan ditampilkan semua). Term sama untuk semua bahasa sebuah entri, dan tampil di situs saat entri diterbitkan (lihat [Entri](guide:website/entries)). Field **Term**, jika developer menambahkannya, adalah hal lain: tautan ke sebuah term (misalnya "topik pilihan"), diisi seperti field lainnya.
 
 > [!TECHNICAL]
 > Taksonomi, koleksinya, halaman term, dan field-nya diatur di Struktur → Taksonomi. Lihat [Taxonomies and terms](docs:cms/taxonomies).

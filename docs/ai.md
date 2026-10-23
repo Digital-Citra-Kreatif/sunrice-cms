@@ -5,13 +5,13 @@ With the CMS, AI agents connected to the panel ([AI access](../../admin/docs/ai.
 | Tool | Permission | |
 | --- | --- | --- |
 | `cms_list_entries` | `cms.entries.view` | The collections; or a collection's entries (search, trash, pages) with their status in each language and which translations are outdated (`outdated_languages`). |
-| `cms_get_entry` | `cms.entries.view` | An entry in a language: status (and `outdated` when the main language changed since it was translated), fields, and the draft's title, slug, data and SEO. With a collection instead of an id: a new entry's fields. |
-| `cms_save_entry` | `cms.entries.create` / `.update` | Create an entry, or change a draft in a language; only what's sent changes. `"publish": true` publishes too (`cms.entries.publish`). |
+| `cms_get_entry` | `cms.entries.view` | An entry in a language: status (and `outdated` when the main language changed since it was translated), fields, and the draft's title, slug, data and SEO; the taxonomies its collection has (`taxonomies`: handle, title, `single`) and the entry's terms by taxonomy handle (`terms`, as the editor shows them, and `live_terms`; each term's id, slug and title). With a collection instead of an id: a new entry's fields and taxonomies. |
+| `cms_save_entry` | `cms.entries.create` / `.update` | Create an entry, or change a draft in a language; only what's sent changes. `"terms"` sets the entry's terms by taxonomy handle (term ids or slugs, `[]` for none; `SaveEntryTerms`), not for translators. `"publish": true` publishes too (`cms.entries.publish`), terms included. |
 | `cms_publish_entry` | `cms.entries.publish` | Publish a draft now, or schedule it. |
 | `cms_unpublish_entry` | `cms.entries.publish` | Take a language off the site, keeping its draft. |
 | `cms_translate_entry` | `cms.entries.create` | Add a language, copied from the main one. |
 | `cms_trash_entry` | `cms.entries.delete` | Move an entry to the trash, or restore it. |
-| `cms_list_terms` | `cms.terms.view` or `cms.entries.view` | Taxonomies, with their pages as URL patterns (shared term pages and index page, and each collection's term pages and index page; null when off), and their terms with each one's URL and its page in each collection, per language, for terms fields and menus. |
+| `cms_list_terms` | `cms.terms.view` or `cms.entries.view` | Taxonomies, with their pages as URL patterns (shared term pages and index page, and each collection's term pages and index page; null when off), and their terms with each one's URL and its page in each collection, per language, for entries' terms (`cms_save_entry`), terms fields and menus. |
 | `cms_save_term` | `cms.terms.create` (new) or `cms.terms.update` | Add or rename a term, or give it another language. |
 | `cms_get_globals`, `cms_save_globals` | `cms.globals.view`, `.update` | Global sets' fields and values, per language. |
 | `cms_list_submissions` | `cms.submissions.view` | Forms and what visitors sent. |

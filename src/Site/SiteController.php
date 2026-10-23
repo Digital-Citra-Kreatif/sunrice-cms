@@ -169,7 +169,8 @@ final class SiteController
             'page' => $page,
             'entry' => $translation,
             'title' => $preview ? $translation->draft_title : $translation->title,
-            'values' => $translation->values(new HydrationContext($locale, $preview)),
+            // $entry->terms reads with it too: in a preview, the terms not published yet.
+            'values' => $translation->hydrateWith(new HydrationContext($locale, $preview))->values(),
             // Rich text is cleaned when saved, so it's the only HTML a template may print as is.
             'richText' => array_values(array_map(fn (Field $field): string => $field->handle, array_filter($translation->entry->schema()->fields(), fn (Field $field): bool => $field->type === 'rich_text'))),
             'collection' => $collection,

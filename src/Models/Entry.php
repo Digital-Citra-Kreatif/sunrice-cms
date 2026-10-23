@@ -15,6 +15,7 @@ use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Fields\Schema;
 use Sunrice\Cms\Settings\CommentSettings;
 use Sunrice\Cms\Site\Site;
+use Sunrice\Cms\Support\Ids;
 use Sunrice\Cms\Support\Locales;
 
 /**
@@ -30,6 +31,7 @@ use Sunrice\Cms\Support\Locales;
  * @property string|null $template a Blade view for this entry alone
  * @property string|null $blueprint its own blueprint (a handle the collection allows); null: the collection's
  * @property bool $comments_closed it takes no new comments
+ * @property list<int>|null $draft_terms its terms chosen and not published yet (ids, of the taxonomies attached to its collection); null: the live ones (terms())
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
@@ -54,7 +56,7 @@ class Entry extends Model
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['comments_closed' => 'boolean'];
+        return ['comments_closed' => 'boolean', 'draft_terms' => 'array'];
     }
 
     /** @return HasMany<Comment, $this> */
@@ -149,13 +151,43 @@ class Entry extends Model
     }
 
     /**
-     * The terms of its published terms fields (synced on publish).
+     * Its live terms, shared by all its languages: those chosen in the
+     * editor's Taxonomies card, for the taxonomies attached to its
+     * collection, as last published (PublishEntry). Terms fields don't
+     * count: their values are fields like any other.
      *
      * @return BelongsToMany<Term, $this>
      */
     public function terms(): BelongsToMany
     {
         return $this->belongsToMany(Term::class, 'sunrice_entry_term');
+    }
+
+    /**
+     * The ids of its live terms (not those in the trash).
+     *
+     * @return list<int>
+     */
+    public function liveTermIds(): array
+    {
+        return Ids::of($this->terms()->pluck('sunrice_terms.id'));
+    }
+
+    /**
+     * The ids of its terms as the editor shows them: those chosen and not
+     * published yet, else the live ones.
+     *
+     * @return list<int>
+     */
+    public function draftTermIds(): array
+    {
+        return $this->draft_terms !== null ? array_values(array_filter($this->draft_terms, is_int(...))) : $this->liveTermIds();
+    }
+
+    /** Whether terms were chosen that aren't published yet (publishing any of its languages publishes them). */
+    public function hasUnpublishedTerms(): bool
+    {
+        return $this->draft_terms !== null;
     }
 
     /**

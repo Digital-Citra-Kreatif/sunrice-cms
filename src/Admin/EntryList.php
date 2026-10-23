@@ -18,7 +18,6 @@ use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Fields\Schema;
-use Sunrice\Cms\Fields\Types\TermsField;
 use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
@@ -697,43 +696,14 @@ final class EntryList
     }
 
     /**
-     * The taxonomies to filter by: those ticked for the collection, and
-     * those its blueprints have a terms field for (one is enough).
+     * The taxonomies to filter by: those attached to the collection (the
+     * entries' terms, in the editor's Taxonomies card), by title.
      *
      * @return \Illuminate\Database\Eloquent\Collection<int, Taxonomy>
      */
     private function taxonomies(): \Illuminate\Database\Eloquent\Collection
     {
-        if ($this->taxonomies !== null) {
-            return $this->taxonomies;
-        }
-        $handles = [];
-        foreach ($this->collection->allSchemas() as $schema) {
-            array_push($handles, ...self::termsTaxonomies($schema->fields()));
-        }
-        $attached = $this->collection->taxonomies;
-        $missing = array_values(array_diff(array_unique($handles), $attached->map(fn (Taxonomy $taxonomy): string => $taxonomy->handle)->all()));
-
-        return $this->taxonomies = $missing === [] ? $attached : $attached->merge(Taxonomy::query()->whereIn('handle', $missing)->orderBy('title')->get())->values();
-    }
-
-    /**
-     * The taxonomies the terms fields among these name, at any depth.
-     *
-     * @param  list<Field>  $fields
-     * @return list<string>
-     */
-    private static function termsTaxonomies(array $fields): array
-    {
-        $handles = [];
-        foreach ($fields as $field) {
-            if ($field->type === TermsField::TYPE && ($handle = $field->configString('taxonomy')) !== null) {
-                $handles[] = $handle;
-            }
-            array_push($handles, ...self::termsTaxonomies($field->fields));
-        }
-
-        return $handles;
+        return $this->taxonomies ??= $this->collection->taxonomies()->orderBy('title')->get();
     }
 
     /**

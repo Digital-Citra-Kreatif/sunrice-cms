@@ -18,7 +18,7 @@ use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\Locales;
 
 #[IsReadOnly]
-#[Description('Without "taxonomy": the taxonomies (id, handle, title, nested or not) and their pages, as URL patterns in the main language (null: switched off): the shared term pages and shared index page, and per collection it groups (id, handle) its term pages and index page there. With one: its terms (id, parent id, and in each language title, slug, URL: its usual page, and collection_urls: its page in each collection where its terms have pages), in order. Use term ids in entries\' terms fields and menus (cms_save_menu); index pages\' fields are read and saved with cms_get_listing / cms_save_listing ("taxonomy").')]
+#[Description('Without "taxonomy": the taxonomies (id, handle, title, nested or not) and their pages, as URL patterns in the main language (null: switched off): the shared term pages and shared index page, and per collection it groups (id, handle) its term pages and index page there. With one: its terms (id, parent id, and in each language title, slug, URL: its usual page, and collection_urls: its page in each collection where its terms have pages), in order. Use term ids or slugs in entries\' terms (cms_save_entry "terms", for the taxonomies their collection has), term ids in terms fields and menus (cms_save_menu); index pages\' fields are read and saved with cms_get_listing / cms_save_listing ("taxonomy").')]
 final class ListTerms extends CmsTool
 {
     protected string $name = 'cms_list_terms';

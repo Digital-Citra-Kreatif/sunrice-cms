@@ -16,14 +16,16 @@ use Sunrice\Cms\Support\Seo;
 /**
  * Creates an entry as a draft. Input: title, slug (made from the title
  * when empty), data (the blueprint's fields), locale (the main language
- * when left out) and parent_id (in a hierarchical collection; see
- * SaveEntrySettings::parent()). The signed-in user is its author.
+ * when left out), parent_id (in a hierarchical collection; see
+ * SaveEntrySettings::parent()) and terms (taxonomy handle => term ids or
+ * slugs, of the taxonomies attached to the collection; see
+ * SaveEntryTerms). The signed-in user is its author.
  *
  * @api
  */
 final class CreateEntry
 {
-    public function __construct(private readonly ActivityLog $activity) {}
+    public function __construct(private readonly ActivityLog $activity, private readonly SaveEntryTerms $terms) {}
 
     /**
      * @param  array<mixed>  $input
@@ -55,6 +57,13 @@ final class CreateEntry
                 $entry->parent_id = SaveEntrySettings::parent($entry, $input['parent_id'])?->id;
             }
             $entry->save();
+            if (($input['terms'] ?? null) !== null) {
+                if (! is_array($input['terms'])) {
+                    throw ValidationException::withMessages(['terms' => __('Give the terms by taxonomy handle.')]);
+                }
+                $entry->setRelation('collection', $collection);
+                $this->terms->handle($entry, $input['terms']);
+            }
 
             return $entry->translations()->create([
                 'collection_id' => $collection->id,

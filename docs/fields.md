@@ -46,7 +46,7 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 | `repeater` | a list of rows of its fields | `Items` of arrays | `min`, `max` (its `fields`) |
 | `flexible` | a list of blocks | `Items` of `Block` | `blocks` (fieldset handles, offered in this order: the builder keeps the order they're ticked in), `max` |
 | `fieldset` | — | — | `fieldset`: includes that fieldset's fields in its place |
-| `terms` | a term id, or a list with `multiple` | one `Term` (or null), or with `multiple` a collection of them | `taxonomy`, `multiple`, `max` (see [taxonomies](taxonomies.md)) |
+| `terms` | a term id, or a list with `multiple` | one `Term` (or null), or with `multiple` a collection of them | `taxonomy`, `multiple`, `max`. A custom link to terms ("Featured topic"): not the entry's terms, which come from its collection's taxonomies (see [taxonomies](taxonomies.md#terms-fields)) |
 | `entries` | an entry id (`null` or `[]` clears it), or a list with `multiple` | one `EntryTranslation` (or null), or with `multiple` a collection of them | `collections`, `multiple`, `max` |
 
 Rich text keeps only the formatting the editor produces: no scripts, styles or event handlers, and links only to web, mail and phone addresses or paths on the site. Links are checked the same way when saved and again when shown, so a link can never run script.

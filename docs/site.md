@@ -114,7 +114,7 @@ Rich text is cleaned when it's saved, so print it as is: `{!! $values['body'] !!
 | | |
 | --- | --- |
 | `$page` | the page shown (`Cms::page()`) |
-| `$entry` | the `EntryTranslation` (`$entry->title`, `->slug`, `->published_at`, `->url()`, `->entry->collection`) |
+| `$entry` | the `EntryTranslation` (`$entry->title`, `->slug`, `->published_at`, `->url()`, `->entry->collection`; its terms, every taxonomy's: `$entry->terms`, one's: `$entry->termsOf('topics')`, in a preview those not published yet; see [taxonomies](taxonomies.md#giving-entries-terms)) |
 | `$collection` | the `Collection` |
 | `$title` | the title (the draft's in a preview) |
 | `$values` | the fields as templates get them (see [fields](fields.md#field-types)), by handle; a field never filled in may be missing, so read it with `$values['intro'] ?? null` |
@@ -347,8 +347,8 @@ Cms::entries('blog')->search($request->query('q', ''))->paginate(10);
 
 - `locale($locale)`: another language than the current one; entries not live in it come in the main language with the [main-language fallback](#untranslated-pages) on, unless `fallback(false)`. `preview()`: every entry not in the trash, by its draft title, slug and fields (`values()` give the draft's too), as the site's preview does; never cached.
 - `where($field, [$operator,] $value)`: a field, or `title`, `slug`, `published_at`, `parent_id`; operators `=`, `!=`, `<`, `>`, `<=`, `>=`, and `in`, `not in` with a list; `null` for "no value" (`where('subtitle', null)`, `where('subtitle', '!=', null)`). Number and date fields compare as such (`9 < 100`, a `Carbon` or `2026-01-01` for dates); the others as text.
-- `whereTerm($term, ...)`: entries with a term (or any of several): `Term` models or ids (`whereTerm($news, $tips)`, `whereTerm([$news, $tips])`), or a taxonomy handle and a slug or list of slugs (`whereTerm('topics', 'news')`, `whereTerm('topics', ['news', 'tips'])`); `includeChildren: true` takes the terms under them too. Looks at the terms of every terms field.
-- `whereFieldTerm($field, $terms, includeChildren: false)`: the same for one terms field, with slugs looked up in that field's taxonomy.
+- `whereTerm($term, ...)`: entries with a term (or any of several): `Term` models or ids (`whereTerm($news, $tips)`, `whereTerm([$news, $tips])`), or a taxonomy handle and a slug or list of slugs (`whereTerm('topics', 'news')`, `whereTerm('topics', ['news', 'tips'])`); `includeChildren: true` takes the terms under them too. Looks at the entries' own live terms (the editor's Taxonomies card), not at terms fields.
+- `whereFieldTerm($field, $terms, includeChildren: false)`: entries whose terms field holds a term, with slugs looked up in that field's taxonomy (a terms field's values aren't the entry's terms: `whereTerm()` doesn't read them).
 - `whereEntry($field, $entries)`: entries whose entries field links to an entry (or any of a list).
 - `whereContains($field, $values)`: entries whose list field (a select with several choices) holds any of the values.
 - `search($text)`: entries whose title or field text holds the words, as the site's search matches them; title matches first, then in the query's order.

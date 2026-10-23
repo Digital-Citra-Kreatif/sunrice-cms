@@ -36,7 +36,7 @@ From then on, **Save draft** keeps your work (or press **Ctrl S** / **⌘ S**). 
 
 - **Rich text** has a toolbar for headings, bold, italic, lists, quotes, links and images from the media library.
 - **Media** fields pick images or files from the [media library](guide:panel/media), or upload new ones.
-- **Entries** and **Terms** fields link to other entries or to categories and tags; search by title.
+- **Entries** and **Terms** fields link to other entries or to terms (a "featured topic", say); search by title. The entry's own categories and tags are in the **Taxonomies** card (below).
 - **Link** fields take a web address, or another entry (choose **Entry** to follow its address even if it changes).
 - **Groups**, **repeaters** and **flexible** fields hold several fields together; repeaters and flexible fields add rows or blocks, which you drag into order by their handle. Each row or block is named by its first text; click its name to fold it away (**Collapse all** folds the whole list), and switch off **Visible on site** to keep it here but leave it out of the page.
 
@@ -82,6 +82,12 @@ The **Page settings** card on the right applies to every language. It's saved wi
 - **Blueprint**: when the collection offers more than one set of fields (a normal page or a landing page, say), the one this entry uses. Switching keeps every value: fields both have keep theirs, and the others are kept out of sight and come back if you switch back. Save your draft first, then press **Change blueprint**: the editor reloads with the new fields.
 - **Template**: a different design for this entry alone, if your developer made one: pick it from the list, or type its name. **Automatic** uses the collection's own. Under it, the file in use, and **How is it chosen?** lists, for your developer, the files tried in order.
 - **Accept new comments**: in collections with comments, switch it off to close this entry's comments (approved ones stay). **View comments** opens this entry's comments.
+
+## Taxonomies
+
+The **Taxonomies** card, under Page settings, gives the entry its terms: its categories, tags or topics. It has a list for each taxonomy of the collection (*Categories*, *Tags* …): tick the terms that fit, or pick one where the collection allows only one. Terms under other terms are indented. The card shows only when the collection has taxonomies.
+
+Terms are the same for every language of the entry, and they're saved with the draft and go on the website when you publish, like your other changes: until then the card says **Changed**, **Compare with live** lists the terms before and after, and **Discard changes** puts the live ones back. A revision keeps the terms it was published with, so restoring it brings them back too. Translators see the terms but can't change them.
 
 ## Comments
 

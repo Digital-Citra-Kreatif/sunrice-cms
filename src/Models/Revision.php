@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property string $title
  * @property string $slug
  * @property array<string, mixed> $data
+ * @property list<int>|null $terms the entry's terms (ids) when it was published; null: kept before revisions had them
  * @property Carbon|null $created_at
  * @property-read EntryTranslation $translation
  *
@@ -34,7 +35,7 @@ class Revision extends Model
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['data' => 'array'];
+        return ['data' => 'array', 'terms' => 'array'];
     }
 
     /** @return BelongsTo<EntryTranslation, $this> */

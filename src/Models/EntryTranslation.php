@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sunrice\Cms\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -44,6 +45,7 @@ use Sunrice\Cms\Support\SearchText;
  * @property Carbon|null $updated_at
  * @property-read Entry $entry
  * @property-read Collection<int, Revision> $revisions
+ * @property-read \Illuminate\Support\Collection<int, Term> $terms the entry's own terms, as its page shows them (termsOf())
  *
  * @api
  */
@@ -147,13 +149,17 @@ class EntryTranslation extends Model
         return ! $this->isPublished() ? 'draft' : ($this->isLive() ? 'published' : 'scheduled');
     }
 
-    /** Whether the draft differs from what was last published. */
+    /**
+     * Whether the draft differs from what was last published, or the
+     * entry has terms not published yet (they're every language's).
+     */
     public function hasUnpublishedChanges(): bool
     {
         return $this->title === null
             || $this->draft_title !== $this->title
             || $this->draft_slug !== $this->slug
-            || $this->draft_data != $this->data;
+            || $this->draft_data != $this->data
+            || $this->entry->hasUnpublishedTerms();
     }
 
     /**
@@ -267,6 +273,34 @@ class EntryTranslation extends Model
         $this->hydration = $context;
 
         return $this;
+    }
+
+    /**
+     * `$entry->terms` in a template: the entry's own terms (every
+     * language's, chosen in the editor's Taxonomies card), as its page
+     * shows them: the live ones (in a preview, those not published yet),
+     * by taxonomy title, then in the editors' order. A list of entries
+     * reads them all at once (HydrationContext::entryTerms()).
+     *
+     * @return Attribute<\Illuminate\Support\Collection<int, Term>, never>
+     */
+    protected function terms(): Attribute
+    {
+        return Attribute::get(fn (): \Illuminate\Support\Collection => $this->termsOf());
+    }
+
+    /**
+     * The entry's terms of one taxonomy (its handle), as `terms` gives
+     * them: `$entry->termsOf('topics')`; null: all of them.
+     *
+     * @return \Illuminate\Support\Collection<int, Term>
+     */
+    public function termsOf(?string $taxonomy = null): \Illuminate\Support\Collection
+    {
+        $this->hydration ??= new HydrationContext($this->locale);
+        $terms = $this->hydration->entryTerms($this);
+
+        return $taxonomy === null ? $terms : $terms->filter(fn (Term $term): bool => $term->taxonomy->handle === $taxonomy)->values();
     }
 
     /** The fields this translation edits: all of them for the main one, the translated ones for the others. */

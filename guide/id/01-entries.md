@@ -36,7 +36,7 @@ Selanjutnya, **Simpan draf** menyimpan pekerjaan Anda (atau tekan **Ctrl S** / *
 
 - **Teks kaya** memiliki bilah alat untuk judul, tebal, miring, daftar, kutipan, tautan, dan gambar dari pustaka media.
 - Field **Media** memilih gambar atau berkas dari [pustaka media](guide:panel/media), atau mengunggah yang baru.
-- Field **Entri** dan **Term** menautkan ke entri lain atau ke kategori dan tag; cari berdasarkan judul.
+- Field **Entri** dan **Term** menautkan ke entri lain atau ke term (misalnya "topik pilihan"); cari berdasarkan judul. Kategori dan tag entri itu sendiri ada di kartu **Taksonomi** (di bawah).
 - Field **Tautan** menerima alamat web, atau entri lain (pilih **Entri** agar mengikuti alamat entri itu meskipun berubah).
 - Field **Grup**, **Repeater**, dan **Konten fleksibel** menampung beberapa field sekaligus; repeater dan konten fleksibel menambahkan baris atau blok, yang Anda seret ke urutannya lewat pegangannya. Setiap baris atau blok diberi nama dari teks pertamanya; klik namanya untuk melipatnya (**Lipat semua** melipat seluruh daftar), dan matikan **Tampil di situs** untuk menyimpannya di sini tanpa menampilkannya di halaman.
 
@@ -82,6 +82,12 @@ Kartu **Pengaturan halaman** di kanan berlaku untuk semua bahasa. Isinya disimpa
 - **Blueprint**: jika koleksi menawarkan lebih dari satu susunan field (misalnya halaman biasa atau halaman promosi), susunan yang dipakai entri ini. Menggantinya tetap menyimpan semua nilai: field yang ada di keduanya mempertahankan isinya, dan sisanya disimpan tersembunyi dan muncul lagi jika Anda kembali. Simpan draf dulu, lalu tekan **Ganti blueprint**: penyunting dimuat ulang dengan field yang baru.
 - **Template**: desain lain khusus untuk entri ini, jika developer membuatnya: pilih dari daftar, atau ketik namanya. **Otomatis** memakai desain koleksi. Di bawahnya, file yang dipakai, dan **Bagaimana dipilih?** menampilkan, untuk developer, file yang dicoba berurutan.
 - **Terima komentar baru**: di koleksi yang memiliki komentar, matikan untuk menutup komentar entri ini (komentar yang sudah disetujui tetap tampil). **Lihat komentar** membuka komentar entri ini.
+
+## Taksonomi
+
+Kartu **Taksonomi**, di bawah Pengaturan halaman, memberi entri term-nya: kategori, tag, atau topiknya. Ada satu daftar untuk setiap taksonomi koleksinya (*Kategori*, *Tag* …): centang term yang sesuai, atau pilih satu jika koleksi hanya mengizinkan satu. Term di bawah term lain ditampilkan menjorok. Kartu ini hanya tampil jika koleksi punya taksonomi.
+
+Term sama untuk semua bahasa entri, disimpan bersama draf, dan baru tampil di situs saat Anda menerbitkan, seperti perubahan lainnya: sampai saat itu kartunya bertanda **Berubah**, **Bandingkan dengan yang tayang** menampilkan term sebelum dan sesudahnya, dan **Buang perubahan** mengembalikan term yang tayang. Revisi menyimpan term saat diterbitkan, jadi memulihkannya juga mengembalikan term-nya. Penerjemah bisa melihat term, tetapi tidak bisa mengubahnya.
 
 ## Komentar
 

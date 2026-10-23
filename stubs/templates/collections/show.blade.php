@@ -17,6 +17,18 @@
             @if ($collection->dated && $entry->published_at)
                 <p class="muted"><time datetime="{{ $entry->published_at->toAtomString() }}">{{ $entry->published_at->translatedFormat('j F Y') }}</time></p>
             @endif
+            @if ($entry->terms->isNotEmpty())
+                {{-- Its terms, of every taxonomy (one only: $entry->termsOf('topics')), linking to their pages. --}}
+                <p class="muted">
+                    @foreach ($entry->terms as $term)
+                        @if ($url = $term->url())
+                            <a href="{{ $url }}">{{ $term->title() }}</a>
+                        @else
+                            {{ $term->title() }}
+                        @endif
+                    @endforeach
+                </p>
+            @endif
         </header>
 
         @include('cms.partials.fields', ['values' => $values, 'richText' => $richText])

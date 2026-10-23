@@ -9,15 +9,16 @@ use Sunrice\Cms\Models\EntryTranslation;
 
 /**
  * Puts a translation's earlier draft back, as it was before a revision
- * was restored over it (the editor's Undo).
+ * was restored over it (the editor's Undo), with the entry's terms not
+ * published yet when given (`terms`: term ids).
  *
  * @api
  */
 final class PutBackDraft
 {
-    public function __construct(private readonly ActivityLog $activity) {}
+    public function __construct(private readonly ActivityLog $activity, private readonly SaveEntryTerms $terms) {}
 
-    /** @param array{title: string, slug: string, data: array<mixed>} $draft */
+    /** @param array{title: string, slug: string, data: array<mixed>, terms?: list<int>} $draft */
     public function handle(EntryTranslation $translation, array $draft): EntryTranslation
     {
         $taken = EntryInput::taken($draft['slug'], $translation->collection_id, $translation->locale, $translation->id);
@@ -27,6 +28,9 @@ final class PutBackDraft
             'draft_data' => $translation->ownData($draft['data']),
             'version' => $translation->version + 1,
         ])->save();
+        if (isset($draft['terms'])) {
+            $this->terms->setDraft($translation->entry, $draft['terms']);
+        }
         $this->activity->record('updated', 'entry', $translation->entry, $draft['title'], ['locale' => $translation->locale, 'note' => 'undid a revision restore']);
 
         return $translation;

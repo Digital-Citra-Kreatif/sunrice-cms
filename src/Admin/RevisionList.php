@@ -37,6 +37,8 @@ final class RevisionList
         $revisions = array_values($translation->revisions()->limit($limit + 1)->get()->all());
         $authors = self::authors($revisions);
         $labels = self::labels($translation);
+        // The terms they were published with, read once.
+        $terms = self::terms($translation, array_merge(...array_map(fn (Revision $revision): array => $revision->terms ?? [], $revisions)));
         $out = [];
         foreach (array_slice($revisions, 0, $limit) as $index => $revision) {
             $before = $revisions[$index + 1] ?? null;
@@ -46,7 +48,10 @@ final class RevisionList
                 'createdAt' => $revision->created_at?->toIso8601String(),
                 'author' => $revision->user_id === null ? null : ($authors[$revision->user_id] ?? null),
                 // The oldest kept: the first published (or older ones were pruned), nothing to compare with.
-                'changed' => $before === null ? null : self::changed(self::values($before->title, $before->slug, $before->data), self::values($revision->title, $revision->slug, $revision->data), $labels),
+                'changed' => $before === null ? null : [
+                    ...self::changed(self::values($before->title, $before->slug, $before->data), self::values($revision->title, $revision->slug, $revision->data), $labels),
+                    ...($before->terms !== null && $revision->terms !== null ? array_column($terms->compare($before->terms, $revision->terms), 'label') : []),
+                ],
             ];
         }
 
@@ -85,8 +90,15 @@ final class RevisionList
      */
     public static function compare(Revision $revision): array
     {
+        $translation = $revision->translation;
+        $terms = [];
+        if ($revision->terms !== null) {
+            $draft = $translation->entry->draftTermIds();
+            $terms = self::terms($translation, [...$revision->terms, ...$draft])->compare($revision->terms, $draft);
+        }
+
         return array_map(fn (array $field): array => ['label' => $field['label'], 'revision' => $field['old'], 'draft' => $field['new']],
-            self::against($revision->translation, $revision->title, $revision->slug, $revision->data));
+            [...self::against($translation, $revision->title, $revision->slug, $revision->data), ...$terms]);
     }
 
     /**
@@ -98,14 +110,15 @@ final class RevisionList
     public static function compareLive(EntryTranslation $translation): array
     {
         return array_map(fn (array $field): array => ['label' => $field['label'], 'live' => $field['old'], 'draft' => $field['new']],
-            self::against($translation, $translation->title, $translation->slug, $translation->data));
+            [...self::against($translation, $translation->title, $translation->slug, $translation->data), ...self::termsFromLive($translation)]);
     }
 
     /**
      * Which of the editor's values the draft changed from the live version:
-     * "title", "slug", field handles and SEO settings ("seo.title"), each
-     * compared as compare() does (empty values alike, objects whatever
-     * their key order). For the editor's "Changed" markers.
+     * "title", "slug", field handles, SEO settings ("seo.title") and the
+     * entry's terms of a taxonomy ("terms.topics"), each compared as
+     * compare() does (empty values alike, objects whatever their key
+     * order). For the editor's "Changed" markers.
      *
      * @return list<string>
      */
@@ -115,8 +128,37 @@ final class RevisionList
             return [];
         }
 
-        return self::changedKeys(self::values($translation->title, $translation->slug, $translation->data),
-            self::values($translation->draft_title, $translation->draft_slug, $translation->draft_data), self::labels($translation));
+        return [...self::changedKeys(self::values($translation->title, $translation->slug, $translation->data),
+            self::values($translation->draft_title, $translation->draft_slug, $translation->draft_data), self::labels($translation)),
+            ...array_column(self::termsFromLive($translation), 'key')];
+    }
+
+    /**
+     * The taxonomies whose terms the entry chose and didn't publish yet, as compare() gives fields.
+     *
+     * @return list<array{key: string, label: string, old: string, new: string}>
+     */
+    private static function termsFromLive(EntryTranslation $translation): array
+    {
+        $entry = $translation->entry;
+        if (! $entry->hasUnpublishedTerms()) {
+            return [];
+        }
+        $live = $entry->liveTermIds();
+        $draft = $entry->draftTermIds();
+
+        return self::terms($translation, [...$live, ...$draft])->compare($live, $draft);
+    }
+
+    /**
+     * The taxonomies attached to the entry's collection and these terms, read once, to compare terms by taxonomy.
+     *
+     * @param  list<int>  $ids
+     */
+    private static function terms(EntryTranslation $translation, array $ids): TermsCompared
+    {
+        return new TermsCompared($translation->entry->collection->taxonomies()->orderBy('title')->get(),
+            $ids === [] ? [] : array_values(Term::withTrashed()->with('translations')->whereKey(array_values(array_unique($ids)))->get()->all()), $translation->locale);
     }
 
     /**

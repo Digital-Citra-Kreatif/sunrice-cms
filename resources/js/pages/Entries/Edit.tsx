@@ -15,7 +15,7 @@ import { EntriesPicker } from '@/components/EntriesPicker.tsx';
 import { EntryComments, type EntryCommentsSummary } from '@/components/EntryComments.tsx';
 import { FieldSections } from '@/components/FieldSections.tsx';
 import { SlugNote } from '@/components/SlugNote.tsx';
-import { TermLabels } from '@/components/TermsPicker.tsx';
+import { TermLabels, TermsPicker } from '@/components/TermsPicker.tsx';
 import { seoFields } from '@/lib/seo.ts';
 import { FieldError } from '@/components/FieldError.tsx';
 import { Fields } from '@/components/FieldInput.tsx';
@@ -31,6 +31,8 @@ interface Props {
     settings?: { parentId: number | null; template: string | null; commentsClosed?: boolean; blueprint?: string | null };
     /** Whether it's the site's homepage, whether the user may make it so (cms.homepage, in a collection whose entries can be), and the current homepage's title. */
     homepage?: { is: boolean; can: boolean; current?: string | null };
+    /** The taxonomies attached to the collection whose terms the user may see (the Taxonomies card), by title. */
+    taxonomies?: EntryTaxonomy[];
     /** The blueprints the entry may use, when its collection offers more than one. */
     blueprints?: { handle: string; title: string }[];
     /** Its blueprint's editor, when the user may edit blueprints. */
@@ -71,7 +73,8 @@ interface Props {
     redirectsUrl?: string | null;
     /** The views tried for its page, in order, and which exist. */
     templates?: TemplateLookup | null;
-    values: { title: string; slug: string; data: FieldValues; seo: FieldValues | null };
+    /** terms: the entry's (every language's) by taxonomy handle, as the editor shows them (not published yet, else live). */
+    values: { title: string; slug: string; data: FieldValues; seo: FieldValues | null; terms?: TermsByTaxonomy | never[] };
     /** Deferred: loaded after the page shows. */
     revisions?: Revision[];
     /** Deferred, when the collection takes comments and the user may see them (else null). */
@@ -86,8 +89,8 @@ interface Props {
     machineTranslate?: number | null;
     /** Another language, without machine translation set up: the button shows, off, saying what it needs. */
     machineTranslateMissing?: boolean;
-    /** translate: may add a language to the entry (create, or translators' right to edit other languages). */
-    can: { create: boolean; update: boolean; publish: boolean; delete: boolean; translate?: boolean };
+    /** translate: may add a language to the entry (create, or translators' right to edit other languages); terms: may change its terms (every language's). */
+    can: { create: boolean; update: boolean; publish: boolean; delete: boolean; translate?: boolean; terms?: boolean };
 }
 
 /**
@@ -97,6 +100,10 @@ interface Props {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FieldValues = Record<string, any>;
 type UsedBy = { label: string; url: string | null; field: string; fieldLabel?: string };
+/** A taxonomy attached to the entry's collection: single, one term at most. */
+type EntryTaxonomy = { handle: string; title: string; hierarchical: boolean; single: boolean };
+/** Term ids by taxonomy handle. */
+type TermsByTaxonomy = Record<string, number[]>;
 /** A published version: who published it and what it changed from the one before (null: the first, or older ones were pruned). */
 type Revision = { id: number; title: string; createdAt: string | null; author: string | null; changed: string[] | null };
 
@@ -111,7 +118,7 @@ function usedBySentence(usedBy: UsedBy[]): string {
 /** With the page settings (every language's), saved with the draft. */
 type FormData = {
     locale: string | null; title: string; slug: string; data: FieldValues; seo: FieldValues; version: number | null; publish: boolean; published_at: string | null;
-    parent_id: number | null; template: string; comments_closed: boolean;
+    parent_id: number | null; template: string; comments_closed: boolean; terms: TermsByTaxonomy;
 };
 type SettingsValues = Pick<FormData, 'parent_id' | 'template' | 'comments_closed'>;
 
@@ -127,7 +134,7 @@ export default function EntryEditorPage(props: Props) {
     return <EntryEditor key={entry ? `${entry.id}:${entry.locale}:${entry.version}:${entry.status}:${entry.trashed}:${entry.publishedAt}` : 'new'} {...props} />;
 }
 
-function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, comments, termLabels, usedBy = [], undoRestore = null, machineTranslate = null, machineTranslateMissing = false, settings, blueprints = [], blueprintUrl = null, homepage, redirectsUrl = null, templates = null, can }: Props) {
+function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, comments, termLabels, usedBy = [], undoRestore = null, machineTranslate = null, machineTranslateMissing = false, settings, taxonomies = [], blueprints = [], blueprintUrl = null, homepage, redirectsUrl = null, templates = null, can }: Props) {
     const list = adminUrl(`cms/collections/${collection.handle}/entries`);
     const url = entry ? adminUrl(`cms/entries/${entry.id}`) : list;
     const heading = entry ? values.title : t('New entry');
@@ -144,7 +151,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
     const [sendingBack, setSendingBack] = React.useState(false);
 
     const form = useForm<FormData>({
-        ...values, seo: values.seo ?? {}, locale: entry?.locale ?? null, version: entry?.version ?? null, publish: false, published_at: null,
+        ...values, seo: values.seo ?? {}, terms: Array.isArray(values.terms) || !values.terms ? {} : values.terms, locale: entry?.locale ?? null, version: entry?.version ?? null, publish: false, published_at: null,
         parent_id: settings?.parentId ?? null, template: settings?.template ?? '', comments_closed: settings?.commentsClosed === true,
     });
     const setSettings = (patch: Partial<SettingsValues>) => form.setData((data) => ({ ...data, ...patch }));
@@ -170,12 +177,15 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
     const marker = (key: string) => (changed.includes(key) ? <ChangedMarker /> : null);
     const pages = collection.pages !== false;
 
-    // Page settings are every language's: left out for those who may not change them (translators).
+    // Page settings and terms are every language's: left out for those who may not change them (translators).
     const payload = (data: FormData) => {
-        if (settings || entry === null) return data;
-        const { parent_id: _parent, template: _template, comments_closed: _comments, ...rest } = data;
+        const { terms, ...withoutTerms } = data;
+        const sent = can.terms === true && taxonomies.length > 0 ? { ...withoutTerms, terms } : withoutTerms;
+        if (settings || entry === null) return sent;
+        const { parent_id: _parent, template: _template, comments_closed: _comments, ...rest } = sent;
         return rest;
     };
+    const labels = Array.isArray(termLabels) || !termLabels ? {} : termLabels;
     const save = (publish = false, publishedAt: string | null = null) => {
         form.transform((data) => ({ ...payload(data), publish, published_at: publishedAt }));
         if (entry) {
@@ -191,13 +201,13 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
     };
     const lock = useEditLock({
         type: 'cms.entry', id: entry?.id, locale: entry?.locale, enabled: entry !== null && editable, noun: t('entry'), leaveTo: list,
-        getUnsaved: () => (form.isDirty ? { title: form.data.title, slug: form.data.slug, data: form.data.data, seo: form.data.seo } : null),
+        getUnsaved: () => (form.isDirty ? { title: form.data.title, slug: form.data.slug, data: form.data.data, seo: form.data.seo, terms: form.data.terms } : null),
     });
     const writable = editable && !lock.readOnly;
     const loadKept = async (id: number) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const kept = await lock.loadKept(id) as any;
-        form.setData((data) => ({ ...data, title: kept.title ?? data.title, slug: kept.slug ?? data.slug, data: kept.data ?? data.data, seo: kept.seo ?? data.seo }));
+        form.setData((data) => ({ ...data, title: kept.title ?? data.title, slug: kept.slug ?? data.slug, data: kept.data ?? data.data, seo: kept.seo ?? data.seo, terms: kept.terms ?? data.terms }));
     };
     useUnsavedChanges(form.isDirty && !lock.takenOver, writable ? () => form.processing || save() : undefined);
 
@@ -205,7 +215,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
     const requestReview = () => {
         const send = () => router.post(`${url}/review`, locale, { preserveScroll: true });
         if (form.isDirty) {
-            form.transform((data) => ({ ...data, publish: false, published_at: null }));
+            form.transform((data) => ({ ...payload(data), publish: false, published_at: null }));
             form.put(url, { preserveScroll: true, onSuccess: send });
         } else {
             send();
@@ -398,7 +408,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                         </CardContent>
                     </Card>
 
-                    <TermLabels.Provider value={Array.isArray(termLabels) || !termLabels ? {} : termLabels}>
+                    <TermLabels.Provider value={labels}>
                         <FieldSections disabled={!writable} fields={fields} values={form.data.data} errors={errors} storageKey={`cms:entry:${collection.handle}`}
                             shared={shared} sharedValues={sharedValues} changed={changed}
                             sharedNote={mainLocale ? t('Shared by all languages: the greyed-out fields are edited in :language.', { language: localeName(mainLocale) }) : t('Shared by all languages: the greyed-out fields are edited in the main language.')}
@@ -413,13 +423,17 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                     </CollapsibleCard>
                 </div>
 
-                {!entry && collection.hierarchical && (
+                {!entry && (collection.hierarchical || taxonomies.length > 0) && (
                     <aside className="cms:flex cms:min-w-0 cms:flex-col cms:gap-4">
-                        <CollapsibleCard title="Page settings" titleClassName="cms:text-base" storageKey="cms:entry:page-settings" hasErrors={errors.parent_id !== undefined}>
-                            <fieldset disabled={!writable} className="cms:flex cms:min-w-0 cms:flex-col cms:gap-4 cms:text-sm">
-                                <ParentField collection={collection} value={form.data.parent_id} error={errors.parent_id} onChange={(parent_id) => setSettings({ parent_id })} />
-                            </fieldset>
-                        </CollapsibleCard>
+                        {collection.hierarchical && (
+                            <CollapsibleCard title="Page settings" titleClassName="cms:text-base" storageKey="cms:entry:page-settings" hasErrors={errors.parent_id !== undefined}>
+                                <fieldset disabled={!writable} className="cms:flex cms:min-w-0 cms:flex-col cms:gap-4 cms:text-sm">
+                                    <ParentField collection={collection} value={form.data.parent_id} error={errors.parent_id} onChange={(parent_id) => setSettings({ parent_id })} />
+                                </fieldset>
+                            </CollapsibleCard>
+                        )}
+                        <TaxonomiesCard taxonomies={taxonomies} value={form.data.terms} labels={labels} errors={errors} changed={changed} disabled={!writable || can.terms !== true}
+                            onChange={(handle, ids) => { form.setData('terms', { ...form.data.terms, [handle]: ids }); clearErrorsAt(`terms.${handle}`); }} />
                     </aside>
                 )}
                 {entry && (
@@ -491,6 +505,8 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                         {settings && <PageSettings entryUrl={url} collection={collection} settings={settings} templates={templates} blueprints={blueprints} disabled={!writable}
                             values={form.data} errors={errors} onChange={setSettings} draftDirty={form.isDirty}
                             commentCount={comments ? comments.counts.pending + comments.counts.approved : null} />}
+                        <TaxonomiesCard taxonomies={taxonomies} value={form.data.terms} labels={labels} errors={errors} changed={changed} disabled={!writable || can.terms !== true}
+                            onChange={(handle, ids) => { form.setData('terms', { ...form.data.terms, [handle]: ids }); clearErrorsAt(`terms.${handle}`); }} />
                         {comments !== null && collection.comments && <EntryComments entryId={entry.id} comments={comments} />}
                         <CollapsibleCard title={t('Revisions')} titleClassName="cms:text-base" storageKey="cms:entry:revisions" contentClassName="cms:flex cms:flex-col cms:gap-2 cms:text-sm">
                             {undoRestore !== null && can.update && (
@@ -1006,6 +1022,56 @@ function PageSettings({ entryUrl, collection, settings, templates, blueprints, d
                     </div>
                 )}
             </fieldset>
+        </CollapsibleCard>
+    );
+}
+
+/**
+ * The entry's terms (every language's), one picker per taxonomy attached
+ * to its collection: several terms, or one with "One term only". Saved
+ * with the draft and published with it. Hidden when the collection has no
+ * taxonomies (or none the user may see).
+ */
+function TaxonomiesCard({ taxonomies, value, labels, errors, changed, disabled, onChange }: {
+    taxonomies: EntryTaxonomy[];
+    value: TermsByTaxonomy;
+    labels: Record<string, string>;
+    errors: Record<string, string | undefined>;
+    /** The editor's changed keys: "terms.{handle}" for a taxonomy whose terms aren't published yet. */
+    changed: string[];
+    disabled: boolean;
+    onChange: (handle: string, ids: number[]) => void;
+}) {
+    if (taxonomies.length === 0) return null;
+    const anyChanged = changed.some((key) => key.startsWith('terms.'));
+    const hasErrors = errors.terms !== undefined || taxonomies.some((taxonomy) => errors[`terms.${taxonomy.handle}`] !== undefined);
+
+    return (
+        <CollapsibleCard title={anyChanged ? <>{t('Taxonomies')}<ChangedMarker /></> : t('Taxonomies')} titleClassName="cms:text-base" storageKey="cms:entry:taxonomies" hasErrors={hasErrors}>
+            <TermLabels.Provider value={labels}>
+                {/* min-w-0: a fieldset is as wide as its content by default. */}
+                <fieldset disabled={disabled} className="cms:flex cms:min-w-0 cms:flex-col cms:gap-4 cms:text-sm">
+                    {taxonomies.map((taxonomy) => {
+                        const id = `terms-${taxonomy.handle}`;
+                        const ids = value[taxonomy.handle] ?? [];
+                        const error = errors[`terms.${taxonomy.handle}`];
+                        return (
+                            <div key={taxonomy.handle} className="cms:flex cms:min-w-0 cms:flex-col cms:gap-2">
+                                <Label htmlFor={id}>
+                                    {taxonomy.title}
+                                    {changed.includes(`terms.${taxonomy.handle}`) && <ChangedMarker />}
+                                </Label>
+                                <TermsPicker id={id} taxonomy={taxonomy.handle} multiple={!taxonomy.single} max={null} required={false} invalid={error !== undefined}
+                                    value={taxonomy.single ? (ids[0] ?? null) : ids}
+                                    onChange={(next) => onChange(taxonomy.handle, next === null ? [] : Array.isArray(next) ? next : [next])} />
+                                {taxonomy.single && <p className="cms:text-xs cms:text-muted-foreground">{t('One term only.')}</p>}
+                                <FieldError message={error} />
+                            </div>
+                        );
+                    })}
+                    <FieldError message={errors.terms} />
+                </fieldset>
+            </TermLabels.Provider>
         </CollapsibleCard>
     );
 }

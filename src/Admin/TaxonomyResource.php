@@ -67,17 +67,20 @@ final class TaxonomyResource extends Resource
         return 'handle';
     }
 
-    /** Which blueprints give entries (or anything else) its terms: a terms field for it. */
+    /** The collections it groups, with their entries' filter by it, and its terms. */
     public static function aside(Model $record, Authorizable $user): array
     {
         if (! $record instanceof Taxonomy) {
             return [];
         }
+        $collections = $record->loadMissing('collections')->collections->sortBy('title');
 
-        return [Card::make('Terms fields')->description('Editors choose its terms through a terms field. These blueprints have one:')
-            ->list('Blueprints', array_map(fn (array $found): array => ['label' => $found['blueprint']->title, 'meta' => $found['field']], AttachCollections::blueprintsWithField($record)),
-                'None yet: tick a collection to add one to its blueprints, or add a Terms field in a blueprint.')
-            ->link('Blueprints', route('sunrice.admin.cms.blueprints.index', [], false))];
+        return [Card::make('Collections')->description('Their entries get its terms in the entry editor\'s Taxonomies card.')
+            ->list('Collections', array_values($collections->map(fn (Collection $collection): array => [
+                'label' => $collection->title,
+                'meta' => self::pivot($record, $collection)?->single === true ? __('One term only') : __('Several terms'),
+            ])->all()), 'None yet: tick the collections whose entries it groups.')
+            ->link('Terms', route('sunrice.admin.cms.taxonomies.terms.index', $record->handle, false))];
     }
 
     public static function form(Form $form): Form
@@ -90,7 +93,7 @@ final class TaxonomyResource extends Resource
                     ->placeholder('As the title')->help(__('What visitors read in :language on its term pages.', ['language' => $language]))),
                 Toggle::make('hierarchical')->label('Nested terms')->span(2)->help('Terms can sit under other terms, like subcategories.'),
                 CheckboxList::make('collections')->span(2)
-                    ->help('Ticking a collection adds a terms field for this taxonomy to its blueprints (when they have none), so editors choose terms on its entries, and its entries list filters by them.')
+                    ->help('Ticking a collection gives its entries this taxonomy\'s terms, chosen in the entry editor\'s Taxonomies card, and its entries list a filter by them.')
                     ->verbatim()->options(fn () => self::collections()->mapWithKeys(fn (Collection $c): array => [(string) $c->id => $c->title])->all())
                     ->loadUsing(fn (Model $taxonomy): array => $taxonomy instanceof Taxonomy && $taxonomy->exists
                         ? $taxonomy->loadMissing('collections')->collections->map(fn (Collection $c): string => (string) $c->id)->values()->all()
@@ -98,16 +101,12 @@ final class TaxonomyResource extends Resource
                     ->saveUsing(function (Model $taxonomy, mixed $ids): void {
                         if ($taxonomy instanceof Taxonomy) {
                             // Their URLs are checked with the form's values for them (savePivots()).
-                            $result = app(AttachCollections::class)->handle($taxonomy, array_values(array_map(intval(...), array_filter(is_array($ids) ? $ids : [], is_numeric(...)))), request()->boolean('remove_term_fields'), checkRoutes: false);
+                            $result = app(AttachCollections::class)->handle($taxonomy, array_values(array_map(intval(...), array_filter(is_array($ids) ? $ids : [], is_numeric(...)))), checkRoutes: false);
                             self::$attached ??= new \WeakMap;
                             self::$attached[$taxonomy] = $result['attached'];
                             $taxonomy->unsetRelation('collections');
                         }
                     }),
-                // Asked only once the collections change: read by the collections' saveUsing, never stored.
-                Toggle::make('remove_term_fields')->label('Also remove the terms field from collections you untick')->span(2)->onlyOnEdit()->showWhenChanged('collections')
-                    ->help('Off: their blueprints keep the field, and entries keep their terms. On: the field goes from blueprints no ticked collection uses; what entries chose stays stored, out of sight.')
-                    ->loadUsing(fn (): bool => false)->saveUsing(fn (): null => null),
                 Select::make('blueprint')->label('Term fields')->span(2)
                     ->verbatim()->options(BlueprintChoices::options(BlueprintChoices::CONTENT))
                     ->help('Extra fields for each term, like a description or an image.'),
@@ -123,7 +122,7 @@ final class TaxonomyResource extends Resource
                     ->help('For its index pages, the shared one and each collection\'s. Empty: the first template that exists.')
                     ->helpDetails('Which file?', TemplateHelp::files(['cms.taxonomies.{handle}.index', 'cms.taxonomies.index'], 'cms.tag-cloud')."\n".__('In a collection, :file is tried first.', ['file' => '`cms/collections/{collection}/{handle}/index.blade.php`'])),
             ]),
-            Section::make('Term pages in collections')->description('Each collection it groups can have a page per term listing only that collection\'s entries, like /books/tags/featured, and an index page of the terms its entries have, like /books/tags.')->columns(2)
+            Section::make('In collections')->description('Each collection it groups: whether its entries have one term only, a page per term listing only that collection\'s entries, like /books/tags/featured, and an index page of the terms its entries have, like /books/tags.')->columns(2)
                 ->schema(self::collectionTermFields()),
             Section::make('Shared term pages')->description('A page per term listing its entries from every collection, like /tags/featured, and an index page of all its terms, like /tags.')->columns(2)
                 ->links(function (?Model $taxonomy): array {
@@ -196,6 +195,14 @@ final class TaxonomyResource extends Resource
         $fields = [];
         foreach (self::collections() as $collection) {
             $id = (string) $collection->id;
+            $fields[] = Toggle::make("single_{$id}")->label(__(':collection: one term only', ['collection' => $collection->title]))->span(2)->showWhen('collections', $id)
+                ->help(__('An entry of :collection has one term of this taxonomy at most, chosen from a list.', ['collection' => $collection->title]))
+                ->loadUsing(fn (Model $taxonomy): bool => self::pivot($taxonomy, $collection)->single ?? false)
+                ->saveUsing(function (Model $taxonomy, mixed $on) use ($collection): void {
+                    if ($on !== null) {
+                        self::pivot($taxonomy, $collection)?->setAttribute('single', filter_var($on, FILTER_VALIDATE_BOOL));
+                    }
+                });
             $fields[] = Toggle::make("term_pages_{$id}")->label(__('Term pages in :collection', ['collection' => $collection->title]))->span(2)->showWhen('collections', $id)
                 ->help(__('A page per term with only :collection\'s entries, like :url.', ['collection' => $collection->title, 'url' => str_replace('{slug}', 'featured', CollectionTaxonomy::defaultPattern($collection, new Taxonomy(['handle' => '{handle}'])))]))
                 ->loadUsing(fn (Model $taxonomy): bool => self::pivot($taxonomy, $collection)->term_pages ?? true)

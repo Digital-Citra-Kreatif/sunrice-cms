@@ -18,10 +18,8 @@ use Sunrice\Cms\Models\Menu;
 use Sunrice\Cms\Models\Redirect;
 use Sunrice\Cms\Models\Submission;
 use Sunrice\Cms\Models\Taxonomy;
-use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Structure\StructureImporter;
 use Sunrice\Cms\Structure\StructureImportFailed;
-use Sunrice\Cms\Support\Locales;
 
 /**
  * sunrice:demo-content: a small demo site to try the CMS on, made with
@@ -130,7 +128,6 @@ final class DemoContentCommand extends Command
                 ['handle' => 'post', 'title' => 'Blog post', 'fields' => [
                     $field('intro', 'textarea'),
                     $field('sections', 'flexible', ['blocks' => self::FIELDSETS]),
-                    $field('topics', 'terms', ['taxonomy' => 'topics', 'multiple' => true], ['translatable' => false]),
                     $field('related', 'entries', ['collections' => ['blog'], 'multiple' => true, 'max' => 3], ['translatable' => false]),
                 ]],
                 ['handle' => 'topic', 'title' => 'Topic', 'fields' => [$field('description', 'textarea')]],
@@ -181,14 +178,12 @@ final class DemoContentCommand extends Command
     }
 
     /**
-     * The pages and posts, with the topics' ids now that they exist.
+     * The pages and posts, the posts with a topic each.
      *
      * @return list<array<string, mixed>>
      */
     private function entries(): array
     {
-        $topics = TermTranslation::query()->whereHas('term.taxonomy', fn ($query) => $query->where('handle', 'topics'))
-            ->where('locale', Locales::default())->pluck('term_id', 'slug');
         $page = fn (string $slug, string $en, string $id, ?string $parent = null): array => [
             'collection' => 'pages', 'slug' => $slug, 'parent' => $parent, 'translations' => [
                 'en' => ['title' => $en, 'slug' => $slug, 'published' => true, 'data' => ['intro' => "{$en}: a demo page.", 'body' => "<p>This is the {$en} page of the demo site.</p>"]],
@@ -206,10 +201,9 @@ final class DemoContentCommand extends Command
                 ['type' => 'text_block', 'values' => ['body' => "<p>{$text}</p>"]],
                 ['type' => 'quote_block', 'values' => ['quote' => $quote, 'author' => 'Rina']],
             ];
-            $entries[] = ['collection' => 'blog', 'slug' => $slug, 'translations' => [
+            $entries[] = ['collection' => 'blog', 'slug' => $slug, 'terms' => ['topics' => [$topic]], 'translations' => [
                 'en' => ['title' => $en, 'slug' => $slug, 'published' => $i < 7, 'data' => [
                     'intro' => "{$en}, in a few words.", 'sections' => $sections("The story of {$en}.", 'Small steps, every day.'),
-                    'topics' => isset($topics[$topic]) ? [$topics[$topic]] : [],
                 ]],
                 'id' => ['title' => $id, 'slug' => $slug, 'published' => $i < 7, 'data' => [
                     'intro' => "{$id}, singkatnya.", 'sections' => $sections("Kisah tentang {$id}.", 'Langkah kecil, setiap hari.'),

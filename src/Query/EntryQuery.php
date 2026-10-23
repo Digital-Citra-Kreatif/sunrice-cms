@@ -139,7 +139,8 @@ final class EntryQuery
      *     ->whereTerm('topics', 'news')           ->whereTerm('topics', ['news', 'tips'], includeChildren: true)
      *
      * `includeChildren` takes the terms under them too. A slug matches in
-     * any language.
+     * any language. It reads the entries' own live terms (the editor's
+     * Taxonomies card, sunrice_entry_term), not terms fields.
      *
      * @param  Term|int|string|list<Term|int|string>  $term  a term, or a taxonomy handle
      * @param  Term|int|string|list<Term|int|string>|null  $terms  more terms, or the slug(s) in that taxonomy
@@ -161,7 +162,7 @@ final class EntryQuery
      * Entries whose terms field holds this term (or any of these): Term
      * models, ids, or slugs (looked up in the field's taxonomy); with
      * `includeChildren`, the terms under them too. Unlike whereTerm(), which
-     * looks at every terms field, this reads one field.
+     * reads the entries' own terms, this reads one field.
      *
      * @param  Term|int|string|list<Term|int|string>  $terms
      */

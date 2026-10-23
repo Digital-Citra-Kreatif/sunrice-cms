@@ -18,6 +18,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Sunrice\Admin\Panel;
 use Sunrice\Admin\Preferences\Preferences;
+use Sunrice\Cms\Actions\Collections\AttachTaxonomies;
 use Sunrice\Cms\Actions\Entries\CreateEntry;
 use Sunrice\Cms\Actions\Entries\CreateTranslation;
 use Sunrice\Cms\Actions\Entries\DeleteTranslation;
@@ -29,6 +30,7 @@ use Sunrice\Cms\Actions\Entries\RestoreEntry;
 use Sunrice\Cms\Actions\Entries\RestoreRevision;
 use Sunrice\Cms\Actions\Entries\SaveDraft;
 use Sunrice\Cms\Actions\Entries\SaveEntrySettings;
+use Sunrice\Cms\Actions\Entries\SaveEntryTerms;
 use Sunrice\Cms\Actions\Entries\SendBackReview;
 use Sunrice\Cms\Actions\Entries\SetHomepage;
 use Sunrice\Cms\Actions\Entries\TrashEntry;
@@ -197,10 +199,10 @@ final class EntryController
     }
 
     /**
-     * The taxonomies the terms fields of the collections a user may view,
-     * create or edit entries in use (any of their blueprints, nested too), by
-     * handle: the term picker serves those even without cms.terms.view, as
-     * the editor shows those fields.
+     * The taxonomies attached to the collections a user may view, create
+     * or edit entries in, and those the terms fields of these collections
+     * use (any of their blueprints, nested too), by handle: the term picker
+     * serves those even without cms.terms.view, as the editor shows them.
      *
      * @return list<string>
      */
@@ -210,6 +212,10 @@ final class EntryController
         self::eachOwnField($user, ['view', 'create', 'update'], function (array $field) use (&$handles): void {
             if (($field['type'] ?? null) === 'terms' && is_string($field['taxonomy'] ?? null)) {
                 $handles[] = $field['taxonomy'];
+            }
+        }, function (Collection $collection) use (&$handles): void {
+            foreach ($collection->taxonomies as $taxonomy) {
+                $handles[] = $taxonomy->handle;
             }
         });
 
@@ -222,8 +228,9 @@ final class EntryController
      *
      * @param  list<string>  $actions
      * @param  callable(array<mixed>): void  $each
+     * @param  (callable(Collection): void)|null  $eachCollection  called with each of those collections, with its taxonomies
      */
-    private static function eachOwnField(mixed $user, array $actions, callable $each): void
+    private static function eachOwnField(mixed $user, array $actions, callable $each, ?callable $eachCollection = null): void
     {
         if (! $user instanceof Authorizable) {
             return;
@@ -243,7 +250,13 @@ final class EntryController
         };
         $own = Collection::query()->orderBy('title')->get()
             ->filter(fn (Collection $collection): bool => array_any($actions, fn (string $action): bool => Access::entries($user, $action, $collection)));
+        if ($eachCollection !== null) {
+            $own->load('taxonomies');
+        }
         foreach ($own as $collection) {
+            if ($eachCollection !== null) {
+                $eachCollection($collection);
+            }
             foreach ($collection->allSchemas() as $schema) {
                 $walk($schema->toAdmin());
             }
@@ -301,22 +314,24 @@ final class EntryController
     }
 
     /**
-     * For terms fields: a taxonomy's terms in tree order (or those whose
-     * title matches "q"), or some by id ("ids"), main-language titles. Only
-     * a taxonomy the person may view the terms of, or one a terms field of
-     * a collection they may view, create or edit entries in uses.
+     * For terms fields and the editor's Taxonomies card: a taxonomy's terms
+     * in tree order (or those whose title matches "q"), or some by id
+     * ("ids"), main-language titles. Only a taxonomy the person may view
+     * the terms of, or one attached to a collection they may view, create
+     * or edit entries in, or that a terms field of such a collection uses.
      */
     public function termPicker(Request $request): JsonResponse
     {
-        /** @var array{taxonomy: string, q?: string|null, ids?: list<int>} $input */
+        /** @var array{taxonomy: string, q?: string|null, offset?: int|string|null, ids?: list<int>} $input */
         $input = $request->validate([
             'taxonomy' => ['required', 'string', 'max:64'],
             'q' => ['nullable', 'string', 'max:200'],
+            'offset' => ['nullable', 'integer', 'min:0', 'max:100000'],
             'ids' => ['nullable', 'array', 'max:500'],
             'ids.*' => ['integer'],
         ]);
         $taxonomy = Taxonomy::query()->where('handle', $input['taxonomy'])->first() ?? abort(404);
-        // Like the entries picker: taxonomies the person may see, or that a terms field of their collections uses.
+        // Like the entries picker: taxonomies the person may see, or that their collections have (attached, or a terms field).
         abort_unless(Access::terms($request->user(), 'view', $taxonomy) || in_array($taxonomy->handle, self::pickableTaxonomies($request->user()), true), 403);
         if (isset($input['ids'])) {
             $ids = array_map(intval(...), $input['ids']);
@@ -326,26 +341,28 @@ final class EntryController
             return response()->json(['items' => array_map(fn (int $id, string $label): array => ['id' => $id, 'label' => $label, 'depth' => 0], array_keys($labels), $labels), 'more' => false]);
         }
 
-        return response()->json(TermsField::options($taxonomy, trim($input['q'] ?? '')));
+        return response()->json(TermsField::options($taxonomy, trim($input['q'] ?? ''), offset: (int) ($input['offset'] ?? 0)));
     }
 
     public function create(Request $request, Collection $collection): Response
     {
         $schema = $collection->schema();
+        $taxonomies = self::taxonomies($request, $collection, null);
 
         return Inertia::render('Cms/Entries/Edit', [
             'collection' => self::collection($collection),
             'fields' => $schema->toAdmin(),
             'entry' => null,
-            'values' => ['title' => '', 'slug' => '', 'data' => $schema->defaults(), 'seo' => null],
+            'values' => ['title' => '', 'slug' => '', 'data' => $schema->defaults(), 'seo' => null, 'terms' => (object) $taxonomies['terms']],
+            'taxonomies' => $taxonomies['list'],
             'revisions' => [],
-            'can' => self::can($request, $collection),
+            'can' => self::can($request, $collection) + ['terms' => $taxonomies['editable']],
         ]);
     }
 
     public function store(Request $request, Collection $collection, CreateEntry $create): RedirectResponse
     {
-        $translation = $create->handle($collection, $request->only(['title', 'slug', 'data', 'seo', 'parent_id']));
+        $translation = $create->handle($collection, $request->only(['title', 'slug', 'data', 'seo', 'parent_id', 'terms']));
 
         return redirect()->to((string) AdminUrls::entry($translation->entry))->with('success', __('":title" created as a draft.', ['title' => $translation->draft_title]));
     }
@@ -370,6 +387,7 @@ final class EntryController
         $main = $entry->mainTranslation();
         $schema = $entry->schema();
         $shared = $translation->isMain() ? [] : $schema->shared();
+        $taxonomies = self::taxonomies($request, $collection, $entry);
 
         return Inertia::render('Cms/Entries/Edit', [
             'collection' => self::collection($collection),
@@ -412,7 +430,11 @@ final class EntryController
             // Where to add a redirect by hand, for those who may.
             'redirectsUrl' => $request->user()?->can('cms.redirects.create') === true ? route('sunrice.admin.cms.redirects.create') : null,
             // Another language's rows and blocks show the main one's shared values.
-            'values' => ['title' => $translation->draft_title, 'slug' => $translation->draft_slug, 'data' => $translation->completeData(true), 'seo' => $translation->draft_data[Seo::KEY] ?? null],
+            'values' => ['title' => $translation->draft_title, 'slug' => $translation->draft_slug, 'data' => $translation->completeData(true), 'seo' => $translation->draft_data[Seo::KEY] ?? null,
+                // Every language's: the terms of the taxonomies attached to the collection, by handle (the Taxonomies card).
+                'terms' => (object) $taxonomies['terms']],
+            // The taxonomies the card shows: attached to the collection, those the person may see the terms of (all of them for those who may change them).
+            'taxonomies' => $taxonomies['list'],
             // Every language's: the parent and its own Blade view.
             // Not for translators: they edit their languages' text only.
             'settings' => Access::entries($request->user(), 'update', $collection, $entry)
@@ -440,10 +462,10 @@ final class EntryController
                 ? Inertia::defer(fn (): array => self::comments($entry, $request))
                 : null,
             // The chosen terms' titles, so terms fields show them without asking (the options come from cms/term-picker).
-            'termLabels' => TermsField::labels(array_map(fn (Reference $reference): int => $reference->id, array_filter(
+            'termLabels' => TermsField::labels([...array_map(fn (Reference $reference): int => $reference->id, array_filter(
                 $schema->references($translation->completeData(true)),
                 fn (Reference $reference): bool => $reference->type === Reference::TERM,
-            ))),
+            )), ...array_merge(...array_values($taxonomies['terms']))]),
             // Where other content points at it, to show and to warn before it goes.
             'usedBy' => References::usedBy(Reference::ENTRY, $entry->id),
             // A revision restore this session can be undone.
@@ -452,8 +474,43 @@ final class EntryController
             'machineTranslate' => ! $translation->isMain() && app(TranslatorFactory::class)->configured() ? $translation->id : null,
             // Another language without it set up: say it exists, and what it needs.
             'machineTranslateMissing' => ! $translation->isMain() && ! app(TranslatorFactory::class)->configured(),
-            'can' => self::can($request, $collection, $entry, $translation->locale),
+            'can' => self::can($request, $collection, $entry, $translation->locale) + ['terms' => $taxonomies['editable'] && ! $entry->trashed()],
         ]);
+    }
+
+    /**
+     * The editor's Taxonomies card: the taxonomies attached to the
+     * collection, by title, that the person may see the terms of (all of
+     * them for those who may change the entry's terms: who may edit it in
+     * every language, or create one), with the entry's terms of each as
+     * the editor shows them (not published yet, else live).
+     *
+     * @return array{list: list<array{handle: string, title: string, hierarchical: bool, single: bool}>, terms: array<string, list<int>>, editable: bool}
+     */
+    private static function taxonomies(Request $request, Collection $collection, ?Entry $entry): array
+    {
+        $user = $request->user();
+        $user = $user instanceof Authorizable ? $user : null;
+        $editable = $entry === null ? Access::entries($user, 'create', $collection) : Access::entries($user, 'update', $collection, $entry);
+        $shown = $collection->taxonomies()->orderBy('title')->get()
+            ->filter(fn (Taxonomy $taxonomy): bool => $editable || Access::terms($user, 'view', $taxonomy))->values();
+        if ($shown->isEmpty()) {
+            return ['list' => [], 'terms' => [], 'editable' => $editable];
+        }
+        $ids = $entry?->draftTermIds() ?? [];
+        $taxonomyOf = SaveEntryTerms::taxonomiesOf($ids);
+        $terms = [];
+        foreach ($shown as $taxonomy) {
+            $terms[$taxonomy->handle] = array_values(array_filter($ids, fn (int $id): bool => ($taxonomyOf[$id] ?? null) === $taxonomy->id));
+        }
+
+        return [
+            'list' => array_values($shown->map(fn (Taxonomy $taxonomy): array => [
+                'handle' => $taxonomy->handle, 'title' => $taxonomy->title, 'hierarchical' => $taxonomy->hierarchical, 'single' => AttachTaxonomies::single($taxonomy),
+            ])->all()),
+            'terms' => $terms,
+            'editable' => $editable,
+        ];
     }
 
     /**
@@ -491,7 +548,7 @@ final class EntryController
 
     /**
      * Saves the draft with the page settings given (parent_id, template,
-     * comments_closed), all or nothing; with "publish", publishes it too
+     * comments_closed) and the entry's terms (terms), all or nothing; with "publish", publishes it too
      * (needs cms.entries.publish).
      */
     public function update(Request $request, Entry $entry, SaveDraft $save, PublishEntry $publish, SaveEntrySettings $settings): RedirectResponse
@@ -505,7 +562,10 @@ final class EntryController
         $translation = DB::transaction(function () use ($request, $entry, $save, $settings): EntryTranslation {
             EntryManageController::saveSettings($request, $entry, $settings);
 
-            return $save->handle(self::translation($entry, $request->input('locale')), $request->only(['title', 'slug', 'data', 'seo', 'version']));
+            // The entry's terms are every language's: not for translators (as the page settings).
+            $terms = $request->has('terms') && Access::entries($request->user(), 'update', $entry->collection, $entry) ? ['terms' => $request->input('terms')] : [];
+
+            return $save->handle(self::translation($entry, $request->input('locale')), $request->only(['title', 'slug', 'data', 'seo', 'version']) + $terms);
         });
         if ($publishing) {
             $publish->handle($translation, $publishAt);
@@ -666,7 +726,7 @@ final class EntryController
         abort_if($translation->entry->collection->trashed(), 404);
         // The draft it replaces, so the restore can be undone (this session).
         $request->session()->put(EntryManageController::undoKey($translation), [
-            'title' => $translation->draft_title, 'slug' => $translation->draft_slug, 'data' => $translation->draft_data,
+            'title' => $translation->draft_title, 'slug' => $translation->draft_slug, 'data' => $translation->draft_data, 'terms' => $translation->entry->draftTermIds(),
         ]);
         $restore->handle($revision);
 

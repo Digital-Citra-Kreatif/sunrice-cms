@@ -21,8 +21,10 @@ use Sunrice\Cms\Support\SearchText;
  * first published or is scheduled for, but now for a draft that was
  * scheduled for later and unpublished; else, for another language than
  * the main one first published, the main translation's when that's
- * published; else now) and a revision is kept. The draft is checked again,
- * as the blueprint may have changed since it was saved.
+ * published; else now) and a revision is kept. The entry's terms not
+ * published yet (SaveEntryTerms) go live with it, whichever language is
+ * published. The draft is checked again, as the blueprint may have
+ * changed since it was saved.
  *
  * @api
  */
@@ -89,12 +91,16 @@ final class PublishEntry
                 $translation->main_version = $mainVersion;
             }
             $translation->save();
+            // The entry's terms chosen since, every language's (SaveEntryTerms).
+            $this->terms->handle($translation->entry);
             $id = Auth::id();
             $translation->revisions()->create([
                 'user_id' => is_int($id) ? $id : null,
                 'title' => $values['title'],
                 'slug' => $values['slug'],
                 'data' => $values['data'],
+                // The entry's live terms, which restoring the revision brings back.
+                'terms' => $translation->entry->liveTermIds(),
             ]);
             $this->prune($translation);
             $newPath = $site->path($translation, $translation->slug);
@@ -105,7 +111,6 @@ final class PublishEntry
             if ($oldSlug !== null && $oldSlug !== $translation->slug) {
                 $site->relatedMoved($translation, $oldSlug);
             }
-            $this->terms->handle($translation->entry);
             // The other languages' search text holds this one's shared fields.
             if ($translation->isMain()) {
                 $translation->entry->load('translations');

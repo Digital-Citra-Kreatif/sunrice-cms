@@ -6,6 +6,7 @@ namespace Sunrice\Cms\Fields;
 
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Sunrice\Admin\Media\Media;
 use Sunrice\Cms\Models\Collection as CollectionModel;
 use Sunrice\Cms\Models\Entry;
@@ -13,6 +14,7 @@ use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
+use Sunrice\Cms\Support\Ids;
 use WeakMap;
 
 /**
@@ -50,6 +52,9 @@ final class HydrationContext
 
     /** @var array<int, Taxonomy> taxonomies seen, read once */
     private array $taxonomies = [];
+
+    /** @var array<int, list<int>> entries' own terms (ids), by entry id, read once */
+    private array $entryTerms = [];
 
     public function __construct(
         public readonly string $locale,
@@ -232,6 +237,47 @@ final class HydrationContext
         $this->preloadTerms($ids);
 
         return collect($ids)->map(fn (int $id): ?Term => $this->terms[$id] ?? null)->filter()->values();
+    }
+
+    /**
+     * An entry's own terms (every language's, from the editor's Taxonomies
+     * card) as its page shows them: the live ones, or in a preview those
+     * not published yet. By taxonomy title, then in the editors' order;
+     * not those in the trash. Read for every entry sharing this context
+     * at once (share()): two queries for a whole list, not two per entry.
+     *
+     * @return Collection<int, Term>
+     */
+    public function entryTerms(EntryTranslation $translation): Collection
+    {
+        if (! array_key_exists($translation->entry_id, $this->entryTerms)) {
+            $entries = [$translation->entry_id => $translation];
+            foreach ($this->shared as $shared => $hydrated) {
+                if (! array_key_exists($shared->entry_id, $this->entryTerms)) {
+                    $entries[$shared->entry_id] ??= $shared;
+                }
+            }
+            $live = [];
+            foreach (DB::table('sunrice_entry_term')->whereIn('entry_id', array_keys($entries))->orderBy('term_id')->get(['entry_id', 'term_id']) as $row) {
+                [$entryId, $termId] = Ids::of([$row->entry_id, $row->term_id]) + [null, null];
+                if ($entryId !== null && $termId !== null) {
+                    $live[$entryId][] = $termId;
+                }
+            }
+            $all = [];
+            foreach ($entries as $id => $shared) {
+                $draft = $this->preview ? $shared->entry->draft_terms : null;
+                $this->entryTerms[$id] = $draft !== null ? array_values(array_filter($draft, is_int(...))) : ($live[$id] ?? []);
+                array_push($all, ...$this->entryTerms[$id]);
+            }
+            $this->preloadTerms($all);
+        }
+        $terms = $this->terms($this->entryTerms[$translation->entry_id])
+            ->filter(fn (Term $term): bool => ($this->taxonomies[$term->taxonomy_id] ?? null)?->trashed() === false)
+            ->all();
+        usort($terms, fn (Term $a, Term $b): int => [$this->taxonomies[$a->taxonomy_id]->title, $a->sort_order, $a->id] <=> [$this->taxonomies[$b->taxonomy_id]->title, $b->sort_order, $b->id]);
+
+        return collect($terms);
     }
 
     /**

@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 use Sunrice\Cms\Support\Locales;
 
 /**
- * A taxonomy attached to a collection, and its term pages there: one page
+ * A taxonomy attached to a collection: its entries have its terms (chosen
+ * in the entry editor's Taxonomies card; one at most when `single`), and
+ * its term pages there: one page
  * per term listing only that collection's entries with it
  * (/books/tags/featured), unless switched off; and its index page there,
  * listing the terms its entries have (/books/tags), unless switched off.
@@ -21,6 +23,7 @@ use Sunrice\Cms\Support\Locales;
  * @property bool $index_page whether the collection has an index page of its terms
  * @property string|null $index_route its URL instead of the default (indexPath())
  * @property array<string, string>|null $index_routes other languages' own URLs: {"id": "/buku/tag"}
+ * @property bool $single an entry of the collection has one term of it at most ("One term only")
  *
  * @api
  */
@@ -29,14 +32,14 @@ class CollectionTaxonomy extends Pivot
     protected $table = 'sunrice_collection_taxonomy';
 
     /** The pivot's columns, loaded with the relation. */
-    public const COLUMNS = ['term_pages', 'term_route', 'term_routes', 'index_page', 'index_route', 'index_routes'];
+    public const COLUMNS = ['term_pages', 'term_route', 'term_routes', 'index_page', 'index_route', 'index_routes', 'single'];
 
     public $timestamps = false;
 
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['term_pages' => 'boolean', 'term_routes' => 'array', 'index_page' => 'boolean', 'index_routes' => 'array'];
+        return ['term_pages' => 'boolean', 'term_routes' => 'array', 'index_page' => 'boolean', 'index_routes' => 'array', 'single' => 'boolean'];
     }
 
     /**

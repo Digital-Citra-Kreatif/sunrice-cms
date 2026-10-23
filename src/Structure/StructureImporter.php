@@ -27,6 +27,7 @@ use Sunrice\Cms\Actions\Entries\CreateTranslation;
 use Sunrice\Cms\Actions\Entries\PublishEntry;
 use Sunrice\Cms\Actions\Entries\SaveDraft;
 use Sunrice\Cms\Actions\Entries\SaveEntrySettings;
+use Sunrice\Cms\Actions\Entries\SaveEntryTerms;
 use Sunrice\Cms\Actions\Fieldsets\SaveFieldset;
 use Sunrice\Cms\Actions\Globals\SaveGlobals;
 use Sunrice\Cms\Actions\Menus\SaveMenu;
@@ -34,6 +35,7 @@ use Sunrice\Cms\Actions\Taxonomies\SaveIndexPage;
 use Sunrice\Cms\Actions\Terms\SaveTerm;
 use Sunrice\Cms\Actions\Terms\SaveTermContent;
 use Sunrice\Cms\Fields\Fieldsets;
+use Sunrice\Cms\Fields\Types\TermsField;
 use Sunrice\Cms\Globals;
 use Sunrice\Cms\Menus;
 use Sunrice\Cms\Models\Blueprint;
@@ -58,6 +60,7 @@ use Sunrice\Cms\Site\RouteConflicts;
 use Sunrice\Cms\Site\RoutePattern;
 use Sunrice\Cms\Site\RoutePatternRule;
 use Sunrice\Cms\Site\TemplateRule;
+use Sunrice\Cms\Support\Ids;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\SafeUrl;
 use Sunrice\Cms\Support\Seo;
@@ -429,7 +432,8 @@ final class StructureImporter
             'collections' => ['sometimes', 'array'],
             'collections.*' => ['string', Rule::exists((new Collection)->getTable(), 'handle')],
             'collection_pages' => ['sometimes', 'array'],
-            'collection_pages.*' => ['array:pages,route,routes,index,index_route,index_routes,listings'],
+            'collection_pages.*' => ['array:single,pages,route,routes,index,index_route,index_routes,listings'],
+            'collection_pages.*.single' => ['sometimes', 'boolean'],
             'collection_pages.*.pages' => ['sometimes', 'boolean'],
             'collection_pages.*.route' => ['nullable', 'string', 'max:255', self::routeRule()],
             'collection_pages.*.routes' => ['nullable', 'array'],
@@ -456,6 +460,8 @@ final class StructureImporter
             foreach ($validated['collection_pages'] as $handle => $pages) {
                 if (isset($ids[$handle]) && is_array($pages)) {
                     $taxonomy->collections()->updateExistingPivot($ids[$handle], [
+                        // "One term only" there, when the file says (files written before it leave it as it is).
+                        ...(array_key_exists('single', $pages) ? ['single' => (bool) $pages['single']] : []),
                         'term_pages' => (bool) ($pages['pages'] ?? true),
                         'term_route' => is_string($pages['route'] ?? null) && $pages['route'] !== '' ? $pages['route'] : null,
                         'term_routes' => is_array($pages['routes'] ?? null) && $pages['routes'] !== [] ? $pages['routes'] : null,
@@ -730,7 +736,10 @@ final class StructureImporter
      */
     private function entry(array $item, array &$created, array &$later): void
     {
-        $validated = Validator::make($item, ['collection' => ['required', 'string'], 'slug' => ['required', 'string'], 'translations' => ['required', 'array']])->validate();
+        $validated = Validator::make($item, [
+            'collection' => ['required', 'string'], 'slug' => ['required', 'string'], 'translations' => ['required', 'array'],
+            'terms' => ['sometimes', 'nullable', 'array'], 'draft_terms' => ['sometimes', 'nullable', 'array'],
+        ])->validate();
         $handle = self::text($validated['collection']);
         $slug = self::text($validated['slug']);
         $collection = Collection::query()->where('handle', $handle)->first()
@@ -759,6 +768,12 @@ final class StructureImporter
                     app(ChangeBlueprint::class)->handle($entry, $blueprint);
                     $saved = app(SaveDraft::class)->handle($saved->fresh() ?? $saved, $input);
                 }
+                $entry->setRelation('collection', $collection);
+                // Its terms (taxonomy => slugs); files written before entries had their own: those of its terms fields.
+                $terms = is_array($validated['terms'] ?? null) ? $validated['terms'] : (array_key_exists('draft_terms', $validated) ? null : self::termsFromFields($entry, $data));
+                if ($terms !== null && $terms !== []) {
+                    app(SaveEntryTerms::class)->handle($entry, $terms);
+                }
             } else {
                 $saved = app(SaveDraft::class)->handle(app(CreateTranslation::class)->handle($entry, $locale), $input);
             }
@@ -772,9 +787,18 @@ final class StructureImporter
         foreach ($publish as [$translation, $at]) {
             app(PublishEntry::class)->handle($translation->fresh() ?? $translation, $at);
         }
-        // Changes not published yet stay a draft.
+        // Changes not published yet stay a draft, terms too.
         foreach ($drafts as [$translation, $draft]) {
             $this->draft($translation->fresh() ?? $translation, $draft, $notes, $toCome);
+        }
+        if ($entry !== null && is_array($validated['draft_terms'] ?? null)) {
+            $entry->refresh();
+            $entry->setRelation('collection', $collection);
+            $none = [];
+            foreach (SaveEntryTerms::attached($entry) as $taxonomy) {
+                $none[$taxonomy->handle] = [];
+            }
+            app(SaveEntryTerms::class)->handle($entry, array_merge($none, $validated['draft_terms']));
         }
         if ($entry !== null) {
             $created[$label] = $entry;
@@ -783,6 +807,29 @@ final class StructureImporter
             }
         }
         $this->report->add('entry', $label, ImportReport::CREATED, array_values(array_unique($notes)));
+    }
+
+    /**
+     * An entry's terms in a file written before entries had their own: the
+     * values of the top-level terms fields of its main translation for the
+     * taxonomies attached to its collection, by taxonomy handle (ids).
+     *
+     * @param  array<mixed>  $data  the translation's fields, references resolved
+     * @return array<string, list<int>>
+     */
+    private static function termsFromFields(Entry $entry, array $data): array
+    {
+        $attached = array_map(fn (Taxonomy $taxonomy): string => $taxonomy->handle, array_values(SaveEntryTerms::attached($entry)->all()));
+        $terms = [];
+        foreach ($entry->schema()->fields() as $field) {
+            $taxonomy = $field->type === TermsField::TYPE ? $field->configString('taxonomy') : null;
+            if ($taxonomy !== null && in_array($taxonomy, $attached, true)) {
+                $value = $data[$field->handle] ?? null;
+                $terms[$taxonomy] = [...$terms[$taxonomy] ?? [], ...Ids::of(is_array($value) ? $value : [$value])];
+            }
+        }
+
+        return $terms;
     }
 
     /**
@@ -801,6 +848,8 @@ final class StructureImporter
             return;
         }
         $notes = [];
+        // Its terms not published yet stay so, though it's published again.
+        $pending = $entry->fresh()?->draft_terms;
         foreach (is_array($item['translations'] ?? null) ? $item['translations'] : [] as $locale => $translation) {
             $saved = is_string($locale) ? $entry->translation($locale) : null;
             if ($saved === null || ! is_array($translation) || ! is_array($translation['data'] ?? null)) {
@@ -815,6 +864,10 @@ final class StructureImporter
             }
         }
         $entry->unsetRelation('translations');
+        if ($pending !== null) {
+            $entry->refresh();
+            app(SaveEntryTerms::class)->setDraft($entry, $pending);
+        }
     }
 
     /**

@@ -129,16 +129,25 @@ final class StructureExporter
     private function entries(): array
     {
         $entries = [];
-        Entry::query()->with(['collection', 'translations', 'parent.translations'])->whereHas('collection', fn ($query) => $query->withoutTrashed())->orderBy('collection_id')->orderBy('sort_order')->orderBy('id')
-            ->each(function (Entry $entry) use (&$entries): void {
-                $entries[] = [
-                    'collection' => $entry->collection->handle,
-                    'slug' => self::entrySlug($entry),
-                    'parent' => $entry->parent === null ? null : self::entrySlug($entry->parent),
-                    'template' => $entry->template,
-                    ...($entry->blueprint === null ? [] : ['blueprint' => $entry->blueprint]),
-                    'translations' => (object) $entry->translations->sortBy('locale')->mapWithKeys(fn (EntryTranslation $t): array => [$t->locale => $this->entryTranslation($entry, $t)])->all(),
-                ];
+        Entry::query()->with(['collection', 'translations', 'parent.translations', 'terms.translations', 'terms.taxonomy'])->whereHas('collection', fn ($query) => $query->withoutTrashed())->orderBy('collection_id')->orderBy('sort_order')->orderBy('id')
+            ->chunk(200, function ($chunk) use (&$entries): void {
+                // The terms not published yet, read for the chunk at once.
+                $pending = Term::query()->with('translations', 'taxonomy')->whereKey($chunk->flatMap(fn (Entry $entry): array => $entry->draft_terms ?? [])->unique()->values()->all())->get()->keyBy('id');
+                foreach ($chunk as $entry) {
+                    $live = self::termSlugs(array_values($entry->terms->all()));
+                    $draft = $entry->draft_terms === null ? $live : self::termSlugs(array_values(array_filter(array_map(fn (int $id): ?Term => $pending->get($id), $entry->draft_terms))));
+                    $entries[] = [
+                        'collection' => $entry->collection->handle,
+                        'slug' => self::entrySlug($entry),
+                        'parent' => $entry->parent === null ? null : self::entrySlug($entry->parent),
+                        'template' => $entry->template,
+                        ...($entry->blueprint === null ? [] : ['blueprint' => $entry->blueprint]),
+                        // Its own terms (every language's), by taxonomy: the live ones, and those not published yet when they differ.
+                        ...($live !== [] ? ['terms' => (object) $live] : []),
+                        ...($draft !== $live ? ['draft_terms' => (object) $draft] : []),
+                        'translations' => (object) $entry->translations->sortBy('locale')->mapWithKeys(fn (EntryTranslation $t): array => [$t->locale => $this->entryTranslation($entry, $t)])->all(),
+                    ];
+                }
             });
 
         return $entries;
@@ -227,6 +236,27 @@ final class StructureExporter
         return $tree;
     }
 
+    /**
+     * Terms' main-language slugs by taxonomy handle, sorted.
+     *
+     * @param  list<Term>  $terms
+     * @return array<string, list<string>>
+     */
+    private static function termSlugs(array $terms): array
+    {
+        $slugs = [];
+        foreach ($terms as $term) {
+            $slugs[$term->taxonomy->handle][] = self::mainSlug($term);
+        }
+        ksort($slugs);
+
+        return array_map(function (array $list): array {
+            sort($list);
+
+            return $list;
+        }, $slugs);
+    }
+
     private static function entrySlug(Entry $entry): string
     {
         return $entry->translation(Locales::default())->draft_slug ?? $entry->mainTranslation()->draft_slug ?? (string) $entry->id;
@@ -263,7 +293,8 @@ final class StructureExporter
             $pivot = $collection->getRelation('pivot');
             if ($pivot instanceof CollectionTaxonomy) {
                 $values = $this->indexValues($taxonomy, $collection->id);
-                $pages[$collection->handle] = ['pages' => $pivot->term_pages]
+                $pages[$collection->handle] = ($pivot->single ? ['single' => true] : [])
+                    + ['pages' => $pivot->term_pages]
                     + ($pivot->term_route !== null ? ['route' => $pivot->term_route] : [])
                     + ($pivot->term_routes !== null ? ['routes' => $pivot->term_routes] : [])
                     + ['index' => $pivot->index_page]

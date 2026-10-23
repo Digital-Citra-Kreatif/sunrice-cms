@@ -253,13 +253,16 @@ final class DashboardWidgets
             ->join('sunrice_collections', 'sunrice_collections.id', '=', 'sunrice_entry_translations.collection_id')
             ->whereNull('sunrice_collections.deleted_at')
             ->whereIn('sunrice_collections.handle', $handles === [] ? [''] : $handles)
-            ->whereIn('sunrice_entry_translations.entry_id', fn (QueryBuilder $entries) => $entries->select('id')->from('sunrice_entries')->whereNull('deleted_at'))
+            ->join('sunrice_entries', 'sunrice_entries.id', '=', 'sunrice_entry_translations.entry_id')
+            ->whereNull('sunrice_entries.deleted_at')
             ->select('sunrice_entry_translations.id', 'sunrice_entry_translations.entry_id', 'sunrice_entry_translations.locale', 'sunrice_entry_translations.status',
                 'sunrice_entry_translations.draft_title', 'sunrice_entry_translations.published_at', 'sunrice_entry_translations.updated_at',
                 // The live version and the draft, for "Live · changes pending" (a few rows: compared in PHP, as the editor does).
                 'sunrice_entry_translations.title', 'sunrice_entry_translations.slug', 'sunrice_entry_translations.data',
                 'sunrice_entry_translations.draft_slug', 'sunrice_entry_translations.draft_data',
-                'sunrice_collections.title as collection_title', 'sunrice_collections.handle as collection_handle')
+                'sunrice_collections.title as collection_title', 'sunrice_collections.handle as collection_handle',
+                // Its entry's terms not published yet count as changes pending too (see entryRow()).
+                'sunrice_entries.draft_terms as entry_draft_terms')
             ->limit(self::RECENT);
     }
 
@@ -267,6 +270,10 @@ final class DashboardWidgets
     private static function entryRow(EntryTranslation $translation, ?string $at): array
     {
         $status = $translation->status();
+        // What hasUnpublishedChanges() reads of the entry, from the row.
+        if (! $translation->relationLoaded('entry')) {
+            $translation->setRelation('entry', (new Entry)->setRawAttributes(['id' => $translation->entry_id, 'draft_terms' => $translation->getAttribute('entry_draft_terms')]));
+        }
         $collection = $translation->getAttribute('collection_title');
         $handle = $translation->getAttribute('collection_handle');
         $main = $translation->locale === Locales::default();

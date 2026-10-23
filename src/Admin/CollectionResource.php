@@ -7,6 +7,7 @@ namespace Sunrice\Cms\Admin;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Resources\Forms\CheckboxList;
+use Sunrice\Admin\Resources\Forms\Field;
 use Sunrice\Admin\Resources\Forms\Form;
 use Sunrice\Admin\Resources\Forms\Link;
 use Sunrice\Admin\Resources\Forms\NumberInput;
@@ -18,9 +19,11 @@ use Sunrice\Admin\Resources\Resource;
 use Sunrice\Admin\Resources\Tables\ActionFailed;
 use Sunrice\Admin\Resources\Tables\Column;
 use Sunrice\Admin\Resources\Tables\Table;
+use Sunrice\Cms\Actions\Collections\AttachTaxonomies;
 use Sunrice\Cms\Actions\Collections\PurgeDeleted;
 use Sunrice\Cms\Actions\Collections\RestoreDeleted;
 use Sunrice\Cms\Models\Collection;
+use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Site\RoutePatternRule;
 use Sunrice\Cms\Site\TemplateRule;
 use Sunrice\Cms\Support\Locales;
@@ -78,6 +81,8 @@ final class CollectionResource extends Resource
                 Toggle::make('dated')->label('Dated entries')->help('Entries have a date and list newest first.'),
                 Toggle::make('ordered')->label('Manual order')->help('Drag entries into order on the entries list.'),
             ]),
+            Section::make('Taxonomies')->description('Ways to group its entries, like topics or tags: editors choose the terms in the entry editor\'s Taxonomies card.')->columns(2)
+                ->schema(self::taxonomyFields()),
             Section::make('Entry pages')->description('Whether each entry is a page on the site, and how.')->columns(2)
                 ->links(fn (?Model $collection): array => $collection instanceof Collection
                     ? [Link::make('View entries', route('sunrice.admin.cms.collections.entries.index', $collection->handle, false))]
@@ -138,6 +143,70 @@ final class CollectionResource extends Resource
                         ->helpDetails('Which file?', TemplateHelp::files(['cms.collections.{handle}.index', 'cms.collections.index'], 'cms.blog-home')),
                 ]),
         ]);
+    }
+
+    /**
+     * The taxonomies its entries have (AttachTaxonomies), and for each one
+     * ticked, whether an entry has one term of it at most. Their term
+     * pages here are set on the taxonomy's form.
+     *
+     * @return list<Field>
+     */
+    private static function taxonomyFields(): array
+    {
+        $fields = [CheckboxList::make('taxonomies')->span(2)->verbatim()
+            ->options(fn () => self::taxonomies()->mapWithKeys(fn (Taxonomy $t): array => [(string) $t->id => $t->title])->all())
+            ->help('Ticking a taxonomy gives its entries its terms, and its entries list a filter by them. Its term pages in this collection are set on the taxonomy\'s form.')
+            ->loadUsing(fn (Model $collection): array => $collection instanceof Collection && $collection->exists
+                ? $collection->loadMissing('taxonomies')->taxonomies->map(fn (Taxonomy $t): string => (string) $t->id)->values()->all()
+                : [])
+            ->saveUsing(function (Model $collection, mixed $ids): void {
+                if ($collection instanceof Collection) {
+                    $kept = $collection->loadMissing('taxonomies')->taxonomies->mapWithKeys(fn (Taxonomy $t): array => [$t->id => AttachTaxonomies::single($t)])->all();
+                    $wanted = [];
+                    foreach (is_array($ids) ? $ids : [] as $id) {
+                        if (is_numeric($id)) {
+                            $wanted[(int) $id] = $kept[(int) $id] ?? false;
+                        }
+                    }
+                    app(AttachTaxonomies::class)->handle($collection, $wanted);
+                }
+            })];
+        foreach (self::taxonomies() as $taxonomy) {
+            $id = (string) $taxonomy->id;
+            $fields[] = Toggle::make("single_taxonomy_{$id}")->label(__(':taxonomy: one term only', ['taxonomy' => $taxonomy->title]))->span(2)->showWhen('taxonomies', $id)
+                ->help(__('An entry has one :taxonomy term at most, chosen from a list.', ['taxonomy' => $taxonomy->title]))
+                ->loadUsing(fn (Model $collection): bool => $collection instanceof Collection && $collection->exists
+                    && AttachTaxonomies::single($collection->loadMissing('taxonomies')->taxonomies->firstWhere('id', $taxonomy->id)))
+                // After the list (fields save in order): only an attached taxonomy has the setting.
+                ->saveUsing(function (Model $collection, mixed $on) use ($taxonomy): void {
+                    if ($collection instanceof Collection && $on !== null) {
+                        $collection->taxonomies()->updateExistingPivot($taxonomy->id, ['single' => filter_var($on, FILTER_VALIDATE_BOOL)]);
+                        $collection->unsetRelation('taxonomies');
+                    }
+                });
+        }
+
+        return $fields;
+    }
+
+    /**
+     * Every taxonomy, by title: read once per request, however many times
+     * the form is built.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, Taxonomy>
+     */
+    private static function taxonomies(): \Illuminate\Database\Eloquent\Collection
+    {
+        $request = request();
+        $taxonomies = $request->attributes->get(self::class.'.taxonomies');
+        if (! $taxonomies instanceof \Illuminate\Database\Eloquent\Collection) {
+            $taxonomies = Taxonomy::query()->orderBy('title')->get();
+            $request->attributes->set(self::class.'.taxonomies', $taxonomies);
+        }
+
+        /** @var \Illuminate\Database\Eloquent\Collection<int, Taxonomy> $taxonomies */
+        return $taxonomies;
     }
 
     /**

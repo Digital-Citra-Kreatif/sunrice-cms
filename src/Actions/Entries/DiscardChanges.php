@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Actions\Entries;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
 use Sunrice\Cms\Models\EntryTranslation;
@@ -12,7 +13,8 @@ use Sunrice\Cms\Support\References;
 
 /**
  * Throws away a published translation's unpublished changes: the draft
- * becomes the live version again (its title, slug, fields and SEO). As
+ * becomes the live version again (its title, slug, fields and SEO), and
+ * the entry's terms its live ones (every language's: SaveEntryTerms). As
  * SaveDraft, with a version (the one the editor opened) it refuses to
  * discard over someone else's newer save. A translation never published
  * has no live version to go back to.
@@ -21,7 +23,7 @@ use Sunrice\Cms\Support\References;
  */
 final class DiscardChanges
 {
-    public function __construct(private readonly ActivityLog $activity) {}
+    public function __construct(private readonly ActivityLog $activity, private readonly SaveEntryTerms $terms) {}
 
     /** @throws ValidationException */
     public function handle(EntryTranslation $translation, int|string|null $version = null): EntryTranslation
@@ -36,17 +38,20 @@ final class DiscardChanges
         if (! is_int($expected) && ! ctype_digit($expected)) {
             throw ValidationException::withMessages(['version' => __('The version must be a number.')]);
         }
-        // Only if nobody saved in between: the version check and the write are one statement.
-        $saved = EntryTranslation::query()->whereKey($translation->id)->where('version', (int) $expected)->update([
-            'draft_title' => $translation->title,
-            'draft_slug' => $translation->slug,
-            'draft_data' => json_encode($translation->data ?? [], JSON_THROW_ON_ERROR),
-            'version' => (int) $expected + 1,
-            'updated_at' => now(),
-        ]);
-        if ($saved === 0) {
-            throw ValidationException::withMessages(['version' => __('Someone else saved this entry after you opened it. Reload to see their changes.')]);
-        }
+        DB::transaction(function () use ($translation, $expected): void {
+            // Only if nobody saved in between: the version check and the write are one statement.
+            $saved = EntryTranslation::query()->whereKey($translation->id)->where('version', (int) $expected)->update([
+                'draft_title' => $translation->title,
+                'draft_slug' => $translation->slug,
+                'draft_data' => json_encode($translation->data ?? [], JSON_THROW_ON_ERROR),
+                'version' => (int) $expected + 1,
+                'updated_at' => now(),
+            ]);
+            if ($saved === 0) {
+                throw ValidationException::withMessages(['version' => __('Someone else saved this entry after you opened it. Reload to see their changes.')]);
+            }
+            $this->terms->discard($translation->entry);
+        });
         $translation->refresh();
         // A query update fires no model events: keep the media library's and the references' "Used by" here.
         MediaUsage::entry($translation);

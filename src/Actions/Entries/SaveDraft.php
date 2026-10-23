@@ -13,15 +13,17 @@ use Sunrice\Cms\Support\Seo;
 
 /**
  * Saves the draft of an entry translation; the site keeps showing what
- * was published. Input: title, slug, data and version. Fields left out of
- * data keep their values. With version (the one the editor opened), a
+ * was published. Input: title, slug, data, version and terms (the
+ * entry's, every language's: taxonomy handle => term ids or slugs, see
+ * SaveEntryTerms). Fields left out of data, and taxonomies left out of
+ * terms, keep their values. With version (the one the editor opened), a
  * save over someone else's newer one is refused.
  *
  * @api
  */
 final class SaveDraft
 {
-    public function __construct(private readonly ActivityLog $activity) {}
+    public function __construct(private readonly ActivityLog $activity, private readonly SaveEntryTerms $terms) {}
 
     /**
      * @param  array<mixed>  $input
@@ -57,6 +59,9 @@ final class SaveDraft
             if (array_key_exists(Seo::KEY, $input)) {
                 $values['data'][Seo::KEY] = Seo::validate($input[Seo::KEY]);
             }
+            if (array_key_exists('terms', $input) && $input['terms'] !== null && ! is_array($input['terms'])) {
+                throw ValidationException::withMessages(['terms' => __('Give the terms by taxonomy handle.')]);
+            }
             // Shared fields copied into another language's draft before would go stale: drop them.
             $values['data'] = $translation->ownData($values['data']);
 
@@ -68,6 +73,10 @@ final class SaveDraft
                 if (! array_key_exists($handle, $translation->draft_data) || $translation->draft_data[$handle] != $value) {
                     $changed[] = $handle;
                 }
+            }
+            // The entry's terms (rolled back with the rest when the version check fails).
+            if (is_array($input['terms'] ?? null) && $this->terms->handle($translation->entry, $input['terms'])) {
+                $changed[] = 'terms';
             }
             if ($changed === []) {
                 return [];
