@@ -135,6 +135,7 @@ Only these classes are kept on images when rich text is saved (any other class o
 | `$title` | the title (the draft's in a preview) |
 | `$values` | the fields as templates get them (see [fields](fields.md#field-types)), by handle; a field never filled in may be missing, so read it with `$values['intro'] ?? null` |
 | `$richText` | the handles of its rich text fields, the only HTML a template may print as is |
+| `$code` | its [code fields](fields.md#code-fields), handle => language (`html`, `css`, `javascript`, `json` or `plain`), to show with `<x-sunrice-cms::code-block>` |
 | `$locale` | the language; the app's locale is set to it too |
 | `$preview` | whether this is a preview of the draft (from the editor, or `?draft`) |
 | `$draft` | whether this is the newer draft seen with `?draft` by someone signed in ([drafts on the site](#drafts-on-the-site)) |
@@ -148,7 +149,7 @@ Only these classes are kept on images when rich text is saved (any other class o
 | `$page` | the page shown (`Cms::page()`) |
 | `$collection` | the `Collection` (`->listingUrl($locale)`) |
 | `$entries` | a paginator of `EntryTranslation`s (`{{ $entries->links() }}`; an `Illuminate\Contracts\Pagination\LengthAwarePaginator`), queried only when the template first uses it, so a template that lists entries its own way (an [entry filter](#filtering-entries), `Cms::entries()`) costs nothing for it; a page past the last is a 404 |
-| `$values`, `$richText` | the listing page's fields, as for entries: only those of the collection's listing blueprint, and empty without one, so read them with `$values['intro'] ?? null` |
+| `$values`, `$richText`, `$code` | the listing page's fields, as for entries: only those of the collection's listing blueprint, and empty without one, so read them with `$values['intro'] ?? null` |
 | `$title` | the collection's title in the page's language (`titleIn()`) |
 | `$locale` | the language |
 | `$url` | the page's URL |
@@ -162,7 +163,7 @@ Only these classes are kept on images when rich text is saved (any other class o
 | `$taxonomy` | the `Taxonomy` |
 | `$collection` | the `Collection` whose term page it is; null on the shared one |
 | `$entries` | a paginator of the live entries with the term (and, in a hierarchical taxonomy, with the terms under it), of that collection only on a collection's page, newest first, 10 a page; queried only when the template first uses it, a page past the last is a 404 |
-| `$values`, `$richText` | the term's fields, as for entries |
+| `$values`, `$richText`, `$code` | the term's fields, as for entries |
 | `$title` | the term's title |
 | `$locale` | the language |
 | `$fallback` | whether this is the main language's term in another language ([untranslated pages](#untranslated-pages)) |
@@ -176,7 +177,7 @@ Only these classes are kept on images when rich text is saved (any other class o
 | `$taxonomy` | the `Taxonomy` (`->indexUrl($locale, $collection)`) |
 | `$collection` | the `Collection` whose index page it is; null on the shared one |
 | `$terms` | the terms out of the trash, in their order (a collection's: those with its live entries), as `Term` models with their translations and `entries_count` (live entries in the page's language; a collection's only), loaded at once: `$term->title($locale)`, `$term->url($locale)` (in a collection with term pages, its page there) |
-| `$values`, `$richText` | the index page's fields, as for listing pages: only those of the index blueprint, and empty without one |
+| `$values`, `$richText`, `$code` | the index page's fields, as for listing pages: only those of the index blueprint, and empty without one |
 | `$title` | the taxonomy's title in the page's language (`titleIn()`) |
 | `$locale` | the language |
 | `$url` | the page's URL |

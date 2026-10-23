@@ -14,6 +14,7 @@ use Illuminate\View\ViewException;
 use Sunrice\Admin\Panel;
 use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\HydrationContext;
+use Sunrice\Cms\Fields\Types\Code;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Term;
@@ -173,6 +174,8 @@ final class SiteController
             'values' => $translation->hydrateWith(new HydrationContext($locale, $preview))->values(),
             // Rich text is cleaned when saved, so it's the only HTML a template may print as is.
             'richText' => array_values(array_map(fn (Field $field): string => $field->handle, array_filter($translation->entry->schema()->fields(), fn (Field $field): bool => $field->type === 'rich_text'))),
+            // Code fields, shown as code (<x-sunrice-cms::code-block>), never as a paragraph of text.
+            'code' => self::codeFields($translation->entry->schema()->fields()),
             'collection' => $collection,
             'locale' => $locale,
             'preview' => $preview,
@@ -221,6 +224,7 @@ final class SiteController
             'entries' => $entries,
             'values' => $translation->values(),
             'richText' => array_values(array_map(fn (Field $field): string => $field->handle, array_filter($schema->fields(), fn (Field $field): bool => $field->type === 'rich_text'))),
+            'code' => self::codeFields($schema->fields()),
             'locale' => $locale,
             'fallback' => $fallback,
             'contentLocale' => $translation->locale,
@@ -256,6 +260,7 @@ final class SiteController
             'entries' => $entries,
             'values' => $schema->hydrate($collection->listingData($listing->locale, $schema), new HydrationContext($listing->locale)),
             'richText' => array_values(array_map(fn (Field $field): string => $field->handle, array_filter($schema->fields(), fn (Field $field): bool => $field->type === 'rich_text'))),
+            'code' => self::codeFields($schema->fields()),
             'locale' => $listing->locale,
             'url' => $collection->listingUrl($listing->locale),
         ]));
@@ -303,6 +308,7 @@ final class SiteController
             'terms' => $terms,
             'values' => $schema->hydrate($taxonomy->indexData($locale, $collection, $schema), new HydrationContext($locale)),
             'richText' => array_values(array_map(fn (Field $field): string => $field->handle, array_filter($schema->fields(), fn (Field $field): bool => $field->type === 'rich_text'))),
+            'code' => self::codeFields($schema->fields()),
             'locale' => $locale,
             'url' => $taxonomy->indexUrl($locale, $collection),
         ]));
@@ -325,6 +331,24 @@ final class SiteController
      * without asking them (the page cache keeps ?page= copies only of pages
      * whose entries were paginated).
      */
+    /**
+     * The code fields among these, as handle => language (Code::language(): plain when it names none).
+     *
+     * @param  list<Field>  $fields
+     * @return array<string, string>
+     */
+    private static function codeFields(array $fields): array
+    {
+        $code = [];
+        foreach ($fields as $field) {
+            if ($field->type === 'code') {
+                $code[$field->handle] = Code::language($field);
+            }
+        }
+
+        return $code;
+    }
+
     private static function pageNumber(): int
     {
         $page = filter_var(request()->query('page'), FILTER_VALIDATE_INT);

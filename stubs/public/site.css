@@ -57,8 +57,12 @@ main:focus { outline: none; }
 .site-name { color: var(--text); font-weight: 600; text-decoration: none; margin-right: auto; }
 .site-menu ul, .site-footer nav ul, .language-switcher ul { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; margin: 0; padding: 0; list-style: none; }
 .site-menu li { position: relative; }
-.site-menu a, .language-switcher a { color: var(--text); text-decoration: none; }
-.site-menu a:hover, .language-switcher a:hover, .site-menu a[aria-current="page"], .language-switcher [aria-current="true"] { color: var(--accent); text-decoration: underline; }
+.site-menu a { color: var(--text); text-decoration: none; }
+.site-menu a:hover, .site-menu a[aria-current="page"] { color: var(--accent); text-decoration: underline; }
+/* The other languages are links; the current one isn't (it's this page), so it reads as the current one: bold, not underlined. */
+.language-switcher a { color: var(--accent); text-decoration: underline; }
+.language-switcher a:hover { text-decoration-thickness: 2px; }
+.language-switcher [aria-current="true"] { color: var(--text); font-weight: 600; text-decoration: none; }
 .site-menu .is-active > a { font-weight: 600; }
 /* Sub-menus open on hover and keyboard focus. */
 .site-menu li ul { display: none; position: absolute; top: 100%; left: 0; min-width: 12rem; flex-direction: column; padding: 0.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); z-index: 5; }
@@ -82,13 +86,14 @@ figure { margin: 1.5rem 0; }
 .sunrice-img-w-75 { width: 75%; }
 .sunrice-img-w-100, .sunrice-img-full { width: 100%; }
 .sunrice-img-center { margin-inline: auto; }
-.sunrice-img-left { float: left; margin: 0.35rem 1.5rem 1rem 0; }
-.sunrice-img-right { float: right; margin: 0.35rem 0 1rem 1.5rem; }
+.sunrice-img-left { float: left; margin: 0.35rem 1.5rem 1.5rem 0; }
+.sunrice-img-right { float: right; margin: 0.35rem 0 1.5rem 1.5rem; }
 .sunrice-img-left:not([class*="sunrice-img-w-"]), .sunrice-img-right:not([class*="sunrice-img-w-"]) { max-width: 50%; }
 .prose::after { content: ""; display: block; clear: both; }
 .prose :is(h2, h3, h4, hr, pre, blockquote, figure) { clear: both; }
 @media (max-width: 40em) {
-    .sunrice-img-left, .sunrice-img-right { float: none; width: 100%; max-width: 100%; margin: 1.5rem 0; }
+    /* With the :not() selectors too, so the 50% limit of a float without a width doesn't outweigh this */
+    .sunrice-img-left, .sunrice-img-right, .sunrice-img-left:not([class*="sunrice-img-w-"]), .sunrice-img-right:not([class*="sunrice-img-w-"]) { float: none; width: 100%; max-width: 100%; margin: 1.5rem 0; }
 }
 
 /* Lists of entries */

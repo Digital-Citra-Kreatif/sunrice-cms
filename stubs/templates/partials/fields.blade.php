@@ -1,14 +1,16 @@
 {{--
-    Prints fields as they come: text, rich text, images, links and flexible blocks; skips what it doesn't know
+    Prints fields as they come: text, rich text, code, images, links and flexible blocks; skips what it doesn't know
     (repeaters, groups, numbers…: print those in your own templates, by handle: $values['price']).
-    @include('cms.partials.fields', ['values' => $values, 'richText' => $richText])
+    @include('cms.partials.fields', ['values' => $values, 'richText' => $richText, 'code' => $code])
 --}}
 @foreach ($values as $handle => $value)
     @continue($handle === 'seo' || $value === null || $value === '')
     @if (is_string($value))
-        {{-- Only rich text is HTML (cleaned when saved); everything else is escaped. --}}
+        {{-- Only rich text is HTML (cleaned when saved); everything else is escaped. Code is shown as code. --}}
         @if (in_array($handle, $richText, true))
             <div class="prose">{!! $value !!}</div>
+        @elseif (isset($code[$handle]))
+            <x-sunrice-cms::code-block :value="$value" :language="$code[$handle] === 'plain' ? null : $code[$handle]" />
         @else
             <p>{{ $value }}</p>
         @endif

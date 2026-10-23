@@ -48,10 +48,10 @@ resources/views/cms/
 ## What views get
 
 - Every page: `$page` (what `Cms::page()` gives), `$title`, `$locale`.
-- Entries: `$entry` (the EntryTranslation: `->title`, `->url()`, `->published_at`, `->entry->collection`), `$collection`, `$values` (fields by handle, ready for templates), `$richText` (handles of rich text fields), `$preview`, `$draft`, `$fallback`, `$contentLocale`.
-- Listing pages: `$collection`, `$entries` (a paginator: `{{ $entries->links() }}`), `$values`, `$richText`, `$url`.
-- Term pages: `$term`, `$taxonomy`, `$collection` (null on the shared one), `$entries` (paginator), `$values`, `$richText`, `$fallback`, `$contentLocale`.
-- Taxonomy index pages: `$taxonomy`, `$collection` (null on the shared one), `$terms` (each `->title($locale)`, `->url($locale)`, `->entries_count`), `$values`, `$richText`, `$url`.
+- Entries: `$entry` (the EntryTranslation: `->title`, `->url()`, `->published_at`, `->entry->collection`), `$collection`, `$values` (fields by handle, ready for templates), `$richText` (handles of rich text fields), `$code` (code fields, handle => language), `$preview`, `$draft`, `$fallback`, `$contentLocale`.
+- Listing pages: `$collection`, `$entries` (a paginator: `{{ $entries->links() }}`), `$values`, `$richText`, `$code`, `$url`.
+- Term pages: `$term`, `$taxonomy`, `$collection` (null on the shared one), `$entries` (paginator), `$values`, `$richText`, `$code`, `$fallback`, `$contentLocale`.
+- Taxonomy index pages: `$taxonomy`, `$collection` (null on the shared one), `$terms` (each `->title($locale)`, `->url($locale)`, `->entries_count`), `$values`, `$richText`, `$code`, `$url`.
 - Search: `$query`, `$results` (paginator).
 
 ## In the layout

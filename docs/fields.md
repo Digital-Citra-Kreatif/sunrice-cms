@@ -63,7 +63,7 @@ A `code` field is edited in the panel's code editor (line numbers, highlighting 
 {{-- <pre class="example"><code class="language-html">&lt;iframe src=&quot;…&quot;&gt;&lt;/iframe&gt;</code></pre> --}}
 ```
 
-It prints nothing when the field is empty; other attributes go on the `<pre>`. No highlighting is shipped for the site: add Prism or highlight.js (and its theme) to your layout if you want it, both read the `language-…` class.
+It prints nothing when the field is empty; other attributes go on the `<pre>`. Pages get `$code`, their code fields' handles and languages, and the starter templates' `cms.partials.fields` shows those fields this way. No highlighting is shipped for the site: add Prism or highlight.js (and its theme) to your layout if you want it, both read the `language-…` class.
 
 Printing it unescaped, `{!! $values['snippet'] !!}`, **runs it**: HTML and scripts go on the page for every visitor. Do that only for code its editors are trusted to run on the site (as with Settings → [Site code](site.md#site-code)), never for a field anyone else can fill in; the CMS never prints a code field unescaped by itself.
 

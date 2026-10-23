@@ -7,6 +7,7 @@ namespace Sunrice\Cms;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Sunrice\Admin\Assets\PluginBundle;
 use Sunrice\Admin\BasePlugin;
@@ -180,8 +181,8 @@ final class CmsPlugin extends BasePlugin
                         Route::delete("{$area}/{{$model}:handle}", 'destroy')->name('destroy')->middleware("can:cms.{$area}.delete");
                     });
                 }
-                // Settings → SEO's address in 0.1: on to settings/seo, where it is now.
-                Route::get('seo', fn (): RedirectResponse => redirect()->route('sunrice.admin.settings.seo.edit', status: 301))
+                // Settings → SEO's address in 0.1: on to settings/seo, where it is now, with the query it was given.
+                Route::get('seo', fn (Request $request): RedirectResponse => redirect()->route('sunrice.admin.settings.seo.edit', $request->query->all(), 301))
                     ->name('seo.moved')->middleware('can:cms.settings.site');
                 // Settings → Cache's buttons.
                 Route::name('cache.')->controller(CacheController::class)->middleware('can:cms.settings.cache')->group(function (): void {

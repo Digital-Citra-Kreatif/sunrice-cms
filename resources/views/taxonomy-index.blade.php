@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <x-sunrice-cms::seo />
-    <style>body{font:16px/1.6 system-ui,sans-serif;max-width:42rem;margin:3rem auto;padding:0 1rem;color:#1a1a1a}h1{line-height:1.2}.sunrice-img{display:block;max-width:100%;height:auto}.sunrice-img-w-25{width:25%}.sunrice-img-w-50{width:50%}.sunrice-img-w-75{width:75%}.sunrice-img-w-100,.sunrice-img-full{width:100%}.sunrice-img-center{margin-inline:auto}.sunrice-img-left{float:left;margin:.3rem 1.5rem 1rem 0}.sunrice-img-right{float:right;margin:.3rem 0 1rem 1.5rem}.sunrice-img-left:not([class*=sunrice-img-w-]),.sunrice-img-right:not([class*=sunrice-img-w-]){max-width:50%}article::after,body>div::after{content:"";display:block;clear:both}@media(max-width:40em){.sunrice-img-left,.sunrice-img-right{float:none;width:100%;max-width:100%;margin:1.5rem 0}}</style>
+    <style>body{font:16px/1.6 system-ui,sans-serif;max-width:42rem;margin:3rem auto;padding:0 1rem;color:#1a1a1a}h1{line-height:1.2}.sunrice-img{display:block;max-width:100%;height:auto}.sunrice-img-w-25{width:25%}.sunrice-img-w-50{width:50%}.sunrice-img-w-75{width:75%}.sunrice-img-w-100,.sunrice-img-full{width:100%}.sunrice-img-center{margin-inline:auto}.sunrice-img-left{float:left;margin:.3rem 1.5rem 1.5rem 0}.sunrice-img-right{float:right;margin:.3rem 0 1.5rem 1.5rem}.sunrice-img-left:not([class*=sunrice-img-w-]),.sunrice-img-right:not([class*=sunrice-img-w-]){max-width:50%}article::after,body>div::after{content:"";display:block;clear:both}:is(h2,h3,h4,hr,pre,blockquote,figure){clear:both}@media(max-width:40em){.sunrice-img-left,.sunrice-img-right,.sunrice-img-left:not([class*=sunrice-img-w-]),.sunrice-img-right:not([class*=sunrice-img-w-]){float:none;width:100%;max-width:100%;margin:1.5rem 0}}</style>
     <x-sunrice-cms::code place="head" />
 </head>
 <body class="{{ \Sunrice\Cms\Content::bodyClass() }}">
@@ -18,6 +18,8 @@
         @if (is_string($value) && $value !== '')
             @if (in_array($handle, $richText, true))
                 <div>{!! $value !!}</div>
+            @elseif (isset($code[$handle]))
+                <x-sunrice-cms::code-block :value="$value" :language="$code[$handle] === 'plain' ? null : $code[$handle]" />
             @else
                 <p>{{ $value }}</p>
             @endif
