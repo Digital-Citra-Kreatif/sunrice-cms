@@ -134,6 +134,8 @@ final class StructureExporter
                 // The terms not published yet, read for the chunk at once.
                 $pending = Term::query()->with('translations', 'taxonomy')->whereKey($chunk->flatMap(fn (Entry $entry): array => $entry->draft_terms ?? [])->unique()->values()->all())->get()->keyBy('id');
                 foreach ($chunk as $entry) {
+                    // Its languages know it (hasUnpublishedChanges() reads its terms): no query each.
+                    $entry->translations->each(fn (EntryTranslation $t) => $t->setRelation('entry', $entry));
                     $live = self::termSlugs(array_values($entry->terms->all()));
                     $draft = $entry->draft_terms === null ? $live : self::termSlugs(array_values(array_filter(array_map(fn (int $id): ?Term => $pending->get($id), $entry->draft_terms))));
                     $entries[] = [

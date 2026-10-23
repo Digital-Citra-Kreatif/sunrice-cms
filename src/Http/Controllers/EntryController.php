@@ -392,6 +392,8 @@ final class EntryController
         $schema = $entry->schema();
         $shared = $translation->isMain() ? [] : $schema->shared();
         $taxonomies = self::taxonomies($request, $collection, $entry);
+        // The taxonomies the person may see the terms of: the Changed markers and revisions compare those only.
+        $shown = $taxonomies['shown'];
 
         return Inertia::render('Cms/Entries/Edit', [
             'collection' => self::collection($collection),
@@ -412,7 +414,7 @@ final class EntryController
                 // Published with unpublished changes: when the live version was published, by whom, and the
                 // values the draft changed from it (the editor's "Changed" markers). Null otherwise: nothing to load.
                 'live' => $translation->isPublished() && $translation->hasUnpublishedChanges()
-                    ? RevisionList::live($translation) + ['changed' => RevisionList::changedFromLive($translation)]
+                    ? RevisionList::live($translation) + ['changed' => RevisionList::changedFromLive($translation, $shown)]
                     : null,
                 'trashed' => $entry->trashed(),
                 // "Submit for review": when, and who asked.
@@ -448,9 +450,11 @@ final class EntryController
             'templates' => [
                 'own' => TemplateHelp::lookup([$entry->template])[0] ?? null,
                 'fallbacks' => TemplateHelp::lookup(TemplateLookup::entry($collection, TemplateLookup::entrySlug($translation))),
-                // The views that exist under the template prefixes, to pick from.
-                'choices' => TemplateHelp::choices(),
+                // A view name to show how names map to files.
+                'example' => TemplateHelp::example("{$collection->handle}-landing"),
             ],
+            // The views that exist under the template prefixes, to pick from: read when the Template choice opens.
+            'templateChoices' => Inertia::optional(fn (): array => TemplateHelp::choices()),
             // The blueprints it may use, when there's a choice (Page settings).
             'blueprints' => self::blueprints($collection),
             // Its blueprint's editor, for those who may edit blueprints (the ⋮ menu's "Edit blueprint").
@@ -461,7 +465,7 @@ final class EntryController
             'homepage' => self::homepageState($entry, $collection, $request),
             // Loaded after the page shows (Inertia's deferred props): the sidebar's lists.
             // Who published each and what it changed from the one before.
-            'revisions' => Inertia::defer(fn (): array => RevisionList::summaries($translation)),
+            'revisions' => Inertia::defer(fn (): array => RevisionList::summaries($translation, taxonomies: $shown)),
             'comments' => $collection->comments && ($request->user()?->can('cms.comments.view') ?? false)
                 ? Inertia::defer(fn (): array => self::comments($entry, $request))
                 : null,
@@ -492,17 +496,16 @@ final class EntryController
      * every language, or create one), with the entry's terms of each as
      * the editor shows them (not published yet, else live).
      *
-     * @return array{list: list<array{handle: string, title: string, hierarchical: bool, single: bool}>, terms: array<string, list<int>>, editable: bool}
+     * @return array{list: list<array{handle: string, title: string, hierarchical: bool, single: bool}>, terms: array<string, list<int>>, editable: bool, shown: \Illuminate\Database\Eloquent\Collection<int, Taxonomy>}
      */
     private static function taxonomies(Request $request, Collection $collection, ?Entry $entry): array
     {
         $user = $request->user();
         $user = $user instanceof Authorizable ? $user : null;
         $editable = $entry === null ? Access::entries($user, 'create', $collection) : Access::entries($user, 'update', $collection, $entry);
-        $shown = $collection->taxonomies()->orderBy('title')->get()
-            ->filter(fn (Taxonomy $taxonomy): bool => $editable || Access::terms($user, 'view', $taxonomy))->values();
+        $shown = Access::entryTaxonomies($user, $collection, $entry);
         if ($shown->isEmpty()) {
-            return ['list' => [], 'terms' => [], 'editable' => $editable];
+            return ['list' => [], 'terms' => [], 'editable' => $editable, 'shown' => $shown];
         }
         $ids = $entry?->draftTermIds() ?? [];
         $taxonomyOf = SaveEntryTerms::taxonomiesOf($ids);
@@ -517,6 +520,7 @@ final class EntryController
             ])->all()),
             'terms' => $terms,
             'editable' => $editable,
+            'shown' => $shown,
         ];
     }
 
@@ -570,7 +574,8 @@ final class EntryController
             EntryManageController::saveSettings($request, $entry, $settings);
 
             // The entry's terms are every language's: not for translators (as the page settings).
-            $terms = $request->has('terms') && Access::entries($request->user(), 'update', $entry->collection, $entry) ? ['terms' => $request->input('terms')] : [];
+            // With the terms the editor loaded (terms_base), so a save over another language's newer terms is refused.
+            $terms = $request->has('terms') && Access::entries($request->user(), 'update', $entry->collection, $entry) ? $request->only(['terms', 'terms_base']) : [];
 
             return $save->handle(self::translation($entry, $request->input('locale')), $request->only(['title', 'slug', 'data', 'seo', 'version']) + $terms);
         });
@@ -702,28 +707,42 @@ final class EntryController
 
     /** A revision compared with the draft: the fields that differ, as text. */
     /** The live version beside the draft: the fields where they differ, in words (the editor's "Compare with live"). */
-    public function compareLive(Entry $entry, string $locale): JsonResponse
+    public function compareLive(Request $request, Entry $entry, string $locale): JsonResponse
     {
         $translation = self::translation($entry, $locale);
         abort_unless($translation->isPublished() && $translation->title !== null, 404);
 
-        return response()->json(['fields' => RevisionList::compareLive($translation)]);
+        // Terms of the taxonomies the person may see only, as the Taxonomies card.
+        return response()->json(['fields' => RevisionList::compareLive($translation, self::shownTaxonomies($request, $entry))]);
     }
 
     /** Throws away the unpublished changes: the draft is the live version again. */
     public function discardChanges(Request $request, Entry $entry, string $locale, DiscardChanges $discard): RedirectResponse
     {
         $version = $request->input('version');
-        $discard->handle(self::translation($entry, $locale), is_int($version) || is_string($version) ? $version : null);
+        // The entry's terms are every language's: not for translators (as saving).
+        $discard->handle(self::translation($entry, $locale), is_int($version) || is_string($version) ? $version : null, Access::entries($request->user(), 'update', $entry->collection, $entry));
 
         return back()->with('success', 'Changes discarded. The editor shows the live version again.');
     }
 
-    public function compareRevision(Entry $entry, Revision $revision): JsonResponse
+    public function compareRevision(Request $request, Entry $entry, Revision $revision): JsonResponse
     {
         abort_unless($revision->translation->entry_id === $entry->id, 404);
 
-        return response()->json(['fields' => RevisionList::compare($revision)]);
+        return response()->json(['fields' => RevisionList::compare($revision, self::shownTaxonomies($request, $entry))]);
+    }
+
+    /**
+     * The taxonomies whose terms of the entry the person may see.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, Taxonomy>
+     */
+    private static function shownTaxonomies(Request $request, Entry $entry): \Illuminate\Database\Eloquent\Collection
+    {
+        $user = $request->user();
+
+        return Access::entryTaxonomies($user instanceof Authorizable ? $user : null, $entry->collection, $entry);
     }
 
     public function restoreRevision(Request $request, Entry $entry, Revision $revision, RestoreRevision $restore): RedirectResponse
@@ -731,11 +750,14 @@ final class EntryController
         $translation = $revision->translation;
         abort_unless($translation->entry_id === $entry->id, 404);
         abort_if($translation->entry->collection->trashed(), 404);
+        // The entry's terms are every language's: not for translators (as saving).
+        $withTerms = Access::entries($request->user(), 'update', $entry->collection, $entry);
         // The draft it replaces, so the restore can be undone (this session).
         $request->session()->put(EntryManageController::undoKey($translation), [
-            'title' => $translation->draft_title, 'slug' => $translation->draft_slug, 'data' => $translation->draft_data, 'terms' => $translation->entry->draftTermIds(),
+            'title' => $translation->draft_title, 'slug' => $translation->draft_slug, 'data' => $translation->draft_data,
+            ...($withTerms ? ['terms' => $translation->entry->draftTermIds()] : []),
         ]);
-        $restore->handle($revision);
+        $restore->handle($revision, $withTerms);
 
         return back()->with('success', 'The revision is in the draft now. Publish it to put it on the site.');
     }

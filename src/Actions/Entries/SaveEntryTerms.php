@@ -27,17 +27,24 @@ use Sunrice\Cms\Support\Ids;
  * taxonomies not given keep their terms. SaveDraft and CreateEntry call
  * it with their input's `terms`.
  *
+ * Terms are the entry's, while each language is saved on its own: with
+ * `$base`, the terms the editor loaded (by taxonomy handle, as `$terms`),
+ * a save is refused when the terms of a taxonomy given changed since
+ * (someone saved them from another language's editor), rather than
+ * putting the old ones back unknowingly.
+ *
  * @api
  */
 final class SaveEntryTerms
 {
     /**
      * @param  array<mixed>  $terms  taxonomy handle => term ids or slugs
+     * @param  array<mixed>|null  $base  taxonomy handle => the term ids the editor loaded
      * @return bool whether the terms not published yet changed
      *
      * @throws ValidationException
      */
-    public function handle(Entry $entry, array $terms): bool
+    public function handle(Entry $entry, array $terms, ?array $base = null): bool
     {
         $attached = self::attached($entry);
         $byHandle = $attached->keyBy('handle');
@@ -71,9 +78,27 @@ final class SaveEntryTerms
             return false;
         }
 
+        if ($base !== null) {
+            // As stored now (locked until the save ends), not as loaded: another language's save may have changed them.
+            $stored = DB::table($entry->getTable())->where('id', $entry->id)->lockForUpdate()->value('draft_terms');
+            $decoded = is_string($stored) ? json_decode($stored, true) : null;
+            $entry->draft_terms = is_array($decoded) ? Ids::of($decoded) : null;
+            $entry->syncOriginalAttribute('draft_terms');
+        }
         // The draft: the terms chosen of the attached taxonomies not given, and those given.
         $current = $entry->draftTermIds();
         $taxonomyOf = self::taxonomiesOf($current);
+        foreach ($given as $taxonomyId => $ids) {
+            $handle = $attached->firstWhere('id', $taxonomyId)?->handle;
+            if ($base === null || $handle === null || ! array_key_exists($handle, $base)) {
+                continue;
+            }
+            $loaded = $base[$handle] === null ? [] : (is_array($base[$handle]) ? array_values($base[$handle]) : [$base[$handle]]);
+            $now = array_values(array_filter($current, fn (int $id): bool => ($taxonomyOf[$id] ?? null) === $taxonomyId));
+            if (self::normal($loaded) !== self::normal($now)) {
+                throw ValidationException::withMessages(['terms' => __('Someone else changed this entry\'s terms. Reload to see them.')]);
+            }
+        }
         $keep = array_values(array_filter($current, fn (int $id): bool => isset($taxonomyOf[$id]) && $attached->contains('id', $taxonomyOf[$id]) && ! isset($given[$taxonomyOf[$id]])));
 
         return $this->setDraft($entry, [...$keep, ...array_merge(...array_values($given))], Ids::of($attached->pluck('id')));

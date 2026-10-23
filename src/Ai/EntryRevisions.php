@@ -71,7 +71,8 @@ final class EntryRevisions extends CmsTool
         if (! $this->may('update', $entry->collection, $entry, $translation->locale)) {
             return $this->denied('edit this entry'.($translation->isMain() ? '' : ' in this language'));
         }
-        app(RestoreRevision::class)->handle($revision);
+        // The entry's terms are every language's: only for those who may edit the whole entry.
+        app(RestoreRevision::class)->handle($revision, withTerms: $this->may('update', $entry->collection, $entry));
         $translation->refresh();
 
         return $this->json(['restored' => true, ...self::describe($translation)]);

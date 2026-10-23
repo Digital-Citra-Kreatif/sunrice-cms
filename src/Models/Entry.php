@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Carbon;
 use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Fields\Schema;
@@ -154,13 +155,35 @@ class Entry extends Model
      * Its live terms, shared by all its languages: those chosen in the
      * editor's Taxonomies card, for the taxonomies attached to its
      * collection, as last published (PublishEntry). Terms fields don't
-     * count: their values are fields like any other.
+     * count: their values are fields like any other. A taxonomy detached
+     * from the collection keeps its terms here, unseen, until it's
+     * attached again.
      *
      * @return BelongsToMany<Term, $this>
      */
     public function terms(): BelongsToMany
     {
-        return $this->belongsToMany(Term::class, 'sunrice_entry_term');
+        return $this->belongsToMany(Term::class, 'sunrice_entry_term')->whereExists(self::termAttached());
+    }
+
+    /**
+     * For a query of sunrice_entry_term (or one joining it): only the rows
+     * whose term's taxonomy is attached to the entry's collection, those
+     * the site shows. Entry::terms() and Term::entries() use it.
+     *
+     * @internal
+     *
+     * @return \Closure(QueryBuilder): void
+     */
+    public static function termAttached(): \Closure
+    {
+        return function (QueryBuilder $query): void {
+            $query->selectRaw('1')->from('sunrice_collection_taxonomy as attached')
+                ->join('sunrice_entries as attached_entry', 'attached_entry.collection_id', '=', 'attached.collection_id')
+                ->join('sunrice_terms as attached_term', 'attached_term.taxonomy_id', '=', 'attached.taxonomy_id')
+                ->whereColumn('attached_entry.id', 'sunrice_entry_term.entry_id')
+                ->whereColumn('attached_term.id', 'sunrice_entry_term.term_id');
+        };
     }
 
     /**

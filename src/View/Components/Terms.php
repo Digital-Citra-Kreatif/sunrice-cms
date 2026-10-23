@@ -130,7 +130,7 @@ final class Terms extends Component
      */
     private static function countWithChildren(Items $terms, \Closure $entries): void
     {
-        $pairs = DB::table('sunrice_entry_term')->whereIn('term_id', $terms->pluck('id')->all())
+        $pairs = DB::table('sunrice_entry_term')->whereIn('term_id', $terms->pluck('id')->all())->whereExists(Entry::termAttached())
             ->whereIn('entry_id', tap(Entry::query(), $entries)->select('sunrice_entries.id'))
             ->get(['term_id', 'entry_id']);
         /** @var array<int, array<int, true>> $own */

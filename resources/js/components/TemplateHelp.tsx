@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { router } from '@inertiajs/react';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { t } from '@imajiner/admin-sdk';
 import {
@@ -16,8 +17,15 @@ export interface TemplateFile {
 export interface TemplateLookup {
     own: TemplateFile | null;
     fallbacks: TemplateFile[];
-    /** The views under the site's template prefixes that exist (partials and layouts left out). */
+    /** The views that exist to pick from (layouts, partials and the like left out): loaded when the choice opens. */
     choices?: string[];
+    /** A view name to show how names map to files ("pages.blog-landing"). */
+    example?: string;
+}
+
+/** A page's lookup with the views to pick from, once its `templateChoices` prop is loaded (TemplateField asks for it). */
+export function withTemplateChoices(lookup: TemplateLookup | null, choices: string[] | undefined): TemplateLookup | null {
+    return lookup === null || choices === undefined ? lookup : { ...lookup, choices };
 }
 
 /** cms.article → cms/article.blade.php, under resources/views (a package's "pkg::x.y" stays as it is). */
@@ -84,14 +92,17 @@ export function TemplateOrder({ value = '', lookup = null }: { value?: string; l
  * "Automatic" (empty: the collection's or taxonomy's template) first and
  * any other view name typed in; two helper lines (how names map to files,
  * what Automatic uses), the file in use, and "How is it chosen?" for the
- * order the files are tried in.
+ * order the files are tried in. The views to pick from (lookup.choices)
+ * may be left out of the page until the choice first opens (finding them
+ * reads the views folders): it then reloads the page's `templateChoices`
+ * prop (withTemplateChoices()).
  */
 export function TemplateField({ id, value, onChange, lookup = null, example, automatic, error, disabled = false }: {
     id: string;
     value: string;
     onChange: (value: string) => void;
     lookup?: TemplateLookup | null;
-    /** A view name to show how names map to files: "cms.posts-landing". */
+    /** A view name to show how names map to files, when the lookup has none: "pages.posts-landing". */
     example: string;
     /** What Automatic uses, in words: "Automatic uses the collection's template." */
     automatic: string;
@@ -100,7 +111,17 @@ export function TemplateField({ id, value, onChange, lookup = null, example, aut
 }) {
     const [open, setOpen] = React.useState(false);
     const [typed, setTyped] = React.useState('');
+    const loadChoices = () => { if (lookup?.choices === undefined) router.reload({ only: ['templateChoices'] }); };
     const choices = lookup?.choices ?? [];
+    const shown = lookup?.example ?? example;
+    // The site's own folder first, then the other views.
+    const inCms = choices.filter((view) => view.startsWith('cms.'));
+    const others = choices.filter((view) => !view.startsWith('cms.'));
+    const option = (view: string) => (
+        <CommandItem key={view} value={view} onSelect={() => pick(view)}>
+            <Check className={own === view ? '' : 'cms:opacity-0'} /> <span className="cms:truncate cms:font-mono cms:text-xs">{view}</span>
+        </CommandItem>
+    );
     const own = value.trim();
     const used = usedTemplate(value, lookup);
     const missing = missingTemplate(value, lookup);
@@ -110,7 +131,7 @@ export function TemplateField({ id, value, onChange, lookup = null, example, aut
     return (
         <div className="cms:flex cms:min-w-0 cms:flex-col cms:gap-2">
             <Label htmlFor={id}>{t('Template')}</Label>
-            <Popover open={open} onOpenChange={(next: boolean) => { setOpen(next); if (!next) setTyped(''); }}>
+            <Popover open={open} onOpenChange={(next: boolean) => { setOpen(next); if (!next) setTyped(''); if (next) loadChoices(); }}>
                 <PopoverTrigger asChild>
                     <Button id={id} type="button" variant="outline" role="combobox" aria-expanded={open} aria-invalid={error !== undefined} disabled={disabled}
                         className="cms:w-full cms:min-w-0 cms:justify-between cms:font-normal">
@@ -122,45 +143,48 @@ export function TemplateField({ id, value, onChange, lookup = null, example, aut
                 </PopoverTrigger>
                 <PopoverContent align="start" className="cms:w-(--radix-popover-trigger-width) cms:min-w-64 cms:p-0">
                     <Command>
-                        <CommandInput placeholder={t('Find or type a view name')} value={typed} onValueChange={setTyped} />
+                        <CommandInput placeholder={t('Automatic, or type a view name')} value={typed} onValueChange={setTyped} />
                         <CommandList>
                             <CommandEmpty>{t('No such view.')}</CommandEmpty>
+                            {/* Whatever is typed, first, so Enter takes it: any view of the app, not only those listed. */}
+                            {candidate !== '' && !choices.includes(candidate) && (
+                                <CommandGroup>
+                                    <CommandItem value={`__typed ${candidate}`} keywords={[candidate]} onSelect={() => pick(candidate)}>
+                                        <Check className="cms:opacity-0" /> <span className="cms:truncate">{t('Use “:view”', { view: candidate })}</span>
+                                    </CommandItem>
+                                </CommandGroup>
+                            )}
                             <CommandGroup>
                                 <CommandItem value="__automatic" keywords={[t('Automatic')]} onSelect={() => pick('')}>
                                     <Check className={own === '' ? '' : 'cms:opacity-0'} /> {t('Automatic')}
                                 </CommandItem>
-                                {choices.map((view) => (
-                                    <CommandItem key={view} value={view} onSelect={() => pick(view)}>
-                                        <Check className={own === view ? '' : 'cms:opacity-0'} /> <span className="cms:truncate cms:font-mono cms:text-xs">{view}</span>
-                                    </CommandItem>
-                                ))}
-                                {candidate !== '' && !choices.includes(candidate) && (
-                                    <CommandItem value={`__typed ${candidate}`} keywords={[candidate]} onSelect={() => pick(candidate)}>
-                                        <Check className="cms:opacity-0" /> <span className="cms:truncate">{t('Use :view', { view: candidate })}</span>
-                                    </CommandItem>
-                                )}
                             </CommandGroup>
+                            {inCms.length > 0 && <CommandGroup heading={t('In cms/')}>{inCms.map(option)}</CommandGroup>}
+                            {others.length > 0 && <CommandGroup heading={inCms.length > 0 ? t('Other views') : t('Views')}>{others.map(option)}</CommandGroup>}
                         </CommandList>
                     </Command>
                 </PopoverContent>
             </Popover>
             {missing && <p className="cms:text-xs cms:text-amber-700 cms:dark:text-amber-400">{t('No such file yet: the page uses the next one until it exists.')}</p>}
             <div className="cms:flex cms:flex-col cms:gap-0.5 cms:text-xs cms:leading-relaxed cms:text-muted-foreground">
-                <p>{t('Files are under resources/views; a name like :example is :file.', { example: '\u0000', file: '\u0001' }).split(/(\u0000|\u0001)/).map((part, i) => part === '\u0000'
-                    ? <code key={i}>{example}</code>
-                    : part === '\u0001' ? <code key={i}>{shortViewFile(example)}</code> : part)}</p>
+                <p>{t('A view name from resources/views: :example is :file.', { example: '\u0000', file: '\u0001' }).split(/(\u0000|\u0001)/).map((part, i) => part === '\u0000'
+                    ? <code key={i} className="cms:wrap-anywhere">{shown}</code>
+                    : part === '\u0001' ? <code key={i} className="cms:wrap-anywhere">{shortViewFile(shown)}</code> : part)}</p>
                 <p>{automatic}</p>
             </div>
-            <div className="cms:flex cms:min-w-0 cms:items-center cms:gap-2 cms:text-xs cms:text-muted-foreground">
-                <span className="cms:shrink-0">{t('Uses')}</span>
-                {used === null ? <span className="cms:min-w-0 cms:truncate">{t('the built-in template')}</span> : <FilePath view={used} />}
+            {/* The file in use, then the link; the link goes under it when they don't fit side by side. A long path is cut short, whole in its tooltip. */}
+            <div className="cms:flex cms:min-w-0 cms:flex-wrap cms:items-center cms:gap-x-3 cms:gap-y-1 cms:text-xs cms:text-muted-foreground">
+                <span className="cms:flex cms:min-w-0 cms:max-w-full cms:items-baseline cms:gap-1">
+                    <span className="cms:shrink-0">{t('Uses')}</span>
+                    {used === null ? <span>{t('the built-in template')}</span> : <FilePath view={used} />}
+                </span>
                 <Popover>
                     <PopoverTrigger asChild>
                         <button type="button" className="cms:ml-auto cms:shrink-0 cms:rounded-sm cms:underline cms:underline-offset-4 cms:hover:text-foreground cms:focus-visible:outline-2 cms:focus-visible:outline-ring">
                             {t('How is it chosen?')}
                         </button>
                     </PopoverTrigger>
-                    <PopoverContent align="end" className="cms:w-80 cms:max-w-[calc(100vw-2rem)]">
+                    <PopoverContent align="end" className="cms:w-max cms:min-w-72 cms:max-w-[min(32rem,calc(100vw-2rem))]">
                         <TemplateOrder value={value} lookup={lookup} />
                     </PopoverContent>
                 </Popover>

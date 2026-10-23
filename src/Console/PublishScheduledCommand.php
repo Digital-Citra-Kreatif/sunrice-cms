@@ -7,16 +7,19 @@ namespace Sunrice\Cms\Console;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Sunrice\Cms\Actions\Entries\SyncEntryTerms;
 use Sunrice\Cms\Events\EntryPublished;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Support\SiteCache;
 
 /**
  * Entries published for a later date go live by themselves when it comes
- * (the site only shows what's past its date). This tells everyone else:
- * it clears the site's caches and fires EntryPublished (`scheduled`) for
- * each one whose time came since the last run. The scheduler runs it
- * every minute.
+ * (the site only shows what's past its date). This puts their entries'
+ * terms not published yet on the site then (SyncEntryTerms: publishing
+ * for later leaves them waiting) and tells everyone else: it clears the
+ * site's caches and fires EntryPublished (`scheduled`) for each one
+ * whose time came since the last run. The scheduler runs it every
+ * minute.
  *
  * @internal
  */
@@ -28,7 +31,7 @@ final class PublishScheduledCommand extends Command
 
     private const LAST_RUN = 'sunrice-cms:scheduled-checked-at';
 
-    public function handle(SiteCache $cache): int
+    public function handle(SiteCache $cache, SyncEntryTerms $terms): int
     {
         $now = now();
         $last = $cache->store()->get(self::LAST_RUN);
@@ -40,8 +43,9 @@ final class PublishScheduledCommand extends Command
             ->where('published_at', '>', $since)->where('published_at', '<=', $now)
             // Published ahead of its date (not just now, or backdated).
             ->whereHas('revisions', fn (Builder $q) => $q->whereColumn('sunrice_revisions.created_at', '<', 'sunrice_entry_translations.published_at'))
-            ->chunkById(100, function ($translations) use (&$count): void {
+            ->chunkById(100, function ($translations) use (&$count, $terms): void {
                 foreach ($translations as $translation) {
+                    $terms->handle($translation->entry);
                     EntryPublished::dispatch($translation, true);
                     $count++;
                 }

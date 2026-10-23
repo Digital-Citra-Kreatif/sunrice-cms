@@ -169,7 +169,8 @@ final class EntryManageController
         if (! is_array($draft) || ! is_string($draft['title'] ?? null) || ! is_string($draft['slug'] ?? null) || ! is_array($draft['data'] ?? null)) {
             return back()->with('error', 'There is no restore to undo.');
         }
-        $terms = is_array($draft['terms'] ?? null) ? array_values(array_filter($draft['terms'], is_int(...))) : null;
+        // The entry's terms are every language's: only for those who may edit the whole entry (as saving).
+        $terms = is_array($draft['terms'] ?? null) && Access::entries($request->user(), 'update', $entry->collection, $entry) ? array_values(array_filter($draft['terms'], is_int(...))) : null;
         $putBack->handle($translation, ['title' => $draft['title'], 'slug' => $draft['slug'], 'data' => $draft['data'], ...($terms !== null ? ['terms' => $terms] : [])]);
 
         return back()->with('success', 'Your previous draft is back.');

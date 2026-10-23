@@ -23,8 +23,9 @@ use Sunrice\Cms\Support\SearchText;
  * the main one first published, the main translation's when that's
  * published; else now) and a revision is kept. The entry's terms not
  * published yet (SaveEntryTerms) go live with it, whichever language is
- * published. The draft is checked again, as the blueprint may have
- * changed since it was saved.
+ * published: now, or for a date to come when that comes (the
+ * sunrice:publish-scheduled command). The draft is checked again, as the
+ * blueprint may have changed since it was saved.
  *
  * @api
  */
@@ -94,16 +95,19 @@ final class PublishEntry
             $translation->live_version = $translation->version;
             $translation->live_updated_at = now();
             $translation->save();
-            // The entry's terms chosen since, every language's (SaveEntryTerms).
-            $this->terms->handle($translation->entry);
+            // The entry's terms chosen since, every language's (SaveEntryTerms): live now, or when its date comes.
+            $live = $translation->isLive();
+            if ($live) {
+                $this->terms->handle($translation->entry);
+            }
             $id = Auth::id();
             $translation->revisions()->create([
                 'user_id' => is_int($id) ? $id : null,
                 'title' => $values['title'],
                 'slug' => $values['slug'],
                 'data' => $values['data'],
-                // The entry's live terms, which restoring the revision brings back.
-                'terms' => $translation->entry->liveTermIds(),
+                // The entry's terms it's published with, which restoring the revision brings back.
+                'terms' => $live ? $translation->entry->liveTermIds() : $translation->entry->draftTermIds(),
             ]);
             $this->prune($translation);
             $newPath = $site->path($translation, $translation->slug);

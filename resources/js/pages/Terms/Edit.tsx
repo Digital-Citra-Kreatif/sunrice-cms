@@ -10,7 +10,7 @@ import { FieldError } from '@/components/FieldError.tsx';
 import { Fields } from '@/components/FieldInput.tsx';
 import { FieldSections } from '@/components/FieldSections.tsx';
 import { SlugNote } from '@/components/SlugNote.tsx';
-import { TemplateField, type TemplateLookup } from '@/components/TemplateHelp.tsx';
+import { TemplateField, type TemplateLookup, withTemplateChoices } from '@/components/TemplateHelp.tsx';
 import { VersionConflict } from '@/components/VersionConflict.tsx';
 import { LanguageTabs } from '@/components/LanguageTabs.tsx';
 import { errorKeysAt, errorsAt, hasErrors } from '@/lib/builder.ts';
@@ -42,6 +42,8 @@ interface Props {
     redirectsUrl?: string | null;
     /** The views tried for its page, in order, and which exist. */
     templates?: TemplateLookup | null;
+    /** The views to pick a template from: loaded when the Template choice first opens. */
+    templateChoices?: string[];
     /** Whether the term has a title in this language. */
     translated: boolean;
     fields: FieldDefinition[];
@@ -65,7 +67,7 @@ export default function TermEditPage(props: Props) {
 }
 
 /** One editor for a term, new or not: title, slug, where it sits, its fields, SEO and template, in a language. */
-function TermEdit({ taxonomy, term, parentId = null, terms = [], translated, fields, locale, locales, shared, sharedValues, values, seo, version, usedBy = [], redirectsUrl = null, templates = null }: Props) {
+function TermEdit({ taxonomy, term, parentId = null, terms = [], translated, fields, locale, locales, shared, sharedValues, values, seo, version, usedBy = [], redirectsUrl = null, templates = null, templateChoices }: Props) {
     const list = adminUrl(`cms/taxonomies/${taxonomy.handle}/terms`);
     const url = term ? adminUrl(`cms/terms/${term.id}/content`) : list;
     const heading = term ? term.title : t('New term');
@@ -177,7 +179,7 @@ function TermEdit({ taxonomy, term, parentId = null, terms = [], translated, fie
                     <CollapsibleCard title={t('Page settings')} titleClassName="cms:text-base" storageKey="cms:term:page-settings" hasErrors={errors.template !== undefined}
                         contentClassName="cms:flex cms:flex-col cms:gap-2">
                         <fieldset disabled={!writable} className="cms:flex cms:min-w-0 cms:flex-col cms:gap-2">
-                            <TemplateField id="template" value={form.data.template} onChange={(template) => form.setData('template', template)} lookup={templates}
+                            <TemplateField id="template" value={form.data.template} onChange={(template) => form.setData('template', template)} lookup={withTemplateChoices(templates, templateChoices)}
                                 example={`cms.${taxonomy.handle}-special`} automatic={t('Automatic uses the taxonomy\'s template.')} error={errors.template} disabled={!writable} />
                         </fieldset>
                     </CollapsibleCard>

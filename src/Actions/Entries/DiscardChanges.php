@@ -14,7 +14,9 @@ use Sunrice\Cms\Support\References;
 /**
  * Throws away a published translation's unpublished changes: the draft
  * becomes the live version again (its title, slug, fields and SEO), and
- * the entry's terms its live ones (every language's: SaveEntryTerms). As
+ * the entry's terms its live ones (every language's: SaveEntryTerms),
+ * unless `$withTerms` is false: for someone who may edit this language
+ * only (a translator), who may not change the entry's terms. As
  * SaveDraft, with a version (the one the editor opened) it refuses to
  * discard over someone else's newer save. A translation never published
  * has no live version to go back to. Discarding the main translation's
@@ -28,7 +30,7 @@ final class DiscardChanges
     public function __construct(private readonly ActivityLog $activity, private readonly SaveEntryTerms $terms) {}
 
     /** @throws ValidationException */
-    public function handle(EntryTranslation $translation, int|string|null $version = null): EntryTranslation
+    public function handle(EntryTranslation $translation, int|string|null $version = null, bool $withTerms = true): EntryTranslation
     {
         if (! $translation->isPublished() || $translation->title === null || $translation->slug === null) {
             throw ValidationException::withMessages(['entry' => __('This entry has no published version to go back to.')]);
@@ -40,7 +42,7 @@ final class DiscardChanges
         if (! is_int($expected) && ! ctype_digit($expected)) {
             throw ValidationException::withMessages(['version' => __('The version must be a number.')]);
         }
-        DB::transaction(function () use ($translation, $expected): void {
+        DB::transaction(function () use ($translation, $expected, $withTerms): void {
             // Only if nobody saved in between: the version check and the write are one statement.
             $saved = EntryTranslation::query()->whereKey($translation->id)->where('version', (int) $expected)->update([
                 'draft_title' => $translation->title,
@@ -56,7 +58,9 @@ final class DiscardChanges
                 EntryTranslation::query()->where('entry_id', $translation->entry_id)->whereKeyNot($translation->id)
                     ->where('main_version', '>=', $translation->live_version)->update(['main_version' => (int) $expected + 1]);
             }
-            $this->terms->discard($translation->entry);
+            if ($withTerms) {
+                $this->terms->discard($translation->entry);
+            }
         });
         $translation->refresh();
         // A query update fires no model events: keep the media library's and the references' "Used by" here.

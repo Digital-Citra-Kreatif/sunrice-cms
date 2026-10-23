@@ -56,6 +56,9 @@ final class HydrationContext
     /** @var array<int, list<int>> entries' own terms (ids), by entry id, read once */
     private array $entryTerms = [];
 
+    /** @var array<int, list<int>> the taxonomies attached to each collection (ids), read once, in a preview */
+    private array $attached = [];
+
     public function __construct(
         public readonly string $locale,
         public readonly bool $preview = false,
@@ -242,7 +245,8 @@ final class HydrationContext
     /**
      * An entry's own terms (every language's, from the editor's Taxonomies
      * card) as its page shows them: the live ones, or in a preview those
-     * not published yet. By taxonomy title, then in the editors' order;
+     * not published yet; of the taxonomies attached to its collection
+     * (as Entry::terms()). By taxonomy title, then in the editors' order;
      * not those in the trash. Read for every entry sharing this context
      * at once (share()): two queries for a whole list, not two per entry.
      *
@@ -258,10 +262,23 @@ final class HydrationContext
                 }
             }
             $live = [];
-            foreach (DB::table('sunrice_entry_term')->whereIn('entry_id', array_keys($entries))->orderBy('term_id')->get(['entry_id', 'term_id']) as $row) {
+            foreach (DB::table('sunrice_entry_term')->whereIn('entry_id', array_keys($entries))->whereExists(Entry::termAttached())->orderBy('term_id')->get(['entry_id', 'term_id']) as $row) {
                 [$entryId, $termId] = Ids::of([$row->entry_id, $row->term_id]) + [null, null];
                 if ($entryId !== null && $termId !== null) {
                     $live[$entryId][] = $termId;
+                }
+            }
+            // In a preview, the taxonomies attached to their collections, in one query: only their terms count (as Entry::terms()).
+            $collections = ! $this->preview ? [] : array_values(array_diff(array_unique(array_map(fn (EntryTranslation $t): int => $t->collection_id, $entries)), array_keys($this->attached)));
+            if ($collections !== []) {
+                foreach ($collections as $collection) {
+                    $this->attached[$collection] = [];
+                }
+                foreach (DB::table('sunrice_collection_taxonomy')->whereIn('collection_id', $collections)->get(['collection_id', 'taxonomy_id']) as $row) {
+                    [$collectionId, $taxonomyId] = Ids::of([$row->collection_id, $row->taxonomy_id]) + [null, null];
+                    if ($collectionId !== null && $taxonomyId !== null) {
+                        $this->attached[$collectionId][] = $taxonomyId;
+                    }
                 }
             }
             $all = [];
@@ -272,8 +289,10 @@ final class HydrationContext
             }
             $this->preloadTerms($all);
         }
+        // Live ones are read attached only; those not published yet are checked here.
+        $attached = $this->preview ? ($this->attached[$translation->collection_id] ?? []) : null;
         $terms = $this->terms($this->entryTerms[$translation->entry_id])
-            ->filter(fn (Term $term): bool => ($this->taxonomies[$term->taxonomy_id] ?? null)?->trashed() === false)
+            ->filter(fn (Term $term): bool => ($this->taxonomies[$term->taxonomy_id] ?? null)?->trashed() === false && ($attached === null || in_array($term->taxonomy_id, $attached, true)))
             ->all();
         usort($terms, fn (Term $a, Term $b): int => [$this->taxonomies[$a->taxonomy_id]->title, $a->sort_order, $a->id] <=> [$this->taxonomies[$b->taxonomy_id]->title, $b->sort_order, $b->id]);
 

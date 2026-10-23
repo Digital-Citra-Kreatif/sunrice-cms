@@ -17,7 +17,9 @@ use Sunrice\Cms\Support\Seo;
  * entry's, every language's: taxonomy handle => term ids or slugs, see
  * SaveEntryTerms). Fields left out of data, and taxonomies left out of
  * terms, keep their values. With version (the one the editor opened), a
- * save over someone else's newer one is refused.
+ * save over someone else's newer one is refused; with terms_base (the
+ * terms the editor loaded, by taxonomy handle), so is a change of terms
+ * over someone else's newer one, from any language (SaveEntryTerms).
  *
  * @api
  */
@@ -77,7 +79,7 @@ final class SaveDraft
                 }
             }
             // The entry's terms (rolled back with the rest when the version check fails).
-            if (is_array($input['terms'] ?? null) && $this->terms->handle($translation->entry, $input['terms'])) {
+            if (is_array($input['terms'] ?? null) && $this->terms->handle($translation->entry, $input['terms'], is_array($input['terms_base'] ?? null) ? $input['terms_base'] : null)) {
                 $changed[] = 'terms';
             }
             if ($changed === []) {

@@ -88,6 +88,23 @@ final class Access
             || ($handle !== null ? $user->can("cms.terms.{$handle}.{$action}") : self::anyScoped($user, "cms.terms.%s.{$action}", Handles::taxonomies()));
     }
 
+    /**
+     * The taxonomies attached to a collection whose terms of an entry
+     * (null: a new one) a user may see, by title: all of them for those
+     * who may change the entry's terms (edit it in every language, or
+     * create one), else those whose terms they may view. The editor's
+     * Taxonomies card, its compare dialogs and AI clients show these.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, Taxonomy>
+     */
+    public static function entryTaxonomies(?Authorizable $user, Collection $collection, ?Entry $entry = null): \Illuminate\Database\Eloquent\Collection
+    {
+        $editable = $entry === null ? self::entries($user, 'create', $collection) : self::entries($user, 'update', $collection, $entry);
+
+        return $collection->taxonomies()->orderBy('title')->get()
+            ->filter(fn (Taxonomy $taxonomy): bool => $editable || self::terms($user, 'view', $taxonomy))->values();
+    }
+
     /** Whether a user may view, export or delete a form's submissions (with none: some form's). */
     public static function submissions(?Authorizable $user, string $action, Form|string|null $form = null): bool
     {

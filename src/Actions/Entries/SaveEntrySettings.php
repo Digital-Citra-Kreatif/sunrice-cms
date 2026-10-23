@@ -20,6 +20,13 @@ final class SaveEntrySettings
 {
     public const TEMPLATE = '/^[a-z0-9_\-]+(?:[.:][a-z0-9_\-]+)*$/';
 
+    /**
+     * Folders of the app's views that hold no pages: a template may not be
+     * under them (without template prefixes), and the Template choice
+     * leaves them out.
+     */
+    public const NOT_PAGES = ['layouts', 'partials', 'components', 'errors', 'vendor', 'emails', 'mail', 'auth'];
+
     public function __construct(private readonly ActivityLog $activity) {}
 
     /**
@@ -60,10 +67,9 @@ final class SaveEntrySettings
     }
 
     /**
-     * A template as typed, checked: a view name under one of the site's
-     * template prefixes (config sunrice-cms.site.template_prefixes, "cms."
-     * by default), so no other view of the app can be made a public page.
-     * Null when empty.
+     * A template as typed, checked: a view name of the app's own (see
+     * allowed()), so no layout, partial, mail or package view can be made
+     * a public page. Null when empty.
      *
      * @throws ValidationException
      */
@@ -77,16 +83,39 @@ final class SaveEntrySettings
             throw ValidationException::withMessages(['template' => __('Use a view name like :example: lowercase letters, digits, dashes, dots.', ['example' => $example])]);
         }
         if (! self::allowed($template)) {
-            throw ValidationException::withMessages(['template' => __('Use a view under :prefixes, like :example.', ['prefixes' => implode(', ', self::prefixes()), 'example' => $example])]);
+            $prefixes = self::prefixes();
+            throw ValidationException::withMessages(['template' => $prefixes === null
+                ? __('Use a view of your own, not under :folders, like :example.', ['folders' => implode(', ', self::NOT_PAGES), 'example' => $example])
+                : __('Use a view under :prefixes, like :example.', ['prefixes' => implode(', ', $prefixes), 'example' => $example])]);
         }
 
         return $template;
     }
 
-    /** Whether a view name is under one of the site's template prefixes. */
+    /**
+     * Whether a view may be a page's template: with template prefixes
+     * (sunrice-cms.site.template_prefixes), one under them; without (the
+     * default), any of the app's own views (resources/views) but those in
+     * the NOT_PAGES folders or whose name starts with "_", never a
+     * package's ("pkg::…").
+     */
     public static function allowed(string $template): bool
     {
-        foreach (self::prefixes() as $prefix) {
+        $prefixes = self::prefixes();
+        if ($prefixes === null) {
+            if (str_contains($template, '::')) {
+                return false;
+            }
+            $parts = explode('.', $template);
+            foreach ($parts as $i => $part) {
+                if (str_starts_with($part, '_') || ($i < count($parts) - 1 && in_array($part, self::NOT_PAGES, true))) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        foreach ($prefixes as $prefix) {
             if (str_starts_with($template, $prefix)) {
                 return true;
             }
@@ -96,13 +125,18 @@ final class SaveEntrySettings
     }
 
     /**
-     * The site's template prefixes (sunrice-cms.site.template_prefixes; "cms." when none).
+     * The site's template prefixes (sunrice-cms.site.template_prefixes):
+     * null, the default, for any of the app's own views (allowed()); an
+     * empty list stands for "cms.".
      *
-     * @return non-empty-list<string>
+     * @return non-empty-list<string>|null
      */
-    public static function prefixes(): array
+    public static function prefixes(): ?array
     {
-        $prefixes = config('sunrice-cms.site.template_prefixes', ['cms.']);
+        $prefixes = config('sunrice-cms.site.template_prefixes');
+        if ($prefixes === null) {
+            return null;
+        }
         $prefixes = is_array($prefixes) ? array_values(array_filter($prefixes, fn (mixed $p): bool => is_string($p) && $p !== '')) : [];
 
         return $prefixes === [] ? ['cms.'] : $prefixes;

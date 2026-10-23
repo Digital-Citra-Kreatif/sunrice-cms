@@ -32,8 +32,11 @@ return [
         // Laravel's StartSession, a session for every visitor.
         'lazy_sessions' => env('SUNRICE_LAZY_SESSIONS', true),
         // What the views editors pick for an entry or a term may start
-        // with, so no other view of the app can be made a public page.
-        'template_prefixes' => ['cms.'],
+        // with: resources/views/cms/ and resources/views/pages/. Add the
+        // folders you want editors to use; null allows any of the app's own
+        // views but those under layouts, partials, components, errors,
+        // vendor, emails, mail and auth (and "_" files). Never a package's.
+        'template_prefixes' => ['cms.', 'pages.'],
         // An entry or term not translated into a language (or not live in
         // it) shows the main language's content at that language's address,
         // canonical to the main page. Off: a 404 there. Null (the default):

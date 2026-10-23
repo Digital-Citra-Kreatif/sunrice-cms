@@ -75,10 +75,15 @@ class Term extends Model
         return $this->hasMany(TermTranslation::class);
     }
 
-    /** @return BelongsToMany<Entry, $this> */
+    /**
+     * The entries with this term (their own terms, the editor's Taxonomies
+     * card): those of collections its taxonomy is attached to.
+     *
+     * @return BelongsToMany<Entry, $this>
+     */
     public function entries(): BelongsToMany
     {
-        return $this->belongsToMany(Entry::class, 'sunrice_entry_term');
+        return $this->belongsToMany(Entry::class, 'sunrice_entry_term')->whereExists(Entry::termAttached());
     }
 
     /** In a language, falling back to the main language's. */

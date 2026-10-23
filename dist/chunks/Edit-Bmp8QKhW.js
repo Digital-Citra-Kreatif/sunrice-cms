@@ -1,19 +1,19 @@
-import { j as e, a as S, t as l, r as j, l as h, h as U } from "./admin-yVJc9wzJ.js";
+import { j as e, a as S, t as l, r as j, l as x, h as A } from "./admin-DOeXGS4s.js";
 import { u as i } from "./ui-Dh5wfMwT.js";
-import { F as v } from "./FieldError-CRiLMdkC.js";
-import { A, b as B, h as P, B as H } from "./FieldInput-Dnhq0ZxI.js";
-import { F as M } from "./FieldSections-BG74A7JE.js";
-import { S as q, T as G } from "./SlugNote-CTW3T26h.js";
-import { V as J } from "./VersionConflict-9gS8WThr.js";
-import { L as R } from "./LanguageTabs-KqcbB580.js";
-import { s as z } from "./seo-DIf3DL1x.js";
-import { E as Q } from "./external-link-CFxEu4M4.js";
-import { L as W } from "./loader-circle-ByksABXO.js";
+import { F as v } from "./FieldError-D-WN54vL.js";
+import { A as B, b as P, h as H, B as M } from "./FieldInput-Bq_thxuf.js";
+import { F as q } from "./FieldSections-1hrfbCvr.js";
+import { S as G, T as J, w as R } from "./SlugNote-Chx9gJaT.js";
+import { V as z } from "./VersionConflict-D337XINe.js";
+import { L as Q } from "./LanguageTabs-D9p4MxF1.js";
+import { s as W } from "./seo-DOAf80_3.js";
+import { E as X } from "./external-link-CFxEu4M4.js";
+import { L as Y } from "./loader-circle-ByksABXO.js";
 const b = "__top";
-function de(r) {
-  return /* @__PURE__ */ e.jsx(X, { ...r }, `${r.term?.id ?? "new"}:${r.locale}:${r.version}:${JSON.stringify([r.values, r.seo, r.term?.template, r.parentId])}`);
+function oe(r) {
+  return /* @__PURE__ */ e.jsx(Z, { ...r }, `${r.term?.id ?? "new"}:${r.locale}:${r.version}:${JSON.stringify([r.values, r.seo, r.term?.template, r.parentId])}`);
 }
-function X({ taxonomy: r, term: t, parentId: $ = null, terms: k = [], translated: N, fields: T, locale: d, locales: p, shared: E, sharedValues: F, values: L, seo: _, version: D, usedBy: C = [], redirectsUrl: K = null, templates: I = null }) {
+function Z({ taxonomy: r, term: t, parentId: $ = null, terms: k = [], translated: N, fields: T, locale: d, locales: p, shared: E, sharedValues: F, values: L, seo: _, version: D, usedBy: C = [], redirectsUrl: K = null, templates: I = null, templateChoices: O }) {
   const g = S(`cms/taxonomies/${r.handle}/terms`), f = t ? S(`cms/terms/${t.id}/content`) : g, w = t ? t.title : l("New term");
   i.useBreadcrumbs([{ label: r.title, href: `${g}?locale=${d}` }, { label: w }]);
   const a = j.useForm({
@@ -26,9 +26,9 @@ function X({ taxonomy: r, term: t, parentId: $ = null, terms: k = [], translated
     template: t?.template ?? "",
     version: D
   }), n = a.errors, u = (s) => {
-    const c = H(n, s);
+    const c = M(n, s);
     c.length > 0 && a.clearErrors(...c);
-  }, y = () => a.processing || (t ? a.put(f, { preserveScroll: !0 }) : a.post(f)), O = () => {
+  }, y = () => a.processing || (t ? a.put(f, { preserveScroll: !0 }) : a.post(f)), V = () => {
     a.transform((s) => ({ ...s, version: null })), a.put(f, { preserveScroll: !0 });
   }, m = i.useEditLock({
     type: "cms.term",
@@ -38,13 +38,13 @@ function X({ taxonomy: r, term: t, parentId: $ = null, terms: k = [], translated
     noun: l("term"),
     leaveTo: `${g}?locale=${d}`,
     getUnsaved: () => a.isDirty ? { data: a.data.data, seo: a.data.seo, template: a.data.template } : null
-  }), o = !m.readOnly, V = async (s) => {
+  }), o = !m.readOnly, U = async (s) => {
     const c = await m.loadKept(s);
-    a.setData((x) => ({
-      ...x,
-      data: c.data && typeof c.data == "object" ? c.data : x.data,
-      seo: c.seo && typeof c.seo == "object" ? c.seo : x.seo,
-      template: typeof c.template == "string" ? c.template : x.template
+    a.setData((h) => ({
+      ...h,
+      data: c.data && typeof c.data == "object" ? c.data : h.data,
+      seo: c.seo && typeof c.seo == "object" ? c.seo : h.seo,
+      template: typeof c.template == "string" ? c.template : h.template
     }));
   };
   return i.useUnsavedChanges(a.isDirty && !m.takenOver, o ? y : void 0), /* @__PURE__ */ e.jsxs("form", { noValidate: !0, onSubmit: (s) => {
@@ -59,12 +59,12 @@ function X({ taxonomy: r, term: t, parentId: $ = null, terms: k = [], translated
         back: { href: `${g}?locale=${d}`, label: l("Back to :title", { title: r.title }) },
         actions: /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
           t?.url && /* @__PURE__ */ e.jsx(i.Button, { type: "button", variant: "ghost", asChild: !0, children: /* @__PURE__ */ e.jsxs("a", { href: t.url, target: "_blank", rel: "noopener noreferrer", children: [
-            /* @__PURE__ */ e.jsx(Q, {}),
+            /* @__PURE__ */ e.jsx(X, {}),
             " ",
             l("View page")
           ] }) }),
           o && /* @__PURE__ */ e.jsxs(i.Button, { type: "submit", disabled: a.processing, children: [
-            a.processing && /* @__PURE__ */ e.jsx(W, { className: "cms:animate-spin" }),
+            a.processing && /* @__PURE__ */ e.jsx(Y, { className: "cms:animate-spin" }),
             " ",
             t ? l("Save") : l("Create term")
           ] })
@@ -75,7 +75,7 @@ function X({ taxonomy: r, term: t, parentId: $ = null, terms: k = [], translated
     /* @__PURE__ */ e.jsxs("div", { className: "cms:grid cms:items-start cms:gap-6 cms:lg:grid-cols-[minmax(0,1fr)_20rem]", children: [
       /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:min-w-0 cms:flex-col cms:gap-6", children: [
         /* @__PURE__ */ e.jsx(
-          R,
+          Q,
           {
             current: d,
             locales: p,
@@ -84,8 +84,8 @@ function X({ taxonomy: r, term: t, parentId: $ = null, terms: k = [], translated
           }
         ),
         /* @__PURE__ */ e.jsx(i.ViewingNotice, { by: m.viewingBy, onTakeOver: m.requestTakeOver }),
-        t === null && p.length > 1 && /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: l("In :language. Translate it here afterwards: switch the language and give it a title there.", { language: h(d) }) }),
-        !N && /* @__PURE__ */ e.jsx("p", { className: "cms:rounded-lg cms:border cms:bg-muted/40 cms:p-3 cms:text-sm cms:text-muted-foreground", role: "note", children: l("Not in :language yet: the site shows the :main term meanwhile. Give it a title in :language and save to add it.", { language: h(d), main: h(p[0] ?? "en") }) }),
+        t === null && p.length > 1 && /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: l("In :language. Translate it here afterwards: switch the language and give it a title there.", { language: x(d) }) }),
+        !N && /* @__PURE__ */ e.jsx("p", { className: "cms:rounded-lg cms:border cms:bg-muted/40 cms:p-3 cms:text-sm cms:text-muted-foreground", role: "note", children: l("Not in :language yet: the site shows the :main term meanwhile. Give it a title in :language and save to add it.", { language: x(d), main: x(p[0] ?? "en") }) }),
         /* @__PURE__ */ e.jsxs("fieldset", { disabled: !o, className: "cms:grid cms:min-w-0 cms:gap-4 cms:sm:grid-cols-2", children: [
           /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
             /* @__PURE__ */ e.jsx(i.Label, { htmlFor: "term-title", children: l("Title") }),
@@ -122,7 +122,7 @@ function X({ taxonomy: r, term: t, parentId: $ = null, terms: k = [], translated
                 }
               }
             ),
-            /* @__PURE__ */ e.jsx(q, { note: U(t?.hasPage ? t.slug : null, a.data.slug, !1), redirectsUrl: K }),
+            /* @__PURE__ */ e.jsx(G, { note: A(t?.hasPage ? t.slug : null, a.data.slug, !1), redirectsUrl: K }),
             /* @__PURE__ */ e.jsx(v, { message: n.slug })
           ] }),
           r.hierarchical && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2 cms:sm:col-span-2", children: [
@@ -150,13 +150,13 @@ function X({ taxonomy: r, term: t, parentId: $ = null, terms: k = [], translated
           ] })
         ] }),
         /* @__PURE__ */ e.jsx(i.KeptEditsNotice, { kept: m.kept, disabled: !o, onLoad: (s) => {
-          V(s);
+          U(s);
         }, onDiscard: (s) => {
           m.discardKept(s);
         } }),
-        /* @__PURE__ */ e.jsx(J, { message: n.version, processing: a.processing, onSaveMine: O }),
+        /* @__PURE__ */ e.jsx(z, { message: n.version, processing: a.processing, onSaveMine: V }),
         /* @__PURE__ */ e.jsx(
-          M,
+          q,
           {
             disabled: !o,
             fields: T,
@@ -165,13 +165,13 @@ function X({ taxonomy: r, term: t, parentId: $ = null, terms: k = [], translated
             storageKey: `cms:term:${r.handle}`,
             shared: E,
             sharedValues: F,
-            sharedNote: l("Shared by all languages: the greyed-out fields are edited in :language.", { language: h(p[0] ?? "en") }),
+            sharedNote: l("Shared by all languages: the greyed-out fields are edited in :language.", { language: x(p[0] ?? "en") }),
             onChange: (s, c) => {
               a.setData("data", { ...a.data.data, [s]: c }), u(`data.${s}`);
             }
           }
         ),
-        /* @__PURE__ */ e.jsx(i.CollapsibleCard, { title: l("SEO"), description: l("How this term's page appears in search results and shared links."), titleClassName: "cms:text-base", storageKey: "cms:term:seo", hasErrors: P(n, "seo"), children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !o, className: "cms:min-w-0", children: /* @__PURE__ */ e.jsx(A, { bare: !0, id: "seo", fields: z(), value: a.data.seo, errors: B(n, "seo"), onChange: (s) => {
+        /* @__PURE__ */ e.jsx(i.CollapsibleCard, { title: l("SEO"), description: l("How this term's page appears in search results and shared links."), titleClassName: "cms:text-base", storageKey: "cms:term:seo", hasErrors: H(n, "seo"), children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !o, className: "cms:min-w-0", children: /* @__PURE__ */ e.jsx(B, { bare: !0, id: "seo", fields: W(), value: a.data.seo, errors: P(n, "seo"), onChange: (s) => {
           a.setData("seo", s), u("seo");
         } }) }) })
       ] }),
@@ -185,12 +185,12 @@ function X({ taxonomy: r, term: t, parentId: $ = null, terms: k = [], translated
             hasErrors: n.template !== void 0,
             contentClassName: "cms:flex cms:flex-col cms:gap-2",
             children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !o, className: "cms:flex cms:min-w-0 cms:flex-col cms:gap-2", children: /* @__PURE__ */ e.jsx(
-              G,
+              J,
               {
                 id: "template",
                 value: a.data.template,
                 onChange: (s) => a.setData("template", s),
-                lookup: I,
+                lookup: R(I, O),
                 example: `cms.${r.handle}-special`,
                 automatic: l("Automatic uses the taxonomy's template."),
                 error: n.template,
@@ -211,5 +211,5 @@ function X({ taxonomy: r, term: t, parentId: $ = null, terms: k = [], translated
   ] });
 }
 export {
-  de as default
+  oe as default
 };
