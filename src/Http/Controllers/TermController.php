@@ -90,7 +90,7 @@ final class TermController
                     'title' => $translation->title ?? null,
                     'slug' => $translation->slug ?? null,
                     'version' => $translation->version ?? null,
-                    'fallback' => $term->title(),
+                    'fallback' => $term->title(Locales::default()),
                     'entries' => $term->entries_count ?? 0,
                     'createdAt' => $term->created_at?->toIso8601String(),
                     // Its usual page: the shared one, else a collection's.
@@ -276,7 +276,7 @@ final class TermController
 
         return Inertia::render('Cms/Terms/Edit', [
             ...$this->editorProps($request, $taxonomy, $term, $locale),
-            'term' => ['id' => $term->id, 'title' => $translation->title ?? $term->title(), 'template' => $term->template, 'url' => $translation?->url(),
+            'term' => ['id' => $term->id, 'title' => $translation->title ?? $term->title(Locales::default()), 'template' => $term->template, 'url' => $translation?->url(),
                 // This language's own title and slug, edited here too (empty: not translated yet).
                 'ownTitle' => $translation?->title, 'slug' => $translation?->slug, 'mainTitle' => $main?->title,
                 // Whether the term has a page of its own, whose address a new slug moves (nothing redirects from the old one).

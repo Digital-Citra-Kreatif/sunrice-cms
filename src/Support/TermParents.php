@@ -43,7 +43,7 @@ final class TermParents
             $chains[$term->id] = $chain;
         }
         $titles = Term::query()->withTrashed()->with('translations')->whereKey(array_values(array_unique(array_merge(...array_values($chains)))))->get()
-            ->mapWithKeys(fn (Term $term): array => [$term->id => $term->title()])->all();
+            ->mapWithKeys(fn (Term $term): array => [$term->id => $term->title(Locales::default())])->all();
 
         return array_map(fn (array $chain): array => array_map(fn (int $id): string => $titles[$id] ?? '', $chain), $chains);
     }

@@ -7,6 +7,7 @@ namespace Sunrice\Cms\Actions\Terms;
 use Illuminate\Support\Facades\DB;
 use Sunrice\Admin\Activity\ActivityLog;
 use Sunrice\Cms\Models\Term;
+use Sunrice\Cms\Support\Locales;
 
 /**
  * Brings a term out of the trash, with the terms under it. Under a parent
@@ -30,6 +31,6 @@ final class RestoreTerm
             $term->restore();
             Term::onlyTrashed()->whereKey($term->descendantIds())->get()->each(fn (Term $child) => $child->restore());
         });
-        $this->activity->record('restored', 'term', $term, $term->title());
+        $this->activity->record('restored', 'term', $term, $term->title(Locales::default()));
     }
 }

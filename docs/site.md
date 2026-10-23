@@ -396,6 +396,8 @@ For a part of a template without PHP, `<x-sunrice-cms::entries>` and `<x-sunrice
 </x-sunrice-cms::terms>
 ```
 
+A term's `title()`, `translation()` and `url()` are in the language of the page shown (`Locales::current()`, so "Berita" and `/id/topics/berita` on `/id/…`), falling back to the main language's when it has no translation there; give a language to have another (`$term->title('en')`).
+
 #### `<x-sunrice-cms::entries>`
 
 | Attribute | |

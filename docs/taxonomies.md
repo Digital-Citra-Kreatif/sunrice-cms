@@ -37,7 +37,7 @@ $entry->entry->terms;           // an entry's live terms (an Entry's relation)
 
 ### Terms fields
 
-A **Terms** field (with its taxonomy, and whether it takes several terms, and at most how many) is an ordinary field: a custom link to terms, like a "Featured topic", whatever the collection's taxonomies. Its values are stored with the entry's fields (shared by all languages) and are not the entry's terms: term pages, `whereTerm()` and the filters don't read them; `whereFieldTerm('featured_topic', …)` does. Templates get `Term` models (`$term->title()`, `$term->title('id')`, `$term->translation()->slug`), or a collection of them with several, in the order chosen; deleted terms are left out. `TermsField::toAdmin()` sends the taxonomy's handle.
+A **Terms** field (with its taxonomy, and whether it takes several terms, and at most how many) is an ordinary field: a custom link to terms, like a "Featured topic", whatever the collection's taxonomies. Its values are stored with the entry's fields (shared by all languages) and are not the entry's terms: term pages, `whereTerm()` and the filters don't read them; `whereFieldTerm('featured_topic', …)` does. Templates get `Term` models (`$term->title()` and `$term->translation()->slug` in the page's language, falling back to the main one's, as `$term->url()`; `$term->title('id')` in another), or a collection of them with several, in the order chosen; deleted terms are left out. `TermsField::toAdmin()` sends the taxonomy's handle.
 
 Sites made with 0.1 gave entries their terms through terms fields (attaching a taxonomy added one to the collection's blueprints): see [upgrading](../../../docs/upgrading.md).
 

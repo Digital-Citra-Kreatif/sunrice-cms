@@ -256,6 +256,6 @@ final class ContentReferences
 
     public static function termSlug(Term $term): string
     {
-        return $term->translations->firstWhere('locale', Locales::default())->slug ?? $term->translation()->slug ?? (string) $term->id;
+        return $term->translations->firstWhere('locale', Locales::default())->slug ?? $term->translations->sortBy('id')->first()->slug ?? (string) $term->id;
     }
 }

@@ -86,10 +86,13 @@ class Term extends Model
         return $this->belongsToMany(Entry::class, 'sunrice_entry_term')->whereExists(Entry::termAttached());
     }
 
-    /** In a language, falling back to the main language's. */
+    /**
+     * In a language (by default the page's, Locales::current(), as url()
+     * does), falling back to the main language's, else the first one.
+     */
     public function translation(?string $locale = null): ?TermTranslation
     {
-        return $this->translations->firstWhere('locale', $locale ?? Locales::default())
+        return $this->translations->firstWhere('locale', $locale ?? Locales::current())
             ?? $this->translations->firstWhere('locale', Locales::default())
             ?? $this->translations->sortBy('id')->first();
     }
@@ -162,7 +165,11 @@ class Term extends Model
         }
     }
 
-    /** The title in a language (falling back to the main one). */
+    /**
+     * The title in a language: by default the page's (Locales::current(),
+     * as url()), falling back to the main language's when it has no
+     * translation there. Admin code passes the language it shows.
+     */
     public function title(?string $locale = null): string
     {
         return $this->translation($locale)->title ?? '';

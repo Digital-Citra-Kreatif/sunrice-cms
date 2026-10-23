@@ -203,7 +203,7 @@ final class Menus
             if ($term === null || $term->trashed() || ($item->collection_id !== null && ($item->collection === null || $item->collection->trashed()))) {
                 return null;
             }
-            $translation = $term->translations->firstWhere('locale', $locale) ?? $term->translation();
+            $translation = $term->translation($locale);
             // With a collection: its term page there (/books/tags/featured); without, the same page wherever the menu shows.
             $translation?->setRelation('term', $term)->in($item->collection_id !== null ? $item->collection : null);
             $url = $translation === null ? null : app(Site::class)->termUrlIn($translation, $locale, followPage: false);

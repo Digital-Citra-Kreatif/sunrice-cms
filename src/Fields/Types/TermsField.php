@@ -13,6 +13,7 @@ use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Fields\Schema;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
+use Sunrice\Cms\Support\Locales;
 
 /**
  * Terms of a taxonomy (config: taxonomy, multiple, max). Stores term ids;
@@ -119,7 +120,7 @@ final class TermsField extends FieldType
                 ->offset($offset)->limit($limit + 1)->with('translations')->get();
             $items = [];
             foreach ($terms->take($limit) as $term) {
-                $items[] = ['id' => $term->id, 'label' => $term->title(), 'depth' => 0];
+                $items[] = ['id' => $term->id, 'label' => $term->title(Locales::default()), 'depth' => 0];
             }
 
             return ['items' => $items, 'more' => $terms->count() > $limit];
@@ -132,7 +133,7 @@ final class TermsField extends FieldType
         foreach ($page as [$id, $depth]) {
             $term = $terms->get($id);
             if ($term instanceof Term) {
-                $items[] = ['id' => $id, 'label' => $term->title(), 'depth' => $depth];
+                $items[] = ['id' => $id, 'label' => $term->title(Locales::default()), 'depth' => $depth];
             }
         }
 
@@ -153,7 +154,7 @@ final class TermsField extends FieldType
         }
         $labels = [];
         foreach (Term::query()->with('translations')->whereKey(array_slice($ids, 0, 500))->get() as $term) {
-            $labels[$term->id] = $term->title();
+            $labels[$term->id] = $term->title(Locales::default());
         }
 
         return $labels;

@@ -11,6 +11,7 @@ use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Models\ContentReference;
 use Sunrice\Cms\Models\MenuItem;
 use Sunrice\Cms\Models\Term;
+use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\References;
 
 /**
@@ -33,7 +34,7 @@ final class DeleteTerm
         if (! $force && $usedBy !== []) {
             throw ValidationException::withMessages(['term' => __('This term is used by :uses. Delete it anyway to leave those fields without it.', ['uses' => References::sentence($usedBy)])]);
         }
-        $title = $term->title();
+        $title = $term->title(Locales::default());
         DB::transaction(function () use ($term): void {
             Term::query()->withTrashed()->where('parent_id', $term->id)->update(['parent_id' => $term->parent_id]);
             // Explicitly, not by the foreign keys' cascade: not every connection enforces them.

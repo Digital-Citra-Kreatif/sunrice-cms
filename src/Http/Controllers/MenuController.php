@@ -38,7 +38,7 @@ final class MenuController
             // What else items may link to: terms with pages (shared, or in collections: `pages`), listing pages.
             'terms' => Term::query()->whereHas('taxonomy', fn ($q) => $q->whereNotNull('route')->orWhereHas('collections', fn ($q) => $q->where('sunrice_collection_taxonomy.term_pages', true)))
                 ->with(['translations', 'taxonomy.collections' => fn ($query) => $query->orderBy('title')])->orderBy('taxonomy_id')->orderBy('sort_order')->limit(500)->get()
-                ->map(fn (Term $term): array => ['id' => $term->id, 'title' => $term->title(), 'taxonomy' => $term->taxonomy->title, 'pages' => self::termPages($term)])->all(),
+                ->map(fn (Term $term): array => ['id' => $term->id, 'title' => $term->title(Locales::default()), 'taxonomy' => $term->taxonomy->title, 'pages' => self::termPages($term)])->all(),
             'listings' => Collection::query()->whereNotNull('listing_route')->orderBy('title')->get()
                 ->map(fn (Collection $collection): array => ['id' => $collection->id, 'title' => $collection->title])->all(),
             // Taxonomies with index pages: the shared one (collection null) and their collections'.
@@ -123,7 +123,7 @@ final class MenuController
             $pages = $in === null ? $item->collection_id === null && ($taxonomy->route !== null || $withPages->isNotEmpty()) : ! $in->trashed() && $withPages->contains('id', $in->id);
             $kind = $in !== null ? $taxonomy->title.' · '.$in->title : ($taxonomy->route !== null ? __(':taxonomy · Shared page', ['taxonomy' => $taxonomy->title]) : $taxonomy->title);
 
-            return ['title' => $item->term->title(), 'kind' => $kind, 'live' => ! $item->term->trashed() && $pages];
+            return ['title' => $item->term->title(Locales::default()), 'kind' => $kind, 'live' => ! $item->term->trashed() && $pages];
         }
         if ($item->collection !== null) {
             return ['title' => $item->collection->title, 'kind' => __('Listing page'), 'live' => ! $item->collection->trashed() && $item->collection->listing_route !== null];

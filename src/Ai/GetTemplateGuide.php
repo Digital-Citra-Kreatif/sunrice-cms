@@ -61,7 +61,7 @@ resources/views/cms/
 ## Data
 
 - Entries: `Cms::entries('blog')->latest()->limit(3)->get()`, `->whereTerm('topics', 'news')`, `->where('featured', true)`, `->ordered()`, `->paginate(10)`, or `<x-sunrice-cms::entries collection="blog" :limit="3">` with `$component->entries`. Each result: `$post->title`, `$post->url()`, `$post->values()`.
-- Terms: `<x-sunrice-cms::terms taxonomy="categories" hide-empty tree>` with `$component->terms`. An entry's own terms: `$entry->terms`, or one taxonomy's `$entry->termsOf('categories')` (each `$term->title()`, `$term->url()`).
+- Terms: `<x-sunrice-cms::terms taxonomy="categories" hide-empty tree>` with `$component->terms`. An entry's own terms: `$entry->terms`, or one taxonomy's `$entry->termsOf('categories')` (each `$term->title()`, `$term->url()`, in the page's language, else the main one's).
 - Menus: `@foreach (Cms::menu('main') as $item)` → `$item['label']`, `['url']`, `['new_tab']`, `['active']`, `['active_trail']`, `['children']`.
 - Globals: `Cms::global('contact')['phone'] ?? ''`. Forms: `<x-sunrice-cms::form handle="contact" />`. Comments: `<x-sunrice-cms::comments :entry="$entry" />`. Search box: `<x-sunrice-cms::search>`.
 - read_docs "cms/site", "cms/fields", "cms/menus", "cms/forms" have the details.
