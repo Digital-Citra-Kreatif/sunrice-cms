@@ -145,23 +145,29 @@ final class Schema
 
     /**
      * What another language stores of its data: without what withShared()
-     * would take from the main language's.
+     * would take from the main language's. Given what it stores now
+     * (`$stored`), the values it has there for those fields are kept
+     * instead: they're out of sight while the field is shared and show
+     * again when it's translated again (in rows and blocks too, matched by
+     * id). Without, nothing of them is stored.
      *
      * @param  array<mixed>  $data
      * @param  array<mixed>  $main
+     * @param  array<mixed>|null  $stored
      * @return array<mixed>
      */
-    public function withoutShared(array $data, array $main): array
+    public function withoutShared(array $data, array $main, ?array $stored = null): array
     {
-        return $this->share($data, $main, true);
+        return $this->share($data, $main, true, $stored);
     }
 
     /**
      * @param  array<mixed>  $data
      * @param  array<mixed>  $main
+     * @param  array<mixed>|null  $stored  when stripping: the values to keep for the shared fields
      * @return array<mixed>
      */
-    private function share(array $data, array $main, bool $strip): array
+    private function share(array $data, array $main, bool $strip, ?array $stored = null): array
     {
         foreach ($this->fields as $field) {
             $handle = $field->handle;
@@ -169,10 +175,13 @@ final class Schema
                 continue;
             }
             if (! $this->isTranslatable($field)) {
-                if ($strip) {
-                    unset($data[$handle]);
-                } else {
+                if (! $strip) {
                     $data[$handle] = $main[$handle];
+                } elseif ($stored !== null && array_key_exists($handle, $stored)) {
+                    // Its own value from when the field was translated, kept out of sight.
+                    $data[$handle] = $stored[$handle];
+                } else {
+                    unset($data[$handle]);
                 }
 
                 continue;
@@ -182,13 +191,15 @@ final class Schema
             if (! is_array($value) || ! is_array($base)) {
                 continue;
             }
+            $kept = $stored !== null && is_array($stored[$handle] ?? null) ? $stored[$handle] : null;
             $data[$handle] = match ($field->type) {
-                Types\Group::TYPE => self::children($field, $this->depth)->share($value, $base, $strip),
-                Types\Repeater::TYPE => $this->shareItems($value, $base, '_id', fn (array $row, array $mainRow): array => self::children($field, $this->depth)->share($row, $mainRow, $strip)),
-                Types\Flexible::TYPE => $this->depth >= self::MAX_DEPTH ? $value : $this->shareItems($value, $base, 'id', function (array $block, array $mainBlock) use ($strip): array {
+                Types\Group::TYPE => self::children($field, $this->depth)->share($value, $base, $strip, $kept),
+                Types\Repeater::TYPE => $this->shareItems($value, $base, $kept, '_id', fn (array $row, array $mainRow, ?array $keptRow): array => self::children($field, $this->depth)->share($row, $mainRow, $strip, $keptRow)),
+                Types\Flexible::TYPE => $this->depth >= self::MAX_DEPTH ? $value : $this->shareItems($value, $base, $kept, 'id', function (array $block, array $mainBlock, ?array $keptBlock) use ($strip): array {
                     $fields = is_string($block['type'] ?? null) && ($block['type'] === ($mainBlock['type'] ?? null)) ? app(Fieldsets::class)->fields($block['type']) : null;
                     if ($fields !== null && is_array($block['values'] ?? null) && is_array($mainBlock['values'] ?? null)) {
-                        $block['values'] = self::make($fields, $this->depth + 1)->share($block['values'], $mainBlock['values'], $strip);
+                        $keptValues = $keptBlock !== null && ($keptBlock['type'] ?? null) === $block['type'] && is_array($keptBlock['values'] ?? null) ? $keptBlock['values'] : null;
+                        $block['values'] = self::make($fields, $this->depth + 1)->share($block['values'], $mainBlock['values'], $strip, $keptValues);
                     }
 
                     return $block;
@@ -201,29 +212,43 @@ final class Schema
     }
 
     /**
-     * Rows or blocks, each paired with the main language's of the same id.
+     * Rows or blocks, each paired with the main language's of the same id
+     * (and the stored one of that id, if any).
      *
      * @param  array<mixed>  $items
      * @param  array<mixed>  $main
-     * @param  \Closure(array<mixed>, array<mixed>): array<mixed>  $share
+     * @param  array<mixed>|null  $stored
+     * @param  \Closure(array<mixed>, array<mixed>, array<mixed>|null): array<mixed>  $share
      * @return array<mixed>
      */
-    private function shareItems(array $items, array $main, string $id, \Closure $share): array
+    private function shareItems(array $items, array $main, ?array $stored, string $id, \Closure $share): array
     {
-        $byId = [];
-        foreach ($main as $item) {
-            if (is_array($item) && is_string($item[$id] ?? null) && $item[$id] !== '') {
-                $byId[$item[$id]] = $item;
-            }
-        }
+        $byId = self::byId($main, $id);
+        $storedById = $stored === null ? [] : self::byId($stored, $id);
         foreach ($items as $index => $item) {
             $key = is_array($item) && is_string($item[$id] ?? null) ? $item[$id] : null;
             if ($key !== null && isset($byId[$key])) {
-                $items[$index] = $share($item, $byId[$key]);
+                $items[$index] = $share($item, $byId[$key], $storedById[$key] ?? null);
             }
         }
 
         return $items;
+    }
+
+    /**
+     * @param  array<mixed>  $items
+     * @return array<string, array<mixed>>
+     */
+    private static function byId(array $items, string $id): array
+    {
+        $byId = [];
+        foreach ($items as $item) {
+            if (is_array($item) && is_string($item[$id] ?? null) && $item[$id] !== '') {
+                $byId[$item[$id]] = $item;
+            }
+        }
+
+        return $byId;
     }
 
     /**

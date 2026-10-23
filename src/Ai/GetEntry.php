@@ -48,7 +48,8 @@ final class GetEntry extends CmsTool
             return $translation;
         }
         $schema = $entry->schema();
-        $data = $translation->draft_data;
+        // Without the values another language keeps of shared fields, out of sight.
+        $data = $translation->shownData($translation->draft_data) ?? [];
         unset($data[Seo::KEY]);
 
         return $this->json([

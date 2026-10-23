@@ -212,12 +212,14 @@ final class SwitchMainLanguage
 
         $others = $entry->translations->reject(fn (EntryTranslation $t): bool => $t->is($new));
         foreach ($others as $translation) {
+            // The values they keep of shared fields, out of sight (EntryTranslation::ownData()), stay; the old main one's are the new one's now.
+            $keep = $translation->is($old) ? [null, null] : [$translation->data, $translation->draft_data];
             if ($translation->data !== null) {
                 $complete = $schema->withShared($translation->data, $oldLive ?? []);
                 // Without a live main version, the others keep their own copies.
-                $translation->data = self::fields($new->data === null ? $complete : $schema->withoutShared($complete, $new->data));
+                $translation->data = self::fields($new->data === null ? $complete : $schema->withoutShared($complete, $new->data, $keep[0]));
             }
-            $translation->draft_data = self::fields($schema->withoutShared($schema->withShared($translation->draft_data, $oldDraft), $new->draft_data));
+            $translation->draft_data = self::fields($schema->withoutShared($schema->withShared($translation->draft_data, $oldDraft), $new->draft_data, $keep[1]));
         }
         // Saved with the entry and its translations at hand, the new main one first, so search text reads it.
         foreach ([$new, ...$others->all()] as $translation) {

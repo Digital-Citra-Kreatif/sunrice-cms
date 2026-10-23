@@ -160,7 +160,8 @@ class EntryTranslation extends Model
         return $this->title === null
             || $this->draft_title !== $this->title
             || $this->draft_slug !== $this->slug
-            || $this->draft_data != $this->data
+            // Not the values another language keeps of shared fields, out of sight (ownData()).
+            || ($this->draft_data != $this->data && $this->shownData($this->draft_data) != $this->shownData($this->data))
             || $this->entry->hasUnpublishedTerms();
     }
 
@@ -265,20 +266,44 @@ class EntryTranslation extends Model
     /**
      * What this translation stores of the given fields: all of them for the
      * main one; for the others, without what completeData() takes from the
-     * main translation's draft (or the given main data).
+     * main translation's draft (or the given main data). What the others
+     * have stored for shared fields (their values from when the field was
+     * translated) stays as it is, out of sight, whatever the given data
+     * holds for them: it comes back when the field is translated again.
      *
      * @param  array<mixed>  $data
      * @param  array<mixed>|null  $main  the main translation's data to compare with (null: its draft)
+     * @param  array<mixed>|null  $stored  what it stores now, to keep its values of shared fields from (null: its draft)
      * @return array<mixed>
      */
-    public function ownData(array $data, ?array $main = null): array
+    public function ownData(array $data, ?array $main = null, ?array $stored = null): array
     {
         $mainTranslation = $this->entry->mainTranslation();
         if ($mainTranslation === null || $mainTranslation->is($this)) {
             return $data;
         }
 
-        return $this->entry->schema()->withoutShared($data, $main ?? $mainTranslation->draft_data);
+        return $this->entry->schema()->withoutShared($data, $main ?? $mainTranslation->draft_data, $stored ?? $this->draft_data);
+    }
+
+    /**
+     * What of the given stored data (its draft, its live version or a
+     * revision) is this translation's own to show: for another language
+     * than the main one, without the shared fields, so values it keeps of
+     * them out of sight (see ownData()) aren't compared as changes.
+     *
+     * @param  array<string, mixed>|null  $data
+     * @return array<string, mixed>|null
+     */
+    public function shownData(?array $data): ?array
+    {
+        $main = $this->entry->mainTranslation();
+        if ($data === null || $main === null || $main->is($this)) {
+            return $data;
+        }
+
+        // Fields are keyed by handle.
+        return array_filter($this->entry->schema()->withoutShared($data, $main->draft_data), is_string(...), ARRAY_FILTER_USE_KEY);
     }
 
     /**
