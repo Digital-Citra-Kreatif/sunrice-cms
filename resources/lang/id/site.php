@@ -89,4 +89,8 @@ return [
         'edit' => 'Sunting',
     ],
     'captcha' => 'Konfirmasikan bahwa Anda bukan robot, lalu kirim formulir lagi.',
+    'languages' => [
+        'label' => 'Bahasa',
+        'not_translated' => '(belum diterjemahkan)',
+    ],
 ];

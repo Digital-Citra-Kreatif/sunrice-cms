@@ -163,7 +163,21 @@ final readonly class Page
      */
     public function localeUrls(): array
     {
+        return array_map(fn (array $link): string => $link['url'], $this->localeLinks());
+    }
+
+    /**
+     * The same as localeUrls(), each with whether it's the main language's
+     * entry or term standing in for one not translated into that language
+     * (the main-language fallback): ['id' => ['url' => …, 'fallback' => true]].
+     *
+     * @return array<string, array{url: string, fallback: bool}>
+     */
+    public function localeLinks(): array
+    {
         $urls = [];
+        /** @var array<string, true> $fallback */
+        $fallback = [];
         if ($this->entry !== null) {
             $entry = $this->entry->entry;
             $site = app(Site::class);
@@ -181,6 +195,7 @@ final readonly class Page
             foreach (Locales::all() as $locale) {
                 if (! isset($urls[$locale]) && $main !== null && $site->isFallbackFor($main, $locale) && ($url = $site->urlIn($main, $locale)) !== null) {
                     $urls[$locale] = $url;
+                    $fallback[$locale] = true;
                 }
             }
         } elseif ($this->term !== null) {
@@ -197,6 +212,7 @@ final readonly class Page
             foreach (Locales::all() as $locale) {
                 if (! isset($urls[$locale]) && $main !== null && Site::fallback() && ($url = $site->termUrlIn($main->in($this->term->scope), $locale)) !== null) {
                     $urls[$locale] = $this->paged($url);
+                    $fallback[$locale] = true;
                 }
             }
         } elseif ($this->type === self::SEARCH) {
@@ -220,7 +236,14 @@ final readonly class Page
         }
 
         // In the order of the site's languages.
-        return array_filter(array_replace(array_fill_keys(Locales::all(), null), $urls), fn (?string $url): bool => $url !== null);
+        $links = [];
+        foreach (Locales::all() as $locale) {
+            if (isset($urls[$locale])) {
+                $links[$locale] = ['url' => $urls[$locale], 'fallback' => isset($fallback[$locale])];
+            }
+        }
+
+        return $links;
     }
 
     /**

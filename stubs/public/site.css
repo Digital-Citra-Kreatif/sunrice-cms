@@ -58,7 +58,7 @@ main:focus { outline: none; }
 .site-menu ul, .site-footer nav ul, .language-switcher ul { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; margin: 0; padding: 0; list-style: none; }
 .site-menu li { position: relative; }
 .site-menu a, .language-switcher a { color: var(--text); text-decoration: none; }
-.site-menu a:hover, .language-switcher a:hover, .site-menu a[aria-current="page"], .language-switcher a[aria-current="true"] { color: var(--accent); text-decoration: underline; }
+.site-menu a:hover, .language-switcher a:hover, .site-menu a[aria-current="page"], .language-switcher [aria-current="true"] { color: var(--accent); text-decoration: underline; }
 .site-menu .is-active > a { font-weight: 600; }
 /* Sub-menus open on hover and keyboard focus. */
 .site-menu li ul { display: none; position: absolute; top: 100%; left: 0; min-width: 12rem; flex-direction: column; padding: 0.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); z-index: 5; }

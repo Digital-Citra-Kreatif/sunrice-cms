@@ -11,7 +11,7 @@ Templates reach the CMS through one class, `Sunrice\Cms\Content` (`@api`), alias
 | `Cms::global(string $handle)` | A global set's values in the current language, as templates get fields (media as `Media`, dates as Carbon …); an unknown handle gives `[]`. See [Globals](globals.md). |
 | `Cms::page()` | The CMS page being shown (`Sunrice\Cms\Site\Page`: `type`, `locale`, `view`, `entry`, `collection`, `term`, `preview`, `home`, `pageNumber`, `fallback`, `draft`; `contentLocale()`, the language its content is in, and `langAttribute()`, ` lang="en"` on an untranslated page), or `null` on your app's own pages. |
 | `Cms::bodyClass(array\|string $extra = [])` | The page's body classes as one string (kind of page, collection, entry or term, template, language, `logged-in` …), plus yours. See [Layout helpers](site.md#layout-helpers). |
-| `Cms::localeUrls()` | `[locale => url]`: the page shown in each language it's on, for a language switcher (`[]` on your app's own pages). |
+| `Cms::localeUrls()` | `[locale => url]`: the page shown in each language it's on, for a language switcher of your own (`[]` on your app's own pages); `<x-sunrice-cms::language-switcher />` is a ready-made one ([Components](site.md#components)). |
 | `Cms::site()` | Settings → Site (`Sunrice\Cms\Settings\SiteSettings`): `name()`, `title('About')` ("About \| Acme"), `hidden()` (the whole site hidden from search engines), `twitterHandle()`, and its properties (`description`, `image` (a media id), `separator` …). |
 | `Cms::resolveTemplateUsing(Closure(Page): ?string $hook)` | In a service provider's `boot()`: choose the view of the CMS's pages. See [Hooks](site.md#hooks). |
 | `Cms::bodyClassUsing(Closure(Page): array $hook)` | In a service provider's `boot()`: add body classes. |

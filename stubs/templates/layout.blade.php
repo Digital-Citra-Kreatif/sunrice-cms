@@ -33,7 +33,7 @@
                     @include('cms.partials.menu', ['items' => $menu])
                 </nav>
             @endif
-            @include('cms.partials.language-switcher')
+            <x-sunrice-cms::language-switcher class="language-switcher" />
         </div>
     </header>
 

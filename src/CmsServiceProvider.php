@@ -102,6 +102,7 @@ final class CmsServiceProvider extends ServiceProvider
             $blade->component(View\Components\EntryFilter::class, 'sunrice-cms::entry-filter');
             $blade->component(View\Components\Form::class, 'sunrice-cms::form');
             $blade->component(View\Components\Comments::class, 'sunrice-cms::comments');
+            $blade->component(View\Components\LanguageSwitcher::class, 'sunrice-cms::language-switcher');
             // <body @bodyClass> or <body @bodyClass('dark')>: the whole class="…" attribute.
             $blade->directive('bodyClass', fn (string $extra): string => '<?php echo \'class="\'.e(\Sunrice\Cms\Content::bodyClass('.($extra === '' ? '[]' : $extra).')).\'"\'; ?>');
         });

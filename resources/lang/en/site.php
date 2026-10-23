@@ -89,4 +89,8 @@ return [
         'edit' => 'Edit',
     ],
     'captcha' => 'Please confirm you\'re not a robot, then send the form again.',
+    'languages' => [
+        'label' => 'Languages',
+        'not_translated' => '(not translated yet)',
+    ],
 ];

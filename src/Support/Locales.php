@@ -70,6 +70,33 @@ final class Locales
     }
 
     /**
+     * A content language's name as its own speakers write it, for a
+     * language switcher: its name as set (Settings → Languages,
+     * sunrice-cms.locale_names), unless it was named only by its code,
+     * then its own name ("id" → "Bahasa Indonesia", "de" → "Deutsch").
+     */
+    public static function nativeName(string $locale): string
+    {
+        $name = self::name($locale);
+        if ($name !== self::displayName($locale)) {
+            return $name;
+        }
+        if (isset(LocaleSettings::KNOWN[$locale])) {
+            return LocaleSettings::KNOWN[$locale];
+        }
+        if (class_exists(\Locale::class)) {
+            $tag = str_replace('-', '_', $locale);
+            $own = \Locale::getDisplayName($tag, $tag);
+            // ICU gives an unknown language back as its code: keep the name then.
+            if (is_string($own) && strcasecmp($own, $tag) !== 0) {
+                return mb_strtoupper(mb_substr($own, 0, 1)).mb_substr($own, 1);
+            }
+        }
+
+        return $name;
+    }
+
+    /**
      * What the language's addresses start with: by default "" for the main
      * one and "/id" for the others; Settings → Languages (or config
      * sunrice-cms.locale_prefixes) can give any of them another, the main

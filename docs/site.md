@@ -43,7 +43,7 @@ An entry that isn't live in a language other than the main one (no translation t
 - the app's locale and `$locale` are the address's language, so the layout's own words are in it; templates get `$fallback = true` (and `Cms::page()->fallback`), to say "Not translated yet" if you like (the starter templates show nothing);
 - the content is in another language than the page: `$contentLocale` (and `Cms::page()->contentLocale()`) is its language, and `Cms::page()->langAttribute()` prints ` lang="en"` on such pages (nothing on others) for the element around it, so screen readers read it in the right language: `<article{{ cms_page()?->langAttribute() }}>`. The CMS's plain pages and the starter templates do this;
 - `<x-sunrice-cms::seo />` gives the main language's page as the canonical URL and no `hreflang` links, and the main page's `hreflang` links leave the language out; the sitemap lists only the main page;
-- menus, entry and term links (`$translation->url()` of a linked entry or a listed one, `$term->url()`) and `Cms::localeUrls()` link it in that language, so visitors stay in it;
+- menus, entry and term links (`$translation->url()` of a linked entry or a listed one, `$term->url()`), `Cms::localeUrls()` and the language switcher (`<x-sunrice-cms::language-switcher>`, [Components](#components)) link it in that language, so visitors stay in it (the switcher marks the link `data-fallback`);
 - listing pages, term pages, site search, `Cms::entries()` and the components (`<x-sunrice-cms::entries>`, `<x-sunrice-cms::entry-filter>`, the counts of `<x-sunrice-cms::terms>`) include it, in the main language: one row per entry, its translation where that's live, else the main language's, whose `url()` is its page at that language's address. `Cms::entries(...)->fallback(false)` keeps a query to what's translated.
 
 A translation's own slug works once it's live, and the main language's slug then redirects (301) to it in that language (`/id/about` → `/id/tentang-kami`, `Site::translatedAddress()`); terms likewise. Turn this off in **Settings → Site → Show untranslated pages in the main language** (`SiteSettings::$fallback`, on by default; shown once the site has more than one language): untranslated pages are then 404s in other languages, lists and search show only what's translated, and menus and links go to the main language's page. Saving it clears the site's caches and kept pages. `sunrice-cms.site.fallback` (`SUNRICE_FALLBACK`), when set to `true` or `false`, forces it whatever the setting says, and the toggle shows disabled ("Set by SUNRICE_FALLBACK in the app's config."); `null`, the default, follows the setting. `Site::fallback()` says which applies (`Site::fallbackForced()`: the config's value, or null).
@@ -187,7 +187,7 @@ It copies them into `resources/views/cms/`, where the rules above pick them up (
 
 | File | Used for | Shows how to |
 | --- | --- | --- |
-| `cms/layout.blade.php` | every page (`@extends('cms.layout')`, `@section('content')`, `@push('head')`) | `<x-sunrice-cms::seo>`, site code, the `main` and `footer` menus, the language switcher, a footer (the `footer` global's `text`), `@bodyClass`, a skip link |
+| `cms/layout.blade.php` | every page (`@extends('cms.layout')`, `@section('content')`, `@push('head')`) | `<x-sunrice-cms::seo>`, site code, the `main` and `footer` menus, the language switcher (`<x-sunrice-cms::language-switcher>`), a footer (the `footer` global's `text`), `@bodyClass`, a skip link |
 | `cms/collections/show.blade.php` | any entry | the title, date and fields; a note on [untranslated pages](#untranslated-pages); comments |
 | `cms/collections/index.blade.php` | listing pages | the listing's fields, cards, pagination |
 | `cms/taxonomies/show.blade.php` | term pages, shared and collections' | the term's fields and its entries |
@@ -198,7 +198,6 @@ It copies them into `resources/views/cms/`, where the rules above pick them up (
 | `cms/partials/blocks.blade.php`, `block.blade.php` | flexible blocks | `cms/blocks/{fieldset}.blade.php` per kind of block when you make one (it gets `$block`), else the block's fields |
 | `cms/partials/card.blade.php` | lists of entries | title, date, and an `image` and `excerpt` field when there are |
 | `cms/partials/pagination.blade.php` | lists of entries | previous and next links |
-| `cms/partials/language-switcher.blade.php` | the layout | `cms_locale_urls()`, with `hreflang` and `lang` |
 | `cms/partials/menu.blade.php` | the layout | a menu with its sub-menus, `aria-current` on the page shown |
 | `errors/404.blade.php`, `errors/500.blade.php` | error pages | the 404 in the layout with a search box; the 500 on its own (whatever failed would fail again in the layout) |
 | `public/cms/site.css` | all of the above | plain CSS with light and dark colours; replace it with your own build and change the `<link>` in the layout |
@@ -271,14 +270,12 @@ Code there runs in every visitor's browser, so give the permission only to peopl
 
 ```blade
 <body class="{{ Cms::bodyClass('dark') }}">
-@foreach (Cms::localeUrls() as $locale => $url)
-    <a href="{{ $url }}" hreflang="{{ $locale }}">{{ strtoupper($locale) }}</a>
-@endforeach
+<x-sunrice-cms::language-switcher />
 ```
 
 - `Cms::bodyClass($extra)`: what the page is, for CSS and scripts. Entries: `page-entry collection-{handle} entry-{id} entry-{slug}`, with `home`, `has-parent parent-{id}` and `is-preview` when they apply; listing pages: `page-listing collection-{handle}`; term pages: `page-term taxonomy-{handle} term-{id} term-{slug}`, with `collection-{handle}` on a collection's; taxonomy index pages: `page-taxonomy taxonomy-{handle}`, with `collection-{handle}` on a collection's; pages past the first: `paged paged-{n}`; always `template-{view} lang-{locale}`, and `logged-in` for people signed in to the panel. On your app's own pages: `lang-{locale}` and your extras.
-- `Cms::localeUrls()`: the page shown in each language it's live in (and, with the [main-language fallback](#untranslated-pages), the others), in the order of `sunrice-cms.locales`, for a language switcher (none on your app's own pages); a listing's or term page's keep its query string (filters, sort, page).
-- `Cms::page()`: the page shown (`Sunrice\Cms\Site\Page`: `type`, `locale`, `view`, `entry`, `collection`, `term`, `preview`, `home`, `pageNumber`, `fallback`; `contentLocale()` and `langAttribute()`), or null.
+- `Cms::localeUrls()`: the page shown in each language it's live in (and, with the [main-language fallback](#untranslated-pages), the others), in the order of `sunrice-cms.locales`, for a language switcher of your own (none on your app's own pages); a listing's or term page's keep its query string (filters, sort, page). `<x-sunrice-cms::language-switcher />` is a ready-made one ([Components](#components)).
+- `Cms::page()`: the page shown (`Sunrice\Cms\Site\Page`: `type`, `locale`, `view`, `entry`, `collection`, `term`, `preview`, `home`, `pageNumber`, `fallback`; `contentLocale()`, `langAttribute()` and `localeLinks()`, `localeUrls()` with whether each is the main language's page standing in), or null.
 
 `@bodyClass` prints the whole attribute: `<body @bodyClass>` or `<body @bodyClass('dark')>` gives `<body class="page-entry … dark">`.
 
@@ -437,6 +434,51 @@ See [Comments](comments.md#on-the-site): `entry` (an `Entry` or `EntryTranslatio
 
 See [Site code](#site-code): `place` (`head`, `body-start`, `body-end`).
 
+#### `<x-sunrice-cms::language-switcher>`
+
+Links to the page shown in each language, from `Cms::localeUrls()` (no queries of its own), in the order of the site's languages:
+
+```blade
+<x-sunrice-cms::language-switcher class="language-switcher" />
+```
+
+```html
+<nav aria-label="Languages" class="language-switcher">
+    <ul>
+        <li><span aria-current="true" lang="en">English</span></li>
+        <li><a href="https://example.com/id/blog/halo" hreflang="id" lang="id">Bahasa Indonesia</a></li>
+    </ul>
+</nav>
+```
+
+Each language is named in its own words (`Locales::nativeName()`: its name in Settings → Languages or `locale_names`, or, named by its code only, "Bahasa Indonesia", "Deutsch"), and its link has `hreflang` (where it leads) and `lang` (how a screen reader says its name). The current language isn't a link, since it would lead to the page you're on, but it's in the list with `aria-current="true"` (the current item of a set, not a page of the site's navigation), so everyone hears which one is selected. The `<nav>`'s label is the site's words, `sunrice-cms::site.languages.label` ("Languages", "Bahasa"; see [The site's words](#the-sites-words)).
+
+| Attribute | |
+| --- | --- |
+| `variant` | `list` (default) or `dropdown`: the same links in a `<details>` disclosure, the current language as its `<summary>`. No script: a `<select>` that navigates would need an inline `onchange`, which a `Content-Security-Policy` without `'unsafe-inline'` blocks ([Security headers](#security-headers)), and does nothing without JavaScript. |
+| `labels` | `name` (default) or `code`: "EN", "ID", each link keeping the name as its accessible name and `title` (`<abbr title>` for the current one). |
+| `missing` | A language the page isn't in at all (with the main-language fallback off): `home` (default) links to that language's homepage (`data-home`), `hide` leaves it out. |
+| `fallback-note` | On a link to an untranslated page (the main language's standing in, `data-fallback`), add a visually hidden "(not translated yet)", in the page's language, for screen readers. Style `.visually-hidden` (the starter templates do). Off by default, so nothing visible changes. |
+| `label` | The `<nav>`'s label instead of the site's words. |
+
+Other attributes (`class`, `id` …) go on the `<nav>`. It renders nothing when fewer than two languages are left to show: on a site with one language, on your app's own pages (where `Cms::localeUrls()` is empty: there's no page to translate), and with `missing="hide"` on a page in its language only. A listing's, term page's or search page's links keep the query string (filters, sort, page number): `/id/blog?page=2`.
+
+With a slot, the markup is yours; `$component->languages` lists the page's languages (`Sunrice\Cms\Site\PageLanguage`: `code` "pt_BR", `tag` "pt-BR" for `lang` and `hreflang`, `name`, `url`, `current`, `fallback`, `home`):
+
+```blade
+<x-sunrice-cms::language-switcher missing="hide">
+    <div class="langs">
+        @foreach ($component->languages as $language)
+            @if ($language->current)
+                <strong aria-current="true" lang="{{ $language->tag }}">{{ $language->name }}</strong>
+            @else
+                <a href="{{ $language->url }}" hreflang="{{ $language->tag }}" lang="{{ $language->tag }}">{{ $language->name }}</a>
+                @if ($language->fallback) <small>(English)</small> @endif
+            @endif
+        @endforeach
+    </div>
+</x-sunrice-cms::language-switcher>
+```
 ### Filtering entries
 
 `<x-sunrice-cms::entry-filter>` lists a collection's entries filtered, sorted and paginated by the address (`/shop?q=kettle&topic[]=kitchen&price_max=100&sort=cheap`), so a result can be shared or bookmarked and works without JavaScript. Put it on a listing page's template:
@@ -556,7 +598,7 @@ In code: `app(\Sunrice\Cms\Site\Search::class)->entries('coffee', ['blog'], perP
 
 ## The site's words
 
-What the CMS's own views say to visitors (the plain pages' **Newer** and **Older**, the search page, comments, the forms' **Send**, the reply emails, and the messages after posting) are translation keys, `sunrice-cms::site.*`, in English and Indonesian, shown in the page's language. To change them or add a language, put your own lines in `lang/vendor/sunrice-cms/{locale}/site.php` (only the keys you change):
+What the CMS's own views say to visitors (the plain pages' **Newer** and **Older**, the search page, the language switcher's label, comments, the forms' **Send**, the reply emails, and the messages after posting) are translation keys, `sunrice-cms::site.*`, in English and Indonesian, shown in the page's language. To change them or add a language, put your own lines in `lang/vendor/sunrice-cms/{locale}/site.php` (only the keys you change):
 
 ```php
 // lang/vendor/sunrice-cms/id/site.php

@@ -55,7 +55,7 @@ resources/views/cms/
 
 ## In the layout
 
-`<x-sunrice-cms::seo />` in `<head>` (title, description, canonical, hreflang, share tags, structured data); `<x-sunrice-cms::code place="head|body-start|body-end" />` for the site code; `{{ Cms::bodyClass() }}` on `<body>`; `Cms::localeUrls()` for a language switcher; `Cms::page()` for what's shown. Share a layout with `@extends('cms.layout')` and `@section('content')`, and parts with `@include('cms.partials.card', ['entry' => $post])`.
+`<x-sunrice-cms::seo />` in `<head>` (title, description, canonical, hreflang, share tags, structured data); `<x-sunrice-cms::code place="head|body-start|body-end" />` for the site code; `{{ Cms::bodyClass() }}` on `<body>`; `<x-sunrice-cms::language-switcher />` for a language switcher (`Cms::localeUrls()` for one of your own); `Cms::page()` for what's shown. Share a layout with `@extends('cms.layout')` and `@section('content')`, and parts with `@include('cms.partials.card', ['entry' => $post])`.
 
 ## Data
 
