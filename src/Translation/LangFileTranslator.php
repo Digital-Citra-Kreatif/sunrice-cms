@@ -12,7 +12,9 @@ use Throwable;
  * Translates the app's Laravel language files: the PHP files under
  * lang/<from>/ (subfolders too) and lang/<from>.json, written to the same
  * place for the target language. Keys already translated are kept unless
- * $force; keys only the target has are kept.
+ * $force; keys only the target has are kept. Placeholders (:count) must
+ * come back as they were, and pluralised strings keep their choices and
+ * counts.
  *
  * @internal
  */
@@ -20,6 +22,9 @@ final class LangFileTranslator
 {
     /** Joins nested keys; it can't appear in a real key. */
     private const SEPARATOR = "\x1F";
+
+    /** Joins a key and the number of one of its choices ("{0} None|[1,*] :count"). */
+    private const CHOICE = "\x1E";
 
     /** @var Closure(string): void|null */
     private ?Closure $report = null;
@@ -127,7 +132,7 @@ final class LangFileTranslator
         }
 
         try {
-            $answer = $this->translator->translate($pending, $this->from, $this->to, 'Interface text of a web application');
+            $answer = $this->translateStrings($pending);
         } catch (Throwable $e) {
             $this->stats->failed += count($pending);
             $this->say("{$label}: failed ({$e->getMessage()})");
@@ -153,6 +158,62 @@ final class LangFileTranslator
         $this->say("{$label}: {$written} translated");
 
         return $written > 0 ? $merged + $target : null;
+    }
+
+    /**
+     * The strings translated (a missing key: not translated). Each choice
+     * of a pluralised string ("{0} None|{1} One|[2,*] :count") goes on its
+     * own, without its count, and they are joined back the same way; a
+     * text whose placeholders (:count, :Name) don't all come back as they
+     * were, or whose choices don't all come back, isn't used.
+     *
+     * @param  array<string, string>  $pending
+     * @return array<string, string>
+     */
+    private function translateStrings(array $pending): array
+    {
+        $send = [];
+        $parts = [];
+        foreach ($pending as $key => $text) {
+            foreach (explode('|', $text) as $i => $segment) {
+                // Its count ("{0}", "[2,*]") and the spaces around the words stay as they are.
+                preg_match('/^(\s*(?:\{[^}]*\}|\[[^\]]*[\]\[])?\s*)(.*?)(\s*)$/s', $segment, $match);
+                $parts[$key][$i] = [$match[1] ?? '', $match[2] ?? $segment, $match[3] ?? ''];
+                if (trim($parts[$key][$i][1]) !== '') {
+                    $send[$key.self::CHOICE.$i] = $parts[$key][$i][1];
+                }
+            }
+        }
+        $answer = $this->translator->translate($send, $this->from, $this->to,
+            'Interface text of a web application. Words that start with a colon (:count, :name, :Name) are placeholders: keep each exactly as it is.');
+
+        $translated = [];
+        foreach ($parts as $key => $segments) {
+            $joined = [];
+            foreach ($segments as $i => [$lead, $words, $trail]) {
+                $at = $key.self::CHOICE.$i;
+                if (isset($send[$at])) {
+                    $words = $answer[$at] ?? null;
+                    if (! is_string($words) || self::placeholders($words) !== self::placeholders($send[$at])) {
+                        continue 2;
+                    }
+                }
+                $joined[] = $lead.$words.$trail;
+            }
+            $translated[$key] = implode('|', $joined);
+        }
+
+        return $translated;
+    }
+
+    /** @return list<string> a text's :placeholders, sorted */
+    private static function placeholders(string $text): array
+    {
+        preg_match_all('/(?<![\w:]):[A-Za-z_][A-Za-z0-9_]*/', $text, $found);
+        $names = $found[0];
+        sort($names);
+
+        return $names;
     }
 
     /** @return array<mixed> */

@@ -9,7 +9,7 @@ With the CMS, AI agents connected to the panel ([AI access](../../admin/docs/ai.
 | `cms_save_entry` | `cms.entries.create` / `.update` | Create an entry, or change a draft in a language; only what's sent changes. `"terms"` sets the entry's terms by taxonomy handle (term ids or slugs, `[]` for none; `SaveEntryTerms`), not for translators. `"publish": true` publishes too (`cms.entries.publish`), terms included. |
 | `cms_publish_entry` | `cms.entries.publish` | Publish a draft now, or schedule it. |
 | `cms_unpublish_entry` | `cms.entries.publish` | Take a language off the site, keeping its draft. |
-| `cms_translate_entry` | `cms.entries.create` | Add a language, copied from the main one. |
+| `cms_translate_entry` | `cms.entries.create` / `.translate` | Add a language, copied from the main one. With `"machine": true` (when [machine translation](translation.md) is set up, for agents that may edit that translation), fill in what isn't translated yet into its draft, as the editor's **Translate from …** does; the answer's `machine_translated` counts the texts. |
 | `cms_trash_entry` | `cms.entries.delete` | Move an entry to the trash, or restore it. |
 | `cms_list_terms` | `cms.terms.view` or `cms.entries.view` | Taxonomies, with their pages as URL patterns (shared term pages and index page, and each collection's term pages and index page; null when off), and their terms with each one's URL and its page in each collection, per language, for entries' terms (`cms_save_entry`), terms fields and menus. |
 | `cms_save_term` | `cms.terms.create` (new) or `cms.terms.update` | Add or rename a term, or give it another language. |

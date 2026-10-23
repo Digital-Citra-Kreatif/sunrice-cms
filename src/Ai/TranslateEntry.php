@@ -35,15 +35,16 @@ final class TranslateEntry extends CmsTool
         if ($machine && ! app(TranslatorFactory::class)->configured()) {
             return Response::error('Machine translation isn\'t set up on this site: translate the text yourself with cms_save_entry.');
         }
+        // Before adding the language: one may add it, and still not be allowed to fill it in.
+        if ($machine && ! $this->may('update', $entry->collection, $entry, $locale)) {
+            return $this->denied('edit this translation');
+        }
         $entry->loadMissing('translations');
         $translation = $machine ? $entry->translation($locale) : null;
         try {
             $added = $translation === null;
             $translation ??= app(CreateTranslation::class)->handle($entry, $locale);
             if ($machine) {
-                if (! $this->may('update', $entry->collection, $entry, $locale)) {
-                    return $this->denied('edit this translation');
-                }
                 $stats = app(MachineTranslateEntry::class)->handle($translation);
                 if ($stats->errors !== []) {
                     return Response::error('Not translated: '.implode(' ', $stats->errors));

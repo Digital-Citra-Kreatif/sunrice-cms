@@ -17,11 +17,16 @@ The rest is in `config/sunrice-cms.php` under `translation`: `batch_size` (texts
 
 ## What is translated
 
-- **Entries**: the title, text, textarea and rich text fields and the texts of link fields (not where they go) that are translated (not [shared](collections.md#languages)), inside groups, repeater rows and flexible blocks too (matched to the source's by id), and the SEO title and description. A missing translation is added first (as **Adding a language** does); a slug still the source's is made from the translated title. Saved through `SaveDraft`, so it's validated and rich text is cleaned like an editor's.
-- **Terms**: the title, fields and SEO description, saved as they are (`SaveTerm`, `SaveTermContent`).
+- **Entries**: the title, text, textarea and rich text fields and the texts of link fields (not where they go) that are translated (not [shared](collections.md#languages)), custom field types built on them too, inside groups, repeater rows and flexible blocks (matched to the source's by id), and the SEO title and description. A missing translation is added first (as **Adding a language** does); a slug still the source's is made from the translated title. Saved through `SaveDraft` into the **draft** (a live translation stays live, now with unpublished changes; its version counts up and it's no longer outdated), so it's validated and rich text is cleaned like an editor's. Collections that aren't translatable are left out.
+- **Not sent, never changed**: numbers, dates, choices, toggles, media, related entries and terms fields (ids), shared fields, and the entry's own terms (the editor's **Taxonomies** card, every language's). How a field presents itself in the editor (label, hint, hint tooltip, helper text, placeholder, prefix, suffix, width) is the blueprint's, not the entry's: it isn't translated here (forms' visitor-facing labels are, under **Site texts**).
+- **Terms**: the title, fields and SEO title and description (`SaveTermContent`). A slug of its own stays; one still the source's is made from the translated title.
 - **Globals**: their translated fields (`SaveGlobals`).
-- **Menus**: link labels.
-- **Language files**, only when asked for with `--only=lang`: the app's own Laravel translations, `lang/<from>/*.php` (subfolders too) and `lang/<from>.json`, written to `lang/<to>/…` and `lang/<to>.json`. Keys already translated are kept (unless `--force`), and keys only the target has stay.
+- **Menus**: link labels (those with a label of their own; a link without one shows its page's title).
+- **Listing and index pages** (`pages`): a collection's listing page and a taxonomy's index pages (the shared one, and each collection's) that are on: their translated fields and SEO title and description (`SaveListing`, `SaveIndexPage`).
+- **Site texts** (`texts`), what **Content → Translations** lists apart from menu labels: the site's description, collections' and taxonomies' titles (`translations`), forms' thank-you messages, and their fields' labels, helper texts and choices (`SaveVisitorTranslations`). From the main language only (they are the main language's). URL patterns (a collection's or taxonomy's routes) are addresses, never machine-translated: give them per language under Structure.
+- **Language files**, only when asked for with `--only=lang`: the app's own Laravel translations, `lang/<from>/*.php` (subfolders and nested keys too, like a starter's `lang/en/site.php`) and `lang/<from>.json`, written to `lang/<to>/…` and `lang/<to>.json`. Keys already translated are kept (unless `--force`), and keys only the target has stay. Placeholders (`:count`, `:Name`) must come back as they were, or the text isn't used; each choice of a pluralised text (`{0} No posts|{1} One post|[2,*] :count posts`) is translated on its own and joined back with its count.
+
+Each save checks the version it read: someone who saved the same entry, term, page or set while it was being translated keeps their save, and that item is reported as failed.
 
 A text counts as translated when it's there, not empty, and not the source's text any more (a new translation starts as a copy of the main language). `--force` translates everything again.
 
@@ -35,17 +40,27 @@ php artisan sunrice:translate                           # from the main language
 php artisan sunrice:translate --to=id --to=fr --from=en
 php artisan sunrice:translate --only=entries --collection=blog
 php artisan sunrice:translate --only=terms --only=globals --only=menus
+php artisan sunrice:translate --only=pages,texts         # listing and index pages; Content → Translations' texts
 php artisan sunrice:translate --only=lang                # the app's lang/ files
 php artisan sunrice:translate --force                   # translate again what is translated
 ```
+
+| Option | |
+| --- | --- |
+| `--to=*` | The languages to translate into (default: all of Settings → Languages but the source, a language added there later too). |
+| `--from=` | The language to translate from (default: the main one). |
+| `--only=*` | `entries`, `terms`, `globals`, `menus`, `pages`, `texts`, `lang`; repeated or comma-separated. Default: all but `lang`. |
+| `--collection=*` | Only the entries of these collections (handles). |
+| `--force` | Translate again what is translated already. |
+| `--dry-run` | Count the texts that would be sent (and those translated already), sending nothing. |
 
 It reports each item and the totals, and fails (exit code 1) when something couldn't be translated.
 
 ## In the editor
 
-In another language than the main one, **Translate from English** (the main language's name) fills in that language's draft with what isn't translated yet (`POST /admin/cms/entries/{translation}/translate`, route `sunrice.admin.cms.entries.translate`, for those who may edit that translation: `cms.entries.update` or `cms.entries.translate`). Save your changes first; someone else's newer save is never overwritten.
+In another language than the main one, **Translate from English** (the main language's name) fills in that language's draft with what isn't translated yet (`POST /admin/cms/entries/{entry}/translations/{locale}/translate` with the editor's `version`, route `sunrice.admin.cms.entries.translations.translate`, for those who may edit that translation: `cms.entries.update` or `cms.entries.translate`). Save your changes first (it waits while the form has unsaved edits); someone else's newer save is never overwritten. The entry's terms are left alone.
 
-AI agents: `cms_translate_entry` with `"machine": true` adds the language if needed and translates it the same way.
+AI agents: `cms_translate_entry` with `"machine": true` adds the language if needed and translates it the same way, for agents that may edit that translation.
 
 ## In code
 
@@ -60,6 +75,8 @@ $content->entries(['blog']);
 $content->terms();
 $content->globals();
 $content->menus();
+$content->pages();     // listing and index pages
+$content->texts();     // Content → Translations' texts, from the main language
 $content->stats()->translated;
 ```
 

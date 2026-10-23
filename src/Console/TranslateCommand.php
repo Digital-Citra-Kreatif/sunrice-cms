@@ -16,15 +16,15 @@ use Sunrice\Cms\Translation\TranslatorFactory;
 /** Machine-translates content (ContentTranslator) and the app's language files (LangFileTranslator) into the other languages. */
 final class TranslateCommand extends Command
 {
-    public const PARTS = ['entries', 'terms', 'globals', 'menus', 'lang'];
+    public const PARTS = ['entries', 'terms', 'globals', 'menus', 'pages', 'texts', 'lang'];
 
     /** What runs without --only: content, not the app's language files. */
-    public const DEFAULT_PARTS = ['entries', 'terms', 'globals', 'menus'];
+    public const DEFAULT_PARTS = ['entries', 'terms', 'globals', 'menus', 'pages', 'texts'];
 
     protected $signature = 'sunrice:translate
         {--to=* : Languages to translate into (default: all but the source)}
         {--from= : The language to translate from (default: the main one)}
-        {--only=* : entries, terms, globals, menus, lang (default: all but lang)}
+        {--only=* : entries, terms, globals, menus, pages, texts, lang (default: all but lang)}
         {--collection=* : Only entries of these collections (handles)}
         {--force : Translate again what is translated already}
         {--dry-run : Count what would be translated, without sending anything}';
@@ -35,11 +35,11 @@ final class TranslateCommand extends Command
     {
         $from = $this->option('from');
         $from = is_string($from) && $from !== '' ? $from : Locales::default();
-        $to = array_values(array_filter((array) $this->option('to'), is_string(...)));
+        $to = $this->listOption('to');
         $to = array_values(array_diff($to === [] ? Locales::all() : $to, [$from]));
-        $parts = array_values(array_filter((array) $this->option('only'), is_string(...)));
+        $parts = $this->listOption('only');
         $parts = $parts === [] ? self::DEFAULT_PARTS : $parts;
-        $collections = array_values(array_filter((array) $this->option('collection'), is_string(...)));
+        $collections = $this->listOption('collection');
         $dryRun = (bool) $this->option('dry-run');
 
         if (($unknown = array_diff($parts, self::PARTS)) !== []) {
@@ -65,6 +65,10 @@ final class TranslateCommand extends Command
             return self::FAILURE;
         }
 
+        if (in_array('texts', $parts, true) && $from !== Locales::default()) {
+            $this->components->warn('The site\'s texts (Content → Translations) are translated from the main language only: left out.');
+        }
+
         $stats = new TranslationStats;
         foreach ($to as $locale) {
             $this->components->info(($dryRun ? 'Counting ' : 'Translating ').Locales::name($from).' → '.Locales::name($locale));
@@ -74,6 +78,8 @@ final class TranslateCommand extends Command
             in_array('terms', $parts, true) && $content->terms();
             in_array('globals', $parts, true) && $content->globals();
             in_array('menus', $parts, true) && $content->menus();
+            in_array('pages', $parts, true) && $content->pages();
+            in_array('texts', $parts, true) && $content->texts();
             in_array('lang', $parts, true) && (new LangFileTranslator($translator, $from, $locale, (bool) $this->option('force'), $dryRun, $stats))
                 ->onProgress(fn (string $line) => $this->line("  {$line}"))->translate();
         }
@@ -93,6 +99,23 @@ final class TranslateCommand extends Command
         }
 
         return $stats->failed > 0 || $stats->errors !== [] ? self::FAILURE : self::SUCCESS;
+    }
+
+    /**
+     * An option given more than once or comma-separated (--only=terms,menus).
+     *
+     * @return list<string>
+     */
+    private function listOption(string $name): array
+    {
+        $values = [];
+        foreach ((array) $this->option($name) as $value) {
+            if (is_string($value)) {
+                array_push($values, ...array_filter(array_map(trim(...), explode(',', $value)), fn (string $v): bool => $v !== ''));
+            }
+        }
+
+        return array_values(array_unique($values));
     }
 
     /** For a dry run: sends nothing. */

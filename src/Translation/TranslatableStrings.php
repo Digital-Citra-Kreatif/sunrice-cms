@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Translation;
 
+use Sunrice\Cms\Fields\CustomField;
 use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\Fieldsets;
 use Sunrice\Cms\Fields\Schema;
@@ -14,8 +15,11 @@ use Sunrice\Cms\Fields\Types\Repeater;
 /**
  * The text to translate in field data: text, textarea and rich text
  * fields, and links' texts (`label`, at "cta.label"), that are
- * translated, also inside groups, repeater rows and flexible blocks.
- * Fields shared by all languages are left out.
+ * translated, also inside groups, repeater rows and flexible blocks, and
+ * custom field types built on them. Fields shared by all languages are
+ * left out, and so is everything else: numbers, choices, media, related
+ * entries and terms (ids), and how a field presents itself (its label,
+ * hint, placeholder…: the blueprint's, not the content's).
  *
  * @api
  */
@@ -50,7 +54,10 @@ final class TranslatableStrings
             }
             $path = $prefix.$handle;
             $value = $target[$handle];
-            if ($field->type === 'link') {
+            // A custom field type is translated as the built-in one it builds on.
+            $type = $schema->type($field);
+            $base = $type instanceof CustomField ? $type->baseType() : $field->type;
+            if ($base === 'link') {
                 // Only the link's text: where it goes stays the source's.
                 $text = is_array($from) ? ($from['label'] ?? null) : null;
                 if (is_string($text) && trim($text) !== '') {
@@ -60,9 +67,9 @@ final class TranslatableStrings
 
                 continue;
             }
-            if (in_array($field->type, self::TYPES, true)) {
+            if (in_array($base, self::TYPES, true)) {
                 if (is_string($from) && trim(strip_tags($from)) !== '') {
-                    $strings[$path] = ['source' => $from, 'current' => is_string($value) ? $value : null, 'rich' => $field->type === 'rich_text'];
+                    $strings[$path] = ['source' => $from, 'current' => is_string($value) ? $value : null, 'rich' => $base === 'rich_text'];
                 }
 
                 continue;
@@ -70,7 +77,7 @@ final class TranslatableStrings
             if (! is_array($value) || ! is_array($from)) {
                 continue;
             }
-            [$target[$handle], $nested] = match ($field->type) {
+            [$target[$handle], $nested] = match ($base) {
                 Group::TYPE => self::pairs(Schema::children($field, $schema->depth()), $value, $from, $path.'.'),
                 Repeater::TYPE => self::items($value, $from, '_id', $path, fn (array $row, array $sourceRow, string $at): array => self::pairs(Schema::children($field, $schema->depth()), $row, $sourceRow, $at.'.')),
                 Flexible::TYPE => self::blocks($field, $schema, $value, $from, $path),
