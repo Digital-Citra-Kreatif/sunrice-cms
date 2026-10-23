@@ -18,6 +18,7 @@ use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Menu;
 use Sunrice\Cms\Models\Submission;
 use Sunrice\Cms\Settings\SiteSettings;
+use Sunrice\Cms\Site\AppHomeRoute;
 use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\Handles;
 use Sunrice\Cms\Support\Locales;
@@ -43,7 +44,8 @@ final class DashboardWidgets
     /**
      * What's left to set up a new site, for site managers (cms.settings.site),
      * shown until it's done: the first entries, the homepage, menus without
-     * links. Three small queries, only for them.
+     * links. Three small queries, only for them; and an app's own / route,
+     * which hides the homepage (a lookup in the router).
      */
     public static function setup(): Widget
     {
@@ -53,7 +55,7 @@ final class DashboardWidgets
             ->data(fn (): array => ['rows' => self::setupSteps()]);
     }
 
-    /** @return list<array{title: string, meta: string, url: string}> */
+    /** @return list<array{title: string, meta: string, url?: string, tone?: string}> */
     private static function setupSteps(): array
     {
         $steps = [];
@@ -62,6 +64,9 @@ final class DashboardWidgets
         }
         if (app(SiteSettings::class)->homepage === null) {
             $steps[] = ['title' => self::said(__('Choose the homepage'), 'Choose the homepage'), 'meta' => self::said(__('The entry shown at the site\'s address: Settings → Site.'), ''), 'url' => 'settings/site'];
+        }
+        if (app(AppHomeRoute::class)->found() !== null) {
+            $steps[] = ['title' => self::said(__('Your app\'s own / route hides the homepage'), 'Your app\'s own / route hides the homepage'), 'meta' => self::said(__('Remove it from routes/web.php: the app\'s routes win over the CMS\'s.'), ''), 'tone' => 'warning'];
         }
         foreach (Menu::query()->whereDoesntHave('items')->orderBy('title')->limit(5)->get(['handle', 'title']) as $menu) {
             $steps[] = ['title' => self::said(__('Add links to the :menu menu', ['menu' => $menu->title]), $menu->title), 'meta' => self::said(__('It has no links yet, so the site shows nothing there.'), ''), 'url' => "cms/menus/{$menu->handle}/links"];

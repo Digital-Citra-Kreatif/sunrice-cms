@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Route;
 use Sunrice\Admin\Assets\PluginBundle;
 use Sunrice\Admin\BasePlugin;
+use Sunrice\Admin\Console\InstallOutput;
 use Sunrice\Admin\Navigation\NavigationItem;
 use Sunrice\Admin\Panel;
 use Sunrice\Admin\Permissions\Permission;
@@ -93,6 +94,8 @@ final class CmsPlugin extends BasePlugin
         $panel->contentLocales(fn (): array => Locales::names());
         // Every screen names the languages as Settings → Languages does.
         $panel->share('cms', fn (): array => ['locales' => Locales::names()]);
+        // sunrice:install: an app's own / route (Laravel's welcome page) hides the site's homepage.
+        $panel->installStep('cms.home-route', fn (InstallOutput $output) => app(Site\AppHomeRoute::class)->install($output));
         // sunrice:roles: people who write and look after the content, not the structure or the people,
         // nor form submissions (visitors' personal details): those are given per form.
         $panel->defaultRole('editor', [Panel::ACCESS, 'sunrice.media.*', 'cms.entries.*', 'cms.terms.*', 'cms.globals.view', 'cms.globals.update', 'cms.menus.view', 'cms.menus.update', 'cms.comments.*', 'cms.homepage']);
