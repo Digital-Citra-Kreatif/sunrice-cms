@@ -15,7 +15,7 @@ use Sunrice\Cms\Models\Fieldset;
 use Sunrice\Cms\Models\Taxonomy;
 
 #[IsReadOnly]
-#[Description('Without "handle": the blueprints (the fields of collections, taxonomies, global sets, forms, listing pages and taxonomy index pages) with what uses them (handles of collections, listing_pages: collections, taxonomies, index_pages: taxonomies) or, with "kind": "fieldset", the fieldsets (reusable groups of fields, also blocks). With one: its title and field definitions as saved, to change and send back whole to cms_save_blueprint. cms_field_types lists the field types and their settings.')]
+#[Description('Without "handle": the blueprints (the fields of collections, taxonomies, global sets, forms, listing pages and taxonomy index pages) with what uses them (handles of collections, listing_pages: collections, taxonomies, index_pages: taxonomies) or, with "kind": "fieldset", the fieldsets (reusable groups of fields, also blocks). With one: its title and field definitions as saved (a field\'s "width", when there, is how much of the row it takes in the editor, in percent), to change and send back whole to cms_save_blueprint. cms_field_types lists the field types and their settings.')]
 final class GetBlueprint extends CmsTool
 {
     protected string $name = 'cms_get_blueprint';

@@ -1,8 +1,8 @@
-import { j as s, t } from "./admin-AwfaNzsU.js";
+import { j as s, t } from "./admin-BrOs4B--.js";
 import { _ as C } from "./createLucideIcon-Ccbp7F45.js";
 import { u as m } from "./ui-Dh5wfMwT.js";
-import { F as _ } from "./FieldError-BD5SRSF-.js";
-import { A as P } from "./FieldInput-CXFpAw9T.js";
+import { F as _ } from "./FieldError-36ltLu3Y.js";
+import { H as P } from "./FieldInput-CPXNGfxM.js";
 import { C as f } from "./check-OeKFYRnl.js";
 const y = (c) => c.includes("::") ? c : `${c.replace(/\./g, "/")}.blade.php`;
 function T(c, e) {
@@ -41,7 +41,7 @@ function A({ value: c = "", lookup: e = null }) {
     ] })
   ] });
 }
-function V({ id: c, value: e, onChange: i, lookup: r = null, example: d, automatic: x, error: a, disabled: u = !1 }) {
+function H({ id: c, value: e, onChange: i, lookup: r = null, example: d, automatic: x, error: a, disabled: u = !1 }) {
   const [j, g] = C.useState(!1), [w, h] = C.useState(""), N = r?.choices ?? [], l = e.trim(), v = T(e, r), S = k(e, r), o = w.trim().toLowerCase(), p = (n) => {
     i(n), g(!1), h("");
   };
@@ -107,7 +107,7 @@ function V({ id: c, value: e, onChange: i, lookup: r = null, example: d, automat
     /* @__PURE__ */ s.jsx(_, { message: a })
   ] });
 }
-function B({ note: c, redirectsUrl: e }) {
+function V({ note: c, redirectsUrl: e }) {
   return /* @__PURE__ */ s.jsx("div", { "aria-live": "polite", children: c !== null && /* @__PURE__ */ s.jsxs("p", { className: "cms:text-xs cms:text-muted-foreground", children: [
     c === "redirects" ? t("Once published, the old address redirects to the new one.") : t("The old address will stop working (404) unless a redirect is added."),
     c === "breaks" && e && /* @__PURE__ */ s.jsxs(s.Fragment, { children: [
@@ -117,6 +117,6 @@ function B({ note: c, redirectsUrl: e }) {
   ] }) });
 }
 export {
-  B as S,
-  V as T
+  V as S,
+  H as T
 };

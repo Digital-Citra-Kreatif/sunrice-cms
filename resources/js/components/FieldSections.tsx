@@ -5,6 +5,7 @@ import { ChangedMarker } from '@/components/EntryStatus.tsx';
 import { errorsAt, hasErrors } from '@/lib/builder.ts';
 import { isShown } from '@/lib/conditions.ts';
 import { hasSharedFields } from '@/lib/values.ts';
+import { fieldGrid, widthClass } from '@/lib/width.ts';
 import type { Errors, FieldDefinition } from '@/types.ts';
 
 // Field values are any JSON; see the entry editor for why `any`.
@@ -32,7 +33,8 @@ interface Props {
 /**
  * An editor's fields: a card of fields, and each group field as a card of
  * its own that folds away (remembered, and opened on an error inside).
- * A field whose condition isn't met is left out.
+ * A field whose condition isn't met is left out. Fields sit side by side by
+ * their widths (lib/width.ts), top-level groups too.
  */
 /** How a field shared by all languages looks in another language: read-only and greyed out. */
 export const SHARED_FIELD = 'cms:flex cms:flex-col cms:gap-1 cms:opacity-60';
@@ -53,24 +55,31 @@ export function FieldSections({ fields, values, onChange, errors, storageKey, sh
         ? <p role="note" className="cms:rounded-lg cms:border cms:border-dashed cms:px-3 cms:py-2 cms:text-sm cms:text-muted-foreground">{sharedNote}</p>
         : null;
 
+    if (note === null && sections.length === 0) return null;
+
+    // A grid of their own: runs of plain fields are full-width cards, groups take their width (lib/width.ts).
     return (
-        <>
-            {note}
+        <div className={fieldGrid('cms:gap-6')}>
+            {note && <div className="cms:col-span-12">{note}</div>}
             {sections.map((section) => {
                 if (Array.isArray(section)) {
                     return (
-                        <Card key={`fields-${section[0]?.handle ?? ''}`}>
+                        <Card key={`fields-${section[0]?.handle ?? ''}`} className="cms:col-span-12 cms:min-w-0">
                             <CardContent>
-                                <fieldset disabled={disabled} className="cms:flex cms:min-w-0 cms:flex-col cms:gap-6">
+                                <fieldset disabled={disabled} className="cms:min-w-0">
+                                    <div className={fieldGrid()}>
                                     {section.map((field) => shared.includes(field.handle) ? (
-                                        <fieldset key={field.handle} disabled className={SHARED_FIELD} title={t('Shared by all languages')}>
+                                        <fieldset key={field.handle} disabled className={`${SHARED_FIELD} ${widthClass(field)}`} title={t('Shared by all languages')}>
                                             <FieldInput id={`data-${field.handle}`} field={field} content value={sharedValues[field.handle]} errors={{}} onChange={() => {}} />
                                         </fieldset>
                                     ) : (
-                                        <FieldInput key={field.handle} id={`data-${field.handle}`} field={field} content value={values[field.handle]}
-                                            errors={errorsAt(errors, `data.${field.handle}`)} onChange={(value) => onChange(field.handle, value)}
-                                            marker={changed.includes(field.handle) ? <ChangedMarker /> : null} />
+                                        <div key={field.handle} className={widthClass(field)}>
+                                            <FieldInput id={`data-${field.handle}`} field={field} content value={values[field.handle]}
+                                                errors={errorsAt(errors, `data.${field.handle}`)} onChange={(value) => onChange(field.handle, value)}
+                                                marker={changed.includes(field.handle) ? <ChangedMarker /> : null} />
+                                        </div>
                                     ))}
+                                    </div>
                                 </fieldset>
                             </CardContent>
                         </Card>
@@ -81,7 +90,7 @@ export function FieldSections({ fields, values, onChange, errors, storageKey, sh
                 const fieldErrors = errorsAt(errors, `data.${section.handle}`);
 
                 return (
-                    <CollapsibleCard key={section.handle} title={changed.includes(section.handle) ? <>{labelOf(section)}<ChangedMarker /></> : labelOf(section)} titleClassName="cms:text-base" description={section.instructions ?? undefined}
+                    <CollapsibleCard key={section.handle} className={widthClass(section)} title={changed.includes(section.handle) ? <>{labelOf(section)}<ChangedMarker /></> : labelOf(section)} titleClassName="cms:text-base" description={section.instructions ?? undefined}
                         storageKey={`${storageKey}:${section.handle}`} hasErrors={!isShared && hasErrors(errors, `data.${section.handle}`)}>
                         <fieldset disabled={isShared || disabled} role="group" aria-label={labelOf(section)} className={`cms:flex cms:flex-col cms:gap-2 ${isShared ? 'cms:opacity-60' : ''}`}
                             title={isShared ? t('Shared by all languages') : undefined}>
@@ -93,6 +102,6 @@ export function FieldSections({ fields, values, onChange, errors, storageKey, sh
                     </CollapsibleCard>
                 );
             })}
-        </>
+        </div>
     );
 }

@@ -11,6 +11,7 @@ import { t } from '@imajiner/admin-sdk';
 import { ChangeWarning } from '@/components/ChangeWarning.tsx';
 import { FieldError, FieldInput } from '@/components/FieldInput.tsx';
 import { type BuilderField, cleanHandle, conditionChoices, settingGroups, duplicateField, errorsAt, errorsUnder, handleWarning, hasErrors, isTranslatable, MAX_DEPTH, newField, relabel, renamedFrom, type ReservedHandles, setTranslatable } from '@/lib/builder.ts';
+import { FIELD_WIDTHS, fieldWidth, withWidth } from '@/lib/width.ts';
 import { conditionFrom, conditionMatch, conditionRules, conditionValueInput, type ConditionValueInput, OPERATORS, startValue } from '@/lib/conditions.ts';
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
 import { TermsPicker } from '@/components/TermsPicker.tsx';
@@ -122,6 +123,7 @@ function FieldRow({ field, type, expanded, controls, handle, shared, onToggle, o
     const include = field.type === 'fieldset';
     const key = include ? (typeof field.config?.fieldset === 'string' ? field.config.fieldset : '') : field.handle;
     const isShared = shared && !include && !isTranslatable(field, type?.translatable ?? false);
+    const width = include ? 100 : fieldWidth(field);
 
     return (
         <div className="cms:flex cms:items-center cms:gap-1 cms:py-1.5 cms:pr-1.5 cms:pl-2">
@@ -142,11 +144,12 @@ function FieldRow({ field, type, expanded, controls, handle, shared, onToggle, o
                         <code className="cms:truncate cms:text-xs cms:text-muted-foreground" title={include ? t('Fieldset') : t('Handle')}>{key}</code>
                     )}
                 </span>
-                {(field.required || isShared || field.condition || (type?.hasChildren && field.fields.length > 0 && !expanded)) && (
+                {(field.required || isShared || field.condition || width !== 100 || (type?.hasChildren && field.fields.length > 0 && !expanded)) && (
                     <span className="cms:flex cms:flex-wrap cms:items-center cms:gap-1">
                         {field.required && <Badge variant="outline" className="cms:font-normal">{t('Required')}</Badge>}
                         {isShared && <Badge variant="outline" className="cms:font-normal" title={t('One value shared by every language.')}>{t('Shared')}</Badge>}
                         {field.condition && <Badge variant="outline" className="cms:font-normal">{t('Conditional')}</Badge>}
+                        {width !== 100 && <Badge variant="outline" className="cms:font-normal cms:tabular-nums" title={t('Width in the editor')}>{width}%</Badge>}
                         {type?.hasChildren && field.fields.length > 0 && !expanded && (
                             <span className="cms:text-xs cms:text-muted-foreground">{t(':count inside', { count: field.fields.length })}</span>
                         )}
@@ -252,6 +255,19 @@ function FieldSettings({ id, field, type, siblings, onChange, types, errors, dep
                         </div>
                         <p id={`${id}-translatable-help`} className="cms:text-sm cms:text-muted-foreground">{t('Each language gets its own value. Off: one value shared by every language.')}</p>
                     </div>
+                </div>
+                <div className="cms:flex cms:flex-col cms:gap-2">
+                    <Label id={`${id}-width-label`}>{t('Width')}</Label>
+                    <div role="radiogroup" aria-labelledby={`${id}-width-label`} aria-describedby={`${id}-width-help`} className="cms:inline-flex cms:w-fit cms:flex-wrap cms:rounded-md cms:border cms:p-0.5">
+                        {FIELD_WIDTHS.map((width) => (
+                            <Button key={width} type="button" size="sm" role="radio" aria-checked={fieldWidth(field) === width} variant={fieldWidth(field) === width ? 'secondary' : 'ghost'}
+                                className="cms:tabular-nums" onClick={() => onChange(withWidth(field, width))}>
+                                {width}%
+                            </Button>
+                        ))}
+                    </div>
+                    <p id={`${id}-width-help`} className="cms:text-sm cms:text-muted-foreground">{t('How much of the row the field takes in the editor. Fields side by side wrap to the next row when they don\'t fit; on narrow screens every field is full width.')}</p>
+                    <FieldError message={errors.width} />
                 </div>
             </SettingsSection>
 

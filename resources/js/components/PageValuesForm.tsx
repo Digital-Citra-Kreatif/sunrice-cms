@@ -13,6 +13,7 @@ import { seoFields } from '@/lib/seo.ts';
 import type { FieldDefinition } from '@/types.ts';
 import { isShown } from '@/lib/conditions.ts';
 import { hasSharedFields } from '@/lib/values.ts';
+import { fieldGrid, widthClass } from '@/lib/width.ts';
 
 // Field values are any JSON; see the entry editor for why `any`.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -121,14 +122,19 @@ function PageValuesEdit({ title, breadcrumbs, back, saveUrl, editUrl, params = {
                                     {mainLocale ? t('Shared by all languages: the greyed-out fields are edited in :language.', { language: localeName(mainLocale) }) : t('Shared by all languages: the greyed-out fields are edited in the main language.')}
                                 </p>
                             )}
+                            {/* Side by side by their widths (lib/width.ts). */}
+                            <div className={fieldGrid()}>
                             {fields.filter((field) => isShown(field, { ...values, ...form.data.data })).map((field) => shared.includes(field.handle) ? (
-                                <fieldset key={field.handle} disabled className={SHARED_FIELD} title={t('Shared by all languages')}>
+                                <fieldset key={field.handle} disabled className={`${SHARED_FIELD} ${widthClass(field)}`} title={t('Shared by all languages')}>
                                     <FieldInput id={`data-${field.handle}`} field={field} content value={values[field.handle]} errors={{}} onChange={() => {}} />
                                 </fieldset>
                             ) : (
-                                <FieldInput key={field.handle} id={`data-${field.handle}`} field={field} content value={form.data.data[field.handle]}
-                                    errors={errorsAt(errors, `data.${field.handle}`)} onChange={(value) => { form.setData('data', { ...form.data.data, [field.handle]: value }); clearErrorsAt(`data.${field.handle}`); }} />
+                                <div key={field.handle} className={widthClass(field)}>
+                                    <FieldInput id={`data-${field.handle}`} field={field} content value={form.data.data[field.handle]}
+                                        errors={errorsAt(errors, `data.${field.handle}`)} onChange={(value) => { form.setData('data', { ...form.data.data, [field.handle]: value }); clearErrorsAt(`data.${field.handle}`); }} />
+                                </div>
                             ))}
+                            </div>
                         </CardContent>
                     </Card>
                 )}

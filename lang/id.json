@@ -1233,5 +1233,9 @@
     "Link copied.": "Tautan disalin.",
     "Copy": "Salin",
     "Translate": "Terjemahkan",
-    "See drafts on the site": "Lihat draf di situs"
+    "See drafts on the site": "Lihat draf di situs",
+    "Width": "Lebar",
+    "Width in the editor": "Lebar di editor",
+    "How much of the row the field takes in the editor. Fields side by side wrap to the next row when they don't fit; on narrow screens every field is full width.": "Seberapa lebar field di barisnya pada editor. Field yang berdampingan pindah ke baris berikutnya bila tidak muat; di layar sempit setiap field selebar penuh.",
+    "The width must be one of :widths (percent of the row).": "Lebar harus salah satu dari :widths (persen dari baris)."
 }

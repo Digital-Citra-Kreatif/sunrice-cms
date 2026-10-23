@@ -1,12 +1,12 @@
-import { j as e, a as S, t as l, r as j, l as h, h as U } from "./admin-AwfaNzsU.js";
+import { j as e, a as S, t as l, r as j, l as h, h as U } from "./admin-BrOs4B--.js";
 import { u as i } from "./ui-Dh5wfMwT.js";
-import { F as v } from "./FieldError-BD5SRSF-.js";
-import { x as P, b as A, h as B, y as H } from "./FieldInput-CXFpAw9T.js";
-import { F as M } from "./FieldSections-BKp60Le6.js";
-import { S as q, T as G } from "./SlugNote-AnzpnY2G.js";
-import { V as J } from "./VersionConflict-dXud_KBL.js";
-import { L as R } from "./LanguageTabs-BNXIKfyR.js";
-import { s as z } from "./seo-CpNaxZMX.js";
+import { F as v } from "./FieldError-36ltLu3Y.js";
+import { A, b as B, h as P, B as H } from "./FieldInput-CPXNGfxM.js";
+import { F as M } from "./FieldSections-BJLhG3EZ.js";
+import { S as q, T as G } from "./SlugNote-BKRD5knS.js";
+import { V as J } from "./VersionConflict-CGaSNIva.js";
+import { L as R } from "./LanguageTabs-0edldnew.js";
+import { s as z } from "./seo-21z6Ug5w.js";
 import { E as Q } from "./external-link-CFxEu4M4.js";
 import { L as W } from "./loader-circle-ByksABXO.js";
 const b = "__top";
@@ -14,8 +14,8 @@ function de(r) {
   return /* @__PURE__ */ e.jsx(X, { ...r }, `${r.term?.id ?? "new"}:${r.locale}:${r.version}:${JSON.stringify([r.values, r.seo, r.term?.template, r.parentId])}`);
 }
 function X({ taxonomy: r, term: t, parentId: $ = null, terms: k = [], translated: N, fields: T, locale: d, locales: p, shared: E, sharedValues: F, values: L, seo: _, version: D, usedBy: C = [], redirectsUrl: K = null, templates: I = null }) {
-  const g = S(`cms/taxonomies/${r.handle}/terms`), f = t ? S(`cms/terms/${t.id}/content`) : g, y = t ? t.title : l("New term");
-  i.useBreadcrumbs([{ label: r.title, href: `${g}?locale=${d}` }, { label: y }]);
+  const g = S(`cms/taxonomies/${r.handle}/terms`), f = t ? S(`cms/terms/${t.id}/content`) : g, w = t ? t.title : l("New term");
+  i.useBreadcrumbs([{ label: r.title, href: `${g}?locale=${d}` }, { label: w }]);
   const a = j.useForm({
     locale: d,
     title: t?.ownTitle ?? "",
@@ -28,7 +28,7 @@ function X({ taxonomy: r, term: t, parentId: $ = null, terms: k = [], translated
   }), n = a.errors, u = (s) => {
     const c = H(n, s);
     c.length > 0 && a.clearErrors(...c);
-  }, w = () => a.processing || (t ? a.put(f, { preserveScroll: !0 }) : a.post(f)), O = () => {
+  }, y = () => a.processing || (t ? a.put(f, { preserveScroll: !0 }) : a.post(f)), O = () => {
     a.transform((s) => ({ ...s, version: null })), a.put(f, { preserveScroll: !0 });
   }, m = i.useEditLock({
     type: "cms.term",
@@ -47,15 +47,15 @@ function X({ taxonomy: r, term: t, parentId: $ = null, terms: k = [], translated
       template: typeof c.template == "string" ? c.template : x.template
     }));
   };
-  return i.useUnsavedChanges(a.isDirty && !m.takenOver, o ? w : void 0), /* @__PURE__ */ e.jsxs("form", { noValidate: !0, onSubmit: (s) => {
-    s.preventDefault(), w();
+  return i.useUnsavedChanges(a.isDirty && !m.takenOver, o ? y : void 0), /* @__PURE__ */ e.jsxs("form", { noValidate: !0, onSubmit: (s) => {
+    s.preventDefault(), y();
   }, className: "cms:flex cms:flex-col cms:gap-6", children: [
     /* @__PURE__ */ e.jsx(j.Head, { title: t ? t.title : l("New term · :taxonomy", { taxonomy: r.title }) }),
     m.dialogs,
     /* @__PURE__ */ e.jsx(
       i.PageHeader,
       {
-        title: y,
+        title: w,
         back: { href: `${g}?locale=${d}`, label: l("Back to :title", { title: r.title }) },
         actions: /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
           t?.url && /* @__PURE__ */ e.jsx(i.Button, { type: "button", variant: "ghost", asChild: !0, children: /* @__PURE__ */ e.jsxs("a", { href: t.url, target: "_blank", rel: "noopener noreferrer", children: [
@@ -171,7 +171,7 @@ function X({ taxonomy: r, term: t, parentId: $ = null, terms: k = [], translated
             }
           }
         ),
-        /* @__PURE__ */ e.jsx(i.CollapsibleCard, { title: l("SEO"), description: l("How this term's page appears in search results and shared links."), titleClassName: "cms:text-base", storageKey: "cms:term:seo", hasErrors: B(n, "seo"), children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !o, className: "cms:min-w-0", children: /* @__PURE__ */ e.jsx(P, { bare: !0, id: "seo", fields: z(), value: a.data.seo, errors: A(n, "seo"), onChange: (s) => {
+        /* @__PURE__ */ e.jsx(i.CollapsibleCard, { title: l("SEO"), description: l("How this term's page appears in search results and shared links."), titleClassName: "cms:text-base", storageKey: "cms:term:seo", hasErrors: P(n, "seo"), children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !o, className: "cms:min-w-0", children: /* @__PURE__ */ e.jsx(A, { bare: !0, id: "seo", fields: z(), value: a.data.seo, errors: B(n, "seo"), onChange: (s) => {
           a.setData("seo", s), u("seo");
         } }) }) })
       ] }),

@@ -40,6 +40,8 @@ export interface FieldDefinition {
     condition?: FieldCondition | null;
     /** What visitors read in other languages, by language: label, instructions, a select's option labels by value. */
     translations?: Record<string, FieldTranslation>;
+    /** How much of the row it takes in the editor, in percent (25, 33, 50, 66, 75; none: 100). See lib/width.ts. */
+    width?: number;
     /** A flexible field's kinds of block, as the editor gets them. */
     blocks?: BlockType[];
     /** A terms field's taxonomy (its terms load from cms/terms/picker). */

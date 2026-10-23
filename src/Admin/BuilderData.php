@@ -24,7 +24,7 @@ final class BuilderData
 {
     public function __construct(private readonly FieldTypes $types) {}
 
-    /** @return array{fieldTypes: list<array<string, mixed>>, fieldsets: list<array{value: string, label: string}>, rules: list<string>, reserved: list<string>, locales: list<array{code: string, name: string}>} */
+    /** @return array{fieldTypes: list<array<string, mixed>>, fieldsets: list<array{value: string, label: string}>, rules: list<string>, widths: list<int>, reserved: list<string>, locales: list<array{code: string, name: string}>} */
     public function toArray(): array
     {
         return [
@@ -38,6 +38,8 @@ final class BuilderData
             ], $this->types->all())),
             'fieldsets' => Fieldset::options(),
             'rules' => DefinitionValidator::RULES,
+            // How wide a field may be in the editor, in percent of its row (a field's "width").
+            'widths' => Field::WIDTHS,
             // Handles content keeps for itself: the builder warns as they're typed.
             'reserved' => Blueprint::RESERVED,
             // The content languages, the main one first: fields' labels for visitors in the others.
@@ -54,7 +56,7 @@ final class BuilderData
         }
 
         return new Field($field->handle, $field->type, self::say($field->label), $field->required, self::say($field->instructions),
-            $field->translatable, $field->validation, $config, array_map(self::said(...), $field->fields), $field->condition, $field->translations);
+            $field->translatable, $field->validation, $config, array_map(self::said(...), $field->fields), $field->condition, $field->translations, $field->width);
     }
 
     private static function say(string $words): string

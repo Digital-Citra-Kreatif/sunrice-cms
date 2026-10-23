@@ -1,6 +1,6 @@
-import { r as t, j as r, t as i, a as n } from "./admin-AwfaNzsU.js";
-import { F as o } from "./FieldError-BD5SRSF-.js";
-import { S as a } from "./StructureList-CWR5il0k.js";
+import { r as t, j as r, t as i, a as n } from "./admin-BrOs4B--.js";
+import { F as o } from "./FieldError-36ltLu3Y.js";
+import { S as a } from "./StructureList-7wuZG7Uh.js";
 function p({ blueprints: e }) {
   const s = t.usePage().props.errors;
   return /* @__PURE__ */ r.jsxs(r.Fragment, { children: [

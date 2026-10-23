@@ -79,7 +79,7 @@ final class DefinitionValidator
             $key = "{$path}.{$index}";
             $type = is_array($field) && is_string($field['type'] ?? null) && $this->types->has($field['type']) ? $this->types->get($field['type']) : null;
             $rules[$key] = ['array'];
-            foreach (['handle', 'type', 'label', 'instructions', 'required', 'translatable', 'validation', 'condition', 'config', 'fields'] as $part) {
+            foreach (['handle', 'type', 'label', 'instructions', 'required', 'translatable', 'validation', 'condition', 'config', 'fields', 'width'] as $part) {
                 $names["{$key}.{$part}"] = $part === 'validation' ? 'extra rules' : $part;
             }
             $rules["{$key}.handle"] = ['required', 'string', 'max:64', new HandleRule];
@@ -88,6 +88,12 @@ final class DefinitionValidator
             $rules["{$key}.instructions"] = ['nullable', 'string', 'max:1000'];
             $rules["{$key}.required"] = ['nullable', self::strictBoolean()];
             $rules["{$key}.translatable"] = ['nullable', self::strictBoolean()];
+            // How much of the row it takes in the editor, in percent.
+            $rules["{$key}.width"] = ['nullable', function (string $attribute, mixed $value, \Closure $fail): void {
+                if (! in_array($value, Field::WIDTHS, true)) {
+                    $fail(__('The width must be one of :widths (percent of the row).', ['widths' => implode(', ', Field::WIDTHS)]));
+                }
+            }];
             $rules["{$key}.validation"] = ['nullable', 'array', 'list', 'max:20'];
             $rules["{$key}.validation.*"] = ['string', 'max:255', function (string $attribute, mixed $value, \Closure $fail): void {
                 $name = is_string($value) ? strtolower(explode(':', $value, 2)[0]) : '';
@@ -339,6 +345,8 @@ final class DefinitionValidator
                 fields: $type->hasChildren() ? $this->clean($field->fields) : [],
                 condition: $field->condition,
                 translations: $field->translations,
+                // A fieldset include's fields keep their own widths; it has none.
+                width: $field->type === FieldsetInclude::TYPE ? 100 : $field->width,
             );
         }, $fields);
     }

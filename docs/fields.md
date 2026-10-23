@@ -24,6 +24,7 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 | `config` | The type's settings. |
 | `fields` | The fields of a group or a repeater. Groups and repeaters nest up to five levels. |
 | `condition` | When it shows ([below](#showing-a-field-only-sometimes)). |
+| `width` | How much of the row it takes in the editor, in percent: `25`, `33`, `50`, `66`, `75` or `100` (`Field::WIDTHS`); stored only when not 100 ([below](#field-width)). |
 | `translations` | What visitors read in other languages, by language code: `label`, `instructions` and a select's `options` (value => label), as [forms](forms.md) show them (**In other languages** in the builder). `{"id": {"label": "Jenis properti", "options": {"house": "Rumah"}}}` |
 
 `DefinitionValidator` checks definitions before they are saved, and the `SaveBlueprint` and `SaveFieldset` actions use it.
@@ -79,6 +80,27 @@ A block's values are readable as properties (`$block->heading`) or keys (`$block
 ### Fieldsets
 
 A `fieldset` field puts the fieldset's fields in its own place, at its level and with their own handles: they count as the blueprint's own, and the include's own handle, label and settings aren't used (the builder shows only which fieldset). To keep them under a name of their own (`primary_contact.phone`), put the include in a Group with that handle; a clash says so. A fieldset can include other fieldsets, but never itself (directly or through another). An include whose fieldset is gone stays in the blueprint and keeps its data. A fieldset can't be deleted while a blueprint or another fieldset includes it or uses it as a kind of block. Its edit page says who uses it and where, each linking to its page: 'Used by: the blueprint "Post" — a block in its "More" field; the fieldset "Hero" — included as "Intro".', naming each field by its label (or handle) with the fields above it ("Sections › Columns"); Structure → Fieldsets lists their names. In code: `DeleteFieldset::uses($fieldset)` (each user's `kind`, `handle`, `title` and `uses`, each a `field` and `how`, `include` or `block`), `DeleteFieldset::usedBy($fieldset)` (the same in words, as the refusal says them) and `DefinitionValidator::fieldsetUses($fields)` (each `fieldset`, `path` and `how` in a list of fields).
+
+## Field width
+
+Fields can sit side by side in the editor, like ACF's wrapper width: a field's `width` is how much of the row it takes, in percent, one of `25`, `33`, `50`, `66`, `75` and `100` (the default). The builder's **Width** (under Basics) sets it, and a field's row there shows it (**50%**) when it isn't 100. In a definition:
+
+```php
+app(SaveBlueprint::class)->handle(['handle' => 'property', 'title' => 'Property', 'fields' => [
+    ['handle' => 'price', 'type' => 'number', 'width' => 50],
+    ['handle' => 'area', 'type' => 'number', 'width' => 50],
+    ['handle' => 'city', 'type' => 'text', 'width' => 66],
+    ['handle' => 'postcode', 'type' => 'text', 'width' => 33],
+    ['handle' => 'agent', 'type' => 'group', 'fields' => [
+        ['handle' => 'name', 'type' => 'text', 'width' => 50],
+        ['handle' => 'phone', 'type' => 'text', 'width' => 50],
+    ]],
+]]);
+```
+
+`width` sits beside `label` and `required`, not in `config`. Any other value is refused ("The width must be one of 25, 33, 50, 66, 75, 100 (percent of the row)."); 100 isn't stored, so definitions without it stay as they are. A fieldset include has none: the fieldset's own fields keep theirs. Read it as `$field->width` (an int, 100 when not set).
+
+The editor lays each level's fields on a 12-column grid (`resources/js/lib/width.ts`: 25 → 3 columns, 33 → 4, 50 → 6, 66 → 8, 75 → 9), so 50 + 50, 33 + 66 and four at 25 fill a row with the gap between them; a field that doesn't fit wraps to the next row, and labels of fields side by side line up at the top, each one's help and error under it. Every level does it: the top level (where a top-level group's card takes its width too), groups, repeater rows and flexible blocks, in entries, terms, global sets, listing pages and taxonomy index pages. The grid is a container query: where the fields' area is narrower than 32rem (a phone, a narrow column) every field is full width. Width is for the admin's editor only: forms on the website are laid out by their template.
 
 ## Showing a field only sometimes
 

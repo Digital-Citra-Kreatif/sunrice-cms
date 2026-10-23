@@ -21,6 +21,11 @@ use Illuminate\Support\Str;
  *
  *     "translations": {"id": {"label": "Nama", "instructions": "…", "options": {"house": "Rumah"}}}
  *
+ * `width` is how much of the row the field takes in the editor, in percent
+ * (one of WIDTHS; stored only when not 100), so fields can sit side by side:
+ *
+ *     {"handle": "price", "type": "number", "width": 50}
+ *
  * Build one with Field::make() or Field::fromArray(); DefinitionValidator
  * checks a whole list before it is saved.
  *
@@ -34,6 +39,7 @@ final readonly class Field
      * @param  list<Field>  $fields  children (groups and repeaters)
      * @param  array{field: string, operator: string, value: string|int|float|bool|null}|array{match: 'all'|'any', rules: list<array{field: string, operator: string, value: string|int|float|bool|null}>}|null  $condition  shown only when other fields on its level are so: one rule, or several that must all (or any) hold
      * @param  array<string, array{label?: string, instructions?: string, options?: array<string, string>}>  $translations  by language: what visitors read there
+     * @param  int  $width  how much of the row it takes in the editor, in percent: one of WIDTHS
      */
     public function __construct(
         public string $handle,
@@ -47,7 +53,11 @@ final readonly class Field
         public array $fields = [],
         public ?array $condition = null,
         public array $translations = [],
+        public int $width = 100,
     ) {}
+
+    /** How wide a field may be in the editor, in percent of its row. */
+    public const WIDTHS = [25, 33, 50, 66, 75, 100];
 
     /** @param array<string, mixed> $config */
     public static function make(string $handle, string $type, array $config = []): self
@@ -79,6 +89,7 @@ final readonly class Field
             fields: self::listFromArray($children),
             condition: self::conditionFrom($data['condition'] ?? null),
             translations: self::translationsFrom($data['translations'] ?? null),
+            width: is_int($data['width'] ?? null) && in_array($data['width'], self::WIDTHS, true) ? $data['width'] : 100,
         );
     }
 
@@ -249,7 +260,8 @@ final readonly class Field
             'config' => $this->config,
             'fields' => self::listToArray($this->fields),
         ] + ($this->condition !== null ? ['condition' => $this->condition] : [])
-            + ($this->translations !== [] ? ['translations' => $this->translations] : []);
+            + ($this->translations !== [] ? ['translations' => $this->translations] : [])
+            + ($this->width !== 100 ? ['width' => $this->width] : []);
     }
 
     /** The label, or the handle as words when there is none. */
@@ -355,12 +367,12 @@ final readonly class Field
     /** @param array<string, mixed> $config */
     public function withConfig(array $config): self
     {
-        return new self($this->handle, $this->type, $this->label, $this->required, $this->instructions, $this->translatable, $this->validation, $config, $this->fields, $this->condition, $this->translations);
+        return new self($this->handle, $this->type, $this->label, $this->required, $this->instructions, $this->translatable, $this->validation, $config, $this->fields, $this->condition, $this->translations, $this->width);
     }
 
     /** @param list<Field> $fields */
     public function withFields(array $fields): self
     {
-        return new self($this->handle, $this->type, $this->label, $this->required, $this->instructions, $this->translatable, $this->validation, $this->config, $fields, $this->condition, $this->translations);
+        return new self($this->handle, $this->type, $this->label, $this->required, $this->instructions, $this->translatable, $this->validation, $this->config, $fields, $this->condition, $this->translations, $this->width);
     }
 }

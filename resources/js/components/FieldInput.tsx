@@ -10,6 +10,7 @@ import { FieldError } from '@/components/FieldError.tsx';
 import { TermsPicker } from '@/components/TermsPicker.tsx';
 import { errorsAt } from '@/lib/builder.ts';
 import { isShown } from '@/lib/conditions.ts';
+import { fieldGrid, widthClass } from '@/lib/width.ts';
 import { asRecord, dateInputValue, dateValueFromInput, groupedNumber, itemSummary, offersEmptyChoice, newBlock, newRow, syncKeys } from '@/lib/values.ts';
 import type { Errors, FieldDefinition, Option } from '@/types.ts';
 
@@ -186,20 +187,23 @@ export function Fields({ fields, value, onChange, errors, id, content, bare = fa
     /** Without the box around them (a card holds them already). */
     bare?: boolean;
 }) {
-    return (
-        <div className={bare ? 'cms:flex cms:flex-col cms:gap-6' : 'cms:flex cms:flex-col cms:gap-4 cms:rounded-lg cms:border cms:p-4'}>
-            {fields.filter((child) => isShown(child, value)).map((child) => child.shared ? (
-                // Greyed out; the form says once, at the top, where to edit shared fields.
-                <fieldset key={child.handle} disabled className="cms:flex cms:flex-col cms:gap-1 cms:opacity-60" title={t('Shared by all languages: edit it in the main language.')}>
-                    <FieldInput id={`${id}-${child.handle}`} field={child} value={value[child.handle]} content={content} errors={{}} onChange={() => {}} />
-                </fieldset>
-            ) : (
-                <FieldInput key={child.handle} id={`${id}-${child.handle}`} field={child} value={value[child.handle]} content={content}
+    // Side by side by their widths (lib/width.ts); a box around them unless a card holds them already.
+    const grid = <div className={fieldGrid(bare ? undefined : 'cms:gap-4')}>
+        {fields.filter((child) => isShown(child, value)).map((child) => child.shared ? (
+            // Greyed out; the form says once, at the top, where to edit shared fields.
+            <fieldset key={child.handle} disabled className={`cms:flex cms:flex-col cms:gap-1 cms:opacity-60 ${widthClass(child)}`} title={t('Shared by all languages: edit it in the main language.')}>
+                <FieldInput id={`${id}-${child.handle}`} field={child} value={value[child.handle]} content={content} errors={{}} onChange={() => {}} />
+            </fieldset>
+        ) : (
+            <div key={child.handle} className={widthClass(child)}>
+                <FieldInput id={`${id}-${child.handle}`} field={child} value={value[child.handle]} content={content}
                     errors={errorsAt(errors, child.handle)}
                     onChange={(next) => onChange({ ...value, [child.handle]: next })} />
-            ))}
-        </div>
-    );
+            </div>
+        ))}
+    </div>;
+
+    return bare ? grid : <div className="cms:rounded-lg cms:border cms:p-4">{grid}</div>;
 }
 
 function SingleSelect({ options, value, onChange, id, empty, fill = false }: { options: Option[]; value: string | null; onChange: (value: unknown) => void; id: string; empty: boolean; fill?: boolean }) {

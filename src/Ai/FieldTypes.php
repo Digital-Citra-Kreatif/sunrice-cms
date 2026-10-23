@@ -11,7 +11,7 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 use Sunrice\Cms\Admin\BuilderData;
 
 #[IsReadOnly]
-#[Description('The field types for blueprint field definitions: each type, its label, whether it holds child fields ("fields"), and its settings (the keys of "config"), plus the fieldsets and the extra rules a field\'s "validation" list may use. Every field also takes handle, type, label, required, instructions and translatable.')]
+#[Description('The field types for blueprint field definitions: each type, its label, whether it holds child fields ("fields"), and its settings (the keys of "config"), plus the fieldsets and the extra rules a field\'s "validation" list may use. Every field also takes handle, type, label, required, instructions, translatable and width (how much of the row it takes in the editor, in percent: one of "widths"; left out: 100).')]
 final class FieldTypes extends CmsTool
 {
     protected string $name = 'cms_field_types';
