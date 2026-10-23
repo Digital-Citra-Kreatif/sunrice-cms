@@ -32,7 +32,7 @@ If your developer has set up machine translation, the editor of a translation ha
 
 ## Pages not translated yet
 
-When an entry has no live translation in a language, visitors to that language usually see the main language's content at that language's address, so menus and links keep working and nobody lands on a missing page. Once you publish the translation, it takes over. (Your developer can switch this off, in which case such pages don't exist in that language.)
+When an entry has no live translation in a language, visitors to that language usually see the main language's content at that language's address, so menus and links keep working and nobody lands on a missing page. Once you publish the translation, it takes over. (It can be switched off in **Settings → Site** → **Show untranslated pages in the main language**, in which case such pages don't exist in that language.)
 
 ## The entries list and languages
 

@@ -16,6 +16,7 @@ use Sunrice\Admin\Resources\Forms\Toggle;
 use Sunrice\Admin\Settings\Settings;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\EntryTranslation;
+use Sunrice\Cms\Site\Site;
 use Sunrice\Cms\Support\Locales;
 
 /**
@@ -50,6 +51,13 @@ final class SiteSettings extends Settings
 
     /** The site's X (Twitter) account, "@acme", for share cards. */
     public string $twitter = '';
+
+    /**
+     * Pages not translated into a language show the main language's there
+     * (unless config sunrice-cms.site.fallback, SUNRICE_FALLBACK, forces
+     * it): read it with Site::fallback().
+     */
+    public bool $fallback = true;
 
     /** Ask search engines to stay away from the whole site (also config sunrice-cms.seo.noindex). */
     public bool $noindex = false;
@@ -138,6 +146,12 @@ final class SiteSettings extends Settings
                     ->fixed(array_slice(Locales::names(), 1, null, true))
                     ->help('What pages in each language say about the site. Empty: the description above.')] : []),
             ]),
+            // Only matters with other languages; SUNRICE_FALLBACK, when set, decides instead.
+            ...(count(Locales::all()) > 1 ? [Section::make('Languages')->schema([
+                Toggle::make('fallback')->label('Show untranslated pages in the main language')->disabled(Site::fallbackForced() !== null)
+                    ->help('A page not translated into a language shows its main language\'s content at that language\'s address (/id/about), with the main page as its canonical address, so links and the language switcher keep working. Off: those pages are not found (404) and lists show only what\'s translated.')
+                    ->developerHelp(Site::fallbackForced() !== null ? 'Set by SUNRICE_FALLBACK in the app\'s config.' : null),
+            ])] : []),
             Section::make('Structured data')->description('What search engines are told pages are (schema.org), for richer results: articles, breadcrumbs, the site\'s search box.')->columns(2)->schema([
                 Toggle::make('structuredData')->label('Add structured data to pages')->span(2),
                 Select::make('publisher')->label('Published by')->options(['Organization' => 'An organization', 'Person' => 'A person']),

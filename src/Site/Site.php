@@ -38,6 +38,9 @@ final class Site
     /** The homepage entry's id, once read (false: not read yet). */
     private int|false|null $homepage = false;
 
+    /** Settings → Site's "Show untranslated pages in the main language", once read. */
+    private ?bool $fallback = null;
+
     /** @var array<string, array<int, array<string, string>>> related entries' live slugs by language, per collection and route field */
     private array $related = [];
 
@@ -225,10 +228,31 @@ final class Site
         return $this->fallsBack($locale) ? $this->termUrl($main->in($scope), $locale) : null;
     }
 
-    /** Whether pages not translated into a language show the main language's there (`sunrice-cms.site.fallback`). */
+    /**
+     * Whether pages not translated into a language show the main
+     * language's there: `sunrice-cms.site.fallback` when it's set (true or
+     * false, SUNRICE_FALLBACK), else Settings → Site (on by default).
+     */
     public static function fallback(): bool
     {
-        return filter_var(config('sunrice-cms.site.fallback', true), FILTER_VALIDATE_BOOL);
+        $forced = self::fallbackForced();
+        if ($forced !== null) {
+            return $forced;
+        }
+        $site = app(self::class);
+
+        return $site->fallback ??= app(SiteSettings::class)->fallback;
+    }
+
+    /** What `sunrice-cms.site.fallback` (SUNRICE_FALLBACK) forces, or null when it's not set and Settings → Site decides. */
+    public static function fallbackForced(): ?bool
+    {
+        $value = config('sunrice-cms.site.fallback');
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return filter_var($value, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE);
     }
 
     private function fallsBack(string $locale): bool
@@ -687,6 +711,7 @@ final class Site
         $this->patterns = [];
         $this->oldPatterns = [];
         $this->homepage = false;
+        $this->fallback = null;
         $this->related = [];
     }
 

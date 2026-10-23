@@ -99,7 +99,7 @@ final class StructureImporter
      * which are the app's own or hold addresses and keys.
      */
     public const SITE_SETTINGS = ['homepage', 'name', 'description', 'descriptions', 'separator', 'appendName', 'image', 'twitter',
-        'structuredData', 'publisher', 'logo', 'publisherName', 'publisherType', 'telephone', 'address', 'sameAs'];
+        'fallback', 'structuredData', 'publisher', 'logo', 'publisherName', 'publisherType', 'telephone', 'address', 'sameAs'];
 
     /** A collection's settings in the file. */
     public const COLLECTION = ['handle', 'title', 'blueprint', 'blueprints', 'dated', 'translatable', 'ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template', 'listing_template', 'translations', 'routes', ...self::SEO_FIELDS];
@@ -638,7 +638,7 @@ final class StructureImporter
         $values = $this->resolved(array_intersect_key($item, array_flip(self::SITE_SETTINGS)), $notes);
         // Settings → SEO's, as SaveSeoSettings checks them, and Settings → Site's form.
         $rules = [
-            'separator' => ['nullable', 'string', 'max:5'], 'appendName' => ['boolean'],
+            'separator' => ['nullable', 'string', 'max:5'], 'appendName' => ['boolean'], 'fallback' => ['boolean'],
             'twitter' => ['nullable', 'string', 'max:16', 'regex:/^(@?[A-Za-z0-9_]{1,15})?$/'], 'image' => ['nullable', 'integer', Rule::exists('sunrice_media', 'id')],
         ];
         foreach (SiteSettings::form(new SettingsForm)->fields('edit') as $field) {

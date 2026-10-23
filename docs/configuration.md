@@ -30,7 +30,7 @@ See [Languages](collections.md#languages).
 | `site.lazy_sessions` | `true` | `SUNRICE_LAZY_SESSIONS` | Start a visitor's session only when a page needs one, so pages without forms write no session and set no cookie; `false` keeps Laravel's session for every visitor. See [Sessions](site.md#sessions). |
 | `site.template_prefixes` | `['cms.']` | — | What the views editors pick for an entry or a term (Page settings → Template) may start with, so no other view of the app can become a public page. |
 | `site.headers` | `nosniff`, `SAMEORIGIN` framing, `strict-origin-when-cross-origin`, a `Permissions-Policy` | `SUNRICE_SITE_CSP` (the CSP) | Security headers on every site response; null leaves one out, and a header the response already has is kept. No Content-Security-Policy unless set. See [Security headers](site.md#security-headers). |
-| `site.fallback` | `true` | `SUNRICE_FALLBACK` | Untranslated entries and terms show the main language's content at the other language's address (canonical to the main page); off, they're a 404 there. See [Untranslated pages](site.md#untranslated-pages). |
+| `site.fallback` | `null` | `SUNRICE_FALLBACK` | Untranslated entries and terms show the main language's content at the other language's address (canonical to the main page); off, they're a 404 there. `null`: Settings → Site decides (on by default); `true` or `false` forces it. See [Untranslated pages](site.md#untranslated-pages). |
 
 ## Caching
 

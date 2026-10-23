@@ -32,7 +32,7 @@ Jika developer Anda menyiapkan terjemahan mesin, penyunting terjemahan memiliki 
 
 ## Halaman yang belum diterjemahkan
 
-Jika sebuah entri belum memiliki terjemahan yang tayang dalam suatu bahasa, pengunjung bahasa itu biasanya melihat isi bahasa utama di alamat bahasa tersebut, sehingga menu dan tautan tetap berfungsi dan tidak ada yang tersesat ke halaman kosong. Begitu terjemahannya terbit, terjemahan itulah yang tampil. (Developer bisa mematikan ini; jika begitu, halaman tersebut tidak ada dalam bahasa itu.)
+Jika sebuah entri belum memiliki terjemahan yang tayang dalam suatu bahasa, pengunjung bahasa itu biasanya melihat isi bahasa utama di alamat bahasa tersebut, sehingga menu dan tautan tetap berfungsi dan tidak ada yang tersesat ke halaman kosong. Begitu terjemahannya terbit, terjemahan itulah yang tampil. (Ini bisa dimatikan di **Pengaturan → Situs** → **Tampilkan halaman yang belum diterjemahkan dalam bahasa utama**; jika begitu, halaman tersebut tidak ada dalam bahasa itu.)
 
 ## Daftar entri dan bahasa
 

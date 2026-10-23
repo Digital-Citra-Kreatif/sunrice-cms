@@ -36,8 +36,10 @@ return [
         'template_prefixes' => ['cms.'],
         // An entry or term not translated into a language (or not live in
         // it) shows the main language's content at that language's address,
-        // canonical to the main page. Off: a 404 there.
-        'fallback' => env('SUNRICE_FALLBACK', true),
+        // canonical to the main page. Off: a 404 there. Null (the default):
+        // Settings → Site → "Show untranslated pages in the main language"
+        // decides; true or false forces it whatever the setting says.
+        'fallback' => env('SUNRICE_FALLBACK'),
         // Headers sent with every site response (pages, listings, terms,
         // search, the sitemap, previews, form and comment posts); null or
         // '' leaves one out, and a header the response already has is

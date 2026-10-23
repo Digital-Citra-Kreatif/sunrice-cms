@@ -14,6 +14,8 @@ Settings are live as soon as you click **Save**.
 - **Description**: used when a page has none of its own.
 - **Description in other languages** (with more than one language): a box per language, for pages in that language. Empty: the description above.
 
+**Languages** (with more than one language): **Show untranslated pages in the main language** (on by default). A page not translated into a language then shows its main language's content at that language's address (`/id/about`), so links and the language switcher keep working; off, those pages aren't found in that language and lists show only what's translated. When your developer has set it in the app's config, the switch is greyed out. See [Pages not translated yet](guide:website/languages#pages-not-translated-yet).
+
 The share image, the site name in titles and its separator, the X (Twitter) account and hiding the whole site from search engines are in **Settings → SEO** (right after Site in the Settings menu; see [SEO](guide:website/seo)).
 
 **Structured data**: **Add structured data to pages** (on unless you have a reason), whether the site is **Published by** an organisation or a person, and the organisation's **Logo** (square or wide, at least 112 pixels). Search engines also like the publisher's details: its **Name** (empty: the site name), the **Organization type** (search the list: *Local business*, *Real estate agent*, *Restaurant*…; or choose **Other…** and type any schema.org type as one word, like *Brewery*), **Phone**, **Address** and **Profiles elsewhere** (its Instagram, LinkedIn… pages: **Add profile** for each, an address starting with https://; the site it's on shows beside it).
