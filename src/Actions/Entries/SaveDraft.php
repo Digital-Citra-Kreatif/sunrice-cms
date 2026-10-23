@@ -70,7 +70,9 @@ final class SaveDraft
                 'slug' => $values['slug'] !== $translation->draft_slug,
             ]));
             foreach ($values['data'] as $handle => $value) {
-                if (! array_key_exists($handle, $translation->draft_data) || $translation->draft_data[$handle] != $value) {
+                // A field the draft didn't have yet changed only when it's given a value (an untouched SEO is null).
+                $had = array_key_exists($handle, $translation->draft_data);
+                if ($had ? $translation->draft_data[$handle] != $value : ! in_array($value, [null, '', []], true)) {
                     $changed[] = $handle;
                 }
             }

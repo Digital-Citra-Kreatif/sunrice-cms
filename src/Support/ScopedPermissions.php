@@ -30,7 +30,8 @@ final class ScopedPermissions
 
     private const TERM_LABELS = ['view' => 'View terms', 'create' => 'Create terms', 'update' => 'Edit terms', 'delete' => 'Trash and delete terms'];
 
-    private const KEY = 'sunrice-cms:scoped-permissions';
+    /** Versioned: v2 keeps the groups as patterns with their replacements. */
+    private const KEY = 'sunrice-cms:scoped-permissions:v2';
 
     /** The actions scoped permissions come in, by what they're scoped to. */
     private const SCOPES = [
@@ -53,38 +54,42 @@ final class ScopedPermissions
             return [];
         }
 
-        return array_map(fn (array $row): Permission => Permission::make($row['name'], $row['label'], $row['group']), $cached);
+        return array_map(fn (array $row): Permission => Permission::make($row['name'], $row['label'], $row['group'], $row['replace'] ?? []), $cached);
     }
 
-    /** @return list<array{name: string, label: string, group: string}> */
+    /**
+     * The group is a translatable pattern ("Entries: :collection"), with the title as its replacement.
+     *
+     * @return list<array{name: string, label: string, group: string, replace?: array<string, string>}>
+     */
     private static function read(): array
     {
         if (! Schema::hasTable('sunrice_collections')) {
             return [];
         }
         $permissions = [];
-        $make = function (string $name, string $label, string $group) use (&$permissions): void {
+        $make = function (string $name, string $label, string $group, string $key, string $title) use (&$permissions): void {
             try {
-                $permission = Permission::make($name, $label, $group);
-                $permissions[] = ['name' => $permission->name, 'label' => $permission->label, 'group' => $permission->group];
+                $permission = Permission::make($name, $label, $group, [$key => $title]);
+                $permissions[] = ['name' => $permission->name, 'label' => $label, 'group' => $group, 'replace' => [$key => $title]];
             } catch (\InvalidArgumentException) {
                 // A handle permissions can't hold (a double or trailing underscore): no scoped permission.
             }
         };
         foreach (Collection::query()->withTrashed()->orderBy('title')->get(['handle', 'title']) as $collection) {
             foreach (self::ENTRY_LABELS as $action => $label) {
-                $make("cms.entries.{$collection->handle}.{$action}", $label, "Entries: {$collection->title}");
+                $make("cms.entries.{$collection->handle}.{$action}", $label, 'Entries: :collection', 'collection', $collection->title);
             }
         }
         foreach (Taxonomy::query()->withTrashed()->orderBy('title')->get(['handle', 'title']) as $taxonomy) {
             foreach (self::TERM_LABELS as $action => $label) {
-                $make("cms.terms.{$taxonomy->handle}.{$action}", $label, "Terms: {$taxonomy->title}");
+                $make("cms.terms.{$taxonomy->handle}.{$action}", $label, 'Terms: :taxonomy', 'taxonomy', $taxonomy->title);
             }
         }
         foreach (Form::query()->orderBy('title')->get(['handle', 'title']) as $form) {
-            $make("cms.submissions.{$form->handle}.view", 'View submissions', "Submissions: {$form->title}");
-            $make("cms.submissions.{$form->handle}.export", 'Export submissions as CSV', "Submissions: {$form->title}");
-            $make("cms.submissions.{$form->handle}.delete", 'Delete submissions', "Submissions: {$form->title}");
+            $make("cms.submissions.{$form->handle}.view", 'View submissions', 'Submissions: :form', 'form', $form->title);
+            $make("cms.submissions.{$form->handle}.export", 'Export submissions as CSV', 'Submissions: :form', 'form', $form->title);
+            $make("cms.submissions.{$form->handle}.delete", 'Delete submissions', 'Submissions: :form', 'form', $form->title);
         }
 
         return $permissions;
