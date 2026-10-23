@@ -7,7 +7,7 @@ namespace Sunrice\Cms\Fields\Types;
 use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\FieldType;
 
-/** One line of text. Settings: max (characters, up to 255 in the builder; none: 65535), placeholder, default. */
+/** One line of text. Settings: max (characters, up to 255 in the builder; none: 65535), placeholder, prefix, suffix (shown around the input, not stored), default. */
 final class Text extends FieldType
 {
     public function type(): string
@@ -40,7 +40,8 @@ final class Text extends FieldType
     {
         return [
             new Field('max', 'number', 'Maximum characters', config: ['min' => 1, 'max' => 255]),
-            new Field('placeholder', 'text', 'Placeholder'),
+            InputSettings::placeholder(),
+            ...InputSettings::affixes(),
             new Field('default', 'text', 'Default value'),
         ];
     }

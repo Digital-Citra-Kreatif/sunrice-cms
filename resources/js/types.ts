@@ -32,6 +32,7 @@ export interface FieldDefinition {
     type: string;
     label?: string | null;
     required?: boolean;
+    /** The helper text under the input: simple inline Markdown (lib/inline-markdown.ts). */
     instructions?: string | null;
     translatable?: boolean | null;
     validation?: string[];
@@ -42,6 +43,9 @@ export interface FieldDefinition {
     translations?: Record<string, FieldTranslation>;
     /** How much of the row it takes in the editor, in percent (25, 33, 50, 66, 75; none: 100). See lib/width.ts. */
     width?: number;
+    /** A short note at the right of the label, and a longer one behind an ⓘ beside it. See lib/presentation.ts. */
+    hint?: string | null;
+    hint_tooltip?: string | null;
     /** A flexible field's kinds of block, as the editor gets them. */
     blocks?: BlockType[];
     /** A terms field's taxonomy (its terms load from cms/terms/picker). */

@@ -26,6 +26,13 @@ use Illuminate\Support\Str;
  *
  *     {"handle": "price", "type": "number", "width": 50}
  *
+ * `hint` is a short note at the right of the label in the editor ("Before
+ * tax"), and `hint_tooltip` a longer one behind an ⓘ beside it; both are
+ * stored only when not empty. `instructions` is the helper text under the
+ * input (simple Markdown: links, **bold**, *italic*, `code`). A type's
+ * `placeholder`, `prefix` and `suffix` (text and number) are its settings,
+ * in `config`: shown in and around the input, never stored with the value.
+ *
  * Build one with Field::make() or Field::fromArray(); DefinitionValidator
  * checks a whole list before it is saved.
  *
@@ -40,6 +47,8 @@ final readonly class Field
      * @param  array{field: string, operator: string, value: string|int|float|bool|null}|array{match: 'all'|'any', rules: list<array{field: string, operator: string, value: string|int|float|bool|null}>}|null  $condition  shown only when other fields on its level are so: one rule, or several that must all (or any) hold
      * @param  array<string, array{label?: string, instructions?: string, options?: array<string, string>}>  $translations  by language: what visitors read there
      * @param  int  $width  how much of the row it takes in the editor, in percent: one of WIDTHS
+     * @param  string  $hint  a short note at the right of the label in the editor
+     * @param  string  $hintTooltip  a longer note behind an ⓘ beside the hint
      */
     public function __construct(
         public string $handle,
@@ -54,10 +63,18 @@ final readonly class Field
         public ?array $condition = null,
         public array $translations = [],
         public int $width = 100,
+        public string $hint = '',
+        public string $hintTooltip = '',
     ) {}
 
     /** How wide a field may be in the editor, in percent of its row. */
     public const WIDTHS = [25, 33, 50, 66, 75, 100];
+
+    /** How long a hint (at the right of the label) may be, in characters. */
+    public const HINT_MAX = 100;
+
+    /** How long a hint's tooltip may be, in characters. */
+    public const HINT_TOOLTIP_MAX = 500;
 
     /** @param array<string, mixed> $config */
     public static function make(string $handle, string $type, array $config = []): self
@@ -90,6 +107,8 @@ final readonly class Field
             condition: self::conditionFrom($data['condition'] ?? null),
             translations: self::translationsFrom($data['translations'] ?? null),
             width: is_int($data['width'] ?? null) && in_array($data['width'], self::WIDTHS, true) ? $data['width'] : 100,
+            hint: trim($string('hint')),
+            hintTooltip: trim($string('hint_tooltip')),
         );
     }
 
@@ -261,7 +280,9 @@ final readonly class Field
             'fields' => self::listToArray($this->fields),
         ] + ($this->condition !== null ? ['condition' => $this->condition] : [])
             + ($this->translations !== [] ? ['translations' => $this->translations] : [])
-            + ($this->width !== 100 ? ['width' => $this->width] : []);
+            + ($this->width !== 100 ? ['width' => $this->width] : [])
+            + ($this->hint !== '' ? ['hint' => $this->hint] : [])
+            + ($this->hintTooltip !== '' ? ['hint_tooltip' => $this->hintTooltip] : []);
     }
 
     /** The label, or the handle as words when there is none. */
@@ -367,12 +388,12 @@ final readonly class Field
     /** @param array<string, mixed> $config */
     public function withConfig(array $config): self
     {
-        return new self($this->handle, $this->type, $this->label, $this->required, $this->instructions, $this->translatable, $this->validation, $config, $this->fields, $this->condition, $this->translations, $this->width);
+        return new self($this->handle, $this->type, $this->label, $this->required, $this->instructions, $this->translatable, $this->validation, $config, $this->fields, $this->condition, $this->translations, $this->width, $this->hint, $this->hintTooltip);
     }
 
     /** @param list<Field> $fields */
     public function withFields(array $fields): self
     {
-        return new self($this->handle, $this->type, $this->label, $this->required, $this->instructions, $this->translatable, $this->validation, $this->config, $fields, $this->condition, $this->translations, $this->width);
+        return new self($this->handle, $this->type, $this->label, $this->required, $this->instructions, $this->translatable, $this->validation, $this->config, $fields, $this->condition, $this->translations, $this->width, $this->hint, $this->hintTooltip);
     }
 }

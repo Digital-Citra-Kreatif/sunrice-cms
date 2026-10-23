@@ -7,7 +7,7 @@ namespace Sunrice\Cms\Fields\Types;
 use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\FieldType;
 
-/** Several lines of plain text. Settings: rows, max (characters). */
+/** Several lines of plain text. Settings: rows, max (characters), placeholder. */
 final class Textarea extends FieldType
 {
     public function type(): string
@@ -40,6 +40,7 @@ final class Textarea extends FieldType
         return [
             new Field('rows', 'number', 'Rows', config: ['min' => 2, 'max' => 40]),
             new Field('max', 'number', 'Maximum characters', config: ['min' => 1, 'max' => 65535]),
+            InputSettings::placeholder(),
         ];
     }
 }

@@ -237,10 +237,29 @@ function FieldSettings({ id, field, type, siblings, onChange, types, errors, dep
                     </div>
                 </div>
                 <div className="cms:flex cms:flex-col cms:gap-2">
-                    <Label htmlFor={`${id}-instructions`}>{t('Instructions')}</Label>
-                    <Input id={`${id}-instructions`} value={field.instructions ?? ''} placeholder={t('Shown under the field to editors')}
+                    <Label htmlFor={`${id}-instructions`}>{t('Helper text')}</Label>
+                    <Input id={`${id}-instructions`} value={field.instructions ?? ''} aria-describedby={`${id}-instructions-help`}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...field, instructions: e.target.value || null })} />
+                    <p id={`${id}-instructions-help`} className="cms:text-sm cms:text-muted-foreground">
+                        {t('Shown under the field.')} {withCode(t('Simple Markdown works: :link, :bold, :italic, :code.'), { link: '[text](https://…)', bold: '**bold**', italic: '*italic*', code: '`code`' })}
+                    </p>
                     <FieldError message={errors.instructions} />
+                </div>
+                <div className="cms:grid cms:items-start cms:gap-4 cms:md:grid-cols-2">
+                    <div className="cms:flex cms:min-w-0 cms:flex-col cms:gap-2">
+                        <Label htmlFor={`${id}-hint`}>{t('Hint')}</Label>
+                        <Input id={`${id}-hint`} value={field.hint ?? ''} maxLength={100} aria-describedby={`${id}-hint-help`}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...field, hint: e.target.value || null })} />
+                        <p id={`${id}-hint-help`} className="cms:text-sm cms:text-muted-foreground">{t('A short note at the right of the label, like "Max 160 characters".')}</p>
+                        <FieldError message={errors.hint} />
+                    </div>
+                    <div className="cms:flex cms:min-w-0 cms:flex-col cms:gap-2">
+                        <Label htmlFor={`${id}-hint-tooltip`}>{t('Hint tooltip')}</Label>
+                        <Textarea id={`${id}-hint-tooltip`} rows={2} className="cms:min-h-0" value={field.hint_tooltip ?? ''} maxLength={500} aria-describedby={`${id}-hint-tooltip-help`}
+                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange({ ...field, hint_tooltip: e.target.value || null })} />
+                        <p id={`${id}-hint-tooltip-help`} className="cms:text-sm cms:text-muted-foreground">{t('A longer explanation, behind an ⓘ beside the hint.')}</p>
+                        <FieldError message={errors.hint_tooltip} />
+                    </div>
                 </div>
                 <div className="cms:grid cms:items-start cms:gap-4 cms:md:grid-cols-2">
                     <div className="cms:flex cms:h-9 cms:items-center cms:gap-3 cms:md:h-auto">
@@ -284,6 +303,15 @@ function FieldSettings({ id, field, type, siblings, onChange, types, errors, dep
                 <SettingsSection title={t('Limits and defaults')}>
                     <div className="cms:grid cms:grid-cols-1 cms:items-start cms:gap-4 cms:min-[420px]:grid-cols-2 cms:lg:grid-cols-4">
                         {groups.limits.map((each) => <div key={each.handle} className="cms:min-w-0">{setting(each, true)}</div>)}
+                    </div>
+                </SettingsSection>
+            )}
+
+            {groups.appearance.length > 0 && (
+                <SettingsSection title={t('Appearance')}>
+                    <p className="cms:-mt-1 cms:text-sm cms:text-muted-foreground">{t('How the input looks in the editor. Never saved with the value.')}</p>
+                    <div className="cms:grid cms:grid-cols-1 cms:items-start cms:gap-4 cms:min-[420px]:grid-cols-2 cms:lg:grid-cols-3">
+                        {groups.appearance.map((each) => <div key={each.handle} className="cms:min-w-0">{setting(each, true)}</div>)}
                     </div>
                 </SettingsSection>
             )}
@@ -399,7 +427,7 @@ function TranslationSettings({ id, field, locales, onChange, errors }: { id: str
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => set(code, { label: e.target.value })} />
                         </div>
                         <div className="cms:flex cms:flex-col cms:gap-2">
-                            <Label htmlFor={`${id}-instructions-${code}`}>Instructions ({name})</Label>
+                            <Label htmlFor={`${id}-instructions-${code}`}>{t('Helper text')} ({name})</Label>
                             <Input id={`${id}-instructions-${code}`} value={translations[code]?.instructions ?? ''} placeholder={field.instructions ?? ''}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => set(code, { instructions: e.target.value })} />
                         </div>

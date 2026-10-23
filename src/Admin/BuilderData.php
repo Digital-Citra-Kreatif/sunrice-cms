@@ -56,7 +56,7 @@ final class BuilderData
         }
 
         return new Field($field->handle, $field->type, self::say($field->label), $field->required, self::say($field->instructions),
-            $field->translatable, $field->validation, $config, array_map(self::said(...), $field->fields), $field->condition, $field->translations, $field->width);
+            $field->translatable, $field->validation, $config, array_map(self::said(...), $field->fields), $field->condition, $field->translations, $field->width, $field->hint, $field->hintTooltip);
     }
 
     private static function say(string $words): string

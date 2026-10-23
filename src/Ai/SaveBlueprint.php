@@ -13,7 +13,7 @@ use Sunrice\Cms\Actions\Fieldsets\SaveFieldset;
 use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Fieldset;
 
-#[Description('Create a blueprint (or with "kind": "fieldset", a fieldset), or replace an existing one\'s title and fields, found by handle. "fields" is the complete list of field definitions ({handle, type, label, required, instructions, translatable, width: how much of the row it takes in the editor (25, 33, 50, 66, 75 or 100 percent; left out: 100, so fields at 50 sit side by side), validation: extra rules, config: the type\'s settings, fields: child fields}: cms_field_types has the types) and replaces the current list; validated like the blueprint builder. A field taken out hides its values but doesn\'t delete them. Ask before removing fields.')]
+#[Description('Create a blueprint (or with "kind": "fieldset", a fieldset), or replace an existing one\'s title and fields, found by handle. "fields" is the complete list of field definitions ({handle, type, label, required, instructions: helper text under the input (simple Markdown: links, **bold**, *italic*, `code`), hint: a short note at the right of the label (up to 100 characters), hint_tooltip: a longer note behind an ⓘ (up to 500), translatable, width: how much of the row it takes in the editor (25, 33, 50, 66, 75 or 100 percent; left out: 100, so fields at 50 sit side by side), validation: extra rules, config: the type\'s settings, fields: child fields}: cms_field_types has the types) and replaces the current list; validated like the blueprint builder. A field taken out hides its values but doesn\'t delete them. Ask before removing fields.')]
 final class SaveBlueprint extends CmsTool
 {
     protected string $name = 'cms_save_blueprint';

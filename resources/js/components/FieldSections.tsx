@@ -2,9 +2,11 @@ import { Card, CardContent, CollapsibleCard } from '@imajiner/admin-sdk/ui';
 import { t } from '@imajiner/admin-sdk';
 import { FieldError, FieldInput, Fields, labelOf } from '@/components/FieldInput.tsx';
 import { ChangedMarker } from '@/components/EntryStatus.tsx';
+import { FieldHint, HelperText } from '@/components/FieldPresentation.tsx';
 import { errorsAt, hasErrors } from '@/lib/builder.ts';
 import { isShown } from '@/lib/conditions.ts';
 import { hasSharedFields } from '@/lib/values.ts';
+import { hintOf } from '@/lib/presentation.ts';
 import { fieldGrid, widthClass } from '@/lib/width.ts';
 import type { Errors, FieldDefinition } from '@/types.ts';
 
@@ -36,6 +38,8 @@ interface Props {
  * A field whose condition isn't met is left out. Fields sit side by side by
  * their widths (lib/width.ts), top-level groups too.
  */
+const hasHint = (field: FieldDefinition) => { const { hint, tooltip } = hintOf(field); return hint !== null || tooltip !== null; };
+
 /** How a field shared by all languages looks in another language: read-only and greyed out. */
 export const SHARED_FIELD = 'cms:flex cms:flex-col cms:gap-1 cms:opacity-60';
 
@@ -90,10 +94,13 @@ export function FieldSections({ fields, values, onChange, errors, storageKey, sh
                 const fieldErrors = errorsAt(errors, `data.${section.handle}`);
 
                 return (
-                    <CollapsibleCard key={section.handle} className={widthClass(section)} title={changed.includes(section.handle) ? <>{labelOf(section)}<ChangedMarker /></> : labelOf(section)} titleClassName="cms:text-base" description={section.instructions ?? undefined}
+                    <CollapsibleCard key={section.handle} className={widthClass(section)} title={changed.includes(section.handle) ? <>{labelOf(section)}<ChangedMarker /></> : labelOf(section)} titleClassName="cms:text-base"
+                        headerAction={hasHint(section) ? <FieldHint field={section} id={`data-${section.handle}`} label={labelOf(section)} maxWidth="cms:max-w-40 cms:sm:max-w-64" /> : undefined}
                         storageKey={`${storageKey}:${section.handle}`} hasErrors={!isShared && hasErrors(errors, `data.${section.handle}`)}>
                         <fieldset disabled={isShared || disabled} role="group" aria-label={labelOf(section)} className={`cms:flex cms:flex-col cms:gap-2 ${isShared ? 'cms:opacity-60' : ''}`}
                             title={isShared ? t('Shared by all languages') : undefined}>
+                            {/* Its helper text under its heading (not in the header: that's a button, and the text may hold links). */}
+                            <HelperText text={section.instructions} className="cms:-mt-1 cms:mb-2" />
                             <Fields bare fields={section.fields ?? []} id={`data-${section.handle}`} content errors={isShared ? {} : fieldErrors}
                                 value={value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}}
                                 onChange={(next) => onChange(section.handle, next)} />

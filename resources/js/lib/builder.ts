@@ -1,3 +1,4 @@
+import { APPEARANCE_SETTINGS } from './presentation.ts';
 import type { Errors, FieldDefinition } from '../types.ts';
 
 /** Says a text in the user's language (the panel's t); the tests run without one. */
@@ -218,11 +219,13 @@ export function dependsOn(setting: FieldDefinition, settings: FieldDefinition[])
 
 /**
  * A type's settings in the builder's sections: "Options" (choices, lists, switches and long texts, full
- * width) and "Limits and defaults" (numbers and short texts, side by side on one compact row). Settings
+ * width), "Limits and defaults" (numbers and short texts, side by side on one compact row) and
+ * "Appearance" (the placeholder, prefix and suffix: how the input looks, never what it stores). Settings
  * that depend on a switch go with it instead, by its handle.
  */
-export function settingGroups(settings: FieldDefinition[]): { options: FieldDefinition[]; limits: FieldDefinition[]; dependents: Record<string, FieldDefinition[]> } {
+export function settingGroups(settings: FieldDefinition[]): { options: FieldDefinition[]; limits: FieldDefinition[]; appearance: FieldDefinition[]; dependents: Record<string, FieldDefinition[]> } {
     const compact = (setting: FieldDefinition) => setting.type === 'number' || (setting.type === 'text' && (setting.instructions ?? '').length <= 60);
+    const looks = (setting: FieldDefinition) => setting.type === 'text' && APPEARANCE_SETTINGS.includes(setting.handle);
     const dependents: Record<string, FieldDefinition[]> = {};
     const free: FieldDefinition[] = [];
     for (const setting of settings) {
@@ -230,6 +233,7 @@ export function settingGroups(settings: FieldDefinition[]): { options: FieldDefi
         if (on === null) free.push(setting);
         else (dependents[on] ??= []).push(setting);
     }
+    const rest = free.filter((setting) => !looks(setting));
 
-    return { options: free.filter((setting) => !compact(setting)), limits: free.filter(compact), dependents };
+    return { options: rest.filter((setting) => !compact(setting)), limits: rest.filter(compact), appearance: free.filter(looks), dependents };
 }

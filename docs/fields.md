@@ -25,6 +25,8 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 | `fields` | The fields of a group or a repeater. Groups and repeaters nest up to five levels. |
 | `condition` | When it shows ([below](#showing-a-field-only-sometimes)). |
 | `width` | How much of the row it takes in the editor, in percent: `25`, `33`, `50`, `66`, `75` or `100` (`Field::WIDTHS`); stored only when not 100 ([below](#field-width)). |
+| `instructions` | The helper text, under the input in the editor (simple Markdown: links, bold, italic, code); forms on the website show it as help ([below](#how-a-field-presents-itself)). |
+| `hint`, `hint_tooltip` | A short note at the right of the label (up to 100 characters) and a longer one behind an ⓘ beside it (up to 500); each stored only when not empty ([below](#how-a-field-presents-itself)). |
 | `translations` | What visitors read in other languages, by language code: `label`, `instructions` and a select's `options` (value => label), as [forms](forms.md) show them (**In other languages** in the builder). `{"id": {"label": "Jenis properti", "options": {"house": "Rumah"}}}` |
 
 `DefinitionValidator` checks definitions before they are saved, and the `SaveBlueprint` and `SaveFieldset` actions use it.
@@ -33,14 +35,14 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 
 | Type | Stores | Templates get | Settings |
 | --- | --- | --- | --- |
-| `text` | a string | the string | `max` (≤ 255; none: values up to 65535 characters pass, so longer data saved before isn't refused), `placeholder`, `default` |
-| `textarea` | a string | the string | `rows`, `max` |
+| `text` | a string | the string | `max` (≤ 255; none: values up to 65535 characters pass, so longer data saved before isn't refused), `placeholder`, `prefix`, `suffix`, `default` |
+| `textarea` | a string | the string | `rows`, `max`, `placeholder` |
 | `rich_text` | HTML, cleaned on save | the HTML | |
-| `number` | a number | the number | `min`, `max`, `step` (1 for whole numbers), `default` |
+| `number` | a number | the number | `min`, `max`, `step` (1 for whole numbers), `default`, `placeholder`, `prefix`, `suffix` |
 | `toggle` | true or false | the boolean | `default`; a required toggle must be on (a form's consent box: `accepted`) |
 | `select` | a value, or a list with `multiple` | the same | `options` (`[{value, label}]`), `multiple`, `default` |
 | `date` | `2026-10-19`, or `2026-10-19T14:30:00` with `time` | a Carbon | `time`; `future` (*Today or later only*: earlier days are refused with `sunrice-cms::site.forms.today_or_later`, "The Preferred date must be today or a later date.", and a form's date input gets `min`) |
-| `link` | `{type: url, url, label, new_tab}` or `{type: entry, entry_id, label, new_tab}` | `{type, url, label, title, new_tab}`, or null | `collections` (entry links; none: any) |
+| `link` | `{type: url, url, label, new_tab}` or `{type: entry, entry_id, label, new_tab}` | `{type, url, label, title, new_tab}`, or null | `collections` (entry links; none: any), `placeholder` (in the address input) |
 | `media` | a media id, or a list with `multiple` | a `Media` model, or a collection (`$image->altIn()` and `captionIn()`: its alt text and caption in the page's language, set per language in the media library; see [media](../../admin/docs/media.md)) | `multiple`, `max`, `types` (image, video, audio, document) |
 | `group` | an object of its fields | an array | (its `fields`) |
 | `repeater` | a list of rows of its fields | `Items` of arrays | `min`, `max` (its `fields`) |
@@ -101,6 +103,30 @@ app(SaveBlueprint::class)->handle(['handle' => 'property', 'title' => 'Property'
 `width` sits beside `label` and `required`, not in `config`. Any other value is refused ("The width must be one of 25, 33, 50, 66, 75, 100 (percent of the row)."); 100 isn't stored, so definitions without it stay as they are. A fieldset include has none: the fieldset's own fields keep theirs. Read it as `$field->width` (an int, 100 when not set).
 
 The editor lays each level's fields on a 12-column grid (`resources/js/lib/width.ts`: 25 → 3 columns, 33 → 4, 50 → 6, 66 → 8, 75 → 9), so 50 + 50, 33 + 66 and four at 25 fill a row with the gap between them; a field that doesn't fit wraps to the next row, and labels of fields side by side line up at the top, each one's help and error under it. Every level does it: the top level (where a top-level group's card takes its width too), groups, repeater rows and flexible blocks, in entries, terms, global sets, listing pages and taxonomy index pages. The grid is a container query: where the fields' area is narrower than 32rem (a phone, a narrow column) every field is full width. Width is for the admin's editor only: forms on the website are laid out by their template.
+
+## How a field presents itself
+
+In the editor a field shows, like a Filament form field:
+
+1. its **label** (and a red `*` when it's required), with its **hint** at the right of the label in small grey text and, when it has a **hint tooltip**, an ⓘ after the hint (or alone) that shows the tooltip on hover or focus. A hint too long for a narrow field (one at 25%) is cut short with "…" and reads whole on hover;
+2. the **input**, with the type's **placeholder** in it while it's empty (`text`, `textarea`, `number`, and a `link`'s address) and, on `text` and `number`, a **prefix** and **suffix** attached to it as one box (`Rp` 150000, 120 `m²`, `https://` example.com);
+3. the **helper text** (the field's `instructions`) under the input, then the field's error under that. A group, repeater or flexible field has no one input to be under: its helper text sits under its label (a top-level group's under its card's heading), and its hint in its card's header.
+
+```php
+app(SaveBlueprint::class)->handle(['handle' => 'property', 'title' => 'Property', 'fields' => [
+    ['handle' => 'price', 'type' => 'number', 'required' => true, 'width' => 50,
+        'hint' => 'Before tax', 'hint_tooltip' => 'What buyers pay, without VAT. Whole rupiah.',
+        'instructions' => 'See the [price guide](https://example.com/prices). **Round** to the nearest thousand.',
+        'config' => ['prefix' => 'Rp', 'placeholder' => '150000', 'step' => 1]],
+    ['handle' => 'area', 'type' => 'number', 'width' => 50, 'config' => ['suffix' => 'm²']],
+    ['handle' => 'website', 'type' => 'text', 'config' => ['prefix' => 'https://', 'placeholder' => 'example.com']],
+    ['handle' => 'summary', 'type' => 'textarea', 'config' => ['placeholder' => 'Two or three sentences for lists']],
+]]);
+```
+
+`hint` (up to 100 characters, `Field::HINT_MAX`) and `hint_tooltip` (up to 500, `Field::HINT_TOOLTIP_MAX`) sit beside `instructions`, not in `config`, and are stored only when not empty; read them as `$field->hint` and `$field->hintTooltip`. A fieldset include has none (its fields keep their own). `placeholder` (up to 255 characters), `prefix` and `suffix` (up to 20) are the types' settings, in `config`, under **Appearance** in the builder. They are display only: a price saved as `150000` is stored as `150000`, not `Rp 150000`, so templates add them where they want them: `$field->configString('prefix')` (null when there's none), for example, in an entry's template, `@php($price = $entry->entry->schema()->field('price'))` and then `{{ $price?->configString('prefix') }} {{ number_format($entry->price) }}`. A [type built on another](#built-on-a-built-in-type) can preset them (`preset()` returning `['suffix' => 'kg']`).
+
+The helper text takes simple inline Markdown: `[text](https://…)` links, `**bold**`, `*italic*` and `` `code` ``. The editor escapes everything else, so HTML shows as text; links go to `http(s)`, `mailto:` and `tel:` addresses, paths on the site (`/about`) and anchors (`#prices`) only — anything else (`javascript:`, `data:`, `//elsewhere`) keeps only its words — and open in a new tab with `rel="noopener noreferrer"` (`resources/js/lib/inline-markdown.ts`). Forms on the website show `instructionsIn()` as plain, escaped text. The hint, tooltip, prefix, suffix and placeholder are for the admin's editor; the website's forms are laid out by their template.
 
 ## Showing a field only sometimes
 

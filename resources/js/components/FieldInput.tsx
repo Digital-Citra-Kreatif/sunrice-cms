@@ -7,9 +7,11 @@ import {
 import { t } from '@imajiner/admin-sdk';
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
 import { FieldError } from '@/components/FieldError.tsx';
+import { AFFIXED_INPUT, Affixed, FieldHint, HelperText } from '@/components/FieldPresentation.tsx';
 import { TermsPicker } from '@/components/TermsPicker.tsx';
 import { errorsAt } from '@/lib/builder.ts';
 import { isShown } from '@/lib/conditions.ts';
+import { affixesOf, CONTAINER_TYPES, hintOf } from '@/lib/presentation.ts';
 import { fieldGrid, widthClass } from '@/lib/width.ts';
 import { asRecord, dateInputValue, dateValueFromInput, groupedNumber, itemSummary, offersEmptyChoice, newBlock, newRow, syncKeys } from '@/lib/values.ts';
 import type { Errors, FieldDefinition, Option } from '@/types.ts';
@@ -53,7 +55,6 @@ interface Props {
 /** Types whose inputs are a list or a set of inputs: labelled as a group. */
 const GROUPS = ['repeater', 'group', 'flexible', 'link', 'media', 'rich_text', 'entries'];
 
-/** One input for a field definition, any built-in type. */
 /** A field's label, or its handle made readable ("event_day" → "Event day"). */
 export function labelOf(field: FieldDefinition): string {
     if (field.label) return field.label;
@@ -62,29 +63,47 @@ export function labelOf(field: FieldDefinition): string {
     return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
+/**
+ * One input for a field definition, any built-in type, presented like
+ * Filament's: the label (and required mark) with the hint and its ⓘ at the
+ * right, the input (a text or number one with its prefix and suffix), the
+ * helper text under it, then the error. A group, repeater or flexible field
+ * has its helper text under its label instead: there's no one input to be under.
+ */
 export function FieldInput({ field, value, onChange, errors, id, content = false, fill = false, marker = null }: Props) {
     const label = labelOf(field);
     const group = GROUPS.includes(field.type) || (['select', 'terms'].includes(field.type) && field.config?.multiple === true);
     // The message under a group of inputs (ticked choices, a group's fields) is tied to the group.
     const invalid = errors[''] !== undefined;
+    const container = CONTAINER_TYPES.includes(field.type);
+    const helper = field.instructions && field.instructions.trim() !== '' ? <HelperText id={`${id}-help`} text={field.instructions} /> : null;
+    const { hint } = hintOf(field);
+    const { prefix, suffix } = affixesOf(field);
+    // What the input is described by: its hint, prefix and suffix, helper text and error.
+    const describedBy = [hint && `${id}-hint`, prefix && `${id}-prefix`, suffix && `${id}-suffix`, helper && `${id}-help`, invalid && `${id}-error`].filter(Boolean).join(' ') || undefined;
 
     return (
-        <div className="cms:flex cms:flex-col cms:gap-2"
-            {...(group ? { role: 'group', 'aria-labelledby': `${id}-label`, ...(invalid ? { 'aria-invalid': true, 'aria-describedby': `${id}-error` } : {}) } : {})}>
+        <div className="cms:flex cms:min-w-0 cms:flex-col cms:gap-2"
+            {...(group ? { role: 'group', 'aria-labelledby': `${id}-label`, ...(invalid ? { 'aria-invalid': true } : {}), ...(invalid || helper ? { 'aria-describedby': [helper && `${id}-help`, invalid && `${id}-error`].filter(Boolean).join(' ') } : {}) } : {})}>
             {field.type === 'toggle' ? (
-                <div className="cms:flex cms:items-center cms:gap-3">
-                    <Switch id={id} checked={value === true} onCheckedChange={(checked: boolean) => onChange(checked)} />
-                    <Label htmlFor={id}>{label}</Label>
+                <div className="cms:flex cms:min-w-0 cms:items-center cms:gap-3">
+                    <Switch id={id} checked={value === true} aria-describedby={describedBy} onCheckedChange={(checked: boolean) => onChange(checked)} />
+                    <Label htmlFor={id} className="cms:min-w-0">{label}</Label>
                     {marker}
+                    <FieldHint field={field} id={id} label={label} />
                 </div>
             ) : (
-                <Label id={`${id}-label`} htmlFor={group ? undefined : id}>{label}{field.required && <span className="cms:text-destructive"> *</span>}{marker}</Label>
+                <div className="cms:flex cms:min-h-4 cms:min-w-0 cms:items-center cms:gap-2">
+                    <Label id={`${id}-label`} htmlFor={group ? undefined : id} className="cms:min-w-0">{label}{field.required && <span className="cms:text-destructive"> *</span>}{marker}</Label>
+                    <FieldHint field={field} id={id} label={label} />
+                </div>
             )}
-            <Control field={field} value={value} onChange={onChange} errors={errors} id={id} content={content} fill={fill} />
+            {container && helper}
+            <Control field={field} value={value} onChange={onChange} errors={errors} id={id} content={content} fill={fill} describedBy={describedBy} />
             {['text', 'textarea'].includes(field.type) && numberConfig(field, 'max') !== undefined && (
                 <CharacterCount length={typeof value === 'string' ? [...value].length : 0} max={numberConfig(field, 'max') ?? 0} />
             )}
-            {field.instructions && <p className="cms:text-sm cms:text-muted-foreground">{field.instructions}</p>}
+            {!container && helper}
             <FieldError message={errors['']} id={`${id}-error`} />
         </div>
     );
@@ -101,8 +120,13 @@ function CharacterCount({ length, max }: { length: number; max: number }) {
     );
 }
 
-function Control({ field, value, onChange, errors, id, content, fill = false }: Props) {
+function Control({ field, value, onChange, errors, id, content, fill = false, describedBy }: Props & {
+    /** The ids that describe a single input (hint, prefix, suffix, helper text, error). */
+    describedBy?: string;
+}) {
     const invalid = errors[''] !== undefined;
+    const { prefix, suffix } = affixesOf(field);
+    const affixed = prefix !== null || suffix !== null;
     switch (field.type) {
         case 'toggle':
             return null;
@@ -110,8 +134,8 @@ function Control({ field, value, onChange, errors, id, content, fill = false }: 
             // Visitors send files with forms; entries use a media field.
             return <p className="cms:text-sm cms:text-muted-foreground">{t('Visitors attach a file here when they send a form.')}</p>;
         case 'textarea':
-            return <Textarea id={id} aria-invalid={invalid} value={typeof value === 'string' ? value : ''} rows={numberConfig(field, 'rows') ?? 4}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)} />;
+            return <Textarea id={id} aria-invalid={invalid} aria-describedby={describedBy} value={typeof value === 'string' ? value : ''} rows={numberConfig(field, 'rows') ?? 4}
+                placeholder={stringConfig(field, 'placeholder')} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)} />;
         case 'rich_text':
             // The panel's editor; its code loads when the first one shows.
             return <RichTextEditor id={id} labelledBy={`${id}-label`} invalid={invalid} value={typeof value === 'string' ? value : ''} onChange={onChange} />;
@@ -119,12 +143,16 @@ function Control({ field, value, onChange, errors, id, content, fill = false }: 
             const echo = groupedNumber(value);
             return (
                 <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-3">
-                    <Input
-                        id={id} type="number" className={fill ? 'cms:w-full' : 'cms:max-w-48'} placeholder={stringConfig(field, 'placeholder')} aria-invalid={invalid} aria-describedby={echo ? `${id}-grouped` : undefined}
-                        value={typeof value === 'number' ? String(value) : typeof value === 'string' ? value : ''}
-                        min={numberConfig(field, 'min')} max={numberConfig(field, 'max')} step={numberConfig(field, 'step') ?? 'any'}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value === '' ? null : Number(e.target.value))}
-                    />
+                    {/* With a prefix or suffix the box is a little wider, so the number keeps its room. */}
+                    <Affixed prefix={prefix} suffix={suffix} id={id} className={fill ? '' : 'cms:max-w-64'}>
+                        <Input
+                            id={id} type="number" className={affixed ? AFFIXED_INPUT : fill ? 'cms:w-full' : 'cms:max-w-48'} placeholder={stringConfig(field, 'placeholder')} aria-invalid={invalid}
+                            aria-describedby={[describedBy, echo && `${id}-grouped`].filter(Boolean).join(' ') || undefined}
+                            value={typeof value === 'number' ? String(value) : typeof value === 'string' ? value : ''}
+                            min={numberConfig(field, 'min')} max={numberConfig(field, 'max')} step={numberConfig(field, 'step') ?? 'any'}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value === '' ? null : Number(e.target.value))}
+                        />
+                    </Affixed>
                     {/* Long numbers read back grouped, so 18500000000 can't be mistaken for 1850000000. */}
                     {echo && <span id={`${id}-grouped`} className="cms:text-sm cms:tabular-nums cms:text-muted-foreground">{echo}</span>}
                 </div>
@@ -152,7 +180,8 @@ function Control({ field, value, onChange, errors, id, content, fill = false }: 
                 collections={field.collections ?? []} onChange={onChange}
                 value={typeof value === 'number' || (Array.isArray(value) && value.every((v) => typeof v === 'number')) ? value as number | number[] : null} />;
         case 'link':
-            return <LinkInput label={labelOf(field)} value={asRecord(value)} onChange={onChange} errors={errors} id={id} collections={field.collections ?? []} />;
+            return <LinkInput label={labelOf(field)} value={asRecord(value)} onChange={onChange} errors={errors} id={id} collections={field.collections ?? []}
+                placeholder={stringConfig(field, 'placeholder')} describedBy={describedBy} />;
         case 'media':
             return <MediaPickerInput id={id} invalid={invalid} disabled={false} multiple={field.config?.multiple === true}
                 max={numberConfig(field, 'max') ?? null} types={Array.isArray(field.config?.types) ? field.config.types as string[] : []}
@@ -166,8 +195,12 @@ function Control({ field, value, onChange, errors, id, content, fill = false }: 
             return <Blocks field={field} value={Array.isArray(value) ? value : []} onChange={onChange} errors={errors} id={id} />;
         default:
             // No maxLength: a pasted text that's too long would be cut silently; the counter shows it instead.
-            return <Input id={id} aria-invalid={invalid} value={typeof value === 'string' ? value : ''} placeholder={stringConfig(field, 'placeholder')}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)} />;
+            return (
+                <Affixed prefix={prefix} suffix={suffix} id={id}>
+                    <Input id={id} aria-invalid={invalid} aria-describedby={describedBy} className={affixed ? AFFIXED_INPUT : undefined} value={typeof value === 'string' ? value : ''}
+                        placeholder={stringConfig(field, 'placeholder')} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)} />
+                </Affixed>
+            );
     }
 }
 
@@ -242,9 +275,12 @@ function MultiSelect({ options, value, onChange, empty, inTickOrder = false, inv
     );
 }
 
-function LinkInput({ label, value, onChange, errors, id, collections }: {
+function LinkInput({ label, value, onChange, errors, id, collections, placeholder, describedBy }: {
     /** The field's label: the inputs are named after it ("Map link: address"), not just "Address". */
     label: string; value: Record<string, unknown>; onChange: (value: unknown) => void; errors: Errors; id: string; collections: string[];
+    /** In the address input (the field's own, else an example). */
+    placeholder?: string;
+    describedBy?: string;
 }) {
     const type = value.type === 'entry' ? 'entry' : 'url';
     const set = (changes: Record<string, unknown>) => {
@@ -266,7 +302,7 @@ function LinkInput({ label, value, onChange, errors, id, collections }: {
             </div>
             <div className="cms:grid cms:gap-2 cms:md:grid-cols-[2fr_1fr_auto] cms:md:items-start">
                 {type === 'url'
-                    ? <Input id={id} aria-label={t(':field: address', { field: label })} placeholder={t('https://… or /about')} value={typeof value.url === 'string' ? value.url : ''}
+                    ? <Input id={id} aria-label={t(':field: address', { field: label })} placeholder={placeholder || t('https://… or /about')} aria-describedby={describedBy} value={typeof value.url === 'string' ? value.url : ''}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => set({ url: e.target.value })} aria-invalid={errors.url !== undefined} />
                     : <EntriesPicker id={id} invalid={errors.entry_id !== undefined} multiple={false} max={null} collections={collections}
                         value={typeof value.entry_id === 'number' ? value.entry_id : null}

@@ -26,7 +26,8 @@ use Sunrice\Cms\Support\SafeUrl;
  * Templates get {type, url, label, title, new_tab}: an entry link's URL
  * and title are the entry's in the page's language (its main one's page
  * when it isn't translated), and its URL is null while it isn't live.
- * Config: `collections` (handles entry links may point into; none: any).
+ * Config: `collections` (handles entry links may point into; none: any),
+ * `placeholder` (in the address input; none: "https://… or /about").
  */
 final class Link extends FieldType
 {
@@ -123,6 +124,7 @@ final class Link extends FieldType
                 'options' => Collection::query()->orderBy('title')->get()->map(fn (Collection $c): array => ['value' => $c->handle, 'label' => $c->title])->all(),
                 'empty' => 'There are no collections yet: links can go to entries once there are (Structure → Collections).',
             ]),
+            new Field('placeholder', 'text', 'Placeholder', instructions: 'Shown in the empty address input.', validation: ['max:255']),
         ];
     }
 

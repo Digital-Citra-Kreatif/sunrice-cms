@@ -79,13 +79,20 @@ final class DefinitionValidator
             $key = "{$path}.{$index}";
             $type = is_array($field) && is_string($field['type'] ?? null) && $this->types->has($field['type']) ? $this->types->get($field['type']) : null;
             $rules[$key] = ['array'];
-            foreach (['handle', 'type', 'label', 'instructions', 'required', 'translatable', 'validation', 'condition', 'config', 'fields', 'width'] as $part) {
-                $names["{$key}.{$part}"] = $part === 'validation' ? 'extra rules' : $part;
+            foreach (['handle', 'type', 'label', 'instructions', 'required', 'translatable', 'validation', 'condition', 'config', 'fields', 'width', 'hint', 'hint_tooltip'] as $part) {
+                $names["{$key}.{$part}"] = match ($part) {
+                    'validation' => 'extra rules',
+                    'hint_tooltip' => 'hint tooltip',
+                    default => $part,
+                };
             }
             $rules["{$key}.handle"] = ['required', 'string', 'max:64', new HandleRule];
             $rules["{$key}.type"] = ['required', 'string', Rule::in(array_keys($this->types->all()))];
             $rules["{$key}.label"] = ['nullable', 'string', 'max:255'];
             $rules["{$key}.instructions"] = ['nullable', 'string', 'max:1000'];
+            // A short note at the right of the label, and a longer one behind an ⓘ.
+            $rules["{$key}.hint"] = ['nullable', 'string', 'max:'.Field::HINT_MAX];
+            $rules["{$key}.hint_tooltip"] = ['nullable', 'string', 'max:'.Field::HINT_TOOLTIP_MAX];
             $rules["{$key}.required"] = ['nullable', self::strictBoolean()];
             $rules["{$key}.translatable"] = ['nullable', self::strictBoolean()];
             // How much of the row it takes in the editor, in percent.
@@ -347,6 +354,9 @@ final class DefinitionValidator
                 translations: $field->translations,
                 // A fieldset include's fields keep their own widths; it has none.
                 width: $field->type === FieldsetInclude::TYPE ? 100 : $field->width,
+                // Nor a hint: only its fields show.
+                hint: $field->type === FieldsetInclude::TYPE ? '' : $field->hint,
+                hintTooltip: $field->type === FieldsetInclude::TYPE ? '' : $field->hintTooltip,
             );
         }, $fields);
     }

@@ -37,12 +37,12 @@ final class MenuController
             'limits' => ['depth' => SaveMenu::MAX_DEPTH, 'items' => SaveMenu::MAX_ITEMS],
             // What else items may link to: terms with pages (shared, or in collections: `pages`), listing pages.
             'terms' => Term::query()->whereHas('taxonomy', fn ($q) => $q->whereNotNull('route')->orWhereHas('collections', fn ($q) => $q->where('sunrice_collection_taxonomy.term_pages', true)))
-                ->with('translations', 'taxonomy.collections')->orderBy('taxonomy_id')->orderBy('sort_order')->limit(500)->get()
+                ->with(['translations', 'taxonomy.collections' => fn ($query) => $query->orderBy('title')])->orderBy('taxonomy_id')->orderBy('sort_order')->limit(500)->get()
                 ->map(fn (Term $term): array => ['id' => $term->id, 'title' => $term->title(), 'taxonomy' => $term->taxonomy->title, 'pages' => self::termPages($term)])->all(),
             'listings' => Collection::query()->whereNotNull('listing_route')->orderBy('title')->get()
                 ->map(fn (Collection $collection): array => ['id' => $collection->id, 'title' => $collection->title])->all(),
             // Taxonomies with index pages: the shared one (collection null) and their collections'.
-            'indexes' => Taxonomy::query()->with('collections')->orderBy('title')->get()
+            'indexes' => Taxonomy::query()->with(['collections' => fn ($query) => $query->orderBy('title')])->orderBy('title')->get()
                 ->map(fn (Taxonomy $taxonomy): array => ['id' => $taxonomy->id, 'title' => $taxonomy->title, 'pages' => self::indexPages($taxonomy)])
                 ->filter(fn (array $taxonomy): bool => $taxonomy['pages'] !== [])->values()->all(),
             'can' => ['update' => $request->user()?->can('cms.menus.update') ?? false],

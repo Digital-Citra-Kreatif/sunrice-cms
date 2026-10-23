@@ -7,7 +7,7 @@ namespace Sunrice\Cms\Fields\Types;
 use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\FieldType;
 
-/** A number. Settings: min, max, step (1 for whole numbers). */
+/** A number. Settings: min, max, step (1 for whole numbers), default, placeholder, prefix, suffix (shown around the input, not stored). */
 final class Number extends FieldType
 {
     public function type(): string
@@ -50,6 +50,8 @@ final class Number extends FieldType
             new Field('max', 'number', 'Maximum'),
             new Field('step', 'number', 'Step', instructions: '1 for whole numbers; empty for any number.', config: ['min' => 0]),
             new Field('default', 'number', 'Default value'),
+            InputSettings::placeholder(),
+            ...InputSettings::affixes(),
         ];
     }
 }
