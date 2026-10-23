@@ -1154,5 +1154,7 @@
     "This index page is off. An administrator can switch it on in the taxonomy's settings.": "Halaman indeks ini nonaktif. Administrator dapat mengaktifkannya di pengaturan taksonomi.",
     "Addresses with query parameters that aren't listed get the page kept without them, so a filter or sort a template reads may show the wrong page. Unless that's what you chose, set Any other parameter to Skip the cache.": "Alamat dengan parameter kueri yang tidak terdaftar mendapat halaman yang disimpan tanpa parameter itu, sehingga filter atau urutan yang dibaca template bisa menampilkan halaman yang salah. Kecuali memang itu pilihan Anda, atur Parameter lainnya ke Lewati cache.",
     "Add a second language in Settings → Languages to translate the site's texts.": "Tambahkan bahasa kedua di Pengaturan → Bahasa untuk menerjemahkan teks situs.",
-    "Translations need a second language. An administrator can add one in Settings → Languages.": "Terjemahan memerlukan bahasa kedua. Administrator dapat menambahkannya di Pengaturan → Bahasa."
+    "Translations need a second language. An administrator can add one in Settings → Languages.": "Terjemahan memerlukan bahasa kedua. Administrator dapat menambahkannya di Pengaturan → Bahasa.",
+    "Translate": "Terjemahkan",
+    "See drafts on the site": "Lihat draf di situs"
 }
