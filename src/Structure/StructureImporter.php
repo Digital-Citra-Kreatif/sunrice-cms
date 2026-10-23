@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sunrice\Cms\Structure;
 
 use Closure;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -13,7 +14,9 @@ use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use ReflectionClass;
 use Spatie\Permission\PermissionRegistrar;
+use Sunrice\Admin\Actions\Media\UploadMedia;
 use Sunrice\Admin\Actions\Settings\SaveSettings;
+use Sunrice\Admin\Media\Media;
 use Sunrice\Admin\Resources\Forms\Form as SettingsForm;
 use Sunrice\Cms\Actions\Blueprints\SaveBlueprint;
 use Sunrice\Cms\Actions\Collections\SaveCollection;
@@ -136,11 +139,16 @@ final class StructureImporter
 
     /**
      * @param  array<mixed>  $structure
+     * @param  array<string, string>  $mediaToCome  a dry run only: files (name => local path) that count as in the media library, as they'll be uploaded before the real import (content may point at them by name)
      *
      * @throws StructureImportFailed
+     * @throws InvalidArgumentException with $mediaToCome on a real import
      */
-    public function import(array $structure, bool $dryRun = false, bool $force = false, bool $replaceMenus = false, bool $skipOtherLanguages = false): ImportReport
+    public function import(array $structure, bool $dryRun = false, bool $force = false, bool $replaceMenus = false, bool $skipOtherLanguages = false, array $mediaToCome = []): ImportReport
     {
+        if ($mediaToCome !== [] && ! $dryRun) {
+            throw new InvalidArgumentException('Files to come are for a dry run: upload them before the real import.');
+        }
         $unknown = array_diff(array_keys($structure), ['sunrice', 'locales', ...self::SECTIONS]);
         if ($unknown !== []) {
             throw new StructureImportFailed('the file', ['sections' => ['Unknown sections: '.implode(', ', array_map(strval(...), $unknown)).'.']]);
@@ -170,6 +178,7 @@ final class StructureImporter
 
         DB::beginTransaction();
         try {
+            self::standIns($mediaToCome);
             // Definitions point at collections and taxonomies (entries and terms
             // fields) and those at blueprints: create what's missing empty first.
             $newFieldsets = $this->placeholders(Fieldset::class, $section('fieldsets'));
@@ -217,6 +226,30 @@ final class StructureImporter
         $this->forget();
 
         return $this->report;
+    }
+
+    /**
+     * A dry run's files to come, in the library as an upload would name
+     * and type them (no file on disk), rolled back with the rest.
+     *
+     * @param  array<string, string>  $files  name => local path
+     */
+    private static function standIns(array $files): void
+    {
+        $disk = config('sunrice-admin.media.disk');
+        foreach ($files as $name => $path) {
+            $file = new UploadedFile($path, $name, null, null, true);
+            [$width, $height] = UploadMedia::dimensions($file);
+            Media::query()->create([
+                'disk' => is_string($disk) && $disk !== '' ? $disk : 'public',
+                'path' => 'to-come/'.$name,
+                'filename' => $name,
+                'mime_type' => UploadMedia::mimeType($file),
+                'size' => $file->getSize() ?: 0,
+                'width' => $width,
+                'height' => $height,
+            ]);
+        }
     }
 
     /**

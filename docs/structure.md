@@ -141,6 +141,8 @@ $report->counts();
 
 `import()` throws `StructureImportFailed` (with `$item` and `$errors`) for an invalid item.
 
+A dry run can check content that points at files you'll upload before the real import (a starter's, say): `import($structure, dryRun: true, mediaToCome: ['hero.jpg' => '/path/to/hero.jpg'])` counts each file (by name, with its kind read from the local file) as in the media library, so a required image field set to `{"media": "hero.jpg"}` passes. They stand in for the check only and are rolled back with it; a real import with `mediaToCome` throws `InvalidArgumentException`: upload the files first.
+
 ## Leftovers
 
 Deleting a collection or a taxonomy keeps its entries or terms out of sight, and its handle taken, so it can be brought back. Their lists (Structure → Collections, Structure → Taxonomies) have a **Trash** with **Restore** (`cms.collections.delete`, `cms.taxonomies.delete`; `CollectionResource::restoreRecord()`), refused when another one took its address meanwhile (`Actions\Collections\RestoreDeleted`), and **Permanently delete**, which deletes it with its entries or terms and frees its handle (`forceDeleteRecord()`, through `PurgeDeleted`).
