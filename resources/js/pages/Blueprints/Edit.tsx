@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { LoaderCircle, Trash2 } from 'lucide-react';
 import { adminUrl, t } from '@imajiner/admin-sdk';
 import { Button, Card, CardContent, Input, Label, PageHeader, useBreadcrumbs, useUnsavedChanges } from '@imajiner/admin-sdk/ui';
@@ -21,8 +21,37 @@ interface Props {
     reserved?: string[];
     /** The content languages, the main one first: labels for visitors in the others. */
     locales?: LocaleInfo[];
-    /** For a fieldset: what uses it ("the blueprint \"Page\""). */
-    usedBy?: string[];
+    /** For a fieldset: the blueprints and fieldsets that use it, and where. */
+    usedBy?: FieldsetUser[];
+}
+
+/** A blueprint or fieldset using this fieldset, with each field that does. */
+interface FieldsetUser {
+    kind: 'blueprint' | 'fieldset';
+    handle: string;
+    title: string;
+    url: string;
+    /** field: its labels down from the top ("Sections › Columns"); how: a fieldset field including it, or a flexible field offering it as a block. */
+    uses: { field: string; how: 'include' | 'block' }[];
+}
+
+/** "Used by: the blueprint "Post" — a block in its "More" field; the fieldset "Hero" — included as "Intro". Changes show there at once." */
+function UsedBy({ users }: { users: FieldsetUser[] }) {
+    return (
+        <p className="cms:text-sm cms:text-muted-foreground">
+            {t('Used by:')}{' '}
+            {users.map((user, i) => (
+                <React.Fragment key={user.url}>
+                    {i > 0 && '; '}
+                    {user.kind === 'blueprint' ? t('the blueprint') : t('the fieldset')}{' '}
+                    "<Link href={user.url} className="cms:font-medium cms:text-foreground cms:underline cms:underline-offset-2 cms:hover:no-underline">{user.title}</Link>"
+                    {' — '}
+                    {user.uses.map((use) => use.how === 'block' ? t('a block in its ":field" field', { field: use.field }) : t('included as ":field"', { field: use.field })).join(', ')}
+                </React.Fragment>
+            ))}
+            {'. '}{t('Changes show there at once.')}
+        </p>
+    );
 }
 
 function handleHelp(kind: 'blueprint' | 'fieldset', exists: boolean): string {
@@ -153,7 +182,7 @@ export default function BlueprintForm({ kind = 'blueprint', blueprint, fieldType
                 </CardContent>
             </Card>
 
-            {usedBy.length > 0 && <p className="cms:text-sm cms:text-muted-foreground">{t('Used by :list. Changes show there at once.', { list: usedBy.join(', ') })}</p>}
+            {usedBy.length > 0 && <UsedBy users={usedBy} />}
 
             <section className="cms:flex cms:flex-col cms:gap-3" aria-labelledby="fields-heading">
                 <h2 id="fields-heading" className="cms:text-lg cms:font-medium">{t('Fields')}</h2>

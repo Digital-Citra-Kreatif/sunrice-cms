@@ -257,25 +257,31 @@ final class DefinitionValidator
     }
 
     /**
-     * The fieldsets these fields include or use as kinds of block.
+     * Where these fields use fieldsets, at any level: each fieldset field
+     * that includes one, and each flexible field that offers one as a kind
+     * of block, with the labels (or handles) of the fields down to it.
      *
      * @param  list<Field>  $fields
-     * @return list<string>
+     * @param  list<string>  $parents  the labels of the fields above these
+     * @return list<array{fieldset: string, path: list<string>, how: 'include'|'block'}>
      */
-    public static function usedFieldsets(array $fields): array
+    public static function fieldsetUses(array $fields, array $parents = []): array
     {
-        $handles = [];
+        $uses = [];
         foreach ($fields as $field) {
+            $path = [...$parents, $field->label !== '' ? $field->label : $field->handle];
             if ($field->type === FieldsetInclude::TYPE && ($handle = $field->configString('fieldset')) !== null) {
-                $handles[] = $handle;
+                $uses[] = ['fieldset' => $handle, 'path' => $path, 'how' => 'include'];
             }
             if ($field->type === Types\Flexible::TYPE) {
-                array_push($handles, ...$field->configStrings('blocks'));
+                foreach (array_unique($field->configStrings('blocks')) as $handle) {
+                    $uses[] = ['fieldset' => $handle, 'path' => $path, 'how' => 'block'];
+                }
             }
-            array_push($handles, ...self::usedFieldsets($field->fields));
+            array_push($uses, ...self::fieldsetUses($field->fields, $path));
         }
 
-        return array_values(array_unique($handles));
+        return $uses;
     }
 
     /**

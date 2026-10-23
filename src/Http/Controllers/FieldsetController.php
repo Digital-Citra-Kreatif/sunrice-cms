@@ -21,14 +21,17 @@ use Sunrice\Cms\Models\Fieldset;
  */
 final class FieldsetController
 {
-    public function index(): Response
+    public function index(DeleteFieldset $delete): Response
     {
+        $usedBy = $delete->usesOf();
+
         return Inertia::render('Cms/Fieldsets/Index', [
             'fieldsets' => Fieldset::query()->orderBy('title')->get()->map(fn (Fieldset $fieldset): array => [
                 'id' => $fieldset->id,
                 'handle' => $fieldset->handle,
                 'title' => $fieldset->title,
                 'fields' => count($fieldset->fields),
+                'usedBy' => array_map(fn (array $user): string => $user['title'], $usedBy[$fieldset->handle] ?? []),
             ])->all(),
         ]);
     }
@@ -50,7 +53,10 @@ final class FieldsetController
         return Inertia::render('Cms/Fieldsets/Edit', [
             'kind' => 'fieldset',
             'blueprint' => ['id' => $fieldset->id, 'handle' => $fieldset->handle, 'title' => $fieldset->title, 'fields' => $fieldset->fields],
-            'usedBy' => $delete->usedBy($fieldset),
+            'usedBy' => array_map(fn (array $user): array => [
+                ...$user,
+                'url' => route($user['kind'] === 'blueprint' ? 'sunrice.admin.cms.blueprints.edit' : 'sunrice.admin.cms.fieldsets.edit', $user['handle']),
+            ], $delete->uses($fieldset)),
             ...$builder->toArray(),
         ]);
     }
