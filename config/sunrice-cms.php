@@ -51,14 +51,34 @@ return [
         // Headers sent with every site response (pages, listings, terms,
         // search, the sitemap, previews, form and comment posts); null or
         // '' leaves one out, and a header the response already has is
-        // kept. No Content-Security-Policy unless you set one: what it
-        // must allow depends on your templates, scripts and site code.
+        // kept. A Content-Security-Policy string here is sent as is,
+        // instead of the one below.
         'headers' => [
             'X-Content-Type-Options' => 'nosniff',
             'X-Frame-Options' => 'SAMEORIGIN',
             'Referrer-Policy' => 'strict-origin-when-cross-origin',
             'Permissions-Policy' => 'camera=(), microphone=(), geolocation=()',
             'Content-Security-Policy' => env('SUNRICE_SITE_CSP'),
+        ],
+        // The site's Content-Security-Policy, off by default: what it must
+        // allow depends on your templates, scripts, embeds and Site code.
+        // Scripts and styles from the site or with the request's nonce
+        // (`@vite` tags, cms_nonce(), Site code's tags), images and media
+        // from the site and the media disk, framing by the site only. See
+        // packages/cms/docs/site.md#content-security-policy.
+        'csp' => [
+            'enabled' => env('SUNRICE_SITE_CSP_ENABLED', false),
+            // Report violations (browser console, report_uri) without blocking.
+            'report_only' => env('SUNRICE_SITE_CSP_REPORT_ONLY', false),
+            'report_uri' => env('SUNRICE_SITE_CSP_REPORT_URI'),
+            // Inline scripts and styles allowed by nonce. False: no nonce, so
+            // add "'unsafe-inline'" to script-src and style-src below (for
+            // snippets with onclick="" and the like).
+            'nonce' => true,
+            // More sources per directive, e.g.
+            // 'img-src' => ['https:'], 'frame-src' => ['https://www.youtube-nocookie.com'],
+            // 'script-src' => ['https://www.googletagmanager.com'].
+            'sources' => [],
         ],
     ],
 

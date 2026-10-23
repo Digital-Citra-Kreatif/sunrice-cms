@@ -5,7 +5,8 @@ declare(strict_types=1);
 /*
  * Short functions for templates, the same as the `Cms` alias
  * (Sunrice\Cms\Content): cms_entries('blog'), cms_menu('main'),
- * cms_global('contact'), cms_locale_urls(), cms_body_class(), cms_page().
+ * cms_global('contact'), cms_locale_urls(), cms_body_class(), cms_page(),
+ * cms_nonce().
  * An app may define any of them itself first.
  */
 
@@ -14,6 +15,7 @@ use Sunrice\Cms\Globals;
 use Sunrice\Cms\Menus;
 use Sunrice\Cms\Query\EntryQuery;
 use Sunrice\Cms\Site\Page;
+use Sunrice\Cms\Site\SiteCsp;
 use Sunrice\Cms\Support\Locales;
 
 if (! function_exists('cms_entries')) {
@@ -78,5 +80,17 @@ if (! function_exists('cms_page')) {
     function cms_page(): ?Page
     {
         return Content::page();
+    }
+}
+
+if (! function_exists('cms_nonce')) {
+    /**
+     * The nonce of the site's Content-Security-Policy (`site.csp`), or ''
+     * while it's off or has none, for a template's inline script or style:
+     * `<script nonce="{{ cms_nonce() }}">`.
+     */
+    function cms_nonce(): string
+    {
+        return SiteCsp::nonce();
     }
 }

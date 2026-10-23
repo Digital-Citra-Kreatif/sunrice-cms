@@ -11,7 +11,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
     <title>{{ $done ? __('sunrice-cms::site.comments.unsubscribed_title') : __('sunrice-cms::site.comments.unsubscribe_title') }} | {{ \Sunrice\Cms\Content::site()->name() }}</title>
-    <style>
+    <style nonce="{{ cms_nonce() }}">
         :root { color-scheme: light dark; }
         body { margin: 0; min-height: 100vh; display: grid; place-items: center; font: 1rem/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; background: #fafaf9; color: #1c1917; }
         main { width: min(100% - 2rem, 28rem); padding: 2rem; border: 1px solid #e7e5e4; border-radius: .625rem; background: #fff; }

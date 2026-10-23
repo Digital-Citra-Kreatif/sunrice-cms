@@ -283,6 +283,8 @@ What's printed can't end the script (`<`, `>`, `&` and quotes are escaped). `Sun
 
 Each box is a code editor with HTML highlighting, under a warning at the top of the page: code there runs in every visitor's browser, so a wrong or malicious script can break the site, steal what visitors type or take over admin sessions. Give the permission only to people you trust with the whole site. Each change is a `site code changed` security event and emails the [security alerts](../../admin/docs/security.md#email-alerts).
 
+With the site's [Content-Security-Policy](#content-security-policy) on, the `<script>` and `<style>` tags printed here get the request's nonce, so inline snippets run; inline event handlers (`onclick=""`) don't, and what a snippet loads from elsewhere needs its origin in `site.csp.sources`.
+
 A site that doesn't need it can switch it off with `SUNRICE_SITE_CODE=false` (`sunrice-cms.site.custom_code`, see [configuration](configuration.md#the-site)): the page and its menu item are gone (its address is a 404), `<x-sunrice-cms::code>` prints nothing (so layouts can keep it), and agents can't read or change it. Structure files never carry site code, on or off. What was saved is kept, not deleted: switching it back on prints it again. Kept pages follow the switch either way (the [page cache](caching.md) keeps pages with and without site code apart).
 
 ## Layout helpers
@@ -652,15 +654,52 @@ Every response of the CMS's site routes (entry, listing and term pages, search, 
 | `X-Frame-Options` | `SAMEORIGIN` | Other sites can't frame your pages (clickjacking); your own can. |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` | Other sites see only your origin, never the page's path or query. |
 | `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | No page (nor a script in it) may ask for these. |
-| `Content-Security-Policy` | none (`SUNRICE_SITE_CSP`) | Off by default: what it must allow depends on your templates, scripts, fonts, embeds and site code snippets. |
+| `Content-Security-Policy` | none | Off by default: turn on the [site's policy](#content-security-policy) (`site.csp`), or set a policy string of your own here (`SUNRICE_SITE_CSP`), sent as is. |
 
-Set one to `null` to leave it out, change its value, or add others (`'Strict-Transport-Security' => 'max-age=31536000'` once the whole site is on HTTPS). A header the response already has, set by your own middleware, is kept. A CSP to start from, then check the browser console on every kind of page:
+Set one to `null` to leave it out, change its value, or add others. A header the response already has, set by your own middleware, is kept. Leave `Strict-Transport-Security` (HSTS) to your web server, or add it here once the whole site is on HTTPS (`'Strict-Transport-Security' => 'max-age=31536000'`). Your app's own routes (a `robots.txt` route, say) aren't touched; the panel sends its own ([panel security headers](../../admin/docs/security.md#security-headers)).
+
+### Content-Security-Policy
+
+The site's `Content-Security-Policy` is off by default, since what it must allow depends on your templates, scripts, embeds and Site code. Turn it on in `config/sunrice-cms.php`, ideally in report-only mode first (`SUNRICE_SITE_CSP_REPORT_ONLY=true`: browsers report in the console what it would block and block nothing), then look at every kind of page:
+
+```dotenv
+SUNRICE_SITE_CSP_ENABLED=true
+```
 
 ```
-SUNRICE_SITE_CSP="default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; frame-ancestors 'self'"
+default-src 'self'; script-src 'self' 'nonce-…'; style-src 'self' 'nonce-…'; style-src-attr 'unsafe-inline';
+img-src 'self' data:; font-src 'self' data:; media-src 'self'; connect-src 'self'; frame-src 'self';
+object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'
 ```
 
-Site code (Settings → Site code) and captcha widgets load scripts from elsewhere: allow their origins in `script-src` and `frame-src`. Your app's own routes (a `robots.txt` route, say) aren't touched; the panel sends its own ([panel security headers](../../admin/docs/security.md#security-headers)).
+plus the origins of the media disk (S3, a CDN) in `img-src` and `media-src`, of `ASSET_URL` for scripts, styles, images and fonts, the [captcha](forms.md)'s when it's set up (Turnstile, reCAPTCHA or hCaptcha: their scripts and frames), and the Vite dev server's (`public/hot`) while you develop. Pages (HTML) get it, not the sitemap's XML, nor the framework's error page with the stack trace (a 500 with `APP_DEBUG`). Error pages get it too: the framework's own (an app without `resources/views/errors/404.blade.php`) have inline styles without the nonce and show unstyled, so give yours the site's stylesheet, as the starter templates' do, or `<style nonce="{{ cms_nonce() }}">`.
+
+**Inline code uses a nonce**: a new one on every request (Laravel's `Vite::useCspNonce()`), so injected HTML can't run a script. What carries it:
+
+- `@vite` tags, by themselves.
+- The CMS's own pages' `<style>` blocks, the captcha's script, and `<x-sunrice-cms::code>`: [Site code](#site-code)'s `<script>` and `<style>` tags get it added (one that has a `nonce` keeps its own). So an analytics snippet's inline script runs; what it then loads from elsewhere needs its origin in `sources` (`'script-src' => ['https://www.googletagmanager.com']`, and `connect-src`, `img-src` for what it sends), or `'strict-dynamic'` in `script-src` to trust what a nonced script loads.
+- Your templates' inline code: `<script nonce="{{ cms_nonce() }}">` (`cms_nonce()` is `''` while the policy is off or has no nonce, so the attribute can always be there). With a policy of your own (a middleware of yours calling `Vite::useCspNonce()`), print `Vite::cspNonce()` instead.
+- `style=""` attributes are allowed (`style-src-attr 'unsafe-inline'`: the draft banner, rich text, snippets); they can't run code.
+
+Inline event handlers (`onclick=""`, a `<select onchange>`) and `javascript:` links never run under a nonce. A snippet that needs them works only with `'unsafe-inline'`, which browsers ignore while a nonce is in the policy: set `nonce` to `false` and add `'unsafe-inline'` to `script-src` and `style-src` (the CMS's plain pages have inline styles too). That's weaker: any script injected into a page runs.
+
+```php
+'site' => [
+    'csp' => [
+        'enabled' => env('SUNRICE_SITE_CSP_ENABLED', false),
+        'report_only' => env('SUNRICE_SITE_CSP_REPORT_ONLY', false),
+        'report_uri' => env('SUNRICE_SITE_CSP_REPORT_URI'),
+        'nonce' => true,
+        'sources' => [
+            'img-src' => ['https:'],                               // images from anywhere
+            'frame-src' => ['https://www.youtube-nocookie.com'],   // embeds
+            'script-src' => ['https://www.googletagmanager.com'],
+        ],
+    ],
+],
+```
+
+**With the page cache**: a kept page would repeat the nonce it was rendered with, so the CMS stores it with a placeholder and puts the serving request's nonce back (`CspNonceReplacer`, see [Whole pages](caching.md#whole-pages)): every visitor still gets a new one. Clear the kept pages after turning the policy on or off or changing its sources. A CDN that keeps pages can't do that: see [CDNs and reverse proxies](caching.md#cdns-and-reverse-proxies).
 
 ### The Host header
 

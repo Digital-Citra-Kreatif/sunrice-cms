@@ -44,6 +44,7 @@ Defined in `packages/cms/src/helpers.php` (Composer `files` autoload), each only
 | `cms_locale_urls()` | `Cms::localeUrls()` |
 | `cms_body_class(array\|string $extra = [])` | `Cms::bodyClass()` |
 | `cms_page()` | `Cms::page()` |
+| `cms_nonce()` | The nonce of the site's CSP, `''` while it's off or has none: `<script nonce="{{ cms_nonce() }}">` (`SiteCsp::nonce()`, see [Content-Security-Policy](site.md#content-security-policy)) |
 
 ## `@bodyClass`
 

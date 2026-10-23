@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <x-sunrice-cms::seo :title="$title" />
-    <style>body{font:16px/1.6 system-ui,sans-serif;max-width:42rem;margin:3rem auto;padding:0 1rem;color:#1a1a1a}h1{line-height:1.2}nav a{margin-right:1rem}input{font:inherit;padding:.25rem .5rem}</style>
+    <style nonce="{{ cms_nonce() }}">body{font:16px/1.6 system-ui,sans-serif;max-width:42rem;margin:3rem auto;padding:0 1rem;color:#1a1a1a}h1{line-height:1.2}nav a{margin-right:1rem}input{font:inherit;padding:.25rem .5rem}</style>
     <x-sunrice-cms::code place="head" />
 </head>
 <body class="{{ \Sunrice\Cms\Content::bodyClass() }}">
