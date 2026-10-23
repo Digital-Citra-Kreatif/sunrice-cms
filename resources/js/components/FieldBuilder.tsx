@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {
-    AlignLeft, Blocks, Calendar, ChevronRight, Copy, FileText, Group, Hash, Image, Link2, List, type LucideIcon, Newspaper, Paperclip, Plus, Puzzle,
+    AlignLeft, Blocks, Calendar, ChevronRight, CodeXml, Copy, FileText, Group, Hash, Image, Link2, List, type LucideIcon, Newspaper, Paperclip, Plus, Puzzle,
     Repeat, Shapes, Tags, ToggleLeft, Trash2, Type, X,
 } from 'lucide-react';
 import {
@@ -105,7 +105,7 @@ export function FieldBuilder({ fields, onChange, types, errors, depth = 1, idPre
 
 /** Each type's icon in a field's row; a type the panel doesn't know gets a plain one. */
 const TYPE_ICONS: Record<string, LucideIcon> = {
-    text: Type, textarea: AlignLeft, rich_text: FileText, number: Hash, toggle: ToggleLeft, date: Calendar, select: List,
+    text: Type, textarea: AlignLeft, rich_text: FileText, code: CodeXml, number: Hash, toggle: ToggleLeft, date: Calendar, select: List,
     media: Image, entries: Newspaper, terms: Tags, link: Link2, group: Group, repeater: Repeat, flexible: Blocks, fieldset: Puzzle, file: Paperclip,
 };
 

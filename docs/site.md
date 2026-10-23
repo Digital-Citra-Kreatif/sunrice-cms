@@ -280,7 +280,9 @@ What's printed can't end the script (`<`, `>`, `&` and quotes are escaped). `Sun
 </body>
 ```
 
-Code there runs in every visitor's browser, so give the permission only to people you trust with the whole site. Each change is a `site code changed` security event and emails the [security alerts](../../admin/docs/security.md#email-alerts).
+Each box is a code editor with HTML highlighting, under a warning at the top of the page: code there runs in every visitor's browser, so a wrong or malicious script can break the site, steal what visitors type or take over admin sessions. Give the permission only to people you trust with the whole site. Each change is a `site code changed` security event and emails the [security alerts](../../admin/docs/security.md#email-alerts).
+
+A site that doesn't need it can switch it off with `SUNRICE_SITE_CODE=false` (`sunrice-cms.site.custom_code`, see [configuration](configuration.md#the-site)): the page and its menu item are gone (its address is a 404), `<x-sunrice-cms::code>` prints nothing (so layouts can keep it), and agents can't read or change it. Structure files never carry site code, on or off. What was saved is kept, not deleted: switching it back on prints it again.
 
 ## Layout helpers
 
@@ -449,6 +451,10 @@ See [Comments](comments.md#on-the-site): `entry` (an `Entry` or `EntryTranslatio
 #### `<x-sunrice-cms::code>`
 
 See [Site code](#site-code): `place` (`head`, `body-start`, `body-end`).
+
+#### `<x-sunrice-cms::code-block>`
+
+A [code field](fields.md#code-fields)'s value shown as code, escaped: `<x-sunrice-cms::code-block :value="$values['snippet']" language="html" />` prints `<pre><code class="language-html">…</code></pre>`, nothing when it's empty; other attributes go on the `<pre>`. Add Prism or highlight.js yourself for colours.
 
 #### `<x-sunrice-cms::language-switcher>`
 

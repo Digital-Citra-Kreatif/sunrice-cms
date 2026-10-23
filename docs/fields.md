@@ -38,6 +38,7 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 | `text` | a string | the string | `max` (≤ 255; none: values up to 65535 characters pass, so longer data saved before isn't refused), `placeholder`, `prefix`, `suffix`, `default` |
 | `textarea` | a string | the string | `rows`, `max`, `placeholder` |
 | `rich_text` | HTML, cleaned on save | the HTML | |
+| `code` | a string, as typed (never cleaned) | the string | `language` (`html`, `css`, `javascript`, `json`, `plain`: what the editor highlights; `plain` by default), `max`, `placeholder`. Shared by all languages unless `translatable` ([below](#code-fields)) |
 | `number` | a number | the number | `min`, `max`, `step` (1 for whole numbers), `default`, `placeholder`, `prefix`, `suffix` |
 | `toggle` | true or false | the boolean | `default`; a required toggle must be on (a form's consent box: `accepted`) |
 | `select` | a value, or a list with `multiple` | the same | `options` (`[{value, label}]`), `multiple`, `default` |
@@ -52,6 +53,21 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 | `entries` | an entry id (`null` or `[]` clears it), or a list with `multiple` | one `EntryTranslation` (or null), or with `multiple` a collection of them | `collections`, `multiple`, `max` |
 
 Rich text keeps only the formatting the editor produces: no scripts, styles or event handlers, and links only to web, mail and phone addresses or paths on the site. Links are checked the same way when saved and again when shown, so a link can never run script.
+
+### Code fields
+
+A `code` field is edited in the panel's code editor (line numbers, highlighting for its `language`, bracket matching, indentation; Tab indents, Esc then Tab moves on), for code an editor pastes or writes: an embed, a snippet a tutorial shows, a bit of JSON. Templates get the text as typed, a string, and **nothing cleans it**. Printed with `{{ }}` it's escaped, shown as text. To show it as code, use the code block component, which prints it escaped in `<pre><code class="language-html">`:
+
+```blade
+<x-sunrice-cms::code-block :value="$values['snippet']" language="html" class="example" />
+{{-- <pre class="example"><code class="language-html">&lt;iframe src=&quot;…&quot;&gt;&lt;/iframe&gt;</code></pre> --}}
+```
+
+It prints nothing when the field is empty; other attributes go on the `<pre>`. No highlighting is shipped for the site: add Prism or highlight.js (and its theme) to your layout if you want it, both read the `language-…` class.
+
+Printing it unescaped, `{!! $values['snippet'] !!}`, **runs it**: HTML and scripts go on the page for every visitor. Do that only for code its editors are trusted to run on the site (as with Settings → [Site code](site.md#site-code)), never for a field anyone else can fill in; the CMS never prints a code field unescaped by itself.
+
+A code field is shared by all languages unless its definition says `translatable` (code rarely differs per language). Even then it's never machine-translated: a new translation starts with the main language's code, to change by hand ([machine translation](translation.md)).
 
 A link goes to an address or to an entry. An entry link follows the entry: its `url` and `title` are the entry's in the page's language (its main language's page when it isn't translated), so a new slug or a translation needs no edit; the `url` is null while the entry isn't live (a preview gets its draft title, still without a URL). The linked entry must exist, outside the trash, in the chosen `collections`. Links saved before entry links existed (`{url, label, new_tab}`) are addresses.
 

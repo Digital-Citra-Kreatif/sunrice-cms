@@ -34,10 +34,12 @@ See [Languages](guide:website/languages) for working with translations.
 
 ## Site code
 
-Code from other services added to every page of the website, as is: analytics, a chat widget, a verification tag from a search engine. Paste it where the service says: **In the `<head>`**, **At the start of the `<body>`** or **At the end of the `<body>`**.
+Code from other services added to every page of the website, as is: analytics, a chat widget, a verification tag from a search engine. Paste it where the service says: **In the `<head>`**, **At the start of the `<body>`** or **At the end of the `<body>`**. Each box is a code editor with line numbers and colours; Tab indents, and Esc then Tab moves on to the next box.
 
 > [!WARNING]
-> Code here runs in every visitor's browser. Only paste code from services you trust, and only give this permission to people you trust with the whole website. Every change is recorded and emailed to the people who receive security alerts.
+> Code here runs on every page, in every visitor's browser: a wrong or malicious script can break the site, steal visitors' data or take over admin sessions. Only paste code from services you trust, check it with your developer, and only give this permission to people you trust with the whole website. Every change is recorded and emailed to the people who receive security alerts.
+
+If your site doesn't need it, your developer can switch **Site code** off: the page disappears from Settings and nothing saved there is added to the website (it's kept, and comes back if it's switched on again).
 
 ## Comments
 

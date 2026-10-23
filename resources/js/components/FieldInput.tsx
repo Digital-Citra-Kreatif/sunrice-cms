@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, Plus, Trash2 } from 'lucide-react';
 import {
-    Badge, Button, Checkbox, DatePicker, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input, Label, MediaPickerInput,
+    Badge, Button, Checkbox, CodeEditor, DatePicker, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input, Label, MediaPickerInput,
     moveItem, RichTextEditor, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SortableHandle, type SortableHandleProps, SortableList, Switch, Textarea,
 } from '@imajiner/admin-sdk/ui';
 import { t } from '@imajiner/admin-sdk';
@@ -10,6 +10,7 @@ import { FieldError } from '@/components/FieldError.tsx';
 import { AFFIXED_INPUT, Affixed, FieldHint, HelperText } from '@/components/FieldPresentation.tsx';
 import { TermsPicker } from '@/components/TermsPicker.tsx';
 import { errorsAt } from '@/lib/builder.ts';
+import { codeLanguageOf } from '@/lib/code.ts';
 import { isShown } from '@/lib/conditions.ts';
 import { affixesOf, CONTAINER_TYPES, hintOf } from '@/lib/presentation.ts';
 import { fieldGrid, widthClass } from '@/lib/width.ts';
@@ -100,7 +101,7 @@ export function FieldInput({ field, value, onChange, errors, id, content = false
             )}
             {container && helper}
             <Control field={field} value={value} onChange={onChange} errors={errors} id={id} content={content} fill={fill} describedBy={describedBy} />
-            {['text', 'textarea'].includes(field.type) && numberConfig(field, 'max') !== undefined && (
+            {['text', 'textarea', 'code'].includes(field.type) && numberConfig(field, 'max') !== undefined && (
                 <CharacterCount length={typeof value === 'string' ? [...value].length : 0} max={numberConfig(field, 'max') ?? 0} />
             )}
             {!container && helper}
@@ -136,6 +137,10 @@ function Control({ field, value, onChange, errors, id, content, fill = false, de
         case 'textarea':
             return <Textarea id={id} aria-invalid={invalid} aria-describedby={describedBy} value={typeof value === 'string' ? value : ''} rows={numberConfig(field, 'rows') ?? 4}
                 placeholder={stringConfig(field, 'placeholder')} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)} />;
+        case 'code':
+            // The panel's code editor (CodeMirror); its code loads when the first one shows, a textarea meanwhile.
+            return <CodeEditor id={id} aria-labelledby={`${id}-label`} aria-describedby={describedBy} invalid={invalid} language={codeLanguageOf(field)}
+                value={typeof value === 'string' ? value : ''} placeholder={stringConfig(field, 'placeholder')} onChange={(code: string) => onChange(code)} />;
         case 'rich_text':
             // The panel's editor; its code loads when the first one shows.
             return <RichTextEditor id={id} labelledBy={`${id}-label`} invalid={invalid} value={typeof value === 'string' ? value : ''} onChange={onChange} />;

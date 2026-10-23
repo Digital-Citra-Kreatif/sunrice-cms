@@ -34,10 +34,12 @@ Lihat [Bahasa](guide:website/languages) untuk bekerja dengan terjemahan.
 
 ## Kode situs
 
-Kode dari layanan lain yang ditambahkan ke setiap halaman situs web apa adanya: analitik, widget obrolan, tag verifikasi dari mesin pencari. Tempelkan sesuai petunjuk layanannya: **Di dalam `<head>`**, **Di awal `<body>`**, atau **Di akhir `<body>`**.
+Kode dari layanan lain yang ditambahkan ke setiap halaman situs web apa adanya: analitik, widget obrolan, tag verifikasi dari mesin pencari. Tempelkan sesuai petunjuk layanannya: **Di dalam `<head>`**, **Di awal `<body>`**, atau **Di akhir `<body>`**. Setiap kotak adalah editor kode dengan nomor baris dan warna; Tab menjorokkan baris, lalu Esc kemudian Tab pindah ke kotak berikutnya.
 
 > [!WARNING]
-> Kode di sini berjalan di peramban setiap pengunjung. Tempelkan hanya kode dari layanan yang Anda percayai, dan berikan izin ini hanya kepada orang yang Anda percayai untuk seluruh situs web. Setiap perubahan dicatat dan diemailkan kepada penerima peringatan keamanan.
+> Kode di sini berjalan di setiap halaman, di peramban setiap pengunjung: skrip yang salah atau berbahaya bisa merusak situs, mencuri data pengunjung, atau mengambil alih sesi admin. Tempelkan hanya kode dari layanan yang Anda percayai, periksakan ke developer Anda, dan berikan izin ini hanya kepada orang yang Anda percayai untuk seluruh situs web. Setiap perubahan dicatat dan diemailkan kepada penerima peringatan keamanan.
+
+Jika situs Anda tidak membutuhkannya, developer Anda bisa mematikan **Kode situs**: halamannya hilang dari Pengaturan dan tidak ada yang tersimpan di sana yang ditambahkan ke situs web (kodenya tetap disimpan, dan muncul lagi jika dinyalakan kembali).
 
 ## Komentar
 

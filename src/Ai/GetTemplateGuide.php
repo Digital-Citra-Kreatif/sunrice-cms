@@ -8,6 +8,7 @@ use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
+use Sunrice\Cms\Settings\CodeSettings;
 use Sunrice\Cms\Support\Templates;
 
 #[IsReadOnly]
@@ -55,7 +56,7 @@ resources/views/cms/
 
 ## In the layout
 
-`<x-sunrice-cms::seo />` in `<head>` (title, description, canonical, hreflang, share tags, structured data); `<x-sunrice-cms::code place="head|body-start|body-end" />` for the site code; `{{ Cms::bodyClass() }}` on `<body>`; `<x-sunrice-cms::language-switcher />` for a language switcher (`Cms::localeUrls()` for one of your own); `Cms::page()` for what's shown. Share a layout with `@extends('cms.layout')` and `@section('content')`, and parts with `@include('cms.partials.card', ['entry' => $post])`.
+`<x-sunrice-cms::seo />` in `<head>` (title, description, canonical, hreflang, share tags, structured data); `<x-sunrice-cms::code place="head|body-start|body-end" />` for the site code (it prints nothing where the site code is switched off: "site_code"); `{{ Cms::bodyClass() }}` on `<body>`; `<x-sunrice-cms::language-switcher />` for a language switcher (`Cms::localeUrls()` for one of your own); `Cms::page()` for what's shown. Share a layout with `@extends('cms.layout')` and `@section('content')`, and parts with `@include('cms.partials.card', ['entry' => $post])`.
 
 ## Data
 
@@ -68,6 +69,7 @@ resources/views/cms/
 ## Rules
 
 - Escape with `{{ }}`. Only rich text fields are printed as is (`{!! $values['body'] !!}`): they're cleaned when saved. Never print anything else unescaped.
+- Code fields are plain strings, not cleaned: show them as code with `<x-sunrice-cms::code-block :value="$values['snippet']" language="html" />` (escaped, in `<pre><code>`), never with `{!! !!}`.
 - Data only through the CMS (`Cms::…`, components, `$values`): no database queries or models, no `@php` beyond small formatting.
 - Every field can be empty: `@if`, `?->`, `?? ''`.
 - Images: a media field's value has `->url()` (and sizes, `->url('medium')`) and `->altIn()` (its alt text in the page's language): always `alt="{{ $image->altIn() }}"`.
@@ -87,6 +89,8 @@ MD;
             'templates' => Templates::files(),
             // Not GLOB_BRACE: some PHP builds (musl, Alpine) don't have it.
             'defaults' => array_values(array_filter(['entry.blade.php', 'listing.blade.php', 'term.blade.php', 'taxonomy-index.blade.php', 'search.blade.php'], fn (string $file): bool => is_file(dirname(__DIR__, 2).'/resources/views/'.$file))),
+            // Settings → Site code switched off (sunrice-cms.site.custom_code): the code component prints nothing.
+            'site_code' => CodeSettings::available(),
             'can_write' => $writable = Templates::writable($this->user()),
             // Why not, since cms_write_template isn't listed then.
             'write_note' => $writable ? null : 'cms_write_template is only for super admins, on sites that allow it (sunrice-cms.ai.templates, SUNRICE_AI_TEMPLATES=true): templates run code on the server. Suggest the change to a developer instead.',

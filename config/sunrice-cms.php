@@ -37,6 +37,11 @@ return [
         // views but those under layouts, partials, components, errors,
         // vendor, emails, mail and auth (and "_" files). Never a package's.
         'template_prefixes' => ['cms.', 'pages.'],
+        // Settings → Site code: HTML editors add to every page (analytics,
+        // chat widgets). False turns it off: the page and its menu item are
+        // gone, nothing is printed and agents can't read or change it. What
+        // was saved is kept, and shows again once it's back on.
+        'custom_code' => env('SUNRICE_SITE_CODE', true),
         // An entry or term not translated into a language (or not live in
         // it) shows the main language's content at that language's address,
         // canonical to the main page. Off: a 404 there. Null (the default):

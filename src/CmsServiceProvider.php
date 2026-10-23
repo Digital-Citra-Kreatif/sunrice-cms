@@ -51,6 +51,7 @@ final class CmsServiceProvider extends ServiceProvider
             Types\Text::class,
             Types\Textarea::class,
             Types\RichText::class,
+            Types\Code::class,
             Types\Number::class,
             Types\Toggle::class,
             Types\Select::class,
