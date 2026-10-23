@@ -1,11 +1,12 @@
 import * as React from 'react';
 import { router } from '@inertiajs/react';
 import { adminUrl, t } from '@imajiner/admin-sdk';
-import { Badge, Card, SortableHandle, SortableList } from '@imajiner/admin-sdk/ui';
-import { type EntryStatus, statusLabel } from '@/lib/entries.ts';
+import { Card, SortableHandle, SortableList } from '@imajiner/admin-sdk/ui';
+import { type EntryStatus } from '@/lib/entries.ts';
+import { EntryStatusBadges } from '@/components/EntryStatus.tsx';
 import { childIndexes, reorderLevel, treeOrder } from '@/lib/tree.ts';
 
-export interface ReorderRow { id: number; title: string; status: EntryStatus; parentId?: number | null; parent?: string | null }
+export interface ReorderRow { id: number; title: string; status: EntryStatus; changes?: boolean; parentId?: number | null; parent?: string | null }
 
 /**
  * An ordered collection's list page as rows dragged into order: each drop
@@ -39,7 +40,7 @@ export function EntryReorderList({ collection, rows, hierarchical = false }: { c
                         <div className="cms:flex cms:items-center cms:gap-2 cms:rounded-lg cms:border cms:border-border/70 cms:bg-card cms:p-2 cms:text-sm">
                             <SortableHandle {...handle} label={t('Move :title', { title: row.title })} />
                             <span className="cms:min-w-0 cms:flex-1 cms:truncate cms:font-medium">{row.title}</span>
-                            <Badge variant={row.status === 'published' ? 'success' : 'secondary'}>{statusLabel(row.status)}</Badge>
+                            <EntryStatusBadges status={row.status} changes={row.changes} />
                         </div>
                         {childIndexes(items, index).length > 0 && level(index)}
                     </div>

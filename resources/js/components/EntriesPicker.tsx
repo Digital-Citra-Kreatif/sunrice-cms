@@ -1,11 +1,12 @@
 import * as React from 'react';
 import { Search, X } from 'lucide-react';
 import { adminUrl, t } from '@imajiner/admin-sdk';
-import { Badge, Button, Input, SortableHandle, SortableList } from '@imajiner/admin-sdk/ui';
+import { Button, Input, SortableHandle, SortableList } from '@imajiner/admin-sdk/ui';
 import { pickerQuery } from '@/lib/values.ts';
-import { type EntryStatus, statusLabel } from '@/lib/entries.ts';
+import { type EntryStatus } from '@/lib/entries.ts';
+import { EntryStatusBadges } from '@/components/EntryStatus.tsx';
 
-interface Item { id: number; title: string; collection: string; status: EntryStatus }
+interface Item { id: number; title: string; collection: string; status: EntryStatus; changes?: boolean }
 
 interface Props {
     id: string;
@@ -80,16 +81,23 @@ export function EntriesPicker({ id, value, multiple, max, collections, invalid, 
     return (
         <div className="cms:flex cms:flex-col cms:gap-2">
             {ids.length > 0 && (
-                <SortableList items={ids} getId={(entryId) => entryId} getLabel={(entryId) => known[entryId]?.title ?? `Entry #${entryId}`} onReorder={(next) => set(next)} disabled={!multiple} className="cms:gap-1">
+                <SortableList items={ids} getId={(entryId) => entryId} getLabel={(entryId) => known[entryId]?.title ?? `Entry #${entryId}`} onReorder={(next) => set(next)} disabled={!multiple} className="cms:grid-cols-[minmax(0,1fr)] cms:gap-1">
                     {(entryId, { handle }) => {
                         const item = known[entryId];
                         return (
-                            <div className="cms:flex cms:items-center cms:gap-2 cms:rounded-md cms:border cms:bg-card cms:px-2 cms:py-1 cms:text-sm">
+                            <div className="cms:flex cms:min-w-0 cms:items-center cms:gap-2 cms:rounded-md cms:border cms:bg-card cms:px-2 cms:py-1 cms:text-sm">
                                 {multiple && <SortableHandle {...handle} label={t('Move :title', { title: item?.title ?? entryId })} />}
-                                <span className={`cms:min-w-0 cms:flex-1 cms:truncate ${multiple ? '' : 'cms:pl-1'}`}>{item ? item.title : t('Entry #:id', { id: entryId })}</span>
-                                {item && <span className="cms:text-xs cms:text-muted-foreground">{item.collection}</span>}
-                                {item && <Badge variant={item.status === 'published' ? 'success' : 'secondary'}>{statusLabel(item.status)}</Badge>}
-                                <Button type="button" variant="ghost" size="icon" className="cms:size-7" aria-label={t('Remove :title', { title: item?.title ?? entryId })}
+                                {/* The title on one line, cut short (the whole of it in the tooltip); the collection and status beside it, or under it when there's no room. */}
+                                <div className={`cms:flex cms:min-w-0 cms:flex-1 cms:flex-wrap cms:items-center cms:gap-x-2 cms:gap-y-0.5 ${multiple ? '' : 'cms:pl-1'}`}>
+                                    <span className="cms:min-w-0 cms:max-w-full cms:truncate" title={item?.title}>{item ? item.title : t('Entry #:id', { id: entryId })}</span>
+                                    {item && (
+                                        <span className="cms:flex cms:min-w-0 cms:max-w-full cms:flex-wrap cms:items-center cms:gap-1">
+                                            <span className="cms:min-w-0 cms:truncate cms:text-xs cms:text-muted-foreground">{item.collection}</span>
+                                            <EntryStatusBadges status={item.status} changes={item.changes} />
+                                        </span>
+                                    )}
+                                </div>
+                                <Button type="button" variant="ghost" size="icon" className="cms:size-7 cms:shrink-0" aria-label={t('Remove :title', { title: item?.title ?? entryId })}
                                     onClick={() => set(ids.filter((other) => other !== entryId))}><X /></Button>
                             </div>
                         );

@@ -44,14 +44,23 @@ Kartu-kartu di penyunting (grup, **SEO**, dan kartu di kanan) bisa dilipat denga
 
 ## Draf dan penerbitan
 
-Setiap entri memiliki **draf**, yang Anda sunting, dan versi **tayang**, yang dilihat pengunjung. Versi tayang hanya berubah saat Anda menerbitkan.
+Setiap entri memiliki **versi tayang**, yang dilihat pengunjung, dan **perubahan Anda**, yang Anda sunting dan simpan tanpa terlihat oleh pengunjung. Versi tayang hanya berubah saat Anda menerbitkan. Entri yang belum pernah diterbitkan adalah **draf**.
+
+Bilah di bagian atas penyunting selalu menunjukkan keadaannya:
+
+- **Belum diterbitkan**: hanya yang bisa menyunting yang melihatnya (belum pernah diterbitkan, atau sudah diturunkan dari situs).
+- **Terjadwal**: tayang pada tanggal yang ditunjukkan.
+- **Tayang**: pengunjung melihat persis yang ada di penyunting.
+- **Tayang, dengan perubahan yang belum diterbitkan**: Anda sudah menyimpan perubahan, tetapi pengunjung masih melihat versi yang diterbitkan pada tanggal yang ditunjukkan, oleh orang yang disebut. **Lihat halaman yang tayang** membuka yang dilihat pengunjung; **Bandingkan dengan yang tayang** menampilkan perubahan Anda di sampingnya, field demi field (kata yang dihapus dicoret, yang ditambahkan disorot); **Pratinjau perubahan** menampilkan perubahan Anda di situs; **Buang perubahan** membuang perubahan Anda dan mengembalikan versi tayang, setelah bertanya dulu. Field yang Anda ubah diberi tanda kecil **Berubah** di samping namanya.
+
+Selama ada suntingan yang belum disimpan, bilah itu menambahkan *Ada suntingan yang belum disimpan*. Di daftar entri, entri tayang yang punya perubahan tersimpan diberi **Ada perubahan** di samping statusnya.
 
 - **Terbitkan** menayangkan draf di situs web. Untuk entri yang sudah tayang, tombolnya bertuliskan **Terbitkan perubahan**; bertuliskan **Terbit** jika tidak ada yang baru.
 - Kartu **Status** di samping isian berisi **Tanggal terbit**: pilih tanggal dan jam (menurut zona waktu Anda, format 24 jam: ketik `14:30`) lalu tekan **Jadwalkan**; entri akan tayang saat itu, dan sampai waktunya statusnya **Terjadwal**. Tanggal yang sudah lewat langsung menerbitkan, dengan tanggal tersebut (untuk memundurkan tanggal tulisan). Pada entri yang sudah tayang atau terjadwal, ubah tanggalnya lalu tekan **Ubah tanggal** (atau **Jadwalkan ulang**): entri diterbitkan lagi dengan tanggal itu, beserta isi penyunting; tanggal yang akan datang menarik entri dari situs sampai waktunya. **Batalkan terbit** juga ada di sana.
 - Panah di sebelah **Terbitkan** juga berisi **Terbitkan pada tanggal tertentu…** (pemilih tanggal dimulai dari besok; tanggal yang sudah lewat meminta konfirmasi dulu). Selama entri terjadwal, tombolnya bertuliskan **Terjadwal …**: tekan untuk mengganti tanggal; panahnya juga berisi **Terbitkan sekarang** dan **Batalkan jadwal (kembali ke draf)**.
 - **Batalkan terbit** (di menu yang sama) menarik entri dari situs web; entri kembali menjadi draf. Jika diterbitkan lagi, tanggal aslinya tetap dipakai.
 
-Kartu **Status** di kanan menunjukkan apakah entri masih draf, terjadwal, atau terbit (dan sejak kapan), dan memberi peringatan *Draf memiliki perubahan yang belum ditampilkan di situs.* jika draf berisi perubahan yang belum tampil di situs.
+Kartu **Status** di kanan menunjukkan apakah entri masih draf, terjadwal, atau tayang (dan sejak kapan), dengan **Ada perubahan** jika ada perubahan yang belum diterbitkan.
 
 > [!NOTE]
 > Jika peran Anda bisa menulis tetapi tidak bisa menerbitkan (misalnya peran *author*), Anda menyimpan draf dan orang lain yang menerbitkannya. Saat draf siap, klik **Ajukan untuk ditinjau**: draf disimpan, semua orang yang bisa menerbitkannya menerima email, dan draf muncul di **Menunggu tinjauan** pada dasbor mereka. Entri menampilkan lencana **Menunggu tinjauan** sampai ada yang menerbitkannya. Berubah pikiran? **Tarik permintaan** di kartu Status menarik kembali permintaannya.
@@ -60,9 +69,10 @@ Kartu **Status** di kanan menunjukkan apakah entri masih draf, terjadwal, atau t
 
 ## Melihat hasil kerja Anda di situs
 
-- **Pratinjau** membuka draf yang tersimpan seperti tampilannya nanti di situs, di tab baru. Simpan dulu: pratinjau menampilkan yang tersimpan, bukan yang ada di layar Anda. Tautan pratinjau berlaku 30 menit, dan siapa pun yang Anda kirimi bisa membukanya selama itu; pita gelap di bagian atas menandai bahwa itu pratinjau. Koleksi yang entrinya tidak punya halaman sendiri (misalnya testimoni) tidak punya Pratinjau.
-- **Lihat halaman** membuka halaman yang tayang.
-- Jika peran Anda boleh melihat draf di situs, halaman tayang yang punya perubahan belum terbit menampilkan spanduk kecil selama Anda masuk, dengan **View the draft**. Pengunjung tidak pernah melihatnya.
+- **Pratinjau perubahan** (**Pratinjau** untuk entri yang belum diterbitkan), di bilah atas, membuka yang Anda simpan seperti tampilannya nanti di situs, di tab baru. Simpan dulu: pratinjau menampilkan yang tersimpan, bukan yang ada di layar Anda. Pita gelap di bagian atas menandai bahwa itu pratinjau. Koleksi yang entrinya tidak punya halaman sendiri (misalnya testimoni) tidak punya pratinjau.
+- **Bagikan tautan pratinjau…** di menu **⋯** memberi tautan yang sama untuk disalin dan dikirim ke orang yang tidak bisa masuk. Tautan berlaku 30 menit (dialognya menyebut sampai kapan); muat ulang penyunting untuk tautan baru.
+- **Lihat halaman yang tayang** membuka halaman yang dilihat pengunjung.
+- Jika peran Anda boleh melihat perubahan yang belum diterbitkan di situs, halaman tayang yang punya perubahan belum terbit menampilkan spanduk kecil **Perubahan belum terbit** selama Anda masuk, dengan **Lihat perubahan yang belum diterbitkan** (dan, selama Anda melihatnya, **Lihat halaman yang tayang**). Pengunjung tidak pernah melihatnya.
 
 ## Pengaturan halaman
 
@@ -70,8 +80,8 @@ Kartu **Pengaturan halaman** di kanan berlaku untuk semua bahasa. Isinya disimpa
 
 - **Induk**: di koleksi yang entrinya bertingkat (seperti halaman di bawah halaman), entri tempat entri ini berada; bisa juga dipilih saat membuat entri. Dipakai untuk jejak halaman dan sub-menu; alamat webnya tidak berubah.
 - **Blueprint**: jika koleksi menawarkan lebih dari satu susunan field (misalnya halaman biasa atau halaman promosi), susunan yang dipakai entri ini. Menggantinya tetap menyimpan semua nilai: field yang ada di keduanya mempertahankan isinya, dan sisanya disimpan tersembunyi dan muncul lagi jika Anda kembali. Simpan draf dulu, lalu tekan **Ganti blueprint**: penyunting dimuat ulang dengan field yang baru.
-- **Template**: desain lain khusus untuk entri ini, jika developer membuatnya. Kosongkan untuk desain koleksi. **File yang mana?** di bawahnya menampilkan, untuk developer, file yang dicoba berurutan dan menandai yang dipakai.
-- **Terima komentar baru**: di koleksi yang memiliki komentar, matikan untuk menutup komentar entri ini (komentar yang sudah disetujui tetap tampil). **Komentar** membuka komentar entri ini.
+- **Template**: desain lain khusus untuk entri ini, jika developer membuatnya: pilih dari daftar, atau ketik namanya. **Otomatis** memakai desain koleksi. Di bawahnya, file yang dipakai, dan **Bagaimana dipilih?** menampilkan, untuk developer, file yang dicoba berurutan.
+- **Terima komentar baru**: di koleksi yang memiliki komentar, matikan untuk menutup komentar entri ini (komentar yang sudah disetujui tetap tampil). **Lihat komentar** membuka komentar entri ini.
 
 ## Komentar
 
@@ -83,7 +93,7 @@ Kartu **Dipakai oleh** menampilkan konten lain yang menautkan ke entri ini (entr
 
 ## Revisi
 
-Setiap penerbitan menyimpan sebuah **revisi**: salinan dari yang diterbitkan, beserta tanggal dan siapa yang menerbitkannya. Kartu **Revisi** menampilkannya beserta field yang diubah tiap revisi; **Bandingkan** menampilkan revisi di samping draf yang tersimpan, field demi field; **Pulihkan** memuat revisi ke dalam draf, sehingga Anda bisa memeriksanya dan menerbitkan saat siap. Berubah pikiran? **Batalkan pemulihan** mengembalikan draf Anda sebelumnya (sampai Anda keluar). Disimpan 50 revisi terakhir untuk setiap bahasa.
+Setiap penerbitan menyimpan sebuah **revisi**: salinan dari yang diterbitkan, beserta tanggal dan siapa yang menerbitkannya. Kartu **Revisi** menampilkannya beserta field yang diubah tiap revisi; **Bandingkan** menampilkan revisi di samping versi yang tayang (atau perubahan Anda, jika ada), field demi field, dengan nama di tiap sisi; **Pulihkan** memuat revisi ke dalam draf, sehingga Anda bisa memeriksanya dan menerbitkan saat siap. Berubah pikiran? **Batalkan pemulihan** mengembalikan draf Anda sebelumnya (sampai Anda keluar). Disimpan 50 revisi terakhir untuk setiap bahasa.
 
 ## Tindakan lain
 

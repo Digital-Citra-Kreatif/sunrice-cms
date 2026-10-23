@@ -95,8 +95,12 @@ final class SaveEntrySettings
         return false;
     }
 
-    /** @return non-empty-list<string> */
-    private static function prefixes(): array
+    /**
+     * The site's template prefixes (sunrice-cms.site.template_prefixes; "cms." when none).
+     *
+     * @return non-empty-list<string>
+     */
+    public static function prefixes(): array
     {
         $prefixes = config('sunrice-cms.site.template_prefixes', ['cms.']);
         $prefixes = is_array($prefixes) ? array_values(array_filter($prefixes, fn (mixed $p): bool => is_string($p) && $p !== '')) : [];

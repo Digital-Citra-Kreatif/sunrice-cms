@@ -10,7 +10,7 @@ import { FieldError } from '@/components/FieldError.tsx';
 import { Fields } from '@/components/FieldInput.tsx';
 import { FieldSections } from '@/components/FieldSections.tsx';
 import { SlugNote } from '@/components/SlugNote.tsx';
-import { TemplateHelp, type TemplateLookup } from '@/components/TemplateHelp.tsx';
+import { TemplateField, type TemplateLookup } from '@/components/TemplateHelp.tsx';
 import { VersionConflict } from '@/components/VersionConflict.tsx';
 import { LanguageTabs } from '@/components/LanguageTabs.tsx';
 import { errorKeysAt, errorsAt, hasErrors } from '@/lib/builder.ts';
@@ -177,11 +177,8 @@ function TermEdit({ taxonomy, term, parentId = null, terms = [], translated, fie
                     <CollapsibleCard title={t('Page settings')} titleClassName="cms:text-base" storageKey="cms:term:page-settings" hasErrors={errors.template !== undefined}
                         contentClassName="cms:flex cms:flex-col cms:gap-2">
                         <fieldset disabled={!writable} className="cms:flex cms:min-w-0 cms:flex-col cms:gap-2">
-                            <Label htmlFor="template">{t('Template')}</Label>
-                            <Input id="template" className="cms:font-mono" placeholder={`cms.${taxonomy.handle}-special`} value={form.data.template}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => form.setData('template', e.target.value)} aria-invalid={errors.template !== undefined} />
-                            <TemplateHelp example={`cms.${taxonomy.handle}-special`} empty={t('Leave empty to use the taxonomy\'s template.')} value={form.data.template} lookup={templates} />
-                            <FieldError message={errors.template} />
+                            <TemplateField id="template" value={form.data.template} onChange={(template) => form.setData('template', template)} lookup={templates}
+                                example={`cms.${taxonomy.handle}-special`} automatic={t('Automatic uses the taxonomy\'s template.')} error={errors.template} disabled={!writable} />
                         </fieldset>
                     </CollapsibleCard>
 {term && (

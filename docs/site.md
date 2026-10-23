@@ -101,7 +101,7 @@ View names use dots (`cms/collections/pages/about.blade.php` is `cms.collections
 - **`index` and `show` are reserved**: an entry or term with that slug never picks a slug file (it gets `show.blade.php` like the others). Only slugs that can name a file are tried (lowercase letters, digits, `-` and `_`).
 - **Templates picked in the admin come first**, before any file found by name. Every template picked in the admin, an entry's or a term's own and a collection's or taxonomy's, must be under one of the site's template prefixes, `cms.` unless `sunrice-cms.site.template_prefixes` says otherwise (`['cms.', 'pages.']`), so no other view of the app (`layouts.app`, `emails.invoice`) can be made a public page; a stored one outside them is ignored. Only the collection's editors (`cms.entries.update`) pick an entry's: authors with `cms.entries.update-own` change the other page settings and keep the template as it is. A collection's and a taxonomy's templates (**Entry template**, **Listing page template**, **Term page template**, **Index page template**) are set under Structure (`cms.collections.update`, `cms.taxonomies.update`) or by a structure import, both of which check them.
 - The built-in views are `sunrice-cms::entry`, `::listing`, `::term`, `::taxonomy-index` and `::search`; a [hook](#hooks) can still choose another view for any page.
-- Each view is looked for once per page (the editor's **Which file?** lists the same views and marks the one in use).
+- Each view is looked for once per page (the editor's **How is it chosen?** lists the same views and marks the one in use).
 
 ### What templates get
 
@@ -571,7 +571,7 @@ The entry editor's **Preview** opens the saved draft in its template through a s
 
 ### Drafts on the site
 
-Signed-in panel users with `cms.entries.view-drafts` (and view access to the collection; the author and editor roles have it) see a small banner on a live page whose entry has a newer draft, with a **View draft** link. `?draft` renders the draft the way a preview does: the view gets `$draft = true`, `Cms::page()->draft` is set, the body class gets `is-draft`, and the response is `noindex` and `Cache-Control: no-store, private`, never kept by the page cache. The banner is `sunrice-cms::draft-banner`, inserted right after `<body>`, so it works with any template.
+Signed-in panel users with `cms.entries.view-drafts` (and view access to the collection; the author and editor roles have it) see a small banner (labelled **Unpublished changes**) on a live page whose entry has unpublished changes, with a **View the unpublished changes** link; while looking at them, **View the live page** goes back. The editor's preview link shows the same banner: "Preview of unpublished changes" for a live page, "Preview of the draft" (labelled **Draft**) for one never published. `?draft` renders the draft the way a preview does: the view gets `$draft = true`, `Cms::page()->draft` is set, the body class gets `is-draft`, and the response is `noindex` and `Cache-Control: no-store, private`, never kept by the page cache. The banner is `sunrice-cms::draft-banner`, inserted right after `<body>`, so it works with any template.
 
 ## Security
 

@@ -184,10 +184,12 @@ final class TermController
             'terms' => $places,
             // Where to add a redirect by hand, for those who may.
             'redirectsUrl' => $request->user()?->can('cms.redirects.create') === true ? route('sunrice.admin.cms.redirects.create') : null,
-            // The views tried for its page, in order, and which exist (Template → Which file?).
+            // The views tried for its page, in order, and which exist (Template, and How is it chosen?).
             'templates' => [
                 'own' => $term === null ? null : (TemplateHelp::lookup([$term->template])[0] ?? null),
                 'fallbacks' => TemplateHelp::lookup(self::termViews($taxonomy, $term?->translation(Locales::default())?->slug)),
+                // The views that exist under the template prefixes, to pick from.
+                'choices' => TemplateHelp::choices(),
             ],
             'hasPages' => $taxonomy->hasTermPages(),
             'fields' => $taxonomy->schema()->toAdmin(),

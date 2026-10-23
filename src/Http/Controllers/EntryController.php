@@ -21,6 +21,7 @@ use Sunrice\Admin\Preferences\Preferences;
 use Sunrice\Cms\Actions\Entries\CreateEntry;
 use Sunrice\Cms\Actions\Entries\CreateTranslation;
 use Sunrice\Cms\Actions\Entries\DeleteTranslation;
+use Sunrice\Cms\Actions\Entries\DiscardChanges;
 use Sunrice\Cms\Actions\Entries\MachineTranslateEntry;
 use Sunrice\Cms\Actions\Entries\PublishEntry;
 use Sunrice\Cms\Actions\Entries\RequestReview;
@@ -63,6 +64,9 @@ use Sunrice\Cms\Translation\TranslatorFactory;
  */
 final class EntryController
 {
+    /** How long the editor's preview link works: to open, or to share with someone who can't sign in. */
+    public const PREVIEW_MINUTES = 30;
+
     /** The sidebar's Entries item: the first collection's list. */
     public function home(Request $request): RedirectResponse|Response
     {
@@ -157,6 +161,8 @@ final class EntryController
                 'collection' => $translation->entry->collection->title,
                 'collectionHandle' => $translation->entry->collection->handle,
                 'status' => $translation->status(),
+                // Published, with unpublished changes: only where the draft is theirs to see.
+                'changes' => in_array($translation->collection_id, $own, true) && $translation->isPublished() && $translation->hasUnpublishedChanges(),
             ], $items),
             'unavailable' => $asked === [] ? [] : Collection::query()->whereIn('handle', array_diff($asked, $pickable))->orderBy('title')->pluck('title')->all(),
         ]);
@@ -379,6 +385,13 @@ final class EntryController
                 'status' => $translation->status(),
                 'publishedAt' => $translation->published_at?->toIso8601String(),
                 'hasUnpublishedChanges' => $translation->hasUnpublishedChanges(),
+                // Published once: it has a live version (title, slug, data), even when unpublished since.
+                'everPublished' => $translation->title !== null,
+                // Published with unpublished changes: when the live version was published, by whom, and the
+                // values the draft changed from it (the editor's "Changed" markers). Null otherwise: nothing to load.
+                'live' => $translation->isPublished() && $translation->hasUnpublishedChanges()
+                    ? RevisionList::live($translation) + ['changed' => RevisionList::changedFromLive($translation)]
+                    : null,
                 'trashed' => $entry->trashed(),
                 // "Submit for review": when, and who asked.
                 'review' => $translation->review_requested_at === null ? null : [
@@ -388,9 +401,10 @@ final class EntryController
                     'mine' => $translation->review_requested_by !== null && is_scalar($id = $request->user()?->getAuthIdentifier()) && (string) $id === (string) $translation->review_requested_by,
                 ],
                 'version' => $translation->version,
-                // The live page, and a signed link to preview the draft (30 minutes).
+                // The live page, and a signed link to preview the draft (PREVIEW_MINUTES), to open or share.
                 'url' => $translation->isLive() && ! $entry->trashed() ? $translation->url() : null,
-                'previewUrl' => URL::temporarySignedRoute('sunrice.cms.preview', now()->addMinutes(30), ['translation' => $translation->id]),
+                'previewUrl' => URL::temporarySignedRoute('sunrice.cms.preview', $expires = now()->addMinutes(self::PREVIEW_MINUTES), ['translation' => $translation->id]),
+                'previewExpiresAt' => $expires->toIso8601String(),
                 // The slug in the address visitors have known (published once, a page of its own, not the homepage's /):
                 // the editor notes a new one, which publishing redirects from while the entry is published (PublishEntry).
                 'publishedSlug' => $translation->published_at !== null && $collection->route !== null && app(SiteSettings::class)->homepage !== $entry->id ? $translation->slug : null,
@@ -404,10 +418,12 @@ final class EntryController
             'settings' => Access::entries($request->user(), 'update', $collection, $entry)
                 ? ['parentId' => $entry->parent_id, 'template' => $entry->template, 'commentsClosed' => $entry->comments_closed, 'blueprint' => $entry->blueprintHandle()]
                 : null,
-            // The views tried for its page, in order, and which exist (Page settings → Which file?).
+            // The views tried for its page, in order, and which exist (Page settings → Template).
             'templates' => [
                 'own' => TemplateHelp::lookup([$entry->template])[0] ?? null,
                 'fallbacks' => TemplateHelp::lookup(TemplateLookup::entry($collection, TemplateLookup::entrySlug($translation))),
+                // The views that exist under the template prefixes, to pick from.
+                'choices' => TemplateHelp::choices(),
             ],
             // The blueprints it may use, when there's a choice (Page settings).
             'blueprints' => self::blueprints($collection),
@@ -618,6 +634,24 @@ final class EntryController
     }
 
     /** A revision compared with the draft: the fields that differ, as text. */
+    /** The live version beside the draft: the fields where they differ, in words (the editor's "Compare with live"). */
+    public function compareLive(Entry $entry, string $locale): JsonResponse
+    {
+        $translation = self::translation($entry, $locale);
+        abort_unless($translation->isPublished() && $translation->title !== null, 404);
+
+        return response()->json(['fields' => RevisionList::compareLive($translation)]);
+    }
+
+    /** Throws away the unpublished changes: the draft is the live version again. */
+    public function discardChanges(Request $request, Entry $entry, string $locale, DiscardChanges $discard): RedirectResponse
+    {
+        $version = $request->input('version');
+        $discard->handle(self::translation($entry, $locale), is_int($version) || is_string($version) ? $version : null);
+
+        return back()->with('success', 'Changes discarded. The editor shows the live version again.');
+    }
+
     public function compareRevision(Entry $entry, Revision $revision): JsonResponse
     {
         abort_unless($revision->translation->entry_id === $entry->id, 404);

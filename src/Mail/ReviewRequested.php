@@ -16,8 +16,8 @@ use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Support\Locales;
 
 /**
- * Tells those who may publish that a draft waits for their review, with a
- * link to it.
+ * Tells those who may publish that a draft (or a live entry's unpublished
+ * changes) waits for their review, with a link to it and to the live page.
  *
  * @internal
  */
@@ -45,6 +45,9 @@ final class ReviewRequested extends Mailable
             'title' => $this->translation->draft_title,
             'collection' => $this->translation->entry->collection->title,
             'requester' => is_string($name) && $name !== '' ? $name : __('Someone'),
+            // Live already: what's to review are its unpublished changes, beside the live page.
+            'changes' => $this->translation->isLive() && $this->translation->hasUnpublishedChanges(),
+            'liveUrl' => $this->translation->isLive() && ! $this->translation->entry->trashed() ? $this->translation->url() : null,
             'url' => AppUrl::route('sunrice.admin.cms.collections.entries.edit', [
                 'collection' => $this->translation->entry->collection->handle,
                 'entry' => $this->translation->entry_id,

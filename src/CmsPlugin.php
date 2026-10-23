@@ -265,6 +265,8 @@ final class CmsPlugin extends BasePlugin
                     Route::post('entries/{entry}/translations/{locale}/translate', 'translate')->name('entries.translations.translate')->middleware($guard('entries', 'update'));
                     Route::post('entries/{entry}/revisions/{revision}/restore', 'restoreRevision')->name('entries.revisions.restore')->middleware($guard('entries', 'update'));
                     Route::get('entries/{entry}/revisions/{revision}/compare', 'compareRevision')->name('entries.revisions.compare')->middleware($guard('entries', 'view'));
+                    Route::get('entries/{entry}/translations/{locale}/compare-live', 'compareLive')->name('entries.translations.compare-live')->middleware($guard('entries', 'view'));
+                    Route::post('entries/{entry}/translations/{locale}/discard', 'discardChanges')->name('entries.translations.discard')->middleware($guard('entries', 'update'));
                 });
                 // A taxonomy's index pages (the shared one, or ?collection=books): behind its terms permissions.
                 Route::name('taxonomies.index-page.')->controller(IndexPageController::class)->group(function () use ($guard): void {

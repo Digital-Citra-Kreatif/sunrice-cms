@@ -45,6 +45,8 @@ interface Props {
     content?: boolean;
     /** A number fills its place (the builder's compact rows) instead of keeping its own width. */
     fill?: boolean;
+    /** Beside the label: the entry editor's "Changed" marker. */
+    marker?: React.ReactNode;
 }
 
 /** Types whose inputs are a list or a set of inputs: labelled as a group. */
@@ -59,7 +61,7 @@ export function labelOf(field: FieldDefinition): string {
     return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
-export function FieldInput({ field, value, onChange, errors, id, content = false, fill = false }: Props) {
+export function FieldInput({ field, value, onChange, errors, id, content = false, fill = false, marker = null }: Props) {
     const label = labelOf(field);
     const group = GROUPS.includes(field.type) || (['select', 'terms'].includes(field.type) && field.config?.multiple === true);
     // The message under a group of inputs (ticked choices, a group's fields) is tied to the group.
@@ -72,9 +74,10 @@ export function FieldInput({ field, value, onChange, errors, id, content = false
                 <div className="cms:flex cms:items-center cms:gap-3">
                     <Switch id={id} checked={value === true} onCheckedChange={(checked: boolean) => onChange(checked)} />
                     <Label htmlFor={id}>{label}</Label>
+                    {marker}
                 </div>
             ) : (
-                <Label id={`${id}-label`} htmlFor={group ? undefined : id}>{label}{field.required && <span className="cms:text-destructive"> *</span>}</Label>
+                <Label id={`${id}-label`} htmlFor={group ? undefined : id}>{label}{field.required && <span className="cms:text-destructive"> *</span>}{marker}</Label>
             )}
             <Control field={field} value={value} onChange={onChange} errors={errors} id={id} content={content} fill={fill} />
             {['text', 'textarea'].includes(field.type) && numberConfig(field, 'max') !== undefined && (

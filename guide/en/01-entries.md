@@ -44,14 +44,23 @@ The editor's cards (groups, **SEO**, and the cards on the right) fold away when 
 
 ## Drafts and publishing
 
-Every entry has a **draft**, which you edit, and a **live** version, which visitors see. The live version changes only when you publish.
+Every entry has a **live version**, which visitors see, and **your changes**, which you edit and save without visitors seeing them. The live version changes only when you publish. An entry that was never published is a **draft**.
+
+The bar at the top of the editor always says which applies:
+
+- **Not published yet**: only people who can edit see it (it was never published, or it was taken off the site).
+- **Scheduled**: it goes live on the date shown.
+- **Live**: visitors see exactly what's in the editor.
+- **Live, with unpublished changes**: you saved changes, but visitors still see the version published on the date shown, by the person named. **View live page** opens what visitors see; **Compare with live** shows your changes beside it, field by field (removed words struck through, added ones highlighted); **Preview changes** shows your changes on the website; **Discard changes** throws your changes away and brings back the live version, after asking. Fields you changed have a small **Changed** beside their name.
+
+While you have edits you haven't saved, the bar adds *You have unsaved edits*. In the entries list, a live entry with saved changes has **Changes pending** beside its status.
 
 - **Publish** puts the draft on the website. For an entry already live, the button says **Publish changes**; it says **Published** when there's nothing new.
 - The **Status** card beside the fields has the **Publish date**: choose a date and time (in your time zone, on the 24-hour clock: type `14:30`) and press **Schedule**; the entry goes live then, and until then its status is **Scheduled**. A date in the past publishes now, with that date (to back-date a post). On a live or scheduled entry, change the date and press **Change date** (or **Reschedule**): the entry is published again with that date, with what's in the editor; a date to come takes it off the site until then. **Unpublish** is there too.
 - The arrow next to **Publish** has **Publish on a date…** too (the picker starts on tomorrow; a date in the past asks first). While an entry is scheduled, the button says **Scheduled for …**: press it to change the date; the arrow also has **Publish now** and **Unschedule (back to draft)**.
 - **Unpublish** (same menu) takes the entry off the website; it becomes a draft again. Publishing it again keeps its original date.
 
-The **Status** card on the right says whether the entry is a draft, scheduled or published (and since when), and warns when *The draft has changes the site doesn't show yet*.
+The **Status** card on the right says whether the entry is a draft, scheduled or live (and since when), with **Changes pending** when there are unpublished changes.
 
 > [!NOTE]
 > If your role can write but not publish (the *author* role, for example), you save drafts and someone else publishes them. When a draft is ready, click **Submit for review**: it's saved, everyone who can publish it gets an email, and it appears under **Waiting for review** on their dashboard. The entry shows a **Waiting for review** badge until someone publishes it. Changed your mind? **Withdraw the request** in the Status card takes it back.
@@ -60,9 +69,10 @@ The **Status** card on the right says whether the entry is a draft, scheduled or
 
 ## Seeing your work on the website
 
-- **Preview** opens the saved draft as it will look on the website, in a new tab. Save first: the preview shows what's saved, not what's on your screen. The preview link works for 30 minutes, and anyone you send it to can open it in that time; a dark ribbon at the top says it's a preview. Collections whose entries have no page of their own (testimonials, say) have no Preview.
-- **View page** opens the live page.
-- If your role may see drafts on the site, live pages with unpublished changes show you a small banner while you're signed in, with **View draft**. Visitors never see it.
+- **Preview changes** (**Preview** for an entry not published yet), in the bar at the top, opens what you saved as it will look on the website, in a new tab. Save first: the preview shows what's saved, not what's on your screen. A dark ribbon at the top says it's a preview. Collections whose entries have no page of their own (testimonials, say) have no preview.
+- **Share preview link…** in the **⋯** menu gives you the same link to copy and send to someone who can't sign in. It works for 30 minutes (the dialog says until when); reload the editor for a new one.
+- **View live page** opens the page visitors see.
+- If your role may see unpublished changes on the site, live pages with unpublished changes show you a small **Unpublished changes** banner while you're signed in, with **View the unpublished changes** (and, while you look at them, **View the live page**). Visitors never see it.
 
 ## Page settings
 
@@ -70,8 +80,8 @@ The **Page settings** card on the right applies to every language. It's saved wi
 
 - **Parent**: in collections where entries nest (like pages under pages), the entry this one sits under; you can also choose it while creating the entry. It's used for breadcrumbs and sub-menus; the web address doesn't change.
 - **Blueprint**: when the collection offers more than one set of fields (a normal page or a landing page, say), the one this entry uses. Switching keeps every value: fields both have keep theirs, and the others are kept out of sight and come back if you switch back. Save your draft first, then press **Change blueprint**: the editor reloads with the new fields.
-- **Template**: a different design for this entry alone, if your developer made one. Leave it empty for the collection's own. **Which file?** under it lists, for your developer, the files tried in order and marks the one in use.
-- **Accept new comments**: in collections with comments, switch it off to close this entry's comments (approved ones stay). **Comments** opens this entry's comments.
+- **Template**: a different design for this entry alone, if your developer made one: pick it from the list, or type its name. **Automatic** uses the collection's own. Under it, the file in use, and **How is it chosen?** lists, for your developer, the files tried in order.
+- **Accept new comments**: in collections with comments, switch it off to close this entry's comments (approved ones stay). **View comments** opens this entry's comments.
 
 ## Comments
 
@@ -83,7 +93,7 @@ The **Used by** card lists the other content that links to this entry (other ent
 
 ## Revisions
 
-Every publish keeps a **revision**: a copy of what was published, with the date and who published it. The **Revisions** card lists them with the fields each one changed; **Compare** shows a revision beside your saved draft, field by field; **Restore** loads one into the draft, so you can check it and publish when ready. Changed your mind? **Undo the restore** puts your previous draft back (until you sign out). The latest 50 revisions of each language are kept.
+Every publish keeps a **revision**: a copy of what was published, with the date and who published it. The **Revisions** card lists them with the fields each one changed; **Compare** shows a revision beside the live version (or your changes, when there are any), field by field, each side named; **Restore** loads one into the draft, so you can check it and publish when ready. Changed your mind? **Undo the restore** puts your previous draft back (until you sign out). The latest 50 revisions of each language are kept.
 
 ## More actions
 

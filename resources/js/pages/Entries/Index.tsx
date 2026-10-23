@@ -12,6 +12,7 @@ import {
     TableBody, TableCell, TableHead, TableHeader, TableRow, TrashBanner, TrashHint, TrashTitle, useBreadcrumbs, useTablePreferences,
 } from '@imajiner/admin-sdk/ui';
 import { type EntryLocale, type EntryStatus, formatDate, localeName, statusLabel } from '@/lib/entries.ts';
+import { EntryStatusBadges } from '@/components/EntryStatus.tsx';
 import {
     activeFilters, type EntryListQuery, entryListParams, entryListQueryString, nextSort, sortDirection,
 } from '@/lib/entry-list.ts';
@@ -23,6 +24,8 @@ interface Row {
     /** Its address on the site (/team/anindya), or null when the collection has no pages. */
     path?: string | null;
     status: EntryStatus;
+    /** Published, with unpublished changes ("Changes pending"). */
+    changes?: boolean;
     /** In the trash (the status is what it was before). */
     trashed?: boolean;
     publishedAt: string | null;
@@ -83,7 +86,7 @@ interface Props {
 const ALL = '__all';
 const statuses = (): { value: string; label: string }[] => [
     { value: 'draft', label: t('Drafts') },
-    { value: 'published', label: t('Published') },
+    { value: 'published', label: t('Live') },
     { value: 'scheduled', label: t('Scheduled') },
     { value: 'trashed', label: t('Trash') },
 ];
@@ -400,7 +403,7 @@ function CellValue({ row, column }: { row: Row; column: Column }) {
                 <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-1">
                     {row.trashed
                         ? <Badge variant="outline" className="cms:text-destructive" title={t(':status before it was trashed', { status: statusLabel(row.status) })}>{t('Trashed')}</Badge>
-                        : <Badge variant={row.status === 'published' ? 'success' : 'secondary'}>{statusLabel(row.status)}</Badge>}
+                        : <EntryStatusBadges status={row.status} changes={row.changes} />}
                     {row.locales.length > 1 && row.locales.filter((l) => !l.main).map((l) => {
                         const badge = languageBadge(l);
                         return (
@@ -433,7 +436,7 @@ function CellValue({ row, column }: { row: Row; column: Column }) {
 function languageBadge(l: EntryLocale): { variant: 'secondary' | 'outline' | 'warning'; className: string; word: string | null; title: string } {
     if (l.status === null) return { variant: 'outline', className: 'cms:border-dashed cms:text-muted-foreground', word: t('missing'), title: t('not translated') };
     if (l.outdated) return { variant: 'warning', className: '', word: t('outdated'), title: t(':status, outdated: the main language changed since', { status: statusLabel(l.status) }) };
-    if (l.status === 'published') return { variant: 'secondary', className: '', word: null, title: t('Published') };
+    if (l.status === 'published') return { variant: 'secondary', className: '', word: null, title: t('Live') };
 
     return { variant: 'outline', className: '', word: l.status === 'scheduled' ? t('scheduled') : t('draft'), title: statusLabel(l.status) };
 }

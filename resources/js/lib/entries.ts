@@ -3,7 +3,7 @@ import { t } from '@imajiner/admin-sdk';
 export type EntryStatus = 'draft' | 'scheduled' | 'published';
 
 export function statusLabel(status: EntryStatus): string {
-    return { draft: t('Draft'), scheduled: t('Scheduled'), published: t('Published') }[status];
+    return { draft: t('Draft'), scheduled: t('Scheduled'), published: t('Live') }[status];
 }
 
 /** An ISO date as the reader's local date and time ("19 Oct 2026, 14:30"), or "—". */
@@ -114,4 +114,50 @@ export function slugNote(published: string | null | undefined, slug: string, red
     if (!published || slug.trim() === '' || slug.trim() === published) return null;
 
     return redirects ? 'redirects' : 'breaks';
+}
+
+/**
+ * Where an entry translation stands, for the editor's status bar: never
+ * published ('draft'), taken off the site ('offline'), published for a
+ * date to come ('scheduled'), live ('live'), each of the published ones
+ * with unpublished changes ('scheduled-changes', 'live-changes'), or in
+ * the trash ('trashed'). The live version is what visitors see; the
+ * changes are the saved draft, not published yet.
+ */
+export type EditorState = 'draft' | 'offline' | 'scheduled' | 'scheduled-changes' | 'live' | 'live-changes' | 'trashed';
+
+export function editorState(entry: { status: EntryStatus; hasUnpublishedChanges: boolean; trashed: boolean; everPublished?: boolean }): EditorState {
+    if (entry.trashed) return 'trashed';
+    if (entry.status === 'draft') return entry.everPublished ? 'offline' : 'draft';
+    if (entry.status === 'scheduled') return entry.hasUnpublishedChanges ? 'scheduled-changes' : 'scheduled';
+
+    return entry.hasUnpublishedChanges ? 'live-changes' : 'live';
+}
+
+/** Whether the state has unpublished changes beside a published version: Compare with live, Discard and the field markers. */
+export function hasPendingChanges(state: EditorState): boolean {
+    return state === 'live-changes' || state === 'scheduled-changes';
+}
+
+/**
+ * What the status bar offers in a state: the live page (`viewLive`, when
+ * it's on the site at an address), the unpublished changes compared with
+ * it (`compare`) or thrown away (`discard`, for those who may edit), and
+ * a preview of the saved draft (`preview`, where the collection has pages
+ * and there's something visitors don't see).
+ */
+export function statusActions(state: EditorState, options: { liveUrl: boolean; pages: boolean; canUpdate: boolean }): { viewLive: boolean; compare: boolean; preview: boolean; discard: boolean } {
+    const pending = hasPendingChanges(state);
+
+    return {
+        viewLive: options.liveUrl && (state === 'live' || state === 'live-changes'),
+        compare: pending,
+        preview: options.pages && state !== 'trashed' && state !== 'live',
+        discard: pending && options.canUpdate,
+    };
+}
+
+/** An entry's status in lists: its status, and "Changes pending" when it's published with unpublished changes. */
+export function changesPending(row: { status: EntryStatus; changes?: boolean }): boolean {
+    return row.status !== 'draft' && row.changes === true;
 }

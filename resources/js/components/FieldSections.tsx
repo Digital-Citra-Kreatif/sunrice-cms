@@ -1,6 +1,7 @@
 import { Card, CardContent, CollapsibleCard } from '@imajiner/admin-sdk/ui';
 import { t } from '@imajiner/admin-sdk';
 import { FieldError, FieldInput, Fields, labelOf } from '@/components/FieldInput.tsx';
+import { ChangedMarker } from '@/components/EntryStatus.tsx';
 import { errorsAt, hasErrors } from '@/lib/builder.ts';
 import { isShown } from '@/lib/conditions.ts';
 import { hasSharedFields } from '@/lib/values.ts';
@@ -24,6 +25,8 @@ interface Props {
     sharedNote?: string;
     /** Read only (the cards still fold: their fields are disabled, not their headers). */
     disabled?: boolean;
+    /** Fields whose saved draft differs from the live version: marked "Changed" beside their label. */
+    changed?: string[];
 }
 
 /**
@@ -34,7 +37,7 @@ interface Props {
 /** How a field shared by all languages looks in another language: read-only and greyed out. */
 export const SHARED_FIELD = 'cms:flex cms:flex-col cms:gap-1 cms:opacity-60';
 
-export function FieldSections({ fields, values, onChange, errors, storageKey, shared = [], sharedValues = {}, sharedNote, disabled = false }: Props) {
+export function FieldSections({ fields, values, onChange, errors, storageKey, shared = [], sharedValues = {}, sharedNote, disabled = false, changed = [] }: Props) {
     // Runs of plain fields, and groups on their own.
     const sections: (FieldDefinition | FieldDefinition[])[] = [];
     // Fields hidden by their condition (as the server decides) are left out.
@@ -65,7 +68,8 @@ export function FieldSections({ fields, values, onChange, errors, storageKey, sh
                                         </fieldset>
                                     ) : (
                                         <FieldInput key={field.handle} id={`data-${field.handle}`} field={field} content value={values[field.handle]}
-                                            errors={errorsAt(errors, `data.${field.handle}`)} onChange={(value) => onChange(field.handle, value)} />
+                                            errors={errorsAt(errors, `data.${field.handle}`)} onChange={(value) => onChange(field.handle, value)}
+                                            marker={changed.includes(field.handle) ? <ChangedMarker /> : null} />
                                     ))}
                                 </fieldset>
                             </CardContent>
@@ -77,7 +81,7 @@ export function FieldSections({ fields, values, onChange, errors, storageKey, sh
                 const fieldErrors = errorsAt(errors, `data.${section.handle}`);
 
                 return (
-                    <CollapsibleCard key={section.handle} title={labelOf(section)} titleClassName="cms:text-base" description={section.instructions ?? undefined}
+                    <CollapsibleCard key={section.handle} title={changed.includes(section.handle) ? <>{labelOf(section)}<ChangedMarker /></> : labelOf(section)} titleClassName="cms:text-base" description={section.instructions ?? undefined}
                         storageKey={`${storageKey}:${section.handle}`} hasErrors={!isShared && hasErrors(errors, `data.${section.handle}`)}>
                         <fieldset disabled={isShared || disabled} role="group" aria-label={labelOf(section)} className={`cms:flex cms:flex-col cms:gap-2 ${isShared ? 'cms:opacity-60' : ''}`}
                             title={isShared ? t('Shared by all languages') : undefined}>

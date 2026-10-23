@@ -19,7 +19,8 @@ use Sunrice\Cms\Support\Seo;
 
 /**
  * The entry editor's revisions: who published each one and what it
- * changed from the one before, and one compared with the draft.
+ * changed from the one before, and one (or the live version) compared
+ * with the draft.
  *
  * @internal
  */
@@ -52,6 +53,25 @@ final class RevisionList
         return $out;
     }
 
+    /**
+     * When the live version was published and by whom: the latest
+     * revision's (publishing keeps one each time), else the publish date.
+     *
+     * @return array{publishedAt: string|null, by: string|null}
+     */
+    public static function live(EntryTranslation $translation): array
+    {
+        $revision = $translation->revisions()->first();
+        if ($revision === null) {
+            return ['publishedAt' => $translation->published_at?->toIso8601String(), 'by' => null];
+        }
+
+        return [
+            'publishedAt' => $revision->created_at?->toIso8601String(),
+            'by' => $revision->user_id === null ? null : (self::authors([$revision])[$revision->user_id] ?? null),
+        ];
+    }
+
     /** The SEO card's settings, compared one by one, with the editor's labels (lib/seo.ts). */
     private const SEO = ['title' => 'Meta title', 'description' => 'Meta description', 'canonical' => 'Canonical URL', 'image' => 'Open Graph image', 'noindex' => 'Hide from search engines (noindex)'];
 
@@ -65,18 +85,58 @@ final class RevisionList
      */
     public static function compare(Revision $revision): array
     {
-        $translation = $revision->translation;
+        return array_map(fn (array $field): array => ['label' => $field['label'], 'revision' => $field['old'], 'draft' => $field['new']],
+            self::against($revision->translation, $revision->title, $revision->slug, $revision->data));
+    }
+
+    /**
+     * The fields where the live version (what visitors see) and the draft
+     * (the unpublished changes) differ, in words as compare() gives them.
+     *
+     * @return list<array{label: string, live: string, draft: string}>
+     */
+    public static function compareLive(EntryTranslation $translation): array
+    {
+        return array_map(fn (array $field): array => ['label' => $field['label'], 'live' => $field['old'], 'draft' => $field['new']],
+            self::against($translation, $translation->title, $translation->slug, $translation->data));
+    }
+
+    /**
+     * Which of the editor's values the draft changed from the live version:
+     * "title", "slug", field handles and SEO settings ("seo.title"), each
+     * compared as compare() does (empty values alike, objects whatever
+     * their key order). For the editor's "Changed" markers.
+     *
+     * @return list<string>
+     */
+    public static function changedFromLive(EntryTranslation $translation): array
+    {
+        if ($translation->title === null) {
+            return [];
+        }
+
+        return self::changedKeys(self::values($translation->title, $translation->slug, $translation->data),
+            self::values($translation->draft_title, $translation->draft_slug, $translation->draft_data), self::labels($translation));
+    }
+
+    /**
+     * The fields where the given version and the translation's draft differ.
+     *
+     * @param  array<string, mixed>|null  $oldData
+     * @return list<array{label: string, old: string, new: string}>
+     */
+    private static function against(EntryTranslation $translation, ?string $title, ?string $slug, ?array $oldData): array
+    {
         $labels = self::labels($translation);
         $schema = $translation->entry->schema();
-        $oldData = $revision->data;
         $newData = $translation->draft_data;
-        $old = self::values($revision->title, $revision->slug, $oldData);
+        $old = self::values($title, $slug, $oldData);
         $new = self::values($translation->draft_title, $translation->draft_slug, $newData);
         $keys = self::changedKeys($old, $new, $labels);
         $words = self::words($schema, [$oldData, $newData], $translation->locale);
         $out = [];
         foreach ($keys as $key) {
-            $out[] = ['label' => $labels[$key], 'revision' => self::text($key, $old[$key] ?? null, $schema, $words), 'draft' => self::text($key, $new[$key] ?? null, $schema, $words)];
+            $out[] = ['label' => $labels[$key], 'old' => self::text($key, $old[$key] ?? null, $schema, $words), 'new' => self::text($key, $new[$key] ?? null, $schema, $words)];
         }
 
         return $out;

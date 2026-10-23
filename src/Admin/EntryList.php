@@ -214,6 +214,8 @@ final class EntryList
                 // Its address on the site with the draft's slug (/team/anindya), or null when the collection has no pages.
                 'path' => $site->path($translation, $translation->draft_slug),
                 'status' => $translation->status(),
+                // Published, with a draft that differs ("Changes pending"): compared from the row as loaded, no query.
+                'changes' => $translation->isPublished() && $translation->hasUnpublishedChanges(),
                 'trashed' => $translation->entry->trashed(),
                 'publishedAt' => $translation->published_at?->toIso8601String(),
                 'updatedAt' => $translation->updated_at?->toIso8601String(),
