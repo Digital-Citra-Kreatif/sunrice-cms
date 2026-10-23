@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Deferred, Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { CalendarClock, Check, ChevronDown, Copy, ExternalLink, Eye, GitCompare, Languages, LayoutTemplate, Link2, LoaderCircle, MoreHorizontal, Plus, RotateCcw, Send, Trash2, Undo2 } from 'lucide-react';
+import { CalendarClock, Check, ChevronDown, Copy, ExternalLink, Eye, GitCompare, Languages, LayoutTemplate, Link2, LoaderCircle, MoreVertical, Plus, RotateCcw, Send, Trash2, Undo2 } from 'lucide-react';
 import { adminUrl, t } from '@imajiner/admin-sdk';
 import {
     Badge, Button, Card, CardContent, CollapsibleCard, DatePicker, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -247,7 +247,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                         {entry && !entry.trashed && (pages || can.create || (can.delete && !lock.readOnly) || (writable && machineTranslate !== null) || blueprintUrl) && (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button type="button" variant="outline" size="icon" aria-label={t('More actions')}><MoreHorizontal /></Button>
+                                    <Button type="button" variant="outline" size="icon" aria-label={t('More actions')}><MoreVertical /></Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="cms:min-w-52">
                                     {writable && machineTranslate !== null && (
