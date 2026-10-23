@@ -6,6 +6,7 @@ namespace Sunrice\Cms\Structure;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\CollectionListing;
@@ -23,6 +24,7 @@ use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\TaxonomyListing;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
+use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Support\Locales;
 
 /**
@@ -30,7 +32,10 @@ use Sunrice\Cms\Support\Locales;
  * `sunrice:export-structure` writes as JSON): fieldsets, blueprints,
  * collections with their listing pages, taxonomies with their index pages, global sets, forms,
  * menus and redirects, by handle. With $content, also terms, entries
- * (drafts, every language) and global values. Records point at each
+ * (every language: what the site shows, with changes not published yet
+ * as a `draft`; never published, the draft) and global values. With
+ * $settings, the Settings → Site values that describe the site
+ * (StructureImporter::SITE_SETTINGS). Records point at each
  * other by handle and slug ("pages/about"), not by id, and so do field
  * values: linked entries, terms and media files are written portably
  * (ContentReferences: {"entry": "pages/about"}, {"term": "topics/news"},
@@ -50,7 +55,7 @@ final class StructureExporter
     }
 
     /** @return array<string, mixed> */
-    public function export(bool $content = false): array
+    public function export(bool $content = false, bool $settings = false): array
     {
         $structure = [
             'sunrice' => self::VERSION,
@@ -88,6 +93,9 @@ final class StructureExporter
             $structure['entries'] = $this->entries();
         }
         $structure['menus'] = $this->menus();
+        if ($settings) {
+            $structure['settings'] = ['site' => $this->siteSettings()];
+        }
 
         return $structure;
     }
@@ -129,15 +137,49 @@ final class StructureExporter
                     'parent' => $entry->parent === null ? null : self::entrySlug($entry->parent),
                     'template' => $entry->template,
                     ...($entry->blueprint === null ? [] : ['blueprint' => $entry->blueprint]),
-                    'translations' => (object) $entry->translations->sortBy('locale')->mapWithKeys(fn (EntryTranslation $t): array => [$t->locale => [
-                        'title' => $t->draft_title, 'slug' => $t->draft_slug, 'data' => $this->references->portable($entry->schema(), $t->draft_data), 'published' => $t->isPublished(),
-                        // Its date (a post's, or the one it's scheduled for), so a moved site keeps them.
-                        ...($t->isPublished() && $t->published_at !== null ? ['published_at' => $t->published_at->toIso8601String()] : []),
-                    ]])->all(),
+                    'translations' => (object) $entry->translations->sortBy('locale')->mapWithKeys(fn (EntryTranslation $t): array => [$t->locale => $this->entryTranslation($entry, $t)])->all(),
                 ];
             });
 
         return $entries;
+    }
+
+    /**
+     * A language of an entry: published, what the site shows (its live
+     * version) with, when it has changes not published yet, its `draft`;
+     * else its draft, unpublished.
+     *
+     * @return array<string, mixed>
+     */
+    private function entryTranslation(Entry $entry, EntryTranslation $t): array
+    {
+        $draft = ['title' => $t->draft_title, 'slug' => $t->draft_slug, 'data' => $this->references->portable($entry->schema(), $t->draft_data)];
+        if (! $t->isPublished() || $t->title === null || $t->slug === null) {
+            return [...$draft, 'published' => false];
+        }
+
+        return [
+            'title' => $t->title, 'slug' => $t->slug, 'data' => $this->references->portable($entry->schema(), $t->data ?? []), 'published' => true,
+            // Its date (a post's, or the one it's scheduled for), so a moved site keeps them.
+            ...($t->published_at !== null ? ['published_at' => $t->published_at->toIso8601String()] : []),
+            ...($t->hasUnpublishedChanges() ? ['draft' => $draft] : []),
+        ];
+    }
+
+    /**
+     * Settings → Site's values that describe the site, with the homepage
+     * and the images written portably ({"entry": "pages/home"}, {"media": "<path>"}).
+     *
+     * @return array<string, mixed>
+     */
+    private function siteSettings(): array
+    {
+        $values = array_intersect_key((new SiteSettings)->toArray(), array_flip(StructureImporter::SITE_SETTINGS));
+        foreach (['homepage' => Reference::ENTRY, 'logo' => Reference::MEDIA, 'image' => Reference::MEDIA] as $name => $type) {
+            $values[$name] = is_int($values[$name] ?? null) ? $this->references->reference($type, $values[$name]) : null;
+        }
+
+        return $values;
     }
 
     /** @return list<array<string, mixed>> */

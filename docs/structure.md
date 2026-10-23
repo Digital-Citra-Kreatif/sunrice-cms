@@ -71,6 +71,7 @@ It throws a `ValidationException` (on `from` or `to`) when the field isn't there
 ```bash
 php artisan sunrice:export-structure structure.json             # the structure
 php artisan sunrice:export-structure starter.json --entries     # with terms, entries and global values
+php artisan sunrice:export-structure site.json --entries --settings   # and Settings → Site
 php artisan sunrice:import-structure structure.json --dry-run   # what would change
 php artisan sunrice:import-structure structure.json             # do it
 php artisan sunrice:import-structure structure.json --force     # also when fields would be removed
@@ -99,7 +100,9 @@ The file is JSON with a section per kind, each item by handle, and records point
         {"from": "/blog/*", "to": "/journal/*", "status": 301}],
     "terms": [{"taxonomy": "topics", "slug": "local", "parent": "news", "translations": {"en": {"title": "Local", "slug": "local", "data": {...}}}}],
     "entries": [{"collection": "pages", "slug": "team", "parent": "about", "template": null,
-        "translations": {"en": {"title": "Team", "slug": "team", "data": {...}, "published": true}}}]
+        "translations": {"en": {"title": "Team", "slug": "team", "data": {...}, "published": true,
+            "draft": {"title": "Our team", "slug": "team", "data": {...}}}}}],
+    "settings": {"site": {"name": "Acme", "description": "Homes in Bali.", "homepage": {"entry": "pages/home"}, "logo": {"media": "media/2026/10/x7…-logo.png"}, ...}}
 }
 ```
 
@@ -109,7 +112,9 @@ Menu links point at entries and terms by collection or taxonomy and slug in the 
 
 Listing pages' fields and SEO card are always in the file, with files and links written as below; importing one finds them on the site and saves its SEO card as SEO.
 
-`terms`, `entries` and the globals' `values` come with `--entries` (entries as their drafts, whether each language is published, and its `published_at`: a post's date, or the one it's scheduled for, which importing keeps; without one, it's published now). What field values point at is written so another site finds it, at any depth (groups, repeater rows, flexible blocks, link fields, the SEO card's image): a linked entry as `{"entry": "agents/ayu-pratiwi"}` (its collection and its slug in the main language), a term as `{"term": "locations/canggu"}`, a media file as `{"media": "media/2026/10/x7…-pool.jpg"}` (its path in the library). The file also names the site's languages (`"locales": ["en", "id"]`).
+`terms`, `entries` and the globals' `values` come with `--entries`. Each language of an entry is what the site shows: a published one its live title, slug and fields, `"published": true` and its `published_at` (a post's date, or the one it's scheduled for, which importing keeps; without one, it's published now), and, when it has changes not published yet, those as its `draft`; one never published (or unpublished) is its draft, `"published": false`. Importing publishes the live version and then saves the `draft` as the draft (`SaveDraft`), so changes an editor hasn't published stay unpublished on the other site too. (Files written before had the draft as the content, so importing one published those changes; a file without `draft` still imports as before.) What field values point at is written so another site finds it, at any depth (groups, repeater rows, flexible blocks, link fields, the SEO card's image): a linked entry as `{"entry": "agents/ayu-pratiwi"}` (its collection and its slug in the main language), a term as `{"term": "locations/canggu"}`, a media file as `{"media": "media/2026/10/x7…-pool.jpg"}` (its path in the library). The file also names the site's languages (`"locales": ["en", "id"]`).
+
+`settings` comes with `--settings` (`export(settings: true)`): Settings → Site's values that describe the site (`StructureImporter::SITE_SETTINGS`: the homepage, name, descriptions, title separator, share image, X account, structured data and the publisher's details and logo), the homepage and images written as above. Not `noindex`, which is where a site runs (a staging copy would hide the new one), nor the other settings (languages, comments, cache, code, mail, branding), which are the app's own or hold addresses and keys. Importing sets each value this site still has as the default, after the entries and files it points at, through `SaveSettings`, checked as the admin checks them; values the site set itself are kept, and the report's `settings` line says which ("Keeps this site's own: name.").
 
 On import these become the site's ids again: entries and terms by slug, files by path, else a file of the same name in the library. Entries that link to others in the file are imported after them; links in a loop (two entries that point at each other) are filled in once both exist. What can't be found here is **left empty**, and the entry's or term's line says so ("Left empty (not on this site): media media/2026/10/x7…-pool.jpg."), in a dry run too; a required field left empty stops the import with that field's message. Plain ids, as files from before have them, are kept as they are, so such a file still imports on the site it came from.
 

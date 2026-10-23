@@ -190,6 +190,18 @@ final class ContentReferences
         };
     }
 
+    /**
+     * A record here written portably ({"entry": "pages/home"}, {"media": "<path>"}), or null when it's gone.
+     *
+     * @return array<string, string>|null
+     */
+    public function reference(string $type, int $id): ?array
+    {
+        $key = $this->key($type, $id);
+
+        return $key === null ? null : [$type => $key];
+    }
+
     /** "agents/ayu-pratiwi", "locations/canggu" or a file's path, for an id here. */
     private function key(string $type, int $id): ?string
     {

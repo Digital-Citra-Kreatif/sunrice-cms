@@ -11,7 +11,10 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
+use ReflectionClass;
 use Spatie\Permission\PermissionRegistrar;
+use Sunrice\Admin\Actions\Settings\SaveSettings;
+use Sunrice\Admin\Resources\Forms\Form as SettingsForm;
 use Sunrice\Cms\Actions\Blueprints\SaveBlueprint;
 use Sunrice\Cms\Actions\Collections\SaveCollection;
 use Sunrice\Cms\Actions\Collections\SaveListing;
@@ -46,6 +49,7 @@ use Sunrice\Cms\Models\TaxonomyListing;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Settings\LocaleSettings;
+use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Site\RedirectRule;
 use Sunrice\Cms\Site\RouteConflicts;
 use Sunrice\Cms\Site\RoutePattern;
@@ -61,7 +65,8 @@ use Throwable;
  * Creates or updates, by handle, the structure a file describes (the
  * shape StructureExporter writes): fieldsets, blueprints, collections
  * with their listing pages, taxonomies with their index pages, global sets, forms, menus and
- * redirects, and terms, entries and global values when it has them,
+ * redirects, and terms, entries (with their drafts), global values and
+ * Settings → Site (only values the site left as the defaults) when it has them,
  * through the same actions and checks as the admin (field definitions by
  * DefinitionValidator).
  *
@@ -79,7 +84,16 @@ use Throwable;
  */
 final class StructureImporter
 {
-    public const SECTIONS = ['fieldsets', 'blueprints', 'collections', 'taxonomies', 'globals', 'forms', 'terms', 'entries', 'menus', 'redirects'];
+    public const SECTIONS = ['fieldsets', 'blueprints', 'collections', 'taxonomies', 'globals', 'forms', 'terms', 'entries', 'menus', 'redirects', 'settings'];
+
+    /**
+     * Settings → Site's values a file carries (`settings.site`): what
+     * describes the site. Not `noindex`, which is where the site runs (a
+     * staging copy), nor other sections (languages, comments, cache, code),
+     * which are the app's own or hold addresses and keys.
+     */
+    public const SITE_SETTINGS = ['homepage', 'name', 'description', 'descriptions', 'separator', 'appendName', 'image', 'twitter',
+        'structuredData', 'publisher', 'logo', 'publisherName', 'publisherType', 'telephone', 'address', 'sameAs'];
 
     /** A collection's settings in the file. */
     public const COLLECTION = ['handle', 'title', 'blueprint', 'blueprints', 'dated', 'translatable', 'ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template', 'listing_template', 'translations', 'routes', ...self::SEO_FIELDS];
@@ -187,6 +201,12 @@ final class StructureImporter
             $this->each('global set', $section('globals'), fn (array $item) => $this->globalValues($item));
             $this->each('menu', $section('menus'), fn (array $item) => $this->menu($item));
             $this->each('redirect', $section('redirects'), fn (array $item) => $this->redirect($item));
+            // After the entries and media it points at (the homepage, the logo).
+            $settings = is_array($structure['settings'] ?? null) ? $structure['settings'] : [];
+            if (array_diff(array_keys($settings), ['site']) !== []) {
+                throw new StructureImportFailed('the file', ['settings' => ['Only the site\'s settings (settings.site) are read.']]);
+            }
+            $this->each('settings', is_array($settings['site'] ?? null) ? [$settings['site']] : [], fn (array $item) => $this->siteSettings($item, $dryRun));
             $dryRun ? DB::rollBack() : DB::commit();
         } catch (Throwable $e) {
             DB::rollBack();
@@ -563,6 +583,53 @@ final class StructureImporter
         return $data;
     }
 
+    /**
+     * Settings → Site from the file: each value the site still has as the
+     * default is set; those the site set itself are kept (and noted).
+     * Checked as the admin checks them.
+     *
+     * @param  array<mixed>  $item
+     */
+    private function siteSettings(array $item, bool $dryRun): void
+    {
+        $settings = new SiteSettings;
+        $current = $settings->toArray();
+        $defaults = (new ReflectionClass(SiteSettings::class))->getDefaultProperties();
+        $notes = [];
+        $values = $this->resolved(array_intersect_key($item, array_flip(self::SITE_SETTINGS)), $notes);
+        // Settings → SEO's, as SaveSeoSettings checks them, and Settings → Site's form.
+        $rules = [
+            'separator' => ['nullable', 'string', 'max:5'], 'appendName' => ['boolean'],
+            'twitter' => ['nullable', 'string', 'max:16', 'regex:/^(@?[A-Za-z0-9_]{1,15})?$/'], 'image' => ['nullable', 'integer', Rule::exists('sunrice_media', 'id')],
+        ];
+        foreach (SiteSettings::form(new SettingsForm)->fields('edit') as $field) {
+            $rules[$field->name] = $field->validationRules(null);
+        }
+        $validated = Validator::make($values, array_intersect_key($rules, $values))->validate();
+        $set = [];
+        $kept = [];
+        foreach ($validated as $name => $value) {
+            $name = (string) $name;
+            $value = $value ?? $defaults[$name] ?? null;
+            if ($value === ($current[$name] ?? null)) {
+                continue;
+            }
+            if (($current[$name] ?? null) !== ($defaults[$name] ?? null)) {
+                $kept[] = $name;
+
+                continue;
+            }
+            $set[$name] = $value;
+        }
+        if ($kept !== []) {
+            $notes[] = 'Keeps this site\'s own: '.implode(', ', $kept).'.';
+        }
+        if ($set !== [] && ! $dryRun) {
+            app(SaveSettings::class)->handle($settings, $set);
+        }
+        $this->report->add('settings', 'site', $set === [] ? ImportReport::UNCHANGED : ImportReport::UPDATED, array_values(array_unique($notes)));
+    }
+
     /** @param array<mixed> $item */
     private function form(array $item): void
     {
@@ -644,6 +711,7 @@ final class StructureImporter
         unset($this->toCome[$label]);
         $entry = null;
         $publish = [];
+        $drafts = [];
         $notes = [];
         $toCome = [];
         foreach (self::mainFirst(is_array($validated['translations']) ? $validated['translations'] : []) as $locale => $translation) {
@@ -663,10 +731,17 @@ final class StructureImporter
             }
             if (($translation['published'] ?? false) === true) {
                 $publish[] = [$saved, self::publishDate($translation)];
+                if (is_array($translation['draft'] ?? null)) {
+                    $drafts[] = [$saved, $translation['draft']];
+                }
             }
         }
         foreach ($publish as [$translation, $at]) {
             app(PublishEntry::class)->handle($translation->fresh() ?? $translation, $at);
+        }
+        // Changes not published yet stay a draft.
+        foreach ($drafts as [$translation, $draft]) {
+            $this->draft($translation->fresh() ?? $translation, $draft, $notes, $toCome);
         }
         if ($entry !== null) {
             $created[$label] = $entry;
@@ -700,10 +775,27 @@ final class StructureImporter
             }
             $saved = app(SaveDraft::class)->handle($saved, ['title' => $translation['title'] ?? null, 'slug' => $translation['slug'] ?? null, ...self::content($this->resolved($translation['data'], $notes))]);
             if (($translation['published'] ?? false) === true) {
-                app(PublishEntry::class)->handle($saved->fresh() ?? $saved, self::publishDate($translation));
+                $saved = app(PublishEntry::class)->handle($saved->fresh() ?? $saved, self::publishDate($translation));
+                if (is_array($translation['draft'] ?? null)) {
+                    $this->draft($saved->fresh() ?? $saved, $translation['draft'], $notes);
+                }
             }
         }
         $entry->unsetRelation('translations');
+    }
+
+    /**
+     * Saves a published translation's changes not published yet (the file's
+     * `draft`: title, slug, data) as its draft.
+     *
+     * @param  array<mixed>  $draft
+     * @param  list<string>  $notes
+     * @param  list<string>|null  $later
+     */
+    private function draft(EntryTranslation $translation, array $draft, array &$notes, ?array &$later = null): void
+    {
+        $data = $this->resolved(is_array($draft['data'] ?? null) ? $draft['data'] : [], $notes, $later);
+        app(SaveDraft::class)->handle($translation, ['title' => $draft['title'] ?? $translation->draft_title, 'slug' => $draft['slug'] ?? $translation->draft_slug, ...self::content($data)]);
     }
 
     /**
