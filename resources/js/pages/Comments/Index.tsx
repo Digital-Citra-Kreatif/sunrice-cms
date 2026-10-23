@@ -7,7 +7,7 @@ import {
     SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsList, TabsTrigger, Textarea, TrashHint, useBreadcrumbs,
 } from '@imajiner/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
-import { FieldError } from '@/components/FieldInput.tsx';
+import { FieldError } from '@/components/FieldError.tsx';
 import { formatDate } from '@/lib/entries.ts';
 
 type Tab = 'all' | 'pending' | 'approved' | 'spam' | 'trashed';

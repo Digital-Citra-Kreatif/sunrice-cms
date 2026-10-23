@@ -6,7 +6,7 @@ import { Button, Card, CardContent, Input, Label, PageHeader, useBreadcrumbs, us
 import { ChangeWarning } from '@/components/ChangeWarning.tsx';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { FieldBuilder } from '@/components/FieldBuilder.tsx';
-import { FieldError } from '@/components/FieldInput.tsx';
+import { FieldError } from '@/components/FieldError.tsx';
 import { type BuilderField, cleanHandle, errorsUnder, fromDefinitions, handleFromLabel, markSaved, toDefinitions } from '@/lib/builder.ts';
 import type { FieldDefinition, FieldTypeInfo, LocaleInfo, Option } from '@/types.ts';
 

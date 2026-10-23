@@ -5,7 +5,7 @@ import {
     useBreadcrumbs, useUnsavedChanges, type SettingsNavEntry,
 } from '@imajiner/admin-sdk/ui';
 import { adminUrl, t } from '@imajiner/admin-sdk';
-import { FieldError } from '@/components/FieldInput.tsx';
+import { FieldError } from '@/components/FieldError.tsx';
 
 type Role = 'title' | 'description' | 'image';
 

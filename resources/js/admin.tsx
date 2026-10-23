@@ -3,21 +3,6 @@ import * as React from 'react';
 import { usePage } from '@inertiajs/react';
 import { definePlugin } from '@imajiner/admin-sdk';
 import { setLocaleNames } from '@/lib/entries.ts';
-import BlueprintEdit from '@/pages/Blueprints/Edit.tsx';
-import BlueprintsIndex from '@/pages/Blueprints/Index.tsx';
-import EntryEdit from '@/pages/Entries/Edit.tsx';
-import EntriesIndex from '@/pages/Entries/Index.tsx';
-import ListingEdit from '@/pages/Listing/Edit.tsx';
-import FieldsetsIndex from '@/pages/Fieldsets/Index.tsx';
-import GlobalsEdit from '@/pages/Globals/Edit.tsx';
-import MenuEdit from '@/pages/Menus/Edit.tsx';
-import CommentsIndex from '@/pages/Comments/Index.tsx';
-import SeoEdit from '@/pages/Seo/Edit.tsx';
-import SubmissionsIndex from '@/pages/Submissions/Index.tsx';
-import TermEdit from '@/pages/Terms/Edit.tsx';
-import TermsIndex from '@/pages/Terms/Index.tsx';
-import TaxonomyIndexEdit from '@/pages/TaxonomyIndex/Edit.tsx';
-import TranslationsEdit from '@/pages/Translations/Edit.tsx';
 
 /** A page that first takes the content languages' names the panel shares (`cms.locales`), so localeName() says them as the site does. */
 function withLocaleNames<P extends object>(Page: React.ComponentType<P>): React.ComponentType<P> {
@@ -28,26 +13,34 @@ function withLocaleNames<P extends object>(Page: React.ComponentType<P>): React.
     };
 }
 
-const pages: Record<string, React.ComponentType<never>> = {
-    'Cms/Blueprints/Index': BlueprintsIndex,
-    'Cms/Blueprints/Edit': BlueprintEdit,
-    'Cms/Fieldsets/Index': FieldsetsIndex,
+type Loader = () => Promise<{ default: React.ComponentType<never> }>;
+
+// Each page is its own chunk, loaded the first time it opens (with what it alone uses).
+const blueprintEdit: Loader = () => import('@/pages/Blueprints/Edit.tsx');
+
+const pages: Record<string, Loader> = {
+    'Cms/Blueprints/Index': () => import('@/pages/Blueprints/Index.tsx'),
+    'Cms/Blueprints/Edit': blueprintEdit,
+    'Cms/Fieldsets/Index': () => import('@/pages/Fieldsets/Index.tsx'),
     // A fieldset is edited like a blueprint.
-    'Cms/Fieldsets/Edit': BlueprintEdit,
-    'Cms/Entries/Index': EntriesIndex,
-    'Cms/Entries/Edit': EntryEdit,
-    'Cms/Listing/Edit': ListingEdit,
-    'Cms/Terms/Index': TermsIndex,
-    'Cms/TaxonomyIndex/Edit': TaxonomyIndexEdit,
-    'Cms/Translations/Edit': TranslationsEdit,
-    'Cms/Terms/Edit': TermEdit,
-    'Cms/Globals/Edit': GlobalsEdit,
-    'Cms/Menus/Edit': MenuEdit,
-    'Cms/Comments/Index': CommentsIndex,
-    'Cms/Seo/Edit': SeoEdit,
-    'Cms/Submissions/Index': SubmissionsIndex,
+    'Cms/Fieldsets/Edit': blueprintEdit,
+    'Cms/Entries/Index': () => import('@/pages/Entries/Index.tsx'),
+    'Cms/Entries/Edit': () => import('@/pages/Entries/Edit.tsx'),
+    'Cms/Listing/Edit': () => import('@/pages/Listing/Edit.tsx'),
+    'Cms/Terms/Index': () => import('@/pages/Terms/Index.tsx'),
+    'Cms/TaxonomyIndex/Edit': () => import('@/pages/TaxonomyIndex/Edit.tsx'),
+    'Cms/Translations/Edit': () => import('@/pages/Translations/Edit.tsx'),
+    'Cms/Terms/Edit': () => import('@/pages/Terms/Edit.tsx'),
+    'Cms/Globals/Edit': () => import('@/pages/Globals/Edit.tsx'),
+    'Cms/Menus/Edit': () => import('@/pages/Menus/Edit.tsx'),
+    'Cms/Comments/Index': () => import('@/pages/Comments/Index.tsx'),
+    'Cms/Seo/Edit': () => import('@/pages/Seo/Edit.tsx'),
+    'Cms/Submissions/Index': () => import('@/pages/Submissions/Index.tsx'),
 };
 
 definePlugin({
-    pages: Object.fromEntries(Object.entries(pages).map(([name, Page]) => [name, withLocaleNames(Page as React.ComponentType<object>)])),
+    lazyPages: Object.fromEntries(Object.entries(pages).map(([name, load]) => [
+        name,
+        async () => withLocaleNames((await load()).default as React.ComponentType<object>),
+    ])),
 });

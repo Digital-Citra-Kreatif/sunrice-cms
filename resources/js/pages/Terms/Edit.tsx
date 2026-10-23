@@ -6,7 +6,8 @@ import {
     Button, CollapsibleCard, Input, KeptEditsNotice, Label, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
     useBreadcrumbs, useEditLock, useUnsavedChanges, ViewingNotice,
 } from '@imajiner/admin-sdk/ui';
-import { FieldError, Fields } from '@/components/FieldInput.tsx';
+import { FieldError } from '@/components/FieldError.tsx';
+import { Fields } from '@/components/FieldInput.tsx';
 import { FieldSections } from '@/components/FieldSections.tsx';
 import { SlugNote } from '@/components/SlugNote.tsx';
 import { TemplateHelp, type TemplateLookup } from '@/components/TemplateHelp.tsx';

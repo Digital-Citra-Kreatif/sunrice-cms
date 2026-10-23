@@ -6,6 +6,7 @@ import {
 } from '@imajiner/admin-sdk/ui';
 import { t } from '@imajiner/admin-sdk';
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
+import { FieldError } from '@/components/FieldError.tsx';
 import { TermsPicker } from '@/components/TermsPicker.tsx';
 import { errorsAt } from '@/lib/builder.ts';
 import { isShown } from '@/lib/conditions.ts';
@@ -15,9 +16,7 @@ import type { Errors, FieldDefinition, Option } from '@/types.ts';
 /** Radix's Select can't hold an empty value, so "none" is this. */
 const NONE = '__none';
 
-export function FieldError({ message, id }: { message?: string; id?: string }) {
-    return message ? <p id={id} className="cms:text-sm cms:text-destructive">{message}</p> : null;
-}
+export { FieldError };
 
 /** Options as {value, label}, from either that or a list of values. */
 export function optionsOf(field: FieldDefinition): Option[] {

@@ -1,6 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import { adminUrl, t } from '@imajiner/admin-sdk';
-import { FieldError } from '@/components/FieldInput.tsx';
+import { FieldError } from '@/components/FieldError.tsx';
 import { type StructureRow, StructureList } from '@/components/StructureList.tsx';
 
 export default function FieldsetsIndex({ fieldsets }: { fieldsets: StructureRow[] }) {

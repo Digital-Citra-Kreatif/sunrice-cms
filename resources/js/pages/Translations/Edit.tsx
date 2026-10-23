@@ -6,7 +6,7 @@ import {
     Button, Card, CardContent, CollapsibleCard, Input, Label, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Switch, Textarea,
     useBreadcrumbs, useUnsavedChanges,
 } from '@imajiner/admin-sdk/ui';
-import { FieldError } from '@/components/FieldInput.tsx';
+import { FieldError } from '@/components/FieldError.tsx';
 import { localeName } from '@/lib/entries.ts';
 import { translationProgress } from '@/lib/translations.ts';
 

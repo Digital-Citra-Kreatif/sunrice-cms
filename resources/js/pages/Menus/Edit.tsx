@@ -7,7 +7,7 @@ import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SortableHandle, SortableList, useBreadcrumbs, useUnsavedChanges,
 } from '@imajiner/admin-sdk/ui';
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
-import { FieldError } from '@/components/FieldInput.tsx';
+import { FieldError } from '@/components/FieldError.tsx';
 import { localeName } from '@/lib/entries.ts';
 import { type FlatItem, flatten, indent, labelFallback, type MenuNode, newItem, outdent, removeItem, toTree } from '@/lib/menu.ts';
 import { childIndexes, reorderLevel } from '@/lib/tree.ts';
