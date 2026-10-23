@@ -26,6 +26,11 @@ return [
         'enabled' => true,
         // Middleware for the site's pages.
         'middleware' => ['web'],
+        // Start a visitor's session only when a page needs one (it shows a
+        // form, puts something in the session, or they're signed in), so
+        // pages without forms write no session and set no cookie. False:
+        // Laravel's StartSession, a session for every visitor.
+        'lazy_sessions' => env('SUNRICE_LAZY_SESSIONS', true),
         // What the views editors pick for an entry or a term may start
         // with, so no other view of the app can be made a public page.
         'template_prefixes' => ['cms.'],

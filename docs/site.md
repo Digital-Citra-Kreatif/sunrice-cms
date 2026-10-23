@@ -10,7 +10,7 @@ Set a collection's URL under Structure → Collections: a path with `{slug}` onc
 - The more specific pattern is tried first (more fixed characters): `/blog/{slug}` before `/{slug}`. The first pattern that matches decides: `/blog/about` looks for a blog entry "about", and is a 404 if there's none, even when a page "about" exists.
 - Two collections can't have the same URL. Each language can have its own ([translated URLs](#translated-urls)).
 - Only live entries have pages: published, past their date, not in the trash, of a collection not deleted. Anything else is a 404.
-- The CMS's route is the app's **fallback**: your own routes (`routes/web.php`) always come first. Turn the site off with `sunrice-cms.site.enabled` (the admin and previews keep working); its middleware is `sunrice-cms.site.middleware` (`web`).
+- The CMS's route is the app's **fallback**: your own routes (`routes/web.php`) always come first. Turn the site off with `sunrice-cms.site.enabled` (the admin and previews keep working); its middleware is `sunrice-cms.site.middleware` (`web`), with sessions started only when a page needs one ([Sessions](#sessions)).
 
 `$translation->url()` gives an entry's address (null without a route). For a visitor reading another language, `app(Sunrice\Cms\Site\Site::class)->urlIn($translation, $locale)` gives the page to link to: the translation's own address when it's in that language, else, for a main-language translation of an entry not live there and with the [fallback](#untranslated-pages) on, its page at that language's address (`/id/blog/hello`), else its own. `app(Site::class)->termUrlIn($termTranslation, $locale)` does the same for term pages. Entries from `Cms::entries()`, linked entries and `$entry->shownIn($locale)` already link this way.
 
@@ -612,3 +612,15 @@ return redirect()->to(SafeUrl::previous('/thanks')); // the previous page when i
 
 `SafeUrl::isSafe($url)` is the looser check for links editors type: any http(s), `mailto:` or `tel:` address, or a path, never `javascript:`.
 
+
+### Sessions
+
+A visitor gets a session (a row in the `sessions` table with Laravel's `database` driver, a file with `file`) and its cookies (`config('session.cookie')` and `XSRF-TOKEN`) only when a page needs one, so reading pages without forms writes nothing and sets no cookie, kept pages too. A session is started and kept, as Laravel does, when the page:
+
+- prints the CSRF token: a form (`<x-sunrice-cms::form>`), the comment form, the comment unsubscribe page, `@csrf` or `csrf_token()` in your templates, or a kept page whose form gets the visitor's own token;
+- puts or flashes something in the session (errors, old input, a thank-you message, `session()->put()` in your own code);
+- is shown to someone signed in.
+
+Visitors who already have a session cookie, and requests other than `GET` and `HEAD` (form and comment posts), get Laravel's normal session. A visitor who opens a page with a form gets their session then, so the form sends as before.
+
+This is `Sunrice\Cms\Site\StartSessionWhenNeeded`, Laravel's `StartSession` for the site's routes: they run in the `sunrice-cms.site` middleware group, made on the first request from `sunrice-cms.site.middleware` (`['web']`) with it in place of `StartSession`. The panel and your own routes keep Laravel's. To give every visitor a session as before (say, a template reads `session()->getId()` or JavaScript reads the `XSRF-TOKEN` cookie on pages without a form), set `sunrice-cms.site.lazy_sessions` to `false` (`SUNRICE_LAZY_SESSIONS=false`).

@@ -10,6 +10,7 @@ use Illuminate\Contracts\Translation\Loader;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -177,6 +178,10 @@ final class CmsServiceProvider extends ServiceProvider
                 Support\SiteCode::changed($event->changed);
             }
         });
+        // The site's middleware as a group, made when the first request comes (cached routes name it too):
+        // with site.lazy_sessions, visitors get a session (and its cookies) only when a page needs one.
+        $middleware = config('sunrice-cms.site.middleware', ['web']);
+        Site\StartSessionWhenNeeded::register($this->app->make(Router::class), is_array($middleware) ? array_values(array_filter($middleware, is_string(...))) : ['web']);
         if (! $this->app->routesAreCached()) {
             $this->siteRoutes();
         }
@@ -239,8 +244,8 @@ final class CmsServiceProvider extends ServiceProvider
 
     private function siteRoutes(): void
     {
-        $middleware = config('sunrice-cms.site.middleware', ['web']);
-        $middleware = is_array($middleware) ? array_values(array_filter($middleware, is_string(...))) : ['web'];
+        // sunrice-cms.site.middleware, as a group (see boot()).
+        $middleware = [Site\StartSessionWhenNeeded::GROUP];
         // Security headers (site.headers) on every site response, kept pages too: outside the page cache.
         $middleware[] = Site\SiteSecurityHeaders::class;
         Route::middleware([...$middleware, ProtectAgainstSpam::class, Site\RequireHoneypot::class])
