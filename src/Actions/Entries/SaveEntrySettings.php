@@ -27,6 +27,9 @@ final class SaveEntrySettings
      */
     public const NOT_PAGES = ['layouts', 'partials', 'components', 'errors', 'vendor', 'emails', 'mail', 'auth'];
 
+    /** Views that are no page wherever they are: the site's layout (`cms.layout`, which pages extend). */
+    public const NOT_PAGE_NAMES = ['layout'];
+
     public function __construct(private readonly ActivityLog $activity) {}
 
     /**
@@ -86,7 +89,7 @@ final class SaveEntrySettings
             $prefixes = self::prefixes();
             throw ValidationException::withMessages(['template' => $prefixes === null
                 ? __('Use a view of your own, not under :folders, like :example.', ['folders' => implode(', ', self::NOT_PAGES), 'example' => $example])
-                : __('Use a view under :prefixes, like :example.', ['prefixes' => implode(', ', $prefixes), 'example' => $example])]);
+                : __('Use a view under :prefixes, not under :folders, like :example.', ['prefixes' => implode(', ', $prefixes), 'folders' => implode(', ', self::NOT_PAGES), 'example' => $example])]);
         }
 
         return $template;
@@ -94,25 +97,28 @@ final class SaveEntrySettings
 
     /**
      * Whether a view may be a page's template: with template prefixes
-     * (sunrice-cms.site.template_prefixes), one under them; without (the
-     * default), any of the app's own views (resources/views) but those in
-     * the NOT_PAGES folders or whose name starts with "_", never a
-     * package's ("pkg::…").
+     * (sunrice-cms.site.template_prefixes), one under them; without, any
+     * of the app's own views (resources/views), never a package's
+     * ("pkg::…"). Either way, never one in the NOT_PAGES folders (at any
+     * depth), a site layout (NOT_PAGE_NAMES: `cms.layout`) or one with a
+     * part whose name starts with "_".
      */
     public static function allowed(string $template): bool
     {
         $prefixes = self::prefixes();
-        if ($prefixes === null) {
-            if (str_contains($template, '::')) {
+        if ($prefixes === null && str_contains($template, '::')) {
+            return false;
+        }
+        // A package's view under a prefix ("pkg::pages."): its own folders count, not the namespace.
+        $name = str_contains($template, '::') ? substr($template, (int) strrpos($template, '::') + 2) : $template;
+        $parts = preg_split('/[.:]/', $name) ?: [];
+        foreach ($parts as $i => $part) {
+            $last = $i === count($parts) - 1;
+            if (str_starts_with($part, '_') || (! $last && in_array($part, self::NOT_PAGES, true)) || ($last && in_array($part, self::NOT_PAGE_NAMES, true))) {
                 return false;
             }
-            $parts = explode('.', $template);
-            foreach ($parts as $i => $part) {
-                if (str_starts_with($part, '_') || ($i < count($parts) - 1 && in_array($part, self::NOT_PAGES, true))) {
-                    return false;
-                }
-            }
-
+        }
+        if ($prefixes === null) {
             return true;
         }
         foreach ($prefixes as $prefix) {

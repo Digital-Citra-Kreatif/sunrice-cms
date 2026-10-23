@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Site;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Sunrice\Admin\Panel;
@@ -249,16 +251,34 @@ final readonly class Page
     /**
      * A listing's or term page's address in another language with what the
      * visitor chose kept: its query string (filters, sort, page number).
-     * Term filters take a term's slug in any language (entry-filter).
+     * Term filters take a term's slug in any language (entry-filter). With
+     * the page cache on, only the parameters kept pages are told apart by
+     * (PageCacheQuery::query()): a page kept from `?utm_source=…` is
+     * served for the address without it, so its links never carry it.
      */
     private function paged(string $url): string
     {
-        $query = request()->getQueryString();
+        $request = request();
+        $query = PageCache::enabled() ? self::keyedQuery($request) : $request->getQueryString();
         if ($query !== null && $query !== '') {
             return "{$url}?{$query}";
         }
 
         return $this->pageNumber > 1 ? "{$url}?page={$this->pageNumber}" : $url;
+    }
+
+    /** The address's query parameters kept pages are told apart by (see PageCacheHasher), as a query string. */
+    private static function keyedQuery(Request $request): string
+    {
+        $kept = [];
+        foreach (PageCacheQuery::query() as $name) {
+            $value = $name === 'page' ? PageCacheQuery::pageNumber($request) : $request->query($name);
+            if (PageCacheQuery::given($value)) {
+                $kept[$name] = $value;
+            }
+        }
+
+        return Arr::query($kept);
     }
 
     /**

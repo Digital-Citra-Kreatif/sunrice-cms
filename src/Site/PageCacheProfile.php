@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Vite;
 use Spatie\ResponseCache\CacheProfiles\CacheAllSuccessfulGetRequests;
 use Sunrice\Cms\Settings\CacheSettings;
+use Sunrice\Cms\Settings\CodeSettings;
 use Sunrice\Cms\Support\SiteCache;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -42,14 +43,16 @@ class PageCacheProfile extends CacheAllSuccessfulGetRequests
     }
 
     /**
-     * The pages' content version, and the front end's build (Vite's
-     * manifest): pages kept before a change, or before `npm run build`
-     * renamed the CSS and JS they link, are never served again.
+     * The pages' content version, the front end's build (Vite's
+     * manifest) and whether the site code is on (CodeSettings::available()):
+     * pages kept before a change, before `npm run build` renamed the CSS
+     * and JS they link, or with the site code before SUNRICE_SITE_CODE=false
+     * (and without it before it's back on), are never served again.
      */
     public function useCacheNameSuffix(Request $request): string
     {
         $build = Vite::manifestHash();
 
-        return 'v'.app(SiteCache::class)->version(SiteCache::PAGES).($build === null ? '' : '-'.substr($build, 0, 12));
+        return 'v'.app(SiteCache::class)->version(SiteCache::PAGES).($build === null ? '' : '-'.substr($build, 0, 12)).(CodeSettings::available() ? '' : '-nocode');
     }
 }
