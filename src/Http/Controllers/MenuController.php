@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Sunrice\Cms\Actions\Menus\SaveMenu;
+use Sunrice\Cms\Admin\MenuResource;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\CollectionTaxonomy;
 use Sunrice\Cms\Models\Menu;
@@ -20,7 +21,8 @@ use Sunrice\Cms\Support\Locales;
 /**
  * A menu's links (/admin/cms/menus/{handle}/links); the menus themselves
  * are MenuResource. Behind cms.menus.view, saving behind cms.menus.update
- * (see CmsPlugin).
+ * (see CmsPlugin). Only the links: the menu's title and handle are its
+ * Settings (cms.menus.configure).
  *
  * @internal
  */
@@ -46,8 +48,8 @@ final class MenuController
                 ->map(fn (Taxonomy $taxonomy): array => ['id' => $taxonomy->id, 'title' => $taxonomy->title, 'pages' => self::indexPages($taxonomy)])
                 ->filter(fn (array $taxonomy): bool => $taxonomy['pages'] !== [])->values()->all(),
             'can' => ['update' => $request->user()?->can('cms.menus.update') ?? false],
-            // Its title and handle.
-            'settings' => $request->user()?->can('cms.menus.update') === true ? route('sunrice.admin.cms.menus.edit', $menu->handle) : null,
+            // Its title and handle: for those who may configure menus, not editors.
+            'settings' => MenuResource::configures($request->user()) ? route('sunrice.admin.cms.menus.edit', $menu->handle) : null,
         ]);
     }
 

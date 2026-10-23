@@ -2,6 +2,8 @@
 
 **Menus** are the website's navigation: the main menu at the top, the links in the footer, a menu for the side. A site manager creates the menus; editors fill them in under **Menus** in Content.
 
+A menu's name and handle are changed in its **Settings** by those allowed to (*Change settings* under Menus in Roles): editors change the links only, as the website finds each menu by its handle.
+
 > A menu links to entries that already exist, so create the pages first (see [Entries](guide:website/entries)), then the menu; a link to a web address works any time.
 
 ## Editing a menu

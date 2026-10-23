@@ -2,6 +2,8 @@
 
 **Menu** adalah navigasi situs web: menu utama di atas, tautan di kaki halaman, menu di samping. Pengelola situs membuat menunya; editor mengisinya di **Menu** di bawah Konten.
 
+Nama dan handle sebuah menu diubah di **Pengaturan** menu tersebut oleh mereka yang diizinkan (*Ubah pengaturan* di bawah Menu pada Peran): editor hanya mengubah tautannya, karena situs web menemukan setiap menu dari handle-nya.
+
 > Menu menautkan entri yang sudah ada, jadi buat halamannya dulu (lihat [Entri](guide:website/entries)), baru menunya; tautan ke alamat web bisa ditambahkan kapan saja.
 
 ## Menyunting menu

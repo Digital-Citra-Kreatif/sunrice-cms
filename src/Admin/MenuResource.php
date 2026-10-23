@@ -17,7 +17,9 @@ use Sunrice\Cms\Models\Menu;
 /**
  * Content → Menus (/admin/cms/menus), guarded by the cms.menus.*
  * permissions: the list opens each menu's links (MenuController, at
- * /admin/cms/menus/{handle}/links); Settings holds its title and handle.
+ * /admin/cms/menus/{handle}/links); Settings holds its title and handle,
+ * which templates rely on: changing them takes cms.menus.configure as
+ * well as cms.menus.update (editors have only the latter, for the links).
  *
  * @internal
  */
@@ -33,6 +35,24 @@ final class MenuResource extends Resource
     public static function recordKey(): string
     {
         return 'handle';
+    }
+
+    /** The permission a menu's Settings (title, handle) take besides cms.menus.update. */
+    public const CONFIGURE = 'cms.menus.configure';
+
+    /**
+     * Whether `$user` may change menus' titles and handles: templates find
+     * a menu by its handle, so editing its links isn't enough.
+     */
+    public static function configures(mixed $user): bool
+    {
+        return $user instanceof Authorizable && $user->can('cms.menus.update') && $user->can(self::CONFIGURE);
+    }
+
+    /** Settings (the edit form, and save_record for agents) take cms.menus.configure too. */
+    public static function can(Authorizable $user, string $ability, ?Model $record = null): bool
+    {
+        return $ability !== 'update' || $user->can(self::CONFIGURE);
     }
 
     /** The list opens the menu's links. */

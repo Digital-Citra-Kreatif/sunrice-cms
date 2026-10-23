@@ -102,8 +102,8 @@ final class CmsPlugin extends BasePlugin
         $panel->share('cms', fn (): array => ['locales' => Locales::names()]);
         // sunrice:install: an app's own / route (Laravel's welcome page) hides the site's homepage.
         $panel->installStep('cms.home-route', fn (InstallOutput $output) => app(Site\AppHomeRoute::class)->install($output));
-        // sunrice:roles: people who write and look after the content (globals' values, not their
-        // sets' handles and blueprints: cms.globals.configure), not the structure or the people,
+        // sunrice:roles: people who write and look after the content (globals' values and menus' links,
+        // not their handles: cms.globals.configure, cms.menus.configure), not the structure or the people,
         // nor form submissions (visitors' personal details): those are given per form.
         $panel->defaultRole('editor', [Panel::ACCESS, 'sunrice.media.*', 'cms.entries.*', 'cms.terms.*', 'cms.globals.view', 'cms.globals.update', 'cms.menus.view', 'cms.menus.update', 'cms.comments.*', 'cms.homepage']);
         // Writes entries, publishes nothing, and edits only their own.
@@ -135,6 +135,8 @@ final class CmsPlugin extends BasePlugin
             Permission::make('cms.homepage', 'Choose the homepage (from a live page\'s editor)', 'Content')->short('Choose the homepage'),
             // Beside the Globals resource's own: a set's Settings, which templates rely on (GlobalSetResource::can()).
             Permission::make(GlobalSetResource::CONFIGURE, 'Change global sets\' titles, handles and blueprints', 'Globals')->short('Change settings'),
+            // Beside the Menus resource's own: a menu's Settings, which templates rely on (MenuResource::can()).
+            Permission::make(MenuResource::CONFIGURE, 'Change menus\' titles and handles', 'Menus')->short('Change settings'),
             Permission::make('cms.blueprints.view', 'View blueprints', 'Content structure'),
             Permission::make('cms.blueprints.create', 'Create blueprints', 'Content structure'),
             Permission::make('cms.blueprints.update', 'Edit blueprints', 'Content structure'),
