@@ -11,9 +11,6 @@
 @section('content')
     <header class="page-header">
         <p class="eyebrow">{{ $taxonomy->title }}</p>
-        @if ($fallback)
-            <p class="notice" role="note">{{ __('This page isn\'t translated yet: it\'s shown in its original language.') }}</p>
-        @endif
         <div{{ cms_page()?->langAttribute() }}>
             <h1>{{ $title }}</h1>
             @include('cms.partials.fields', ['values' => $values, 'richText' => $richText])
