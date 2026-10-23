@@ -10,10 +10,12 @@ use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Fields\Schema;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\GlobalValue;
+use Sunrice\Cms\Settings\SiteSettings;
 
 /**
  * Tells the media library which files entries and global sets use (the
- * draft and the live version, and the SEO share image), on every save.
+ * draft and the live version, and the SEO share image) and Settings →
+ * SEO's images, on every save.
  *
  * @internal
  */
@@ -36,6 +38,14 @@ final class MediaUsage
         $url = Route::has('sunrice.admin.cms.globals.values.edit') ? route('sunrice.admin.cms.globals.values.edit', [$set->handle, 'locale' => $value->locale]) : null;
         app(MediaUsages::class)->sync('cms.global', (string) $set->id, self::ids($set->schema(), $value->data),
             "Globals: {$set->title} (".strtoupper($value->locale).')', $url, $value->locale);
+    }
+
+    /** Settings → SEO's share image and structured data logo (SiteSettings), as "Settings: SEO". */
+    public static function seo(): void
+    {
+        $site = new SiteSettings;
+        $url = Route::has('sunrice.admin.settings.seo.edit') ? route('sunrice.admin.settings.seo.edit') : null;
+        app(MediaUsages::class)->sync('cms.settings', 'seo', array_values(array_filter([$site->image, $site->logo], is_int(...))), 'Settings: SEO', $url);
     }
 
     /**

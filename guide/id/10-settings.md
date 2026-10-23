@@ -1,6 +1,6 @@
 # Pengaturan situs
 
-Situs web menambahkan lima bagian ke **Pengaturan** di bawah Administrasi: **Situs**, **Bahasa**, **Kode situs**, **Komentar**, dan **Cache**. Masing-masing adalah izin tersendiri, jadi mungkin Anda hanya melihat sebagian. Bagian milik panel (**Branding**, **Keamanan**, dan **Email**) dijelaskan di [Pengaturan](guide:panel/settings).
+Situs web menambahkan enam halaman ke **Pengaturan** di bawah Administrasi: **Situs**, **SEO**, **Bahasa**, **Kode situs**, **Komentar**, dan **Cache**. Masing-masing adalah izin tersendiri, jadi mungkin Anda hanya melihat sebagian. Bagian milik panel (**Branding**, **Keamanan**, dan **Email**) dijelaskan di [Pengaturan](guide:panel/settings).
 
 Pengaturan langsung berlaku begitu Anda mengeklik **Simpan**.
 
@@ -16,7 +16,11 @@ Pengaturan langsung berlaku begitu Anda mengeklik **Simpan**.
 
 **Bahasa** (jika ada lebih dari satu bahasa): **Tampilkan halaman yang belum diterjemahkan dalam bahasa utama** (menyala secara bawaan). Halaman yang belum diterjemahkan ke suatu bahasa lalu menampilkan isi bahasa utamanya di alamat bahasa tersebut (`/id/about`), sehingga tautan dan pengalih bahasa tetap berfungsi; jika dimatikan, halaman itu tidak ditemukan dalam bahasa tersebut dan daftar hanya menampilkan yang sudah diterjemahkan. Jika developer sudah mengaturnya di konfigurasi aplikasi, sakelarnya berwarna abu-abu. Lihat [Halaman yang belum diterjemahkan](guide:website/languages#halaman-yang-belum-diterjemahkan).
 
-Gambar berbagi, nama situs di judul beserta pemisahnya, akun X (Twitter), dan menyembunyikan seluruh situs dari mesin pencari ada di **Pengaturan → SEO** (tepat setelah Situs pada menu Pengaturan; lihat [SEO](guide:website/seo)).
+Gambar berbagi, nama situs di judul beserta pemisahnya, akun X (Twitter), menyembunyikan seluruh situs dari mesin pencari, dan structured data ada di **Pengaturan → SEO**, tepat setelah Situs pada menu Pengaturan.
+
+## SEO
+
+Apa yang dilihat mesin pencari dan tautan yang dibagikan dari situs web, dengan izin yang sama seperti **Situs**. **Mesin pencari dan berbagi** serta **Field yang dipakai untuk SEO** dijelaskan di [SEO](guide:website/seo#pengaturan-bawaan-situs).
 
 **Structured data**: **Tambahkan structured data ke halaman** (biarkan menyala kecuali ada alasan), apakah situs diterbitkan oleh organisasi atau perorangan (**Diterbitkan oleh**), dan **Logo** organisasi (persegi atau melebar, minimal 112 piksel). Mesin pencari juga menyukai detail penerbit: **Nama** (kosong: nama situs), **Jenis organisasi** (cari di daftar: *Usaha lokal*, *Agen properti*, *Restoran*…; atau pilih **Lainnya…** dan ketik jenis schema.org apa pun sebagai satu kata, misalnya *Brewery*), **Telepon**, **Alamat**, dan **Profil di tempat lain** (halaman Instagram, LinkedIn… penerbit: **Tambah profil** untuk masing-masing, alamat yang diawali https://; situsnya tampil di sebelahnya).
 

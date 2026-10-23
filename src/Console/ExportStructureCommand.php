@@ -20,7 +20,7 @@ final class ExportStructureCommand extends Command
     protected $signature = 'sunrice:export-structure
         {file : The JSON file to write}
         {--entries : Also terms, entries (every language, with changes not published yet as drafts) and global values}
-        {--settings : Also the Settings → Site values that describe the site (name, description, logo, homepage…)}';
+        {--settings : Also the Settings → Site and SEO values that describe the site (name, description, logo, homepage…)}';
 
     protected $description = 'Write the fieldsets, blueprints, collections, taxonomies, globals, forms, menus and redirects to a JSON file';
 

@@ -22,6 +22,8 @@ use Sunrice\Cms\Support\Locales;
 /**
  * Settings → Site, guarded by cms.settings.site: the homepage, and what
  * search results and shared links show when a page doesn't say (see Seo).
+ * Settings → SEO edits the search and sharing settings and the
+ * structured data ones (structuredDataForm()), stored here too.
  *
  *     Cms::site()->name()
  *
@@ -130,7 +132,7 @@ final class SiteSettings extends Settings
 
     public static function description(): string
     {
-        return 'The homepage, the site\'s name and description, and structured data.';
+        return 'The homepage, and the site\'s name and description.';
     }
 
     public static function form(Form $form): Form
@@ -152,6 +154,17 @@ final class SiteSettings extends Settings
                     ->help('A page not translated into a language shows its main language\'s content at that language\'s address (/id/about), with the main page as its canonical address, so links and the language switcher keep working. Off: those pages are not found (404) and lists show only what\'s translated.')
                     ->developerHelp(Site::fallbackForced() !== null ? 'Set by SUNRICE_FALLBACK in the app\'s config.' : null),
             ])] : []),
+        ]);
+    }
+
+    /**
+     * Settings → SEO's Structured data card: who publishes the site, for
+     * schema.org (JSON-LD). These properties are SiteSettings', saved
+     * with Settings → SEO (SaveSeoSettings), not on Settings → Site's form.
+     */
+    public static function structuredDataForm(Form $form): Form
+    {
+        return $form->schema([
             Section::make('Structured data')->description('What search engines are told pages are (schema.org), for richer results: articles, breadcrumbs, the site\'s search box.')->columns(2)->schema([
                 Toggle::make('structuredData')->label('Add structured data to pages')->span(2),
                 Select::make('publisher')->label('Published by')->options(['Organization' => 'An organization', 'Person' => 'A person']),

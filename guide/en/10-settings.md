@@ -1,6 +1,6 @@
 # The website's settings
 
-The website adds five sections to **Settings** under Administration: **Site**, **Languages**, **Site code**, **Comments** and **Cache**. Each is a separate permission, so you may see only some of them. The panel's own sections (**Branding**, **Security** and **Mail**) are explained in [Settings](guide:panel/settings).
+The website adds six pages to **Settings** under Administration: **Site**, **SEO**, **Languages**, **Site code**, **Comments** and **Cache**. Each is a separate permission, so you may see only some of them. The panel's own sections (**Branding**, **Security** and **Mail**) are explained in [Settings](guide:panel/settings).
 
 Settings are live as soon as you click **Save**.
 
@@ -16,7 +16,11 @@ Settings are live as soon as you click **Save**.
 
 **Languages** (with more than one language): **Show untranslated pages in the main language** (on by default). A page not translated into a language then shows its main language's content at that language's address (`/id/about`), so links and the language switcher keep working; off, those pages aren't found in that language and lists show only what's translated. When your developer has set it in the app's config, the switch is greyed out. See [Pages not translated yet](guide:website/languages#pages-not-translated-yet).
 
-The share image, the site name in titles and its separator, the X (Twitter) account and hiding the whole site from search engines are in **Settings → SEO** (right after Site in the Settings menu; see [SEO](guide:website/seo)).
+The share image, the site name in titles and its separator, the X (Twitter) account, hiding the whole site from search engines and structured data are in **Settings → SEO**, right after Site in the Settings menu.
+
+## SEO
+
+What search engines and shared links see of the website, with the same permission as **Site**. **Search engines and sharing** and **Fields used for SEO** are explained in [SEO](guide:website/seo#the-sites-defaults).
 
 **Structured data**: **Add structured data to pages** (on unless you have a reason), whether the site is **Published by** an organisation or a person, and the organisation's **Logo** (square or wide, at least 112 pixels). Search engines also like the publisher's details: its **Name** (empty: the site name), the **Organization type** (search the list: *Local business*, *Real estate agent*, *Restaurant*…; or choose **Other…** and type any schema.org type as one word, like *Brewery*), **Phone**, **Address** and **Profiles elsewhere** (its Instagram, LinkedIn… pages: **Add profile** for each, an address starting with https://; the site it's on shows beside it).
 

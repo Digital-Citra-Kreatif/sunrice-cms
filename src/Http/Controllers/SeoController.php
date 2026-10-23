@@ -18,10 +18,11 @@ use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Settings\SiteSettings;
 
 /**
- * Settings → SEO: the site's search and sharing settings, and the fields
- * each collection and taxonomy fills its SEO from. Behind
- * cms.settings.site; a kind's rows only for those who may edit it
- * (cms.collections.update, cms.taxonomies.update).
+ * Settings → SEO (/admin/settings/seo, Panel::settingsPage()): the site's
+ * search and sharing settings, its structured data, and the fields each
+ * collection and taxonomy fills its SEO from. Behind cms.settings.site; a
+ * kind's rows only for those who may edit it (cms.collections.update,
+ * cms.taxonomies.update).
  *
  * @internal
  */
@@ -52,6 +53,8 @@ final class SeoController
         return Inertia::render('Cms/Seo/Edit', [
             'site' => ['noindex' => $site->noindex, 'appendName' => $site->appendName, 'separator' => $site->separator, 'twitter' => $site->twitter, 'image' => $site->image],
             'siteName' => $site->name(),
+            // SiteSettings' structured data fields, drawn as the Settings pages draw theirs.
+            'structured' => SaveSeoSettings::structuredData()->props(),
             'collections' => $may['collection'] ? Collection::query()->orderBy('title')->get()->map($row)->all() : null,
             'taxonomies' => $may['taxonomy'] ? Taxonomy::query()->orderBy('title')->get()->map($row)->all() : null,
             'settingsNav' => $request->user() instanceof Authorizable ? app(Panel::class)->settingsNavigation($request->user()) : [],
@@ -60,7 +63,7 @@ final class SeoController
 
     public function update(Request $request, SaveSeoSettings $save): RedirectResponse
     {
-        $save->handle($request->only(['site', 'mappings']), self::may($request));
+        $save->handle($request->only(['site', 'structured', 'mappings']), self::may($request));
 
         return back()->with('success', 'SEO settings saved.');
     }

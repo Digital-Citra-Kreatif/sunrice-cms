@@ -10,19 +10,26 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Actions\Settings\SaveSettings;
 use Sunrice\Admin\Activity\ActivityLog;
+use Sunrice\Admin\Resources\Forms\Form;
+use Sunrice\Admin\Settings\SettingsFields;
 use Sunrice\Cms\Admin\SeoMapping;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Settings\SiteSettings;
 
 /**
- * Settings → SEO in one save: the site's search and sharing settings
- * (SiteSettings), and which fields fill in what each collection's and
- * taxonomy's SEO cards leave empty. Collections and taxonomies the user
- * may not edit are left as they are.
+ * Settings → SEO in one save: the site's search and sharing settings and
+ * its structured data (SiteSettings), and which fields fill in what each
+ * collection's and taxonomy's SEO cards leave empty. Collections and
+ * taxonomies the user may not edit are left as they are.
  *
- * Input: `site` (noindex, appendName, separator, twitter, image) and
- * `mappings`, a list of {kind: collection|taxonomy, id, title, description, image}.
+ * Input: `site` (noindex, appendName, separator, twitter, image),
+ * `structured` (optional: SiteSettings::structuredDataForm()'s fields,
+ * structuredData, publisher, logo, publisherName, publisherType,
+ * telephone, address, sameAs; checked as Settings pages check theirs)
+ * and `mappings`, a list of {kind: collection|taxonomy, id, title,
+ * description, image}. Every error is reported at once; nothing is saved
+ * then.
  *
  * @api
  */
@@ -38,8 +45,7 @@ final class SaveSeoSettings
      */
     public function handle(array $input, array $may = ['collection' => true, 'taxonomy' => true]): void
     {
-        /** @var array{site: array{noindex: bool, appendName: bool, separator?: string|null, twitter?: string|null, image?: int|null}, mappings?: list<array{kind: string, id: int, title?: string|null, description?: string|null, image?: string|null}>} $valid */
-        $valid = Validator::make($input, [
+        $validator = Validator::make($input, [
             'site' => ['required', 'array'],
             'site.noindex' => ['required', 'boolean'],
             'site.appendName' => ['required', 'boolean'],
@@ -52,11 +58,28 @@ final class SaveSeoSettings
             'mappings.*.title' => ['nullable', 'string', 'max:64'],
             'mappings.*.description' => ['nullable', 'string', 'max:64'],
             'mappings.*.image' => ['nullable', 'string', 'max:64'],
-        ], [], ['site.twitter' => __('X (Twitter) account')])->validate();
+        ], [], ['site.twitter' => __('X (Twitter) account')]);
+
+        $errors = $validator->fails() ? $validator->errors()->toArray() : [];
+        // Structured data: errors by the field's name under "structured." (structured.sameAs.0).
+        $structured = [];
+        if (is_array($input['structured'] ?? null)) {
+            try {
+                $structured = self::structuredData()->validate($input['structured']);
+            } catch (ValidationException $e) {
+                foreach ($e->errors() as $key => $messages) {
+                    $errors["structured.{$key}"] = $messages;
+                }
+            }
+        }
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+        /** @var array{site: array{noindex: bool, appendName: bool, separator?: string|null, twitter?: string|null, image?: int|null}, mappings?: list<array{kind: string, id: int, title?: string|null, description?: string|null, image?: string|null}>} $valid */
+        $valid = $validator->validated();
 
         // Each field named must be one of the blueprint's of the right type.
         $owners = [];
-        $errors = [];
         foreach ($valid['mappings'] ?? [] as $index => $mapping) {
             if (! ($may[$mapping['kind']] ?? false)) {
                 continue;
@@ -78,7 +101,7 @@ final class SaveSeoSettings
             throw ValidationException::withMessages($errors);
         }
 
-        DB::transaction(function () use ($valid, $owners): void {
+        DB::transaction(function () use ($valid, $structured, $owners): void {
             $site = $valid['site'];
             $separator = trim((string) ($site['separator'] ?? ''));
             $this->settings->handle(app(SiteSettings::class), [
@@ -87,6 +110,7 @@ final class SaveSeoSettings
                 'separator' => $separator !== '' ? $separator : '|',
                 'twitter' => (string) ($site['twitter'] ?? ''),
                 'image' => $site['image'] ?? null,
+                ...$structured,
             ]);
             foreach ($owners as [$owner, $mapping]) {
                 $owner->fill([
@@ -100,5 +124,11 @@ final class SaveSeoSettings
                 }
             }
         });
+    }
+
+    /** SiteSettings' structured data fields (SiteSettings::structuredDataForm()), as Settings → SEO shows and checks them. */
+    public static function structuredData(): SettingsFields
+    {
+        return SettingsFields::make(SiteSettings::class, SiteSettings::structuredDataForm(new Form));
     }
 }

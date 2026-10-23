@@ -142,6 +142,12 @@ final class CmsServiceProvider extends ServiceProvider
                 app(Site\Site::class)->flush();
             }
         });
+        // The share image and logo: used by Settings → SEO, where they're chosen (not on Settings → Site's form).
+        Event::listen(SettingsSaved::class, function (SettingsSaved $event): void {
+            if ($event->section === Settings\SiteSettings::key() && array_intersect($event->changed, ['image', 'logo']) !== []) {
+                Support\MediaUsage::seo();
+            }
+        });
         // Other languages: every address may have changed.
         Event::listen(SettingsSaved::class, function (SettingsSaved $event): void {
             if ($event->section === Settings\LocaleSettings::key()) {

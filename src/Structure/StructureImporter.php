@@ -93,7 +93,7 @@ final class StructureImporter
     public const SECTIONS = ['fieldsets', 'blueprints', 'collections', 'taxonomies', 'globals', 'forms', 'terms', 'entries', 'menus', 'redirects', 'settings'];
 
     /**
-     * Settings → Site's values a file carries (`settings.site`): what
+     * Settings → Site's and SEO's values (SiteSettings) a file carries (`settings.site`): what
      * describes the site. Not `noindex`, which is where the site runs (a
      * staging copy), nor other sections (languages, comments, cache, code),
      * which are the app's own or hold addresses and keys.
@@ -636,12 +636,12 @@ final class StructureImporter
         $defaults = (new ReflectionClass(SiteSettings::class))->getDefaultProperties();
         $notes = [];
         $values = $this->resolved(array_intersect_key($item, array_flip(self::SITE_SETTINGS)), $notes);
-        // Settings → SEO's, as SaveSeoSettings checks them, and Settings → Site's form.
+        // Settings → SEO's, as SaveSeoSettings checks them (its structured data form too), and Settings → Site's form.
         $rules = [
             'separator' => ['nullable', 'string', 'max:5'], 'appendName' => ['boolean'], 'fallback' => ['boolean'],
             'twitter' => ['nullable', 'string', 'max:16', 'regex:/^(@?[A-Za-z0-9_]{1,15})?$/'], 'image' => ['nullable', 'integer', Rule::exists('sunrice_media', 'id')],
         ];
-        foreach (SiteSettings::form(new SettingsForm)->fields('edit') as $field) {
+        foreach ([...SiteSettings::form(new SettingsForm)->fields('edit'), ...SiteSettings::structuredDataForm(new SettingsForm)->fields('edit')] as $field) {
             $rules[$field->name] = $field->validationRules(null);
         }
         $validated = Validator::make($values, array_intersect_key($rules, $values))->validate();

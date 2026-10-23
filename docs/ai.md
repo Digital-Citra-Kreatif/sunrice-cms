@@ -41,3 +41,5 @@ Writing templates is off unless the site turns it on, and then only for super ad
 The CMS registers its docs (the `docs` folder it ships) for `read_docs` ("cms/site", "cms/fields" …). Its command `sunrice:publish-scheduled` can be added to the panel's `sunrice-admin.ai.commands` for `run_command`.
 
 Collections, taxonomies, global sets, menus, redirects and forms themselves are resources, reached with the panel's `list_records`, `get_record` and `save_record`. Media for media fields comes from `list_media`.
+
+The panel's `get_settings` and `update_settings` reach the CMS's settings sections (`site`, `locales`, `code`, `comments`, `cache`) and Settings → SEO's structured data as the section `seo` (`SiteSettings::structuredDataForm()`'s fields: `structuredData`, `publisher`, `logo`, `publisherName`, `publisherType`, `telephone`, `address`, `sameAs`), behind `cms.settings.site`, checked as the page checks them.

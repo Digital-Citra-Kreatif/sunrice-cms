@@ -1,11 +1,12 @@
 import * as React from 'react';
 import { Head, useForm } from '@inertiajs/react';
 import {
-    Button, CollapsibleCard, Input, Label, MediaPickerInput, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SettingsLayout, Switch,
-    useBreadcrumbs, useUnsavedChanges, type SettingsNavEntry,
+    Button, CollapsibleCard, FormSections, Input, Label, MediaPickerInput, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SettingsLayout, Switch,
+    useBreadcrumbs, useUnsavedChanges, type SettingsFieldsProps, type SettingsNavEntry, type SettingsValue,
 } from '@imajiner/admin-sdk/ui';
 import { adminUrl, t } from '@imajiner/admin-sdk';
 import { FieldError } from '@/components/FieldError.tsx';
+import { errorsUnder } from '@/lib/nested-errors.ts';
 
 type Role = 'title' | 'description' | 'image';
 
@@ -21,6 +22,8 @@ interface Row {
 interface Props {
     site: { noindex: boolean; appendName: boolean; separator: string; twitter: string; image: number | null };
     siteName: string;
+    /** Structured data's fields (SiteSettings::structuredDataForm(), SettingsFields::props()). */
+    structured: SettingsFieldsProps;
     /** Null: the user may not edit collections (or taxonomies). */
     collections: Row[] | null;
     taxonomies: Row[] | null;
@@ -35,16 +38,17 @@ const roles = (): { role: Role; label: string; automatic: string }[] => [
 ];
 const AUTO = '__auto';
 
-/** Settings → SEO: search engines and sharing, and the fields each collection and taxonomy fills its SEO from. */
-export default function SeoEdit({ site, siteName, collections, taxonomies, settingsNav }: Props) {
+/** Settings → SEO: search engines and sharing, structured data, and the fields each collection and taxonomy fills its SEO from. */
+export default function SeoEdit({ site, siteName, structured, collections, taxonomies, settingsNav }: Props) {
     useBreadcrumbs([{ label: t('Settings'), href: adminUrl('settings') }, { label: t('SEO') }]);
     const rows = [...(collections ?? []), ...(taxonomies ?? [])];
     const form = useForm({
         site: { ...site },
+        structured: { ...structured.values },
         mappings: rows.map((row) => ({ kind: row.kind, id: row.id, title: row.chosen.title ?? '', description: row.chosen.description ?? '', image: row.chosen.image ?? '' })),
     });
     const errors = form.errors as Record<string, string | undefined>;
-    const save = () => form.put(adminUrl('cms/seo'), { preserveScroll: true, onSuccess: () => form.setDefaults() });
+    const save = () => form.put(adminUrl('settings/seo'), { preserveScroll: true, onSuccess: () => form.setDefaults() });
     useUnsavedChanges(form.isDirty, save);
     const setSite = <K extends keyof Props['site']>(key: K, value: Props['site'][K]) => form.setData('site', { ...form.data.site, [key]: value });
     const setField = (index: number, role: Role, value: string) =>
@@ -83,10 +87,10 @@ export default function SeoEdit({ site, siteName, collections, taxonomies, setti
     );
 
     return (
-        <SettingsLayout items={settingsNav} current="cms-seo">
+        <SettingsLayout items={settingsNav} current="seo">
             <form onSubmit={(e) => { e.preventDefault(); save(); }} className="cms:flex cms:flex-col cms:gap-6">
                 <Head title={t('SEO')} />
-                <PageHeader title={t('SEO')} description={t('What search engines and shared links see of the site.')}
+                <PageHeader title={t('SEO')} description={t('What search engines and shared links see of the site, and the structured data that tells them what its pages are.')}
                     actions={<Button type="submit" disabled={form.processing}>{t('Save')}</Button>} />
 
                 <CollapsibleCard title={t('Search engines and sharing')} titleClassName="cms:text-base" storageKey="cms:seo:site" contentClassName="cms:flex cms:flex-col cms:gap-5">
@@ -127,6 +131,9 @@ export default function SeoEdit({ site, siteName, collections, taxonomies, setti
                         <FieldError message={errors['site.image']} />
                     </div>
                 </CollapsibleCard>
+
+                <FormSections sections={structured.sections} data={form.data.structured} errors={errorsUnder(errors, 'structured')} storageKey="cms:seo:structured"
+                    onChange={(name: string, value: SettingsValue) => form.setData('structured', { ...form.data.structured, [name]: value })} />
 
                 {rows.length > 0 && (
                     <section className="cms:flex cms:flex-col cms:gap-1">

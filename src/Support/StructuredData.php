@@ -19,7 +19,7 @@ use Sunrice\Cms\Site\Site;
  * collection's `schema_type`) with breadcrumbs; listing, term and taxonomy index pages as
  * collection pages; search pages as search results. Printed by
  * <x-sunrice-cms::seo />, which takes more nodes from templates
- * (`:schema="[…]"`). Off in Settings → Site.
+ * (`:schema="[…]"`). Off in Settings → SEO.
  *
  * @api
  */
