@@ -75,6 +75,22 @@ figure { margin: 1.5rem 0; }
 .block { margin-block: 2rem; }
 .button, button { display: inline-block; padding: 0.55rem 1.1rem; border: 0; border-radius: var(--radius); background: var(--accent); color: var(--accent-text); font: inherit; font-weight: 600; text-decoration: none; cursor: pointer; }
 
+/* Rich text images: the editor's width and alignment presets (no inline styles) */
+.sunrice-img { display: block; max-width: 100%; height: auto; margin-block: 1.5rem; }
+.sunrice-img-w-25 { width: 25%; }
+.sunrice-img-w-50 { width: 50%; }
+.sunrice-img-w-75 { width: 75%; }
+.sunrice-img-w-100, .sunrice-img-full { width: 100%; }
+.sunrice-img-center { margin-inline: auto; }
+.sunrice-img-left { float: left; margin: 0.35rem 1.5rem 1rem 0; }
+.sunrice-img-right { float: right; margin: 0.35rem 0 1rem 1.5rem; }
+.sunrice-img-left:not([class*="sunrice-img-w-"]), .sunrice-img-right:not([class*="sunrice-img-w-"]) { max-width: 50%; }
+.prose::after { content: ""; display: block; clear: both; }
+.prose :is(h2, h3, h4, hr, pre, blockquote, figure) { clear: both; }
+@media (max-width: 40em) {
+    .sunrice-img-left, .sunrice-img-right { float: none; width: 100%; max-width: 100%; margin: 1.5rem 0; }
+}
+
 /* Lists of entries */
 .cards { display: grid; gap: 1.25rem; margin: 0; padding: 0; list-style: none; }
 .card { padding: 1.25rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }

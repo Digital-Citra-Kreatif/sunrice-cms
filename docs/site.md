@@ -109,6 +109,22 @@ Every page's view gets `$page`, the page shown (`Sunrice\Cms\Site\Page`, the sam
 
 Rich text is cleaned when it's saved, so print it as is: `{!! $values['body'] !!}`. Print everything else escaped: `{{ $values['intro'] }}`.
 
+Images in rich text may carry the editor's width and alignment presets as classes, never inline styles, so style them in your site's CSS (the starter templates' `site.css` does):
+
+| Class | Meant as |
+| --- | --- |
+| `sunrice-img` | on every image with a preset |
+| `sunrice-img-w-25`, `-w-50`, `-w-75`, `-w-100` | that share of the text's width (`height: auto`, at most 100%) |
+| `sunrice-img-left`, `sunrice-img-right` | floated, the text wraps around it; on narrow screens a full-width block |
+| `sunrice-img-center` | centred on its own line |
+| `sunrice-img-full` | the text's full width |
+
+```html
+<img src="/storage/media/saw.jpg" alt="A saw" class="sunrice-img sunrice-img-w-50 sunrice-img-left" data-media-id="7">
+```
+
+Only these classes are kept on images when rich text is saved (any other class or `style` is dropped), and images without a preset keep no class, so they show as before. Clear the floats after the text (`.prose::after { content: ""; display: block; clear: both; }`).
+
 #### Entry pages get
 
 | | |

@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Support;
 
+use Sunrice\Admin\Resources\Forms\RichTextImageClasses;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizer as Sanitizer;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
 
 /**
  * Cleans rich text before it is stored: only the formatting the editor
  * produces is kept, so no script, style or event handler reaches the site.
- * Images from the media library keep data-media-id, so their use is known.
+ * Images from the media library keep data-media-id, so their use is known,
+ * and on images only the editor's width and alignment classes are kept
+ * (the panel's RichTextImageClasses).
  *
  * @api
  */
@@ -53,6 +56,7 @@ final class HtmlSanitizer
             ->allowRelativeMedias()
             ->forceAttribute('a', 'rel', 'noopener noreferrer')
             ->allowAttribute('class', ['p', 'figure', 'figcaption', 'blockquote', 'pre', 'code', 'table', 'img'])
+            ->withAttributeSanitizer(new RichTextImageClasses)
             ->withMaxInputLength(self::MAX_LENGTH);
         foreach (['p', 'br', 'hr', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'b', 'em', 'i', 'u', 's', 'del', 'sub', 'sup', 'mark', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li', 'figure', 'figcaption', 'table', 'thead', 'tbody', 'tr'] as $element) {
             $config = $config->allowElement($element);

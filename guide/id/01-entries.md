@@ -34,7 +34,7 @@ Selanjutnya, **Simpan draf** menyimpan pekerjaan Anda (atau tekan **Ctrl S** / *
 
 ### Field yang akan Anda temui
 
-- **Teks kaya** memiliki bilah alat untuk judul, tebal, miring, daftar, kutipan, tautan, dan gambar dari pustaka media.
+- **Teks kaya** memiliki bilah alat untuk judul, tebal, miring, daftar, kutipan, tautan, dan gambar dari pustaka media. Klik gambar (atau pindah ke gambar dengan tombol panah lalu tekan Tab) untuk bilah alatnya sendiri: lebar (25, 50, 75, atau 100% dari teks), perataan (kiri atau kanan dengan teks mengalir di sampingnya, tengah, atau lebar penuh), teks alt yang menjelaskan gambar kepada orang yang tidak dapat melihatnya, dan **Hapus gambar**. Klik lagi tombol yang sedang aktif untuk membatalkannya; Esc kembali ke teks. Di ponsel, gambar di samping teks tampil selebar layar di atasnya.
 - Field **Media** memilih gambar atau berkas dari [pustaka media](guide:panel/media), atau mengunggah yang baru.
 - Field **Entri** dan **Term** menautkan ke entri lain atau ke term (misalnya "topik pilihan"); cari berdasarkan judul. Kategori dan tag entri itu sendiri ada di kartu **Taksonomi** (di bawah).
 - Field **Tautan** menerima alamat web, atau entri lain (pilih **Entri** agar mengikuti alamat entri itu meskipun berubah).
