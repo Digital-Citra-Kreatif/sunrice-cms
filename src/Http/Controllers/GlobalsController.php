@@ -9,13 +9,15 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Sunrice\Cms\Actions\Globals\SaveGlobals;
+use Sunrice\Cms\Admin\GlobalSetResource;
 use Sunrice\Cms\Models\GlobalSet;
 use Sunrice\Cms\Support\Locales;
 
 /**
  * A global set's values in each language (/admin/cms/globals/{handle}/values);
  * the sets themselves are GlobalSetResource. Behind cms.globals.view,
- * saving behind cms.globals.update (see CmsPlugin).
+ * saving behind cms.globals.update (see CmsPlugin). Only the values: the
+ * set's title, handle and blueprint are its Settings (cms.globals.configure).
  *
  * @internal
  */
@@ -37,8 +39,8 @@ final class GlobalsController
             'values' => $set->data($locale),
             'version' => $set->values->firstWhere('locale', $locale)?->version,
             'can' => ['update' => $request->user()?->can('cms.globals.update') ?? false],
-            // Its title, handle and fields.
-            'settings' => $request->user()?->can('cms.globals.update') === true ? route('sunrice.admin.cms.globals.edit', $set->handle) : null,
+            // Its title, handle and fields: for those who may configure sets, not editors.
+            'settings' => GlobalSetResource::configures($request->user()) ? route('sunrice.admin.cms.globals.edit', $set->handle) : null,
         ]);
     }
 

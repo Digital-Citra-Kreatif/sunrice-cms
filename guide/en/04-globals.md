@@ -14,7 +14,7 @@ Fields shared by all languages (a phone number, a logo) are edited in the main l
 
 In another language, a set not saved there yet starts with the main language's values, which the website shows meanwhile: translate them, then save. A field you leave empty shows the main language's value on the website.
 
-If the set says it has no fields, a site manager still has to choose its fields in the set's **Settings** (Content → Globals).
+If the set says it has no fields, a site manager still has to choose its fields in the set's **Settings** (Content → Globals). A set's name, handle and fields are changed there by those allowed to (*Change settings* under Globals in Roles): editors change the values only, as the website finds each set by its handle.
 
 ## When someone else is editing
 

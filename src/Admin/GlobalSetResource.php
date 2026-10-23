@@ -19,7 +19,9 @@ use Sunrice\Cms\Models\GlobalSet;
  * Content → Globals (/admin/cms/globals), guarded by the cms.globals.*
  * permissions: the list opens each set's values (GlobalsController, at
  * /admin/cms/globals/{handle}/values); Settings holds its title, handle
- * and blueprint.
+ * and blueprint, which templates rely on: changing them takes
+ * cms.globals.configure as well as cms.globals.update (editors have only
+ * the latter, for the values).
  *
  * @internal
  */
@@ -50,6 +52,24 @@ final class GlobalSetResource extends Resource
     public static function recordKey(): string
     {
         return 'handle';
+    }
+
+    /** The permission a set's Settings (title, handle, blueprint) take besides cms.globals.update. */
+    public const CONFIGURE = 'cms.globals.configure';
+
+    /**
+     * Whether `$user` may change sets' titles, handles and blueprints:
+     * templates find a set by its handle, so editing its values isn't enough.
+     */
+    public static function configures(mixed $user): bool
+    {
+        return $user instanceof Authorizable && $user->can('cms.globals.update') && $user->can(self::CONFIGURE);
+    }
+
+    /** Settings (the edit form, and save_record for agents) take cms.globals.configure too. */
+    public static function can(Authorizable $user, string $ability, ?Model $record = null): bool
+    {
+        return $ability !== 'update' || $user->can(self::CONFIGURE);
     }
 
     /** The list opens the set's values. */

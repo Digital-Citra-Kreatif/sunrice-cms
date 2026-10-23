@@ -6,6 +6,8 @@
 
 Under **Content → Globals** (`/admin/cms/globals`, permissions `cms.globals.view`, `.create`, `.update`, `.delete`): the sets, each with a title, a handle that templates use (made from the title as you type it; it can be changed later on the set's **Settings**, with a warning: templates that name it need the new one too), and a blueprint (its **Settings**, `/admin/cms/globals/{handle}/edit`). Changing the blueprint keeps the values already saved.
 
+A set's **Settings** (its title, handle and blueprint) take `cms.globals.configure` as well as `cms.globals.update`, as templates find a set by its handle: `cms.globals.update` alone edits the values only. The default `editor` role has `cms.globals.view` and `.update`, not `.configure`, `.create` or `.delete`: editors change what the sets say, not which sets there are or what they're called. Without `cms.globals.configure` the values page has no **Settings** link, the Settings page answers 403, and AI agents' `save_record` on `globals` is refused (`GlobalSetResource::configures($user)` says whether someone may).
+
 ## Editing
 
 Opening a set shows its values (`/admin/cms/globals/{handle}/values`, `cms.globals.view` to see, `cms.globals.update` to save): each set's fields, in each language. Fields the blueprint shares across languages are edited in the main language and shown read-only in the others, as for entries. Until a set is saved, its fields have their defaults. In another language, a translated field without a value there (the set never saved in it, or the field left empty) shows the main language's, on the site and in the editor, which says so (`GlobalSet::data()`). One person edits a set in a language at a time ([edit locks](../../admin/docs/locks.md)).

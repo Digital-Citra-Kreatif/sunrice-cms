@@ -13,7 +13,7 @@ With the CMS, AI agents connected to the panel ([AI access](../../admin/docs/ai.
 | `cms_trash_entry` | `cms.entries.delete` | Move an entry to the trash, or restore it. |
 | `cms_list_terms` | `cms.terms.view` or `cms.entries.view` | Taxonomies, with their pages as URL patterns (shared term pages and index page, and each collection's term pages and index page; null when off), and their terms with each one's URL and its page in each collection, per language, for entries' terms (`cms_save_entry`), terms fields and menus. |
 | `cms_save_term` | `cms.terms.create` (new) or `cms.terms.update` | Add or rename a term, or give it another language. |
-| `cms_get_globals`, `cms_save_globals` | `cms.globals.view`, `.update` | Global sets' fields and values, per language. |
+| `cms_get_globals`, `cms_save_globals` | `cms.globals.view`, `.update` | Global sets' fields and values, per language (the values only: a set's title, handle and blueprint are the `globals` resource's, through `save_record`, which takes `cms.globals.configure` too). |
 | `cms_list_submissions` | `cms.submissions.view` | Forms and what visitors sent. |
 | `cms_delete_submissions` | `cms.submissions.delete` | Delete submissions permanently, with their files. |
 | `cms_manage_entry` | `cms.entries.delete`, `.create`, `cms.settings.site` | Delete an entry in the trash permanently (`ForceDeleteEntry`), duplicate it as a draft (`DuplicateEntry`), or make it the homepage (Settings → Site). |

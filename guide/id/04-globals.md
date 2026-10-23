@@ -14,7 +14,7 @@ Field yang dipakai bersama oleh semua bahasa (nomor telepon, logo) disunting di 
 
 Di bahasa lain, set yang belum pernah disimpan di bahasa itu dimulai dengan nilai bahasa utama, yang ditampilkan situs web sementara ini: terjemahkan, lalu simpan. Field yang Anda biarkan kosong menampilkan nilai bahasa utama di situs web.
 
-Jika set menyatakan tidak punya field, pengelola situs masih perlu memilih field-nya di **Pengaturan** set tersebut (Konten → Global).
+Jika set menyatakan tidak punya field, pengelola situs masih perlu memilih field-nya di **Pengaturan** set tersebut (Konten → Global). Nama, handle, dan field sebuah set diubah di sana oleh mereka yang diizinkan (*Ubah pengaturan* di bawah Global pada Peran): editor hanya mengubah nilainya, karena situs web menemukan setiap set dari handle-nya.
 
 ## Jika orang lain sedang menyunting
 
