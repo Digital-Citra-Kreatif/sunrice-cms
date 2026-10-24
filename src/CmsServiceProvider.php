@@ -27,6 +27,7 @@ use Spatie\ResponseCache\Serializers\JsonSerializer;
 use Sunrice\Admin\Events\SettingsSaved;
 use Sunrice\Admin\Exceptions\PanelMisconfigured;
 use Sunrice\Admin\Media\MediaUsages;
+use Sunrice\Admin\Support\PackageConfig;
 use Sunrice\Cms\Fields\Fieldsets;
 use Sunrice\Cms\Fields\FieldTypes;
 use Sunrice\Cms\Fields\Types;
@@ -46,7 +47,8 @@ final class CmsServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(dirname(__DIR__).'/config/sunrice-cms.php', 'sunrice-cms');
+        // Key by key at every depth, so a config file published on an older version gets the keys added since.
+        PackageConfig::merge($this->app, dirname(__DIR__).'/config/sunrice-cms.php', 'sunrice-cms', whole: ['locale_names', 'locale_prefixes', 'site.headers', 'site.csp.sources']);
         $this->app->singleton(FieldTypes::class, fn (): FieldTypes => (new FieldTypes)->register(
             Types\Text::class,
             Types\Textarea::class,

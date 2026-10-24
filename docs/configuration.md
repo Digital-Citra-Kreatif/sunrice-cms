@@ -6,6 +6,8 @@ The CMS's settings for developers live in `config/sunrice-cms.php` (key `sunrice
 php artisan vendor:publish --tag=sunrice-cms-config
 ```
 
+The published file is merged with the CMS's at every depth: a key it doesn't have, such as one added under `site` by a later version (`site.csp`, `site.custom_code`, `site.lazy_sessions`), takes its default and its environment variable, so those variables work with a file published on an older version, and you needn't publish it again to get new keys. Keys your file has keep their values, `null` and empty lists included, and a list or a map you set (`site.template_prefixes`, `site.middleware`, `site.headers`, `site.csp.sources`, `locale_names`) replaces the default as a whole. Comparing your file with the new one after an upgrade still shows you the new keys and their comments.
+
 What editors change in the panel (the homepage, site name and SEO defaults, languages, site code, comments) is in **Settings**: Settings → Site, SEO, Languages, Site code and Comments override or complete what's here where they overlap (the languages, `noindex`). The panel's own file is described in [the panel's configuration](../../admin/docs/configuration.md).
 
 **Times** (comments' and submissions' dates, publish dates, scheduled publishing) are in the app's time zone, Laravel's `app.timezone` (`APP_TIMEZONE`, UTC unless set): a site for Indonesia sets `APP_TIMEZONE=Asia/Jakarta` so a comment posted at 17:55 WIB reads 17:55, not 10:55. The panel shows dates in each editor's own time zone.
