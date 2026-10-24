@@ -86,7 +86,7 @@ The **Page settings** card on the right applies to every language. It's saved wi
 
 ## Taxonomies
 
-The **Taxonomies** card, under Page settings, gives the entry its terms: its categories, tags or topics. It has a list for each taxonomy of the collection (*Categories*, *Tags* …): tick the terms that fit, or pick one where the collection allows only one. Terms under other terms are indented. The card shows only when the collection has taxonomies.
+The **Taxonomies** card, under Page settings, gives the entry its terms: its categories, tags or topics. It has one picker for each taxonomy of the collection (*Categories*, *Tags* …), the same for every taxonomy: the chosen terms show as chips, each with an **×** to remove it, and **Choose terms…** (or **Choose a term…** where the collection allows only one; **Add…** or **Change…** once there are some) opens a list you can search, with terms under other terms indented. The card shows only when the collection has taxonomies.
 
 Terms are the same for every language of the entry, and they're saved with the draft and go on the website when you publish, like your other changes: until then the card says **Changed**, **Compare with live** lists the terms before and after, and **Discard changes** puts the live ones back. A revision keeps the terms it was published with, so restoring it brings them back too. Translators see the terms but can't change them.
 

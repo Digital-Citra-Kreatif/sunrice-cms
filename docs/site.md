@@ -205,13 +205,13 @@ It copies them into `resources/views/cms/`, where the rules above pick them up (
 | File | Used for | Shows how to |
 | --- | --- | --- |
 | `cms/layout.blade.php` | every page (`@extends('cms.layout')`, `@section('content')`, `@push('head')`) | `<x-sunrice-cms::seo>`, site code, the `main` and `footer` menus, the language switcher (`<x-sunrice-cms::language-switcher>`), a footer (the `footer` global's `text`), `@bodyClass`, a skip link |
-| `cms/collections/show.blade.php` | any entry | the title, date and fields; a note on [untranslated pages](#untranslated-pages); comments |
+| `cms/collections/show.blade.php` | any entry | the title, date, terms and fields (with `lang` marking the content's language on [untranslated pages](#untranslated-pages)); comments |
 | `cms/collections/index.blade.php` | listing pages | the listing's fields, cards, pagination |
 | `cms/taxonomies/show.blade.php` | term pages, shared and collections' | the term's fields and its entries |
 | `cms/taxonomies/index.blade.php` | taxonomy index pages, shared and collections' | the page's fields and the terms with their counts |
 | `cms/search.blade.php` | the search page | the search box, results |
 | `cms/comment-unsubscribe.blade.php` | a reply email's "stop these emails" link | the confirm button, then the done message, in the layout ([Comments](comments.md)) |
-| `cms/partials/fields.blade.php` | the pages above | text, rich text, images, galleries, links and flexible blocks, by kind |
+| `cms/partials/fields.blade.php` | the pages above | text, rich text, code (`<x-sunrice-cms::code-block>`), images, galleries, links and flexible blocks, by kind |
 | `cms/partials/blocks.blade.php`, `block.blade.php` | flexible blocks | `cms/blocks/{fieldset}.blade.php` per kind of block when you make one (it gets `$block`), else the block's fields |
 | `cms/partials/card.blade.php` | lists of entries | title, date, and an `image` and `excerpt` field when there are |
 | `cms/partials/pagination.blade.php` | lists of entries | previous and next links |
@@ -300,7 +300,7 @@ A site that doesn't need it can switch it off with `SUNRICE_SITE_CODE=false` (`s
 
 `@bodyClass` prints the whole attribute: `<body @bodyClass>` or `<body @bodyClass('dark')>` gives `<body class="page-entry … dark">`.
 
-The same as functions, for templates that prefer them (each defined only if the app hasn't defined it first): `cms_entries(...$collections)`, `cms_menu($handle, $locale = null)`, `cms_global($handle, $locale = null)`, `cms_locale_urls()`, `cms_body_class($extra = [])` and `cms_page()`.
+The same as functions, for templates that prefer them (each defined only if the app hasn't defined it first): `cms_entries(...$collections)`, `cms_menu($handle, $locale = null)`, `cms_global($handle, $locale = null)`, `cms_locale_urls()`, `cms_body_class($extra = [])` and `cms_page()`. `cms_nonce()` gives the request's nonce for inline `<script>` and `<style>` under the site's [Content-Security-Policy](#content-security-policy) (`''` while it's off).
 
 ### Hooks
 
@@ -488,7 +488,7 @@ Each language is named in its own words (`Locales::nativeName()`: its name in Se
 | `fallback-note` | On a link to an untranslated page (the main language's standing in, `data-fallback`), add a visually hidden "(not translated yet)", in the page's language, for screen readers. Style `.visually-hidden` (the starter templates do). Off by default, so nothing visible changes. |
 | `label` | The `<nav>`'s label instead of the site's words. |
 
-Other attributes (`class`, `id` …) go on the `<nav>`. It renders nothing when fewer than two languages are left to show: on a site with one language, on your app's own pages (where `Cms::localeUrls()` is empty: there's no page to translate), and with `missing="hide"` on a page in its language only. A listing's, term page's or search page's links keep the query string (filters, sort, page number): `/id/blog?page=2`.
+Other attributes (`class`, `id` …) go on the `<nav>`. It renders nothing when fewer than two languages are left to show: on a site with one language, on your app's own pages (where `Cms::localeUrls()` is empty: there's no page to translate), and with `missing="hide"` on a page in its language only. A listing's, term page's or search page's links keep the query string (filters, sort, page number): `/id/blog?page=2`. With the [page cache](caching.md#whole-pages) on, they keep only the parameters kept pages are told apart by (`PageCacheQuery::query()`: `page`, `sunrice-cms.cache.query` and Settings → Cache's), so `?utm_source=…` never ends up in kept links.
 
 With a slot, the markup is yours; `$component->languages` lists the page's languages (`Sunrice\Cms\Site\PageLanguage`: `code` "pt_BR", `tag` "pt-BR" for `lang` and `hreflang`, `name`, `url`, `current`, `fallback`, `home`):
 

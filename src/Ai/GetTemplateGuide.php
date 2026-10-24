@@ -43,7 +43,9 @@ resources/views/cms/
 - Taxonomy index page (its terms): the taxonomy's `index_template` → (in a collection: `cms.collections.{collection}.{taxonomy}.index` →) `cms.taxonomies.{taxonomy}.index` → `cms.taxonomies.index` → `sunrice-cms::taxonomy-index`.
 - Search page: `cms.search` → `sunrice-cms::search`. The homepage (Settings → Site) is an entry.
 
-`{slug}` is the main language's slug, so one file serves every language; slugs `index` and `show` never pick a file. Handles keep their underscores. So: one design for every entry of a collection: `collections/{collection}/show.blade.php`; one page of its own: `collections/pages/about.blade.php`, or any view such as `pages/landing.blade.php` set as the entry's template (`cms.pages.landing`). Own templates must start with `cms.`.
+`{slug}` is the main language's slug, so one file serves every language; slugs `index` and `show` never pick a file. Handles keep their underscores. So: one design for every entry of a collection: `collections/{collection}/show.blade.php`; one page of its own: `collections/pages/about.blade.php`, or any view such as `pages/landing.blade.php` set as the entry's template (`cms.pages.landing`).
+
+A template set by name (an entry's or term's Page settings, a collection's or taxonomy's `template`, `listing_template`, `index_template`) must be a view under `sunrice-cms.site.template_prefixes` (default `cms.` and `pages.`; `null` allows any of the app's views), and never one in a `layouts`, `partials`, `components`, `errors`, `vendor`, `emails`, `mail` or `auth` folder, one named `layout` (`cms.layout`), one with a part starting with `_` (`cms._card`), or a package's (`pkg::…`, unless a prefix names it). cms_read_template, cms_write_template and "templates" cover only `resources/views/cms/`: views elsewhere (`resources/views/pages/`) are a developer's to change.
 
 ## What views get
 
@@ -70,6 +72,7 @@ resources/views/cms/
 
 - Escape with `{{ }}`. Only rich text fields are printed as is (`{!! $values['body'] !!}`): they're cleaned when saved. Never print anything else unescaped.
 - Code fields are plain strings, not cleaned: show them as code with `<x-sunrice-cms::code-block :value="$values['snippet']" language="html" />` (escaped, in `<pre><code>`), never with `{!! !!}`.
+- With the site's Content-Security-Policy on (`sunrice-cms.site.csp`), inline `<script>` and `<style>` run only with `nonce="{{ cms_nonce() }}"` (empty while it's off, so always add it), and inline event handlers (`onclick=""`, `onchange`) and `javascript:` links never run: attach them from a script (`addEventListener`).
 - Data only through the CMS (`Cms::…`, components, `$values`): no database queries or models, no `@php` beyond small formatting.
 - Every field can be empty: `@if`, `?->`, `?? ''`.
 - Images: a media field's value has `->url()` (and sizes, `->url('medium')`) and `->altIn()` (its alt text in the page's language): always `alt="{{ $image->altIn() }}"`.
@@ -80,7 +83,7 @@ MD;
     public function handle(Request $request): Response
     {
         if (! $this->can('cms.blueprints.view')) {
-            return $this->denied('work on the site\'s templates (Manage blueprints)');
+            return $this->denied('work on the site\'s templates (View blueprints)');
         }
 
         return $this->json([

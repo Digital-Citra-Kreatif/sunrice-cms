@@ -35,7 +35,7 @@ Satu orang menyunting sebuah term dalam satu bahasa pada satu waktu: jika rekan 
 
 ## Memberi term pada entri
 
-Di penyunting entri, kartu **Taksonomi** punya satu daftar untuk setiap taksonomi koleksi entri itu: centang term-nya, atau pilih satu jika koleksi hanya mengizinkan satu term (daftar yang panjang dicari, bukan ditampilkan semua). Term sama untuk semua bahasa sebuah entri, dan tampil di situs saat entri diterbitkan (lihat [Entri](guide:website/entries)). Field **Term**, jika developer menambahkannya, adalah hal lain: tautan ke sebuah term (misalnya "topik pilihan"), diisi seperti field lainnya.
+Di penyunting entri, kartu **Taksonomi** punya satu pemilih untuk setiap taksonomi koleksi entri itu: term yang dipilih tampil sebagai chip yang bisa dihapus (**×**), dan **Pilih term…** (**Pilih satu term…** jika koleksi hanya mengizinkan satu term) membuka daftar yang bisa dicari, dengan term di bawah term lain ditampilkan menjorok. Term sama untuk semua bahasa sebuah entri, dan tampil di situs saat entri diterbitkan (lihat [Entri](guide:website/entries)). Field **Term**, jika developer menambahkannya, adalah hal lain: tautan ke sebuah term (misalnya "topik pilihan"), diisi seperti field lainnya.
 
 > [!TECHNICAL]
 > Taksonomi, koleksinya, halaman term, dan field-nya diatur di Struktur → Taksonomi. Lihat [Taxonomies and terms](docs:cms/taxonomies).

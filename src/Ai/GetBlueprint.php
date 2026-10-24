@@ -23,7 +23,7 @@ final class GetBlueprint extends CmsTool
     public function handle(Request $request): Response
     {
         if (! $this->can('cms.blueprints.view')) {
-            return $this->denied('manage blueprints');
+            return $this->denied('view blueprints');
         }
         $fieldset = $request->get('kind') === 'fieldset';
         $class = $fieldset ? Fieldset::class : Blueprint::class;

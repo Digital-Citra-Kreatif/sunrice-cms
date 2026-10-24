@@ -86,7 +86,7 @@ Kartu **Pengaturan halaman** di kanan berlaku untuk semua bahasa. Isinya disimpa
 
 ## Taksonomi
 
-Kartu **Taksonomi**, di bawah Pengaturan halaman, memberi entri term-nya: kategori, tag, atau topiknya. Ada satu daftar untuk setiap taksonomi koleksinya (*Kategori*, *Tag* …): centang term yang sesuai, atau pilih satu jika koleksi hanya mengizinkan satu. Term di bawah term lain ditampilkan menjorok. Kartu ini hanya tampil jika koleksi punya taksonomi.
+Kartu **Taksonomi**, di bawah Pengaturan halaman, memberi entri term-nya: kategori, tag, atau topiknya. Ada satu pemilih untuk setiap taksonomi koleksinya (*Kategori*, *Tag* …), sama untuk semua taksonomi: term yang dipilih tampil sebagai chip, masing-masing dengan **×** untuk menghapusnya, dan **Pilih term…** (atau **Pilih satu term…** jika koleksi hanya mengizinkan satu; **Tambah…** atau **Ganti…** setelah ada yang dipilih) membuka daftar yang bisa dicari, dengan term di bawah term lain ditampilkan menjorok. Kartu ini hanya tampil jika koleksi punya taksonomi.
 
 Term sama untuk semua bahasa entri, disimpan bersama draf, dan baru tampil di situs saat Anda menerbitkan, seperti perubahan lainnya: sampai saat itu kartunya bertanda **Berubah**, **Bandingkan dengan yang tayang** menampilkan term sebelum dan sesudahnya, dan **Buang perubahan** mengembalikan term yang tayang. Revisi menyimpan term saat diterbitkan, jadi memulihkannya juga mengembalikan term-nya. Penerjemah bisa melihat term, tetapi tidak bisa mengubahnya.
 
