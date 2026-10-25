@@ -587,6 +587,93 @@ In hierarchical collections, `$entry->entry->parent`, `->children` and `->ancest
 @endforeach
 ```
 
+## Data for JavaScript
+
+A script on a page (a map's pins, a gallery, cards a "load more" button adds) or a small JSON route of your app's needs the content as plain arrays. `toData()` gives them, from what templates get: the live version (the draft in a [preview](#previews)), in the page's language with the [main language standing in](#untranslated-pages), with the same URLs. It's explicit: Eloquent's `toArray()` and `toJson()` are the models' own, hold stored data, and are never meant for a page.
+
+```php
+Cms::toData(Cms::entries('places')->limit(50)->get(), ['location', 'photo']); // a list
+Cms::toData(Cms::entries('blog')->latest()->paginate(6), ['image']);            // ['data' => [...], 'meta' => [...]]
+$entry->toData(['price', 'gallery']);   // one entry (the page's $entry too)
+$term->toData();                        // a Term (in the page's language, or ->toData('id')); a TermTranslation's too
+$media->toData();                       // see the panel's media docs
+```
+
+`Cms::toData($items, $fields = [])` takes a collection, an array or a paginator of entries, terms or media (anything else in it is left out), and gives each one's `toData()`; `$fields` are the entries' field handles to add. A paginator (`->paginate()`, the `$entries` of listing and term pages, the search page's `$results`) gives `data` and `meta`:
+
+```json
+{"data": [ … ], "meta": {"current_page": 1, "last_page": 4, "per_page": 6, "total": 21, "next_url": "https://example.com/blog?page=2", "prev_url": null}}
+```
+
+**An entry** (`EntryTranslation::toData(array $fields = [])`):
+
+| Key | |
+| --- | --- |
+| `id` | the entry's id (the same in every language) |
+| `locale` | the language its content is in: the main language's on an untranslated page |
+| `title`, `slug` | the live ones (the draft's in a preview) |
+| `url` | its page, as `url()` gives it (null without one, or never published) |
+| `collection` | the collection's handle |
+| `published_at` | ISO 8601 (`2026-10-19T09:30:00+00:00`), or null |
+| `parent_id` | the parent entry's id, or null |
+| `terms` | its own terms by taxonomy handle, `{"topics": [term, …]}`, as `$entry->terms` gives them |
+| `fields` | only when `$fields` names some: those fields by handle (handles the blueprint doesn't have are left out) |
+
+**A term**: `id`, `taxonomy` (handle), `locale` (its translation's language), `title`, `slug` and `url` in the page's language (the main language's standing in, as `$term->title()`), and `parent_id`.
+
+**Fields** are converted from `values()`, by kind:
+
+| Field | Gives |
+| --- | --- |
+| text, textarea, number, toggle, select | the value as it is (a select with several choices: the list of values) |
+| date | ISO 8601 |
+| rich text | the cleaned HTML templates print |
+| code | the string, as typed: insert it as text, never as HTML |
+| link | `{type, url, label, title, new_tab}` |
+| media | its data (`Media::toData()`), or a list; files in the trash are left out, as templates leave them out |
+| entries | each one's data **without fields**, so links never go round in circles; or a list |
+| terms | each one's data, or a list |
+| group | an object of its fields, converted the same way |
+| repeater | a list of rows, each an object of its fields (hidden rows left out) |
+| flexible | a list of `{type, key, values}`, `values` its fields (hidden blocks left out) |
+
+Only fields the blueprint (or a block's fieldset) defines come out, never anything else stored. More keys may be added to these shapes later; none will be renamed or removed without a note in the changelog.
+
+**Costs.** Entries from `Cms::entries()` (and listing, term and search pages) share one `HydrationContext`, so a list of 50 with their media, linked entries and terms costs the same few queries as a list of 2 (see [Using fields in code](fields.md#using-fields-in-code) for entries you load yourself).
+
+### In a template
+
+`@json` prints JSON safe for an attribute in single quotes and inside a `<script>` (it escapes `<`, `>`, `&` and quotes). It takes one expression and splits it at commas, so put the data in a variable first:
+
+```blade
+@php($pins = Cms::toData(Cms::entries('places')->get(), ['location']))
+<div id="map" data-pins='@json($pins)'></div>
+
+<script type="application/json" id="gallery-data">@json($entry->toData(['gallery']))</script>
+<script nonce="{{ cms_nonce() }}">
+    const pins = JSON.parse(document.getElementById('map').dataset.pins);
+    const gallery = JSON.parse(document.getElementById('gallery-data').textContent).fields.gallery;
+    for (const image of gallery) { /* image.url, image.srcset, image.alt, image.sizes.medium.url … */ }
+</script>
+```
+
+A JSON `<script type="application/json">` never runs, so it needs no nonce; the script reading it does, under the site's [Content-Security-Policy](#content-security-policy).
+
+### A small JSON route
+
+For "load more", a route of your app's in `routes/web.php` (your routes come before the CMS's). The CMS adds no routes of its own for this: there's no API.
+
+```php
+use Sunrice\Cms\Content as Cms;
+
+Route::get('/places.json', fn () => Cms::toData(
+    Cms::entries('places')->latest()->paginate(12),
+    ['location', 'photo'],
+));
+```
+
+`/places.json?page=2` gives the second page, its `meta.next_url` the third. It shows only live entries, as the site does; set the app's locale (or `->locale('id')`) for another language. The [page cache](caching.md) keeps only the CMS's own pages, so this route runs on every request: add `->remember()` to keep the query's ids in the site's cache.
+
 ## Search
 
 `/search?q=…` (and `/{locale}/search`) searches the live entries that have pages, in that language (with the [main-language fallback](#untranslated-pages), the main language's of entries not live in it, linked at that language's address): their title and field text (the words only: no field handles, HTML tags, addresses or SEO), titles first, then newest first. It renders with `cms.search`, or the CMS's plain page, with [what the search page gets](#the-search-page-gets). Search pages are never indexed or kept by the page cache, and one visitor may search `per_minute` times a minute, everyone together `per_minute_global` times. Your app's own `/search` route wins; the search page wins over an entry at that address.

@@ -5,10 +5,15 @@ declare(strict_types=1);
 namespace Sunrice\Cms;
 
 use Closure;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Sunrice\Admin\Media\Media;
+use Sunrice\Cms\Models\EntryTranslation;
+use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Query\EntryQuery;
 use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Site\Page;
 use Sunrice\Cms\Site\SiteHooks;
+use Sunrice\Cms\Support\ContentData;
 
 /**
  * The CMS for templates, also as the `Cms` alias when the app doesn't use
@@ -22,6 +27,7 @@ use Sunrice\Cms\Site\SiteHooks;
  *
  *     <nav>@foreach (Cms::localeUrls() as $locale => $url) … @endforeach</nav>
  *     Cms::site()->name()
+ *     Cms::toData(Cms::entries('places')->get(), ['location'])  // plain arrays for a script
  *
  * The same as functions: cms_entries(), cms_menu(), cms_global(),
  * cms_locale_urls(), cms_body_class(), cms_page(); and `<body @bodyClass>`.
@@ -29,6 +35,10 @@ use Sunrice\Cms\Site\SiteHooks;
  *
  *     Cms::resolveTemplateUsing(fn (Page $page): ?string => $page->collection?->handle === 'shop' ? 'shop.product' : null);
  *     Cms::bodyClassUsing(fn (Page $page): array => $page->home ? ['landing'] : []);
+ *
+ * @phpstan-import-type EntryData from EntryTranslation
+ * @phpstan-import-type TermData from Term
+ * @phpstan-import-type MediaData from Media
  *
  * @api
  */
@@ -119,5 +129,25 @@ final class Content
     public static function site(): SiteSettings
     {
         return app(SiteSettings::class);
+    }
+
+    /**
+     * Plain arrays of entries, terms or media, for a script on a page (a
+     * map, a gallery, "load more") or a small JSON route of the app's: each
+     * one's toData(), entries with the fields named in `$fields`. A list
+     * (an Eloquent or Laravel collection, an array) gives a list; a
+     * paginator (`->paginate()`, a listing page's `$entries`) gives
+     * `['data' => [...], 'meta' => [current_page, last_page, per_page,
+     * total, next_url, prev_url]]`. Anything else in it is left out.
+     *
+     *     <script type="application/json" id="pins">@json(Cms::toData(Cms::entries('places')->get(), ['location']))</script>
+     *
+     * @param  iterable<mixed>|LengthAwarePaginator<array-key, mixed>  $items
+     * @param  list<string>  $fields
+     * @return ($items is LengthAwarePaginator<array-key, mixed> ? array{data: list<EntryData|TermData|MediaData>, meta: array{current_page: int, last_page: int, per_page: int, total: int, next_url: string|null, prev_url: string|null}} : list<EntryData|TermData|MediaData>)
+     */
+    public static function toData(iterable|LengthAwarePaginator $items, array $fields = []): array
+    {
+        return $items instanceof LengthAwarePaginator ? ContentData::page($items, $fields) : ContentData::list($items, $fields);
     }
 }

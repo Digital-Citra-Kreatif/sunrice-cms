@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
 use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Fields\Schema;
 use Sunrice\Cms\Site\Site;
+use Sunrice\Cms\Support\ContentData;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\SearchText;
 
@@ -48,6 +49,10 @@ use Sunrice\Cms\Support\SearchText;
  * @property-read Entry $entry
  * @property-read Collection<int, Revision> $revisions
  * @property-read \Illuminate\Support\Collection<int, Term> $terms the entry's own terms, as its page shows them (termsOf())
+ *
+ * @phpstan-import-type TermData from Term
+ *
+ * @phpstan-type EntryData array{id: int, locale: string, title: string|null, slug: string|null, url: string|null, collection: string, published_at: string|null, parent_id: int|null, terms: array<string, list<TermData>>, fields?: array<string, mixed>}
  *
  * @api
  */
@@ -343,6 +348,32 @@ class EntryTranslation extends Model
         $terms = $this->hydration->entryTerms($this);
 
         return $taxonomy === null ? $terms : $terms->filter(fn (Term $term): bool => $term->taxonomy->handle === $taxonomy)->values();
+    }
+
+    /**
+     * A plain array of the entry as its page shows it, for a script on a
+     * page (a map's pins, cards loaded later) or a small JSON route of the
+     * app's: `id` (the entry's), `locale` (its content's language), `title`,
+     * `slug`, `url`, `collection` (handle), `published_at` (ISO 8601),
+     * `parent_id` and `terms` (its own, by taxonomy handle), plus `fields`
+     * with the fields asked for by handle (unknown ones left out), from
+     * values(): the live version, or the draft in a preview, in the page's
+     * language with the main one standing in. Media, linked entries (no
+     * fields of their own) and terms come as their data, dates as ISO 8601.
+     * Entries sharing a context (Cms::entries()) are read together: a list
+     * costs a fixed number of queries. toArray() is Eloquent's own: never
+     * give it to a page.
+     *
+     *     <div data-pins='@json(Cms::toData($properties, ['location', 'photo']))'></div>
+     *
+     * @param  list<string>  $fields
+     * @return EntryData
+     */
+    public function toData(array $fields = []): array
+    {
+        $this->hydration ??= new HydrationContext($this->locale);
+
+        return ContentData::entry($this, $this->hydration, $fields);
     }
 
     /** The fields this translation edits: all of them for the main one, the translated ones for the others. */

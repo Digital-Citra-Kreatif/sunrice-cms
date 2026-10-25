@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Sunrice\Cms\Models;
 use Sunrice\Cms\Site\Site;
+use Sunrice\Cms\Support\ContentData;
 use Sunrice\Cms\Support\Locales;
 
 /**
@@ -32,6 +33,8 @@ use Sunrice\Cms\Support\Locales;
  * @property-read Collection<int, Term> $children
  * @property-read Collection<int, TermTranslation> $translations
  * @property-read int|null $entries_count with withCount('entries')
+ *
+ * @phpstan-type TermData array{id: int, taxonomy: string, locale: string|null, title: string, slug: string|null, url: string|null, parent_id: int|null}
  *
  * @api
  */
@@ -173,6 +176,19 @@ class Term extends Model
     public function title(?string $locale = null): string
     {
         return $this->translation($locale)->title ?? '';
+    }
+
+    /**
+     * A plain array of the term, for a script on a page or a small JSON
+     * route: `id`, `taxonomy` (handle), `locale` (its translation's language),
+     * `title`, `slug` and `url` in a language (by default the page's, as
+     * title() and url(), the main language's standing in), and `parent_id`.
+     *
+     * @return TermData
+     */
+    public function toData(?string $locale = null): array
+    {
+        return ContentData::term($this, $locale);
     }
 
     /**

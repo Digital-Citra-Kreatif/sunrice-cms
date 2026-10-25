@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Site\Site;
+use Sunrice\Cms\Support\ContentData;
 use Sunrice\Cms\Support\Locales;
 
 /**
@@ -25,6 +26,8 @@ use Sunrice\Cms\Support\Locales;
  * @property Carbon|null $updated_at
  * @property array<string, mixed>|null $data its fields and SEO
  * @property-read Term $term
+ *
+ * @phpstan-import-type TermData from Term
  *
  * @api
  */
@@ -61,6 +64,17 @@ class TermTranslation extends Model
     public function url(): ?string
     {
         return app(Site::class)->termUrl($this);
+    }
+
+    /**
+     * Its term as data (Term::toData()), with this translation's title,
+     * slug and page (`$term` on a term page).
+     *
+     * @return TermData
+     */
+    public function toData(): array
+    {
+        return ContentData::termTranslation($this);
     }
 
     /** The same translation, for the term page in a collection (null: the shared one). */

@@ -213,6 +213,8 @@ $cards = EntryTranslation::query()->live()->whereIn('entry_id', $ids)->with('ent
 foreach ($cards as $card) { $card->values(); } // no queries in the loop
 ```
 
+The same values as plain arrays, for a script on the page or a JSON route: `$card->toData(['image', 'price'])` and `Cms::toData($cards, [...])` ([Data for JavaScript](site.md#data-for-javascript)).
+
 ## Your own field types
 
 Register field types on the CMS plugin in your panel provider:
