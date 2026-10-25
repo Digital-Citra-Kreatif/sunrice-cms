@@ -34,8 +34,9 @@ return [
         // What the views editors pick for an entry or a term may start
         // with: resources/views/cms/ and resources/views/pages/. Add the
         // folders you want editors to use; null allows any of the app's own
-        // views but those under layouts, partials, components, errors,
-        // vendor, emails, mail and auth (and "_" files). Never a package's.
+        // views but those under layouts, partials, components, blocks,
+        // errors, vendor, emails, mail and auth, those named layout, search
+        // or comment-unsubscribe (and "_" files). Never a package's.
         'template_prefixes' => ['cms.', 'pages.'],
         // Settings → Site code: HTML editors add to every page (analytics,
         // chat widgets). False turns it off: the page and its menu item are

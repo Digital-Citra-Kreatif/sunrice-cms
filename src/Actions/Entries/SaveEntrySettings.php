@@ -22,13 +22,20 @@ final class SaveEntrySettings
 
     /**
      * Folders of the app's views that hold no pages: a template may not be
-     * under them (without template prefixes), and the Template choice
-     * leaves them out.
+     * under them (at any depth), and the Template choice leaves them out.
+     * `blocks` holds the parts a page's blocks render with (`cms.blocks.hero`).
      */
-    public const NOT_PAGES = ['layouts', 'partials', 'components', 'errors', 'vendor', 'emails', 'mail', 'auth'];
+    public const NOT_PAGES = ['layouts', 'partials', 'components', 'blocks', 'errors', 'vendor', 'emails', 'mail', 'auth'];
 
-    /** Views that are no page wherever they are: the site's layout (`cms.layout`, which pages extend). */
-    public const NOT_PAGE_NAMES = ['layout'];
+    /**
+     * Views that are no entry's or term's page wherever they are: the
+     * site's layout (`cms.layout`, which pages extend) and the views the
+     * CMS renders by name for pages of its own, the search page
+     * (`cms.search`) and a reply email's unsubscribe page
+     * (`cms.comment-unsubscribe`), which need variables an entry's page
+     * doesn't have.
+     */
+    public const NOT_PAGE_NAMES = ['layout', 'search', 'comment-unsubscribe'];
 
     public function __construct(private readonly ActivityLog $activity) {}
 
@@ -88,8 +95,8 @@ final class SaveEntrySettings
         if (! self::allowed($template)) {
             $prefixes = self::prefixes();
             throw ValidationException::withMessages(['template' => $prefixes === null
-                ? __('Use a view of your own, not under :folders, like :example.', ['folders' => implode(', ', self::NOT_PAGES), 'example' => $example])
-                : __('Use a view under :prefixes, not under :folders, like :example.', ['prefixes' => implode(', ', $prefixes), 'folders' => implode(', ', self::NOT_PAGES), 'example' => $example])]);
+                ? __('Use a view of your own, not under :folders nor named :names, like :example.', ['folders' => implode(', ', self::NOT_PAGES), 'names' => implode(', ', self::NOT_PAGE_NAMES), 'example' => $example])
+                : __('Use a view under :prefixes, not under :folders nor named :names, like :example.', ['prefixes' => implode(', ', $prefixes), 'folders' => implode(', ', self::NOT_PAGES), 'names' => implode(', ', self::NOT_PAGE_NAMES), 'example' => $example])]);
         }
 
         return $template;
@@ -100,7 +107,8 @@ final class SaveEntrySettings
      * (sunrice-cms.site.template_prefixes), one under them; without, any
      * of the app's own views (resources/views), never a package's
      * ("pkg::…"). Either way, never one in the NOT_PAGES folders (at any
-     * depth), a site layout (NOT_PAGE_NAMES: `cms.layout`) or one with a
+     * depth), one named in NOT_PAGE_NAMES (`cms.layout`, `cms.search`,
+     * `cms.comment-unsubscribe`) or one with a
      * part whose name starts with "_".
      */
     public static function allowed(string $template): bool
