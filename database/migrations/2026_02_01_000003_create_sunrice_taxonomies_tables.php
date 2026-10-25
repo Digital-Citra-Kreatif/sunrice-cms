@@ -54,6 +54,8 @@ return new class extends Migration
             // Its URL instead of {listing}/{taxonomy}, and other languages' own: {"id": "/buku/tag"}.
             $table->string('index_route')->nullable();
             $table->json('index_routes')->nullable();
+            // Its entries may have one of its terms at most ("One term only").
+            $table->boolean('single')->default(false);
             $table->primary(['collection_id', 'taxonomy_id']);
         });
 
@@ -88,7 +90,7 @@ return new class extends Migration
             $table->unique(['taxonomy_id', 'locale', 'slug'], 'sunrice_term_tr_slug_unique');
         });
 
-        // Which terms published entries have, from their terms fields: for queries.
+        // Which terms published entries have (their live terms, chosen in the editor's Taxonomies card): for queries.
         Schema::create('sunrice_entry_term', function (Blueprint $table): void {
             $table->foreignId('entry_id')->constrained('sunrice_entries')->cascadeOnDelete();
             $table->foreignId('term_id')->constrained('sunrice_terms')->cascadeOnDelete();

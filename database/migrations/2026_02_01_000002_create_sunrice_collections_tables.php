@@ -70,6 +70,8 @@ return new class extends Migration
             $table->boolean('comments_closed')->default(false);
             $table->timestamps();
             $table->softDeletes();
+            // Its terms (shared by its languages) chosen and not published yet, as term ids; null: the live ones (sunrice_entry_term).
+            $table->json('draft_terms')->nullable();
             $table->index(['collection_id', 'sort_order'], 'sunrice_entries_collection_order_index');
             // The trash.
             $table->index('deleted_at');
@@ -101,6 +103,11 @@ return new class extends Migration
             $table->timestamp('review_requested_at')->nullable()->index();
             $table->unsignedBigInteger('review_requested_by')->nullable();
             $table->timestamps();
+            // Its version when last published, so discarding the main translation's changes leaves the
+            // other languages that were up to date with it up to date (EntryTranslation::isOutdated()),
+            // and when it was last published: the date the site gives as modified (saving a draft doesn't change it).
+            $table->unsignedInteger('live_version')->nullable();
+            $table->timestamp('live_updated_at')->nullable();
 
             // Named, as generated names pass MySQL's 64 characters.
             $table->unique(['entry_id', 'locale'], 'sunrice_entry_tr_entry_locale_unique');
@@ -136,6 +143,8 @@ return new class extends Migration
             $table->string('slug');
             $table->json('data');
             $table->timestamp('created_at')->nullable();
+            // The entry's terms when it was published (term ids), so restoring brings them back.
+            $table->json('terms')->nullable();
             // Postgres and SQLite don't index a foreign key by themselves.
             $table->index('entry_translation_id', 'sunrice_revisions_translation_index');
         });
