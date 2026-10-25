@@ -55,8 +55,11 @@ final class MenuController
 
     public function update(Request $request, Menu $menu, SaveMenu $save): RedirectResponse
     {
-        $items = $request->input('items');
-        $save->handle($menu, is_array($items) ? $items : []);
+        // The whole tree, always: an empty list clears the menu, a missing
+        // one is a mistake (not "clear"), so it's refused.
+        /** @var array{items: array<mixed>} $data */
+        $data = $request->validate(['items' => ['present', 'array']]);
+        $save->handle($menu, $data['items']);
 
         return back()->with('success', 'Menu saved.');
     }
