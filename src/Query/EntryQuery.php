@@ -10,6 +10,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection as Items;
+use Illuminate\Support\Traits\Conditionable;
 use InvalidArgumentException;
 use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Fields\Schema;
@@ -32,6 +33,7 @@ use Sunrice\Cms\Support\SiteCache;
  *     Cms::entries('articles')->where('price', '<', 100)->orderBy('price')->get()
  *     Cms::entries('articles')->whereEntry('related', $entry)->get()   // pointing at $entry
  *     Cms::entries('articles')->search('coffee')->paginate(10)
+ *     Cms::entries('articles')->when($request->query('topic'), fn (EntryQuery $q, string $topic) => $q->whereTerm('topics', $topic))
  *
  * Only published entries past their date, of collections not deleted
  * (preview() takes every entry's draft instead). In another language than
@@ -49,6 +51,8 @@ use Sunrice\Cms\Support\SiteCache;
  */
 final class EntryQuery
 {
+    use Conditionable;
+
     private const OPERATORS = ['=', '!=', '<', '>', '<=', '>=', 'in', 'not in'];
 
     private const COLUMNS = ['title', 'slug', 'published_at'];

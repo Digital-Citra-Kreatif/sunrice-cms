@@ -352,7 +352,7 @@ In any view, `Cms::entries()` finds live entries in the current language (`Sunri
 {{ Cms::global('contact')['phone'] ?? '' }}
 ```
 
-`entries(...$collections)` (none: every collection), then `locale()`, `fallback()`, `preview()`, `whereTerm()`, `whereFieldTerm()`, `whereSlug()`, `childrenOf($entry)` (`null`: top-level entries), `where()`, `whereContains()`, `whereEntry()`, `except()`, `search()`, `latest()`, `oldest()`, `alphabetical()`, `ordered()` (Manual order), `orderBy()`, `limit()`, `remember()`, and `get()`, `first()`, `count()`, `paginate($perPage, $pageName = 'page')` or `toBase()`.
+`entries(...$collections)` (none: every collection), then `when($value, $callback)` and `unless()` (Laravel's, to add a condition only when a value is given), `locale()`, `fallback()`, `preview()`, `whereTerm()`, `whereFieldTerm()`, `whereSlug()`, `childrenOf($entry)` (`null`: top-level entries), `where()`, `whereContains()`, `whereEntry()`, `except()`, `search()`, `latest()`, `oldest()`, `alphabetical()`, `ordered()` (Manual order), `orderBy()`, `limit()`, `remember()`, and `get()`, `first()`, `count()`, `paginate($perPage, $pageName = 'page')` or `toBase()`.
 
 ```php
 Cms::entries('events')->where('featured', true)->where('date', '>=', today())->orderBy('date')->get();
@@ -673,6 +673,66 @@ Route::get('/places.json', fn () => Cms::toData(
 ```
 
 `/places.json?page=2` gives the second page, its `meta.next_url` the third. It shows only live entries, as the site does; set the app's locale (or `->locale('id')`) for another language. The [page cache](caching.md) keeps only the CMS's own pages, so this route runs on every request: add `->remember()` to keep the query's ids in the site's cache.
+
+### Filtering with JavaScript
+
+To filter without reloading the page, either filter in the browser or ask a JSON route for the matches. Without JavaScript, [`<x-sunrice-cms::entry-filter>`](#filtering-entries) does it through the address, works with the page cache and needs no code: use `toData()` only when results should change as the visitor clicks.
+
+| | Use it for |
+| --- | --- |
+| In the browser | a few hundred entries at most: all of them come with the page once, then filtering is instant |
+| On the server | more entries, or filters on many fields: the database finds the matches and only a page of them is sent |
+| `<x-sunrice-cms::entry-filter>` | results that can wait for a page load, shareable and bookmarkable |
+
+**In the browser.** Give the page every entry with the fields the filters need, and filter the list in a script. An entry's terms come grouped by taxonomy handle, so filtering by a term needs nothing more:
+
+```blade
+@php($homes = Cms::toData(Cms::entries('properties')->get(), ['price', 'bedrooms']))
+<div id="homes" data-homes='@json($homes)'></div>
+
+<script nonce="{{ cms_nonce() }}">
+    const homes = JSON.parse(document.getElementById('homes').dataset.homes);
+
+    function matching({ maxPrice, location }) {
+        return homes.filter((home) =>
+            (maxPrice === null || home.fields.price <= maxPrice)
+            && (location === null || (home.terms.locations ?? []).some((term) => term.slug === location)));
+    }
+
+    console.log(matching({ maxPrice: 500000, location: 'canggu' }));
+</script>
+```
+
+**On the server.** A route of your app's runs the query with the [query methods](#querying-entries) and returns a page of matches; the script fetches it as the visitor changes a filter:
+
+```php
+use Illuminate\Http\Request;
+use Sunrice\Cms\Content as Cms;
+
+Route::get('/homes.json', function (Request $request) {
+    $homes = Cms::entries('properties')
+        ->when($request->integer('max_price'), fn ($q, int $max) => $q->where('price', '<=', $max))
+        ->when($request->string('location')->toString(), fn ($q, string $slug) => $q->whereTerm('locations', $slug))
+        ->latest();
+
+    return Cms::toData($homes->paginate(12), ['price', 'bedrooms', 'gallery']);
+})->middleware('throttle:60,1');
+```
+
+```blade
+<script nonce="{{ cms_nonce() }}">
+    async function search(filters) {
+        const response = await fetch('/homes.json?' + new URLSearchParams(filters), { headers: { Accept: 'application/json' } });
+        const { data, meta } = await response.json();
+
+        return { homes: data, more: meta.next_url };   // fetch meta.next_url for "load more"
+    }
+</script>
+```
+
+- Read each filter yourself and pass it to a query method (`where()`, `whereTerm()`, `whereContains()`, `search()`): never hand the request to the query whole, so visitors can only filter on what you chose.
+- It gives only live entries, as the site does. The route is public, so keep a rate limit on it (`throttle`), and add `->remember()` to the query when the same filters come often.
+- Under the site's [Content-Security-Policy](#content-security-policy), `fetch` to your own site needs nothing more (`connect-src 'self'`).
 
 ## Search
 
