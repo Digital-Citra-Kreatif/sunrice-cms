@@ -6,13 +6,17 @@ namespace Sunrice\Cms\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Sunrice\Cms\Actions\Taxonomies\SaveIndexPage;
+use Sunrice\Cms\Actions\Taxonomies\SaveIndexTemplate;
+use Sunrice\Cms\Admin\TemplateHelp;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\CollectionTaxonomy;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\TaxonomyListing;
+use Sunrice\Cms\Site\TemplateLookup;
 use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\Seo;
@@ -58,19 +62,39 @@ final class IndexPageController
             'values' => array_diff_key($taxonomy->indexData($locale, $collection, $schema), [Seo::KEY => true]),
             'seo' => $stored?->data[Seo::KEY] ?? null,
             'version' => $stored?->version,
-            'can' => ['update' => Access::terms($request->user(), 'update', $taxonomy)],
-            // Its index blueprint, for those who may edit the taxonomy.
+            // Its Index page template (the taxonomy's, for all its index pages), the views tried for this page when it's empty, and which exist.
+            'template' => $taxonomy->index_template,
+            'templates' => [
+                'own' => TemplateHelp::lookup([$taxonomy->index_template])[0] ?? null,
+                'fallbacks' => TemplateHelp::lookup(TemplateLookup::index($taxonomy, $collection, own: false)),
+                'example' => TemplateHelp::example("{$taxonomy->handle}-index"),
+            ],
+            // The views that exist under the template prefixes, to pick from: read when the Template choice opens.
+            'templateChoices' => Inertia::optional(fn (): array => TemplateHelp::choices()),
+            'can' => [
+                'update' => Access::terms($request->user(), 'update', $taxonomy),
+                // The template is the taxonomy's setting.
+                'template' => $request->user()?->can('cms.taxonomies.update') === true,
+            ],
+            // The taxonomy's settings (its index pages, their blueprint and template), for those who may change them: the back link, breadcrumbs and menu.
             'settings' => $request->user()?->can('cms.taxonomies.update') === true ? route('sunrice.admin.cms.taxonomies.edit', $taxonomy->handle) : null,
         ]);
     }
 
-    public function update(Request $request, Taxonomy $taxonomy, SaveIndexPage $save): RedirectResponse
+    public function update(Request $request, Taxonomy $taxonomy, SaveIndexPage $save, SaveIndexTemplate $saveTemplate): RedirectResponse
     {
         $collection = self::collection($request, $taxonomy);
+        // The template is the taxonomy's setting: only for those who may change it.
+        abort_if($request->has('template') && $request->user()?->can('cms.taxonomies.update') !== true, 403);
         $data = $request->input('data');
         $locale = $request->input('locale');
         $version = $request->input('version');
-        $save->handle($taxonomy, $collection, is_array($data) ? $data : [], is_string($locale) ? $locale : null, is_int($version) || is_string($version) ? $version : null, $request->has('seo') ? ($request->input('seo') ?? []) : null);
+        DB::transaction(function () use ($request, $taxonomy, $collection, $save, $saveTemplate, $data, $locale, $version): void {
+            if ($request->has('template')) {
+                $saveTemplate->handle($taxonomy, $request->input('template'));
+            }
+            $save->handle($taxonomy, $collection, is_array($data) ? $data : [], is_string($locale) ? $locale : null, is_int($version) || is_string($version) ? $version : null, $request->has('seo') ? ($request->input('seo') ?? []) : null);
+        });
 
         return back()->with('success', 'Saved. The site shows it now.');
     }

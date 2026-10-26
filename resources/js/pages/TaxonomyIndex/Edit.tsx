@@ -12,7 +12,7 @@ interface Props extends PageValuesProps {
     url: string | null;
     /** The taxonomy's index pages that are on (collection null: the shared one). */
     pages: { collection: string | null; title: string }[];
-    /** The taxonomy's settings, when the user may change them. */
+    /** The taxonomy's settings, when the user may change them (the back link, breadcrumbs and menu). */
     settings?: string | null;
 }
 
@@ -20,22 +20,28 @@ const SHARED = '__shared';
 
 /** A taxonomy index page's fields and SEO (the shared one, or a collection's), per language. */
 export default function TaxonomyIndexPage({ taxonomy, collection, url, pages, settings, ...props }: Props) {
-    const back = adminUrl(`cms/taxonomies/${taxonomy.handle}/terms`);
+    // Back to the taxonomy's settings, where its index pages are set up; for those who can't change them, its terms.
+    const back = settings ?? adminUrl(`cms/taxonomies/${taxonomy.handle}/terms`);
     const editUrl = adminUrl(`cms/taxonomies/${taxonomy.handle}/index-page/edit`);
     const page = collection ? t('Index page: :collection', { collection: collection.title }) : t('Index page');
+    const breadcrumbs = settings
+        ? [{ label: t('Taxonomies'), href: adminUrl('cms/taxonomies') }, { label: taxonomy.title, href: settings }, { label: page }]
+        : [{ label: taxonomy.title, href: back }, { label: page }];
 
     return (
         <PageValuesForm {...props}
             title={`${taxonomy.title}: ${page}`}
-            breadcrumbs={[{ label: taxonomy.title, href: back }, { label: page }]}
+            breadcrumbs={breadcrumbs}
             back={{ href: back, label: t('Back to :title', { title: taxonomy.title }) }}
             saveUrl={adminUrl(`cms/taxonomies/${taxonomy.handle}/index-page`)}
             editUrl={editUrl}
             params={collection ? { collection: collection.handle } : {}}
             viewUrl={url}
             empty={t('The index page has no fields of its own: choose its fields (Index page fields) in the taxonomy\'s settings under Structure → Taxonomies.')}
+            emptyAction={settings ? { label: t('Choose index page fields'), href: `${settings}#field-index_blueprint` } : null}
             seoDescription={t('How the index page appears in search results and shared links.')}
             storageKey="cms:taxonomy-index:seo"
+            templateHelp={t('For all of :taxonomy\'s index pages, the shared one and each collection\'s, in every language; also under Structure → Taxonomies. Automatic uses the first file that exists.', { taxonomy: taxonomy.title })}
             menu={settings ? [{ label: t('Taxonomy settings'), href: settings, icon: <Settings2 /> }] : []}
         >
             {pages.length > 1 && (

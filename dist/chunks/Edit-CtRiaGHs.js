@@ -1,12 +1,12 @@
-import { j as e, a as S, t as l, r as j, l as x, h as A } from "./admin-CQrIqXPu.js";
+import { j as e, a as S, t as l, r as j, l as x, h as A } from "./admin-CLF05qBH.js";
 import { u as i } from "./ui-Dh5wfMwT.js";
-import { F as v } from "./FieldError-DB-u7pB2.js";
-import { A as B, b as P, h as H, B as M } from "./FieldInput-DrKWQcNq.js";
-import { F as q } from "./FieldSections-bWnTBtdE.js";
-import { S as G, T as J, w as R } from "./SlugNote-CpV3RLWq.js";
-import { V as z } from "./VersionConflict-CwWuplpj.js";
-import { L as Q } from "./LanguageTabs-DyRc7off.js";
-import { s as W } from "./seo-D6FlDlyV.js";
+import { F as v } from "./FieldError-ROD6-Nnj.js";
+import { A as B, b as P, h as H, B as M } from "./FieldInput-CvMRiFKf.js";
+import { F as q } from "./FieldSections-7SgmxNQI.js";
+import { S as G } from "./SlugNote-C8WwyLcQ.js";
+import { s as J, T as R, w as z } from "./seo-odMjWUg6.js";
+import { V as Q } from "./VersionConflict-DqMQWtv0.js";
+import { L as W } from "./LanguageTabs-B2yao7ge.js";
 import { E as X } from "./external-link-CFxEu4M4.js";
 import { L as Y } from "./loader-circle-ByksABXO.js";
 const b = "__top";
@@ -75,7 +75,7 @@ function Z({ taxonomy: r, term: t, parentId: $ = null, terms: k = [], translated
     /* @__PURE__ */ e.jsxs("div", { className: "cms:grid cms:items-start cms:gap-6 cms:lg:grid-cols-[minmax(0,1fr)_20rem]", children: [
       /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:min-w-0 cms:flex-col cms:gap-6", children: [
         /* @__PURE__ */ e.jsx(
-          Q,
+          W,
           {
             current: d,
             locales: p,
@@ -154,7 +154,7 @@ function Z({ taxonomy: r, term: t, parentId: $ = null, terms: k = [], translated
         }, onDiscard: (s) => {
           m.discardKept(s);
         } }),
-        /* @__PURE__ */ e.jsx(z, { message: n.version, processing: a.processing, onSaveMine: V }),
+        /* @__PURE__ */ e.jsx(Q, { message: n.version, processing: a.processing, onSaveMine: V }),
         /* @__PURE__ */ e.jsx(
           q,
           {
@@ -171,7 +171,7 @@ function Z({ taxonomy: r, term: t, parentId: $ = null, terms: k = [], translated
             }
           }
         ),
-        /* @__PURE__ */ e.jsx(i.CollapsibleCard, { title: l("SEO"), description: l("How this term's page appears in search results and shared links."), titleClassName: "cms:text-base", storageKey: "cms:term:seo", hasErrors: H(n, "seo"), children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !o, className: "cms:min-w-0", children: /* @__PURE__ */ e.jsx(B, { bare: !0, id: "seo", fields: W(), value: a.data.seo, errors: P(n, "seo"), onChange: (s) => {
+        /* @__PURE__ */ e.jsx(i.CollapsibleCard, { title: l("SEO"), description: l("How this term's page appears in search results and shared links."), titleClassName: "cms:text-base", storageKey: "cms:term:seo", hasErrors: H(n, "seo"), children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !o, className: "cms:min-w-0", children: /* @__PURE__ */ e.jsx(B, { bare: !0, id: "seo", fields: J(), value: a.data.seo, errors: P(n, "seo"), onChange: (s) => {
           a.setData("seo", s), u("seo");
         } }) }) })
       ] }),
@@ -185,12 +185,12 @@ function Z({ taxonomy: r, term: t, parentId: $ = null, terms: k = [], translated
             hasErrors: n.template !== void 0,
             contentClassName: "cms:flex cms:flex-col cms:gap-2",
             children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !o, className: "cms:flex cms:min-w-0 cms:flex-col cms:gap-2", children: /* @__PURE__ */ e.jsx(
-              J,
+              R,
               {
                 id: "template",
                 value: a.data.template,
                 onChange: (s) => a.setData("template", s),
-                lookup: R(I, O),
+                lookup: z(I, O),
                 example: `cms.${r.handle}-special`,
                 automatic: l("Automatic uses the taxonomy's template."),
                 error: n.template,

@@ -6,11 +6,15 @@ namespace Sunrice\Cms\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Sunrice\Cms\Actions\Collections\SaveListing;
+use Sunrice\Cms\Actions\Collections\SaveListingTemplate;
+use Sunrice\Cms\Admin\TemplateHelp;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\CollectionListing;
+use Sunrice\Cms\Site\TemplateLookup;
 use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\Seo;
@@ -39,6 +43,8 @@ final class ListingController
 
         return Inertia::render('Cms/Listing/Edit', [
             'collection' => ['handle' => $collection->handle, 'title' => $collection->title, 'url' => $collection->listingUrl($locale)],
+            // Where its back link and breadcrumbs go: the collection's settings (its listing page card), for those who may change them.
+            'settings' => $request->user()?->can('cms.collections.update') === true ? route('sunrice.admin.cms.collections.edit', $collection->handle) : null,
             'fields' => $schema->toAdmin(),
             'locale' => $locale,
             'locales' => Locales::all(),
@@ -48,17 +54,37 @@ final class ListingController
             'values' => array_diff_key($collection->listingData($locale, $schema), [Seo::KEY => true]),
             'seo' => $collection->listings->firstWhere('locale', $locale)?->data[Seo::KEY] ?? null,
             'version' => $collection->listings->firstWhere('locale', $locale)?->version,
-            'can' => ['update' => Access::entries($request->user(), 'update', $collection)],
+            // Its Listing page template, the views tried when it's empty, and which exist (Template, and How is it chosen?).
+            'template' => $collection->listing_template,
+            'templates' => [
+                'own' => TemplateHelp::lookup([$collection->listing_template])[0] ?? null,
+                'fallbacks' => TemplateHelp::lookup(TemplateLookup::listing($collection, own: false)),
+                'example' => TemplateHelp::example("{$collection->handle}-home"),
+            ],
+            // The views that exist under the template prefixes, to pick from: read when the Template choice opens.
+            'templateChoices' => Inertia::optional(fn (): array => TemplateHelp::choices()),
+            'can' => [
+                'update' => Access::entries($request->user(), 'update', $collection),
+                // The template is the collection's setting.
+                'template' => $request->user()?->can('cms.collections.update') === true,
+            ],
         ]);
     }
 
-    public function update(Request $request, Collection $collection, SaveListing $save): RedirectResponse
+    public function update(Request $request, Collection $collection, SaveListing $save, SaveListingTemplate $saveTemplate): RedirectResponse
     {
         abort_if($collection->listing_route === null, 404);
+        // The template is the collection's setting: only for those who may change it.
+        abort_if($request->has('template') && $request->user()?->can('cms.collections.update') !== true, 403);
         $data = $request->input('data');
         $locale = $request->input('locale');
         $version = $request->input('version');
-        $save->handle($collection, is_array($data) ? $data : [], is_string($locale) ? $locale : null, is_int($version) || is_string($version) ? $version : null, $request->has('seo') ? ($request->input('seo') ?? []) : null);
+        DB::transaction(function () use ($request, $collection, $save, $saveTemplate, $data, $locale, $version): void {
+            if ($request->has('template')) {
+                $saveTemplate->handle($collection, $request->input('template'));
+            }
+            $save->handle($collection, is_array($data) ? $data : [], is_string($locale) ? $locale : null, is_int($version) || is_string($version) ? $version : null, $request->has('seo') ? ($request->input('seo') ?? []) : null);
+        });
 
         return back()->with('success', 'Saved. The site shows it now.');
     }

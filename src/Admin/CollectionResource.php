@@ -25,7 +25,7 @@ use Sunrice\Cms\Actions\Collections\RestoreDeleted;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Site\RoutePatternRule;
-use Sunrice\Cms\Site\TemplateRule;
+use Sunrice\Cms\Site\TemplateLookup;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\StructuredData;
 
@@ -103,9 +103,8 @@ final class CollectionResource extends Resource
                         ->help('Entries can sit under a parent entry, like pages under pages.'),
                     Toggle::make('comments')->label('Allow comments')->showWhen('pages')
                         ->help('Visitors can comment on its entries.'),
-                    TextInput::make('template')->label('Entry template')->placeholder('cms.article')->showWhen('pages')
-                        ->rules([new TemplateRule('cms.article')])
-                        ->help('Empty: the first template that exists. An entry can choose its own in its Page settings.')
+                    TemplateHelp::select('template', 'cms.article', 'Automatic: the first template that exists. An entry can choose its own in its Page settings.')
+                        ->label('Entry template')->showWhen('pages')
                         ->helpDetails('Which file?', TemplateHelp::files(['cms.collections.{handle}.show', 'cms.collections.show'], 'cms.article')."\n".__('Before this template, :file is tried for the entry with that slug in the main language.', ['file' => '`cms/collections/{handle}/{slug}.blade.php`'])),
                     Select::make('schema_type')->label('Structured data type')->options(StructuredData::ENTRY_TYPES)->showWhen('pages')
                         ->help('What search engines are told its entries are. Empty: Article if dated, else Web page.'),
@@ -113,7 +112,8 @@ final class CollectionResource extends Resource
             Section::make('Listing page')->description('A page listing its entries, like /blog.')->columns(2)
                 ->links(fn (?Model $collection): array => $collection instanceof Collection ? array_values(array_filter([
                     ($url = $collection->listingUrl(Locales::default())) !== null ? Link::make('View on site', $url)->newTab()->showWhen('listing') : null,
-                    Link::make('Edit listing page', route('sunrice.admin.cms.collections.listing.edit', $collection->handle, false))->showWhen('listing_blueprint'),
+                    // Its fields (with a listing blueprint), SEO and template, per language.
+                    $collection->listing_route !== null ? Link::make('Edit listing page', route('sunrice.admin.cms.collections.listing.edit', $collection->handle, false))->showWhen('listing') : null,
                 ])) : [])
                 ->schema([
                     Toggle::make('listing')->label('Has a listing page')->span(2)
@@ -137,9 +137,8 @@ final class CollectionResource extends Resource
                             Link::make('Edit', route('sunrice.admin.cms.blueprints.index', [], false).'/{listing_blueprint}/edit')->showWhen('listing_blueprint'),
                         ]),
                     NumberInput::make('per_page')->label('Entries per page')->integer()->min(1)->max(100)->default(10)->showWhen('listing'),
-                    TextInput::make('listing_template')->label('Listing page template')->placeholder('cms.blog-home')->span(2)->showWhen('listing')
-                        ->rules([new TemplateRule('cms.blog-home')])
-                        ->help('Empty: the first template that exists.')
+                    TemplateHelp::select('listing_template', 'cms.blog-home', 'Automatic: the first template that exists.', fn (Model $collection): array => $collection instanceof Collection ? TemplateLookup::listing($collection) : [])
+                        ->label('Listing page template')->span(2)->showWhen('listing')
                         ->helpDetails('Which file?', TemplateHelp::files(['cms.collections.{handle}.index', 'cms.collections.index'], 'cms.blog-home')),
                 ]),
         ]);

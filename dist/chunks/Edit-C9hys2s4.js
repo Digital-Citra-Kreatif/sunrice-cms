@@ -1,16 +1,16 @@
-import { j as e, t as s, f as S, a as B, r as j, b as Te, d as es, e as ss, l as P, c as ts, g as as, h as ls, s as ns, i as is, k as rs } from "./admin-CQrIqXPu.js";
+import { j as e, t as s, f as S, a as B, r as j, b as Te, d as es, e as ss, l as P, c as ts, g as as, h as ls, s as ns, i as is, k as rs } from "./admin-CLF05qBH.js";
 import { c as U, _ as N } from "./createLucideIcon-Ccbp7F45.js";
 import { u as a } from "./ui-Dh5wfMwT.js";
-import { u as cs } from "./Confirm-DBpG-0So.js";
-import { S as os, w as ds, T as ms } from "./SlugNote-CpV3RLWq.js";
-import { E as ve, C as Z } from "./EntryStatus-BgzGOETB.js";
-import { E as us } from "./EntriesPicker-DZ2n_tm-.js";
+import { u as cs } from "./Confirm-Jlj4_x3j.js";
+import { s as os, w as ds, T as ms } from "./seo-odMjWUg6.js";
+import { E as ve, C as Z } from "./EntryStatus-DOt9fUJZ.js";
+import { E as us } from "./EntriesPicker-C53io_NQ.js";
 import { C as Ae } from "./check-OeKFYRnl.js";
 import { S as hs, M as ps, U as re } from "./undo-2-CBzqSKK6.js";
-import { F as xs } from "./FieldSections-bWnTBtdE.js";
-import { C as gs, z as Be, A as fs, b as bs, h as vs, B as js, T as ws } from "./FieldInput-DrKWQcNq.js";
-import { s as ks } from "./seo-D6FlDlyV.js";
-import { F } from "./FieldError-DB-u7pB2.js";
+import { F as xs } from "./FieldSections-7SgmxNQI.js";
+import { S as gs } from "./SlugNote-C8WwyLcQ.js";
+import { C as fs, z as Be, A as bs, b as vs, h as js, B as ws, T as ks } from "./FieldInput-CvMRiFKf.js";
+import { F } from "./FieldError-ROD6-Nnj.js";
 import { R as Ns } from "./rotate-ccw-BcgdCn0y.js";
 import { T as je } from "./trash-DHN6ewjn.js";
 import { L as Cs } from "./link-2-BYZeXgi5.js";
@@ -252,7 +252,7 @@ function zs({ collection: l, fields: r, locales: c = [], shared: m = [], sharedV
     template: A?.template ?? "",
     comments_closed: A?.commentsClosed === !0
   }), pe = (n) => d.setData((v) => ({ ...v, ...n })), O = t ? { locale: t.locale } : {}, M = c.find((n) => n.main)?.code, C = d.errors, G = j.usePage().props.errors ?? {}, V = (n) => {
-    const v = js(C, n);
+    const v = ws(C, n);
     v.length > 0 && d.clearErrors(...v);
   }, L = t !== null && t.status !== "draft" && !t.hasUnpublishedChanges && !d.isDirty, J = es(t?.status ?? "draft", oe, t?.publishedAt ?? null), xe = t === null ? w.create : w.update && !t.trashed, Y = t?.status === "scheduled", _ = t ? ss(t) : null, W = t?.live?.changed ?? [], ge = (n) => W.includes(n) ? /* @__PURE__ */ e.jsx(Z, {}) : null, Q = l.pages !== !1, Ge = Array.isArray(o.terms) || !o.terms ? {} : o.terms, ae = (n, v = !1) => {
     const { terms: T, ...fe } = n, ie = w.terms === !0 && b.length > 0 ? Fs(Ge, T) : null, be = ie === null ? fe : { ...fe, terms: ie.terms, ...v ? {} : { terms_base: ie.terms_base } };
@@ -400,7 +400,7 @@ function zs({ collection: l, fields: r, locales: c = [], shared: m = [], sharedV
               L ? s("Published") : J.action === "schedule" ? s("Schedule") : J.action === "backdate" ? s("Publish now, back-dated") : _ === "offline" ? s("Publish again") : t.status === "draft" ? s("Publish") : s("Publish changes")
             ] }),
             /* @__PURE__ */ e.jsxs(a.DropdownMenu, { children: [
-              /* @__PURE__ */ e.jsx(a.DropdownMenuTrigger, { asChild: !0, children: /* @__PURE__ */ e.jsx(a.Button, { type: "button", size: "icon", variant: L ? "outline" : "default", className: L ? "cms:-ml-px cms:rounded-l-none" : "cms:rounded-l-none cms:border-l cms:border-primary-foreground/20", "aria-label": s("More publishing options"), children: /* @__PURE__ */ e.jsx(gs, {}) }) }),
+              /* @__PURE__ */ e.jsx(a.DropdownMenuTrigger, { asChild: !0, children: /* @__PURE__ */ e.jsx(a.Button, { type: "button", size: "icon", variant: L ? "outline" : "default", className: L ? "cms:-ml-px cms:rounded-l-none" : "cms:rounded-l-none cms:border-l cms:border-primary-foreground/20", "aria-label": s("More publishing options"), children: /* @__PURE__ */ e.jsx(fs, {}) }) }),
               /* @__PURE__ */ e.jsxs(a.DropdownMenuContent, { align: "end", children: [
                 /* @__PURE__ */ e.jsxs(a.DropdownMenuItem, { onSelect: () => H(!0), children: [
                   /* @__PURE__ */ e.jsx(ce, {}),
@@ -516,7 +516,7 @@ function zs({ collection: l, fields: r, locales: c = [], shared: m = [], sharedV
                 }
               }
             ),
-            /* @__PURE__ */ e.jsx(os, { note: ls(t?.publishedSlug, d.data.slug, t !== null && t.status !== "draft"), redirectsUrl: Oe }),
+            /* @__PURE__ */ e.jsx(gs, { note: ls(t?.publishedSlug, d.data.slug, t !== null && t.status !== "draft"), redirectsUrl: Oe }),
             /* @__PURE__ */ e.jsx(F, { message: C.slug })
           ] })
         ] }) }) }),
@@ -540,14 +540,14 @@ function zs({ collection: l, fields: r, locales: c = [], shared: m = [], sharedV
         /* @__PURE__ */ e.jsx(a.CollapsibleCard, { title: W.some((n) => n.startsWith("seo.")) ? /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
           s("SEO"),
           /* @__PURE__ */ e.jsx(Z, {})
-        ] }) : s("SEO"), description: s("How this entry appears in search results and shared links."), titleClassName: "cms:text-base", storageKey: "cms:entry:seo", hasErrors: vs(C, "seo"), children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !D, className: "cms:min-w-0", children: /* @__PURE__ */ e.jsx(
-          fs,
+        ] }) : s("SEO"), description: s("How this entry appears in search results and shared links."), titleClassName: "cms:text-base", storageKey: "cms:entry:seo", hasErrors: js(C, "seo"), children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !D, className: "cms:min-w-0", children: /* @__PURE__ */ e.jsx(
+          bs,
           {
             bare: !0,
             id: "seo",
-            fields: ks(),
+            fields: os(),
             value: d.data.seo,
-            errors: bs(C, "seo"),
+            errors: vs(C, "seo"),
             onChange: (n) => {
               d.setData("seo", n), V("seo");
             }
@@ -1128,7 +1128,7 @@ function $e({ taxonomies: l, value: r, labels: c, errors: m, changed: h, disable
           h.includes(`terms.${i.handle}`) && /* @__PURE__ */ e.jsx(Z, {})
         ] }),
         /* @__PURE__ */ e.jsx(
-          ws,
+          ks,
           {
             id: u,
             taxonomy: i.handle,

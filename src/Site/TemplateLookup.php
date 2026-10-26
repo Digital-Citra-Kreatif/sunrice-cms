@@ -59,13 +59,14 @@ final class TemplateLookup
     }
 
     /**
-     * A collection's listing page's views.
+     * A collection's listing page's views (`$own` false: those tried when
+     * its Listing page template is empty).
      *
      * @return list<string>
      */
-    public static function listing(Collection $collection): array
+    public static function listing(Collection $collection, bool $own = true): array
     {
-        return self::views([self::own($collection->listing_template), "cms.collections.{$collection->handle}.index", 'cms.collections.index']);
+        return self::views([$own ? self::own($collection->listing_template) : null, "cms.collections.{$collection->handle}.index", 'cms.collections.index']);
     }
 
     /**
@@ -84,15 +85,16 @@ final class TemplateLookup
 
     /**
      * A taxonomy index page's views: the shared one's, or in a collection
-     * (`$collection`) that collection's first.
+     * (`$collection`) that collection's first (`$own` false: those tried
+     * when its Index page template is empty).
      *
      * @return list<string>
      */
-    public static function index(Taxonomy $taxonomy, ?Collection $collection): array
+    public static function index(Taxonomy $taxonomy, ?Collection $collection, bool $own = true): array
     {
         $t = $taxonomy->handle;
 
-        return self::views([self::own($taxonomy->index_template), $collection === null ? null : "cms.collections.{$collection->handle}.{$t}.index", "cms.taxonomies.{$t}.index", 'cms.taxonomies.index']);
+        return self::views([$own ? self::own($taxonomy->index_template) : null, $collection === null ? null : "cms.collections.{$collection->handle}.{$t}.index", "cms.taxonomies.{$t}.index", 'cms.taxonomies.index']);
     }
 
     /** The main language's slug of an entry (its live one, else its draft's), which picks its slug view. */

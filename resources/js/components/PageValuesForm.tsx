@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { ExternalLink, LoaderCircle } from 'lucide-react';
 import { t } from '@imajiner/admin-sdk';
 import { Button, Card, CardContent, CollapsibleCard, PageHeader, type PageHeaderMenuItem, useBreadcrumbs, useUnsavedChanges } from '@imajiner/admin-sdk/ui';
@@ -7,6 +7,7 @@ import { FieldInput, Fields } from '@/components/FieldInput.tsx';
 import { SHARED_FIELD } from '@/components/FieldSections.tsx';
 import { VersionConflict } from '@/components/VersionConflict.tsx';
 import { LanguageTabs } from '@/components/LanguageTabs.tsx';
+import { TemplateField, type TemplateLookup, withTemplateChoices } from '@/components/TemplateHelp.tsx';
 import { errorKeysAt, errorsAt, hasErrors } from '@/lib/builder.ts';
 import { localeName } from '@/lib/entries.ts';
 import { seoFields } from '@/lib/seo.ts';
@@ -33,7 +34,12 @@ export interface PageValuesProps {
     seo: FieldValues | null;
     /** The saved values' version, to refuse a save over someone else's newer one; null before the first save. */
     version: number | null;
-    can: { update: boolean };
+    can: { update: boolean; template?: boolean };
+    /** The page's template setting (its collection's or taxonomy's), when it has one here. */
+    template?: string | null;
+    templates?: TemplateLookup | null;
+    /** The views to pick a template from: loaded when the Template choice first opens. */
+    templateChoices?: string[];
 }
 
 interface FormProps extends PageValuesProps {
@@ -49,11 +55,15 @@ interface FormProps extends PageValuesProps {
     viewUrl: string | null;
     /** Said when the page has no fields of its own. */
     empty: string;
+    /** Where its fields are chosen (a blueprint setting), for those who may: a button under `empty`. */
+    emptyAction?: { label: string; href: string } | null;
     seoDescription: string;
     storageKey: string;
     menu?: PageHeaderMenuItem[];
     /** Above the language switch: another page's fields, say. */
     children?: React.ReactNode;
+    /** Under the Template choice: what Automatic uses, and who else the setting applies to. */
+    templateHelp?: string;
 }
 
 /** A page's own fields and SEO in one language, saved live (no drafts). A fresh form per language and after each save. */
@@ -61,10 +71,15 @@ export function PageValuesForm(props: FormProps) {
     return <PageValuesEdit key={`${props.editUrl}:${JSON.stringify(props.params ?? {})}:${props.locale}:${props.version}:${JSON.stringify([props.values, props.seo])}`} {...props} />;
 }
 
-function PageValuesEdit({ title, breadcrumbs, back, saveUrl, editUrl, params = {}, viewUrl, empty, seoDescription, storageKey, menu, children,
-    fields, locale, locales, translated = [], shared, values, seo, version, can }: FormProps) {
+function PageValuesEdit({ title, breadcrumbs, back, saveUrl, editUrl, params = {}, viewUrl, empty, emptyAction = null, seoDescription, storageKey, menu, children,
+    fields, locale, locales, translated = [], shared, values, seo, version, can, template, templates, templateChoices, templateHelp }: FormProps) {
     useBreadcrumbs(breadcrumbs);
-    const form = useForm<{ locale: string; data: FieldValues; seo: FieldValues; version: number | null }>({ locale, data: values, seo: seo ?? {}, version });
+    // The template is sent only by those who may change it (the collection's or taxonomy's setting).
+    const hasTemplate = templates !== undefined;
+    const templateWritable = can.update && can.template === true;
+    const form = useForm<{ locale: string; data: FieldValues; seo: FieldValues; version: number | null; template?: string }>({
+        locale, data: values, seo: seo ?? {}, version, ...(hasTemplate && templateWritable ? { template: template ?? '' } : {}),
+    });
     const errors = form.errors as Record<string, string | undefined>;
     const clearErrorsAt = (path: string) => {
         const keys = errorKeysAt(errors, path);
@@ -84,36 +99,22 @@ function PageValuesEdit({ title, breadcrumbs, back, saveUrl, editUrl, params = {
     };
     useUnsavedChanges(form.isDirty, writable ? save : undefined);
 
-    return (
-        <form noValidate onSubmit={(e) => { e.preventDefault(); save(); }} className="cms:flex cms:max-w-5xl cms:flex-col cms:gap-6">
-            <Head title={title} />
-            <PageHeader
-                title={title}
-                back={back}
-                menu={menu}
-                actions={
-                    <>
-                        {viewUrl && (
-                            <Button type="button" variant="ghost" asChild><a href={viewUrl} target="_blank" rel="noopener noreferrer"><ExternalLink /> {t('View')}</a></Button>
-                        )}
-                        {writable && (
-                            <Button type="submit" disabled={form.processing}>
-                                {form.processing && <LoaderCircle className="cms:animate-spin" />} {t('Save')}
-                            </Button>
-                        )}
-                    </>
-                }
-            >
-                {form.isDirty && <span className="cms:text-sm cms:text-muted-foreground">{t('Unsaved changes')}</span>}
-            </PageHeader>
-
+    // The page's texts in this language: its fields and SEO.
+    const texts = (
+        <>
             {children}
             {/* Each language has its own texts: which one is open, which have theirs, the others a click away. */}
             <LanguageTabs current={locale} locales={locales} translated={translated} onSwitch={(next) => router.get(editUrl, { ...params, locale: next })} />
             <fieldset disabled={!writable} className="cms:flex cms:flex-col cms:gap-6">
                 <VersionConflict message={errors.version} processing={form.processing} onSaveMine={saveMine} />
                 {fields.length === 0 ? (
-                    <p className="cms:text-muted-foreground">{empty}</p>
+                    // A card like the fields' would be, so it lines up with the cards beside it.
+                    <Card>
+                        <CardContent className="cms:flex cms:flex-col cms:items-start cms:gap-3">
+                            <p className="cms:text-sm cms:text-muted-foreground">{empty}</p>
+                            {emptyAction && <Button type="button" variant="outline" size="sm" asChild><Link href={emptyAction.href}>{emptyAction.label}</Link></Button>}
+                        </CardContent>
+                    </Card>
                 ) : (
                     <Card>
                         <CardContent className="cms:flex cms:flex-col cms:gap-6">
@@ -144,6 +145,47 @@ function PageValuesEdit({ title, breadcrumbs, back, saveUrl, editUrl, params = {
                     <Fields bare id="seo" fields={seoFields()} value={form.data.seo} errors={errorsAt(errors, 'seo')} onChange={(next) => { form.setData('seo', next); clearErrorsAt('seo'); }} />
                 </fieldset>
             </CollapsibleCard>
+        </>
+    );
+
+    return (
+        <form noValidate onSubmit={(e) => { e.preventDefault(); save(); }} className={`cms:flex cms:flex-col cms:gap-6 ${hasTemplate ? '' : 'cms:max-w-5xl'}`}>
+            <Head title={title} />
+            <PageHeader
+                title={title}
+                back={back}
+                menu={menu}
+                actions={
+                    <>
+                        {viewUrl && (
+                            <Button type="button" variant="ghost" asChild><a href={viewUrl} target="_blank" rel="noopener noreferrer"><ExternalLink /> {t('View')}</a></Button>
+                        )}
+                        {writable && (
+                            <Button type="submit" disabled={form.processing}>
+                                {form.processing && <LoaderCircle className="cms:animate-spin" />} {t('Save')}
+                            </Button>
+                        )}
+                    </>
+                }
+            >
+                {form.isDirty && <span className="cms:text-sm cms:text-muted-foreground">{t('Unsaved changes')}</span>}
+            </PageHeader>
+
+            {hasTemplate ? (
+                // Like the entry and term editors: the page's texts, and its settings beside them.
+                <div className="cms:grid cms:items-start cms:gap-6 cms:lg:grid-cols-[minmax(0,1fr)_20rem]">
+                    <div className="cms:flex cms:min-w-0 cms:flex-col cms:gap-6">{texts}</div>
+                    <aside className="cms:flex cms:min-w-0 cms:flex-col cms:gap-6">
+                        <CollapsibleCard title={t('Page settings')} titleClassName="cms:text-base" storageKey={`${storageKey}:page-settings`} hasErrors={errors.template !== undefined}
+                            contentClassName="cms:flex cms:flex-col cms:gap-2">
+                            <TemplateField id="template" value={form.data.template ?? template ?? ''} lookup={withTemplateChoices(templates ?? null, templateChoices)}
+                                onChange={(next) => { form.setData('template', next); form.clearErrors('template' as never); }}
+                                example="cms.landing" automatic={templateHelp ?? t('Automatic uses the first file that exists.')}
+                                error={errors.template} disabled={!templateWritable} />
+                        </CollapsibleCard>
+                    </aside>
+                </div>
+            ) : texts}
         </form>
     );
 }

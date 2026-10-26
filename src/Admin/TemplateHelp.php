@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Admin;
 
+use Closure;
+use Illuminate\Database\Eloquent\Model;
+use Sunrice\Admin\Resources\Forms\Select;
 use Sunrice\Cms\Actions\Entries\SaveEntrySettings;
+use Sunrice\Cms\Site\TemplateRule;
 use Symfony\Component\Finder\Finder;
 
 /**
@@ -15,6 +19,49 @@ use Symfony\Component\Finder\Finder;
  */
 final class TemplateHelp
 {
+    /**
+     * A collection's or taxonomy's template setting on its form, like the
+     * editors' Template choice: Automatic (empty) first, the views that
+     * exist (those in cms/ first; read when the form is shown or saved),
+     * and Other… for any view name typed in, checked by TemplateRule.
+     * `$uses` gives the views tried for the record's page when it's empty,
+     * for an "Uses …" line under it (null: none, as for entry templates,
+     * which differ per entry).
+     *
+     * @param  (Closure(Model): list<string>)|null  $uses
+     */
+    public static function select(string $name, string $example, string $help, ?Closure $uses = null): Select
+    {
+        return Select::make($name)->searchable()->verbatim()->placeholder(__('Automatic'))
+            ->options(function (): array {
+                $choices = self::choices();
+                $views = array_combine($choices, $choices);
+                $inCms = array_filter($views, fn (string $view): bool => str_starts_with($view, 'cms.'));
+                $others = array_diff_key($views, $inCms);
+
+                return array_filter([__('In cms/') => $inCms, ($inCms === [] ? __('Views') : __('Other views')) => $others]);
+            })
+            ->other(__('Other view…'), [new TemplateRule($example)], $example)
+            ->rules([new TemplateRule($example)])
+            ->help(fn (?Model $record): string => $record === null || $uses === null ? __($help) : __($help).' '.self::uses($uses($record)));
+    }
+
+    /**
+     * "Uses cms/collections/index.blade.php.": the first of the views that exists, else the built-in template.
+     *
+     * @param  list<string>  $views
+     */
+    private static function uses(array $views): string
+    {
+        foreach ($views as $view) {
+            if (view()->exists($view)) {
+                return __('Uses :file.', ['file' => self::shortFile($view)]);
+            }
+        }
+
+        return __('Uses the built-in template.');
+    }
+
     /**
      * What a resource form's "Which file?" disclosure says (Field::helpDetails()):
      * the files tried in order, under resources/views, the paths as code, and

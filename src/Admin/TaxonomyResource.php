@@ -29,7 +29,7 @@ use Sunrice\Cms\Models\CollectionTaxonomy;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Site\RouteConflicts;
 use Sunrice\Cms\Site\RoutePatternRule;
-use Sunrice\Cms\Site\TemplateRule;
+use Sunrice\Cms\Site\TemplateLookup;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\SiteCache;
 
@@ -117,9 +117,8 @@ final class TaxonomyResource extends Resource
                         Link::make('Create blueprint', route('sunrice.admin.cms.blueprints.create', [], false))->showUnless('index_blueprint'),
                         Link::make('Edit', route('sunrice.admin.cms.blueprints.index', [], false).'/{index_blueprint}/edit')->showWhen('index_blueprint'),
                     ]),
-                TextInput::make('index_template')->label('Index page template')->placeholder('cms.tag-cloud')->span(2)
-                    ->rules([new TemplateRule('cms.tag-cloud')])
-                    ->help('For its index pages, the shared one and each collection\'s. Empty: the first template that exists.')
+                TemplateHelp::select('index_template', 'cms.tag-cloud', 'For its index pages, the shared one and each collection\'s. Automatic: the first template that exists.', fn (Model $taxonomy): array => $taxonomy instanceof Taxonomy ? TemplateLookup::index($taxonomy, null) : [])
+                    ->label('Index page template')->span(2)
                     ->helpDetails('Which file?', TemplateHelp::files(['cms.taxonomies.{handle}.index', 'cms.taxonomies.index'], 'cms.tag-cloud')."\n".__('In a collection, :file is tried first.', ['file' => '`cms/collections/{collection}/{handle}/index.blade.php`'])),
             ]),
             Section::make('In collections')->description('Each collection it groups: whether its entries have one term only, a page per term listing only that collection\'s entries, like /books/tags/featured, and an index page of the terms its entries have, like /books/tags.')->columns(2)
@@ -172,9 +171,8 @@ final class TaxonomyResource extends Resource
                         ->help(__('Its own address in :language, like /tag. Empty: the index page URL under :prefix.', ['language' => $language, 'prefix' => Locales::prefix($code) ?: '/']))
                         ->links(fn (?Model $taxonomy): array => $taxonomy instanceof Taxonomy && $taxonomy->index_route !== null && ($url = $taxonomy->indexUrl($code)) !== null
                             ? [Link::make('View on site', $url)->newTab()->showWhen('index')] : [])),
-                    TextInput::make('template')->label('Term page template')->placeholder('cms.topic')->span(2)
-                        ->rules([new TemplateRule('cms.topic')])
-                        ->help('For shared and collections\' term pages. Empty: the first template that exists. A term can choose its own on its page.')
+                    TemplateHelp::select('template', 'cms.topic', 'For shared and collections\' term pages. Automatic: the first template that exists. A term can choose its own on its page.')
+                        ->label('Term page template')->span(2)
                         ->helpDetails('Which file?', TemplateHelp::files(['cms.taxonomies.{handle}.show', 'cms.taxonomies.show'], 'cms.topic')."\n".__('Before this template, :file is tried for the term with that slug in the main language.', ['file' => '`cms/taxonomies/{handle}/{slug}.blade.php`'])."\n".__('In a collection, :slug and then :file are tried first.', ['slug' => '`cms/collections/{collection}/{handle}/{slug}.blade.php`', 'file' => '`cms/collections/{collection}/{handle}/show.blade.php`'])),
                 ]),
         ]);

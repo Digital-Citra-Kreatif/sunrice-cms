@@ -49,7 +49,7 @@ A **collection** is a kind of content: *Pages*, *Blog*, *Products*, *Events*. **
 
 When you give a language its own URL (or change it), its old addresses keep working: visitors and search engines are sent on to the new ones (`/id/books/halo` → `/id/buku/halo`). No two collections may share a URL in a language.
 
-Once saved, the form's cards link where you'd go next: **View entries** (Entry pages), **View on site** ↗ and **Edit listing page** (Listing page, the latter when it has a blueprint). Under a template setting, **Which file?** opens the list of template files tried, for your developer.
+Once saved, the form's cards link where you'd go next: **View entries** (Entry pages), **View on site** ↗ and **Edit listing page** (Listing page: its fields, search details and template). A template setting offers **Automatic** (the design your developer made for that kind of page) and the templates there are, or **Other view…** for a name your developer gives you; the line under it says which file is used, and **Which file?** opens the list of template files tried, for your developer.
 
 Deleting a collection doesn't delete its entries: they leave the panel and the website. The list's **Trash** shows deleted collections, with **Restore** to bring one back and **Permanently delete** to remove it for good, with all its entries, which frees its handle for a new collection. That can't be undone, so the panel asks first. Taxonomies work the same way, with their terms.
 

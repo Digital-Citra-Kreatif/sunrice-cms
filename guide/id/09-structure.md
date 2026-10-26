@@ -49,7 +49,7 @@ Field **Fieldset** menaruh field-field fieldset itu di tempatnya, seolah-olah mi
 
 Saat Anda memberi suatu bahasa URL sendiri (atau mengubahnya), alamat lamanya tetap berfungsi: pengunjung dan mesin pencari diarahkan ke alamat baru (`/id/books/halo` → `/id/buku/halo`). Dua koleksi tidak boleh memakai URL yang sama dalam satu bahasa.
 
-Setelah disimpan, kartu-kartu di formulir menautkan ke tujuan berikutnya: **Lihat entri** (Halaman entri), **Lihat di situs** ↗ dan **Sunting halaman daftar** (Halaman daftar, yang terakhir bila punya blueprint). Di bawah pengaturan template, **File yang mana?** membuka daftar file template yang dicoba, untuk developer Anda.
+Setelah disimpan, kartu-kartu di formulir menautkan ke tujuan berikutnya: **Lihat entri** (Halaman entri), **Lihat di situs** ↗ dan **Sunting halaman daftar** (Halaman daftar: field-nya, detail pencarian, dan template-nya). Pengaturan template menawarkan **Otomatis** (desain yang dibuat developer Anda untuk jenis halaman itu) dan template yang ada, atau **View lain…** untuk nama yang diberikan developer Anda; baris di bawahnya menyebutkan file yang dipakai, dan **File yang mana?** membuka daftar file template yang dicoba, untuk developer Anda.
 
 Menghapus koleksi tidak menghapus entrinya: entri hilang dari panel dan situs web. Tombol **Tempat sampah** di daftar menampilkan koleksi yang dihapus, dengan **Pulihkan** untuk mengembalikannya dan **Hapus permanen** untuk menghapusnya selamanya, beserta semua entrinya, sehingga handle-nya bisa dipakai koleksi baru. Ini tidak bisa dibatalkan, jadi panel bertanya dulu. Taksonomi bekerja dengan cara yang sama, beserta istilahnya.
 
