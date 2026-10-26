@@ -22,8 +22,10 @@ interface TermRow {
     version: number | null;
     /** The main language's title, for untranslated terms. */
     fallback: string;
-    /** Where other content points at it. */
+    /** Where other content points at it: the first five uses' labels. */
     usedBy?: string[];
+    /** How many uses it has in all. */
+    usedByCount?: number;
     /** Entries tagged with it. */
     entries?: number;
     createdAt?: string | null;
@@ -53,11 +55,18 @@ interface Props {
     locale: string;
 }
 
-/** " It's used by A; B." for confirmations, or nothing. */
-function usedBySentence(usedBy: string[] = []): string {
-    if (usedBy.length === 0) return '';
-    const list = usedBy.slice(0, 5).join('; ');
-    return ` ${usedBy.length > 5 ? t('It\'s used by :list and :count more.', { list, count: usedBy.length - 5 }) : t('It\'s used by :list.', { list })}`;
+/** How many uses a term has: the server's count, else the labels sent. */
+function usedByTotal(term: TermRow): number {
+    return term.usedByCount ?? (term.usedBy ?? []).length;
+}
+
+/** " It's used by A; B." for confirmations, or nothing: the first five named, the rest counted. */
+function usedBySentence(term: TermRow): string {
+    const shown = (term.usedBy ?? []).slice(0, 5);
+    const total = Math.max(usedByTotal(term), shown.length);
+    if (total === 0) return '';
+    const list = shown.join('; ');
+    return ` ${total > shown.length ? t('It\'s used by :list and :count more.', { list, count: total - shown.length }) : t('It\'s used by :list.', { list })}`;
 }
 
 export default function TermsIndex({ taxonomy, taxonomies, terms, locales, locale, trashed = false, trashedCount = 0 }: Props) {
@@ -84,7 +93,7 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
         router.post(adminUrl('cms/terms/reorder'), { taxonomy: taxonomy.handle, ids, parent_id: parent < 0 ? null : rows[parent]!.id },
             { preserveScroll: true, preserveState: true, onError: () => setRows(terms) });
     };
-    const trash = (term: TermRow) => confirm(t('Move ":title" to the trash, with the terms under it? It comes off the site; you can restore it.', { title: term.fallback }) + usedBySentence(term.usedBy),
+    const trash = (term: TermRow) => confirm(t('Move ":title" to the trash, with the terms under it? It comes off the site; you can restore it.', { title: term.fallback }) + usedBySentence(term),
         () => router.delete(adminUrl(`cms/terms/${term.id}`), { preserveScroll: true }), t('Move to trash'));
     const needle = search.trim().toLowerCase();
     const found = needle === '' ? null : rows.filter((each) => `${each.title ?? each.fallback} ${each.slug ?? ''}`.toLowerCase().includes(needle));
@@ -116,8 +125,8 @@ export default function TermsIndex({ taxonomy, taxonomies, terms, locales, local
                     <div className="cms:flex cms:gap-1">
                         <Button variant="outline" size="sm" onClick={() => router.post(adminUrl(`cms/terms/${term.id}/restore`), {}, { preserveScroll: true })}><RotateCcw /> {t('Restore')}</Button>
                         <Button variant="ghost" size="sm" className="cms:text-destructive"
-                            onClick={() => confirm(t('Permanently delete ":title" in every language? Entries lose it.', { title: term.fallback }) + usedBySentence(term.usedBy),
-                                () => router.delete(adminUrl(`cms/terms/${term.id}/force`), { preserveScroll: true, data: (term.usedBy ?? []).length > 0 ? { force: 1 } : {} }))}>
+                            onClick={() => confirm(t('Permanently delete ":title" in every language? Entries lose it.', { title: term.fallback }) + usedBySentence(term),
+                                () => router.delete(adminUrl(`cms/terms/${term.id}/force`), { preserveScroll: true, data: usedByTotal(term) > 0 ? { force: 1 } : {} }))}>
                             <Trash2 /> {t('Permanently delete')}
                         </Button>
                     </div>

@@ -1,4 +1,4 @@
-import { t as e } from "./admin-DR9cu_PG.js";
+import { t as e } from "./admin-CQrIqXPu.js";
 function n() {
   return [
     { handle: "title", type: "text", label: e("Meta title"), instructions: e("Empty: the title."), config: { max: 255 } },

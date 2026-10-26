@@ -18,7 +18,7 @@ foreach ($entry->referencedBy() as $reference) {
 }
 ```
 
-The admin shows them as **Used by**, in the entry editor's sidebar and on a term's page, each with the field by its label in the source's blueprint ("Blocks › Homes shown"; a field no longer there by its handle in words). Moving a used entry or term to the trash names where it's used in the confirmation. Deleting one permanently is refused unless forced, since those fields would then show nothing:
+The admin shows them as **Used by**, in the entry editor's sidebar and on a term's page, each with the field by its label in the source's blueprint ("Blocks › Homes shown"; a field no longer there by its handle in words). Moving a used entry or term to the trash names where it's used in the confirmation: the first five uses, then how many more ("… and 12 more"). The terms list reads only those five per term and counts the rest in the database, so it stays quick however much a term is used. Deleting one permanently is refused unless forced, since those fields would then show nothing:
 
 ```php
 app(ForceDeleteEntry::class)->handle($entry, force: true);

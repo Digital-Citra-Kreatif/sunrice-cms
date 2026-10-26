@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Support;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -70,19 +71,24 @@ final class References
     }
 
     /**
-     * Where each of some entries or terms is used, in one go.
+     * Where each of some entries or terms is used, in one go: every use,
+     * or with $limit only each one's first that many (in the same order,
+     * for a list page; usedByCount() says how many there are in all).
      *
      * @param  list<int>  $ids
      * @return array<int, list<array{label: string, url: string|null, field: string, fieldLabel: string}>>
      */
-    public static function usedByMany(string $type, array $ids): array
+    public static function usedByMany(string $type, array $ids, ?int $limit = null): array
     {
-        if ($ids === []) {
+        if ($ids === [] || $limit === 0) {
             return [];
         }
-        $rows = ContentReference::query()->where('target_type', $type)->whereIn('target_id', $ids)->orderBy('id')->get()
-            // Pointing at itself doesn't keep it from going.
-            ->reject(fn (ContentReference $r): bool => $r->source_type === $type && $r->source_id === $r->target_id);
+        $rows = $limit === null
+            ? self::uses($type, $ids)->orderBy('id')->get()
+            // Each use's first row (as the full list keeps), the first $limit of them per target, then only those rows.
+            : ContentReference::query()->whereKey(ContentReference::query()->getQuery()->newQuery()
+                ->fromSub(self::uses($type, $ids)->toBase()->selectRaw('min(id) as first_id, target_id')->groupBy('target_id', 'source_type', 'source_id', 'locale'), 'uses')
+                ->select(['first_id', 'target_id'])->orderBy('first_id')->groupLimit($limit, 'target_id')->pluck('first_id')->all())->orderBy('id')->get();
         $ofType = fn (string $source): array => $rows->where('source_type', $source)->pluck('source_id')->unique()->values()->all();
         // Only their titles: a source's fields (its data, draft and search text) can be large, and there can be many.
         $entries = ($sources = $ofType(ContentReference::ENTRY)) === [] ? new EloquentCollection : Entry::withTrashed()
@@ -125,6 +131,53 @@ final class References
         }
 
         return array_map(array_values(...), $used);
+    }
+
+    /**
+     * How many uses (a source and language once, as usedByMany() lists
+     * them) each of some entries or terms has, counted by the database.
+     * Those not used are left out.
+     *
+     * @param  string  $type  Reference::ENTRY or Reference::TERM
+     * @param  list<int>  $ids
+     * @return array<int, int>
+     */
+    public static function usedByCount(string $type, array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+        $counts = [];
+        $rows = ContentReference::query()->getQuery()->newQuery()
+            ->fromSub(self::uses($type, $ids)->toBase()->select(['target_id', 'source_type', 'source_id', 'locale'])->distinct(), 'uses')
+            ->selectRaw('target_id, count(*) as aggregate')->groupBy('target_id')->get();
+        foreach ($rows as $row) {
+            $target = $row->target_id ?? null;
+            $count = $row->aggregate ?? null;
+            if (is_numeric($target) && is_numeric($count)) {
+                $counts[(int) $target] = (int) $count;
+            }
+        }
+
+        return $counts;
+    }
+
+    /**
+     * The references to these entries or terms that make a use: not a
+     * source pointing at itself (that doesn't keep it from going), and
+     * only from sources that still exist (in the trash counts).
+     *
+     * @param  list<int>  $ids
+     * @return Builder<ContentReference>
+     */
+    private static function uses(string $type, array $ids): Builder
+    {
+        return ContentReference::query()->where('target_type', $type)->whereIn('target_id', $ids)
+            ->whereNot(fn ($query) => $query->where('source_type', $type)->whereColumn('source_id', 'target_id'))
+            ->where(fn ($query) => $query
+                ->where(fn ($q) => $q->where('source_type', ContentReference::ENTRY)->whereIn('source_id', Entry::withTrashed()->select('id')))
+                ->orWhere(fn ($q) => $q->where('source_type', ContentReference::TERM)->whereIn('source_id', Term::withTrashed()->select('id')))
+                ->orWhere(fn ($q) => $q->where('source_type', ContentReference::GLOBAL)->whereIn('source_id', GlobalSet::query()->select('id'))));
     }
 
     /**

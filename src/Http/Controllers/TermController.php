@@ -43,6 +43,9 @@ use Sunrice\Cms\Support\Seo;
  */
 final class TermController
 {
+    /** How many of a term's uses the list names; the rest it counts. */
+    private const USED_BY_SHOWN = 5;
+
     public function home(Request $request): RedirectResponse|Response
     {
         $first = Taxonomy::query()->orderBy('title')->get()->first(fn (Taxonomy $t): bool => Access::terms($request->user(), 'view', $t));
@@ -58,8 +61,10 @@ final class TermController
         $locale = is_string($locale) && Locales::has($locale) ? $locale : Locales::default();
         $trashed = $request->query('status') === 'trashed';
         $terms = Term::query()->when($trashed, fn ($q) => $q->onlyTrashed())->with('translations')->withCount('entries')->where('taxonomy_id', $taxonomy->id)->orderBy('sort_order')->orderBy('id')->get();
-        // Where each is used, to warn before trashing or deleting it.
-        $usedBy = References::usedByMany(Reference::TERM, array_values(array_map(fn (Term $term): int => $term->id, $terms->all())));
+        // Where each is used, to warn before trashing or deleting it: the first few, labelled, and how many in all.
+        $ids = array_values(array_map(fn (Term $term): int => $term->id, $terms->all()));
+        $usedBy = References::usedByMany(Reference::TERM, $ids, self::USED_BY_SHOWN);
+        $usedByCount = References::usedByCount(Reference::TERM, $ids);
         $pages = $taxonomy->hasTermPages();
 
         return Inertia::render('Cms/Terms/Index', [
@@ -78,7 +83,7 @@ final class TermController
             'taxonomies' => Taxonomy::query()->orderBy('title')->get()->filter(fn (Taxonomy $t): bool => Access::terms($request->user(), 'view', $t))->values()->map(fn (Taxonomy $t): array => ['handle' => $t->handle, 'title' => $t->title])->all(),
             'locales' => Locales::all(),
             'locale' => $locale,
-            'terms' => array_map(function (array $item) use ($taxonomy, $locale, $usedBy, $pages): array {
+            'terms' => array_map(function (array $item) use ($taxonomy, $locale, $usedBy, $usedByCount, $pages): array {
                 [$term, $depth] = $item;
                 // Its URL comes from the site's cached routes: no query per term.
                 $term->setRelation('taxonomy', $taxonomy);
@@ -97,7 +102,9 @@ final class TermController
                     'createdAt' => $term->created_at?->toIso8601String(),
                     // Its usual page: the shared one, else a collection's.
                     'url' => $translation !== null && $pages ? $term->url($locale) : null,
+                    // The first few uses' labels (as the confirmations name them) and how many in all.
                     'usedBy' => array_map(fn (array $use): string => $use['label'], $usedBy[$term->id] ?? []),
+                    'usedByCount' => $usedByCount[$term->id] ?? 0,
                 ];
             }, $trashed ? array_map(fn (Term $t): array => [$t, 0], array_values($terms->all())) : TermsField::tree(array_values($terms->all()), null, 0)),
         ]);
