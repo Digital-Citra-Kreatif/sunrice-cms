@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Site;
 
+use Closure;
 use Generator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Sunrice\Admin\Support\AppUrl;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\EntryTranslation;
@@ -13,6 +17,7 @@ use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\TaxonomyListing;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
+use Sunrice\Cms\Query\Sql;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\Seo;
 use Sunrice\Cms\Support\SiteCache;
@@ -33,6 +38,25 @@ final class Sitemap
     public const LIMIT = 50000;
 
     private const OPEN = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">'];
+
+    /** How many rows are read at once (with their entries' or terms' other languages). */
+    private const CHUNK = 500;
+
+    /**
+     * What the sitemap reads of an entry translation: never its draft or
+     * search text, and its fields only where a route takes some
+     * (withRouteFields()). Not reading them keeps a chunk's memory small.
+     */
+    private const ENTRY_COLUMNS = ['id', 'entry_id', 'collection_id', 'locale', 'status', 'slug', 'published_at', 'updated_at', 'live_updated_at'];
+
+    /** What it reads of an entry: what its URL needs. */
+    private const ENTRY_PARENT_COLUMNS = ['id', 'collection_id'];
+
+    /** What it reads of a term translation. */
+    private const TERM_COLUMNS = ['id', 'term_id', 'taxonomy_id', 'locale', 'slug', 'updated_at'];
+
+    /** The column lean() reads a row's "Hide from search engines" (SEO card) into: 1 or 0. */
+    private const NOINDEX = 'sitemap_noindex';
 
     /** How many files there are, once built or read. */
     private ?int $count = null;
@@ -120,45 +144,51 @@ final class Sitemap
     /** @return Generator<int, string> each page's <url> element */
     private function urls(): Generator
     {
-        $routed = Collection::query()->whereNotNull('route')->pluck('id');
-        $translations = EntryTranslation::query()->live()->with('entry.collection', 'entry.translations')
-            ->whereIn('collection_id', $routed)->lazyById(500);
-        foreach ($translations as $translation) {
-            if (Seo::noindex($translation) || ($url = app(Site::class)->url($translation)) === null) {
+        $routed = Collection::query()->whereNotNull('route')->get();
+        $fields = self::withRouteFields($routed);
+        $translations = self::lean(EntryTranslation::query()->live(), self::ENTRY_COLUMNS, $fields, noindex: true)
+            ->with(['entry' => fn (BelongsTo $q) => $q->select(self::ENTRY_PARENT_COLUMNS), 'entry.collection',
+                'entry.translations' => fn (HasMany $q) => self::lean($q->getQuery(), self::ENTRY_COLUMNS, $fields)])
+            ->whereIn('collection_id', $routed->modelKeys());
+        // An entry's languages share their links: made once for all of them.
+        $links = [];
+        foreach (self::chunks($translations) as $translation) {
+            if (self::noindex($translation) || ($url = app(Site::class)->url($translation)) === null) {
                 continue;
             }
             $xml = '<url><loc>'.e(AppUrl::url($url)).'</loc>';
             if (($modified = $translation->liveUpdatedAt()) !== null) {
                 $xml .= '<lastmod>'.$modified->toAtomString().'</lastmod>';
             }
-            yield $xml.self::links(Seo::alternates($translation)).'</url>';
+            yield $xml.self::remember($links, $translation->entry_id, fn (): string => self::links(Seo::alternates($translation))).'</url>';
         }
         // Term pages, but those that ask not to be indexed.
         $taxonomies = Taxonomy::query()->whereNotNull('route')->pluck('id');
-        $terms = TermTranslation::query()->whereIn('taxonomy_id', $taxonomies)->whereHas('term', fn ($q) => $q->withoutTrashed())
-            ->with('term.taxonomy', 'term.translations')->lazyById(500);
-        foreach ($terms as $term) {
-            $seo = $term->data[Seo::KEY] ?? null;
-            if ((is_array($seo) && ($seo['noindex'] ?? false) === true) || ($url = $term->url()) === null) {
+        $terms = self::lean(TermTranslation::query(), self::TERM_COLUMNS, noindex: true)->whereIn('taxonomy_id', $taxonomies)
+            ->whereHas('term', fn ($q) => $q->withoutTrashed())
+            ->with(['term.taxonomy', 'term.translations' => fn (HasMany $q) => self::lean($q->getQuery(), self::TERM_COLUMNS)]);
+        $links = [];
+        foreach (self::chunks($terms) as $term) {
+            if (self::noindex($term) || ($url = $term->url()) === null) {
                 continue;
             }
             $xml = '<url><loc>'.e(AppUrl::url($url)).'</loc>';
             if ($term->updated_at !== null) {
                 $xml .= '<lastmod>'.$term->updated_at->toAtomString().'</lastmod>';
             }
-            yield $xml.self::links(Seo::termAlternates($term)).'</url>';
+            yield $xml.self::remember($links, $term->term_id, fn (): string => self::links(Seo::termAlternates($term))).'</url>';
         }
         // Term pages in collections, for terms with entries there.
+        $links = [];
         foreach ($this->collectionTerms() as [$collection, $term]) {
-            $seo = $term->data[Seo::KEY] ?? null;
-            if ((is_array($seo) && ($seo['noindex'] ?? false) === true) || ($url = $term->in($collection)->url()) === null) {
+            if (self::noindex($term) || ($url = $term->in($collection)->url()) === null) {
                 continue;
             }
             $xml = '<url><loc>'.e(AppUrl::url($url)).'</loc>';
             if ($term->updated_at !== null) {
                 $xml .= '<lastmod>'.$term->updated_at->toAtomString().'</lastmod>';
             }
-            yield $xml.self::links(Seo::termAlternates($term)).'</url>';
+            yield $xml.self::remember($links, $collection->id.':'.$term->term_id, fn (): string => self::links(Seo::termAlternates($term))).'</url>';
         }
         // Listing pages, in every language.
         foreach (Collection::query()->whereNotNull('listing_route')->orderBy('id')->get() as $collection) {
@@ -224,27 +254,28 @@ final class Sitemap
      */
     public function pages(?string $locale = null): Generator
     {
-        $routed = Collection::query()->whereNotNull('route')->pluck('handle', 'id');
-        $translations = EntryTranslation::query()->live()->with('entry.collection')->whereIn('collection_id', $routed->keys())
-            ->when($locale !== null, fn ($q) => $q->where('locale', $locale))->lazyById(500);
-        foreach ($translations as $translation) {
-            if (! Seo::noindex($translation) && ($url = app(Site::class)->url($translation)) !== null) {
-                $handle = $routed->get($translation->collection_id);
+        $routed = Collection::query()->whereNotNull('route')->get();
+        $handles = $routed->pluck('handle', 'id');
+        $translations = self::lean(EntryTranslation::query()->live(), self::ENTRY_COLUMNS, self::withRouteFields($routed), noindex: true)
+            ->with(['entry' => fn (BelongsTo $q) => $q->select(self::ENTRY_PARENT_COLUMNS), 'entry.collection'])->whereIn('collection_id', $routed->modelKeys())
+            ->when($locale !== null, fn ($q) => $q->where('locale', $locale));
+        foreach (self::chunks($translations) as $translation) {
+            if (! self::noindex($translation) && ($url = app(Site::class)->url($translation)) !== null) {
+                $handle = $handles->get($translation->collection_id);
                 yield ['url' => AppUrl::url($url), 'collection' => is_string($handle) ? $handle : null];
             }
         }
         $taxonomies = Taxonomy::query()->whereNotNull('route')->pluck('id');
-        $terms = TermTranslation::query()->whereIn('taxonomy_id', $taxonomies)->whereHas('term', fn ($q) => $q->withoutTrashed())
-            ->when($locale !== null, fn ($q) => $q->where('locale', $locale))->with('term.taxonomy')->lazyById(500);
-        foreach ($terms as $term) {
-            $seo = $term->data[Seo::KEY] ?? null;
-            if (! (is_array($seo) && ($seo['noindex'] ?? false) === true) && ($url = $term->url()) !== null) {
+        $terms = self::lean(TermTranslation::query(), self::TERM_COLUMNS, noindex: true)->whereIn('taxonomy_id', $taxonomies)
+            ->whereHas('term', fn ($q) => $q->withoutTrashed())
+            ->when($locale !== null, fn ($q) => $q->where('locale', $locale))->with('term.taxonomy');
+        foreach (self::chunks($terms) as $term) {
+            if (! self::noindex($term) && ($url = $term->url()) !== null) {
                 yield ['url' => AppUrl::url($url), 'collection' => null];
             }
         }
         foreach ($this->collectionTerms($locale) as [$collection, $term]) {
-            $seo = $term->data[Seo::KEY] ?? null;
-            if (! (is_array($seo) && ($seo['noindex'] ?? false) === true) && ($url = $term->in($collection)->url()) !== null) {
+            if (! self::noindex($term) && ($url = $term->in($collection)->url()) !== null) {
                 yield ['url' => AppUrl::url($url), 'collection' => $collection->handle];
             }
         }
@@ -283,17 +314,110 @@ final class Sitemap
                     continue;
                 }
                 foreach ($locale === null ? Locales::all() : [$locale] as $code) {
-                    $terms = TermTranslation::query()->where('taxonomy_id', $taxonomy)->where('locale', $code)
+                    $terms = self::lean(TermTranslation::query(), self::TERM_COLUMNS, noindex: true)->where('taxonomy_id', $taxonomy)->where('locale', $code)
                         // The collection is picked among the live translations (by their index, once), not on each entry of each term.
                         ->whereHas('term', fn ($q) => $q->withoutTrashed()->whereHas('entries', fn ($q) => $q
                             ->whereHas('translations', fn ($q) => $q->whereIn('id', self::shown($id, $code)))))
-                        ->with('term.taxonomy', 'term.translations')->lazyById(500);
-                    foreach ($terms as $term) {
+                        ->with(['term.taxonomy', 'term.translations' => fn (HasMany $q) => self::lean($q->getQuery(), self::TERM_COLUMNS)]);
+                    foreach (self::chunks($terms) as $term) {
                         yield [$collection, $term];
                     }
                 }
             }
         }
+    }
+
+    /**
+     * A query for only `$columns` of its rows (and `data`, their fields,
+     * for those of the collections `$withData`), with whether each asks not
+     * to be indexed (NOINDEX, `$noindex`) read in SQL: decoding every row's
+     * fields for it would take longer than the rest of the sitemap.
+     *
+     * @template TModel of Model
+     *
+     * @param  Builder<TModel>  $query
+     * @param  list<string>  $columns
+     * @param  list<int>  $withData
+     * @return Builder<TModel>
+     */
+    private static function lean(Builder $query, array $columns, array $withData = [], bool $noindex = false): Builder
+    {
+        $table = $query->getModel()->getTable();
+        $grammar = $query->getQuery()->getGrammar();
+        $data = $grammar->wrap("{$table}.data");
+        $query->select(array_map(fn (string $column): string => "{$table}.{$column}", $columns));
+        if ($withData !== []) {
+            $query->addSelect(new Sql('case when '.$grammar->wrap("{$table}.collection_id").' in ('.implode(', ', $withData).") then {$data} end as data"));
+        }
+        if ($noindex) {
+            // The SEO card's toggle, true itself (as Seo::noindex() reads it: not 1 or "true").
+            $true = match ($query->getModel()->getConnection()->getDriverName()) {
+                'sqlite' => "json_type({$data}, '$.\"".Seo::KEY."\".\"noindex\"') = 'true'",
+                'pgsql' => "({$data} -> '".Seo::KEY."' -> 'noindex')::text = 'true'",
+                default => "cast(json_extract({$data}, '$.\"".Seo::KEY."\".\"noindex\"') as char) = 'true'",
+            };
+            $query->addSelect(new Sql("case when {$true} then 1 else 0 end as ".self::NOINDEX));
+        }
+
+        return $query;
+    }
+
+    /** Whether a row lean() read asks not to be indexed. */
+    private static function noindex(Model $row): bool
+    {
+        $flag = $row->getAttribute(self::NOINDEX);
+
+        return is_numeric($flag) && (int) $flag === 1;
+    }
+
+    /**
+     * The routed collections whose patterns (in any language) take fields
+     * of their entries (/projects/{project}/{slug}): their URLs need them.
+     *
+     * @param  iterable<Collection>  $collections
+     * @return list<int>
+     */
+    private static function withRouteFields(iterable $collections): array
+    {
+        $ids = [];
+        foreach ($collections as $collection) {
+            $patterns = [$collection->route, ...array_map(fn (array $own): mixed => $own['route'] ?? null, array_values($collection->routes ?? []))];
+            foreach ($patterns as $pattern) {
+                if (is_string($pattern) && (new RoutePattern($pattern))->parameters() !== []) {
+                    $ids[] = $collection->id;
+                    break;
+                }
+            }
+        }
+
+        return $ids;
+    }
+
+    /**
+     * A query's rows in id order, CHUNK at a time (with its eager loads),
+     * each chunk let go of before the next: its models point at each other
+     * (an entry and its translations), so they're collected right away
+     * rather than piling up until PHP's collector runs.
+     *
+     * @template TModel of Model
+     *
+     * @param  Builder<TModel>  $query
+     * @return Generator<int, TModel>
+     */
+    private static function chunks(Builder $query): Generator
+    {
+        $key = $query->getModel()->getQualifiedKeyName();
+        $after = null;
+        do {
+            $chunk = (clone $query)->when($after !== null, fn (Builder $q) => $q->where($key, '>', $after))->orderBy($key)->limit(self::CHUNK)->get();
+            foreach ($chunk as $row) {
+                yield $row;
+            }
+            $after = $chunk->last()?->getKey();
+            $more = $chunk->count() === self::CHUNK;
+            unset($chunk, $row);
+            gc_collect_cycles();
+        } while ($more);
     }
 
     /**
@@ -317,6 +441,23 @@ final class Sitemap
     private static function shown(int $collection, string $locale): Builder
     {
         return EntryTranslation::query()->live()->shownIn($locale)->where('sunrice_entry_translations.collection_id', $collection)->select('sunrice_entry_translations.id');
+    }
+
+    /**
+     * A page's links, made once for the pages of its entry or term (`$key`)
+     * among the last CHUNK of them.
+     *
+     * @param  array<int|string, string>  $made
+     * @param  Closure(): string  $make
+     */
+    private static function remember(array &$made, int|string $key, Closure $make): string
+    {
+        if (! isset($made[$key])) {
+            $made = count($made) >= self::CHUNK ? [] : $made;
+            $made[$key] = $make();
+        }
+
+        return $made[$key];
     }
 
     /**
