@@ -102,6 +102,8 @@ final class CmsPlugin extends BasePlugin
         $panel->share('cms', fn (): array => ['locales' => Locales::names()]);
         // sunrice:install: an app's own / route (Laravel's welcome page) hides the site's homepage.
         $panel->installStep('cms.home-route', fn (InstallOutput $output) => app(Site\AppHomeRoute::class)->install($output));
+        // sunrice:install: offers the Pages and Posts collections a site that has none of them starts with.
+        $panel->installStep('cms.collections', fn (InstallOutput $output) => app(Actions\Install\ScaffoldCollections::class)->install($output));
         // sunrice:roles: people who write and look after the content (globals' values and menus' links,
         // not their handles: cms.globals.configure, cms.menus.configure), not the structure or the people,
         // nor form submissions (visitors' personal details): those are given per form.
