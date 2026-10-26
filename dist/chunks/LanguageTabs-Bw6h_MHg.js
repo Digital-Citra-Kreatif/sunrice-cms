@@ -1,4 +1,4 @@
-import { j as l, t as u, l as o } from "./admin-CLF05qBH.js";
+import { j as l, t as u, l as o } from "./admin-CYfPJLU2.js";
 import { C as x } from "./check-OeKFYRnl.js";
 function p(e, a, n, t, m) {
   const s = a[0], c = e === s ? t(":language (main)", { language: m(e) }) : m(e), i = a.filter((g) => g !== e).map(m).join(", ");

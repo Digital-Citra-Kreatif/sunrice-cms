@@ -1,5 +1,5 @@
-import { a as i, t, j as n } from "./admin-CLF05qBH.js";
-import { P as o } from "./PageValuesForm-W0CmeVEH.js";
+import { a as i, t, j as n } from "./admin-CYfPJLU2.js";
+import { P as o } from "./PageValuesForm-BKUn_M2n.js";
 function p({ collection: e, settings: l, ...a }) {
   const s = l ?? i(`cms/collections/${e.handle}/entries`), r = l ? [{ label: t("Collections"), href: i("cms/collections") }, { label: e.title, href: l }, { label: t("Listing page") }] : [{ label: e.title, href: s }, { label: t("Listing page") }];
   return /* @__PURE__ */ n.jsx(

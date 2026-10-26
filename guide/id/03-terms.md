@@ -23,7 +23,7 @@ Semua tentang sebuah term disunting di satu tempat, baru maupun lama:
 - **Di bawah**, dalam taksonomi bertingkat: letaknya (tidak pernah di bawah dirinya sendiri atau term di bawahnya);
 - field khususnya: **Deskripsi** untuk memperkenalkan halamannya, atau field yang diberikan developer untuk taksonomi (gambar…);
 - **SEO**: judul SEO, deskripsi, gambar untuk dibagikan, dan *Sembunyikan dari mesin pencari (noindex)* (lihat [SEO](guide:website/seo));
-- **Pengaturan halaman**: **Template**, jika developer membuat desain khusus (kosongkan untuk desain taksonomi).
+- **Pengaturan halaman**: **Template**, jika developer membuat desain khusus (biarkan **Otomatis** untuk **Template halaman term** taksonomi). Template milik term selalu menang, di semua halaman term itu. Dengan **Otomatis**, desain yang dibuat developer Anda untuk halaman term satu koleksi, atau untuk term ini, didahulukan sebelum milik taksonomi; **Bagaimana dipilih?** di bawahnya menampilkan template yang dicoba, berurutan, dan menandai yang dipakai.
 
 Klik **Simpan**. Perubahan langsung tayang: term tidak memiliki draf. **Lihat halaman** membuka halamannya di situs web jika term punya halaman. **Dipakai oleh** menampilkan konten yang menautkan ke term ini lewat field-nya.
 

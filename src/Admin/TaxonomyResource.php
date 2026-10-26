@@ -91,51 +91,35 @@ final class TaxonomyResource extends Resource
                 ...HandleField::make('taxonomy', 'A short name for this taxonomy, used by the site\'s templates.'),
                 ...TranslatedFields::make('title', fn (string $name, string $language) => TextInput::make($name)->label(__('Title in :language', ['language' => $language]))->maxLength(255)
                     ->placeholder('As the title')->help(__('What visitors read in :language on its term pages.', ['language' => $language]))),
-                Toggle::make('hierarchical')->label('Nested terms')->span(2)->help('Terms can sit under other terms, like subcategories.'),
-                CheckboxList::make('collections')->span(2)
-                    ->help('Ticking a collection gives its entries this taxonomy\'s terms, chosen in the entry editor\'s Taxonomies card, and its entries list a filter by them.')
-                    ->verbatim()->options(fn () => self::collections()->mapWithKeys(fn (Collection $c): array => [(string) $c->id => $c->title])->all())
-                    ->loadUsing(fn (Model $taxonomy): array => $taxonomy instanceof Taxonomy && $taxonomy->exists
-                        ? $taxonomy->loadMissing('collections')->collections->map(fn (Collection $c): string => (string) $c->id)->values()->all()
-                        : [])
-                    ->saveUsing(function (Model $taxonomy, mixed $ids): void {
-                        if ($taxonomy instanceof Taxonomy) {
-                            // Their URLs are checked with the form's values for them (savePivots()).
-                            $result = app(AttachCollections::class)->handle($taxonomy, array_values(array_map(intval(...), array_filter(is_array($ids) ? $ids : [], is_numeric(...)))), checkRoutes: false);
-                            self::$attached ??= new \WeakMap;
-                            self::$attached[$taxonomy] = $result['attached'];
-                            $taxonomy->unsetRelation('collections');
-                        }
-                    }),
-                Select::make('blueprint')->label('Term fields')->span(2)
+                Select::make('blueprint')->span(2)
                     ->verbatim()->options(BlueprintChoices::options(BlueprintChoices::CONTENT))
-                    ->help('Extra fields for each term, like a description or an image.'),
-                Select::make('index_blueprint')->label('Index page fields')->span(2)->placeholder('None (no editable fields)')
-                    ->verbatim()->options(BlueprintChoices::options(BlueprintChoices::CONTENT, 'index_blueprint'))
-                    ->help('Gives its index pages (the shared one, and each collection\'s) their own fields, such as an intro. Editors fill them in under Terms → ⋮ → Index page.')
-                    ->links([
-                        Link::make('Create blueprint', route('sunrice.admin.cms.blueprints.create', [], false))->showUnless('index_blueprint'),
-                        Link::make('Edit', route('sunrice.admin.cms.blueprints.index', [], false).'/{index_blueprint}/edit')->showWhen('index_blueprint'),
-                    ]),
-                TemplateHelp::select('index_template', 'cms.tag-cloud', 'For its index pages, the shared one and each collection\'s. Automatic: the first template that exists.', fn (Model $taxonomy): array => $taxonomy instanceof Taxonomy ? TemplateLookup::index($taxonomy, null) : [])
-                    ->label('Index page template')->span(2)
-                    ->helpDetails('Which file?', TemplateHelp::files(['cms.taxonomies.{handle}.index', 'cms.taxonomies.index'], 'cms.tag-cloud')."\n".__('In a collection, :file is tried first.', ['file' => '`cms/collections/{collection}/{handle}/index.blade.php`'])),
+                    ->help('The fields its terms have, like a description or an image. Blueprints of forms and global sets aren\'t offered.'),
+                Toggle::make('hierarchical')->label('Nested terms')->span(2)->help('Terms can sit under other terms, like subcategories.'),
             ]),
-            Section::make('In collections')->description('Each collection it groups: whether its entries have one term only, a page per term listing only that collection\'s entries, like /books/tags/featured, and an index page of the terms its entries have, like /books/tags.')->columns(2)
-                ->schema(self::collectionTermFields()),
-            Section::make('Shared term pages')->description('A page per term listing its entries from every collection, like /tags/featured, and an index page of all its terms, like /tags.')->columns(2)
-                ->links(function (?Model $taxonomy): array {
-                    $term = $taxonomy instanceof Taxonomy && $taxonomy->route !== null ? $taxonomy->terms()->with('translations')->orderBy('id')->first() : null;
-                    $url = $term?->url(Locales::default());
-                    $index = $taxonomy instanceof Taxonomy && $taxonomy->index_route !== null ? $taxonomy->indexUrl(Locales::default()) : null;
-
-                    return array_values(array_filter([
-                        $url !== null ? Link::make('View a term page', $url)->newTab()->showWhen('pages') : null,
-                        $index !== null ? Link::make('View the index page', $index)->newTab()->showWhen('index') : null,
-                        $taxonomy instanceof Taxonomy && $taxonomy->index_route !== null
-                            ? Link::make('Edit index page', route('sunrice.admin.cms.taxonomies.index-page.edit', $taxonomy->handle, false))->showWhen('index') : null,
-                    ]));
-                })
+            // Like the collection form's Taxonomies: which collections, and each one's own settings under it.
+            Section::make('Collections')->description('The collections whose entries it groups: editors choose its terms in the entry editor\'s Taxonomies card, and the entries list filters by them. Under each one ticked: whether an entry has one term only, and its own term pages and index page, like /books/tags/featured and /books/tags.')->columns(2)
+                ->schema([
+                    CheckboxList::make('collections')->label('Collections it groups')->span(2)
+                        ->verbatim()->options(fn () => self::collections()->mapWithKeys(fn (Collection $c): array => [(string) $c->id => $c->title])->all())
+                        ->loadUsing(fn (Model $taxonomy): array => $taxonomy instanceof Taxonomy && $taxonomy->exists
+                            ? $taxonomy->loadMissing('collections')->collections->map(fn (Collection $c): string => (string) $c->id)->values()->all()
+                            : [])
+                        ->saveUsing(function (Model $taxonomy, mixed $ids): void {
+                            if ($taxonomy instanceof Taxonomy) {
+                                // Their URLs are checked with the form's values for them (savePivots()).
+                                $result = app(AttachCollections::class)->handle($taxonomy, array_values(array_map(intval(...), array_filter(is_array($ids) ? $ids : [], is_numeric(...)))), checkRoutes: false);
+                                self::$attached ??= new \WeakMap;
+                                self::$attached[$taxonomy] = $result['attached'];
+                                $taxonomy->unsetRelation('collections');
+                            }
+                        }),
+                    ...self::collectionTermFields(),
+                ]),
+            Section::make('Term pages')->description('A page per term listing its entries. The shared ones list every collection\'s, like /tags/featured; each collection\'s own are set under Collections.')->columns(2)
+                // Like the collection form's View entries.
+                ->links(fn (?Model $taxonomy): array => $taxonomy instanceof Taxonomy
+                    ? [Link::make('View terms', route('sunrice.admin.cms.taxonomies.terms.index', $taxonomy->handle, false))]
+                    : [])
                 ->schema([
                     Toggle::make('pages')->label('Shared term pages')->default(false)->span(2)
                         ->help('Worth it when several collections share this taxonomy. With one, its collection\'s term pages list the same entries.')
@@ -151,13 +135,19 @@ final class TaxonomyResource extends Resource
                     ...TranslatedFields::routes('route', fn (RouteInput $input, string $code, string $language) => $input
                         ->label(__('Shared term page URL in :language', ['language' => $language]))->placeholderFrom('route', '/{handle}/{slug}')->span(2)->showWhen('pages')
                         ->rules([new RoutePatternRule(parameters: false)])
-                        ->help(__('Its own address in :language, like /topik/{slug}. Empty: the term page URL under :prefix.', ['language' => $language, 'prefix' => Locales::prefix($code) ?: '/']))
-                        ->links(function (?Model $taxonomy) use ($code): array {
-                            $term = $taxonomy instanceof Taxonomy && $taxonomy->route !== null ? $taxonomy->terms()->with('translations')->orderBy('id')->first() : null;
-                            $url = $term?->url($code);
-
-                            return $url !== null ? [Link::make('View a term page', $url)->newTab()->showWhen('pages')] : [];
-                        })),
+                        ->help(__('Its own address in :language, like /topik/{slug}. Empty: the term page URL under :prefix.', ['language' => $language, 'prefix' => Locales::prefix($code) ?: '/']))),
+                    TemplateHelp::select('template', 'cms.topic', 'For shared and collections\' term pages. Automatic: the first template that exists. A term can choose its own on its page.')
+                        ->label('Term page template')->span(2)
+                        ->helpDetails('Which file?', TemplateHelp::files(['cms.taxonomies.{handle}.show', 'cms.taxonomies.show'], 'cms.topic')."\n".__('Before this template, :file is tried for the term with that slug in the main language.', ['file' => '`cms/taxonomies/{handle}/{slug}.blade.php`'])."\n".__('In a collection, :slug and then :file are tried first.', ['slug' => '`cms/collections/{collection}/{handle}/{slug}.blade.php`', 'file' => '`cms/collections/{collection}/{handle}/show.blade.php`'])),
+                ]),
+            // Like the collection form's Listing page: its URL, fields and template, and its editor.
+            Section::make('Index pages')->description('A page listing its terms. The shared one lists all of them, like /tags; each collection\'s own are set under Collections. Their fields and template are for both.')->columns(2)
+                ->links(fn (?Model $taxonomy): array => $taxonomy instanceof Taxonomy && $taxonomy->index_route !== null ? array_values(array_filter([
+                    ($index = $taxonomy->indexUrl(Locales::default())) !== null ? Link::make('View the index page', $index)->newTab()->showWhen('index') : null,
+                    // Its fields (with an index page blueprint), SEO and template, per language.
+                    Link::make('Edit index page', route('sunrice.admin.cms.taxonomies.index-page.edit', $taxonomy->handle, false))->showWhen('index'),
+                ])) : [])
+                ->schema([
                     Toggle::make('index')->label('Shared index page')->default(false)->span(2)
                         ->help('A page listing all its terms, each linking to its page, like /tags.')
                         ->loadUsing(fn (Model $taxonomy): bool => $taxonomy->getAttribute('index_route') !== null)
@@ -171,9 +161,16 @@ final class TaxonomyResource extends Resource
                         ->help(__('Its own address in :language, like /tag. Empty: the index page URL under :prefix.', ['language' => $language, 'prefix' => Locales::prefix($code) ?: '/']))
                         ->links(fn (?Model $taxonomy): array => $taxonomy instanceof Taxonomy && $taxonomy->index_route !== null && ($url = $taxonomy->indexUrl($code)) !== null
                             ? [Link::make('View on site', $url)->newTab()->showWhen('index')] : [])),
-                    TemplateHelp::select('template', 'cms.topic', 'For shared and collections\' term pages. Automatic: the first template that exists. A term can choose its own on its page.')
-                        ->label('Term page template')->span(2)
-                        ->helpDetails('Which file?', TemplateHelp::files(['cms.taxonomies.{handle}.show', 'cms.taxonomies.show'], 'cms.topic')."\n".__('Before this template, :file is tried for the term with that slug in the main language.', ['file' => '`cms/taxonomies/{handle}/{slug}.blade.php`'])."\n".__('In a collection, :slug and then :file are tried first.', ['slug' => '`cms/collections/{collection}/{handle}/{slug}.blade.php`', 'file' => '`cms/collections/{collection}/{handle}/show.blade.php`'])),
+                    Select::make('index_blueprint')->label('Index page blueprint')->span(2)->placeholder('None (no editable fields)')
+                        ->verbatim()->options(BlueprintChoices::options(BlueprintChoices::CONTENT, 'index_blueprint'))
+                        ->help('Gives its index pages (the shared one, and each collection\'s) their own fields, such as an intro. Editors fill them in under Terms → ⋮ → Index page.')
+                        ->links([
+                            Link::make('Create blueprint', route('sunrice.admin.cms.blueprints.create', [], false))->showUnless('index_blueprint'),
+                            Link::make('Edit', route('sunrice.admin.cms.blueprints.index', [], false).'/{index_blueprint}/edit')->showWhen('index_blueprint'),
+                        ]),
+                    TemplateHelp::select('index_template', 'cms.tag-cloud', 'For its index pages, the shared one and each collection\'s. Automatic: the first template that exists.', fn (Model $taxonomy): array => $taxonomy instanceof Taxonomy ? TemplateLookup::index($taxonomy, null) : [])
+                        ->label('Index page template')->span(2)
+                        ->helpDetails('Which file?', TemplateHelp::files(['cms.taxonomies.{handle}.index', 'cms.taxonomies.index'], 'cms.tag-cloud')."\n".__('In a collection, :file is tried first.', ['file' => '`cms/collections/{collection}/{handle}/index.blade.php`'])),
                 ]),
         ]);
     }
