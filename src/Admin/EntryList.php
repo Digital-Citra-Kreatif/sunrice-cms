@@ -24,6 +24,7 @@ use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
+use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Query\JsonCast;
 use Sunrice\Cms\Query\Sql;
 use Sunrice\Cms\Site\Site;
@@ -362,15 +363,14 @@ final class EntryList
         usort($authors, fn (array $a, array $b): int => strcasecmp($a['label'], $b['label']));
 
         $taxonomies = $this->taxonomies();
-        $terms = $taxonomies->isEmpty() ? [] : Term::query()->whereIn('taxonomy_id', $taxonomies->pluck('id'))
-            ->with('translations')->orderBy('sort_order')->orderBy('id')->limit(2000)->get()->all();
+        $terms = $taxonomies->isEmpty() ? [] : self::filterTerms($taxonomies->map(fn (Taxonomy $taxonomy): int => $taxonomy->id)->all());
 
         return [
             'authors' => $authors,
             'taxonomies' => array_values($taxonomies->map(fn (Taxonomy $taxonomy): array => [
                 'handle' => $taxonomy->handle,
                 'title' => $taxonomy->title,
-                'terms' => self::termTree(array_values(array_filter($terms, fn (Term $term): bool => $term->taxonomy_id === $taxonomy->id))),
+                'terms' => self::termTree(array_values(array_filter($terms, fn (array $term): bool => $term['taxonomy'] === $taxonomy->id))),
             ])->all()),
             'locales' => Locales::all(),
         ];
@@ -707,26 +707,63 @@ final class EntryList
     }
 
     /**
+     * The filter bar's terms of some taxonomies (2,000 at most), in their
+     * order, with their main-language title (else their first one's): as
+     * plain rows, not models, as a big taxonomy has many.
+     *
+     * @param  array<int, int>  $taxonomies  their ids
+     * @return list<array{id: int, taxonomy: int, parent: int|null, title: string|null}>
+     */
+    private static function filterTerms(array $taxonomies): array
+    {
+        $rows = Term::query()->whereIn('taxonomy_id', $taxonomies)->orderBy('sort_order')->orderBy('id')->limit(2000)
+            ->toBase()->get(['id', 'taxonomy_id', 'parent_id']);
+        $ids = [];
+        foreach ($rows as $row) {
+            /** @var object{id: int|string} $row */
+            $ids[] = (int) $row->id;
+        }
+        $main = Locales::default();
+        $titles = [];
+        $first = [];
+        foreach ($ids === [] ? [] : TermTranslation::query()->whereIntegerInRaw('term_id', $ids)->orderBy('id')->toBase()->get(['term_id', 'locale', 'title']) as $row) {
+            /** @var object{term_id: int|string, locale: string, title: string} $row */
+            $id = (int) $row->term_id;
+            $first[$id] ??= $row->title;
+            if ($row->locale === $main) {
+                $titles[$id] = $row->title;
+            }
+        }
+        $terms = [];
+        foreach ($rows as $row) {
+            /** @var object{id: int|string, taxonomy_id: int|string, parent_id: int|string|null} $row */
+            $id = (int) $row->id;
+            $terms[] = ['id' => $id, 'taxonomy' => (int) $row->taxonomy_id, 'parent' => $row->parent_id === null ? null : (int) $row->parent_id, 'title' => $titles[$id] ?? $first[$id] ?? null];
+        }
+
+        return $terms;
+    }
+
+    /**
      * Terms in tree order with their depth, by main-language title.
      *
-     * @param  list<Term>  $terms
+     * @param  list<array{id: int, taxonomy: int, parent: int|null, title: string|null}>  $terms
      * @return list<array{value: string, label: string, depth: int}>
      */
     private static function termTree(array $terms): array
     {
         $children = [];
-        $ids = array_flip(array_map(fn (Term $term): int => $term->id, $terms));
+        $ids = array_flip(array_map(fn (array $term): int => $term['id'], $terms));
         foreach ($terms as $term) {
-            $parent = $term->parent_id !== null && isset($ids[$term->parent_id]) ? $term->parent_id : 0;
+            $parent = $term['parent'] !== null && isset($ids[$term['parent']]) ? $term['parent'] : 0;
             $children[$parent][] = $term;
         }
         $out = [];
         $walk = function (int $parent, int $depth) use (&$walk, &$out, $children): void {
             foreach ($children[$parent] ?? [] as $term) {
-                $translation = $term->translations->firstWhere('locale', Locales::default()) ?? $term->translations->first();
-                $out[] = ['value' => (string) $term->id, 'label' => $translation->title ?? '#'.$term->id, 'depth' => $depth];
+                $out[] = ['value' => (string) $term['id'], 'label' => $term['title'] ?? '#'.$term['id'], 'depth' => $depth];
                 if ($depth < 20) {
-                    $walk($term->id, $depth + 1);
+                    $walk($term['id'], $depth + 1);
                 }
             }
         };

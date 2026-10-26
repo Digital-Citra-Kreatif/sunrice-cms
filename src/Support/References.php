@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Support;
 
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
@@ -83,9 +84,11 @@ final class References
             // Pointing at itself doesn't keep it from going.
             ->reject(fn (ContentReference $r): bool => $r->source_type === $type && $r->source_id === $r->target_id);
         $ofType = fn (string $source): array => $rows->where('source_type', $source)->pluck('source_id')->unique()->values()->all();
-        $entries = Entry::withTrashed()->with(['collection', 'translations'])->whereKey($ofType(ContentReference::ENTRY))->get()->keyBy('id');
-        $terms = Term::withTrashed()->with(['taxonomy', 'translations'])->whereKey($ofType(ContentReference::TERM))->get()->keyBy('id');
-        $sets = GlobalSet::query()->whereKey($ofType(ContentReference::GLOBAL))->get()->keyBy('id');
+        // Only their titles: a source's fields (its data, draft and search text) can be large, and there can be many.
+        $entries = ($sources = $ofType(ContentReference::ENTRY)) === [] ? new EloquentCollection : Entry::withTrashed()
+            ->with(['collection', 'translations' => fn ($query) => $query->select(['id', 'entry_id', 'locale', 'draft_title'])])->whereKey($sources)->get()->keyBy('id');
+        $terms = ($sources = $ofType(ContentReference::TERM)) === [] ? new EloquentCollection : Term::withTrashed()->with(['taxonomy', 'translations'])->whereKey($sources)->get()->keyBy('id');
+        $sets = ($sources = $ofType(ContentReference::GLOBAL)) === [] ? new EloquentCollection : GlobalSet::query()->whereKey($sources)->get()->keyBy('id');
 
         $used = [];
         foreach ($rows as $row) {

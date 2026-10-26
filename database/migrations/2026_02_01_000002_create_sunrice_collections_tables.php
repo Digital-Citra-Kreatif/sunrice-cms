@@ -116,6 +116,12 @@ return new class extends Migration
             $table->index(['collection_id', 'locale', 'status', 'published_at'], 'sunrice_entry_tr_live_index');
             // The scheduled-publish sweep.
             $table->index(['status', 'published_at'], 'sunrice_entry_tr_status_published_index');
+            // The admin's entries lists in their default order, a page at a time without sorting
+            // the whole collection: by date (dated collections), by title (the others).
+            $table->index(['collection_id', 'locale', 'published_at'], 'sunrice_entry_tr_list_date_index');
+            $table->index(['collection_id', 'locale', 'draft_title'], 'sunrice_entry_tr_list_title_index');
+            // The most recently edited, across collections (the entries picker, the AI tools).
+            $table->index(['locale', 'updated_at'], 'sunrice_entry_tr_recent_index');
         });
 
         /*

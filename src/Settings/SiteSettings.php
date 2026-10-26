@@ -246,7 +246,9 @@ final class SiteSettings extends Settings
         $translations = EntryTranslation::query()->where('locale', Locales::default())->whereIn('collection_id', $routed->keys())
             ->where(fn ($q) => $q->where(fn ($live) => $live->where('status', EntryTranslation::PUBLISHED)->where('published_at', '<=', now()))
                 ->when($current !== null, fn ($q) => $q->orWhere('entry_id', $current)))
-            ->whereHas('entry', fn ($q) => $q->withoutTrashed())->orderBy('draft_title')->limit(1000)->get()
+            // Only what the options show: not the pages' fields, which can be large.
+            ->whereHas('entry', fn ($q) => $q->withoutTrashed())->orderBy('draft_title')->limit(1000)
+            ->get(['id', 'entry_id', 'collection_id', 'locale', 'status', 'title', 'draft_title', 'published_at'])
             ->sortBy(fn (EntryTranslation $t): string => ($routed->get($t->collection_id)->title ?? '')."\0".mb_strtolower($t->title ?? $t->draft_title));
         foreach ($translations as $t) {
             $live = $t->isLive();

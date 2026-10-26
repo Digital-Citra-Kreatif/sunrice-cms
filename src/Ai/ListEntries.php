@@ -50,6 +50,11 @@ final class ListEntries extends CmsTool
             ->orderByDesc('id')
             ->paginate(25, ['*'], 'page', is_int($page) ? max(1, $page) : 1);
 
+        // Each language knows its entry as loaded (with its translations): isOutdated() then reads the main one without a query.
+        foreach ($entries->items() as $translation) {
+            $translation->entry->translations->each(fn (EntryTranslation $other) => $other->setRelation('entry', $translation->entry));
+        }
+
         return $this->json([
             'collection' => $collection->handle,
             'entries' => array_map(self::describe(...), $entries->items()),

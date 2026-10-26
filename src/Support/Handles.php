@@ -14,7 +14,7 @@ use Throwable;
  * The handles of every collection, taxonomy and form, and the titles of
  * the collections and taxonomies, read on every admin page (the sidebar
  * lists them and asks Access who may see each), cached until one is
- * created, changed or deleted.
+ * created, changed or deleted, and read from the cache once per request.
  *
  * @internal
  */
@@ -54,14 +54,15 @@ final class Handles
 
     public static function flush(): void
     {
-        Cache::forget(self::KEY);
+        Cache::memo()->forget(self::KEY);
     }
 
     /** @return array{collections: array<string, array{title: string, listing: bool}>, taxonomies: array<string, string>, forms: list<string>} */
     private static function all(): array
     {
         try {
-            return Cache::remember(self::KEY, SiteCache::ttl(), fn (): array => [
+            // Memoized: read from the cache once per request (or job), however many times the sidebar and Access ask.
+            return Cache::memo()->remember(self::KEY, SiteCache::ttl(), fn (): array => [
                 'collections' => Collection::query()->orderBy('title')->get(['handle', 'title', 'listing_route'])
                     ->mapWithKeys(fn (Collection $c): array => [$c->handle => ['title' => $c->title, 'listing' => $c->listing_route !== null]])->all(),
                 'taxonomies' => Taxonomy::query()->orderBy('title')->get(['handle', 'title'])

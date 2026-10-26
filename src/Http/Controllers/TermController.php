@@ -78,8 +78,10 @@ final class TermController
             'taxonomies' => Taxonomy::query()->orderBy('title')->get()->filter(fn (Taxonomy $t): bool => Access::terms($request->user(), 'view', $t))->values()->map(fn (Taxonomy $t): array => ['handle' => $t->handle, 'title' => $t->title])->all(),
             'locales' => Locales::all(),
             'locale' => $locale,
-            'terms' => array_map(function (array $item) use ($locale, $usedBy, $pages): array {
+            'terms' => array_map(function (array $item) use ($taxonomy, $locale, $usedBy, $pages): array {
                 [$term, $depth] = $item;
+                // Its URL comes from the site's cached routes: no query per term.
+                $term->setRelation('taxonomy', $taxonomy);
                 $translation = $term->translations->firstWhere('locale', $locale);
 
                 return [

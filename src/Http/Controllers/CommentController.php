@@ -64,7 +64,7 @@ final class CommentController
             $counts[$name] = $name === 'trashed' ? $byStatus['trashed'] : array_sum(array_map(fn (string $status): int => $byStatus[$status] ?? 0, $statuses));
         }
         $comments = ($tab === 'trashed' ? $filtered()->onlyTrashed() : $filtered()->whereIn('status', self::TABS[$tab]))
-            ->with(['entry.translations', 'parent'])->latest()->orderByDesc('id')->paginate(self::PER_PAGE)->withQueryString();
+            ->with(['entry.collection', 'entry.translations', 'parent'])->latest()->orderByDesc('id')->paginate(self::PER_PAGE)->withQueryString();
         Comment::withAuthors([...$comments->items(), ...array_filter(array_map(fn (Comment $c): ?Comment => $c->parent, $comments->items()))]);
 
         return Inertia::render('Cms/Comments/Index', [
@@ -160,6 +160,8 @@ final class CommentController
     {
         $entry = $comment->entry;
         $translation = $entry->translation($comment->locale) ?? $entry->mainTranslation();
+        // Its entry as loaded, with its collection: its URL needs no query.
+        $translation?->setRelation('entry', $entry);
 
         return [
             'id' => $comment->id,

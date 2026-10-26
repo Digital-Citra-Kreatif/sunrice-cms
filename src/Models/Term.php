@@ -145,6 +145,9 @@ class Term extends Model
             return $main === null ? null : self::scoped($main, $collection, fn () => app(Site::class)->termUrlIn($main, $locale));
         }
 
+        // Its own term, so working out the URL loads nothing more.
+        $translation?->setRelation('term', $this);
+
         return $translation === null ? null : self::scoped($translation, $collection, fn () => $translation->url());
     }
 
