@@ -18,6 +18,7 @@ use Sunrice\Cms\Fields\Field;
 use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Fields\Schema;
+use Sunrice\Cms\Fields\Types\TermsField;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
@@ -351,7 +352,7 @@ final class EntryList
     /**
      * What the filter bar offers: authors, terms per taxonomy, languages.
      *
-     * @return array{authors: list<array{value: string, label: string}>, taxonomies: list<array{handle: string, title: string, terms: list<array{value: string, label: string, depth: int}>}>, locales: list<string>}
+     * @return array{authors: list<array{value: string, label: string}>, taxonomies: list<array{handle: string, title: string, terms: list<array{value: string, label: string, depth: int}>, search: bool}>, locales: list<string>}
      */
     public function filterOptions(): array
     {
@@ -362,14 +363,18 @@ final class EntryList
         usort($authors, fn (array $a, array $b): int => strcasecmp($a['label'], $b['label']));
 
         $taxonomies = $this->taxonomies();
-        $terms = $taxonomies->isEmpty() ? [] : self::filterTerms($taxonomies->map(fn (Taxonomy $taxonomy): int => $taxonomy->id)->all());
+        // A big taxonomy's terms are searched instead (the term picker, cms/terms/picker): only the others' are listed.
+        $big = TermsField::big($taxonomies->map(fn (Taxonomy $taxonomy): int => $taxonomy->id)->all());
+        $listed = $taxonomies->reject(fn (Taxonomy $taxonomy): bool => isset($big[$taxonomy->id]));
+        $terms = $listed->isEmpty() ? [] : self::filterTerms($listed->map(fn (Taxonomy $taxonomy): int => $taxonomy->id)->all());
 
         return [
             'authors' => $authors,
             'taxonomies' => array_values($taxonomies->map(fn (Taxonomy $taxonomy): array => [
                 'handle' => $taxonomy->handle,
                 'title' => $taxonomy->title,
-                'terms' => self::termTree(array_values(array_filter($terms, fn (array $term): bool => $term['taxonomy'] === $taxonomy->id))),
+                'terms' => isset($big[$taxonomy->id]) ? [] : self::termTree(array_values(array_filter($terms, fn (array $term): bool => $term['taxonomy'] === $taxonomy->id))),
+                'search' => isset($big[$taxonomy->id]),
             ])->all()),
             'locales' => Locales::all(),
         ];
@@ -687,7 +692,7 @@ final class EntryList
     }
 
     /**
-     * The filter bar's terms of some taxonomies (2,000 at most), in their
+     * The filter bar's terms of some taxonomies (small ones: TermsField::big()), in their
      * order, with their main-language title (else their first one's): as
      * plain rows, not models, as a big taxonomy has many.
      *
@@ -696,7 +701,7 @@ final class EntryList
      */
     private static function filterTerms(array $taxonomies): array
     {
-        $rows = Term::query()->whereIn('taxonomy_id', $taxonomies)->orderBy('sort_order')->orderBy('id')->limit(2000)
+        $rows = Term::query()->whereIn('taxonomy_id', $taxonomies)->orderBy('sort_order')->orderBy('id')
             ->toBase()->get(['id', 'taxonomy_id', 'parent_id']);
         $ids = [];
         foreach ($rows as $row) {

@@ -1,8 +1,8 @@
-import { j as s, t as e, r as U } from "./admin-DOytNhi-.js";
+import { j as s, t as e, r as U } from "./admin-B85tCaRI.js";
 import { _ as P } from "./createLucideIcon-Ccbp7F45.js";
 import { u as m } from "./ui-Dh5wfMwT.js";
-import { F as E } from "./FieldError-HMA8utBI.js";
-import { I as L } from "./FieldInput-D2nQC-3x.js";
+import { F as E } from "./FieldError-ol5snTmU.js";
+import { b as L } from "./TermsPicker-Dqxn7i5G.js";
 import { C as j } from "./check-OeKFYRnl.js";
 function B(c, t) {
   return c === null || t === void 0 ? c : { ...c, choices: t };
@@ -16,7 +16,7 @@ function A(c, t) {
   const i = c.trim();
   return i === "" ? !1 : t?.own?.view === i ? !t.own.exists : t?.choices !== void 0 && !t.choices.includes(i);
 }
-function I({ view: c }) {
+function O({ view: c }) {
   const t = S(c);
   return /* @__PURE__ */ s.jsx("code", { title: t, className: "cms:block cms:min-w-0 cms:truncate cms:font-mono cms:text-xs", children: t });
 }
@@ -30,7 +30,7 @@ function V({ value: c = "", lookup: t = null }) {
           h + 1,
           "."
         ] }),
-        /* @__PURE__ */ s.jsx(I, { view: r }),
+        /* @__PURE__ */ s.jsx(O, { view: r }),
         a === r && d
       ] }, r)),
       /* @__PURE__ */ s.jsxs("li", { className: "cms:flex cms:items-center cms:gap-2 cms:text-muted-foreground", children: [
@@ -45,19 +45,19 @@ function V({ value: c = "", lookup: t = null }) {
   ] });
 }
 function D({ id: c, value: t, onChange: i, lookup: a = null, example: d, automatic: x, error: r, disabled: h = !1 }) {
-  const [w, N] = P.useState(!1), [y, p] = P.useState(""), O = () => {
+  const [w, N] = P.useState(!1), [y, p] = P.useState(""), G = () => {
     a?.choices === void 0 && U.router.reload({ only: ["templateChoices"] });
   }, u = a?.choices ?? [], b = a?.example ?? d, f = u.filter((n) => n.startsWith("cms.")), v = u.filter((n) => !n.startsWith("cms.")), C = (n) => /* @__PURE__ */ s.jsxs(m.CommandItem, { value: n, onSelect: () => g(n), children: [
     /* @__PURE__ */ s.jsx(j, { className: l === n ? "" : "cms:opacity-0" }),
     " ",
     /* @__PURE__ */ s.jsx("span", { className: "cms:truncate cms:font-mono cms:text-xs", children: n })
-  ] }, n), l = t.trim(), T = _(t, a), G = A(t, a), o = y.trim().toLowerCase(), g = (n) => {
+  ] }, n), l = t.trim(), T = _(t, a), I = A(t, a), o = y.trim().toLowerCase(), g = (n) => {
     i(n), N(!1), p("");
   };
   return /* @__PURE__ */ s.jsxs("div", { className: "cms:flex cms:min-w-0 cms:flex-col cms:gap-2", children: [
     /* @__PURE__ */ s.jsx(m.Label, { htmlFor: c, children: e("Template") }),
     /* @__PURE__ */ s.jsxs(m.Popover, { open: w, onOpenChange: (n) => {
-      N(n), n || p(""), n && O();
+      N(n), n || p(""), n && G();
     }, children: [
       /* @__PURE__ */ s.jsx(m.PopoverTrigger, { asChild: !0, children: /* @__PURE__ */ s.jsxs(
         m.Button,
@@ -95,7 +95,7 @@ function D({ id: c, value: t, onChange: i, lookup: a = null, example: d, automat
         ] })
       ] }) })
     ] }),
-    G && /* @__PURE__ */ s.jsx("p", { className: "cms:text-xs cms:text-amber-700 cms:dark:text-amber-400", children: e("No such file yet: the page uses the next one until it exists.") }),
+    I && /* @__PURE__ */ s.jsx("p", { className: "cms:text-xs cms:text-amber-700 cms:dark:text-amber-400", children: e("No such file yet: the page uses the next one until it exists.") }),
     /* @__PURE__ */ s.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-0.5 cms:text-xs cms:leading-relaxed cms:text-muted-foreground", children: [
       /* @__PURE__ */ s.jsx("p", { children: e("A view name from resources/views: :example is :file.", { example: "\0", file: "" }).split(/(\u0000|\u0001)/).map((n, F) => n === "\0" ? /* @__PURE__ */ s.jsx("code", { className: "cms:wrap-anywhere", children: b }, F) : n === "" ? /* @__PURE__ */ s.jsx("code", { className: "cms:wrap-anywhere", children: S(b) }, F) : n) }),
       /* @__PURE__ */ s.jsx("p", { children: x })
@@ -103,7 +103,7 @@ function D({ id: c, value: t, onChange: i, lookup: a = null, example: d, automat
     /* @__PURE__ */ s.jsxs("div", { className: "cms:flex cms:min-w-0 cms:flex-wrap cms:items-center cms:gap-x-3 cms:gap-y-1 cms:text-xs cms:text-muted-foreground", children: [
       /* @__PURE__ */ s.jsxs("span", { className: "cms:flex cms:min-w-0 cms:max-w-full cms:items-baseline cms:gap-1", children: [
         /* @__PURE__ */ s.jsx("span", { className: "cms:shrink-0", children: e("Uses") }),
-        T === null ? /* @__PURE__ */ s.jsx("span", { children: e("the built-in template") }) : /* @__PURE__ */ s.jsx(I, { view: T })
+        T === null ? /* @__PURE__ */ s.jsx("span", { children: e("the built-in template") }) : /* @__PURE__ */ s.jsx(O, { view: T })
       ] }),
       /* @__PURE__ */ s.jsxs(m.Popover, { children: [
         /* @__PURE__ */ s.jsx(m.PopoverTrigger, { asChild: !0, children: /* @__PURE__ */ s.jsx("button", { type: "button", className: "cms:ml-auto cms:shrink-0 cms:rounded-sm cms:underline cms:underline-offset-4 cms:hover:text-foreground cms:focus-visible:outline-2 cms:focus-visible:outline-ring", children: e("How is it chosen?") }) }),

@@ -20,7 +20,7 @@ Semua tentang sebuah term disunting di satu tempat, baru maupun lama:
 
 - **tab bahasa** di bagian atas (lihat [Bahasa](guide:website/languages#tab-bahasa)): bahasa yang sedang Anda sunting terpilih, dan bahasa yang belum punya judul tampil pudar dengan tanda **+**. Di bahasa seperti itu, memberi judul di sana akan menambahkannya;
 - **Judul** dan **Slug**-nya dalam bahasa itu. Slug baru memindahkan halaman term begitu Anda menyimpan: sebuah catatan memberi tahu bahwa alamat lama tidak akan berfungsi lagi kecuali pengalihan ditambahkan (**Tambah pengalihan**, jika Anda boleh mengelola pengalihan);
-- **Di bawah**, dalam taksonomi bertingkat: letaknya (tidak pernah di bawah dirinya sendiri atau term di bawahnya);
+- **Di bawah**, dalam taksonomi bertingkat: letaknya (tidak pernah di bawah dirinya sendiri atau term di bawahnya). Dalam taksonomi dengan banyak term (lebih dari 200), ketik untuk mencari term tempat menaruhnya; kosongkan untuk tingkat teratas;
 - field khususnya: **Deskripsi** untuk memperkenalkan halamannya, atau field yang diberikan developer untuk taksonomi (gambar…);
 - **SEO**: judul SEO, deskripsi, gambar untuk dibagikan, dan *Sembunyikan dari mesin pencari (noindex)* (lihat [SEO](guide:website/seo));
 - **Pengaturan halaman**: **Template**, jika developer membuat desain khusus (biarkan **Otomatis** untuk **Template halaman term** taksonomi). Template milik term selalu menang, di semua halaman term itu. Dengan **Otomatis**, desain yang dibuat developer Anda untuk halaman term satu koleksi, atau untuk term ini, didahulukan sebelum milik taksonomi; **Bagaimana dipilih?** di bawahnya menampilkan template yang dicoba, berurutan, dan menandai yang dipakai.

@@ -21,7 +21,7 @@ function givenParents(props: Record<string, unknown>): Record<string, string[]> 
     return parents && typeof parents === 'object' && !Array.isArray(parents) ? parents as Record<string, string[]> : {};
 }
 
-async function fetchTerms(params: { taxonomy: string; q?: string; offset?: number; ids?: number[] }, signal?: AbortSignal): Promise<Page> {
+async function fetchTerms(params: { taxonomy: string; q?: string; offset?: number; except?: number | null; ids?: number[] }, signal?: AbortSignal): Promise<Page> {
     const response = await fetch(`${adminUrl('cms/terms/picker')}?${termPickerQuery(params)}`, { headers: { Accept: 'application/json' }, credentials: 'same-origin', signal });
     if (!response.ok) throw new Error(String(response.status));
 
@@ -37,6 +37,10 @@ interface Props {
     invalid: boolean;
     value: number | number[] | null;
     onChange: (value: number | number[] | null) => void;
+    /** What the button says while nothing is chosen. */
+    placeholder?: string;
+    /** A term not to offer, nor the terms under it (a term's own Under). */
+    except?: number | null;
 }
 
 /** What's known of a term: its title, and its parents' when the tree was listed. */
@@ -47,7 +51,7 @@ interface Known { label: string; parents?: string[] }
  * list of the taxonomy's terms (cms/terms/picker, loaded when it opens, a
  * page at a time, searched on the server).
  */
-export function TermsPicker({ id, taxonomy, multiple, max, required, invalid, value, onChange }: Props) {
+export function TermsPicker({ id, taxonomy, multiple, max, required, invalid, value, onChange, placeholder: placeholderText, except = null }: Props) {
     const given = React.useContext(TermLabels);
     // So a chip's tooltip says "News › Local" before the list is opened.
     const parentsGiven = givenParents(usePage().props as Record<string, unknown>);
@@ -81,7 +85,7 @@ export function TermsPicker({ id, taxonomy, multiple, max, required, invalid, va
         if (wanted === null || taxonomy === null || loaded.current === `${taxonomy}\n${wanted}`) return;
         const controller = new AbortController();
         const timer = window.setTimeout(() => {
-            fetchTerms({ taxonomy, q: wanted }, controller.signal).then((page) => {
+            fetchTerms({ taxonomy, q: wanted, except }, controller.signal).then((page) => {
                 loaded.current = `${taxonomy}\n${wanted}`;
                 setList({ ...page, q: wanted });
                 remember(page.items, wanted === '');
@@ -95,7 +99,7 @@ export function TermsPicker({ id, taxonomy, multiple, max, required, invalid, va
             window.clearTimeout(timer);
             controller.abort();
         };
-    }, [taxonomy, wanted, attempt, remember]);
+    }, [taxonomy, wanted, except, attempt, remember]);
 
     const label = (termId: number): string | undefined => given[String(termId)] ?? known[termId]?.label;
     // Titles of chosen terms neither the page nor a list gave.
@@ -108,7 +112,7 @@ export function TermsPicker({ id, taxonomy, multiple, max, required, invalid, va
     const loadMore = () => {
         if (!taxonomy || !list?.more || loadingMore || list.q !== q) return;
         setLoadingMore(true);
-        fetchTerms({ taxonomy, q: list.q, offset: list.items.length }).then((page) => {
+        fetchTerms({ taxonomy, q: list.q, offset: list.items.length, except }).then((page) => {
             const items = appendPage(list.items, page.items);
             setList({ items, more: page.more, q: list.q });
             remember(items, list.q === '');
@@ -159,7 +163,7 @@ export function TermsPicker({ id, taxonomy, multiple, max, required, invalid, va
         if (el.scrollTop + el.clientHeight >= el.scrollHeight - 48) loadMore();
     };
 
-    const placeholder = multiple ? t('Choose terms…') : t('Choose a term…');
+    const placeholder = placeholderText ?? (multiple ? t('Choose terms…') : t('Choose a term…'));
     const listId = `${id}-listbox`;
     const stale = list !== null && list.q !== q;
 

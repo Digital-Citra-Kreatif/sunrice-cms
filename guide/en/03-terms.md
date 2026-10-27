@@ -20,7 +20,7 @@ Everything about a term is edited in one place, new or not:
 
 - the **language tabs** at the top (see [Languages](guide:website/languages#the-language-tabs)): the one you're editing is selected, and those the term has no title in yet are muted with a **+**. In such a language, giving it a title there adds it;
 - its **Title** and **Slug** in that language. A new slug moves the term's page as soon as you save: a note says the old address will stop working unless a redirect is added (**Add a redirect**, if you may manage redirects);
-- **Under**, in a taxonomy with nested terms: where it sits (never under itself or a term under it);
+- **Under**, in a taxonomy with nested terms: where it sits (never under itself or a term under it). In a taxonomy with many terms (more than 200), type to search for the term to put it under; leave it empty for the top level;
 - its own fields: a **Description** to introduce its page, or the fields your developer gave the taxonomy (an image…);
 - **SEO**: a meta title, a meta description, an Open Graph image and *Hide from search engines (noindex)* (see [SEO](guide:website/seo));
 - **Page settings**: a **Template**, if your developer made a special design (leave it on **Automatic** for the taxonomy's **Term page template**). A term's own template wins, on every page of that term. With **Automatic**, a design your developer made for one collection's term pages, or for this term, comes before the taxonomy's; **How is it chosen?** under it lists the templates tried, in order, and marks the one in use.

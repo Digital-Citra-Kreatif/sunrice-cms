@@ -15,7 +15,7 @@ Click a menu to open it. Its links are listed in order, indented to show what's 
 The buttons above the list add a link to:
 
 - **Entry**: a page, article or other entry. Its label and address follow the entry in each language: rename or move the entry, and the menu follows.
-- **Term**: a term's page, such as a category (when the taxonomy has term pages).
+- **Term**: a term's page, such as a category (when the taxonomy has term pages). With many terms (more than 200), choose the taxonomy, then type to search for the term.
 - **Listing**: a collection's listing page, such as the blog's. **Filters** (optional) narrows it, like "For sale" on a properties page: what the page puts after the `?` in its address when you filter it, such as `listing_type=for-sale`. Filter the page on the website, then copy that part of its address. The link keeps the filters in every language.
 - **Taxonomy index**: a taxonomy's index page, the page listing its terms, such as all categories (when the taxonomy has one: the shared one, or a collection's).
 - **Link**: any web address (`https://…`), a path on the site (`/contact`), an email (`mailto:`) or a phone number (`tel:`).

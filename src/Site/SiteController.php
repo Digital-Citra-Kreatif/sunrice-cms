@@ -20,6 +20,7 @@ use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Query\EntryPaginator;
+use Sunrice\Cms\Query\IdPage;
 use Sunrice\Cms\Settings\SiteSettings;
 use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\AdminUrls;
@@ -237,12 +238,13 @@ final class SiteController
         $collection = $listing->collection;
         // Run when the template first uses $entries.
         $entries = new LazyEntries(function () use ($collection, $listing): LengthAwarePaginator {
-            $entries = EntryPaginator::from(EntryTranslation::query()->live()->with(self::listed($listing->locale))
+            // The page's ids first, then its rows (IdPage): a deep page doesn't sort every translation whole.
+            $entries = EntryPaginator::from(IdPage::paginate(EntryTranslation::query()->live()->with(self::listed($listing->locale))
                 ->where('collection_id', $collection->id)->shownIn($listing->locale)
                 ->when($collection->ordered,
                     fn ($q) => $q->orderBy(Entry::query()->select('sort_order')->whereColumn('sunrice_entries.id', 'sunrice_entry_translations.entry_id'))->orderBy('id'),
-                    fn ($q) => $collection->dated ? $q->orderByDesc('published_at')->orderByDesc('id') : $q->orderBy('title')->orderBy('id'))
-                ->paginate(max(1, min(100, $collection->per_page))))->withQueryString();
+                    fn ($q) => $collection->dated ? $q->orderByDesc('published_at')->orderByDesc('id') : $q->orderBy('title')->orderBy('id')),
+                max(1, min(100, $collection->per_page))))->withQueryString();
             // Hydrated together: the first values() loads what all of them point at.
             (new HydrationContext($listing->locale))->share($entries->getCollection());
 

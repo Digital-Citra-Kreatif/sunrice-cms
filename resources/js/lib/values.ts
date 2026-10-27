@@ -127,10 +127,12 @@ export function syncKeys(keys: readonly string[], count: number): string[] {
 }
 
 /** The term picker endpoint's query string. */
-export function termPickerQuery({ taxonomy, q, offset, ids }: { taxonomy: string; q?: string; offset?: number; ids?: number[] }): string {
+export function termPickerQuery({ taxonomy, q, offset, except, ids }: { taxonomy: string; q?: string; offset?: number; except?: number | null; ids?: number[] }): string {
     const params = new URLSearchParams({ taxonomy });
     if (q) params.set('q', q);
     if (offset) params.set('offset', String(offset));
+    // A term being moved: not it nor the terms under it.
+    if (except) params.set('except', String(except));
     for (const id of ids ?? []) params.append('ids[]', String(id));
 
     return params.toString();

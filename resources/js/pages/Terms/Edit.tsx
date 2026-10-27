@@ -11,6 +11,7 @@ import { Fields } from '@/components/FieldInput.tsx';
 import { FieldSections } from '@/components/FieldSections.tsx';
 import { SlugNote } from '@/components/SlugNote.tsx';
 import { TemplateField, type TemplateLookup, withTemplateChoices } from '@/components/TemplateHelp.tsx';
+import { TermsPicker } from '@/components/TermsPicker.tsx';
 import { VersionConflict } from '@/components/VersionConflict.tsx';
 import { errorKeysAt, errorsAt, hasErrors } from '@/lib/builder.ts';
 import { localeName, slugNote } from '@/lib/entries.ts';
@@ -37,8 +38,8 @@ interface Props {
     } | null;
     /** The term it sits under (null: the top level). */
     parentId?: number | null;
-    /** Where it can go, in nested taxonomies (never under itself or a term under it). */
-    terms?: { id: number; title: string; depth: number }[];
+    /** Where it can go, in nested taxonomies (never under itself or a term under it); null in a big one, searched with the term picker. */
+    terms?: { id: number; title: string; depth: number }[] | null;
     /** Where to add a redirect by hand, for those who may. */
     redirectsUrl?: string | null;
     /** Its terms' blueprint's editor, when the user may edit blueprints. */
@@ -156,14 +157,22 @@ function TermEdit({ taxonomy, term, parentId = null, terms = [], translated, fie
                         {taxonomy.hierarchical && (
                             <div className="cms:flex cms:flex-col cms:gap-2 cms:sm:col-span-2">
                                 <Label htmlFor="term-parent">{t('Under')}</Label>
-                                <Select value={form.data.parent_id === null ? TOP : String(form.data.parent_id)}
-                                    onValueChange={(value: string) => { form.setData('parent_id', value === TOP ? null : Number(value)); clearErrorsAt('parent_id'); }}>
-                                    <SelectTrigger id="term-parent" className="cms:sm:w-1/2" aria-invalid={errors.parent_id !== undefined}><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value={TOP}>{t('Top level')}</SelectItem>
-                                        {terms.map((each) => <SelectItem key={each.id} value={String(each.id)}>{'— '.repeat(each.depth)}{each.title}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
+                                {terms === null ? (
+                                    <div className="cms:sm:w-1/2">
+                                        <TermsPicker id="term-parent" taxonomy={taxonomy.handle} multiple={false} max={null} required={false} invalid={errors.parent_id !== undefined}
+                                            placeholder={t('Top level')} except={term?.id ?? null} value={form.data.parent_id}
+                                            onChange={(next) => { form.setData('parent_id', typeof next === 'number' ? next : null); clearErrorsAt('parent_id'); }} />
+                                    </div>
+                                ) : (
+                                    <Select value={form.data.parent_id === null ? TOP : String(form.data.parent_id)}
+                                        onValueChange={(value: string) => { form.setData('parent_id', value === TOP ? null : Number(value)); clearErrorsAt('parent_id'); }}>
+                                        <SelectTrigger id="term-parent" className="cms:sm:w-1/2" aria-invalid={errors.parent_id !== undefined}><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value={TOP}>{t('Top level')}</SelectItem>
+                                            {terms.map((each) => <SelectItem key={each.id} value={String(each.id)}>{'— '.repeat(each.depth)}{each.title}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                )}
                                 <FieldError message={errors.parent_id} />
                             </div>
                         )}

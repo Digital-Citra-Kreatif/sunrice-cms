@@ -233,7 +233,7 @@ final class CmsPlugin extends BasePlugin
                 Route::controller(TermController::class)->group(function () use ($guard): void {
                     // Every taxonomy's: on to the first one's.
                     Route::get('terms', 'home')->name('terms.index')->middleware($guard('terms', 'view'));
-                    Route::get('terms/picker', [EntryController::class, 'termPicker'])->name('terms.picker')->middleware($guard('entries', 'view'));
+                    Route::get('terms/picker', [EntryController::class, 'termPicker'])->name('terms.picker')->middleware($guard('term-picker', 'view'));
                     Route::post('terms/reorder', 'reorder')->name('terms.reorder')->middleware($guard('terms', 'update'));
                     Route::get('taxonomies/{taxonomy:handle}/terms', 'index')->name('taxonomies.terms.index')->middleware($guard('terms', 'view'));
                     Route::get('taxonomies/{taxonomy:handle}/terms/create', 'create')->name('taxonomies.terms.create')->middleware($guard('terms', 'create'));

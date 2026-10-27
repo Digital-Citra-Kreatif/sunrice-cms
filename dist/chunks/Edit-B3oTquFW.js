@@ -1,16 +1,16 @@
-import { j as e, t as a, a as xe, r as T } from "./admin-DOytNhi-.js";
+import { j as e, t as a, a as xe, r as T } from "./admin-B85tCaRI.js";
 import { c as k, _ as C } from "./createLucideIcon-Ccbp7F45.js";
 import { u as n } from "./ui-Dh5wfMwT.js";
-import { T as P, u as pe } from "./Confirm-CLMxWuYj.js";
-import { h as ge, a as U, e as F, M as fe, i as J, f as O, d as je, r as E, F as R, b as H, s as ve, c as X, g as V, j as be, k as ye, w as we, n as Ne, l as ke, m as $e, o as Se, O as A, p as B, q as W, t as Ce, T as _e, u as ze, v as Le, x as Fe, y as Ie } from "./FieldInput-D2nQC-3x.js";
-import { E as De } from "./EntriesPicker-CLrWeR83.js";
+import { T as P, u as pe } from "./Confirm-imtwkZTr.js";
+import { h as ge, a as U, e as F, M as fe, i as J, f as O, d as je, r as E, F as R, b as H, s as ve, c as X, g as V, j as be, k as ye, w as we, n as Ne, l as ke, m as $e, o as Se, O as A, p as B, q as W, t as Ce, u as _e, v as ze, x as Le, y as Fe } from "./FieldInput-yFVwIjzF.js";
+import { E as Ie } from "./EntriesPicker-AEKmze7W.js";
+import { X as De, T as Me } from "./TermsPicker-Dqxn7i5G.js";
 import { P as G } from "./plus-COqahUZ2.js";
-import { L as Me } from "./link-2-BYZeXgi5.js";
-import { T as Te, L as He } from "./tags-DR5XKR3w.js";
-import { C as Ve } from "./chevron-right-9qVV6b-Q.js";
-import { C as Ae } from "./copy-BT7TBOUx.js";
-import { F as w } from "./FieldError-HMA8utBI.js";
-import { X as Be } from "./EntryStatus-Duw-1dIJ.js";
+import { L as Te } from "./link-2-BYZeXgi5.js";
+import { T as He, L as Ve } from "./tags-DR5XKR3w.js";
+import { C as Ae } from "./chevron-right-9qVV6b-Q.js";
+import { C as Be } from "./copy-BT7TBOUx.js";
+import { F as w } from "./FieldError-ol5snTmU.js";
 import { L as qe } from "./loader-circle-ByksABXO.js";
 const Y = {
   name: "blocks",
@@ -310,11 +310,11 @@ const as = {
   number: Ue,
   toggle: es,
   date: Re,
-  select: He,
+  select: Ve,
   media: Je,
   entries: Xe,
-  terms: Te,
-  link: Me,
+  terms: He,
+  link: Te,
   group: Pe,
   repeater: Ze,
   flexible: Oe,
@@ -334,7 +334,7 @@ function ns({ field: t, type: s, expanded: c, controls: p, handle: m, shared: u,
         onClick: o,
         "aria-label": c ? a("Close :title", { title: r }) : a("Open :title", { title: r }),
         className: "cms:inline-flex cms:size-7 cms:shrink-0 cms:items-center cms:justify-center cms:rounded-md cms:text-muted-foreground cms:transition-colors hover:cms:bg-accent hover:cms:text-foreground focus-visible:cms:outline-none focus-visible:cms:ring-2 focus-visible:cms:ring-ring",
-        children: /* @__PURE__ */ e.jsx(Ve, { "aria-hidden": !0, className: `cms:size-4 cms:transition-transform cms:duration-200 ${c ? "cms:rotate-90" : ""}` })
+        children: /* @__PURE__ */ e.jsx(Ae, { "aria-hidden": !0, className: `cms:size-4 cms:transition-transform cms:duration-200 ${c ? "cms:rotate-90" : ""}` })
       }
     ),
     /* @__PURE__ */ e.jsxs("div", { role: "presentation", onClick: o, className: "cms:flex cms:min-w-0 cms:flex-1 cms:cursor-pointer cms:flex-wrap cms:items-center cms:gap-x-2.5 cms:gap-y-1 cms:py-0.5", children: [
@@ -367,7 +367,7 @@ function ns({ field: t, type: s, expanded: c, controls: p, handle: m, shared: u,
         "aria-label": a("Duplicate :title", { title: r }),
         title: a("Duplicate :title", { title: r }),
         onClick: v,
-        children: /* @__PURE__ */ e.jsx(Ae, {})
+        children: /* @__PURE__ */ e.jsx(Be, {})
       }
     ),
     /* @__PURE__ */ e.jsx(
@@ -770,7 +770,7 @@ function os({ id: t, field: s, siblings: c, onChange: p, errors: m }) {
                 "aria-label": a("Remove condition :number", { number: String(d + 1) }),
                 title: a("Remove condition"),
                 onClick: () => y(o.filter((g, $) => $ !== d)),
-                children: /* @__PURE__ */ e.jsx(Be, {})
+                children: /* @__PURE__ */ e.jsx(De, {})
               }
             )
           ] }),
@@ -804,7 +804,7 @@ function ms({ id: t, input: s, value: c, invalid: p, onChange: m }) {
       ] });
     case "terms":
       return s.taxonomy === null ? /* @__PURE__ */ e.jsx(n.Input, { id: t, "aria-label": a("Value"), "aria-invalid": p, disabled: !0, placeholder: a("Choose the field's taxonomy first") }) : /* @__PURE__ */ e.jsx(
-        _e,
+        Me,
         {
           id: t,
           taxonomy: s.taxonomy,
@@ -818,7 +818,7 @@ function ms({ id: t, input: s, value: c, invalid: p, onChange: m }) {
       );
     case "entries":
       return /* @__PURE__ */ e.jsx(
-        De,
+        Ie,
         {
           id: t,
           multiple: !1,
@@ -896,16 +896,16 @@ function us({ kind: t, handle: s }) {
 function _s({ kind: t = "blueprint", blueprint: s, fieldTypes: c, locales: p = [], usedBy: m = [], reserved: u = [] }) {
   const o = t === "fieldset", v = xe(o ? "cms/fieldsets" : "cms/blueprints"), y = s ? s.title : o ? a("New fieldset") : a("New blueprint");
   n.useBreadcrumbs([{ label: o ? a("Fieldsets") : a("Blueprints"), href: v }, { label: y }]);
-  const [r, b] = pe(), x = T.useForm({ title: s?.title ?? "", handle: s?.handle ?? "" }), [i, d] = C.useState(s !== null), [j, l] = C.useState(() => ze(s?.fields)), h = (N) => c.find((S) => S.type === N)?.hasChildren === !0, f = x.errors, [g, $] = C.useState(() => JSON.stringify(j)), _ = x.isDirty || JSON.stringify(j) !== g, z = () => {
+  const [r, b] = pe(), x = T.useForm({ title: s?.title ?? "", handle: s?.handle ?? "" }), [i, d] = C.useState(s !== null), [j, l] = C.useState(() => _e(s?.fields)), h = (N) => c.find((S) => S.type === N)?.hasChildren === !0, f = x.errors, [g, $] = C.useState(() => JSON.stringify(j)), _ = x.isDirty || JSON.stringify(j) !== g, z = () => {
     x.setDefaults();
-    const N = Ie(j);
+    const N = Fe(j);
     l(N), $(JSON.stringify(N));
   }, I = () => {
     if (x.processing) return;
     x.transform((S) => ({
       // A blueprint's handle can change (RenameBlueprint); a fieldset's can't: flexible blocks store it.
       ...s ? t === "blueprint" ? { title: S.title, handle: S.handle } : { title: S.title } : S,
-      fields: Fe(j, h)
+      fields: Le(j, h)
     }));
     const N = () => window.requestAnimationFrame(() => document.querySelector('[data-invalid="true"]')?.scrollIntoView({ block: "center", behavior: "smooth" }));
     s ? x.put(`${v}/${s.handle}`, { preserveScroll: !0, onSuccess: z, onError: N }) : x.post(v, { onSuccess: z, onError: N });
@@ -939,7 +939,7 @@ function _s({ kind: t = "blueprint", blueprint: s, fieldTypes: c, locales: p = [
       /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2", children: [
         /* @__PURE__ */ e.jsx(n.Label, { htmlFor: "title", children: a("Title") }),
         /* @__PURE__ */ e.jsx(n.Input, { id: "title", value: x.data.title, required: !0, onChange: (N) => {
-          x.setData((S) => ({ ...S, title: N.target.value, handle: i ? S.handle : Le(N.target.value) }));
+          x.setData((S) => ({ ...S, title: N.target.value, handle: i ? S.handle : ze(N.target.value) }));
         } }),
         /* @__PURE__ */ e.jsx(w, { message: f.title })
       ] }),

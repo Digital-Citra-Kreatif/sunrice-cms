@@ -8,7 +8,7 @@ Daftar menampilkan satu koleksi dalam satu waktu; pilih koleksi lain lewat menu 
 
 - **Cari** mencari entri berdasarkan judul atau slug; ketik `#12` untuk menemukan entri bernomor 12.
 - **Status** menampilkan hanya **Draf**, **Terbit**, **Terjadwal**, atau **Tempat sampah**.
-- Saring berdasarkan penulis, term (misalnya kategori), dan **Bahasa**: daftar menampilkan judul dan status dalam bahasa tersebut. Jika ada lebih dari dua filter penulis dan taksonomi, semuanya dikumpulkan di **Filter**, yang menunjukkan berapa yang aktif.
+- Saring berdasarkan penulis, term (misalnya kategori), dan **Bahasa**: daftar menampilkan judul dan status dalam bahasa tersebut. Jika ada lebih dari dua filter penulis dan taksonomi, atau taksonomi dengan banyak term (lebih dari 200, yang dicari dengan mengetik alih-alih menggulir daftar), semuanya dikumpulkan di **Filter**, yang menunjukkan berapa yang aktif.
 - Klik judul kolom untuk mengurutkan. **Kolom** memilih kolom yang tampil, termasuk beberapa field entri itu sendiri (harga, tanggal…). Panel mengingat pilihan kolom dan jumlah baris per halaman Anda.
 - Menu **⋮** di samping **Entri baru** mengarah ke hal yang mungkin Anda perlukan berikutnya: halaman daftar koleksi, term-nya, pengaturannya, dan blueprint-nya, sesuai izin peran Anda.
 - **Ekspor CSV** (di menu **⋮**) mengunduh daftar sesuai filter, urutan, dan bahasanya, semua halamannya, untuk dibuka di spreadsheet. Ini membutuhkan izin tersendiri: bisa melihat daftar belum berarti boleh mengunduhnya.

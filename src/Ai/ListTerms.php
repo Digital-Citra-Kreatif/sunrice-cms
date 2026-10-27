@@ -18,10 +18,12 @@ use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\Locales;
 
 #[IsReadOnly]
-#[Description('Without "taxonomy": the taxonomies (id, handle, title, nested or not) and their pages, as URL patterns in the main language (null: switched off): the shared term pages and shared index page, and per collection it groups (id, handle) its term pages and index page there. With one: its terms (id, parent id, and in each language title, slug, URL: its usual page, and collection_urls: its page in each collection where its terms have pages), in order. Use term ids or slugs in entries\' terms (cms_save_entry "terms", for the taxonomies their collection has), term ids in terms fields and menus (cms_save_menu); index pages\' fields are read and saved with cms_get_listing / cms_save_listing ("taxonomy").')]
+#[Description('Without "taxonomy": the taxonomies (id, handle, title, nested or not) and their pages, as URL patterns in the main language (null: switched off): the shared term pages and shared index page, and per collection it groups (id, handle) its term pages and index page there. With one: its terms (id, parent id, and in each language title, slug, URL: its usual page, and collection_urls: its page in each collection where its terms have pages), in order, 500 a page ("page"; "total" and "last_page" say how many), or those whose title or slug in any language holds "search". Use term ids or slugs in entries\' terms (cms_save_entry "terms", for the taxonomies their collection has), term ids in terms fields and menus (cms_save_menu); index pages\' fields are read and saved with cms_get_listing / cms_save_listing ("taxonomy").')]
 final class ListTerms extends CmsTool
 {
     protected string $name = 'cms_list_terms';
+
+    private const PER_PAGE = 500;
 
     public function handle(Request $request): Response
     {
@@ -56,9 +58,15 @@ final class ListTerms extends CmsTool
         }
         // The collections its terms have pages in.
         $inCollections = $taxonomy->collections->filter(fn (Collection $c): bool => ($p = $c->getRelation('pivot')) instanceof CollectionTaxonomy && $p->term_pages)->sortBy('title');
-        $terms = Term::query()->where('taxonomy_id', $taxonomy->id)->with('translations')->orderBy('sort_order')->orderBy('id')->limit(1000)->get();
+        $search = $request->get('search');
+        $search = is_string($search) ? trim($search) : '';
+        $like = '%'.addcslashes($search, '%_\\').'%';
+        $page = $request->get('page');
+        $terms = Term::query()->where('taxonomy_id', $taxonomy->id)->with('translations')->orderBy('sort_order')->orderBy('id')
+            ->when($search !== '', fn ($query) => $query->whereHas('translations', fn ($t) => $t->where(fn ($t) => $t->whereLike('title', $like)->orWhereLike('slug', $like))))
+            ->paginate(self::PER_PAGE, ['*'], 'page', is_int($page) ? max(1, $page) : 1);
 
-        return $this->json(['taxonomy' => $taxonomy->handle, 'terms' => $terms->map(function (Term $term) use ($taxonomy, $inCollections): array {
+        return $this->json(['taxonomy' => $taxonomy->handle, 'total' => $terms->total(), 'page' => $terms->currentPage(), 'last_page' => $terms->lastPage(), 'terms' => $terms->getCollection()->map(function (Term $term) use ($taxonomy, $inCollections): array {
             // Its URLs come from the site's cached routes: no query per term.
             $term->setRelation('taxonomy', $taxonomy);
             $term->translations->each(fn (TermTranslation $t) => $t->setRelation('term', $term));
@@ -81,6 +89,10 @@ final class ListTerms extends CmsTool
 
     public function schema(JsonSchema $schema): array
     {
-        return ['taxonomy' => $schema->string()->description('A taxonomy handle.')];
+        return [
+            'taxonomy' => $schema->string()->description('A taxonomy handle.'),
+            'search' => $schema->string()->description('Part of a term\'s title or slug, in any language.'),
+            'page' => $schema->integer(),
+        ];
     }
 }

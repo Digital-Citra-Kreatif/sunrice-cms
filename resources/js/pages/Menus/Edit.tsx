@@ -8,11 +8,12 @@ import {
 } from '@imajiner/admin-sdk/ui';
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
 import { FieldError } from '@/components/FieldError.tsx';
+import { TermsPicker } from '@/components/TermsPicker.tsx';
 import { VersionConflict } from '@/components/VersionConflict.tsx';
 import { localeName } from '@/lib/entries.ts';
 import { type FlatItem, flatten, indent, kindOf, labelFallback, type MenuKind, type MenuNode, newItem, outdent, removeItem, retarget, toTree } from '@/lib/menu.ts';
 import { childIndexes, reorderLevel } from '@/lib/tree.ts';
-import { isSafeUrl, pickerQuery } from '@/lib/values.ts';
+import { isSafeUrl, pickerQuery, termPickerQuery } from '@/lib/values.ts';
 import { UnsavedNote } from '@/components/UnsavedNote.tsx';
 
 interface Props {
@@ -22,8 +23,10 @@ interface Props {
     version: number;
     locales: string[];
     limits: { depth: number; items: number };
-    /** Terms with pages: the shared page (collection null) and their collections' term pages. */
-    terms: { id: number; title: string; taxonomy: string; pages: { collection: number | null; title: string }[] }[];
+    /** Terms with pages: the shared page (collection null) and their collections' term pages. Null when there are many: they're searched (the term picker). */
+    terms: { id: number; title: string; taxonomy: string; pages: { collection: number | null; title: string }[] }[] | null;
+    /** The taxonomies whose terms have pages, with those pages. */
+    termTaxonomies?: TermTaxonomy[];
     listings: { id: number; title: string }[];
     /** Taxonomies with index pages: the shared one (collection null) and their collections'. */
     indexes?: { id: number; title: string; pages: { collection: number | null; title: string }[] }[];
@@ -33,13 +36,14 @@ interface Props {
 }
 
 type Kind = MenuKind;
+type TermTaxonomy = { id: number; handle: string; title: string; pages: { collection: number | null; title: string }[] };
 
 export default function MenuEditPage(props: Props) {
     // A fresh editor after each save, and after "Load theirs".
     return <MenuEdit key={props.version} {...props} />;
 }
 
-function MenuEdit({ menu, items: initial, version, locales, limits, terms, listings, indexes = [], can, settings }: Props) {
+function MenuEdit({ menu, items: initial, version, locales, limits, terms, termTaxonomies = [], listings, indexes = [], can, settings }: Props) {
     const url = adminUrl(`cms/menus/${menu.handle}/links`);
     useBreadcrumbs([{ label: t('Menus'), href: adminUrl('cms/menus') }, { label: menu.title }]);
     const [items, setItems] = React.useState<FlatItem[]>(() => flatten(initial));
@@ -137,7 +141,7 @@ function MenuEdit({ menu, items: initial, version, locales, limits, terms, listi
                 actions={can.update && (
                     <>
                                                 <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('entry')}><Plus /> {t('Entry')}</Button>
-                        {terms.length > 0 && <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('term')}><Tag /> {t('Term')}</Button>}
+                        {(terms === null ? termTaxonomies.length > 0 : terms.length > 0) && <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('term')}><Tag /> {t('Term')}</Button>}
                         {listings.length > 0 && <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('listing')}><List /> {t('Listing')}</Button>}
                         {indexes.length > 0 && <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('index')}><Tags /> {t('Taxonomy index')}</Button>}
                         <Button type="button" variant="outline" disabled={items.length >= limits.items} onClick={() => setAdding('url')}><Link2 /> {t('Link')}</Button>
@@ -157,7 +161,7 @@ function MenuEdit({ menu, items: initial, version, locales, limits, terms, listi
                 {items.length === 0 ? <p className="cms:p-4 cms:text-center cms:text-muted-foreground">{t('No links yet. Add an entry or a link.')}</p> : level(-1)}
             </Card>
 
-            <AddDialog kind={adding ?? (edited ? kindOf(edited) : null)} editing={adding ? null : edited} terms={terms} listings={listings} indexes={indexes}
+            <AddDialog kind={adding ?? (edited ? kindOf(edited) : null)} editing={adding ? null : edited} terms={terms} termTaxonomies={termTaxonomies} listings={listings} indexes={indexes}
                 onClose={() => { setAdding(null); setEditing(null); }} main={main}
                 onAdd={(item) => {
                     if (editing !== null && !adding) {
@@ -193,10 +197,11 @@ const descriptions = (): Record<Kind, string> => ({
 });
 
 /** Adds a link, or with `editing`, changes where an existing one links (its kind stays). */
-function AddDialog({ kind, editing = null, terms, listings, indexes, onClose, onAdd, main }: {
+function AddDialog({ kind, editing = null, terms, termTaxonomies, listings, indexes, onClose, onAdd, main }: {
     kind: Kind | null;
     editing?: FlatItem | null;
     terms: Props['terms'];
+    termTaxonomies: TermTaxonomy[];
     listings: Props['listings'];
     indexes: NonNullable<Props['indexes']>;
     onClose: () => void;
@@ -210,20 +215,26 @@ function AddDialog({ kind, editing = null, terms, listings, indexes, onClose, on
     const [query, setQuery] = React.useState('');
     // A term's page: which one, when it has several ("" for the first).
     const [page, setPage] = React.useState('');
+    // Many terms: the taxonomy to search for one in.
+    const [taxonomyId, setTaxonomyId] = React.useState('');
     // Empty to add; the item's own target to change it.
     React.useEffect(() => {
         const k = editing ? kindOf(editing) : null;
         setEntryId(editing?.entry_id ?? null);
         setChoice(k === 'term' ? String(editing?.term_id ?? '') : k === 'index' ? String(editing?.taxonomy_id ?? '') : k === 'listing' ? String(editing?.collection_id ?? '') : '');
         setPage(k === 'term' || k === 'index' ? String(editing?.collection_id ?? '') : '');
+        setTaxonomyId(String((k === 'term' ? editing?.target?.taxonomy : undefined) ?? termTaxonomies[0]?.id ?? ''));
         setAddress(editing?.url ?? '');
         setLabel('');
         setQuery(editing?.query ?? '');
-    }, [kind, editing]);
+    }, [kind, editing, termTaxonomies]);
     const choose = (value: string) => { setChoice(value); setPage(''); };
     // Labels are kept when the target changes: only a new address needs one.
     const needsLabel = kind === 'url' && !editing;
-    const chosenTerm = kind === 'term' ? terms.find((each) => String(each.id) === choice) : undefined;
+    const searchedIn = terms === null ? termTaxonomies.find((each) => String(each.id) === taxonomyId) : undefined;
+    const chosenTerm = kind !== 'term' || choice === '' ? undefined
+        : terms !== null ? terms.find((each) => String(each.id) === choice)
+        : searchedIn ? { id: Number(choice), title: editing?.term_id === Number(choice) ? (editing.target?.title ?? '') : '', taxonomy: searchedIn.title, pages: searchedIn.pages } : undefined;
     const termPage = chosenTerm?.pages.find((each) => String(each.collection ?? '') === page) ?? chosenTerm?.pages[0];
     const chosenIndex = kind === 'index' ? indexes.find((each) => String(each.id) === choice) : undefined;
     const indexPage = chosenIndex?.pages.find((each) => String(each.collection ?? '') === page) ?? chosenIndex?.pages[0];
@@ -239,10 +250,15 @@ function AddDialog({ kind, editing = null, terms, listings, indexes, onClose, on
             const found = response.ok ? ((await response.json()) as { items: { title: string; collection: string; status: string }[] }).items[0] : undefined;
             onAdd(newItem({ entry_id: entryId, target: found ? { title: found.title, kind: found.collection, live: found.status === 'published' } : null, labels }));
         } else if (kind === 'term' && choice !== '') {
-            const term = terms.find((each) => String(each.id) === choice);
+            const term = chosenTerm;
             const collection = termPage?.collection ?? null;
             const page = collection === null ? t('Shared page') : (termPage?.title ?? '');
-            onAdd(newItem({ term_id: Number(choice), collection_id: collection, target: term ? { title: term.title, kind: `${term.taxonomy} · ${page}`, live: true } : null, labels }));
+            // A searched term's title, as the picker gives it.
+            const title = term && searchedIn
+                ? await fetch(`${adminUrl('cms/terms/picker')}?${termPickerQuery({ taxonomy: searchedIn.handle, ids: [term.id] })}`, { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
+                    .then(async (response) => response.ok ? ((await response.json()) as { items: { label: string }[] }).items[0]?.label ?? term.title : term.title).catch(() => term.title)
+                : term?.title;
+            onAdd(newItem({ term_id: Number(choice), collection_id: collection, target: term ? { title: title ?? '', kind: `${term.taxonomy} · ${page}`, live: true, ...(searchedIn ? { taxonomy: searchedIn.id } : {}) } : null, labels }));
         } else if (kind === 'index' && choice !== '' && chosenIndex) {
             const collection = indexPage?.collection ?? null;
             const kindLabel = collection === null ? t(':taxonomy · Index page', { taxonomy: chosenIndex.title }) : t(':taxonomy · :collection index', { taxonomy: chosenIndex.title, collection: indexPage?.title ?? '' });
@@ -268,14 +284,34 @@ function AddDialog({ kind, editing = null, terms, listings, indexes, onClose, on
                         <EntriesPicker id="menu-entry" value={entryId} multiple={false} max={null} collections={[]} invalid={false}
                             emptyHint={menuEntryHint()} onChange={(value) => setEntryId(typeof value === 'number' ? value : null)} />
                     )}
-                    {(kind === 'term' || kind === 'listing' || kind === 'index') && (
+                    {kind === 'term' && terms === null && (
+                        <>
+                            {termTaxonomies.length > 1 && (
+                                <div className="cms:flex cms:flex-col cms:gap-2">
+                                    <Label htmlFor="menu-term-taxonomy">{t('Taxonomy')}</Label>
+                                    <Select value={taxonomyId} onValueChange={(value: string) => { setTaxonomyId(value); choose(''); }}>
+                                        <SelectTrigger id="menu-term-taxonomy"><SelectValue placeholder={t('Choose…')} /></SelectTrigger>
+                                        <SelectContent>
+                                            {termTaxonomies.map((each) => <SelectItem key={each.id} value={String(each.id)}>{each.title}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            )}
+                            <div className="cms:flex cms:flex-col cms:gap-2">
+                                <Label htmlFor="menu-target">{t('Term')}</Label>
+                                <TermsPicker id="menu-target" taxonomy={searchedIn?.handle ?? null} multiple={false} max={null} required={false} invalid={false}
+                                    value={choice === '' ? null : Number(choice)} onChange={(next) => choose(typeof next === 'number' ? String(next) : '')} />
+                            </div>
+                        </>
+                    )}
+                    {((kind === 'term' && terms !== null) || kind === 'listing' || kind === 'index') && (
                         <div className="cms:flex cms:flex-col cms:gap-2">
                             <Label htmlFor="menu-target">{kind === 'term' ? t('Term') : kind === 'index' ? t('Taxonomy') : t('Collection')}</Label>
                             <Select value={choice} onValueChange={choose}>
                                 <SelectTrigger id="menu-target"><SelectValue placeholder={t('Choose…')} /></SelectTrigger>
                                 <SelectContent>
                                     {kind === 'term'
-                                        ? terms.map((term) => <SelectItem key={term.id} value={String(term.id)}>{term.taxonomy}: {term.title}</SelectItem>)
+                                        ? (terms ?? []).map((term) => <SelectItem key={term.id} value={String(term.id)}>{term.taxonomy}: {term.title}</SelectItem>)
                                         : (kind === 'index' ? indexes : listings).map((l) => <SelectItem key={l.id} value={String(l.id)}>{l.title}</SelectItem>)}
                                 </SelectContent>
                             </Select>

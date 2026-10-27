@@ -11,7 +11,7 @@ export interface MenuNode {
     taxonomy_id?: number | null;
     collection_id: number | null;
     /** For the editor: what it links to (an entry, a term's page, a listing page, an index page) and whether the site shows it. */
-    target?: { title: string; kind: string; live: boolean } | null;
+    target?: { title: string; kind: string; live: boolean; /** A term's taxonomy's id. */ taxonomy?: number } | null;
     url: string | null;
     labels: Record<string, string>;
     new_tab: boolean;

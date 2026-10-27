@@ -36,6 +36,8 @@ final class AuthorizeContent
             'entries' => Access::entries($user, $action, ...self::entryScope($param, $request)),
             'terms' => Access::terms($user, $action, self::taxonomy($param)),
             'submissions' => Access::submissions($user, $action, self::form($param)),
+            // The term picker: for entries' terms and terms fields, a term's parent and a menu's terms (it checks the taxonomy itself).
+            'term-picker' => Access::entries($user, 'view') || Access::terms($user, 'view') || $user?->can('cms.menus.update') === true,
             default => false,
         };
         abort_unless($allowed, 403);

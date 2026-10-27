@@ -165,13 +165,15 @@ final class TermController
     /**
      * What the term editor needs either way: the taxonomy, the languages,
      * the fields, where a term can go (never under itself or a term under
-     * it) and the templates tried.
+     * it; in a big taxonomy, searched with the term picker instead:
+     * `terms` null) and the templates tried.
      *
      * @return array<string, mixed>
      */
     private function editorProps(Request $request, Taxonomy $taxonomy, ?Term $term, string $locale): array
     {
-        $terms = $taxonomy->hierarchical ? Term::query()->with('translations')->where('taxonomy_id', $taxonomy->id)->orderBy('sort_order')->orderBy('id')->get() : null;
+        $listed = $taxonomy->hierarchical && TermsField::big([$taxonomy->id]) === [];
+        $terms = $listed ? Term::query()->with('translations')->where('taxonomy_id', $taxonomy->id)->orderBy('sort_order')->orderBy('id')->get() : null;
         // In tree order, the terms under one follow it, deeper: it and they are no place for it.
         $places = [];
         $skipBelow = null;
@@ -190,7 +192,7 @@ final class TermController
 
         return [
             'taxonomy' => ['handle' => $taxonomy->handle, 'title' => $taxonomy->title, 'hierarchical' => $taxonomy->hierarchical],
-            'terms' => $places,
+            'terms' => $taxonomy->hierarchical && ! $listed ? null : $places,
             // Where to add a redirect by hand, for those who may.
             'redirectsUrl' => $request->user()?->can('cms.redirects.create') === true ? route('sunrice.admin.cms.redirects.create') : null,
             // Its terms' blueprint, for those who may edit blueprints.

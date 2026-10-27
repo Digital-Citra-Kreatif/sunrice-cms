@@ -1,16 +1,16 @@
-import { j as e, a as u, t as l, r as f, l as d } from "./admin-DOytNhi-.js";
+import { j as e, a as u, t as l, r as f, l as d } from "./admin-B85tCaRI.js";
 import { u as n } from "./ui-Dh5wfMwT.js";
-import { l as D, F as E } from "./languages-DcENO4Vo.js";
-import { V as K } from "./VersionConflict-CnBY6pT6.js";
-import { B as V } from "./FieldInput-D2nQC-3x.js";
-import { U as $ } from "./UnsavedNote-obqy063z.js";
-import { L as B } from "./loader-circle-ByksABXO.js";
-import { S as C } from "./settings-2-0VUe76YZ.js";
-import { L as O } from "./layout-template-RwJXNfEY.js";
+import { l as D, F as E } from "./languages-Dmv7YMWg.js";
+import { V as K } from "./VersionConflict-CWNAChdW.js";
+import { A as V } from "./FieldInput-yFVwIjzF.js";
+import { U as $ } from "./UnsavedNote-B_mDcgQd.js";
+import { L as C } from "./loader-circle-ByksABXO.js";
+import { S as O } from "./settings-2-0VUe76YZ.js";
+import { L as U } from "./layout-template-RwJXNfEY.js";
 function z(t) {
-  return /* @__PURE__ */ e.jsx(U, { ...t }, `${t.locale}:${t.version}:${JSON.stringify(t.values)}`);
+  return /* @__PURE__ */ e.jsx(A, { ...t }, `${t.locale}:${t.version}:${JSON.stringify(t.values)}`);
 }
-function U({ set: t, fields: b, locale: c, locales: h, shared: S, values: x, version: v, can: j, settings: y = null, blueprint: k = null }) {
+function A({ set: t, fields: b, locale: c, locales: h, shared: S, values: x, version: v, can: j, settings: y = null, blueprint: k = null }) {
   const g = u(`cms/globals/${t.handle}/values`);
   n.useBreadcrumbs([{ label: l("Globals"), href: u("cms/globals") }, { label: t.title }]);
   const a = f.useForm({ locale: c, data: x, version: v }), p = a.errors, w = (s) => {
@@ -40,12 +40,12 @@ function U({ set: t, fields: b, locale: c, locales: h, shared: S, values: x, ver
       {
         title: t.title,
         menu: [
-          ...y ? [{ label: l("Settings"), href: y, icon: /* @__PURE__ */ e.jsx(C, {}) }] : [],
-          ...k ? [{ label: l("Edit blueprint"), href: k, icon: /* @__PURE__ */ e.jsx(O, {}) }] : []
+          ...y ? [{ label: l("Settings"), href: y, icon: /* @__PURE__ */ e.jsx(O, {}) }] : [],
+          ...k ? [{ label: l("Edit blueprint"), href: k, icon: /* @__PURE__ */ e.jsx(U, {}) }] : []
         ],
         back: { href: u("cms/globals"), label: l("Back to globals") },
         actions: /* @__PURE__ */ e.jsx(e.Fragment, { children: m && /* @__PURE__ */ e.jsxs(n.Button, { type: "submit", disabled: a.processing, children: [
-          a.processing && /* @__PURE__ */ e.jsx(B, { className: "cms:animate-spin" }),
+          a.processing && /* @__PURE__ */ e.jsx(C, { className: "cms:animate-spin" }),
           " ",
           l("Save")
         ] }) }),

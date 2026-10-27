@@ -24,6 +24,13 @@ final class TermsField extends FieldType
 {
     public const TYPE = 'terms';
 
+    /**
+     * How many terms a taxonomy may have for the admin to list them all
+     * in a select (the entries list's filter, a term's parent, a menu's
+     * term): a bigger one is searched with the term picker instead.
+     */
+    public const LISTED = 200;
+
     public function type(): string
     {
         return self::TYPE;
@@ -106,16 +113,20 @@ final class TermsField extends FieldType
      * whether others follow). Only the page asked for is read with its
      * titles: a search or a flat taxonomy is paged by the database, a
      * hierarchy's order is worked out from its terms' ids and parents.
+     * With `$except` (a term's id), not that term nor the terms under it
+     * (the places a term can move to).
      *
      * @return array{items: list<array{id: int, label: string, depth: int}>, more: bool}
      */
-    public static function options(Taxonomy $taxonomy, string $search = '', int $limit = 100, int $offset = 0): array
+    public static function options(Taxonomy $taxonomy, string $search = '', int $limit = 100, int $offset = 0, ?int $except = null): array
     {
         $offset = max(0, $offset);
         $limit = max(1, $limit);
+        $excluded = $except === null ? [] : [$except, ...(Term::withTrashed()->find($except)?->descendantIds() ?? [])];
         // A search lists what matches, flat; a flat taxonomy its terms in order.
         if ($search !== '' || ! $taxonomy->hierarchical) {
             $terms = Term::query()->where('taxonomy_id', $taxonomy->id)->orderBy('sort_order')->orderBy('id')
+                ->when($excluded !== [], fn ($query) => $query->whereKeyNot($excluded))
                 ->when($search !== '', fn ($query) => $query->whereHas('translations', fn ($t) => $t->whereLike('title', '%'.addcslashes($search, '%_\\').'%')))
                 ->offset($offset)->limit($limit + 1)->with('translations')->get();
             $items = [];
@@ -127,6 +138,10 @@ final class TermsField extends FieldType
         }
         // A hierarchy: the order from ids and parents only, then the page's terms with their titles.
         $ordered = self::order(Term::query()->where('taxonomy_id', $taxonomy->id)->orderBy('sort_order')->orderBy('id')->toBase()->get(['id', 'parent_id'])->all());
+        if ($excluded !== []) {
+            $skip = array_flip($excluded);
+            $ordered = array_values(array_filter($ordered, fn (array $row): bool => ! isset($skip[$row[0]])));
+        }
         $page = array_slice($ordered, $offset, $limit);
         $terms = $page === [] ? collect() : Term::query()->with('translations')->whereKey(array_column($page, 0))->get()->keyBy('id');
         $items = [];
@@ -138,6 +153,26 @@ final class TermsField extends FieldType
         }
 
         return ['items' => $items, 'more' => count($ordered) > $offset + $limit];
+    }
+
+    /**
+     * Which of these taxonomies have more terms than the admin lists in a
+     * select (LISTED), out of the trash: their ids as keys, in one query.
+     *
+     * @param  array<int>  $taxonomies  their ids
+     * @return array<int, true>
+     */
+    public static function big(array $taxonomies): array
+    {
+        if ($taxonomies === []) {
+            return [];
+        }
+        $big = [];
+        foreach (Term::query()->whereIn('taxonomy_id', array_values($taxonomies))->groupBy('taxonomy_id')->havingRaw('count(*) > ?', [self::LISTED])->pluck('taxonomy_id') as $id) {
+            $big[is_numeric($id) ? (int) $id : 0] = true;
+        }
+
+        return $big;
     }
 
     /**

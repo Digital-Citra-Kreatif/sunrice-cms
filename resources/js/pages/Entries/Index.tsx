@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { EntryReorderList } from '@/components/EntryReorderList.tsx';
+import { TermsPicker } from '@/components/TermsPicker.tsx';
 import { adminUrl, t } from '@imajiner/admin-sdk';
 import {
     Badge, Button, Card, Checkbox, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel,
@@ -70,7 +71,8 @@ interface Props {
     columns?: Column[];
     filters?: {
         authors: Option[];
-        taxonomies: { handle: string; title: string; terms: (Option & { depth: number })[] }[];
+        /** A big taxonomy's terms aren't listed (`terms` empty): they're searched (`search`, the term picker). */
+        taxonomies: { handle: string; title: string; terms: (Option & { depth: number })[]; search?: boolean }[];
         locales: string[];
     };
     links?: { group: string; label: string; href: string; external?: boolean }[];
@@ -123,17 +125,19 @@ function EntryList({
     const trashed = query.status === 'trashed';
     const filtered = activeFilters(query) > 0;
     // Author and taxonomies: a select each, or one Filters menu when there are many of them.
-    const moreFilters: { key: string; label: string; value: string; options: Option[]; onChange: (value: string) => void }[] = [
+    const moreFilters: { key: string; label: string; value: string; options: Option[]; onChange: (value: string) => void; taxonomy?: string }[] = [
         ...(filters.authors.length > 0 ? [{ key: 'author', label: t('Author'), value: query.author, options: filters.authors, onChange: (author: string) => visit({ author }) }] : []),
-        ...filters.taxonomies.filter((taxonomy) => taxonomy.terms.length > 0).map((taxonomy) => ({
+        ...filters.taxonomies.filter((taxonomy) => taxonomy.terms.length > 0 || taxonomy.search).map((taxonomy) => ({
             key: `terms-${taxonomy.handle}`,
             label: taxonomy.title,
             value: query.terms[taxonomy.handle] ?? '',
             options: taxonomy.terms.map((term) => ({ value: term.value, label: `${'— '.repeat(term.depth)}${term.label}` })),
             onChange: (term: string) => visit({ terms: { ...query.terms, [taxonomy.handle]: term } }),
+            ...(taxonomy.search ? { taxonomy: taxonomy.handle } : {}),
         })),
     ];
-    const inMenu = moreFilters.length > INLINE_FILTERS;
+    // A searched taxonomy's picker needs the menu's room.
+    const inMenu = moreFilters.length > INLINE_FILTERS || moreFilters.some((filter) => filter.taxonomy);
     const menuSet = menuFiltersSet(query, filters.taxonomies.map((taxonomy) => taxonomy.handle));
     const visible = columns.filter((column) => query.columns.includes(column.key));
     const params = (changes: Partial<EntryListQuery> = {}) => entryListParams(query, changes, mainLocale);
@@ -228,7 +232,11 @@ function EntryList({
                             {moreFilters.map((filter) => (
                                 <div key={filter.key} className="cms:flex cms:flex-col cms:gap-1.5">
                                     <Label htmlFor={`entry-filter-${filter.key}`}>{filter.label}</Label>
-                                    <FilterSelect id={`entry-filter-${filter.key}`} wide label={filter.label} value={filter.value} options={filter.options} onChange={filter.onChange} />
+                                    {filter.taxonomy
+                                        ? <TermsPicker id={`entry-filter-${filter.key}`} taxonomy={filter.taxonomy} multiple={false} max={null} required={false} invalid={false}
+                                            placeholder={t(':filter: all', { filter: filter.label })} value={/^\d+$/.test(filter.value) ? Number(filter.value) : null}
+                                            onChange={(next) => filter.onChange(typeof next === 'number' ? String(next) : '')} />
+                                        : <FilterSelect id={`entry-filter-${filter.key}`} wide label={filter.label} value={filter.value} options={filter.options} onChange={filter.onChange} />}
                                 </div>
                             ))}
                         </PopoverContent>

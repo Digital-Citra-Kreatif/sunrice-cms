@@ -321,21 +321,26 @@ final class EntryController
      * in tree order (or those whose title matches "q"), or some by id
      * ("ids"), main-language titles. Only a taxonomy the person may view
      * the terms of, or one attached to a collection they may view, create
-     * or edit entries in, or that a terms field of such a collection uses.
+     * or edit entries in, or that a terms field of such a collection uses,
+     * or (to link to their pages from a menu) one whose terms have pages
+     * when they may edit menus.
      */
     public function termPicker(Request $request): JsonResponse
     {
-        /** @var array{taxonomy: string, q?: string|null, offset?: int|string|null, ids?: list<int>} $input */
+        /** @var array{taxonomy: string, q?: string|null, offset?: int|string|null, except?: int|string|null, ids?: list<int>} $input */
         $input = $request->validate([
             'taxonomy' => ['required', 'string', 'max:64'],
             'q' => ['nullable', 'string', 'max:200'],
             'offset' => ['nullable', 'integer', 'min:0', 'max:100000'],
+            // A term being moved: not it nor the terms under it (its editor's Under).
+            'except' => ['nullable', 'integer', 'min:1'],
             'ids' => ['nullable', 'array', 'max:500'],
             'ids.*' => ['integer'],
         ]);
         $taxonomy = Taxonomy::query()->where('handle', $input['taxonomy'])->first() ?? abort(404);
         // Like the entries picker: taxonomies the person may see, or that their collections have (attached, or a terms field).
-        abort_unless(Access::terms($request->user(), 'view', $taxonomy) || in_array($taxonomy->handle, self::pickableTaxonomies($request->user()), true), 403);
+        abort_unless(Access::terms($request->user(), 'view', $taxonomy) || in_array($taxonomy->handle, self::pickableTaxonomies($request->user()), true)
+            || ($request->user()?->can('cms.menus.update') === true && $taxonomy->hasTermPages()), 403);
         if (isset($input['ids'])) {
             $ids = array_map(intval(...), $input['ids']);
             $found = Term::query()->whereKey($ids)->where('taxonomy_id', $taxonomy->id)->pluck('id')->all();
@@ -347,7 +352,9 @@ final class EntryController
             return response()->json(['items' => array_map(fn (int $id, string $label): array => ['id' => $id, 'label' => $label, 'depth' => 0, 'parents' => $parents[$id] ?? []], array_keys($labels), $labels), 'more' => false]);
         }
 
-        return response()->json(TermsField::options($taxonomy, trim($input['q'] ?? ''), offset: (int) ($input['offset'] ?? 0)));
+        $except = $input['except'] ?? null;
+
+        return response()->json(TermsField::options($taxonomy, trim($input['q'] ?? ''), offset: (int) ($input['offset'] ?? 0), except: $except === null ? null : (int) $except));
     }
 
     public function create(Request $request, Collection $collection): Response

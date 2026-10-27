@@ -1,10 +1,10 @@
-import { j as e, r as c, l as D, t as n } from "./admin-DOytNhi-.js";
+import { j as e, r as c, l as D, t as n } from "./admin-B85tCaRI.js";
 import { u as t } from "./ui-Dh5wfMwT.js";
-import { D as z, E as K, F as y, G as L, b as V, H as W, A as q, h as Q, B as X } from "./FieldInput-D2nQC-3x.js";
-import { l as Y, S as Z } from "./languages-DcENO4Vo.js";
-import { V as ee } from "./VersionConflict-CnBY6pT6.js";
-import { s as se, T as ae, w as te } from "./seo-D8Cc3qEy.js";
-import { U as re } from "./UnsavedNote-obqy063z.js";
+import { B as U, D as K, F as y, E as L, b as V, G as W, z as q, h as Q, A as X } from "./FieldInput-yFVwIjzF.js";
+import { l as Y, S as Z } from "./languages-Dmv7YMWg.js";
+import { V as ee } from "./VersionConflict-CWNAChdW.js";
+import { s as se, T as ae, w as te } from "./seo-BL-YRBgD.js";
+import { U as re } from "./UnsavedNote-B_mDcgQd.js";
 import { E as le } from "./external-link-CFxEu4M4.js";
 import { L as ne } from "./loader-circle-ByksABXO.js";
 function je(r) {
@@ -30,27 +30,27 @@ function ie({
   translated: O = [],
   shared: _,
   values: x,
-  seo: G,
-  version: I,
+  seo: z,
+  version: G,
   can: h,
   template: b,
   templates: N,
-  templateChoices: J,
-  templateHelp: R
+  templateChoices: I,
+  templateHelp: J
 }) {
   t.useBreadcrumbs(P);
   const u = N !== void 0, E = h.update && h.template === !0, a = c.useForm({
     locale: v,
     data: x,
-    seo: G ?? {},
-    version: I,
+    seo: z ?? {},
+    version: G,
     ...u && E ? { template: b ?? "" } : {}
   }), l = a.errors, $ = (s) => {
     const o = X(l, s);
     o.length > 0 && a.clearErrors(...o);
   }, S = C[0], i = h.update, F = () => {
     a.processing || (a.transform((s) => ({ ...s, ...m })), a.put(g, { preserveScroll: !0 }));
-  }, U = () => {
+  }, R = () => {
     a.transform((s) => ({ ...s, ...m, version: null })), a.put(g, { preserveScroll: !0 });
   };
   t.useUnsavedChanges(a.isDirty, i ? F : void 0);
@@ -58,14 +58,14 @@ function ie({
     M,
     /* @__PURE__ */ e.jsx(t.LanguageTabs, { value: v, languages: Y(C, O, D), onValueChange: (s) => c.router.get(k, { ...m, locale: s }) }),
     /* @__PURE__ */ e.jsxs("fieldset", { disabled: !i, className: "cms:flex cms:flex-col cms:gap-6", children: [
-      /* @__PURE__ */ e.jsx(ee, { message: l.version, processing: a.processing, onSaveMine: U }),
+      /* @__PURE__ */ e.jsx(ee, { message: l.version, processing: a.processing, onSaveMine: R }),
       f.length === 0 ? (
         // A card like the fields' would be, so it lines up with the cards beside it.
         /* @__PURE__ */ e.jsx(t.Card, { children: /* @__PURE__ */ e.jsxs(t.CardContent, { className: "cms:flex cms:flex-col cms:items-start cms:gap-3", children: [
           /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: B }),
           d && /* @__PURE__ */ e.jsx(t.Button, { type: "button", variant: "outline", size: "sm", asChild: !0, children: /* @__PURE__ */ e.jsx(c.Link, { href: d.href, children: d.label }) })
         ] }) })
-      ) : /* @__PURE__ */ e.jsx(t.Card, { children: /* @__PURE__ */ e.jsx(t.CardContent, { className: "cms:flex cms:flex-col cms:gap-6", children: /* @__PURE__ */ e.jsx(z.Provider, { value: S ? D(S) : null, children: /* @__PURE__ */ e.jsx("div", { className: W(), children: f.filter((s) => K(s, { ...x, ...a.data.data })).map((s) => _.includes(s.handle) ? /* @__PURE__ */ e.jsx("fieldset", { disabled: !0, className: `${Z} ${L(s)}`, children: /* @__PURE__ */ e.jsx(y, { id: `data-${s.handle}`, field: s, content: !0, value: x[s.handle], errors: {}, onChange: () => {
+      ) : /* @__PURE__ */ e.jsx(t.Card, { children: /* @__PURE__ */ e.jsx(t.CardContent, { className: "cms:flex cms:flex-col cms:gap-6", children: /* @__PURE__ */ e.jsx(U.Provider, { value: S ? D(S) : null, children: /* @__PURE__ */ e.jsx("div", { className: W(), children: f.filter((s) => K(s, { ...x, ...a.data.data })).map((s) => _.includes(s.handle) ? /* @__PURE__ */ e.jsx("fieldset", { disabled: !0, className: `${Z} ${L(s)}`, children: /* @__PURE__ */ e.jsx(y, { id: `data-${s.handle}`, field: s, content: !0, value: x[s.handle], errors: {}, onChange: () => {
       }, shared: !0 }) }, s.handle) : /* @__PURE__ */ e.jsx("div", { className: L(s), children: /* @__PURE__ */ e.jsx(
         y,
         {
@@ -126,12 +126,12 @@ function ie({
               {
                 id: "template",
                 value: a.data.template ?? b ?? "",
-                lookup: te(N ?? null, J),
+                lookup: te(N ?? null, I),
                 onChange: (s) => {
                   a.setData("template", s), a.clearErrors("template");
                 },
                 example: "cms.landing",
-                automatic: R ?? n("Automatic uses the first file that exists."),
+                automatic: J ?? n("Automatic uses the first file that exists."),
                 error: l.template,
                 disabled: !E
               }

@@ -10,6 +10,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Sunrice\Cms\Actions\Menus\SaveMenu;
 use Sunrice\Cms\Admin\MenuResource;
+use Sunrice\Cms\Fields\Types\TermsField;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\CollectionTaxonomy;
 use Sunrice\Cms\Models\Menu;
@@ -31,6 +32,13 @@ final class MenuController
     public function edit(Request $request, Menu $menu): Response
     {
         $menu->load('items.entry.translations', 'items.entry.collection', 'items.term.translations', 'items.term.taxonomy.collections', 'items.collection', 'items.taxonomy.collections');
+        // What else items may link to: terms with pages (shared, or in collections: `pages`), of these taxonomies.
+        $withPages = Taxonomy::query()->where(fn ($q) => $q->whereNotNull('route')->orWhereHas('collections', fn ($q) => $q->where('sunrice_collection_taxonomy.term_pages', true)))
+            ->with(['collections' => fn ($query) => $query->orderBy('title')])->orderBy('title')->get()->keyBy('id');
+        $pages = $withPages->map(fn (Taxonomy $taxonomy): array => self::termPages($taxonomy))->all();
+        $titles = $withPages->map(fn (Taxonomy $taxonomy): string => $taxonomy->title)->all();
+        // Their terms, when there are few; else they're searched (the term picker).
+        $listed = $withPages->isNotEmpty() && Term::query()->whereIn('taxonomy_id', $withPages->modelKeys())->count() <= TermsField::LISTED;
 
         return Inertia::render('Cms/Menus/Edit', [
             'menu' => ['handle' => $menu->handle, 'title' => $menu->title],
@@ -39,10 +47,9 @@ final class MenuController
             'version' => $menu->version,
             'locales' => Locales::all(),
             'limits' => ['depth' => SaveMenu::MAX_DEPTH, 'items' => SaveMenu::MAX_ITEMS],
-            // What else items may link to: terms with pages (shared, or in collections: `pages`), listing pages.
-            'terms' => Term::query()->whereHas('taxonomy', fn ($q) => $q->whereNotNull('route')->orWhereHas('collections', fn ($q) => $q->where('sunrice_collection_taxonomy.term_pages', true)))
-                ->with(['translations', 'taxonomy.collections' => fn ($query) => $query->orderBy('title')])->orderBy('taxonomy_id')->orderBy('sort_order')->limit(500)->get()
-                ->map(fn (Term $term): array => ['id' => $term->id, 'title' => $term->title(Locales::default()), 'taxonomy' => $term->taxonomy->title, 'pages' => self::termPages($term)])->all(),
+            'termTaxonomies' => $withPages->map(fn (Taxonomy $taxonomy): array => ['id' => $taxonomy->id, 'handle' => $taxonomy->handle, 'title' => $taxonomy->title, 'pages' => $pages[$taxonomy->id]])->values()->all(),
+            'terms' => ! $listed ? null : Term::query()->whereIn('taxonomy_id', $withPages->modelKeys())->with('translations')->orderBy('taxonomy_id')->orderBy('sort_order')->orderBy('id')->get()
+                ->map(fn (Term $term): array => ['id' => $term->id, 'title' => $term->title(Locales::default()), 'taxonomy' => $titles[$term->taxonomy_id] ?? '', 'pages' => $pages[$term->taxonomy_id]])->all(),
             'listings' => Collection::query()->whereNotNull('listing_route')->orderBy('title')->get()
                 ->map(fn (Collection $collection): array => ['id' => $collection->id, 'title' => $collection->title])->all(),
             // Taxonomies with index pages: the shared one (collection null) and their collections'.
@@ -69,14 +76,13 @@ final class MenuController
     }
 
     /**
-     * The pages a term has, for the editor to choose from: the shared one
-     * (collection null) and its collections' (CollectionTaxonomy).
+     * The pages a taxonomy's terms have, for the editor to choose from: the
+     * shared one (collection null) and its collections' (CollectionTaxonomy).
      *
      * @return list<array{collection: int|null, title: string}>
      */
-    private static function termPages(Term $term): array
+    private static function termPages(Taxonomy $taxonomy): array
     {
-        $taxonomy = $term->taxonomy;
         $pages = $taxonomy->route !== null ? [['collection' => null, 'title' => __('Shared page (all collections)')]] : [];
         foreach ($taxonomy->collections as $collection) {
             $pivot = $collection->getRelation('pivot');
@@ -107,7 +113,7 @@ final class MenuController
         return $pages;
     }
 
-    /** @return array{title: string, kind: string, live: bool}|null */
+    /** @return array{title: string, kind: string, live: bool, taxonomy?: int}|null */
     private static function target(MenuItem $item): ?array
     {
         if ($item->taxonomy !== null) {
@@ -132,7 +138,8 @@ final class MenuController
             $pages = $in === null ? $item->collection_id === null && ($taxonomy->route !== null || $withPages->isNotEmpty()) : ! $in->trashed() && $withPages->contains('id', $in->id);
             $kind = $in !== null ? $taxonomy->title.' · '.$in->title : ($taxonomy->route !== null ? __(':taxonomy · Shared page', ['taxonomy' => $taxonomy->title]) : $taxonomy->title);
 
-            return ['title' => $item->term->title(Locales::default()), 'kind' => $kind, 'live' => ! $item->term->trashed() && $pages];
+            // Its taxonomy: where the editor searches for another term, in a big one.
+            return ['title' => $item->term->title(Locales::default()), 'kind' => $kind, 'live' => ! $item->term->trashed() && $pages, 'taxonomy' => $taxonomy->id];
         }
         if ($item->collection !== null) {
             return ['title' => $item->collection->title, 'kind' => __('Listing page'), 'live' => ! $item->collection->trashed() && $item->collection->listing_route !== null];

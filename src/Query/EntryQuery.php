@@ -410,8 +410,9 @@ final class EntryQuery
      */
     public function paginate(int $perPage = 10, string $pageName = 'page'): LengthAwarePaginator
     {
+        // The page's ids first, then its rows (IdPage): a deep page doesn't sort every translation whole.
         if (! $this->cached()) {
-            $paginator = $this->builder()->paginate($perPage, ['*'], $pageName);
+            $paginator = IdPage::paginate($this->builder(), $perPage, $pageName);
             $this->hydrate($paginator->getCollection());
 
             return EntryPaginator::from($paginator);
@@ -419,9 +420,9 @@ final class EntryQuery
         $page = Paginator::resolveCurrentPage($pageName);
         /** @var array{ids: list<int>, total: int} $cached */
         $cached = $this->remembered("page:{$perPage}:{$page}", function () use ($perPage, $page, $pageName): array {
-            $paginator = $this->builder()->paginate($perPage, ['*'], $pageName, $page);
+            $paginator = IdPage::ids($this->builder(), $perPage, $pageName, $page);
 
-            return ['ids' => $paginator->getCollection()->pluck('id')->all(), 'total' => $paginator->total()];
+            return ['ids' => array_map(intval(...), $paginator->getCollection()->all()), 'total' => $paginator->total()];
         });
 
         return new EntryPaginator($this->hydrate($this->byIds($cached['ids'])), $cached['total'], $perPage, $page, ['path' => Paginator::resolveCurrentPath(), 'pageName' => $pageName]);
