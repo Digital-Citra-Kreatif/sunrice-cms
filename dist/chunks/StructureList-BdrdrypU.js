@@ -1,11 +1,11 @@
-import { t as s, j as e, r as a } from "./admin-DwAcAKS1.js";
+import { t as s, j as e, r as a } from "./admin-CXQmf0B2.js";
 import { u as l } from "./ui-Dh5wfMwT.js";
-import { u, T as o } from "./Confirm-BjpyN9gz.js";
+import { u as o, T as u } from "./Confirm-RMObXMKS.js";
 import { P as j } from "./plus-COqahUZ2.js";
 function N({ kind: d, base: c, rows: n, intro: m }) {
   const i = d === "blueprint", r = i ? s("Blueprints") : s("Fieldsets");
   l.useBreadcrumbs([{ label: r }]);
-  const [x, h] = u();
+  const [x, h] = o();
   return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-6", children: [
     /* @__PURE__ */ e.jsx(a.Head, { title: r }),
     h,
@@ -28,7 +28,7 @@ function N({ kind: d, base: c, rows: n, intro: m }) {
           /* @__PURE__ */ e.jsx(l.TableCell, { children: /* @__PURE__ */ e.jsx(a.Link, { href: `${c}/${t.handle}/edit`, className: "cms:font-medium cms:hover:underline", children: t.title }) }),
           /* @__PURE__ */ e.jsx(l.TableCell, { children: /* @__PURE__ */ e.jsx("code", { className: "cms:text-xs", children: t.handle }) }),
           /* @__PURE__ */ e.jsx(l.TableCell, { children: t.fields }),
-          t.usedBy && /* @__PURE__ */ e.jsx(l.TableCell, { className: "cms:text-muted-foreground", children: t.usedBy.join(", ") || "—" }),
+          t.usedBy && /* @__PURE__ */ e.jsx(l.TableCell, { className: "cms:min-w-64 cms:whitespace-normal cms:text-muted-foreground", children: t.usedBy.join(", ") || "—" }),
           /* @__PURE__ */ e.jsx(l.TableCell, { children: /* @__PURE__ */ e.jsx(
             l.Button,
             {
@@ -40,7 +40,7 @@ function N({ kind: d, base: c, rows: n, intro: m }) {
                 i ? s('Delete the blueprint ":title"? Content keeps its values.', { title: t.title }) : s('Delete the fieldset ":title"? Content keeps its values.', { title: t.title }),
                 () => a.router.delete(`${c}/${t.handle}`, { preserveScroll: !0 })
               ),
-              children: /* @__PURE__ */ e.jsx(o, {})
+              children: /* @__PURE__ */ e.jsx(u, {})
             }
           ) })
         ] }, t.id))

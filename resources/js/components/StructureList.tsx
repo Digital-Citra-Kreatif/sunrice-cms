@@ -44,7 +44,8 @@ export function StructureList({ kind, base, rows, intro }: { kind: 'blueprint' |
                                 <TableCell><Link href={`${base}/${row.handle}/edit`} className="cms:font-medium cms:hover:underline">{row.title}</Link></TableCell>
                                 <TableCell><code className="cms:text-xs">{row.handle}</code></TableCell>
                                 <TableCell>{row.fields}</TableCell>
-                                {row.usedBy && <TableCell className="cms:text-muted-foreground">{row.usedBy.join(', ') || '—'}</TableCell>}
+                                {/* A blueprint can be used in many places: the list wraps rather than widening the table. */}
+                                {row.usedBy && <TableCell className="cms:min-w-64 cms:whitespace-normal cms:text-muted-foreground">{row.usedBy.join(', ') || '—'}</TableCell>}
                                 <TableCell>
                                     <Button variant="ghost" size="icon" className="cms:size-8 cms:text-destructive" aria-label={t('Delete :title', { title: row.title })}
                                         onClick={() => confirm(blueprint ? t('Delete the blueprint ":title"? Content keeps its values.', { title: row.title }) : t('Delete the fieldset ":title"? Content keeps its values.', { title: row.title }),
