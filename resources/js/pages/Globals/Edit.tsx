@@ -1,11 +1,12 @@
 import { Head, router, useForm } from '@inertiajs/react';
 import { LoaderCircle, Settings2 } from 'lucide-react';
 import { adminUrl, t } from '@imajiner/admin-sdk';
-import { Button, KeptEditsNotice, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useBreadcrumbs, useEditLock, useUnsavedChanges, ViewingNotice } from '@imajiner/admin-sdk/ui';
+import { Button, KeptEditsNotice, LanguageTabs, PageHeader, useBreadcrumbs, useEditLock, useUnsavedChanges, ViewingNotice } from '@imajiner/admin-sdk/ui';
 import { FieldSections } from '@/components/FieldSections.tsx';
 import { VersionConflict } from '@/components/VersionConflict.tsx';
 import { errorKeysAt } from '@/lib/builder.ts';
 import { localeName } from '@/lib/entries.ts';
+import { localeTabs } from '@/lib/languages.ts';
 import type { FieldDefinition } from '@/types.ts';
 
 // Field values are any JSON; see the entry editor for why `any`.
@@ -69,14 +70,6 @@ function GlobalsEdit({ set, fields, locale, locales, shared, values, version, ca
                 back={{ href: adminUrl('cms/globals'), label: t('Back to globals') }}
                 actions={
                     <>
-                                                {locales.length > 1 && (
-                            <Select value={locale} onValueChange={(next: string) => router.get(url, { locale: next })}>
-                                <SelectTrigger className="cms:w-48" aria-label={t('Language')}><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    {locales.map((code, i) => <SelectItem key={code} value={code}>{localeName(code)}{i === 0 ? ` ${t('(main)')}` : ''}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
-                        )}
                         {writable && (
                             <Button type="submit" disabled={form.processing}>
                                 {form.processing && <LoaderCircle className="cms:animate-spin" />} {t('Save')}
@@ -87,6 +80,8 @@ function GlobalsEdit({ set, fields, locale, locales, shared, values, version, ca
             >
                 {form.isDirty && <span className="cms:text-sm cms:text-muted-foreground">{t('Unsaved changes')}</span>}
             </PageHeader>
+
+            <LanguageTabs value={locale} languages={localeTabs(locales, null, localeName)} onValueChange={(next: string) => router.get(url, { locale: next })} />
 
             {fields.length === 0 ? (
                 <p className="cms:text-muted-foreground">{t('This global set has no fields: choose a blueprint for it in its Settings.')}</p>

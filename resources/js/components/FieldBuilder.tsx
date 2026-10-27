@@ -4,7 +4,7 @@ import {
     Repeat, Shapes, Tags, ToggleLeft, Trash2, Type, X,
 } from 'lucide-react';
 import {
-    Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input, Label,
+    Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input, Label, LanguageTabs,
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SortableHandle, SortableList, Switch, Textarea,
 } from '@imajiner/admin-sdk/ui';
 import { t } from '@imajiner/admin-sdk';
@@ -413,32 +413,35 @@ function TranslationSettings({ id, field, locales, onChange, errors }: { id: str
         onChange({ ...field, translations: next });
     };
     const message = Object.entries(errors).find(([, error]) => error)?.[1];
+    // The language open: the first with an error, else the first.
+    const [language, setLanguage] = React.useState(() => locales.find(({ code }) => Object.keys(errors).some((key) => key === code || key.startsWith(`${code}.`)))?.code ?? locales[0]?.code ?? '');
+    const only = locales.length === 1 ? locales[0] : undefined;
 
     return (
         <details className="cms:rounded-lg cms:border cms:p-3" open={Object.keys(translations).length > 0 || message !== undefined}>
-            <summary className="cms:cursor-pointer cms:text-sm cms:font-medium">{t('In other languages')}</summary>
+            <summary className="cms:cursor-pointer cms:text-sm cms:font-medium">{only ? t('In :language', { language: only.name }) : t('In other languages')}</summary>
             <p className="cms:mt-2 cms:text-sm cms:text-muted-foreground">{t('What visitors read in each language, as forms show it. Empty: as above.')}</p>
-            <div className="cms:mt-3 cms:flex cms:flex-col cms:gap-4">
-                {locales.map(({ code, name }) => (
-                    <div key={code} className="cms:grid cms:gap-3 cms:md:grid-cols-2">
+            <LanguageTabs className="cms:mt-3" value={language} onValueChange={setLanguage} languages={locales}>
+                {(code: string) => (
+                    <div className="cms:grid cms:gap-3 cms:md:grid-cols-2">
                         <div className="cms:flex cms:flex-col cms:gap-2">
-                            <Label htmlFor={`${id}-label-${code}`}>Label ({name})</Label>
-                            <Input id={`${id}-label-${code}`} value={translations[code]?.label ?? ''} placeholder={field.label ?? ''}
+                            <Label htmlFor={`${id}-label-${code}`}>{t('Label')}</Label>
+                            <Input id={`${id}-label-${code}`} lang={code} value={translations[code]?.label ?? ''} placeholder={field.label ?? ''}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => set(code, { label: e.target.value })} />
                         </div>
                         <div className="cms:flex cms:flex-col cms:gap-2">
-                            <Label htmlFor={`${id}-instructions-${code}`}>{t('Helper text')} ({name})</Label>
-                            <Input id={`${id}-instructions-${code}`} value={translations[code]?.instructions ?? ''} placeholder={field.instructions ?? ''}
+                            <Label htmlFor={`${id}-instructions-${code}`}>{t('Helper text')}</Label>
+                            <Input id={`${id}-instructions-${code}`} lang={code} value={translations[code]?.instructions ?? ''} placeholder={field.instructions ?? ''}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => set(code, { instructions: e.target.value })} />
                         </div>
                         {options.length > 0 && (
                             <fieldset className="cms:flex cms:flex-col cms:gap-2 cms:md:col-span-2">
-                                <legend className="cms:text-sm cms:font-medium">Options ({name})</legend>
+                                <legend className="cms:text-sm cms:font-medium">{t('Options')}</legend>
                                 <div className="cms:grid cms:gap-2 cms:sm:grid-cols-2">
                                     {options.map((option) => {
                                         const value = String(option.value);
                                         return (
-                                            <Input key={value} aria-label={`${value} (${name})`} value={translations[code]?.options?.[value] ?? ''}
+                                            <Input key={value} lang={code} aria-label={value} value={translations[code]?.options?.[value] ?? ''}
                                                 placeholder={typeof option.label === 'string' && option.label !== '' ? option.label : value}
                                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => set(code, { options: { ...translations[code]?.options, [value]: e.target.value } })} />
                                         );
@@ -447,8 +450,8 @@ function TranslationSettings({ id, field, locales, onChange, errors }: { id: str
                             </fieldset>
                         )}
                     </div>
-                ))}
-            </div>
+                )}
+            </LanguageTabs>
             <FieldError message={message} />
         </details>
     );

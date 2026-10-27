@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { Deferred, Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { CalendarClock, Check, ChevronDown, Copy, ExternalLink, Eye, GitCompare, Languages, LayoutTemplate, Link2, LoaderCircle, MoreVertical, Plus, RotateCcw, Send, Trash2, Undo2 } from 'lucide-react';
+import { CalendarClock, Check, ChevronDown, Copy, ExternalLink, Eye, GitCompare, Languages, LayoutTemplate, Link2, LoaderCircle, MoreVertical, RotateCcw, Send, Trash2, Undo2 } from 'lucide-react';
 import { adminUrl, t } from '@imajiner/admin-sdk';
 import {
     Badge, Button, Card, CardContent, CollapsibleCard, DatePicker, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, Input, KeptEditsNotice, Label, PageHeader,
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, Input, KeptEditsNotice, Label, LanguageTabs, PageHeader,
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Skeleton, Switch, Textarea, toast, useBreadcrumbs, useEditLock, useUnsavedChanges, ViewingNotice,
 } from '@imajiner/admin-sdk/ui';
 import { useConfirm } from '@/components/Confirm.tsx';
@@ -24,6 +24,7 @@ import { termsToSend, type TermsByTaxonomy } from '@/lib/entry-terms.ts';
 import {
     type EditorState, type EntryLocale, type EntryStatus, datedPublish, editorState, followingSlug, formatDate, hasPendingChanges, localeName, localInputValue, scheduleStart, slugNote, statusActions, statusLabel,
 } from '@/lib/entries.ts';
+import { entryLanguageTabs } from '@/lib/languages.ts';
 import type { FieldDefinition } from '@/types.ts';
 
 interface Props {
@@ -606,45 +607,15 @@ function SendBackDialog({ open, onClose, by, onSend }: { open: boolean; onClose:
     );
 }
 
+/** The entry's languages as tabs (the panel's LanguageTabs): open one, add a missing one, or remove the open one. */
 function LanguageBar({ entryUrl, editUrl, current, locales, canAdd, canRemove, onRemove }: {
     entryUrl: string; editUrl: string; current: string; locales: EntryLocale[]; canAdd: boolean; canRemove: boolean; onRemove: () => void;
 }) {
-    const present = locales.filter((l) => l.status !== null);
-    const missing = locales.filter((l) => l.status === null);
-
     return (
-        <nav aria-label={t('Languages')} className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
-            {/* The languages it has, by code: a dot for live, amber when outdated. */}
-            <div className="cms:inline-flex cms:items-center cms:gap-0.5 cms:rounded-md cms:bg-muted cms:p-0.5">
-                {present.map((l) => {
-                    const active = l.code === current;
-                    const name = l.main ? t(':language (main)', { language: l.name ?? localeName(l.code) }) : (l.name ?? localeName(l.code));
-                    const status = l.status ? statusLabel(l.status) : '';
-                    const title = l.outdated
-                        ? t(':language: :status, outdated (the main language changed since)', { language: name, status })
-                        : t(':language: :status', { language: name, status });
-                    return (
-                        <button key={l.code} type="button" title={title} aria-label={title} aria-current={active ? 'page' : undefined}
-                            onClick={() => !active && router.get(editUrl, { locale: l.code })}
-                            className={`cms:relative cms:inline-flex cms:h-7 cms:min-w-10 cms:items-center cms:justify-center cms:gap-1.5 cms:rounded cms:px-2.5 cms:text-xs cms:font-semibold cms:tracking-wide cms:uppercase cms:transition-colors ${active ? 'cms:bg-card cms:text-foreground cms:shadow-xs' : 'cms:text-muted-foreground cms:hover:text-foreground'}`}>
-                            {l.code}
-                            {(l.outdated || l.status === 'published') && (
-                                <span aria-hidden className={`cms:size-1.5 cms:rounded-full ${l.outdated ? 'cms:bg-amber-500' : 'cms:bg-emerald-500'}`} />
-                            )}
-                        </button>
-                    );
-                })}
-            </div>
-            {canAdd && missing.map((l) => (
-                <Button key={l.code} type="button" variant="outline" size="sm" className="cms:h-8 cms:border-dashed cms:text-xs cms:uppercase"
-                    title={t('Add :language', { language: l.name ?? localeName(l.code) })} onClick={() => router.post(`${entryUrl}/translations`, { locale: l.code })}>
-                    <Plus /> {l.code}
-                </Button>
-            ))}
-            {canRemove && (
-                <Button type="button" variant="ghost" size="sm" className="cms:ml-auto cms:text-destructive" onClick={onRemove}>{t('Remove this language')}</Button>
-            )}
-        </nav>
+        <LanguageTabs value={current} languages={entryLanguageTabs(locales, canAdd, t, statusLabel, localeName)}
+            onValueChange={(code: string) => router.get(editUrl, { locale: code })}
+            onAdd={(code: string) => router.post(`${entryUrl}/translations`, { locale: code })}
+            actions={canRemove ? <Button type="button" variant="ghost" size="sm" className="cms:text-destructive" onClick={onRemove}>{t('Remove this language')}</Button> : undefined} />
     );
 }
 

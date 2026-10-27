@@ -154,7 +154,7 @@ Locales::prefix('id'); // '/id' ('' for the main one)
 Locales::current();    // the page's language
 ```
 
-The editor's language bar and the entries list name each language as set.
+The editors' language tabs and the entries list name each language as set.
 
 Each language of an entry is a translation of its own: its own title, slug, draft, status, publish date and revisions. With more than one language, the editor shows a bar of them:
 

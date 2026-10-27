@@ -117,7 +117,7 @@ Only one person edits an entry in a language at a time. If a colleague has it op
 
 ## Listing pages
 
-A collection may have a **listing page** that lists its entries on the website (like `/blog`). Its own words (an introduction, a heading) and its search and sharing details are edited with **Edit the listing page** in the **⋮** menu above the entries list, and saved straight away (there's no draft). Each language has its own words: the language codes at the top show which one you're editing and which already have their own (a check), with a line such as "Editing: English (main) — switch to edit Bahasa Indonesia"; click a code to switch.
+A collection may have a **listing page** that lists its entries on the website (like `/blog`). Its own words (an introduction, a heading) and its search and sharing details are edited with **Edit the listing page** in the **⋮** menu above the entries list, and saved straight away (there's no draft). Each language has its own words: the language tabs at the top show which one you're editing, with those that don't have their own yet muted with a **+**; click a tab to switch.
 
 Site managers also see its **Template** there: the design the listing page uses, in every language. **Automatic** uses the one your developer made for it; pick another from the list if they made more than one. **How is it chosen?** lists the template files tried, for your developer. A taxonomy's index page (**Index page** in the **⋮** menu of its terms) has the same choice, shared by all its index pages.
 

@@ -30,7 +30,7 @@ What search engines and shared links see of the website, with the same permissio
 
 Until you save it, the list shows the languages your site was set up with. The first row is the **main language** (marked *Main*), at the plain addresses (`/about`); the others get their code in front (`/id/about`). The panel refuses an empty list, a row that isn't a language code and a language listed twice.
 
-- **Adding a language** makes it available in the editor's language bar. Nothing is translated automatically.
+- **Adding a language** adds a tab for it in the editors' language tabs. Nothing is translated automatically.
 - **Removing a language** hides its content (nothing is deleted); add it back to bring the content back.
 - **Changing the main language** once content exists: use **Make … the main language** on the **Main language** card under the form. It moves everything safely, and changes addresses (the new main language loses its code, the old one gets it; old addresses redirect). Every entry and term needs a translation in the new main language first; the panel says how many don't.
 

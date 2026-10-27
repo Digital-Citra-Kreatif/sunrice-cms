@@ -18,7 +18,7 @@ Terms that have no title in the language shown appear in grey as *… · not tra
 
 Everything about a term is edited in one place, new or not:
 
-- **Languages** at the top: each language by its code, a check on those the term has a title in, and a line saying which one you're editing ("Editing: English (main) — switch to edit Bahasa Indonesia"). In a language the term isn't translated into yet, giving it a title there adds it;
+- the **language tabs** at the top (see [Languages](guide:website/languages#the-language-tabs)): the one you're editing is selected, and those the term has no title in yet are muted with a **+**. In such a language, giving it a title there adds it;
 - its **Title** and **Slug** in that language. A new slug moves the term's page as soon as you save: a note says the old address will stop working unless a redirect is added (**Add a redirect**, if you may manage redirects);
 - **Under**, in a taxonomy with nested terms: where it sits (never under itself or a term under it);
 - its own fields: a **Description** to introduce its page, or the fields your developer gave the taxonomy (an image…);

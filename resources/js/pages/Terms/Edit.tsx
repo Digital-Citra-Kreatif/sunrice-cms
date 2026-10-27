@@ -3,7 +3,7 @@ import { Head, router, useForm } from '@inertiajs/react';
 import { ExternalLink, LoaderCircle } from 'lucide-react';
 import { adminUrl, t } from '@imajiner/admin-sdk';
 import {
-    Button, CollapsibleCard, Input, KeptEditsNotice, Label, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+    Button, CollapsibleCard, Input, KeptEditsNotice, Label, LanguageTabs, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
     useBreadcrumbs, useEditLock, useUnsavedChanges, ViewingNotice,
 } from '@imajiner/admin-sdk/ui';
 import { FieldError } from '@/components/FieldError.tsx';
@@ -12,9 +12,9 @@ import { FieldSections } from '@/components/FieldSections.tsx';
 import { SlugNote } from '@/components/SlugNote.tsx';
 import { TemplateField, type TemplateLookup, withTemplateChoices } from '@/components/TemplateHelp.tsx';
 import { VersionConflict } from '@/components/VersionConflict.tsx';
-import { LanguageTabs } from '@/components/LanguageTabs.tsx';
 import { errorKeysAt, errorsAt, hasErrors } from '@/lib/builder.ts';
 import { localeName, slugNote } from '@/lib/entries.ts';
+import { localeTabs } from '@/lib/languages.ts';
 import { seoFields } from '@/lib/seo.ts';
 import type { FieldDefinition } from '@/types.ts';
 
@@ -123,8 +123,8 @@ function TermEdit({ taxonomy, term, parentId = null, terms = [], translated, fie
 
             <div className="cms:grid cms:items-start cms:gap-6 cms:lg:grid-cols-[minmax(0,1fr)_20rem]">
                 <div className="cms:flex cms:min-w-0 cms:flex-col cms:gap-6">
-                    <LanguageTabs current={locale} locales={locales} translated={term ? (term.translatedIn ?? null) : [locale]}
-                        onSwitch={(next) => router.get(term ? `${list}/${term.id}/edit` : `${list}/create`, { locale: next, ...(term === null && form.data.parent_id !== null ? { parent: form.data.parent_id } : {}) })} />
+                    <LanguageTabs value={locale} languages={localeTabs(locales, term ? (term.translatedIn ?? null) : [locale], localeName)}
+                        onValueChange={(next: string) => router.get(term ? `${list}/${term.id}/edit` : `${list}/create`, { locale: next, ...(term === null && form.data.parent_id !== null ? { parent: form.data.parent_id } : {}) })} />
                     <ViewingNotice by={lock.viewingBy} onTakeOver={lock.requestTakeOver} />
                     {term === null && locales.length > 1 && (
                         <p className="cms:text-sm cms:text-muted-foreground">{t('In :language. Translate it here afterwards: switch the language and give it a title there.', { language: localeName(locale) })}</p>

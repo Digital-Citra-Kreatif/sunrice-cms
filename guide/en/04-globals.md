@@ -5,7 +5,7 @@
 ## Editing a set
 
 1. Click a set in the list.
-2. Choose the language at the top, if the site has several.
+2. Choose the language with the tabs at the top, if the site has several.
 3. Change the fields and click **Save**.
 
 Globals have no drafts: saved values are live on the website straight away, on every page that shows them.

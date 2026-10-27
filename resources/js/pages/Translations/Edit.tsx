@@ -3,7 +3,7 @@ import { Head, router, useForm } from '@inertiajs/react';
 import { ExternalLink, LoaderCircle } from 'lucide-react';
 import { adminUrl, t } from '@imajiner/admin-sdk';
 import {
-    Button, Card, CardContent, CollapsibleCard, Input, Label, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Switch, Textarea,
+    Button, Card, CardContent, CollapsibleCard, Input, Label, LanguageTabs, PageHeader, Switch, Textarea,
     useBreadcrumbs, useUnsavedChanges,
 } from '@imajiner/admin-sdk/ui';
 import { FieldError } from '@/components/FieldError.tsx';
@@ -65,12 +65,7 @@ export default function TranslationsEdit({ locale, main, locales, sections }: Pr
             <Card className="cms:sticky cms:top-16 cms:z-10 cms:py-3 cms:shadow-sm">
                 <CardContent className="cms:flex cms:flex-wrap cms:items-center cms:gap-x-4 cms:gap-y-2">
                     {locales.length > 1 ? (
-                        <Select value={locale} onValueChange={(code: string) => router.get(url, { locale: code })}>
-                            <SelectTrigger aria-label={t('Language')} className="cms:w-48"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                                {locales.map((l) => <SelectItem key={l.code} value={l.code}>{l.name}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
+                        <LanguageTabs value={locale} languages={locales} onValueChange={(code: string) => router.get(url, { locale: code })} />
                     ) : <span className="cms:font-medium">{language}</span>}
                     <span className="cms:text-sm cms:text-muted-foreground" aria-live="polite">
                         {t(':done of :total translated into :language', { done: progress.done, total: progress.total, language })}

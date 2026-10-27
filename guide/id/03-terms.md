@@ -18,7 +18,7 @@ Term yang belum berjudul dalam bahasa yang tampil ditulis abu-abu sebagai *… �
 
 Semua tentang sebuah term disunting di satu tempat, baru maupun lama:
 
-- **Bahasa** di bagian atas: setiap bahasa dengan kodenya, tanda centang pada bahasa yang sudah punya judul, dan satu baris yang menyebut bahasa yang sedang Anda sunting ("Menyunting: English (utama) — beralih untuk menyunting Bahasa Indonesia"). Di bahasa yang belum diterjemahkan, memberi judul di sana akan menambahkannya;
+- **tab bahasa** di bagian atas (lihat [Bahasa](guide:website/languages#tab-bahasa)): bahasa yang sedang Anda sunting terpilih, dan bahasa yang belum punya judul tampil pudar dengan tanda **+**. Di bahasa seperti itu, memberi judul di sana akan menambahkannya;
 - **Judul** dan **Slug**-nya dalam bahasa itu. Slug baru memindahkan halaman term begitu Anda menyimpan: sebuah catatan memberi tahu bahwa alamat lama tidak akan berfungsi lagi kecuali pengalihan ditambahkan (**Tambah pengalihan**, jika Anda boleh mengelola pengalihan);
 - **Di bawah**, dalam taksonomi bertingkat: letaknya (tidak pernah di bawah dirinya sendiri atau term di bawahnya);
 - field khususnya: **Deskripsi** untuk memperkenalkan halamannya, atau field yang diberikan developer untuk taksonomi (gambar…);

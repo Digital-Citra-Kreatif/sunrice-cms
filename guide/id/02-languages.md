@@ -4,15 +4,16 @@ Situs web bisa tersedia dalam beberapa bahasa. Setiap entri lalu memiliki versi 
 
 Di situs web, bahasa utama memakai alamat biasa (`/about`) dan bahasa lain diawali kodenya (`/id/about`). Bagian tetap alamat sebuah koleksi atau taksonomi juga bisa diterjemahkan, di Struktur (`/id/buku/…` untuk `/books/…`: lihat [Struktur](guide:website/structure)).
 
-## Bilah bahasa
+## Tab bahasa
 
-Jika situs memiliki lebih dari satu bahasa, penyunting entri menampilkan bilah bahasa di atas field. Bahasa utama ditandai **(utama)**, dan setiap bahasa menampilkan statusnya (*Draf*, *Terjadwal*, *Terbit*).
+Jika situs memiliki lebih dari satu bahasa, penyunting entri menampilkan satu tab untuk setiap bahasa di atas field, dengan nama seperti di Pengaturan → Bahasa. Bahasa utama ditandai **Utama**. Di mana pun panel membiarkan Anda memilih bahasa yang sedang disunting (entri, term, global, halaman daftar dan indeks, Konten → Terjemahan, teks alternatif berkas, kata-kata field dalam bahasa lain), bentuknya sama: sebaris tab.
 
-- Klik sebuah bahasa untuk menyunting terjemahan itu.
-- Bahasa dengan garis putus-putus dan tanda **+** belum memiliki terjemahan. Klik untuk menambahkannya: terjemahan dimulai sebagai draf yang disalin dari bahasa utama, siap diterjemahkan. Penerjemah juga bisa menambahkan bahasa, bukan hanya yang bisa membuat entri.
-- **Hapus bahasa ini** menghapus terjemahan yang sedang dibuka, beserta revisinya. Bahasa utama tidak bisa dihapus: pindahkan seluruh entri ke tempat sampah sebagai gantinya.
+- Klik sebuah tab (atau pindah ke sana dengan tombol panah lalu tekan Enter) untuk menyunting terjemahan itu. Jika ada perubahan yang belum disimpan, panel bertanya dulu.
+- Titik hijau berarti terjemahannya tayang; titik jingga berarti *usang* (lihat di bawah). Arahkan penunjuk ke tab untuk membaca statusnya (*Draf*, *Terjadwal*, *Tayang*).
+- Tab pudar dengan garis putus-putus dan tanda **+** belum memiliki terjemahan. Klik untuk menambahkannya: terjemahan dimulai sebagai draf yang disalin dari bahasa utama, siap diterjemahkan. Penerjemah juga bisa menambahkan bahasa, bukan hanya yang bisa membuat entri.
+- **Hapus bahasa ini**, di ujung baris, menghapus terjemahan yang sedang dibuka, beserta revisinya. Bahasa utama tidak bisa dihapus: pindahkan seluruh entri ke tempat sampah sebagai gantinya.
 
-Terjemahan yang ditandai *usang* terakhir disimpan sebelum perubahan terbaru di bahasa utama: isinya mungkin sudah tidak sesuai. Kartu **Status** entri juga memberi tahu.
+Terjemahan yang ditandai *usang* (titik jingga) terakhir disimpan sebelum perubahan terbaru di bahasa utama: isinya mungkin sudah tidak sesuai. Kartu **Status** entri juga memberi tahu.
 
 Setiap terjemahan disimpan, diterbitkan, dijadwalkan, dan ditarik dari situs secara terpisah. Menerbitkan versi bahasa Inggris tidak ikut menerbitkan versi bahasa Indonesia.
 
@@ -40,7 +41,7 @@ Menu **Bahasa** di daftar menampilkan judul dan status dalam satu bahasa. Entri 
 
 ## Menjaga terjemahan tetap mutakhir
 
-Saat bahasa utama berubah, bahasa lain tidak ikut berubah, kecuali field bersama. Sebagai gantinya, bahasa lain ditandai *usang* (di bilah bahasa dan di lencana bahasa pada daftar) sampai ada yang menyimpannya lagi. Buka setiap terjemahan yang usang, bandingkan dengan bahasa utama, perbarui isinya, lalu simpan atau terbitkan: tandanya hilang.
+Saat bahasa utama berubah, bahasa lain tidak ikut berubah, kecuali field bersama. Sebagai gantinya, bahasa lain ditandai *usang* (titik jingga di tab bahasanya, dan di lencana bahasa pada daftar) sampai ada yang menyimpannya lagi. Buka setiap terjemahan yang usang, bandingkan dengan bahasa utama, perbarui isinya, lalu simpan atau terbitkan: tandanya hilang.
 
 ## Konten lain dalam beberapa bahasa
 
@@ -51,7 +52,7 @@ Saat bahasa utama berubah, bahasa lain tidak ikut berubah, kecuali field bersama
 
 ## Formulir, menu, dan judul halaman daftar
 
-**Konten → Terjemahan** mengumpulkan teks situs yang bukan entri, dalam bahasa lain, dikelompokkan menurut tempat pengunjung melihatnya: **Judul halaman daftar** (koleksi yang punya halaman daftar), **Judul halaman term** (taksonomi yang punya halaman term), **Formulir: …** (pesan terima kasih setiap formulir beserta label, petunjuk, dan pilihan field-nya), **Menu: …** (label tautan), dan **Deskripsi situs**. Setiap baris menampilkan teks dalam bahasa utama (dengan **Lihat** untuk membuka halamannya, jika ada) di samping kotak untuk terjemahannya; biarkan kotak kosong agar teks bahasa utama yang tampil. Bilah di atas, yang tetap terlihat saat menggulir, memilih bahasa, menyebutkan berapa teks yang sudah diterjemahkan ("12 dari 30 sudah diterjemahkan ke Bahasa Indonesia"), punya **Hanya yang belum diterjemahkan** untuk menyembunyikan sisanya, dan **Simpan**. Dua item dengan judul yang sama dibedakan dengan handle-nya. Penerjemah bisa memakainya tanpa perlu bisa mengubah struktur atau pengaturan.
+**Konten → Terjemahan** mengumpulkan teks situs yang bukan entri, dalam bahasa lain, dikelompokkan menurut tempat pengunjung melihatnya: **Judul halaman daftar** (koleksi yang punya halaman daftar), **Judul halaman term** (taksonomi yang punya halaman term), **Formulir: …** (pesan terima kasih setiap formulir beserta label, petunjuk, dan pilihan field-nya), **Menu: …** (label tautan), dan **Deskripsi situs**. Setiap baris menampilkan teks dalam bahasa utama (dengan **Lihat** untuk membuka halamannya, jika ada) di samping kotak untuk terjemahannya; biarkan kotak kosong agar teks bahasa utama yang tampil. Bilah di atas, yang tetap terlihat saat menggulir, berisi tab bahasa (jika ada lebih dari satu bahasa tujuan), menyebutkan berapa teks yang sudah diterjemahkan ("12 dari 30 sudah diterjemahkan ke Bahasa Indonesia"), punya **Hanya yang belum diterjemahkan** untuk menyembunyikan sisanya, dan **Simpan**. Dua item dengan judul yang sama dibedakan dengan handle-nya. Penerjemah bisa memakainya tanpa perlu bisa mengubah struktur atau pengaturan.
 
 > [!TECHNICAL]
 > Terjemahan mesin diatur dengan `sunrice-cms.translation`; seluruh koleksi, term, global, menu, halaman daftar dan indeks, serta teks **Konten → Terjemahan** bisa diterjemahkan dengan `php artisan sunrice:translate`, dan bahasa utama diganti dengan `php artisan sunrice:switch-main-language`. Lihat [Machine translation](docs:cms/translation) dan [Collections and entries](docs:cms/collections#languages).

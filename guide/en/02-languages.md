@@ -4,15 +4,16 @@ A website can be in several languages. Each entry then has a version per languag
 
 On the website, the main language has plain addresses (`/about`) and the others start with their code (`/id/about`). A collection's or taxonomy's fixed part of the address can be translated too, under Structure (`/id/buku/…` for `/books/…`: see [Structure](guide:website/structure)).
 
-## The language bar
+## The language tabs
 
-When the site has more than one language, the entry editor shows a bar of them above the fields. The main one says **(main)**, and each language shows its status (*Draft*, *Scheduled*, *Published*).
+When the site has more than one language, the entry editor shows a tab for each above the fields, named as in Settings → Languages. The main one is marked **Main**. Wherever the panel lets you choose which language you're editing (entries, terms, globals, listing and index pages, Content → Translations, a file's alternative text, a field's words in other languages), it's the same row of tabs.
 
-- Click a language to edit that translation.
-- A language with a dashed outline and a **+** has no translation yet. Click it to add one: it starts as a draft copied from the main language, ready to translate. Translators can add languages too, not only those who create entries.
-- **Remove this language** deletes the translation you're on, with its revisions. The main language can't be removed: move the whole entry to the trash instead.
+- Click a tab (or move to it with the arrow keys and press Enter) to edit that translation. If you have unsaved changes, the panel asks first.
+- A green dot means the translation is live; an amber dot means it's **Outdated** (see below). Point at a tab to read its status (*Draft*, *Scheduled*, *Live*).
+- A muted tab with a dashed outline and a **+** has no translation yet. Click it to add one: it starts as a draft copied from the main language, ready to translate. Translators can add languages too, not only those who create entries.
+- **Remove this language**, at the end of the row, deletes the translation you're on, with its revisions. The main language can't be removed: move the whole entry to the trash instead.
 
-A translation marked **Outdated** was saved before the latest change to the main language: its text may no longer match. The entry's **Status** card says so too.
+A translation marked **Outdated** (the amber dot) was saved before the latest change to the main language: its text may no longer match. The entry's **Status** card says so too.
 
 Each translation is saved, published, scheduled and unpublished on its own. Publishing the English version doesn't publish the Indonesian one.
 
@@ -40,7 +41,7 @@ The list's **Language** menu shows the titles and statuses of one language. Entr
 
 ## Keeping translations up to date
 
-When the main language changes, the other languages don't change with it, apart from the shared fields. Instead, they're marked **Outdated** (in the language bar and in the list's language badges) until someone saves them again. Open each outdated translation, compare it with the main language, bring it up to date, and save or publish it: the mark goes away.
+When the main language changes, the other languages don't change with it, apart from the shared fields. Instead, they're marked **Outdated** (an amber dot on its language tab, and in the list's language badges) until someone saves them again. Open each outdated translation, compare it with the main language, bring it up to date, and save or publish it: the mark goes away.
 
 ## Other content in several languages
 
@@ -51,7 +52,7 @@ When the main language changes, the other languages don't change with it, apart 
 
 ## Forms, menus and listing titles
 
-**Content → Translations** gathers the site's own texts that aren't entries, in another language, grouped by where visitors see them: **Listing page titles** (collections with a listing page), **Term page titles** (taxonomies with term pages), **Forms: …** (each form's thank-you message and its fields' labels, help and choices), **Menus: …** (the link labels) and the **Site description**. Each row shows the text in the main language (with **View** to open the page it's on, when there is one) next to a box for the translation; leave a box empty to show the main language's text. The bar at the top, which stays in view, picks the language, says how many texts are translated ("12 of 30 translated into Bahasa Indonesia"), has **Only untranslated** to hide the rest, and **Save**. Two items with the same title are told apart by their handle. Translators can use it without being able to change the structure or the settings.
+**Content → Translations** gathers the site's own texts that aren't entries, in another language, grouped by where visitors see them: **Listing page titles** (collections with a listing page), **Term page titles** (taxonomies with term pages), **Forms: …** (each form's thank-you message and its fields' labels, help and choices), **Menus: …** (the link labels) and the **Site description**. Each row shows the text in the main language (with **View** to open the page it's on, when there is one) next to a box for the translation; leave a box empty to show the main language's text. The bar at the top, which stays in view, has the language tabs (with more than one language to translate into), says how many texts are translated ("12 of 30 translated into Bahasa Indonesia"), has **Only untranslated** to hide the rest, and **Save**. Two items with the same title are told apart by their handle. Translators can use it without being able to change the structure or the settings.
 
 > [!TECHNICAL]
 > Machine translation is set up with `sunrice-cms.translation`; whole collections, terms, globals, menus, listing and index pages and the texts of **Content → Translations** can be translated with `php artisan sunrice:translate`, and the main language changed with `php artisan sunrice:switch-main-language`. See [Machine translation](docs:cms/translation) and [Collections and entries](docs:cms/collections#languages).

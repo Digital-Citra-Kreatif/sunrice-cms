@@ -2,14 +2,14 @@ import * as React from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { ExternalLink, LoaderCircle } from 'lucide-react';
 import { t } from '@imajiner/admin-sdk';
-import { Button, Card, CardContent, CollapsibleCard, PageHeader, type PageHeaderMenuItem, useBreadcrumbs, useUnsavedChanges } from '@imajiner/admin-sdk/ui';
+import { Button, Card, CardContent, CollapsibleCard, LanguageTabs, PageHeader, type PageHeaderMenuItem, useBreadcrumbs, useUnsavedChanges } from '@imajiner/admin-sdk/ui';
 import { FieldInput, Fields } from '@/components/FieldInput.tsx';
 import { SHARED_FIELD } from '@/components/FieldSections.tsx';
 import { VersionConflict } from '@/components/VersionConflict.tsx';
-import { LanguageTabs } from '@/components/LanguageTabs.tsx';
 import { TemplateField, type TemplateLookup, withTemplateChoices } from '@/components/TemplateHelp.tsx';
 import { errorKeysAt, errorsAt, hasErrors } from '@/lib/builder.ts';
 import { localeName } from '@/lib/entries.ts';
+import { localeTabs } from '@/lib/languages.ts';
 import { seoFields } from '@/lib/seo.ts';
 import type { FieldDefinition } from '@/types.ts';
 import { isShown } from '@/lib/conditions.ts';
@@ -103,8 +103,8 @@ function PageValuesEdit({ title, breadcrumbs, back, saveUrl, editUrl, params = {
     const texts = (
         <>
             {children}
-            {/* Each language has its own texts: which one is open, which have theirs, the others a click away. */}
-            <LanguageTabs current={locale} locales={locales} translated={translated} onSwitch={(next) => router.get(editUrl, { ...params, locale: next })} />
+            {/* Each language has its own texts: the one open, those without theirs yet muted. */}
+            <LanguageTabs value={locale} languages={localeTabs(locales, translated, localeName)} onValueChange={(next: string) => router.get(editUrl, { ...params, locale: next })} />
             <fieldset disabled={!writable} className="cms:flex cms:flex-col cms:gap-6">
                 <VersionConflict message={errors.version} processing={form.processing} onSaveMine={saveMine} />
                 {fields.length === 0 ? (

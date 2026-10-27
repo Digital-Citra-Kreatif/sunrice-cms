@@ -5,7 +5,7 @@
 ## Menyunting sebuah set
 
 1. Klik sebuah set di daftar.
-2. Pilih bahasa di bagian atas, jika situs memiliki beberapa bahasa.
+2. Pilih bahasa lewat tab di bagian atas, jika situs memiliki beberapa bahasa.
 3. Ubah field-nya dan klik **Simpan**.
 
 Global tidak memiliki draf: nilai yang disimpan langsung tayang di situs web, di setiap halaman yang menampilkannya.
