@@ -38,7 +38,7 @@ From then on, **Save draft** keeps your work (or press **Ctrl S** / **⌘ S**). 
 - **Media** fields pick images or files from the [media library](guide:panel/media), or upload new ones.
 - **Entries** and **Terms** fields link to other entries or to terms (a "featured topic", say); search by title. The entry's own categories and tags are in the **Taxonomies** card (below).
 - **Link** fields take a web address, or another entry (choose **Entry** to follow its address even if it changes).
-- **Groups**, **repeaters** and **flexible** fields hold several fields together; repeaters and flexible fields add rows or blocks, which you drag into order by their handle. Each row or block is named by its first text; click its name to fold it away (**Collapse all** folds the whole list), and switch off **Visible on site** to keep it here but leave it out of the page.
+- **Groups**, **repeaters** and **flexible** fields hold several fields together; repeaters and flexible fields add rows or blocks, which you drag into order by their handle. A new row or block starts with its fields' default values. Each row or block is named by its first text; click its name to fold it away (**Collapse all** folds the whole list), and switch off **Visible on site** to keep it here but leave it out of the page.
 
 The editor's cards (groups, **SEO**, and the cards on the right) fold away when you click their title. The panel remembers which ones you folded, and opens a card by itself when a field inside it has an error.
 

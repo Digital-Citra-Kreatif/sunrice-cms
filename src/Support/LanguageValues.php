@@ -45,7 +45,8 @@ final class LanguageValues
      * The input merged over what a language stores (fields left out keep
      * their values), validated and as it's stored. Another language than
      * the main one is validated with the main language's shared values
-     * (a required shared field in a group needn't be sent) and stores none
+     * (a required shared field in a group needn't be sent, nor in a row or
+     * block only it has: Schema::translationRules()) and stores none
      * of them: what it sends for them is ignored, and what it stored for
      * them before stays out of sight (Schema::withoutShared()).
      *
@@ -64,8 +65,8 @@ final class LanguageValues
         if ($complete !== null) {
             $merged = $schema->withShared($merged, $complete);
         }
-        $rules = $editable->rules($merged);
-        Validator::make(['data' => $merged], $rules, [], EntryInput::attributes($editable, array_keys($rules)))->validate();
+        $rules = $main === null ? $editable->rules($merged) : $editable->translationRules($merged);
+        Validator::make(['data' => $merged], $rules, [], EntryInput::attributes($editable, array_keys($rules), data: $merged))->validate();
         $data = $editable->normalize($merged);
 
         return ['before' => $before, 'data' => $complete === null ? $data : $schema->withoutShared($data, $complete, $stored)];

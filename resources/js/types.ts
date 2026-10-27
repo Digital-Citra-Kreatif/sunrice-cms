@@ -48,6 +48,8 @@ export interface FieldDefinition {
     hint_tooltip?: string | null;
     /** A flexible field's kinds of block, as the editor gets them. */
     blocks?: BlockType[];
+    /** A repeater's new rows' values: its fields' defaults (an empty list when there are none). */
+    defaults?: Record<string, unknown> | unknown[];
     /** A terms field's taxonomy (its terms load from cms/terms/picker). */
     taxonomy?: string | null;
     /** An entries field's collections to choose from (handles). */
@@ -79,4 +81,6 @@ export interface BlockType {
     type: string;
     label: string;
     fields: FieldDefinition[];
+    /** A new block's values: its fields' defaults (an empty list when there are none). */
+    defaults?: Record<string, unknown> | unknown[];
 }

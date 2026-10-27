@@ -437,7 +437,7 @@ function Rows({ field, value, onChange, errors, id, content = false }: Omit<Prop
                 })()}
             </SortableList>
             <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => onChange([...rows, content ? newRow() : {}])}>
+                <Button type="button" variant="outline" size="sm" onClick={() => onChange([...rows, content ? newRow(field.defaults) : {}])}>
                     <Plus /> {t('Add :item', { item: noun })}
                 </Button>
                 {!isCompact(field, content) && <FoldAll keys={items.map((item) => item.key)} folding={folding} />}
@@ -489,7 +489,7 @@ function Blocks({ field, value, onChange, errors, id }: Omit<Props, 'value'> & {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
                         {types.map((type) => (
-                            <DropdownMenuItem key={type.type} onSelect={() => onChange([...blocks, newBlock(type.type)])}>{type.label}</DropdownMenuItem>
+                            <DropdownMenuItem key={type.type} onSelect={() => onChange([...blocks, newBlock(type.type, type.defaults)])}>{type.label}</DropdownMenuItem>
                         ))}
                     </DropdownMenuContent>
                 </DropdownMenu>

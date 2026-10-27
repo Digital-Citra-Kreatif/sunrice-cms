@@ -126,6 +126,9 @@ final class Repeater extends FieldType
 
     public function toAdmin(Field $field, Schema $schema): array
     {
-        return ['fields' => Schema::children($field, $schema->depth())->toAdmin()] + parent::toAdmin($field, $schema);
+        $children = Schema::children($field, $schema->depth());
+
+        // A new row starts with its fields' defaults.
+        return ['fields' => $children->toAdmin(), 'defaults' => $children->defaults()] + parent::toAdmin($field, $schema);
     }
 }

@@ -38,7 +38,7 @@ Selanjutnya, **Simpan draf** menyimpan pekerjaan Anda (atau tekan **Ctrl S** / *
 - Field **Media** memilih gambar atau berkas dari [pustaka media](guide:panel/media), atau mengunggah yang baru.
 - Field **Entri** dan **Term** menautkan ke entri lain atau ke term (misalnya "topik pilihan"); cari berdasarkan judul. Kategori dan tag entri itu sendiri ada di kartu **Taksonomi** (di bawah).
 - Field **Tautan** menerima alamat web, atau entri lain (pilih **Entri** agar mengikuti alamat entri itu meskipun berubah).
-- Field **Grup**, **Repeater**, dan **Konten fleksibel** menampung beberapa field sekaligus; repeater dan konten fleksibel menambahkan baris atau blok, yang Anda seret ke urutannya lewat pegangannya. Setiap baris atau blok diberi nama dari teks pertamanya; klik namanya untuk melipatnya (**Lipat semua** melipat seluruh daftar), dan matikan **Tampil di situs** untuk menyimpannya di sini tanpa menampilkannya di halaman.
+- Field **Grup**, **Repeater**, dan **Konten fleksibel** menampung beberapa field sekaligus; repeater dan konten fleksibel menambahkan baris atau blok, yang Anda seret ke urutannya lewat pegangannya. Baris atau blok baru dimulai dengan nilai bawaan field-fieldnya. Setiap baris atau blok diberi nama dari teks pertamanya; klik namanya untuk melipatnya (**Lipat semua** melipat seluruh daftar), dan matikan **Tampil di situs** untuk menyimpannya di sini tanpa menampilkannya di halaman.
 
 Kartu-kartu di penyunting (grup, **SEO**, dan kartu di kanan) bisa dilipat dengan mengeklik judulnya. Panel mengingat kartu mana yang Anda lipat, dan membuka sendiri kartu yang field di dalamnya bermasalah.
 

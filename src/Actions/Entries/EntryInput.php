@@ -29,18 +29,20 @@ final class EntryInput
     /**
      * @param  array<mixed>  $data  the fields, complete (stored values merged with the input)
      * @param  int|null  $except  the translation being saved, whose own slug doesn't count as taken
+     * @param  bool  $main  whether it's the main language (another doesn't require the shared fields inside groups, rows and blocks: Schema::translationRules())
      * @return array{title: string, slug: string, data: array<string, mixed>}
      *
      * @throws ValidationException
      */
-    public static function validate(Schema $schema, mixed $title, mixed $slug, array $data, int $collectionId, string $locale, ?int $except): array
+    public static function validate(Schema $schema, mixed $title, mixed $slug, array $data, int $collectionId, string $locale, ?int $except, bool $main = true): array
     {
-        $rules = ['title' => ['required', 'string', 'max:255'], 'slug' => ['nullable', 'string', 'max:200', 'regex:'.self::SLUG], 'data' => ['array']] + $schema->rules($data);
+        $rules = ['title' => ['required', 'string', 'max:255'], 'slug' => ['nullable', 'string', 'max:200', 'regex:'.self::SLUG], 'data' => ['array']]
+            + ($main ? $schema->rules($data) : $schema->translationRules($data));
         $validator = Validator::make(
             ['title' => $title, 'slug' => $slug, 'data' => $data],
             $rules,
             ['slug.regex' => __('Use lowercase letters, digits and dashes (about-us).')],
-            self::attributes($schema, array_keys($rules)),
+            self::attributes($schema, array_keys($rules), data: $data),
         );
         $validator->after(function (ValidatorInstance $validator) use ($slug, $collectionId, $locale, $except): void {
             if (is_string($slug) && $slug !== '' && self::taken($slug, $collectionId, $locale, $except)) {
@@ -61,18 +63,21 @@ final class EntryInput
     /**
      * Names for messages: "The Intro field is required", not "The data.intro field".
      * With `$locale`, each field's label in that language (Field::labelIn()).
+     * Fields in rows and blocks ("data.sections.2.values.rows.0.price") are
+     * named by their labels too, a block's fields read from its kind in `$data`.
      *
      * @param  list<string>  $keys
+     * @param  array<mixed>  $data  the fields validated (under "data")
      * @return array<string, string>
      */
-    public static function attributes(Schema $schema, array $keys, ?string $locale = null): array
+    public static function attributes(Schema $schema, array $keys, ?string $locale = null, array $data = []): array
     {
         $names = [];
         foreach ($keys as $key) {
             if (str_starts_with($key, 'data.')) {
                 $path = substr($key, 5);
                 // One of a field's several values ("photos.*", "photos.0") is named as the field.
-                $field = $schema->field($path) ?? $schema->field((string) preg_replace('/(\.(\*|\d+))+$/', '', $path));
+                $field = $schema->fieldAt($path, $data);
                 $names[$key] = $field !== null && $locale !== null ? $field->labelIn($locale) : ($field?->label ?: Str::headline((string) Str::afterLast($path, '.')));
             }
         }

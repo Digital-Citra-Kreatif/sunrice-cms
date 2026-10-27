@@ -352,7 +352,7 @@ final class RenameFieldHandle
             function (EntryTranslation $translation): void {
                 References::entry($translation);
                 if ($translation->data !== null) {
-                    $translation->newQuery()->whereKey($translation->id)->update(['search_text' => SearchText::of($translation->completeData())]);
+                    $translation->newQuery()->whereKey($translation->id)->update(['search_text' => SearchText::of($translation->completeData(), $translation->entry->schema())]);
                 }
             });
         $this->each(Revision::query()->whereIn('entry_translation_id', EntryTranslation::query()->whereIn('entry_id', Entry::usingBlueprint($blueprint)->select('id'))->select('id')), ['data'], $rename, $dryRun, $counts['revisions']);

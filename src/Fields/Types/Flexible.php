@@ -156,7 +156,8 @@ final class Flexible extends FieldType
         foreach ($field->configStrings('blocks') as $handle) {
             $fieldset = $this->schema($handle, $schema->depth() + 1);
             if ($fieldset !== null) {
-                $blocks[] = ['type' => $handle, 'label' => app(Fieldsets::class)->title($handle), 'fields' => $deepest ? [] : $fieldset->toAdmin()];
+                // A new block starts with its fields' defaults.
+                $blocks[] = ['type' => $handle, 'label' => app(Fieldsets::class)->title($handle), 'fields' => $deepest ? [] : $fieldset->toAdmin(), 'defaults' => $deepest ? [] : $fieldset->defaults()];
             }
         }
 

@@ -285,6 +285,125 @@ final class Schema
     }
 
     /**
+     * Rules for another language than the main one: as rules(), but the
+     * shared fields inside translated groups, repeater rows and flexible
+     * blocks (and everything in them) aren't required. They're the main
+     * language's: withShared() gives them for the rows and blocks it has
+     * too, and the editor shows them read-only, also in a row or block
+     * only this language has. What's sent for them is still checked
+     * against their other rules.
+     *
+     * @param  array<mixed>  $data
+     * @return array<string, list<mixed>>
+     */
+    public function translationRules(array $data, string $prefix = 'data'): array
+    {
+        $rules = $this->rules($data, $prefix);
+        foreach ($rules as $key => $list) {
+            $path = $prefix === '' ? $key : (str_starts_with($key, $prefix.'.') ? substr($key, strlen($prefix) + 1) : null);
+            $trail = $path === null ? null : $this->trail($path, $data);
+            // Below the top level (top-level shared fields aren't edited in other languages at all).
+            foreach (array_slice($trail ?? [], 1) as [$field, $in]) {
+                if (! $in->isTranslatable($field)) {
+                    $rules[$key] = self::optional($list);
+                    break;
+                }
+            }
+        }
+
+        return $rules;
+    }
+
+    /**
+     * The field at a dot path into data, as validation keys name them:
+     * through groups ("hero.image"), repeater rows ("rows.0.price") and
+     * flexible blocks ("sections.2.values.heading": the block's kind read
+     * from the data, else the first of the field's kinds of block that has
+     * such a field). An index at the end ("photos.0") is its list's field.
+     * Null when the path leads to no field (a row's "_id", a block's "type").
+     *
+     * @param  array<mixed>  $data
+     */
+    public function fieldAt(string $path, array $data = []): ?Field
+    {
+        $trail = $this->trail($path, $data);
+
+        return $trail === null ? null : $trail[array_key_last($trail)][0];
+    }
+
+    /**
+     * The fields along a path, outermost first, each with the schema it's in.
+     *
+     * @param  array<mixed>  $data
+     * @return non-empty-list<array{0: Field, 1: self}>|null
+     */
+    private function trail(string $path, array $data): ?array
+    {
+        $level = [$this];
+        $trail = [];
+        $value = $data;
+        $parts = explode('.', $path);
+        foreach ($parts as $i => $part) {
+            $value = is_array($value) ? ($value[$part] ?? null) : null;
+            $last = $trail === [] ? null : $trail[count($trail) - 1];
+            if ($last !== null && ($part === '*' || ctype_digit($part))) {
+                // A row or a block; a block's fields are its kind's.
+                if ($last[0]->type === Types\Flexible::TYPE && isset($parts[$i + 1])) {
+                    $level = self::blockSchemas($last[0], $last[1]->depth(), is_array($value) && is_string($value['type'] ?? null) ? $value['type'] : null);
+                }
+
+                continue;
+            }
+            if ($last !== null && $last[0]->type === Types\Flexible::TYPE && $part === 'values') {
+                continue;
+            }
+            $found = null;
+            foreach ($level as $schema) {
+                foreach ($schema->fields as $field) {
+                    if ($field->handle === $part) {
+                        $found = [$field, $schema];
+                        break 2;
+                    }
+                }
+            }
+            if ($found === null) {
+                return null;
+            }
+            $trail[] = $found;
+            [$field, $in] = $found;
+            // What's inside it, when the path goes on (a block's kinds are read only then).
+            $level = ! isset($parts[$i + 1]) ? [] : match (true) {
+                $field->type === Types\Flexible::TYPE => self::blockSchemas($field, $in->depth()),
+                $field->fields !== [] => [self::children($field, $in->depth())],
+                default => [],
+            };
+        }
+
+        return $trail;
+    }
+
+    /**
+     * A flexible field's kinds of block as schemas (only the given kind's, when given).
+     *
+     * @return list<self>
+     */
+    private static function blockSchemas(Field $field, int $depth, ?string $kind = null): array
+    {
+        if ($depth >= self::MAX_DEPTH) {
+            return [];
+        }
+        $schemas = [];
+        foreach ($kind !== null ? [$kind] : $field->configStrings('blocks') as $handle) {
+            $fields = app(Fieldsets::class)->fields($handle);
+            if ($fields !== null) {
+                $schemas[] = self::make($fields, $depth + 1);
+            }
+        }
+
+        return $schemas;
+    }
+
+    /**
      * @param  list<mixed>  $rules
      * @return list<mixed> the rules with "required" (and its variants) made "nullable", and a required toggle's "accepted" "boolean"
      */

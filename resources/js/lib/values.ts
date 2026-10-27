@@ -38,9 +38,9 @@ export function offersEmptyChoice(options: readonly { value: string; label: stri
     return !hasDefault || !filled;
 }
 
-/** A new repeater row: the server gives it its stable id. */
-export function newRow(): Record<string, unknown> {
-    return { _hidden: false };
+/** A new repeater row, with its fields' defaults (the field's `defaults`): the server gives it its stable id. */
+export function newRow(defaults?: unknown): Record<string, unknown> {
+    return { ...structuredClone(asRecord(defaults)), _hidden: false };
 }
 
 /**
@@ -84,9 +84,9 @@ export function decodeEntities(text: string): string {
     });
 }
 
-/** A new flexible block of a kind (a fieldset's handle). */
-export function newBlock(type: string): Record<string, unknown> {
-    return { type, hidden: false, values: {} };
+/** A new flexible block of a kind (a fieldset's handle), with its fields' defaults (the kind's `defaults`). */
+export function newBlock(type: string, defaults?: unknown): Record<string, unknown> {
+    return { type, hidden: false, values: structuredClone(asRecord(defaults)) };
 }
 
 /**

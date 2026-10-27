@@ -299,17 +299,30 @@ final class RevisionList
         return $keys;
     }
 
-    /** A value to compare: empty ones alike, objects whatever their key order. */
+    /** A value to compare: empty ones alike, objects whatever their key order, in groups, rows and blocks too. */
     private static function normal(mixed $value): string
     {
-        if ($value === null || $value === '' || $value === [] || $value === false) {
-            return '';
-        }
-        if (is_array($value) && ! array_is_list($value)) {
-            ksort($value);
-        }
+        $value = self::canonical($value);
 
-        return (string) json_encode($value, JSON_UNESCAPED_UNICODE);
+        return $value === null ? '' : (string) json_encode($value, JSON_UNESCAPED_UNICODE);
+    }
+
+    /** The value with its objects' keys in order and their empty values left out; null when it's empty. */
+    private static function canonical(mixed $value): mixed
+    {
+        if ($value === null || $value === '' || $value === [] || $value === false) {
+            return null;
+        }
+        if (! is_array($value)) {
+            return $value;
+        }
+        if (array_is_list($value)) {
+            return array_map(self::canonical(...), $value);
+        }
+        $value = array_filter(array_map(self::canonical(...), $value), fn (mixed $item): bool => $item !== null);
+        ksort($value);
+
+        return $value === [] ? null : $value;
     }
 
     private static function text(string $key, mixed $value, Schema $schema, ExportText $words): string

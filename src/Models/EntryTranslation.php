@@ -76,7 +76,7 @@ class EntryTranslation extends Model
         // The live version's words for site search, whenever it changes.
         static::saving(function (self $translation): void {
             if ($translation->isDirty('data')) {
-                $translation->search_text = SearchText::of($translation->completeData());
+                $translation->search_text = SearchText::of($translation->completeData(), $translation->entry->schema());
             }
         });
     }

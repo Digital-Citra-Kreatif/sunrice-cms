@@ -71,6 +71,7 @@ final class PublishEntry
                 $translation->collection_id,
                 $translation->locale,
                 $translation->id,
+                $translation->isMain(),
             );
             $values['data'] = $translation->ownData($values['data']);
             $translation->fill([
@@ -129,7 +130,7 @@ final class PublishEntry
                 foreach ($translation->entry->translations as $other) {
                     if (! $other->is($translation) && $other->data !== null) {
                         $other->setRelation('entry', $translation->entry);
-                        $other->forceFill(['search_text' => SearchText::of($other->completeData())])->save();
+                        $other->forceFill(['search_text' => SearchText::of($other->completeData(), $other->entry->schema())])->save();
                     }
                 }
             }

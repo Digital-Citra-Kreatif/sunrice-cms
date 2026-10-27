@@ -29,7 +29,8 @@ final class TranslatableStrings
 
     /**
      * The strings of a translation, each with the source's text at the same
-     * place (rows and blocks matched by id, those without one by position). Fields the
+     * place (rows and blocks matched by id, else by position when one has
+     * none). Fields the
      * translation lacks get the source's value first, so there's a place to
      * write the translation to.
      *
@@ -124,7 +125,8 @@ final class TranslatableStrings
     }
 
     /**
-     * Each row or block with the source's of the same id (one without an id: of the same position).
+     * Each row or block with the source's of the same id (or, when either
+     * has none, the one at its position).
      *
      * @param  array<mixed>  $items
      * @param  array<mixed>  $source
@@ -145,10 +147,11 @@ final class TranslatableStrings
             if (! is_array($item)) {
                 continue;
             }
-            // By id; by position only an item without one (a row or block of the translation's own is never another's).
-            $match = is_string($item[$id] ?? null)
-                ? $byId[$item[$id]] ?? null
-                : (is_int($index) && is_array($sourceList[$index] ?? null) ? $sourceList[$index] : null);
+            $own = is_string($item[$id] ?? null) ? $item[$id] : null;
+            $match = $own !== null && isset($byId[$own]) ? $byId[$own] : null;
+            // By position only when one of them has no id (written before rows had ids): two ids that differ are two rows.
+            $at = is_int($index) && is_array($sourceList[$index] ?? null) ? $sourceList[$index] : null;
+            $match ??= $at !== null && ($own === null || ! is_string($at[$id] ?? null)) ? $at : null;
             if ($match !== null) {
                 [$items[$index], $nested] = $pair($item, $match, $path.'.'.$index);
                 $strings += $nested;
