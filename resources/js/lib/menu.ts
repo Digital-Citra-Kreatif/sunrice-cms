@@ -104,3 +104,28 @@ export function labelFallback(item: Pick<MenuNode, 'url' | 'collection_id' | 'qu
 
     return item.collection_id !== null && (item.query ?? '').trim() !== '' ? 'main' : 'title';
 }
+
+/** What an item links to, as the editor's Add buttons name it. */
+export type MenuKind = 'entry' | 'term' | 'listing' | 'index' | 'url';
+
+export function kindOf(item: Pick<MenuNode, 'url' | 'entry_id' | 'term_id' | 'taxonomy_id' | 'collection_id'>): MenuKind {
+    if (item.url !== null) return 'url';
+    if (item.term_id !== null) return 'term';
+    if ((item.taxonomy_id ?? null) !== null) return 'index';
+    if (item.entry_id === null && item.collection_id !== null) return 'listing';
+
+    return 'entry';
+}
+
+/** Where an item links: its target and, for a listing page, its filters. */
+export type MenuTarget = Pick<FlatItem, 'entry_id' | 'term_id' | 'taxonomy_id' | 'collection_id' | 'url' | 'query' | 'target'>;
+
+/**
+ * Points an item at another target (a corrected address, another entry…),
+ * keeping its labels, new tab, place and what's under it.
+ */
+export function retarget(items: FlatItem[], index: number, to: Partial<MenuTarget>): FlatItem[] {
+    return items.map((item, i) => (i === index
+        ? { ...item, entry_id: null, term_id: null, taxonomy_id: null, collection_id: null, url: null, query: null, target: null, ...to }
+        : item));
+}

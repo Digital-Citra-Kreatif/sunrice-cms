@@ -24,6 +24,7 @@ The buttons above the list add a link to:
 
 - **Label**: the text shown, per language. For entries, terms and listing pages it's optional (the title is used). In another language without its own label, the item shows the target's title in that language when it has one, and otherwise the main language's label. A listing page with **Filters** shows the main language's label instead of the listing's title, so give it a label in each language. A **Link** needs a label in the main language, and other languages use it when they have none.
 - **New tab**: opens the link in a new browser tab. Keep it for links to other websites.
+- **Change where it links** (the pencil) corrects a link's address, or points it at another entry, term, listing page or taxonomy index (of the same kind). Its labels, new tab setting, place and sub-links stay as they are, so there's no need to remove it and add it again.
 - Drag a link by its handle to change its place among the links at its level (or use the keyboard: focus the handle, press Space, move with the arrow keys, press Space again).
 - **Indent** puts a link under the one above it (a sub-menu); **Outdent** takes it (with what's under it) out of its sub-menu, placing it right after the sub-menu; the other links stay where they are. Menus go three levels deep.
 - **Remove, with what's under it** deletes the link and its sub-links.

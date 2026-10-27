@@ -1,5 +1,5 @@
 import { c as i } from "./createLucideIcon-Ccbp7F45.js";
-import { j as e, s as c, m, t as s } from "./admin-4vjDOX5A.js";
+import { j as e, s as c, m, t as s } from "./admin-DgMI81wH.js";
 import { u as a } from "./ui-Dh5wfMwT.js";
 const r = {
   name: "x",
