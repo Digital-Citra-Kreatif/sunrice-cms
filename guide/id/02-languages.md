@@ -6,7 +6,7 @@ Di situs web, bahasa utama memakai alamat biasa (`/about`) dan bahasa lain diawa
 
 ## Tab bahasa
 
-Jika situs memiliki lebih dari satu bahasa, penyunting entri menampilkan satu tab untuk setiap bahasa di atas field, dengan nama seperti di Pengaturan → Bahasa. Bahasa utama ditandai **Utama**. Di mana pun panel membiarkan Anda memilih bahasa yang sedang disunting (entri, term, global, halaman daftar dan indeks, Konten → Terjemahan, teks alternatif berkas, kata-kata field dalam bahasa lain), bentuknya sama: sebaris tab.
+Jika situs memiliki lebih dari satu bahasa, penyunting entri menampilkan satu tab untuk setiap bahasa di atas field, dengan kodenya (**EN**, **ID**): arahkan kursor ke tab untuk melihat nama bahasanya dan apakah itu bahasa utama. Di mana pun panel membiarkan Anda memilih bahasa yang sedang disunting (entri, term, global, halaman daftar dan indeks, Konten → Terjemahan, teks alternatif berkas, kata-kata field dalam bahasa lain), bentuknya sama: sebaris tab.
 
 - Klik sebuah tab (atau pindah ke sana dengan tombol panah lalu tekan Enter) untuk menyunting terjemahan itu. Jika ada perubahan yang belum disimpan, panel bertanya dulu.
 - Titik hijau berarti terjemahannya tayang; titik jingga berarti *usang* (lihat di bawah). Arahkan penunjuk ke tab untuk membaca statusnya (*Draf*, *Terjadwal*, *Tayang*).

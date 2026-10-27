@@ -6,7 +6,7 @@ On the website, the main language has plain addresses (`/about`) and the others 
 
 ## The language tabs
 
-When the site has more than one language, the entry editor shows a tab for each above the fields, named as in Settings → Languages. The main one is marked **Main**. Wherever the panel lets you choose which language you're editing (entries, terms, globals, listing and index pages, Content → Translations, a file's alternative text, a field's words in other languages), it's the same row of tabs.
+When the site has more than one language, the entry editor shows a tab for each above the fields, named by its code (**EN**, **ID**): hover over one for its name and whether it's the main language. Wherever the panel lets you choose which language you're editing (entries, terms, globals, listing and index pages, Content → Translations, a file's alternative text, a field's words in other languages), it's the same row of tabs.
 
 - Click a tab (or move to it with the arrow keys and press Enter) to edit that translation. If you have unsaved changes, the panel asks first.
 - A green dot means the translation is live; an amber dot means it's **Outdated** (see below). Point at a tab to read its status (*Draft*, *Scheduled*, *Live*).
