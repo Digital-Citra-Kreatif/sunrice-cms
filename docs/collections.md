@@ -238,7 +238,7 @@ app(UnpublishEntry::class)->handle($translation);
 | `hasUnpublishedChanges()` | The draft differs from the live version. |
 | `values($context)` | The fields as templates get them (see [fields](fields.md#using-fields-in-code)); the draft's for a preview context. |
 
-`EntryTranslation::query()->live()` finds translations that are published, past their date, and whose entry and collection aren't deleted.
+`EntryTranslation::query()->live()` finds translations that are published, past their date, and whose entry and collection aren't deleted; `->notTrashed()` only the last part (drafts too, as a preview lists them). Both check the collection on the translation's own `collection_id`, so add your own `whereIn('collection_id', [...])` with ids rather than a subquery on the collections: MySQL joins a subquery's collections with every row and sorts them whole.
 
 ## Slugs
 

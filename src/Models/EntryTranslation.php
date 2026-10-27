@@ -14,6 +14,7 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Carbon;
 use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Fields\Schema;
+use Sunrice\Cms\Models\Collection as ContentCollection;
 use Sunrice\Cms\Site\Site;
 use Sunrice\Cms\Support\ContentData;
 use Sunrice\Cms\Support\Locales;
@@ -111,7 +112,23 @@ class EntryTranslation extends Model
     {
         $query->where('status', self::PUBLISHED)
             ->where('published_at', '<=', now())
-            ->whereHas('entry', fn (Builder $entry) => $entry->withoutTrashed()->whereHas('collection', fn (Builder $collection) => $collection->withoutTrashed()));
+            ->notTrashed();
+    }
+
+    /**
+     * Its entry and collection not deleted. The collection is checked on
+     * the translation's own collection_id (the entry's, copied), against
+     * the collections in the trash: MySQL turns an exists nested in the
+     * entry's, or an IN of the collections kept, into a join of every
+     * collection with the rows, then sorts the rows whole in a temporary
+     * table (80 ms for a page of 1,300 entries, against 1 ms).
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeNotTrashed(Builder $query): void
+    {
+        $query->whereNotIn($query->qualifyColumn('collection_id'), ContentCollection::onlyTrashed()->select('id'))
+            ->whereHas('entry', fn (Builder $entry) => $entry->withoutTrashed());
     }
 
     /**

@@ -21,6 +21,7 @@ use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Site\Site;
+use Sunrice\Cms\Support\Ids;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\SiteCache;
 
@@ -81,6 +82,9 @@ final class EntryQuery
 
     /** @var list<array<mixed>> what was asked for, as plain values, for the cache key */
     private array $calls = [];
+
+    /** @var list<int>|null the collections' ids (not in the trash), once needed */
+    private ?array $collectionIds = null;
 
     /** @var list<Schema>|null the collections' fields, once needed */
     private ?array $schemas = null;
@@ -443,11 +447,10 @@ final class EntryQuery
     private function builder(): Builder
     {
         $query = EntryTranslation::query()->with(['entry.collection', 'entry.translations'])->shownIn($this->locale, $this->fallback, $this->preview);
-        $this->preview
-            ? $query->whereHas('entry', fn (Builder $entry) => $entry->withoutTrashed()->whereHas('collection', fn (Builder $collection) => $collection->withoutTrashed()))
-            : $query->live();
+        $this->preview ? $query->notTrashed() : $query->live();
         if ($this->collections !== []) {
-            $query->whereIn('collection_id', Collection::query()->whereIn('handle', $this->collections)->select('id'));
+            // Their ids, not a subquery: MySQL joins a subquery's collections with the rows and sorts them whole.
+            $query->whereIn('collection_id', $this->collectionIds ??= Ids::of(Collection::query()->whereIn('handle', $this->collections)->pluck('id')));
         }
         if ($this->searchOrder !== null) {
             ($this->searchOrder)($query); // title matches first, before the orders asked for

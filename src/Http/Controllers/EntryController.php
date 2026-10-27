@@ -143,8 +143,8 @@ final class EntryController
             ->where(fn ($q) => $q->whereIn('collection_id', $viewable->pluck('id'))
                 ->orWhere(fn ($live) => $live->whereIn('collection_id', $linkable->pluck('id'))
                     ->where('status', EntryTranslation::PUBLISHED)->where('published_at', '<=', now())))
-            ->whereHas('entry', fn ($entry) => $entry->withoutTrashed()->whereHas('collection', fn ($collection) => $collection->withoutTrashed()
-                ->when($asked !== [], fn ($c) => $c->whereIn('handle', $asked))));
+            ->notTrashed()
+            ->when($asked !== [], fn ($q) => $q->whereIn('collection_id', Collection::query()->whereIn('handle', $asked)->pluck('id')));
 
         if (isset($input['ids'])) {
             $found = $query->whereIn('entry_id', $input['ids'])->get()->keyBy('entry_id');
@@ -284,7 +284,7 @@ final class EntryController
         $found = EntryTranslation::query()
             ->with('entry.collection')
             ->whereIn('collection_id', Access::collections($request->user())->pluck('id'))
-            ->whereHas('entry', fn ($entry) => $entry->withoutTrashed()->whereHas('collection', fn ($collection) => $collection->withoutTrashed()))
+            ->notTrashed()
             ->whereLike('draft_title', '%'.addcslashes($search, '%_\\').'%')
             ->orderByRaw('case when locale = ? then 0 else 1 end', [$main])
             ->orderByDesc('updated_at')
