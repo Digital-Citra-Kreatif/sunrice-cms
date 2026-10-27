@@ -15,6 +15,7 @@ Templates reach the CMS through one class, `Sunrice\Cms\Content` (`@api`), alias
 | `Cms::site()` | Settings → Site (`Sunrice\Cms\Settings\SiteSettings`): `name()`, `title('About')` ("About \| Acme"), `hidden()` (the whole site hidden from search engines), `twitterHandle()`, and its properties (`description`, `image` (a media id), `separator` …). |
 | `Cms::resolveTemplateUsing(Closure(Page): ?string $hook)` | In a service provider's `boot()`: choose the view of the CMS's pages. See [Hooks](site.md#hooks). |
 | `Cms::bodyClassUsing(Closure(Page): array $hook)` | In a service provider's `boot()`: add body classes. |
+| `Cms::entryLinksUsing(Closure(EntryTranslation, Authorizable): array $hook)` | In a plugin's `boot()`: add links to the ⋮ menu of an entry's page in the panel. See [Links from plugins](collections.md#links-from-plugins). |
 
 ```blade
 <body @bodyClass('dark')>

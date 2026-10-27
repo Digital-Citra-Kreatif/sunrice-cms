@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Sunrice\Cms;
 
 use Closure;
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Sunrice\Admin\Media\Media;
+use Sunrice\Cms\Admin\EntryLinks;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Query\EntryQuery;
@@ -123,6 +125,24 @@ final class Content
     public static function bodyClassUsing(Closure $hook): void
     {
         app(SiteHooks::class)->bodyClassUsing($hook);
+    }
+
+    /**
+     * Add links to the ⋮ menu of an entry's page in the panel, for a
+     * plugin's own screen about that entry: the hook gets the entry in the
+     * language being edited and who is looking, and returns the links they
+     * may follow, each a `label` and an `href` (a path or an http(s)
+     * address; anything else is left out). Hooks run in the order
+     * registered, each time the page is opened.
+     *
+     *     Cms::entryLinksUsing(fn (EntryTranslation $entry, Authorizable $user): array =>
+     *         $user->can('shop.products.view') ? [['label' => 'Sales', 'href' => '/admin/shop/sales?entry='.$entry->entry_id]] : []);
+     *
+     * @param  Closure(EntryTranslation, Authorizable): iterable<array{label: string, href: string}>  $hook
+     */
+    public static function entryLinksUsing(Closure $hook): void
+    {
+        app(EntryLinks::class)->add($hook);
     }
 
     /** Settings → Site: name(), description, title(…), hidden() … */

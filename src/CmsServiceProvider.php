@@ -80,6 +80,7 @@ final class CmsServiceProvider extends ServiceProvider
         $this->app->scoped(Settings\CacheSettings::class);
         $this->app->singleton(Site\PageCache::class);
         $this->app->singleton(Site\SiteHooks::class);
+        $this->app->singleton(Admin\EntryLinks::class);
         // Indonesian for Laravel's own lines the app hasn't got, read as they're needed.
         $this->app->extend('translation.loader', fn (Loader $loader, Application $app): Loader => Support\CoreTranslations::loader($loader, $app->make(Filesystem::class)));
     }

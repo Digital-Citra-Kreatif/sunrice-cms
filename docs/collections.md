@@ -106,6 +106,19 @@ Media fields use the media library's picker, which needs `sunrice.media.view` (a
 
 Rich text fields have a formatting toolbar: headings, bold, italic, underline, strikethrough, code, lists, quotes, dividers, links (web addresses, paths on the site, mailto: and tel:; others are refused) and images from the media library, which keep their library id. The server cleans the HTML again when saving.
 
+### Links from plugins
+
+A plugin with a screen of its own about an entry (a page designer, a product's sales) adds it to the ⋮ menu of the entry's page with `Cms::entryLinksUsing()` (`Sunrice\Cms\Content`, `@api`), in its plugin's `boot()`. The hook gets the entry in the language being edited (an `EntryTranslation`) and who is looking, and returns the links that person may follow, each a `label` and an `href`: a path or an `http(s)://` address, anything else is left out. The page the link opens checks permissions itself, as every route does.
+
+```php
+public function boot(Panel $panel): void
+{
+    Cms::entryLinksUsing(fn (EntryTranslation $entry, Authorizable $user): array => $user->can('shop.products.view')
+        ? [['label' => 'Sales', 'href' => route('sunrice.admin.shop.sales', ['entry' => $entry->entry_id])]]
+        : []);
+}
+```
+
 ## The entries list
 
 Each collection's list (`EntryController::index`, built by `Sunrice\Cms\Admin\EntryList`) shows the entries of one language, 25 to a page, and keeps everything it shows in the address, so a list can be bookmarked or shared:

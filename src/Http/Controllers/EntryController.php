@@ -36,6 +36,7 @@ use Sunrice\Cms\Actions\Entries\SetHomepage;
 use Sunrice\Cms\Actions\Entries\TrashEntry;
 use Sunrice\Cms\Actions\Entries\UnpublishEntry;
 use Sunrice\Cms\Actions\Entries\WithdrawReview;
+use Sunrice\Cms\Admin\EntryLinks;
 use Sunrice\Cms\Admin\EntryList;
 use Sunrice\Cms\Admin\RevisionList;
 use Sunrice\Cms\Admin\TemplateHelp;
@@ -485,6 +486,8 @@ final class EntryController
             'machineTranslate' => ! $translation->isMain() && app(TranslatorFactory::class)->configured() ? $translation->id : null,
             // Another language without it set up: say it exists, and what it needs.
             'machineTranslateMissing' => ! $translation->isMain() && ! app(TranslatorFactory::class)->configured(),
+            // Plugins' links for the ⋮ menu (Cms::entryLinksUsing()).
+            'links' => app(EntryLinks::class)->for($translation, $request->user() instanceof Authorizable ? $request->user() : null),
             'can' => self::can($request, $collection, $entry, $translation->locale) + ['terms' => $taxonomies['editable'] && ! $entry->trashed()],
         ]);
     }
