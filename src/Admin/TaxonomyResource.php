@@ -93,7 +93,8 @@ final class TaxonomyResource extends Resource
                     ->placeholder('As the title')->help(__('What visitors read in :language on its term pages.', ['language' => $language]))),
                 Select::make('blueprint')->span(2)
                     ->verbatim()->options(BlueprintChoices::options(BlueprintChoices::CONTENT))
-                    ->help('The fields its terms have, like a description or an image. Blueprints of forms and global sets aren\'t offered.'),
+                    ->help('The fields its terms have, like a description or an image. Blueprints of forms and global sets aren\'t offered.')
+                    ->links(BlueprintLinks::field('blueprint')),
                 Toggle::make('hierarchical')->label('Nested terms')->span(2)->help('Terms can sit under other terms, like subcategories.'),
             ]),
             // Like the collection form's Taxonomies: which collections, and each one's own settings under it.
@@ -164,10 +165,7 @@ final class TaxonomyResource extends Resource
                     Select::make('index_blueprint')->label('Index page blueprint')->span(2)->placeholder('None (no editable fields)')
                         ->verbatim()->options(BlueprintChoices::options(BlueprintChoices::CONTENT, 'index_blueprint'))
                         ->help('Gives its index pages (the shared one, and each collection\'s) their own fields, such as an intro. Editors fill them in under Terms → ⋮ → Index page.')
-                        ->links([
-                            Link::make('Create blueprint', route('sunrice.admin.cms.blueprints.create', [], false))->showUnless('index_blueprint'),
-                            Link::make('Edit', route('sunrice.admin.cms.blueprints.index', [], false).'/{index_blueprint}/edit')->showWhen('index_blueprint'),
-                        ]),
+                        ->links(BlueprintLinks::field('index_blueprint')),
                     TemplateHelp::select('index_template', 'cms.tag-cloud', 'For its index pages, the shared one and each collection\'s. Automatic: the first template that exists.', fn (Model $taxonomy): array => $taxonomy instanceof Taxonomy ? TemplateLookup::index($taxonomy, null) : [])
                         ->label('Index page template')->span(2)
                         ->helpDetails('Which file?', TemplateHelp::files(['cms.taxonomies.{handle}.index', 'cms.taxonomies.index'], 'cms.tag-cloud')."\n".__('In a collection, :file is tried first.', ['file' => '`cms/collections/{collection}/{handle}/index.blade.php`'])),

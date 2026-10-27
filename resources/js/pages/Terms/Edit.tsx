@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
-import { ExternalLink, LoaderCircle } from 'lucide-react';
+import { ExternalLink, LayoutTemplate, LoaderCircle } from 'lucide-react';
 import { adminUrl, t } from '@imajiner/admin-sdk';
 import {
     Button, CollapsibleCard, Input, KeptEditsNotice, Label, LanguageTabs, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -41,6 +41,8 @@ interface Props {
     terms?: { id: number; title: string; depth: number }[];
     /** Where to add a redirect by hand, for those who may. */
     redirectsUrl?: string | null;
+    /** Its terms' blueprint's editor, when the user may edit blueprints. */
+    blueprint?: string | null;
     /** The views tried for its page, in order, and which exist. */
     templates?: TemplateLookup | null;
     /** The views to pick a template from: loaded when the Template choice first opens. */
@@ -68,7 +70,7 @@ export default function TermEditPage(props: Props) {
 }
 
 /** One editor for a term, new or not: title, slug, where it sits, its fields, SEO and template, in a language. */
-function TermEdit({ taxonomy, term, parentId = null, terms = [], translated, fields, locale, locales, shared, sharedValues, values, seo, version, usedBy = [], redirectsUrl = null, templates = null, templateChoices }: Props) {
+function TermEdit({ taxonomy, term, parentId = null, terms = [], translated, fields, locale, locales, shared, sharedValues, values, seo, version, usedBy = [], redirectsUrl = null, blueprint = null, templates = null, templateChoices }: Props) {
     const list = adminUrl(`cms/taxonomies/${taxonomy.handle}/terms`);
     const url = term ? adminUrl(`cms/terms/${term.id}/content`) : list;
     const heading = term ? term.title : t('New term');
@@ -112,6 +114,7 @@ function TermEdit({ taxonomy, term, parentId = null, terms = [], translated, fie
             <PageHeader
                 title={heading}
                 back={{ href: `${list}?locale=${locale}`, label: t('Back to :title', { title: taxonomy.title }) }}
+                menu={blueprint ? [{ label: t('Edit blueprint'), href: blueprint, icon: <LayoutTemplate /> }] : []}
                 actions={
                     <>
                         {term?.url && <Button type="button" variant="ghost" asChild><a href={term.url} target="_blank" rel="noopener noreferrer"><ExternalLink /> {t('View page')}</a></Button>}

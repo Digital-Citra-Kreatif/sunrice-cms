@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Sunrice\Cms\Actions\Globals\SaveGlobals;
+use Sunrice\Cms\Admin\BlueprintLinks;
 use Sunrice\Cms\Admin\GlobalSetResource;
 use Sunrice\Cms\Models\GlobalSet;
 use Sunrice\Cms\Support\Locales;
@@ -42,6 +43,8 @@ final class GlobalsController
             'can' => ['update' => $request->user()?->can('cms.globals.update') ?? false],
             // Its title, handle and fields: for those who may configure sets, not editors.
             'settings' => GlobalSetResource::configures($request->user()) ? route('sunrice.admin.cms.globals.edit', $set->handle) : null,
+            // Its blueprint, for those who may edit blueprints.
+            'blueprint' => BlueprintLinks::url($request->user(), $set->blueprint),
         ]);
     }
 

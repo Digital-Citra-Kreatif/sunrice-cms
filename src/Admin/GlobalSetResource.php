@@ -106,7 +106,8 @@ final class GlobalSetResource extends Resource
             ...HandleField::make('global', 'A short name for this global set, used by the site\'s templates.'),
             Select::make('blueprint')
                 ->verbatim()->options(BlueprintChoices::options(BlueprintChoices::GLOBAL))
-                ->help('Its fields.'),
+                ->help('Its fields.')
+                ->links(BlueprintLinks::field('blueprint')),
         ]);
     }
 

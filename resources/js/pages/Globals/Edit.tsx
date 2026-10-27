@@ -1,5 +1,5 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import { LoaderCircle, Settings2 } from 'lucide-react';
+import { LayoutTemplate, LoaderCircle, Settings2 } from 'lucide-react';
 import { adminUrl, t } from '@imajiner/admin-sdk';
 import { Button, KeptEditsNotice, LanguageTabs, PageHeader, useBreadcrumbs, useEditLock, useUnsavedChanges, ViewingNotice } from '@imajiner/admin-sdk/ui';
 import { FieldSections } from '@/components/FieldSections.tsx';
@@ -27,6 +27,8 @@ interface Props {
     can: { update: boolean };
     /** Its title, handle and fields (the set's resource), when the user may change them. */
     settings?: string | null;
+    /** Its blueprint's editor, when the user may edit blueprints. */
+    blueprint?: string | null;
 }
 
 export default function GlobalsEditPage(props: Props) {
@@ -34,7 +36,7 @@ export default function GlobalsEditPage(props: Props) {
     return <GlobalsEdit key={`${props.locale}:${props.version}:${JSON.stringify(props.values)}`} {...props} />;
 }
 
-function GlobalsEdit({ set, fields, locale, locales, shared, values, version, can, settings }: Props) {
+function GlobalsEdit({ set, fields, locale, locales, shared, values, version, can, settings = null, blueprint = null }: Props) {
     const url = adminUrl(`cms/globals/${set.handle}/values`);
     useBreadcrumbs([{ label: t('Globals'), href: adminUrl('cms/globals') }, { label: set.title }]);
     const form = useForm<{ locale: string; data: FieldValues; version: number | null }>({ locale, data: values, version });
@@ -67,7 +69,10 @@ function GlobalsEdit({ set, fields, locale, locales, shared, values, version, ca
             {lock.dialogs}
             <PageHeader
                 title={set.title}
-                menu={settings ? [{ label: t('Settings'), href: settings, icon: <Settings2 /> }] : []}
+                menu={[
+                    ...(settings ? [{ label: t('Settings'), href: settings, icon: <Settings2 /> }] : []),
+                    ...(blueprint ? [{ label: t('Edit blueprint'), href: blueprint, icon: <LayoutTemplate /> }] : []),
+                ]}
                 back={{ href: adminUrl('cms/globals'), label: t('Back to globals') }}
                 actions={
                     <>

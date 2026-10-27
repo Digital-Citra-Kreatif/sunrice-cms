@@ -14,6 +14,7 @@ use Sunrice\Admin\Security\SecurityLog;
 use Sunrice\Admin\Support\Csv;
 use Sunrice\Cms\Actions\Forms\DeleteSubmission;
 use Sunrice\Cms\Actions\Forms\SubmitForm;
+use Sunrice\Cms\Admin\BlueprintLinks;
 use Sunrice\Cms\Mail\SubmissionRows;
 use Sunrice\Cms\Models\Form;
 use Sunrice\Cms\Models\Submission;
@@ -63,6 +64,8 @@ final class SubmissionController
                 ->map(fn (Form $f): array => ['handle' => $f->handle, 'title' => $f->title, 'count' => $f->submissions_count])->all(),
             'submissions' => $submissions,
             'can' => ['delete' => Access::submissions($request->user(), 'delete', $form), 'export' => Access::submissions($request->user(), 'export', $form)],
+            // The form's blueprint (its fields), for those who may edit blueprints.
+            'blueprint' => BlueprintLinks::url($request->user(), $form->blueprint),
         ]);
     }
 

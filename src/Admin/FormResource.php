@@ -66,7 +66,8 @@ final class FormResource extends Resource
                 ...HandleField::make('form', 'A short name for this form, used by the site\'s templates.'),
                 Select::make('blueprint')->required()
                     ->verbatim()->options(BlueprintChoices::options(BlueprintChoices::FORM))
-                    ->help('Its fields. Visitors see the text, textarea, number, toggle, select, date and file ones.'),
+                    ->help('Its fields. Visitors see the text, textarea, number, toggle, select, date and file ones.')
+                    ->links(BlueprintLinks::field('blueprint')),
             ]),
             Section::make('Notifications')->description('Who hears about each submission. Every one is kept under Content → Submissions too.')->schema([
                 ListInput::make('notify')->label('Email to')->emails()->addLabel('Add address')->max(self::MAX_NOTIFY)->maxLength(2000)

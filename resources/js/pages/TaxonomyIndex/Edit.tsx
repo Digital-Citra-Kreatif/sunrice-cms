@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { Settings2 } from 'lucide-react';
+import { LayoutTemplate, Settings2 } from 'lucide-react';
 import { adminUrl, t } from '@imajiner/admin-sdk';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@imajiner/admin-sdk/ui';
 import { PageValuesForm, type PageValuesProps } from '@/components/PageValuesForm.tsx';
@@ -14,12 +14,14 @@ interface Props extends PageValuesProps {
     pages: { collection: string | null; title: string }[];
     /** The taxonomy's settings, when the user may change them (the back link, breadcrumbs and menu). */
     settings?: string | null;
+    /** Its index page blueprint's editor, when the user may edit blueprints. */
+    blueprint?: string | null;
 }
 
 const SHARED = '__shared';
 
 /** A taxonomy index page's fields and SEO (the shared one, or a collection's), per language. */
-export default function TaxonomyIndexPage({ taxonomy, collection, url, pages, settings, ...props }: Props) {
+export default function TaxonomyIndexPage({ taxonomy, collection, url, pages, settings = null, blueprint = null, ...props }: Props) {
     // Back to the taxonomy's settings, where its index pages are set up; for those who can't change them, its terms.
     const back = settings ?? adminUrl(`cms/taxonomies/${taxonomy.handle}/terms`);
     const editUrl = adminUrl(`cms/taxonomies/${taxonomy.handle}/index-page/edit`);
@@ -42,7 +44,10 @@ export default function TaxonomyIndexPage({ taxonomy, collection, url, pages, se
             seoDescription={t('How the index page appears in search results and shared links.')}
             storageKey="cms:taxonomy-index:seo"
             templateHelp={t('For all of :taxonomy\'s index pages, the shared one and each collection\'s, in every language; also under Structure → Taxonomies. Automatic uses the first file that exists.', { taxonomy: taxonomy.title })}
-            menu={settings ? [{ label: t('Taxonomy settings'), href: settings, icon: <Settings2 /> }] : []}
+            menu={[
+                ...(settings ? [{ label: t('Taxonomy settings'), href: settings, icon: <Settings2 /> }] : []),
+                ...(blueprint ? [{ label: t('Edit blueprint'), href: blueprint, icon: <LayoutTemplate /> }] : []),
+            ]}
         >
             {pages.length > 1 && (
                 <Select value={collection?.handle ?? SHARED} onValueChange={(next: string) => router.get(editUrl, { ...(next === SHARED ? {} : { collection: next }), locale: props.locale })}>

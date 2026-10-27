@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight, Download, Inbox, Plus, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, Inbox, LayoutTemplate, Plus, Trash2 } from 'lucide-react';
 import { adminUrl, t } from '@imajiner/admin-sdk';
 import {
     Button, Card, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, PageHeader, Select, SelectContent, SelectItem,
@@ -25,12 +25,14 @@ interface Props {
     can: { delete: boolean; export: boolean };
     /** No forms yet: where to create one (for those who may). */
     createForm?: string | null;
+    /** The form's blueprint (its fields), when the user may edit blueprints. */
+    blueprint?: string | null;
 }
 
 /** Columns the list shows; the rest are in the submission's dialog. */
 const COLUMNS = 3;
 
-export default function SubmissionsIndex({ form, forms, submissions, can, createForm = null }: Props) {
+export default function SubmissionsIndex({ form, forms, submissions, can, createForm = null, blueprint = null }: Props) {
     useBreadcrumbs([{ label: t('Submissions'), href: adminUrl('cms/submissions') }, ...(form ? [{ label: form.title }] : [])]);
     const [open, setOpen] = React.useState<Row | null>(null);
     const [confirm, confirmDialog] = useConfirm();
@@ -63,7 +65,10 @@ export default function SubmissionsIndex({ form, forms, submissions, can, create
             <Head title={t(':form submissions', { form: form.title })} />
             <PageHeader
                 title={form.title}
-                menu={submissions.total > 0 && can.export ? [{ label: t('Export CSV'), href: adminUrl(`cms/forms/${form.handle}/submissions/export`), download: true, icon: <Download /> }] : []}
+                menu={[
+                    ...(submissions.total > 0 && can.export ? [{ label: t('Export CSV'), href: adminUrl(`cms/forms/${form.handle}/submissions/export`), download: true, icon: <Download /> }] : []),
+                    ...(blueprint ? [{ label: t('Edit blueprint'), href: blueprint, icon: <LayoutTemplate /> }] : []),
+                ]}
             >
                 {forms.length > 1 && (
                     <Select value={form.handle} onValueChange={(handle: string) => router.get(adminUrl(`cms/forms/${handle}/submissions`))}>

@@ -36,6 +36,7 @@ use Sunrice\Cms\Actions\Entries\SetHomepage;
 use Sunrice\Cms\Actions\Entries\TrashEntry;
 use Sunrice\Cms\Actions\Entries\UnpublishEntry;
 use Sunrice\Cms\Actions\Entries\WithdrawReview;
+use Sunrice\Cms\Admin\BlueprintLinks;
 use Sunrice\Cms\Admin\EntryLinks;
 use Sunrice\Cms\Admin\EntryList;
 use Sunrice\Cms\Admin\RevisionList;
@@ -459,7 +460,7 @@ final class EntryController
             // The blueprints it may use, when there's a choice (Page settings).
             'blueprints' => self::blueprints($collection),
             // Its blueprint's editor, for those who may edit blueprints (the ⋮ menu's "Edit blueprint").
-            'blueprintUrl' => EntryList::blueprintLinks($request->user() instanceof Authorizable ? $request->user() : null, array_filter([$entry->blueprintHandle()]))[0]['href'] ?? null,
+            'blueprintUrl' => BlueprintLinks::url($request->user(), $entry->blueprintHandle()),
             // Whether it's the site's homepage, whether this user may make it so (a page
             // of a collection whose entries can be: SetHomepage::offers()), and the
             // current homepage's title, for the confirmation.

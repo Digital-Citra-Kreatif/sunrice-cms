@@ -1,34 +1,35 @@
-import { j as e, a as $, t as i, r as j, l as x, h as A } from "./admin-DnUS3JhT.js";
+import { j as e, a as S, t as i, r as j, l as x, h as B } from "./admin-t_knV6mj.js";
 import { u as l } from "./ui-Dh5wfMwT.js";
-import { F as v } from "./FieldError-0lRA6b_a.js";
-import { A as B, b as P, h as H, B as M } from "./FieldInput-rGeU_i8L.js";
-import { l as q, F as G } from "./languages-C7LCqnet.js";
-import { S as J } from "./SlugNote-CEgR3_wn.js";
-import { s as R, T as z, w as Q } from "./seo-B9JkCgun.js";
-import { V as W } from "./VersionConflict-BHxwc6ZP.js";
-import { U as X } from "./UnsavedNote-D4w1iX8O.js";
-import { E as Y } from "./external-link-CFxEu4M4.js";
-import { L as Z } from "./loader-circle-ByksABXO.js";
+import { F as v } from "./FieldError-C0Q5-K3p.js";
+import { A as P, b as H, h as M, B as q } from "./FieldInput-CRF9KNlW.js";
+import { l as G, F as J } from "./languages-DnUzuT28.js";
+import { S as R } from "./SlugNote-S_ZJad_4.js";
+import { s as z, T as Q, w as W } from "./seo-wuxqGCqx.js";
+import { V as X } from "./VersionConflict-DbEl8z7Z.js";
+import { U as Y } from "./UnsavedNote-B_2OIytV.js";
+import { E as Z } from "./external-link-CFxEu4M4.js";
+import { L as ee } from "./loader-circle-ByksABXO.js";
+import { L as se } from "./layout-template-RwJXNfEY.js";
 const b = "__top";
-function ge(r) {
-  return /* @__PURE__ */ e.jsx(ee, { ...r }, `${r.term?.id ?? "new"}:${r.locale}:${r.version}:${JSON.stringify([r.values, r.seo, r.term?.template, r.parentId])}`);
+function xe(r) {
+  return /* @__PURE__ */ e.jsx(ae, { ...r }, `${r.term?.id ?? "new"}:${r.locale}:${r.version}:${JSON.stringify([r.values, r.seo, r.term?.template, r.parentId])}`);
 }
-function ee({ taxonomy: r, term: t, parentId: S = null, terms: T = [], translated: N, fields: k, locale: m, locales: u, shared: E, sharedValues: F, values: L, seo: _, version: D, usedBy: C = [], redirectsUrl: K = null, templates: V = null, templateChoices: I }) {
-  const g = $(`cms/taxonomies/${r.handle}/terms`), f = t ? $(`cms/terms/${t.id}/content`) : g, w = t ? t.title : i("New term");
-  l.useBreadcrumbs([{ label: r.title, href: `${g}?locale=${m}` }, { label: w }]);
+function ae({ taxonomy: r, term: t, parentId: T = null, terms: k = [], translated: N, fields: L, locale: m, locales: u, shared: E, sharedValues: F, values: _, seo: D, version: K, usedBy: C = [], redirectsUrl: V = null, blueprint: w = null, templates: I = null, templateChoices: O }) {
+  const g = S(`cms/taxonomies/${r.handle}/terms`), f = t ? S(`cms/terms/${t.id}/content`) : g, y = t ? t.title : i("New term");
+  l.useBreadcrumbs([{ label: r.title, href: `${g}?locale=${m}` }, { label: y }]);
   const a = j.useForm({
     locale: m,
     title: t?.ownTitle ?? "",
     slug: t?.slug ?? "",
-    parent_id: S,
-    data: L,
-    seo: _ ?? {},
+    parent_id: T,
+    data: _,
+    seo: D ?? {},
     template: t?.template ?? "",
-    version: D
+    version: K
   }), n = a.errors, p = (s) => {
-    const c = M(n, s);
+    const c = q(n, s);
     c.length > 0 && a.clearErrors(...c);
-  }, y = () => a.processing || (t ? a.put(f, { preserveScroll: !0 }) : a.post(f)), O = () => {
+  }, $ = () => a.processing || (t ? a.put(f, { preserveScroll: !0 }) : a.post(f)), U = () => {
     a.transform((s) => ({ ...s, version: null })), a.put(f, { preserveScroll: !0 });
   }, d = l.useEditLock({
     type: "cms.term",
@@ -38,7 +39,7 @@ function ee({ taxonomy: r, term: t, parentId: S = null, terms: T = [], translate
     noun: i("term"),
     leaveTo: `${g}?locale=${m}`,
     getUnsaved: () => a.isDirty ? { data: a.data.data, seo: a.data.seo, template: a.data.template } : null
-  }), o = !d.readOnly, U = async (s) => {
+  }), o = !d.readOnly, A = async (s) => {
     const c = await d.loadKept(s);
     a.setData((h) => ({
       ...h,
@@ -47,29 +48,30 @@ function ee({ taxonomy: r, term: t, parentId: S = null, terms: T = [], translate
       template: typeof c.template == "string" ? c.template : h.template
     }));
   };
-  return l.useUnsavedChanges(a.isDirty && !d.takenOver, o ? y : void 0), /* @__PURE__ */ e.jsxs("form", { noValidate: !0, onSubmit: (s) => {
-    s.preventDefault(), y();
+  return l.useUnsavedChanges(a.isDirty && !d.takenOver, o ? $ : void 0), /* @__PURE__ */ e.jsxs("form", { noValidate: !0, onSubmit: (s) => {
+    s.preventDefault(), $();
   }, className: "cms:flex cms:flex-col cms:gap-6", children: [
     /* @__PURE__ */ e.jsx(j.Head, { title: t ? t.title : i("New term · :taxonomy", { taxonomy: r.title }) }),
     d.dialogs,
     /* @__PURE__ */ e.jsx(
       l.PageHeader,
       {
-        title: w,
+        title: y,
         back: { href: `${g}?locale=${m}`, label: i("Back to :title", { title: r.title }) },
+        menu: w ? [{ label: i("Edit blueprint"), href: w, icon: /* @__PURE__ */ e.jsx(se, {}) }] : [],
         actions: /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
           t?.url && /* @__PURE__ */ e.jsx(l.Button, { type: "button", variant: "ghost", asChild: !0, children: /* @__PURE__ */ e.jsxs("a", { href: t.url, target: "_blank", rel: "noopener noreferrer", children: [
-            /* @__PURE__ */ e.jsx(Y, {}),
+            /* @__PURE__ */ e.jsx(Z, {}),
             " ",
             i("View page")
           ] }) }),
           o && /* @__PURE__ */ e.jsxs(l.Button, { type: "submit", disabled: a.processing, children: [
-            a.processing && /* @__PURE__ */ e.jsx(Z, { className: "cms:animate-spin" }),
+            a.processing && /* @__PURE__ */ e.jsx(ee, { className: "cms:animate-spin" }),
             " ",
             t ? i("Save") : i("Create term")
           ] })
         ] }),
-        children: /* @__PURE__ */ e.jsx(X, { dirty: a.isDirty })
+        children: /* @__PURE__ */ e.jsx(Y, { dirty: a.isDirty })
       }
     ),
     /* @__PURE__ */ e.jsxs("div", { className: "cms:grid cms:items-start cms:gap-6 cms:lg:grid-cols-[minmax(0,1fr)_20rem]", children: [
@@ -78,7 +80,7 @@ function ee({ taxonomy: r, term: t, parentId: S = null, terms: T = [], translate
           l.LanguageTabs,
           {
             value: m,
-            languages: q(u, t ? t.translatedIn ?? null : [m], x),
+            languages: G(u, t ? t.translatedIn ?? null : [m], x),
             onValueChange: (s) => j.router.get(t ? `${g}/${t.id}/edit` : `${g}/create`, { locale: s, ...t === null && a.data.parent_id !== null ? { parent: a.data.parent_id } : {} })
           }
         ),
@@ -121,7 +123,7 @@ function ee({ taxonomy: r, term: t, parentId: S = null, terms: T = [], translate
                 }
               }
             ),
-            /* @__PURE__ */ e.jsx(J, { note: A(t?.hasPage ? t.slug : null, a.data.slug, !1), redirectsUrl: K }),
+            /* @__PURE__ */ e.jsx(R, { note: B(t?.hasPage ? t.slug : null, a.data.slug, !1), redirectsUrl: V }),
             /* @__PURE__ */ e.jsx(v, { message: n.slug })
           ] }),
           r.hierarchical && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-2 cms:sm:col-span-2", children: [
@@ -137,7 +139,7 @@ function ee({ taxonomy: r, term: t, parentId: S = null, terms: T = [], translate
                   /* @__PURE__ */ e.jsx(l.SelectTrigger, { id: "term-parent", className: "cms:sm:w-1/2", "aria-invalid": n.parent_id !== void 0, children: /* @__PURE__ */ e.jsx(l.SelectValue, {}) }),
                   /* @__PURE__ */ e.jsxs(l.SelectContent, { children: [
                     /* @__PURE__ */ e.jsx(l.SelectItem, { value: b, children: i("Top level") }),
-                    T.map((s) => /* @__PURE__ */ e.jsxs(l.SelectItem, { value: String(s.id), children: [
+                    k.map((s) => /* @__PURE__ */ e.jsxs(l.SelectItem, { value: String(s.id), children: [
                       "— ".repeat(s.depth),
                       s.title
                     ] }, s.id))
@@ -149,16 +151,16 @@ function ee({ taxonomy: r, term: t, parentId: S = null, terms: T = [], translate
           ] })
         ] }),
         /* @__PURE__ */ e.jsx(l.KeptEditsNotice, { kept: d.kept, disabled: !o, onLoad: (s) => {
-          U(s);
+          A(s);
         }, onDiscard: (s) => {
           d.discardKept(s);
         } }),
-        /* @__PURE__ */ e.jsx(W, { message: n.version, processing: a.processing, onSaveMine: O }),
+        /* @__PURE__ */ e.jsx(X, { message: n.version, processing: a.processing, onSaveMine: U }),
         /* @__PURE__ */ e.jsx(
-          G,
+          J,
           {
             disabled: !o,
-            fields: k,
+            fields: L,
             values: a.data.data,
             errors: n,
             storageKey: `cms:term:${r.handle}`,
@@ -170,7 +172,7 @@ function ee({ taxonomy: r, term: t, parentId: S = null, terms: T = [], translate
             }
           }
         ),
-        /* @__PURE__ */ e.jsx(l.CollapsibleCard, { title: i("SEO"), description: i("How this term's page appears in search results and shared links."), titleClassName: "cms:text-base", storageKey: "cms:term:seo", hasErrors: H(n, "seo"), children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !o, className: "cms:min-w-0", children: /* @__PURE__ */ e.jsx(B, { bare: !0, id: "seo", fields: R(), value: a.data.seo, errors: P(n, "seo"), onChange: (s) => {
+        /* @__PURE__ */ e.jsx(l.CollapsibleCard, { title: i("SEO"), description: i("How this term's page appears in search results and shared links."), titleClassName: "cms:text-base", storageKey: "cms:term:seo", hasErrors: M(n, "seo"), children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !o, className: "cms:min-w-0", children: /* @__PURE__ */ e.jsx(P, { bare: !0, id: "seo", fields: z(), value: a.data.seo, errors: H(n, "seo"), onChange: (s) => {
           a.setData("seo", s), p("seo");
         } }) }) })
       ] }),
@@ -184,12 +186,12 @@ function ee({ taxonomy: r, term: t, parentId: S = null, terms: T = [], translate
             hasErrors: n.template !== void 0,
             contentClassName: "cms:flex cms:flex-col cms:gap-2",
             children: /* @__PURE__ */ e.jsx("fieldset", { disabled: !o, className: "cms:flex cms:min-w-0 cms:flex-col cms:gap-2", children: /* @__PURE__ */ e.jsx(
-              z,
+              Q,
               {
                 id: "template",
                 value: a.data.template,
                 onChange: (s) => a.setData("template", s),
-                lookup: Q(V, I),
+                lookup: W(I, O),
                 example: `cms.${r.handle}-special`,
                 automatic: i("Automatic uses the taxonomy's template."),
                 error: n.template,
@@ -210,5 +212,5 @@ function ee({ taxonomy: r, term: t, parentId: S = null, terms: T = [], translate
   ] });
 }
 export {
-  ge as default
+  xe as default
 };

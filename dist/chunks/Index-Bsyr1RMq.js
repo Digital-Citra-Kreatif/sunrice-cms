@@ -1,12 +1,13 @@
-import { a as i, t, j as e, r as o, f as p } from "./admin-DnUS3JhT.js";
-import { c as b, _ as C } from "./createLucideIcon-Ccbp7F45.js";
+import { a as i, t, j as e, r as o, f } from "./admin-t_knV6mj.js";
+import { c as C, _ as w } from "./createLucideIcon-Ccbp7F45.js";
 import { u as l } from "./ui-Dh5wfMwT.js";
-import { u as w, T as S } from "./Confirm-B8nvQo5-.js";
-import { P as _ } from "./plus-COqahUZ2.js";
-import { D as T } from "./download-DA5N5mq4.js";
-import { C as y } from "./chevron-left-usCQl1qw.js";
-import { C as D } from "./chevron-right-9qVV6b-Q.js";
-const f = {
+import { u as S, T as _ } from "./Confirm-C0rNMqlH.js";
+import { P as T } from "./plus-COqahUZ2.js";
+import { D as y } from "./download-DA5N5mq4.js";
+import { L as D } from "./layout-template-RwJXNfEY.js";
+import { C as k } from "./chevron-left-usCQl1qw.js";
+import { C as H } from "./chevron-right-9qVV6b-Q.js";
+const j = {
   name: "inbox",
   size: 24,
   node: [
@@ -20,29 +21,29 @@ const f = {
     ]
   ]
 };
-f.node;
-const k = b(f), H = 3;
-function U({ form: n, forms: h, submissions: a, can: u, createForm: m = null }) {
+j.node;
+const B = C(j), P = 3;
+function E({ form: n, forms: h, submissions: a, can: u, createForm: m = null, blueprint: p = null }) {
   l.useBreadcrumbs([{ label: t("Submissions"), href: i("cms/submissions") }, ...n ? [{ label: n.title }] : []]);
-  const [r, d] = C.useState(null), [j, g] = w();
+  const [r, d] = w.useState(null), [g, v] = S();
   if (!n || !a)
     return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-4", children: [
       /* @__PURE__ */ e.jsx(o.Head, { title: t("Submissions") }),
       /* @__PURE__ */ e.jsx(l.PageHeader, { title: t("Submissions"), description: t("What visitors send through the site's forms.") }),
       /* @__PURE__ */ e.jsxs(l.Card, { className: "cms:flex cms:flex-col cms:items-center cms:gap-3 cms:px-6 cms:py-14 cms:text-center", children: [
-        /* @__PURE__ */ e.jsx(k, { className: "cms:size-8 cms:text-muted-foreground" }),
+        /* @__PURE__ */ e.jsx(B, { className: "cms:size-8 cms:text-muted-foreground" }),
         /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-1", children: [
           /* @__PURE__ */ e.jsx("p", { className: "cms:font-medium", children: t("No forms yet") }),
           /* @__PURE__ */ e.jsx("p", { className: "cms:max-w-sm cms:text-sm cms:text-muted-foreground", children: m ? t("Create a form, put it on a page, and what visitors send shows up here.") : t("Once someone creates a form and puts it on a page, what visitors send shows up here.") })
         ] }),
         m && /* @__PURE__ */ e.jsx(l.Button, { asChild: !0, children: /* @__PURE__ */ e.jsxs(o.Link, { href: m, children: [
-          /* @__PURE__ */ e.jsx(_, {}),
+          /* @__PURE__ */ e.jsx(T, {}),
           " ",
           t("Create a form")
         ] }) })
       ] })
     ] });
-  const x = (a.data[0]?.rows ?? []).slice(0, H), v = (s) => j(
+  const x = (a.data[0]?.rows ?? []).slice(0, P), N = (s) => g(
     t("Permanently delete this submission? It can't be restored."),
     () => o.router.delete(i(`cms/submissions/${s.id}`), { preserveScroll: !0, onSuccess: () => d(null) })
   );
@@ -52,7 +53,10 @@ function U({ form: n, forms: h, submissions: a, can: u, createForm: m = null }) 
       l.PageHeader,
       {
         title: n.title,
-        menu: a.total > 0 && u.export ? [{ label: t("Export CSV"), href: i(`cms/forms/${n.handle}/submissions/export`), download: !0, icon: /* @__PURE__ */ e.jsx(T, {}) }] : [],
+        menu: [
+          ...a.total > 0 && u.export ? [{ label: t("Export CSV"), href: i(`cms/forms/${n.handle}/submissions/export`), download: !0, icon: /* @__PURE__ */ e.jsx(y, {}) }] : [],
+          ...p ? [{ label: t("Edit blueprint"), href: p, icon: /* @__PURE__ */ e.jsx(D, {}) }] : []
+        ],
         children: h.length > 1 && /* @__PURE__ */ e.jsxs(l.Select, { value: n.handle, onValueChange: (s) => o.router.get(i(`cms/forms/${s}/submissions`)), children: [
           /* @__PURE__ */ e.jsx(l.SelectTrigger, { className: "cms:w-56", "aria-label": t("Form"), children: /* @__PURE__ */ e.jsx(l.SelectValue, {}) }),
           /* @__PURE__ */ e.jsx(l.SelectContent, { children: h.map((s) => /* @__PURE__ */ e.jsxs(l.SelectItem, { value: s.handle, children: [
@@ -72,8 +76,8 @@ function U({ form: n, forms: h, submissions: a, can: u, createForm: m = null }) 
       /* @__PURE__ */ e.jsxs(l.TableBody, { children: [
         a.data.length === 0 && /* @__PURE__ */ e.jsx(l.TableRow, { children: /* @__PURE__ */ e.jsx(l.TableCell, { colSpan: x.length + 1, className: "cms:py-8 cms:text-center cms:text-muted-foreground", children: t("Nothing sent yet.") }) }),
         a.data.map((s) => /* @__PURE__ */ e.jsxs(l.TableRow, { children: [
-          /* @__PURE__ */ e.jsx(l.TableCell, { className: "cms:whitespace-nowrap", children: /* @__PURE__ */ e.jsx("button", { type: "button", className: "cms:font-medium cms:hover:underline", onClick: () => d(s), children: p(s.createdAt) }) }),
-          x.map((c) => /* @__PURE__ */ e.jsx(l.TableCell, { className: "cms:max-w-64 cms:truncate", children: s.rows.find((N) => N.handle === c.handle)?.value }, c.handle))
+          /* @__PURE__ */ e.jsx(l.TableCell, { className: "cms:whitespace-nowrap", children: /* @__PURE__ */ e.jsx("button", { type: "button", className: "cms:font-medium cms:hover:underline", onClick: () => d(s), children: f(s.createdAt) }) }),
+          x.map((c) => /* @__PURE__ */ e.jsx(l.TableCell, { className: "cms:max-w-64 cms:truncate", children: s.rows.find((b) => b.handle === c.handle)?.value }, c.handle))
         ] }, s.id))
       ] })
     ] }) }),
@@ -88,7 +92,7 @@ function U({ form: n, forms: h, submissions: a, can: u, createForm: m = null }) 
             "aria-label": t("Previous page"),
             disabled: !a.prev_page_url,
             onClick: () => a.prev_page_url && o.router.get(a.prev_page_url, {}, { preserveScroll: !0 }),
-            children: /* @__PURE__ */ e.jsx(y, {})
+            children: /* @__PURE__ */ e.jsx(k, {})
           }
         ),
         /* @__PURE__ */ e.jsx(
@@ -99,7 +103,7 @@ function U({ form: n, forms: h, submissions: a, can: u, createForm: m = null }) 
             "aria-label": t("Next page"),
             disabled: !a.next_page_url,
             onClick: () => a.next_page_url && o.router.get(a.next_page_url, {}, { preserveScroll: !0 }),
-            children: /* @__PURE__ */ e.jsx(D, {})
+            children: /* @__PURE__ */ e.jsx(H, {})
           }
         )
       ] })
@@ -108,7 +112,7 @@ function U({ form: n, forms: h, submissions: a, can: u, createForm: m = null }) 
       /* @__PURE__ */ e.jsxs(l.DialogHeader, { children: [
         /* @__PURE__ */ e.jsx(l.DialogTitle, { children: n.title }),
         /* @__PURE__ */ e.jsxs(l.DialogDescription, { children: [
-          t("Sent :date", { date: p(r?.createdAt ?? null) }),
+          t("Sent :date", { date: f(r?.createdAt ?? null) }),
           " · ",
           r?.locale.toUpperCase()
         ] })
@@ -121,15 +125,15 @@ function U({ form: n, forms: h, submissions: a, can: u, createForm: m = null }) 
         /* @__PURE__ */ e.jsx("dt", { className: "cms:font-medium", children: s }),
         /* @__PURE__ */ e.jsx("dd", { className: "cms:break-all cms:text-muted-foreground", children: c })
       ] }, s)) }),
-      u.delete && r && /* @__PURE__ */ e.jsx(l.DialogFooter, { children: /* @__PURE__ */ e.jsxs(l.Button, { variant: "destructive", onClick: () => v(r), children: [
-        /* @__PURE__ */ e.jsx(S, {}),
+      u.delete && r && /* @__PURE__ */ e.jsx(l.DialogFooter, { children: /* @__PURE__ */ e.jsxs(l.Button, { variant: "destructive", onClick: () => N(r), children: [
+        /* @__PURE__ */ e.jsx(_, {}),
         " ",
         t("Delete")
       ] }) })
     ] }) }),
-    g
+    v
   ] });
 }
 export {
-  U as default
+  E as default
 };

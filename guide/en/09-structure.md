@@ -43,7 +43,7 @@ A **collection** is a kind of content: *Pages*, *Blog*, *Products*, *Events*. **
 | **Entry URL** | Where entries are on the website, with `{slug}` for each entry's slug: `/blog/{slug}`, or `/{slug}` for pages at the top. Empty: `/{handle}/{slug}`. |
 | **Entry URL in …** | With more than one language, each other language can have its own, under its prefix: `/buku/{slug}` for Indonesian gives `/id/buku/…` instead of `/id/books/…`. Empty (it shows the main URL in grey): the main URL under the language's prefix. |
 | **Template** | The design entries use, if your developer made one for it. |
-| **Has a listing page**, **Listing page URL**, **Listing page blueprint**, **Entries per page**, **Listing page template** | A page listing the entries (like `/blog`; empty: `/{handle}`), a blueprint giving it fields of its own (an introduction, a hero image; editors fill them in under the collection's entries → **Listing page**; **Create blueprint** or **Edit** next to it; *None* for no editable fields), how many entries it shows per page, and the design it uses, if your developer made one for it. **Listing page URL in …** gives each other language its own (like `/buku`, with **View on site** ↗ under it). |
+| **Has a listing page**, **Listing page URL**, **Listing page blueprint**, **Entries per page**, **Listing page template** | A page listing the entries (like `/blog`; empty: `/{handle}`), a blueprint giving it fields of its own (an introduction, a hero image; editors fill them in under the collection's entries → **Listing page**; **New blueprint →** or **Edit blueprint →** under it; *None* for no editable fields), how many entries it shows per page, and the design it uses, if your developer made one for it. **Listing page URL in …** gives each other language its own (like `/buku`, with **View on site** ↗ under it). |
 | **Allow comments** | Visitors may comment on its entries (it needs a URL). |
 | **Structured data type** | What search engines are told its entries are (an article, a web page, a real estate listing, or a person, place or product the page is about…). |
 
@@ -58,6 +58,8 @@ Each collection gets its own permissions (view, create, edit, publish, delete an
 ## Blueprints and fieldsets
 
 A **blueprint** is a list of fields: what editors fill in for a collection's entries, a taxonomy's terms, a global set or a form. A **fieldset** is a group of fields used in several blueprints (an address, a call to action). Edit them under **Structure → Blueprints** and **Fieldsets**.
+
+If your role may change blueprints, you don't need to look one up: wherever a blueprint is chosen (a collection's **Blueprint**, **Other blueprints** and **Listing page blueprint**, a taxonomy's **Blueprint** and **Index page blueprint**, a global set's or a form's **Blueprint**), **Edit blueprint →** under it opens the one chosen, and **New blueprint →** makes one while none is. Where content is edited (an entry, a term, a global set, a listing or index page, a form's submissions, and the entries and terms lists), the **⋮** menu has **Edit blueprint**.
 
 To add a field, choose its type, then set (its settings are grouped as **Basics**, **Options**, **Limits and defaults**, **Appearance**, **Visibility** and **Advanced**):
 

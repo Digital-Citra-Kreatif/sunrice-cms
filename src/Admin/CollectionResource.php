@@ -71,9 +71,11 @@ final class CollectionResource extends Resource
                 ...TranslatedFields::make('title', fn (string $name, string $language) => TextInput::make($name)->label(__('Title in :language', ['language' => $language]))->maxLength(255)
                     ->placeholder('As the title')->help(__('What visitors read in :language: the listing page, breadcrumbs, menus.', ['language' => $language]))),
                 Select::make('blueprint')->verbatim()->options(BlueprintChoices::options(BlueprintChoices::CONTENT))
-                    ->help('The fields its entries have. Blueprints of forms and global sets aren\'t offered.'),
-                CheckboxList::make('blueprints')->label('Other blueprints')->verbatim()->options(BlueprintChoices::options(BlueprintChoices::CONTENT, 'blueprints'))->span(2)
-                    ->help('Blueprints an entry can switch to in its Page settings.'),
+                    ->help('The fields its entries have. Blueprints of forms and global sets aren\'t offered.')
+                    ->links(BlueprintLinks::field('blueprint')),
+                CheckboxList::make('blueprints')->label('Other blueprints')->verbatim()->options($others = BlueprintChoices::options(BlueprintChoices::CONTENT, 'blueprints'))->span(2)
+                    ->help('Blueprints an entry can switch to in its Page settings.')
+                    ->links(BlueprintLinks::choices('blueprints', $others)),
                 Toggle::make('translatable')->label('Translatable')->default(true)->span(2)
                     ->help('Entries can have a version in each language. Off: the main language only.'),
             ]),
@@ -132,10 +134,7 @@ final class CollectionResource extends Resource
                         ->options(BlueprintChoices::options(BlueprintChoices::CONTENT, 'listing_blueprint'))->showWhen('listing')
                         ->help('Gives the listing page (:url) its own fields, such as an intro or a hero image. Editors fill them in under Entries → :collection → Listing page.')
                         ->helpValues(['url' => ['listing_route', '/{handle}'], 'collection' => ['title']])
-                        ->links([
-                            Link::make('Create blueprint', route('sunrice.admin.cms.blueprints.create', [], false))->showUnless('listing_blueprint'),
-                            Link::make('Edit', route('sunrice.admin.cms.blueprints.index', [], false).'/{listing_blueprint}/edit')->showWhen('listing_blueprint'),
-                        ]),
+                        ->links(BlueprintLinks::field('listing_blueprint')),
                     NumberInput::make('per_page')->label('Entries per page')->integer()->min(1)->max(100)->default(10)->showWhen('listing'),
                     TemplateHelp::select('listing_template', 'cms.blog-home', 'Automatic: the first template that exists.', fn (Model $collection): array => $collection instanceof Collection ? TemplateLookup::listing($collection) : [])
                         ->label('Listing page template')->span(2)->showWhen('listing')

@@ -11,6 +11,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Sunrice\Cms\Actions\Taxonomies\SaveIndexPage;
 use Sunrice\Cms\Actions\Taxonomies\SaveIndexTemplate;
+use Sunrice\Cms\Admin\BlueprintLinks;
 use Sunrice\Cms\Admin\TemplateHelp;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\CollectionTaxonomy;
@@ -79,6 +80,8 @@ final class IndexPageController
             ],
             // The taxonomy's settings (its index pages, their blueprint and template), for those who may change them: the back link, breadcrumbs and menu.
             'settings' => $request->user()?->can('cms.taxonomies.update') === true ? route('sunrice.admin.cms.taxonomies.edit', $taxonomy->handle) : null,
+            // Its index page blueprint, for those who may edit blueprints.
+            'blueprint' => BlueprintLinks::url($request->user(), $taxonomy->index_blueprint),
         ]);
     }
 

@@ -43,7 +43,7 @@ Field **Fieldset** menaruh field-field fieldset itu di tempatnya, seolah-olah mi
 | **URL entri** | Letak entri di situs web, dengan `{slug}` untuk slug setiap entri: `/blog/{slug}`, atau `/{slug}` untuk halaman di tingkat teratas. Kosong: `/{handle}/{slug}`. |
 | **URL entri dalam …** | Bila ada lebih dari satu bahasa, setiap bahasa lain bisa punya URL sendiri, di bawah awalannya: `/buku/{slug}` untuk Bahasa Indonesia menghasilkan `/id/buku/…`, bukan `/id/books/…`. Kosong (URL utama tampil samar): URL utama di bawah awalan bahasa itu. |
 | **Template entri** | Desain yang dipakai entri, jika developer membuatnya. |
-| **Punya halaman daftar**, **URL halaman daftar**, **Blueprint halaman daftar**, **Entri per halaman**, **Template halaman daftar** | Halaman yang menampilkan daftar entri (seperti `/blog`; kosong: `/{handle}`), blueprint yang memberinya field sendiri (pengantar, gambar utama; editor mengisinya di entri koleksi itu → **Halaman daftar**; **Buat blueprint** atau **Ubah** di sebelahnya; *Tidak ada* untuk tanpa field yang bisa disunting), jumlah entri per halaman, dan desain yang dipakainya, jika developer Anda membuatnya. **URL halaman daftar dalam …** memberi setiap bahasa lain URL sendiri (seperti `/buku`, dengan **Lihat di situs** ↗ di bawahnya). |
+| **Punya halaman daftar**, **URL halaman daftar**, **Blueprint halaman daftar**, **Entri per halaman**, **Template halaman daftar** | Halaman yang menampilkan daftar entri (seperti `/blog`; kosong: `/{handle}`), blueprint yang memberinya field sendiri (pengantar, gambar utama; editor mengisinya di entri koleksi itu → **Halaman daftar**; **Blueprint baru →** atau **Ubah blueprint →** di bawahnya; *Tidak ada* untuk tanpa field yang bisa disunting), jumlah entri per halaman, dan desain yang dipakainya, jika developer Anda membuatnya. **URL halaman daftar dalam …** memberi setiap bahasa lain URL sendiri (seperti `/buku`, dengan **Lihat di situs** ↗ di bawahnya). |
 | **Izinkan komentar** | Pengunjung boleh mengomentari entrinya (membutuhkan URL). |
 | **Jenis structured data** | Jenis entri yang diberitahukan ke mesin pencari (artikel, halaman web, listing properti, atau orang, tempat, atau produk yang dibahas halaman…). |
 
@@ -58,6 +58,8 @@ Setiap koleksi mendapat izinnya sendiri (melihat, membuat, menyunting, menerbitk
 ## Blueprint dan fieldset
 
 **Blueprint** adalah daftar field: apa yang diisi editor untuk entri sebuah koleksi, term sebuah taksonomi, set global, atau formulir. **Fieldset** adalah sekelompok field yang dipakai di beberapa blueprint (alamat, ajakan bertindak). Sunting di **Struktur → Blueprint** dan **Fieldset**.
+
+Jika peran Anda boleh mengubah blueprint, Anda tak perlu mencarinya: di mana pun blueprint dipilih (**Blueprint**, **Blueprint lain**, dan **Blueprint halaman daftar** sebuah koleksi, **Blueprint** dan **Blueprint halaman indeks** sebuah taksonomi, **Blueprint** set global atau formulir), **Ubah blueprint →** di bawahnya membuka blueprint yang dipilih, dan **Blueprint baru →** membuat yang baru selama belum ada yang dipilih. Di tempat konten disunting (entri, term, set global, halaman daftar atau indeks, kiriman formulir, serta daftar entri dan term), menu **⋮** punya **Ubah blueprint**.
 
 Untuk menambah field, pilih jenisnya, lalu atur (pengaturannya dikelompokkan sebagai **Dasar**, **Opsi**, **Batas dan nilai awal**, **Tampilan**, **Kapan tampil**, dan **Lanjutan**):
 

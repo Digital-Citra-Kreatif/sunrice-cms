@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Http\Controllers;
 
-use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -17,7 +16,7 @@ use Sunrice\Cms\Actions\Terms\RestoreTerm;
 use Sunrice\Cms\Actions\Terms\SaveTerm;
 use Sunrice\Cms\Actions\Terms\SaveTermContent;
 use Sunrice\Cms\Actions\Terms\TrashTerm;
-use Sunrice\Cms\Admin\EntryList;
+use Sunrice\Cms\Admin\BlueprintLinks;
 use Sunrice\Cms\Admin\TemplateHelp;
 use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Fields\Types\TermsField;
@@ -72,7 +71,7 @@ final class TermController
             'taxonomy' => ['handle' => $taxonomy->handle, 'title' => $taxonomy->title, 'hierarchical' => $taxonomy->hierarchical,
                 'settings' => $request->user()?->can('cms.taxonomies.update') === true ? route('sunrice.admin.cms.taxonomies.edit', $taxonomy->handle) : null,
                 // Its terms' blueprint, for those who may edit blueprints.
-                'blueprint' => EntryList::blueprintLinks($request->user() instanceof Authorizable ? $request->user() : null, array_filter([$taxonomy->blueprint]))[0]['href'] ?? null,
+                'blueprint' => BlueprintLinks::url($request->user(), $taxonomy->blueprint),
                 'collections' => $taxonomy->collections()->orderBy('title')->get(['sunrice_collections.handle', 'sunrice_collections.title'])
                     ->map(fn (Collection $collection): array => ['title' => $collection->title, 'url' => route('sunrice.admin.cms.collections.entries.index', $collection->handle)])->all(),
                 // Its index pages' fields: the shared one's, and each collection's.
@@ -194,6 +193,8 @@ final class TermController
             'terms' => $places,
             // Where to add a redirect by hand, for those who may.
             'redirectsUrl' => $request->user()?->can('cms.redirects.create') === true ? route('sunrice.admin.cms.redirects.create') : null,
+            // Its terms' blueprint, for those who may edit blueprints.
+            'blueprint' => BlueprintLinks::url($request->user(), $taxonomy->blueprint),
             // The views tried for its page, in order, and which exist (Template, and How is it chosen?).
             'templates' => [
                 'own' => $term === null ? null : (TemplateHelp::lookup([$term->template])[0] ?? null),
