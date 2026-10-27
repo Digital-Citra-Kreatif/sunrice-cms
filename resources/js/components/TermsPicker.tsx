@@ -2,7 +2,7 @@ import * as React from 'react';
 import { usePage } from '@inertiajs/react';
 import { Check, ChevronsUpDown, Search, X } from 'lucide-react';
 import { adminUrl, t } from '@imajiner/admin-sdk';
-import { Button, Popover, PopoverContent, PopoverTrigger, Skeleton } from '@imajiner/admin-sdk/ui';
+import { Button, Popover, PopoverAnchor, PopoverContent, PopoverTrigger, Skeleton } from '@imajiner/admin-sdk/ui';
 import { appendPage, chosenIds, isFull, moveActive, parentPaths, pickTerm, termPath, termValue, withoutLast, type TermOption } from '@/lib/term-picker.ts';
 import { termPickerQuery } from '@/lib/values.ts';
 
@@ -60,10 +60,8 @@ export function TermsPicker({ id, taxonomy, multiple, max, required, invalid, va
     const [attempt, setAttempt] = React.useState(0);
     const [known, setKnown] = React.useState<Record<number, Known>>({});
     const [active, setActive] = React.useState(-1);
-    // The list opens under the whole box, chips and all, as wide as it.
-    const [place, setPlace] = React.useState<{ width: number; alignOffset: number; sideOffset: number } | null>(null);
-    const box = React.useRef<HTMLDivElement>(null);
-    const trigger = React.useRef<HTMLButtonElement>(null);
+    // Set from a press in the box until its click is handled: see onInteractOutside.
+    const pressedInBox = React.useRef(false);
     const input = React.useRef<HTMLInputElement>(null);
     const loaded = React.useRef<string | null>(null);
     const q = search.trim();
@@ -135,27 +133,7 @@ export function TermsPicker({ id, taxonomy, multiple, max, required, invalid, va
     const disabled = (index: number) => full && !ids.includes(items[index]?.id ?? -1);
     const name = (termId: number) => label(termId) ?? t('Term #:id', { id: termId });
 
-    // The list sits under the whole box, at its width, though it opens from the trigger after the chips:
-    // measured on opening, and again while open as chips come and go (the trigger moves) or the box resizes.
-    const measure = React.useCallback(() => {
-        if (!box.current || !trigger.current) return;
-        const outer = box.current.getBoundingClientRect();
-        const inner = trigger.current.getBoundingClientRect();
-        const next = { width: outer.width, alignOffset: outer.left - inner.left, sideOffset: 4 + outer.bottom - inner.bottom };
-        setPlace((now) => (now && now.width === next.width && now.alignOffset === next.alignOffset && now.sideOffset === next.sideOffset ? now : next));
-    }, []);
-    const chips = ids.join(',');
-    React.useLayoutEffect(() => {
-        if (!open) return undefined;
-        measure();
-        if (typeof ResizeObserver === 'undefined' || !box.current) return undefined;
-        const observer = new ResizeObserver(measure);
-        observer.observe(box.current);
-        return () => observer.disconnect();
-    }, [open, chips, measure]);
-
     const onOpenChange = (next: boolean) => {
-        if (next) measure();
         if (!next) setSearch('');
         setOpen(next);
     };
@@ -232,7 +210,12 @@ export function TermsPicker({ id, taxonomy, multiple, max, required, invalid, va
 
     return (
         <Popover open={open} onOpenChange={onOpenChange}>
-            <div ref={box} data-invalid={invalid || undefined}
+            {/* The list is placed against the whole box, not the Add… button after the chips: under it, at its width,
+                where it opened, however many terms are chosen (it doesn't flip above near the bottom of the window). */}
+            <PopoverAnchor asChild>
+            <div data-terms-box="" onPointerDownCapture={() => { pressedInBox.current = true; }}
+                onClickCapture={() => { setTimeout(() => { pressedInBox.current = false; }, 0); }}
+                data-invalid={invalid || undefined}
                 className="cms:flex cms:w-full cms:max-w-xl cms:min-w-0 cms:[contain:inline-size] cms:flex-wrap cms:items-center cms:gap-1 cms:rounded-md cms:border cms:border-input/80 cms:bg-card cms:p-1 cms:shadow-xs cms:data-invalid:border-destructive cms:dark:bg-input/20">
                 {ids.map((termId) => (
                     <span key={termId} title={termPath(name(termId), known[termId]?.parents ?? parentsGiven[String(termId)])}
@@ -240,21 +223,28 @@ export function TermsPicker({ id, taxonomy, multiple, max, required, invalid, va
                         <span className={`cms:min-w-0 cms:truncate ${removable ? '' : 'cms:pr-2'}`}>{name(termId)}</span>
                         {removable && (
                             <button type="button" className="cms:inline-flex cms:size-7 cms:shrink-0 cms:items-center cms:justify-center cms:rounded-sm cms:text-muted-foreground cms:hover:bg-muted cms:hover:text-foreground cms:focus-visible:ring-2 cms:focus-visible:ring-ring cms:focus-visible:outline-none"
-                                aria-label={t('Remove :term', { term: name(termId) })} onClick={() => set(ids.filter((other) => other !== termId))}>
+                                aria-label={t('Remove :term', { term: name(termId) })} onMouseDown={(event: React.MouseEvent) => { if (open) event.preventDefault(); }}
+                                onClick={() => { set(ids.filter((other) => other !== termId)); if (open) input.current?.focus(); }}>
                                 <X className="cms:size-3" aria-hidden="true" />
                             </button>
                         )}
                     </span>
                 ))}
                 <PopoverTrigger asChild>
-                    <button ref={trigger} id={id} type="button" aria-haspopup="listbox" aria-invalid={invalid || undefined}
+                    <button id={id} type="button" aria-haspopup="listbox" aria-invalid={invalid || undefined}
                         className="cms:flex cms:h-7 cms:min-w-24 cms:flex-1 cms:items-center cms:justify-between cms:gap-1 cms:rounded-sm cms:px-2 cms:text-left cms:text-sm cms:text-muted-foreground cms:hover:bg-muted cms:focus-visible:ring-2 cms:focus-visible:ring-ring cms:focus-visible:outline-none cms:disabled:pointer-events-none cms:disabled:opacity-50">
                         <span className="cms:truncate">{ids.length === 0 ? placeholder : multiple ? t('Add…') : t('Change…')}</span>
                         <ChevronsUpDown className="cms:size-4 cms:shrink-0 cms:opacity-60" aria-hidden="true" />
                     </button>
                 </PopoverTrigger>
             </div>
-            <PopoverContent align="start" alignOffset={place?.alignOffset} sideOffset={place?.sideOffset} className="cms:max-w-[calc(100vw-2rem)] cms:min-w-60 cms:p-0" style={{ width: place?.width }}
+            </PopoverAnchor>
+            <PopoverContent side="bottom" align="start" sideOffset={4} avoidCollisions={false} className="cms:max-w-[calc(100vw-2rem)] cms:p-0" style={{ width: 'var(--radix-popper-anchor-width)' }}
+                // Removing a chip (its ×, in the box) keeps the list open.
+                // A press inside the box (removing a chip) isn't outside the list, though Radix only checks after the click, once the × is gone.
+                onInteractOutside={(event: Event) => { if (pressedInBox.current || (event.target instanceof Element && event.target.closest('[data-terms-box]'))) event.preventDefault(); }}
+                // Focus left with a removed chip (on the page itself) isn't leaving the list.
+                onFocusOutside={(event: Event) => { const target = event.target; if (!(target instanceof Element) || target === document.body || target.closest('[data-terms-box]')) event.preventDefault(); }}
                 onOpenAutoFocus={(event: Event) => { event.preventDefault(); input.current?.focus(); }}>
                 <div className="cms:relative cms:border-b cms:border-border/60">
                     <Search className="cms:pointer-events-none cms:absolute cms:top-1/2 cms:left-3 cms:size-4 cms:-translate-y-1/2 cms:text-muted-foreground" aria-hidden="true" />
