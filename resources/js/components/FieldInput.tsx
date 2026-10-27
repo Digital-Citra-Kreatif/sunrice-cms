@@ -14,7 +14,7 @@ import { codeLanguageOf } from '@/lib/code.ts';
 import { isShown } from '@/lib/conditions.ts';
 import { affixesOf, CONTAINER_TYPES, hintOf } from '@/lib/presentation.ts';
 import { fieldGrid, widthClass } from '@/lib/width.ts';
-import { asRecord, dateInputValue, dateValueFromInput, groupedNumber, itemSummary, offersEmptyChoice, newBlock, newRow, syncKeys } from '@/lib/values.ts';
+import { asRecord, dateInputValue, dateValueFromInput, groupedNumber, itemSummary, linkValue, offersEmptyChoice, newBlock, newRow, switchLink, syncKeys, type LinkKind, type LinkTargets } from '@/lib/values.ts';
 import type { Errors, FieldDefinition, Option } from '@/types.ts';
 
 /** Radix's Select can't hold an empty value, so "none" is this. */
@@ -287,12 +287,18 @@ function LinkInput({ label, value, onChange, errors, id, collections, placeholde
     placeholder?: string;
     describedBy?: string;
 }) {
-    const type = value.type === 'entry' ? 'entry' : 'url';
-    const set = (changes: Record<string, unknown>) => {
-        const link: Record<string, unknown> = { ...value, type, ...changes };
-        const empty = link.type === 'entry' ? typeof link.entry_id !== 'number' : link.url === '' || link.url === undefined || link.url === null;
-        // An empty link is no link; the text and tab choice wait for an address or entry.
-        onChange(empty ? (link.label || link.new_tab ? link : null) : link);
+    // An empty link is stored as no link (null), so the kind chosen is kept here too.
+    const [chosen, setChosen] = React.useState<LinkKind>(value.type === 'entry' ? 'entry' : 'url');
+    const type: LinkKind = value.type === 'entry' || value.type === 'url' ? value.type : chosen;
+    // The address or entry of the kind not chosen, until the page is left.
+    const remembered = React.useRef<LinkTargets>({});
+    const set = (changes: Record<string, unknown>) => onChange(linkValue({ ...value, type, ...changes }));
+    const choose = (to: LinkKind) => {
+        if (to === type) return;
+        const next = switchLink(value, type, to, remembered.current);
+        remembered.current = next.remembered;
+        setChosen(to);
+        onChange(next.value);
     };
 
     return (
@@ -300,7 +306,7 @@ function LinkInput({ label, value, onChange, errors, id, collections, placeholde
             <div role="radiogroup" aria-label={t(':field: link to', { field: label })} className="cms:inline-flex cms:w-fit cms:rounded-md cms:border cms:p-0.5">
                 {(['url', 'entry'] as const).map((option) => (
                     <Button key={option} type="button" size="sm" role="radio" aria-checked={type === option} variant={type === option ? 'secondary' : 'ghost'}
-                        onClick={() => set({ type: option, url: option === 'url' ? value.url : undefined, entry_id: option === 'entry' ? value.entry_id : undefined })}>
+                        onClick={() => choose(option)}>
                         {option === 'url' ? t('Address') : t('Entry')}
                     </Button>
                 ))}

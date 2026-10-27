@@ -142,3 +142,26 @@ export function termPickerQuery({ taxonomy, q, offset, ids }: { taxonomy: string
 
     return params.toString();
 }
+
+export type LinkKind = 'url' | 'entry';
+export type LinkTargets = { url?: unknown; entry_id?: unknown };
+
+/** A link field's value as it's kept: no address or entry, and no text or tab choice either, is no link (null). */
+export function linkValue(link: Record<string, unknown>): Record<string, unknown> | null {
+    const empty = link.type === 'entry' ? typeof link.entry_id !== 'number' : link.url === '' || link.url === undefined || link.url === null;
+
+    return empty ? (link.label || link.new_tab ? link : null) : link;
+}
+
+/**
+ * Switching a link field between an address and an entry: the value keeps
+ * only the chosen kind's target (what's saved), and the one it had for the
+ * other kind is remembered, so switching back brings it back until the page
+ * is left.
+ */
+export function switchLink(value: Record<string, unknown>, from: LinkKind, to: LinkKind, remembered: LinkTargets): { value: Record<string, unknown> | null; remembered: LinkTargets } {
+    const kept: LinkTargets = from === 'url' ? { ...remembered, url: value.url } : { ...remembered, entry_id: value.entry_id };
+    const link = { ...value, type: to, url: to === 'url' ? kept.url : undefined, entry_id: to === 'entry' ? kept.entry_id : undefined };
+
+    return { value: linkValue(link), remembered: kept };
+}
