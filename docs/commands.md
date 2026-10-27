@@ -20,4 +20,4 @@ The CMS also schedules Laravel's `model:prune` daily for old form submissions an
 
 ## Panel commands
 
-See [the panel's commands](../../admin/docs/commands.md): `sunrice:install`, `sunrice:make-admin`, `sunrice:sync-permissions`, `sunrice:roles`, `sunrice:two-factor`, `sunrice:unlock`, `sunrice:ai-token`, `mcp:start sunrice`, `sunrice:media-sizes`, `sunrice:media-trash-offline`, `sunrice:optimize-images`, `sunrice:assets` and `sunrice:activity-prune`.
+See [the panel's commands](../../admin/docs/commands.md): `sunrice:install`, `sunrice:make-admin`, `sunrice:sync-permissions`, `sunrice:roles`, `sunrice:two-factor`, `sunrice:unlock`, `sunrice:ai-token`, `mcp:start sunrice`, `sunrice:media-sizes`, `sunrice:optimize-images`, `sunrice:assets` and `sunrice:activity-prune`.
