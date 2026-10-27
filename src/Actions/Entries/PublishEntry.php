@@ -46,13 +46,17 @@ final class PublishEntry
         if ($entry->collection->trashed()) {
             throw ValidationException::withMessages(['entry' => __('The collection ":title" was deleted.', ['title' => $entry->collection->title])]);
         }
-        // Where the live page was, to redirect from if its address changes.
         $site = app(Site::class);
-        $oldPath = $translation->isPublished() ? $site->path($translation, $translation->slug) : null;
-        $oldSlug = $translation->isPublished() ? $translation->slug : null;
 
         // The slug check and the write in one transaction: see EntryInput::write().
-        $values = EntryInput::write(function () use ($translation, $publishAt, $site, $oldPath, $oldSlug): array {
+        $values = EntryInput::write(function () use ($translation, $publishAt, $site): array {
+            // The draft as stored now, its row locked until the publish ends: a save made since the
+            // translation was loaded is published, not overwritten, and two publishes take turns.
+            $stored = EntryTranslation::query()->whereKey($translation->id)->lockForUpdate()->firstOrFail();
+            $translation->setRawAttributes($stored->getAttributes(), true);
+            // Where the live page was, to redirect from if its address changes.
+            $oldPath = $translation->isPublished() ? $site->path($translation, $translation->slug) : null;
+            $oldSlug = $translation->isPublished() ? $translation->slug : null;
             // As SaveDraft does: validated with the main language's shared values in rows and blocks, which ownData() drops again.
             $data = $translation->draft_data;
             $main = $translation->entry->mainTranslation();
@@ -77,7 +81,8 @@ final class PublishEntry
                 'draft_data' => $values['data'],
                 // Without a date: the one it has (first published, or scheduled), but now for a draft once scheduled for later;
                 // never published: the entry's date (another language), else now.
-                'published_at' => $publishAt !== null ? Carbon::instance($publishAt)
+                // In the app's timezone, as dates are stored (the editor sends UTC, others any offset).
+                'published_at' => $publishAt !== null ? Carbon::instance($publishAt)->setTimezone(now()->getTimezone())
                     : ($translation->published_at === null ? (self::entryDate($translation) ?? now())
                         : (! $translation->isPublished() && $translation->published_at->isFuture() ? now() : $translation->published_at)),
                 // Counted up too, so an editor opened before this publish can't save over it unknowingly.

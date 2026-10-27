@@ -188,6 +188,8 @@ An entry published for a later date is live from that moment: the site only show
 
 Without it, kept content shows a scheduled entry within `cache.ttl` at the latest.
 
+Each entry is announced once, in whatever timezone the app runs (`app.timezone`; dates given with another offset, like the editor's UTC, are stored in it). A run remembers the time it got to in the site cache's store (`sunrice-cms.cache.store`) once it's done, so a run that failed (a listener of `EntryPublished` throwing) leaves its entries to the next one, and a late run picks up every entry whose time came since. Runs take turns with a lock in that store: on several servers, use a store they share (database, Redis, Memcached), and a run that finds another one going on does nothing. The scheduler's `withoutOverlapping()` only keeps one server's runs apart. A store that forgets (the `array` store, or `cache:clear`) makes the next run look back 5 minutes only.
+
 ## Query budgets
 
 Site pages make a fixed number of queries however much content there is: no queries in loops. With the cache warm, the CMS's own views take at most 5 queries for an entry page, 6 for a listing page, 7 for a term page and none for the sitemap (`tests/Cms/CachingTest.php` checks this). The site's share image is read once per content version, and an entry's other languages come with it (for `hreflang` links). Templates add their own, but `values()` in a loop doesn't: the entries of a page (its `$entries`, `$results`, `Cms::entries()`, an entries field) hydrate together, one query per kind for each level of links (see [Fields](fields.md)). Otherwise eager load (`Cms::entries()` loads entries with their collections), and see the queries behind a page with Laravel Debugbar or Telescope on staging.
