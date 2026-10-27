@@ -417,7 +417,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                     <TermLabels.Provider value={labels}>
                         <FieldSections disabled={!writable} fields={fields} values={form.data.data} errors={errors} storageKey={`cms:entry:${collection.handle}`}
                             shared={shared} sharedValues={sharedValues} changed={changed}
-                            sharedNote={mainLocale ? t('Shared by all languages: the greyed-out fields are edited in :language.', { language: localeName(mainLocale) }) : t('Shared by all languages: the greyed-out fields are edited in the main language.')}
+                            mainLanguage={locales.find((l) => l.main)?.name ?? (mainLocale ? localeName(mainLocale) : null)}
                             onChange={(handle, value) => { form.setData('data', { ...form.data.data, [handle]: value }); clearErrorsAt(`data.${handle}`); }} />
                     </TermLabels.Provider>
 

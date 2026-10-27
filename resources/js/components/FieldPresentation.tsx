@@ -53,6 +53,26 @@ export function HelperText({ text, id, className = '' }: { text: string | null |
 }
 
 /**
+ * The main language's name ("English"), for the hint under a field shared
+ * by all languages: given by the editor of another language than the main one.
+ */
+export const MainLanguage = React.createContext<string | null>(null);
+
+/**
+ * Under a field shared by all languages, in another language than the main
+ * one (it's read-only there): where to change it, like its helper text.
+ */
+export function SharedHint({ id, className = '' }: { id?: string; className?: string }) {
+    const language = React.useContext(MainLanguage);
+
+    return (
+        <p id={id} className={`cms:text-sm cms:text-muted-foreground ${className}`.trim()}>
+            {language ? t('Not translatable: edit it in :language.', { language }) : t('Not translatable: edit it in the main language.')}
+        </p>
+    );
+}
+
+/**
  * An input with a prefix and/or suffix attached ("Rp" 150000, 120 "m²"):
  * one bordered box with the panel's input look, the focus ring around the
  * whole of it, red when the input is invalid, faded when it's disabled.

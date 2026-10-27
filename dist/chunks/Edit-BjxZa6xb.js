@@ -1,23 +1,23 @@
-import { j as e, t as s, f as S, a as B, r as j, b as Te, d as es, e as ss, l as V, c as ts, g as as, h as ls, i as is, k as ns, s as rs } from "./admin-C3qsRD_x.js";
+import { j as e, t as s, f as S, a as B, r as j, b as Te, d as es, e as ss, l as V, c as ts, g as as, h as ls, i as is, k as ns, s as rs } from "./admin-IqhaZhDI.js";
 import { c as U, _ as k } from "./createLucideIcon-Ccbp7F45.js";
 import { u as a } from "./ui-Dh5wfMwT.js";
-import { u as cs, T as ve } from "./Confirm-LEilnZye.js";
-import { s as os, w as ds, T as ms } from "./seo-woDwdx-Q.js";
-import { E as je, C as Z } from "./EntryStatus-CidS-Rk9.js";
-import { E as us } from "./EntriesPicker-Bf2s6HQQ.js";
+import { u as cs, T as ve } from "./Confirm-De_EGn8J.js";
+import { s as os, w as ds, T as ms } from "./seo-DH5B7s4H.js";
+import { E as je, C as Z } from "./EntryStatus-B9Rew89u.js";
+import { E as us } from "./EntriesPicker-CbWzJ6n7.js";
 import { C as Ae } from "./check-OeKFYRnl.js";
 import { S as hs, M as ps, U as re } from "./undo-2-CBzqSKK6.js";
-import { F as xs, e as gs } from "./languages-B1xHHPmU.js";
-import { S as fs } from "./SlugNote-HjDXeUM0.js";
-import { C as bs, z as Be, A as vs, b as js, h as ws, B as ks, T as Ns } from "./FieldInput-CBk3lvnW.js";
-import { F as P } from "./FieldError-CxPmyLkj.js";
+import { F as xs, e as gs } from "./languages-C-YEmcc7.js";
+import { S as fs } from "./SlugNote-C8tDIV-f.js";
+import { C as bs, z as Be, A as vs, b as js, h as ws, B as ks, T as Ns } from "./FieldInput-DG2Oxx0T.js";
+import { F as P } from "./FieldError-BHWx1Jkq.js";
 import { R as Cs } from "./rotate-ccw-BcgdCn0y.js";
 import { L as Ss } from "./link-2-BYZeXgi5.js";
 import { C as Me } from "./copy-BT7TBOUx.js";
 import { L as ys } from "./layout-template-RwJXNfEY.js";
 import { L as _e } from "./loader-circle-ByksABXO.js";
 import { E as Ds } from "./external-link-CFxEu4M4.js";
-const Ee = {
+const Le = {
   name: "calendar-clock",
   size: 24,
   node: [
@@ -29,9 +29,9 @@ const Ee = {
     ["circle", { cx: "16", cy: "16", r: "6", key: "qoo3c4" }]
   ]
 };
-Ee.node;
-const ce = U(Ee);
-const Le = {
+Le.node;
+const ce = U(Le);
+const Ee = {
   name: "ellipsis-vertical",
   size: 24,
   node: [
@@ -41,8 +41,8 @@ const Le = {
   ],
   aliases: ["more-vertical"]
 };
-Le.node;
-const $s = U(Le);
+Ee.node;
+const $s = U(Ee);
 const Pe = {
   name: "eye",
   size: 24,
@@ -125,11 +125,11 @@ function _s(l, n) {
   for (; m < d.length; ) p(d[m++], "added");
   return x;
 }
-function Es(l, n) {
+function Ls(l, n) {
   return l.filter((r) => r.op === "same" || r.op === (n === "old" ? "removed" : "added"));
 }
 const Ne = { preserveScroll: !0, preserveState: !0 };
-function Ls({ entryId: l, comments: n }) {
+function Es({ entryId: l, comments: n }) {
   const [r, d] = k.useState(null), [h, t] = k.useState(""), [c, x] = k.useState(!1), p = (m, f) => j.router.post(B(`cms/comments/${m}/status`), { status: f }, Ne), u = (m) => j.router.post(B(`cms/comments/${m}/reply`), { body: h }, {
     ...Ne,
     onStart: () => x(!0),
@@ -233,7 +233,7 @@ function ft(l) {
   const { entry: n } = l;
   return /* @__PURE__ */ e.jsx(zs, { ...l }, n ? `${n.id}:${n.locale}:${n.version}:${n.status}:${n.trashed}:${n.publishedAt}` : "new");
 }
-function zs({ collection: l, fields: n, locales: r = [], shared: d = [], sharedValues: h = {}, entry: t, values: c, revisions: x, comments: p, termLabels: u, usedBy: m = [], undoRestore: f = null, machineTranslate: b = null, machineTranslateMissing: N = !1, settings: A, taxonomies: g = [], blueprints: E = [], blueprintUrl: q = null, homepage: F, redirectsUrl: Oe = null, templates: Ve = null, templateChoices: Ue, can: w }) {
+function zs({ collection: l, fields: n, locales: r = [], shared: d = [], sharedValues: h = {}, entry: t, values: c, revisions: x, comments: p, termLabels: u, usedBy: m = [], undoRestore: f = null, machineTranslate: b = null, machineTranslateMissing: N = !1, settings: A, taxonomies: g = [], blueprints: L = [], blueprintUrl: q = null, homepage: F, redirectsUrl: Oe = null, templates: Ve = null, templateChoices: Ue, can: w }) {
   const K = B(`cms/collections/${l.handle}/entries`), y = t ? B(`cms/entries/${t.id}`) : K, ee = t ? c.title : s("New entry");
   a.useBreadcrumbs([{ label: l.title, href: K }, { label: ee }]);
   const [z, qe] = cs(), [Ke, H] = k.useState(!1), se = t?.publishedAt ? Te(new Date(t.publishedAt)) : "", [oe, de] = k.useState(se);
@@ -252,7 +252,7 @@ function zs({ collection: l, fields: n, locales: r = [], shared: d = [], sharedV
   }), pe = (i) => o.setData((v) => ({ ...v, ...i })), R = t ? { locale: t.locale } : {}, M = r.find((i) => i.main)?.code, C = o.errors, G = j.usePage().props.errors ?? {}, O = (i) => {
     const v = ks(C, i);
     v.length > 0 && o.clearErrors(...v);
-  }, L = t !== null && t.status !== "draft" && !t.hasUnpublishedChanges && !o.isDirty, J = es(t?.status ?? "draft", oe, t?.publishedAt ?? null), xe = t === null ? w.create : w.update && !t.trashed, Y = t?.status === "scheduled", _ = t ? ss(t) : null, W = t?.live?.changed ?? [], ge = (i) => W.includes(i) ? /* @__PURE__ */ e.jsx(Z, {}) : null, Q = l.pages !== !1, Ge = Array.isArray(c.terms) || !c.terms ? {} : c.terms, ae = (i, v = !1) => {
+  }, E = t !== null && t.status !== "draft" && !t.hasUnpublishedChanges && !o.isDirty, J = es(t?.status ?? "draft", oe, t?.publishedAt ?? null), xe = t === null ? w.create : w.update && !t.trashed, Y = t?.status === "scheduled", _ = t ? ss(t) : null, W = t?.live?.changed ?? [], ge = (i) => W.includes(i) ? /* @__PURE__ */ e.jsx(Z, {}) : null, Q = l.pages !== !1, Ge = Array.isArray(c.terms) || !c.terms ? {} : c.terms, ae = (i, v = !1) => {
     const { terms: T, ...fe } = i, ne = w.terms === !0 && g.length > 0 ? Fs(Ge, T) : null, be = ne === null ? fe : { ...fe, terms: ne.terms, ...v ? {} : { terms_base: ne.terms_base } };
     if (A || t === null) return be;
     const { parent_id: Gs, template: Js, comments_closed: Qs, ...Ze } = be;
@@ -389,16 +389,16 @@ function zs({ collection: l, fields: n, locales: r = [], shared: d = [], sharedV
             }
           ),
           t && !t.trashed && w.publish && !$.readOnly && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex", children: [
-            Y && L ? /* @__PURE__ */ e.jsxs(a.Button, { type: "button", variant: "outline", className: "cms:rounded-r-none", disabled: o.processing, title: s("Change the date"), onClick: () => H(!0), children: [
+            Y && E ? /* @__PURE__ */ e.jsxs(a.Button, { type: "button", variant: "outline", className: "cms:rounded-r-none", disabled: o.processing, title: s("Change the date"), onClick: () => H(!0), children: [
               /* @__PURE__ */ e.jsx(ce, {}),
               " ",
               s("Scheduled for :date", { date: S(t.publishedAt) })
-            ] }) : /* @__PURE__ */ e.jsxs(a.Button, { type: "button", variant: L ? "outline" : "default", className: "cms:rounded-r-none cms:disabled:opacity-100", disabled: o.processing || L, onClick: () => X(J.at), children: [
-              L && /* @__PURE__ */ e.jsx(Ae, { className: "cms:text-emerald-600 cms:dark:text-emerald-400" }),
-              L ? s("Published") : J.action === "schedule" ? s("Schedule") : J.action === "backdate" ? s("Publish now, back-dated") : _ === "offline" ? s("Publish again") : t.status === "draft" ? s("Publish") : s("Publish changes")
+            ] }) : /* @__PURE__ */ e.jsxs(a.Button, { type: "button", variant: E ? "outline" : "default", className: "cms:rounded-r-none cms:disabled:opacity-100", disabled: o.processing || E, onClick: () => X(J.at), children: [
+              E && /* @__PURE__ */ e.jsx(Ae, { className: "cms:text-emerald-600 cms:dark:text-emerald-400" }),
+              E ? s("Published") : J.action === "schedule" ? s("Schedule") : J.action === "backdate" ? s("Publish now, back-dated") : _ === "offline" ? s("Publish again") : t.status === "draft" ? s("Publish") : s("Publish changes")
             ] }),
             /* @__PURE__ */ e.jsxs(a.DropdownMenu, { children: [
-              /* @__PURE__ */ e.jsx(a.DropdownMenuTrigger, { asChild: !0, children: /* @__PURE__ */ e.jsx(a.Button, { type: "button", size: "icon", variant: L ? "outline" : "default", className: L ? "cms:-ml-px cms:rounded-l-none" : "cms:rounded-l-none cms:border-l cms:border-primary-foreground/20", "aria-label": s("More publishing options"), children: /* @__PURE__ */ e.jsx(bs, {}) }) }),
+              /* @__PURE__ */ e.jsx(a.DropdownMenuTrigger, { asChild: !0, children: /* @__PURE__ */ e.jsx(a.Button, { type: "button", size: "icon", variant: E ? "outline" : "default", className: E ? "cms:-ml-px cms:rounded-l-none" : "cms:rounded-l-none cms:border-l cms:border-primary-foreground/20", "aria-label": s("More publishing options"), children: /* @__PURE__ */ e.jsx(bs, {}) }) }),
               /* @__PURE__ */ e.jsxs(a.DropdownMenuContent, { align: "end", children: [
                 /* @__PURE__ */ e.jsxs(a.DropdownMenuItem, { onSelect: () => H(!0), children: [
                   /* @__PURE__ */ e.jsx(ce, {}),
@@ -529,7 +529,7 @@ function zs({ collection: l, fields: n, locales: r = [], shared: d = [], sharedV
             shared: d,
             sharedValues: h,
             changed: W,
-            sharedNote: M ? s("Shared by all languages: the greyed-out fields are edited in :language.", { language: V(M) }) : s("Shared by all languages: the greyed-out fields are edited in the main language."),
+            mainLanguage: r.find((i) => i.main)?.name ?? (M ? V(M) : null),
             onChange: (i, v) => {
               o.setData("data", { ...o.data.data, [i]: v }), O(`data.${i}`);
             }
@@ -648,7 +648,7 @@ function zs({ collection: l, fields: n, locales: r = [], shared: d = [], sharedV
             collection: l,
             settings: A,
             templates: ds(Ve, Ue),
-            blueprints: E,
+            blueprints: L,
             disabled: !D,
             values: o.data,
             errors: C,
@@ -671,7 +671,7 @@ function zs({ collection: l, fields: n, locales: r = [], shared: d = [], sharedV
             }
           }
         ),
-        p !== null && l.comments && /* @__PURE__ */ e.jsx(Ls, { entryId: t.id, comments: p }),
+        p !== null && l.comments && /* @__PURE__ */ e.jsx(Es, { entryId: t.id, comments: p }),
         /* @__PURE__ */ e.jsxs(a.CollapsibleCard, { title: s("Revisions"), titleClassName: "cms:text-base", storageKey: "cms:entry:revisions", contentClassName: "cms:flex cms:flex-col cms:gap-2 cms:text-sm", children: [
           f !== null && w.update && /* @__PURE__ */ e.jsxs(a.Button, { type: "button", variant: "outline", size: "sm", onClick: () => j.router.post(B(`cms/entries/${t.id}/translations/${t.locale}/undo-restore`), {}, { preserveScroll: !0 }), children: [
             /* @__PURE__ */ e.jsx(re, {}),
@@ -934,7 +934,7 @@ function Hs({ state: l, entry: n, dirty: r, actions: d, onCompare: h, onDiscard:
 }
 function ye({ old: l, next: n, side: r }) {
   if ((r === "old" ? l : n).trim() === "") return /* @__PURE__ */ e.jsx("span", { className: "cms:text-muted-foreground cms:italic", children: s("(empty)") });
-  const h = Es(_s(l, n), r);
+  const h = Ls(_s(l, n), r);
   return /* @__PURE__ */ e.jsx(e.Fragment, { children: h.map((t, c) => t.op === "same" ? /* @__PURE__ */ e.jsx(k.Fragment, { children: t.text }, c) : t.op === "removed" ? /* @__PURE__ */ e.jsx("del", { className: "cms:rounded-sm cms:bg-red-500/15 cms:text-red-900 cms:decoration-red-500/60 cms:dark:text-red-200", children: t.text }, c) : /* @__PURE__ */ e.jsx("ins", { className: "cms:rounded-sm cms:bg-emerald-500/20 cms:text-emerald-900 cms:no-underline cms:dark:text-emerald-200", children: t.text }, c)) });
 }
 function De({ open: l, url: n, read: r, title: d, description: h, oldLabel: t, newLabel: c, same: x, onClose: p, dirty: u }) {
@@ -942,8 +942,8 @@ function De({ open: l, url: n, read: r, title: d, description: h, oldLabel: t, n
   return A.current = r, k.useEffect(() => {
     if (f(null), N(!1), !l || !n) return;
     let g = !0;
-    return fetch(n, { headers: { Accept: "application/json" }, credentials: "same-origin" }).then((E) => E.ok ? E.json() : Promise.reject(new Error(String(E.status)))).then((E) => {
-      g && f(E.fields.map((q) => A.current(q)));
+    return fetch(n, { headers: { Accept: "application/json" }, credentials: "same-origin" }).then((L) => L.ok ? L.json() : Promise.reject(new Error(String(L.status)))).then((L) => {
+      g && f(L.fields.map((q) => A.current(q)));
     }).catch(() => {
       g && N(!0);
     }), () => {

@@ -38,13 +38,6 @@ export function offersEmptyChoice(options: readonly { value: string; label: stri
     return !hasDefault || !filled;
 }
 
-interface SharedLike { shared?: boolean; fields?: SharedLike[]; blocks?: { fields: SharedLike[] }[] }
-
-/** Whether any field, at any depth, is shared with the main language (another language's rows and blocks). */
-export function hasSharedFields(fields: readonly SharedLike[]): boolean {
-    return fields.some((field) => field.shared === true || hasSharedFields(field.fields ?? []) || (field.blocks ?? []).some((block) => hasSharedFields(block.fields)));
-}
-
 /** A new repeater row: the server gives it its stable id. */
 export function newRow(): Record<string, unknown> {
     return { _hidden: false };

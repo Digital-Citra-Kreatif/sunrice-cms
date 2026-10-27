@@ -7,7 +7,7 @@ import {
 import { t } from '@imajiner/admin-sdk';
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
 import { FieldError } from '@/components/FieldError.tsx';
-import { AFFIXED_INPUT, Affixed, FieldHint, HelperText } from '@/components/FieldPresentation.tsx';
+import { AFFIXED_INPUT, Affixed, FieldHint, HelperText, SharedHint } from '@/components/FieldPresentation.tsx';
 import { TermsPicker } from '@/components/TermsPicker.tsx';
 import { errorsAt } from '@/lib/builder.ts';
 import { codeLanguageOf } from '@/lib/code.ts';
@@ -51,6 +51,12 @@ interface Props {
     fill?: boolean;
     /** Beside the label: the entry editor's "Changed" marker. */
     marker?: React.ReactNode;
+    /**
+     * Shared by all languages, shown read-only in another language than the
+     * main one: says under it where to change it (SharedHint). A field inside
+     * a group, row or block the server marks `shared` is, unless said otherwise.
+     */
+    shared?: boolean;
 }
 
 /** Types whose inputs are a list or a set of inputs: labelled as a group. */
@@ -70,22 +76,24 @@ export function labelOf(field: FieldDefinition): string {
  * right, the input (a text or number one with its prefix and suffix), the
  * helper text under it, then the error. A group, repeater or flexible field
  * has its helper text under its label instead: there's no one input to be under.
+ * A field shared by all languages has, after its helper text, where to edit it.
  */
-export function FieldInput({ field, value, onChange, errors, id, content = false, fill = false, marker = null }: Props) {
+export function FieldInput({ field, value, onChange, errors, id, content = false, fill = false, marker = null, shared = field.shared === true }: Props) {
     const label = labelOf(field);
     const group = GROUPS.includes(field.type) || (['select', 'terms'].includes(field.type) && field.config?.multiple === true);
     // The message under a group of inputs (ticked choices, a group's fields) is tied to the group.
     const invalid = errors[''] !== undefined;
     const container = CONTAINER_TYPES.includes(field.type);
     const helper = field.instructions && field.instructions.trim() !== '' ? <HelperText id={`${id}-help`} text={field.instructions} /> : null;
+    const sharedHint = shared ? <SharedHint id={`${id}-shared`} /> : null;
     const { hint } = hintOf(field);
     const { prefix, suffix } = affixesOf(field);
-    // What the input is described by: its hint, prefix and suffix, helper text and error.
-    const describedBy = [hint && `${id}-hint`, prefix && `${id}-prefix`, suffix && `${id}-suffix`, helper && `${id}-help`, invalid && `${id}-error`].filter(Boolean).join(' ') || undefined;
+    // What the input is described by: its hint, prefix and suffix, helper text, where to edit it (shared) and error.
+    const describedBy = [hint && `${id}-hint`, prefix && `${id}-prefix`, suffix && `${id}-suffix`, helper && `${id}-help`, sharedHint && `${id}-shared`, invalid && `${id}-error`].filter(Boolean).join(' ') || undefined;
 
     return (
         <div className="cms:flex cms:min-w-0 cms:flex-col cms:gap-2"
-            {...(group ? { role: 'group', 'aria-labelledby': `${id}-label`, ...(invalid ? { 'aria-invalid': true } : {}), ...(invalid || helper ? { 'aria-describedby': [helper && `${id}-help`, invalid && `${id}-error`].filter(Boolean).join(' ') } : {}) } : {})}>
+            {...(group ? { role: 'group', 'aria-labelledby': `${id}-label`, ...(invalid ? { 'aria-invalid': true } : {}), ...(invalid || helper || sharedHint ? { 'aria-describedby': [helper && `${id}-help`, sharedHint && `${id}-shared`, invalid && `${id}-error`].filter(Boolean).join(' ') } : {}) } : {})}>
             {field.type === 'toggle' ? (
                 <div className="cms:flex cms:min-w-0 cms:items-center cms:gap-3">
                     <Switch id={id} checked={value === true} aria-describedby={describedBy} onCheckedChange={(checked: boolean) => onChange(checked)} />
@@ -100,11 +108,13 @@ export function FieldInput({ field, value, onChange, errors, id, content = false
                 </div>
             )}
             {container && helper}
+            {container && sharedHint}
             <Control field={field} value={value} onChange={onChange} errors={errors} id={id} content={content} fill={fill} describedBy={describedBy} />
             {['text', 'textarea', 'code'].includes(field.type) && numberConfig(field, 'max') !== undefined && (
                 <CharacterCount length={typeof value === 'string' ? [...value].length : 0} max={numberConfig(field, 'max') ?? 0} />
             )}
             {!container && helper}
+            {!container && sharedHint}
             <FieldError message={errors['']} id={`${id}-error`} />
         </div>
     );
@@ -228,9 +238,9 @@ export function Fields({ fields, value, onChange, errors, id, content, bare = fa
     // Side by side by their widths (lib/width.ts); a box around them unless a card holds them already.
     const grid = <div className={fieldGrid(bare ? undefined : 'cms:gap-4')}>
         {fields.filter((child) => isShown(child, value)).map((child) => child.shared ? (
-            // Greyed out; the form says once, at the top, where to edit shared fields.
-            <fieldset key={child.handle} disabled className={`cms:flex cms:flex-col cms:gap-1 cms:opacity-60 ${widthClass(child)}`} title={t('Shared by all languages: edit it in the main language.')}>
-                <FieldInput id={`${id}-${child.handle}`} field={child} value={value[child.handle]} content={content} errors={{}} onChange={() => {}} />
+            // Greyed out, with where to edit it under it.
+            <fieldset key={child.handle} disabled className={`cms:flex cms:flex-col cms:gap-1 cms:opacity-60 ${widthClass(child)}`}>
+                <FieldInput id={`${id}-${child.handle}`} field={child} value={value[child.handle]} content={content} errors={{}} onChange={() => {}} shared />
             </fieldset>
         ) : (
             <div key={child.handle} className={widthClass(child)}>

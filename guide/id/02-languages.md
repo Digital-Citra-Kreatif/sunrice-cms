@@ -23,7 +23,7 @@ Terjemahan yang pertama kali diterbitkan memakai tanggal versi bahasa utama (jad
 
 Sebagian field **diterjemahkan**: setiap bahasa punya isinya sendiri (judul, teks, rich text, tautan). Sebagian lagi **dipakai bersama**: satu nilai untuk semua bahasa (harga, tanggal, foto, saklar ya/tidak). Blueprint yang menentukan mana yang mana.
 
-Field bersama disunting di bahasa utama. Di bahasa lain, field itu tampil abu-abu dengan nilai dari bahasa utama, dengan satu catatan di atas: *Dipakai bersama semua bahasa: field yang abu-abu disunting dalam …*. Ubah harga sekali saja, di bahasa utama, dan harga itu berlaku di semua bahasa.
+Field bersama disunting di bahasa utama. Di bahasa lain, field itu tampil abu-abu dengan nilai dari bahasa utama, masing-masing dengan catatan di bawahnya: *Tidak diterjemahkan: ubah dalam …* (group yang dipakai bersama seluruhnya punya catatan itu sekali saja, di bawah judulnya). Ubah harga sekali saja, di bahasa utama, dan harga itu berlaku di semua bahasa.
 
 Di dalam group, baris repeater, dan blok flexible, aturannya sama per baris: teksnya per bahasa, dan nilai bersama diambil dari baris yang sesuai di bahasa utama. Global, halaman daftar, halaman indeks, dan term juga begitu.
 

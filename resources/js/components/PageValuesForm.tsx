@@ -5,6 +5,7 @@ import { t } from '@imajiner/admin-sdk';
 import { Button, Card, CardContent, CollapsibleCard, LanguageTabs, PageHeader, type PageHeaderMenuItem, useBreadcrumbs, useUnsavedChanges } from '@imajiner/admin-sdk/ui';
 import { FieldInput, Fields } from '@/components/FieldInput.tsx';
 import { SHARED_FIELD } from '@/components/FieldSections.tsx';
+import { MainLanguage } from '@/components/FieldPresentation.tsx';
 import { VersionConflict } from '@/components/VersionConflict.tsx';
 import { TemplateField, type TemplateLookup, withTemplateChoices } from '@/components/TemplateHelp.tsx';
 import { errorKeysAt, errorsAt, hasErrors } from '@/lib/builder.ts';
@@ -13,7 +14,6 @@ import { localeTabs } from '@/lib/languages.ts';
 import { seoFields } from '@/lib/seo.ts';
 import type { FieldDefinition } from '@/types.ts';
 import { isShown } from '@/lib/conditions.ts';
-import { hasSharedFields } from '@/lib/values.ts';
 import { fieldGrid, widthClass } from '@/lib/width.ts';
 
 // Field values are any JSON; see the entry editor for why `any`.
@@ -118,16 +118,12 @@ function PageValuesEdit({ title, breadcrumbs, back, saveUrl, editUrl, params = {
                 ) : (
                     <Card>
                         <CardContent className="cms:flex cms:flex-col cms:gap-6">
-                            {(shared.length > 0 || hasSharedFields(fields)) && (
-                                <p role="note" className="cms:rounded-lg cms:border cms:border-dashed cms:px-3 cms:py-2 cms:text-sm cms:text-muted-foreground">
-                                    {mainLocale ? t('Shared by all languages: the greyed-out fields are edited in :language.', { language: localeName(mainLocale) }) : t('Shared by all languages: the greyed-out fields are edited in the main language.')}
-                                </p>
-                            )}
-                            {/* Side by side by their widths (lib/width.ts). */}
+                            {/* Side by side by their widths (lib/width.ts); shared fields say under them where to edit them. */}
+                            <MainLanguage.Provider value={mainLocale ? localeName(mainLocale) : null}>
                             <div className={fieldGrid()}>
                             {fields.filter((field) => isShown(field, { ...values, ...form.data.data })).map((field) => shared.includes(field.handle) ? (
-                                <fieldset key={field.handle} disabled className={`${SHARED_FIELD} ${widthClass(field)}`} title={t('Shared by all languages')}>
-                                    <FieldInput id={`data-${field.handle}`} field={field} content value={values[field.handle]} errors={{}} onChange={() => {}} />
+                                <fieldset key={field.handle} disabled className={`${SHARED_FIELD} ${widthClass(field)}`}>
+                                    <FieldInput id={`data-${field.handle}`} field={field} content value={values[field.handle]} errors={{}} onChange={() => {}} shared />
                                 </fieldset>
                             ) : (
                                 <div key={field.handle} className={widthClass(field)}>
@@ -136,6 +132,7 @@ function PageValuesEdit({ title, breadcrumbs, back, saveUrl, editUrl, params = {
                                 </div>
                             ))}
                             </div>
+                            </MainLanguage.Provider>
                         </CardContent>
                     </Card>
                 )}
