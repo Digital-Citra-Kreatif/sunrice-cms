@@ -1,12 +1,11 @@
-import { a as u, t, j as e, r as o, f as A } from "./admin-CYfPJLU2.js";
+import { a as u, t, j as e, r as o, f as A } from "./admin-4vjDOX5A.js";
 import { c as E, _ as g } from "./createLucideIcon-Ccbp7F45.js";
 import { u as a } from "./ui-Dh5wfMwT.js";
-import { u as M } from "./Confirm-C6q6hCPN.js";
-import { F as U } from "./FieldError-BIWghK_o.js";
+import { u as M, T as y } from "./Confirm-BEM1jBFC.js";
+import { F as U } from "./FieldError-B0vJA9VL.js";
 import { S as H } from "./search-3zKi7F1_.js";
 import { C as B } from "./check-OeKFYRnl.js";
 import { U as _, S as T, M as I } from "./undo-2-CBzqSKK6.js";
-import { T as y } from "./trash-DHN6ewjn.js";
 import { R as P } from "./rotate-ccw-BcgdCn0y.js";
 import { E as L } from "./external-link-CFxEu4M4.js";
 import { P as V } from "./pencil-D-dwWCMx.js";
@@ -33,9 +32,9 @@ const Y = E(D), W = () => [
   { value: "spam", label: t("Spam") },
   { value: "trashed", label: t("Trash") }
 ], G = (n) => ({ pending: t("Pending"), approved: t("Approved"), spam: t("Spam") })[n];
-function me({ tab: n, counts: m, filters: i, collections: h, comments: l, can: d, errors: C = {} }) {
+function ie({ tab: n, counts: m, filters: i, collections: p, comments: l, can: d, errors: C = {} }) {
   a.useBreadcrumbs([{ label: t("Comments"), href: u("cms/comments") }]);
-  const [p, b] = g.useState(i.search), [c, v] = g.useState([]), [j, S] = g.useState(null), [z, F] = M(), f = (s) => {
+  const [h, b] = g.useState(i.search), [c, v] = g.useState([]), [j, S] = g.useState(null), [z, F] = M(), f = (s) => {
     const r = { status: n, search: i.search, collection: i.collection, ...s };
     o.router.get(u("cms/comments"), {
       ...r.status !== "all" ? { status: r.status } : {},
@@ -45,10 +44,10 @@ function me({ tab: n, counts: m, filters: i, collections: h, comments: l, can: d
     }, { preserveState: !0, replace: !0, onSuccess: () => v([]) });
   };
   g.useEffect(() => {
-    if (p === i.search) return;
-    const s = window.setTimeout(() => f({ search: p }), 300);
+    if (h === i.search) return;
+    const s = window.setTimeout(() => f({ search: h }), 300);
     return () => window.clearTimeout(s);
-  }, [p]);
+  }, [h]);
   const N = (s, r = {}) => o.router.post(u(s), r, { preserveScroll: !0, onSuccess: () => v([]) }), k = (s, r) => N(`cms/comments/${s.id}/status`, { status: r }), x = (s) => {
     const r = () => N("cms/comments/bulk", { action: s, ids: c });
     s === "delete" ? z(c.length === 1 ? t("Permanently delete 1 comment? This can't be undone.") : t("Permanently delete :count comments? This can't be undone.", { count: c.length }), r) : r();
@@ -66,16 +65,16 @@ function me({ tab: n, counts: m, filters: i, collections: h, comments: l, can: d
             placeholder: t("Search text, name or email"),
             "aria-label": t("Search comments"),
             className: "cms:pl-9",
-            value: p,
+            value: h,
             onChange: (s) => b(s.target.value)
           }
         )
       ] }),
-      h.length > 1 && /* @__PURE__ */ e.jsxs(a.Select, { value: i.collection ?? "all", onValueChange: (s) => f({ collection: s === "all" ? null : s }), children: [
+      p.length > 1 && /* @__PURE__ */ e.jsxs(a.Select, { value: i.collection ?? "all", onValueChange: (s) => f({ collection: s === "all" ? null : s }), children: [
         /* @__PURE__ */ e.jsx(a.SelectTrigger, { className: "cms:w-48", "aria-label": t("Collection"), children: /* @__PURE__ */ e.jsx(a.SelectValue, {}) }),
         /* @__PURE__ */ e.jsxs(a.SelectContent, { children: [
           /* @__PURE__ */ e.jsx(a.SelectItem, { value: "all", children: t("Every collection") }),
-          h.map((s) => /* @__PURE__ */ e.jsx(a.SelectItem, { value: s.handle, children: s.title }, s.handle))
+          p.map((s) => /* @__PURE__ */ e.jsx(a.SelectItem, { value: s.handle, children: s.title }, s.handle))
         ] })
       ] })
     ] }),
@@ -238,13 +237,13 @@ function me({ tab: n, counts: m, filters: i, collections: h, comments: l, can: d
     F
   ] });
 }
-function J({ row: n, mode: m, error: i, onClose: h }) {
-  const [l, d] = g.useState(m === "edit" ? n.body : ""), [C, p] = g.useState(!1), b = () => {
-    p(!0);
-    const c = { preserveScroll: !0, onSuccess: h, onFinish: () => p(!1) };
+function J({ row: n, mode: m, error: i, onClose: p }) {
+  const [l, d] = g.useState(m === "edit" ? n.body : ""), [C, h] = g.useState(!1), b = () => {
+    h(!0);
+    const c = { preserveScroll: !0, onSuccess: p, onFinish: () => h(!1) };
     m === "reply" ? o.router.post(u(`cms/comments/${n.id}/reply`), { body: l }, c) : o.router.put(u(`cms/comments/${n.id}`), { body: l }, c);
   };
-  return /* @__PURE__ */ e.jsx(a.Dialog, { open: !0, onOpenChange: (c) => !c && h(), children: /* @__PURE__ */ e.jsxs(a.DialogContent, { children: [
+  return /* @__PURE__ */ e.jsx(a.Dialog, { open: !0, onOpenChange: (c) => !c && p(), children: /* @__PURE__ */ e.jsxs(a.DialogContent, { children: [
     /* @__PURE__ */ e.jsxs(a.DialogHeader, { children: [
       /* @__PURE__ */ e.jsx(a.DialogTitle, { children: m === "reply" ? t("Reply to :author", { author: n.author }) : t("Edit :author's comment", { author: n.author }) }),
       /* @__PURE__ */ e.jsx(a.DialogDescription, { children: m === "reply" ? n.status === "pending" ? t("Your reply is published at once, and approves this comment.") : t("Your reply is published at once, under your name.") : t("Fix a typo or remove a link.") })
@@ -262,11 +261,11 @@ function J({ row: n, mode: m, error: i, onClose: h }) {
     ),
     /* @__PURE__ */ e.jsx(U, { message: i }),
     /* @__PURE__ */ e.jsxs(a.DialogFooter, { children: [
-      /* @__PURE__ */ e.jsx(a.Button, { type: "button", variant: "outline", onClick: h, children: t("Cancel") }),
+      /* @__PURE__ */ e.jsx(a.Button, { type: "button", variant: "outline", onClick: p, children: t("Cancel") }),
       /* @__PURE__ */ e.jsx(a.Button, { type: "button", disabled: l.trim() === "" || C, onClick: b, children: m === "reply" ? t("Post reply") : t("Save") })
     ] })
   ] }) });
 }
 export {
-  me as default
+  ie as default
 };

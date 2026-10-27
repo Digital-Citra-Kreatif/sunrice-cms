@@ -1,17 +1,16 @@
-import { t as s, j as e, r as a } from "./admin-CYfPJLU2.js";
+import { t as s, j as e, r as a } from "./admin-4vjDOX5A.js";
 import { u as l } from "./ui-Dh5wfMwT.js";
-import { u as o } from "./Confirm-C6q6hCPN.js";
-import { P as u } from "./plus-COqahUZ2.js";
-import { T as j } from "./trash-DHN6ewjn.js";
-function C({ kind: d, base: c, rows: n, intro: m }) {
+import { u, T as o } from "./Confirm-BEM1jBFC.js";
+import { P as j } from "./plus-COqahUZ2.js";
+function N({ kind: d, base: c, rows: n, intro: m }) {
   const i = d === "blueprint", r = i ? s("Blueprints") : s("Fieldsets");
   l.useBreadcrumbs([{ label: r }]);
-  const [x, h] = o();
+  const [x, h] = u();
   return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-6", children: [
     /* @__PURE__ */ e.jsx(a.Head, { title: r }),
     h,
     /* @__PURE__ */ e.jsx(l.PageHeader, { title: r, description: m, actions: /* @__PURE__ */ e.jsx(l.Button, { asChild: !0, children: /* @__PURE__ */ e.jsxs(a.Link, { href: `${c}/create`, children: [
-      /* @__PURE__ */ e.jsx(u, {}),
+      /* @__PURE__ */ e.jsx(j, {}),
       " ",
       i ? s("New blueprint") : s("New fieldset")
     ] }) }) }),
@@ -41,7 +40,7 @@ function C({ kind: d, base: c, rows: n, intro: m }) {
                 i ? s('Delete the blueprint ":title"? Content keeps its values.', { title: t.title }) : s('Delete the fieldset ":title"? Content keeps its values.', { title: t.title }),
                 () => a.router.delete(`${c}/${t.handle}`, { preserveScroll: !0 })
               ),
-              children: /* @__PURE__ */ e.jsx(j, {})
+              children: /* @__PURE__ */ e.jsx(o, {})
             }
           ) })
         ] }, t.id))
@@ -50,5 +49,5 @@ function C({ kind: d, base: c, rows: n, intro: m }) {
   ] });
 }
 export {
-  C as S
+  N as S
 };

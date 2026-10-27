@@ -1,14 +1,13 @@
-import { j as e, t, r as m, a as C, l as H, f as M, s as V } from "./admin-CYfPJLU2.js";
+import { j as e, t, r as m, a as C, l as H, f as M, s as V } from "./admin-4vjDOX5A.js";
 import { c as P, _ as b } from "./createLucideIcon-Ccbp7F45.js";
-import { u as xe } from "./Confirm-C6q6hCPN.js";
+import { u as xe, T as pe } from "./Confirm-BEM1jBFC.js";
 import { u as a } from "./ui-Dh5wfMwT.js";
-import { E as J, X as Y } from "./EntryStatus-B_w7AMip.js";
-import { t as pe, c as E, r as ge } from "./tree-B7sRX6dH.js";
-import { D as je } from "./download-DA5N5mq4.js";
+import { E as J, X as Y } from "./EntryStatus-CbFh2-b8.js";
+import { t as ge, c as E, r as je } from "./tree-B7sRX6dH.js";
+import { D as fe } from "./download-DA5N5mq4.js";
 import { P as Z } from "./plus-COqahUZ2.js";
-import { S as fe } from "./search-3zKi7F1_.js";
-import { R as ve } from "./rotate-ccw-BcgdCn0y.js";
-import { T as be } from "./trash-DHN6ewjn.js";
+import { S as ve } from "./search-3zKi7F1_.js";
+import { R as be } from "./rotate-ccw-BcgdCn0y.js";
 import { C as Se } from "./chevron-left-usCQl1qw.js";
 import { C as Ce } from "./chevron-right-9qVV6b-Q.js";
 const q = {
@@ -57,12 +56,12 @@ re.node;
 const Ne = P(re);
 function ke({ collection: r, rows: c, hierarchical: n = !1 }) {
   const l = b.useCallback(
-    (x) => pe(x, (u) => n ? u.parentId : null),
+    (x) => ge(x, (u) => n ? u.parentId : null),
     [n]
   ), [i, d] = b.useState(() => l(c));
   b.useEffect(() => d(l(c)), [c, l]);
   const N = (x, u) => {
-    const S = ge(i, x, u), h = E(S, x).map((v) => S[v].id);
+    const S = je(i, x, u), h = E(S, x).map((v) => S[v].id);
     d(S), m.router.post(
       C("cms/entries/reorder"),
       { collection: r, ids: h, parent_id: x < 0 ? null : i[x]?.id ?? null },
@@ -122,7 +121,7 @@ const R = "__all", $e = () => [
   { value: "scheduled", label: t("Scheduled") },
   { value: "trashed", label: t("Trash") }
 ];
-function We(r) {
+function Ke(r) {
   const { collection: c, entries: n, query: l } = r;
   return a.useBreadcrumbs([{ label: c ? c.title : t("Entries") }]), !c || !n || !l ? /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-4", children: [
     /* @__PURE__ */ e.jsx(m.Head, { title: t("Entries") }),
@@ -184,7 +183,7 @@ function Pe({
           t("New entry")
         ] }) }),
         menu: [
-          ...n.total > 0 && h?.export ? [{ label: t("Export CSV"), href: `${v}/export${W ? `?${W}` : ""}`, download: !0, icon: /* @__PURE__ */ e.jsx(je, {}) }] : [],
+          ...n.total > 0 && h?.export ? [{ label: t("Export CSV"), href: `${v}/export${W ? `?${W}` : ""}`, download: !0, icon: /* @__PURE__ */ e.jsx(fe, {}) }] : [],
           ...N.map((s) => ({ label: s.label, href: s.href, external: s.external, group: s.group }))
         ],
         children: c.length > 1 && /* @__PURE__ */ e.jsxs(a.Select, { value: r.handle, onValueChange: (s) => m.router.get(C(`cms/collections/${s}/entries`)), children: [
@@ -196,7 +195,7 @@ function Pe({
     f && /* @__PURE__ */ e.jsx(a.TrashBanner, { items: t("entries"), onBack: () => p({ status: "" }) }),
     /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-wrap cms:items-center cms:gap-2", children: [
       /* @__PURE__ */ e.jsxs("div", { className: "cms:relative cms:w-full cms:max-w-xs", children: [
-        /* @__PURE__ */ e.jsx(fe, { className: "cms:pointer-events-none cms:absolute cms:top-1/2 cms:left-3 cms:size-4 cms:-translate-y-1/2 cms:text-muted-foreground" }),
+        /* @__PURE__ */ e.jsx(ve, { className: "cms:pointer-events-none cms:absolute cms:top-1/2 cms:left-3 cms:size-4 cms:-translate-y-1/2 cms:text-muted-foreground" }),
         /* @__PURE__ */ e.jsx(
           a.Input,
           {
@@ -337,7 +336,7 @@ function Pe({
                   "aria-label": t("Restore :title", { title: s.title }),
                   onClick: () => m.router.post(C(`cms/entries/${s.id}/restore`), {}, { preserveScroll: !0 }),
                   children: [
-                    /* @__PURE__ */ e.jsx(ve, {}),
+                    /* @__PURE__ */ e.jsx(be, {}),
                     " ",
                     t("Restore")
                   ]
@@ -356,7 +355,7 @@ function Pe({
                     t("Delete")
                   ),
                   children: [
-                    /* @__PURE__ */ e.jsx(be, {}),
+                    /* @__PURE__ */ e.jsx(pe, {}),
                     " ",
                     t("Permanently delete")
                   ]
@@ -489,5 +488,5 @@ function Le({ trashed: r, filtered: c, canCreate: n, createUrl: l, onClear: i })
   ] });
 }
 export {
-  We as default
+  Ke as default
 };

@@ -34,6 +34,8 @@ Links to entries that aren't on the website (drafts, scheduled, in the trash) ar
 
 Click **Save**. The whole menu is saved at once, and changes are live straight away.
 
+If a colleague saved the same menu after you opened it, saving doesn't put their links back: choose **Load theirs** (your unsaved changes are dropped) or **Save mine anyway** (their changes are replaced).
+
 > [!NOTE]
 > Addresses that could run code (such as `javascript:`) are refused. Use `https://`, a path, `mailto:` or `tel:`.
 

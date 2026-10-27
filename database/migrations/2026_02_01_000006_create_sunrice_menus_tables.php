@@ -14,6 +14,8 @@ return new class extends Migration
             $table->id();
             $table->string('handle', 64)->unique();
             $table->string('title');
+            // Counted up each time its links change: a save from an editor opened before is refused.
+            $table->unsignedInteger('version')->default(1);
             $table->timestamps();
         });
 

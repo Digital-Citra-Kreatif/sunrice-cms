@@ -1,18 +1,17 @@
-import { j as e, t as s, f as S, a as B, r as j, b as Te, d as es, e as ss, l as P, c as ts, g as as, h as ls, s as ns, i as is, k as rs } from "./admin-CYfPJLU2.js";
+import { j as e, t as s, f as S, a as B, r as j, b as Te, d as es, e as ss, l as P, c as ts, g as as, h as ls, s as ns, i as is, k as rs } from "./admin-4vjDOX5A.js";
 import { c as U, _ as N } from "./createLucideIcon-Ccbp7F45.js";
 import { u as a } from "./ui-Dh5wfMwT.js";
-import { u as cs } from "./Confirm-C6q6hCPN.js";
-import { s as os, w as ds, T as ms } from "./seo-BlcWC4dk.js";
-import { E as ve, C as Z } from "./EntryStatus-B_w7AMip.js";
-import { E as us } from "./EntriesPicker-D3lVX5Mf.js";
+import { u as cs, T as ve } from "./Confirm-BEM1jBFC.js";
+import { s as os, w as ds, T as ms } from "./seo-CzgD9wGU.js";
+import { E as je, C as Z } from "./EntryStatus-CbFh2-b8.js";
+import { E as us } from "./EntriesPicker-DTMO-o8I.js";
 import { C as Ae } from "./check-OeKFYRnl.js";
 import { S as hs, M as ps, U as re } from "./undo-2-CBzqSKK6.js";
-import { F as xs } from "./FieldSections-DtIBxEBC.js";
-import { S as gs } from "./SlugNote-ChIcbtnv.js";
-import { C as fs, z as Be, A as bs, b as vs, h as js, B as ws, T as ks } from "./FieldInput-Bp9y7puO.js";
-import { F } from "./FieldError-BIWghK_o.js";
+import { F as xs } from "./FieldSections-CBeYLq6J.js";
+import { S as gs } from "./SlugNote-sURx7pDS.js";
+import { C as fs, z as Be, A as bs, b as vs, h as js, B as ws, T as ks } from "./FieldInput-Bjrt_sX4.js";
+import { F } from "./FieldError-B0vJA9VL.js";
 import { R as Ns } from "./rotate-ccw-BcgdCn0y.js";
-import { T as je } from "./trash-DHN6ewjn.js";
 import { L as Cs } from "./link-2-BYZeXgi5.js";
 import { C as Me } from "./copy-BT7TBOUx.js";
 import { L as Ss } from "./layout-template-RwJXNfEY.js";
@@ -231,7 +230,7 @@ function Ce(l) {
   const r = l.slice(0, 5).map((c) => c.label).join("; ");
   return ` ${l.length > 5 ? s("It's used by :list and :count more: those links will show nothing.", { list: r, count: l.length - 5 }) : s("It's used by :list: those links will show nothing.", { list: r })}`;
 }
-function vt(l) {
+function bt(l) {
   const { entry: r } = l;
   return /* @__PURE__ */ e.jsx(zs, { ...l }, r ? `${r.id}:${r.locale}:${r.version}:${r.status}:${r.trashed}:${r.publishedAt}` : "new");
 }
@@ -310,7 +309,7 @@ function zs({ collection: l, fields: r, locales: c = [], shared: m = [], sharedV
                 () => j.router.delete(`${y}/force`, { data: u.length > 0 ? { force: 1 } : {} })
               ),
               children: [
-                /* @__PURE__ */ e.jsx(je, {}),
+                /* @__PURE__ */ e.jsx(ve, {}),
                 " ",
                 s("Permanently delete")
               ]
@@ -355,7 +354,7 @@ function zs({ collection: l, fields: r, locales: c = [], shared: m = [], sharedV
                     className: "cms:text-destructive",
                     onSelect: () => I(s('Move ":title" to the trash? It comes off the site; you can restore it.', { title: o.title }) + Ce(u), () => j.router.delete(y), s("Move to trash")),
                     children: [
-                      /* @__PURE__ */ e.jsx(je, {}),
+                      /* @__PURE__ */ e.jsx(ve, {}),
                       " ",
                       s("Move to trash")
                     ]
@@ -417,7 +416,7 @@ function zs({ collection: l, fields: r, locales: c = [], shared: m = [], sharedV
           ] })
         ] }),
         children: [
-          t && (t.trashed ? /* @__PURE__ */ e.jsx(a.Badge, { variant: "secondary", children: s("In the trash") }) : /* @__PURE__ */ e.jsx(ve, { status: t.status, changes: t.status !== "draft" && t.hasUnpublishedChanges })),
+          t && (t.trashed ? /* @__PURE__ */ e.jsx(a.Badge, { variant: "secondary", children: s("In the trash") }) : /* @__PURE__ */ e.jsx(je, { status: t.status, changes: t.status !== "draft" && t.hasUnpublishedChanges })),
           t?.review && !t.trashed && /* @__PURE__ */ e.jsx(a.Badge, { variant: "warning", title: t.review.by ? s(":name sent it on :date", { name: t.review.by, date: S(t.review.requestedAt) }) : s("Sent on :date", { date: S(t.review.requestedAt) }), children: s("Waiting for review") })
         ]
       }
@@ -576,7 +575,7 @@ function zs({ collection: l, fields: r, locales: c = [], shared: m = [], sharedV
           /* @__PURE__ */ e.jsxs("dl", { className: "cms:flex cms:flex-col cms:gap-2", children: [
             /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-center cms:justify-between cms:gap-3", children: [
               /* @__PURE__ */ e.jsx("dt", { className: "cms:text-muted-foreground", children: s("Status") }),
-              /* @__PURE__ */ e.jsx("dd", { className: "cms:flex cms:flex-wrap cms:justify-end cms:gap-1", children: t.trashed ? /* @__PURE__ */ e.jsx(a.Badge, { variant: "secondary", children: s("In the trash") }) : /* @__PURE__ */ e.jsx(ve, { status: t.status, changes: t.status !== "draft" && t.hasUnpublishedChanges }) })
+              /* @__PURE__ */ e.jsx("dd", { className: "cms:flex cms:flex-wrap cms:justify-end cms:gap-1", children: t.trashed ? /* @__PURE__ */ e.jsx(a.Badge, { variant: "secondary", children: s("In the trash") }) : /* @__PURE__ */ e.jsx(je, { status: t.status, changes: t.status !== "draft" && t.hasUnpublishedChanges }) })
             ] }),
             t.status !== "draft" && t.publishedAt && /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:items-baseline cms:justify-between cms:gap-3", children: [
               /* @__PURE__ */ e.jsx("dt", { className: "cms:text-muted-foreground", children: t.status === "scheduled" ? s("Scheduled for") : s("Published") }),
@@ -1148,5 +1147,5 @@ function $e({ taxonomies: l, value: r, labels: c, errors: m, changed: h, disable
   ] }) }) });
 }
 export {
-  vt as default
+  bt as default
 };

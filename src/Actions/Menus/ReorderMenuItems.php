@@ -16,7 +16,8 @@ use Sunrice\Cms\Support\SortOrder;
 /**
  * Puts a menu's items in the order given, keeping their ids: the items of
  * one level (under `$parentId`, or the top level) are numbered 0…n again,
- * the ones given first, the others after them as they were.
+ * the ones given first, the others after them as they were. Counts the
+ * menu's version up, as SaveMenu does.
  *
  * @api
  */
@@ -68,6 +69,8 @@ final class ReorderMenuItems
                 $positions[$id] = $index;
             }
             SortOrder::write((new MenuItem)->getTable(), $positions);
+            // A links editor opened before would put the old order back: its save is refused.
+            Menu::query()->whereKey($menu->id)->increment('version');
         });
         if (! $changed) {
             return false;

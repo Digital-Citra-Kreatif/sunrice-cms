@@ -16,6 +16,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property string $handle
  * @property string $title
+ * @property int $version counted up each time its links change; a save with an older one is refused
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Collection<int, MenuItem> $items
@@ -27,6 +28,12 @@ class Menu extends Model
     protected $table = 'sunrice_menus';
 
     protected $guarded = [];
+
+    /** @return array<string, string> */
+    protected function casts(): array
+    {
+        return ['version' => 'integer'];
+    }
 
     /** @return HasMany<MenuItem, $this> */
     public function items(): HasMany

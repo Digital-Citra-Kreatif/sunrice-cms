@@ -8,6 +8,7 @@ import {
 } from '@imajiner/admin-sdk/ui';
 import { EntriesPicker } from '@/components/EntriesPicker.tsx';
 import { FieldError } from '@/components/FieldError.tsx';
+import { VersionConflict } from '@/components/VersionConflict.tsx';
 import { localeName } from '@/lib/entries.ts';
 import { type FlatItem, flatten, indent, labelFallback, type MenuNode, newItem, outdent, removeItem, toTree } from '@/lib/menu.ts';
 import { childIndexes, reorderLevel } from '@/lib/tree.ts';
@@ -16,6 +17,8 @@ import { isSafeUrl, pickerQuery } from '@/lib/values.ts';
 interface Props {
     menu: { handle: string; title: string };
     items: MenuNode[];
+    /** The links' version, to refuse a save over someone else's newer one. */
+    version: number;
     locales: string[];
     limits: { depth: number; items: number };
     /** Terms with pages: the shared page (collection null) and their collections' term pages. */
@@ -30,25 +33,32 @@ interface Props {
 
 type Kind = 'entry' | 'term' | 'listing' | 'index' | 'url';
 
-export default function MenuEdit({ menu, items: initial, locales, limits, terms, listings, indexes = [], can, settings }: Props) {
+export default function MenuEditPage(props: Props) {
+    // A fresh editor after each save, and after "Load theirs".
+    return <MenuEdit key={props.version} {...props} />;
+}
+
+function MenuEdit({ menu, items: initial, version, locales, limits, terms, listings, indexes = [], can, settings }: Props) {
     const url = adminUrl(`cms/menus/${menu.handle}/links`);
     useBreadcrumbs([{ label: t('Menus'), href: adminUrl('cms/menus') }, { label: menu.title }]);
     const [items, setItems] = React.useState<FlatItem[]>(() => flatten(initial));
     const [adding, setAdding] = React.useState<Kind | null>(null);
     // The tree is recursive; Inertia's form types stop recursing only at `any`.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const form = useForm<{ items: any[] }>({ items: initial });
+    const form = useForm<{ items: any[]; version: number | null }>({ items: initial, version });
     const errors = form.errors as Record<string, string | undefined>;
     const [dirty, setDirty] = React.useState(false);
     const main = locales[0] ?? 'en';
     const change = (next: FlatItem[]) => { setItems(next); setDirty(true); };
     const update = (index: number, patch: Partial<FlatItem>) => change(items.map((item, i) => (i === index ? { ...item, ...patch } : item)));
 
-    const persist = () => {
+    /** Saves the links; without the version ("Save mine anyway") over whatever is there. */
+    const send = (checked: boolean) => {
         if (form.processing) return;
-        form.transform(() => ({ items: toTree(items).map(strip) }));
+        form.transform(() => ({ items: toTree(items).map(strip), version: checked ? version : null }));
         form.put(url, { preserveScroll: true, onSuccess: () => setDirty(false) });
     };
+    const persist = () => send(true);
     const save = (e: React.FormEvent) => {
         e.preventDefault();
         persist();
@@ -132,6 +142,7 @@ export default function MenuEdit({ menu, items: initial, locales, limits, terms,
             >
                 {dirty && <span className="cms:text-sm cms:text-muted-foreground">{t('Unsaved changes')}</span>}
             </PageHeader>
+            <VersionConflict message={errors.version} processing={form.processing} onSaveMine={() => send(false)} />
             <FieldError message={errors.items} />
             {Object.keys(errors).some((key) => key.startsWith('items.')) && (
                 <p role="alert" className="cms:text-sm cms:text-destructive">{t('Some links need fixing: :error', { error: Object.values(errors).filter(Boolean)[0] })}</p>

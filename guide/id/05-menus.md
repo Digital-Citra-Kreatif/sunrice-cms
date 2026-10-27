@@ -34,6 +34,8 @@ Tautan ke entri yang tidak tayang di situs (draf, terjadwal, di tempat sampah) d
 
 Klik **Simpan**. Seluruh menu disimpan sekaligus, dan perubahan langsung tayang.
 
+Jika rekan menyimpan menu yang sama setelah Anda membukanya, menyimpan tidak mengembalikan tautan mereka: pilih **Muat versi mereka** (perubahan Anda yang belum disimpan dibuang) atau **Tetap simpan versi saya** (perubahan mereka diganti).
+
 > [!NOTE]
 > Alamat yang bisa menjalankan kode (misalnya `javascript:`) ditolak. Gunakan `https://`, alamat di situs, `mailto:`, atau `tel:`.
 

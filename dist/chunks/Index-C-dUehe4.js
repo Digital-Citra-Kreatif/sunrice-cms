@@ -1,13 +1,12 @@
-import { t, j as e, r as n, a as h, l as V } from "./admin-CYfPJLU2.js";
-import { c as M, _ as f } from "./createLucideIcon-Ccbp7F45.js";
+import { t, j as e, r as n, a as h, l as V } from "./admin-4vjDOX5A.js";
+import { c as M, _ as g } from "./createLucideIcon-Ccbp7F45.js";
 import { u as r } from "./ui-Dh5wfMwT.js";
-import { u as A } from "./Confirm-C6q6hCPN.js";
+import { u as A, T as S } from "./Confirm-BEM1jBFC.js";
 import { c as $, r as F } from "./tree-B7sRX6dH.js";
 import { S as G } from "./settings-2-0VUe76YZ.js";
 import { L as q } from "./layout-template-RwJXNfEY.js";
-import { P as S } from "./plus-COqahUZ2.js";
+import { P as k } from "./plus-COqahUZ2.js";
 import { S as J } from "./search-3zKi7F1_.js";
-import { T as k } from "./trash-DHN6ewjn.js";
 import { E as K } from "./external-link-CFxEu4M4.js";
 import { R as Q } from "./rotate-ccw-BcgdCn0y.js";
 import { P as W } from "./pencil-D-dwWCMx.js";
@@ -45,10 +44,10 @@ function I(c) {
   const p = m.join("; ");
   return ` ${o > m.length ? t("It's used by :list and :count more.", { list: p, count: o - m.length }) : t("It's used by :list.", { list: p })}`;
 }
-function ue({ taxonomy: c, taxonomies: m, terms: o, locales: p, locale: d, trashed: i = !1, trashedCount: z = 0 }) {
+function de({ taxonomy: c, taxonomies: m, terms: o, locales: p, locale: d, trashed: i = !1, trashedCount: z = 0 }) {
   r.useBreadcrumbs([{ label: c ? c.title : t("Terms") }]);
-  const [w, R] = A(), [b, E] = f.useState(""), [a, N] = f.useState(o);
-  if (f.useEffect(() => N(o), [o]), !c)
+  const [w, R] = A(), [b, E] = g.useState(""), [a, N] = g.useState(o);
+  if (g.useEffect(() => N(o), [o]), !c)
     return /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-4", children: [
       /* @__PURE__ */ e.jsx(n.Head, { title: t("Terms") }),
       /* @__PURE__ */ e.jsx(r.PageHeader, { title: t("Terms"), description: t("There are no taxonomies yet. Create one under Structure → Taxonomies (categories, tags…), then add its terms here.") })
@@ -64,7 +63,7 @@ function ue({ taxonomy: c, taxonomies: m, terms: o, locales: p, locale: d, trash
     t('Move ":title" to the trash, with the terms under it? It comes off the site; you can restore it.', { title: s.fallback }) + I(s),
     () => n.router.delete(h(`cms/terms/${s.id}`), { preserveScroll: !0 }),
     t("Move to trash")
-  ), y = b.trim().toLowerCase(), g = y === "" ? null : a.filter((s) => `${s.title ?? s.fallback} ${s.slug ?? ""}`.toLowerCase().includes(y)), H = c.collections ?? [], v = (s, l, x) => /* @__PURE__ */ e.jsxs("div", { className: `${L} cms:border-t cms:border-border/60 cms:px-3 cms:py-2`, children: [
+  ), y = b.trim().toLowerCase(), f = y === "" ? null : a.filter((s) => `${s.title ?? s.fallback} ${s.slug ?? ""}`.toLowerCase().includes(y)), H = c.collections ?? [], v = (s, l, x) => /* @__PURE__ */ e.jsxs("div", { className: `${L} cms:border-t cms:border-border/60 cms:px-3 cms:py-2`, children: [
     /* @__PURE__ */ e.jsx("span", { className: "cms:flex cms:justify-center", children: l && !i && /* @__PURE__ */ e.jsx(r.SortableHandle, { ...l, label: t("Move :title", { title: s.fallback }) }) }),
     /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:min-w-0 cms:items-center cms:gap-2", style: { paddingLeft: x * 20 }, children: [
       x > 0 && /* @__PURE__ */ e.jsx("span", { className: "cms:text-muted-foreground", "aria-hidden": !0, children: "└" }),
@@ -94,7 +93,7 @@ function ue({ taxonomy: c, taxonomies: m, terms: o, locales: p, locale: d, trash
             () => n.router.delete(h(`cms/terms/${s.id}/force`), { preserveScroll: !0, data: B(s) > 0 ? { force: 1 } : {} })
           ),
           children: [
-            /* @__PURE__ */ e.jsx(k, {}),
+            /* @__PURE__ */ e.jsx(S, {}),
             " ",
             t("Permanently delete")
           ]
@@ -109,13 +108,13 @@ function ue({ taxonomy: c, taxonomies: m, terms: o, locales: p, locale: d, trash
           t("Edit")
         ] }) }),
         c.hierarchical && s.title !== null && /* @__PURE__ */ e.jsx(r.DropdownMenuItem, { asChild: !0, children: /* @__PURE__ */ e.jsxs(n.Link, { href: `${u}/create?locale=${encodeURIComponent(d)}&parent=${s.id}`, children: [
-          /* @__PURE__ */ e.jsx(S, {}),
+          /* @__PURE__ */ e.jsx(k, {}),
           " ",
           t("Add a term under it")
         ] }) }),
         /* @__PURE__ */ e.jsx(r.DropdownMenuSeparator, {}),
         /* @__PURE__ */ e.jsxs(r.DropdownMenuItem, { className: "cms:text-destructive", onSelect: () => U(s), children: [
-          /* @__PURE__ */ e.jsx(k, {}),
+          /* @__PURE__ */ e.jsx(S, {}),
           " ",
           t("Move to trash")
         ] })
@@ -133,7 +132,7 @@ function ue({ taxonomy: c, taxonomies: m, terms: o, locales: p, locale: d, trash
       {
         title: i ? /* @__PURE__ */ e.jsx(r.TrashTitle, { children: c.title }) : c.title,
         primary: !i && /* @__PURE__ */ e.jsx(r.Button, { asChild: !0, children: /* @__PURE__ */ e.jsxs(n.Link, { href: `${u}/create?locale=${encodeURIComponent(d)}`, children: [
-          /* @__PURE__ */ e.jsx(S, {}),
+          /* @__PURE__ */ e.jsx(k, {}),
           " ",
           t("New term")
         ] }) }),
@@ -169,11 +168,11 @@ function ue({ taxonomy: c, taxonomies: m, terms: o, locales: p, locale: d, trash
         /* @__PURE__ */ e.jsx(r.SelectContent, { children: p.map((s) => /* @__PURE__ */ e.jsx(r.SelectItem, { value: s, children: V(s) }, s)) })
       ] }),
       !i && /* @__PURE__ */ e.jsxs(r.Button, { variant: "ghost", className: "cms:ml-auto cms:order-last", onClick: () => n.router.get(u, { locale: d, status: "trashed" }), children: [
-        /* @__PURE__ */ e.jsx(k, {}),
+        /* @__PURE__ */ e.jsx(S, {}),
         " ",
         t("Trash")
       ] }),
-      !i && a.length > 1 && !g && /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: c.hierarchical ? t("Drag terms to set their order; a term's parent is set in its editor (Under).") : t("Drag terms to set their order.") })
+      !i && a.length > 1 && !f && /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: c.hierarchical ? t("Drag terms to set their order; a term's parent is set in its editor (Under).") : t("Drag terms to set their order.") })
     ] }),
     /* @__PURE__ */ e.jsxs(r.Card, { className: "cms:gap-0 cms:overflow-hidden cms:py-0", children: [
       /* @__PURE__ */ e.jsxs("div", { className: `${L} cms:bg-muted/60 cms:px-3 cms:py-2.5 cms:text-sm cms:font-medium cms:text-muted-foreground`, children: [
@@ -187,12 +186,12 @@ function ue({ taxonomy: c, taxonomies: m, terms: o, locales: p, locale: d, trash
       a.length === 0 ? /* @__PURE__ */ e.jsx("div", { className: "cms:flex cms:flex-col cms:items-center cms:gap-3 cms:border-t cms:border-border/60 cms:p-10 cms:text-center cms:text-muted-foreground", children: i ? t("The trash is empty.") : /* @__PURE__ */ e.jsxs(e.Fragment, { children: [
         t("No terms yet."),
         /* @__PURE__ */ e.jsx(r.Button, { size: "sm", asChild: !0, children: /* @__PURE__ */ e.jsxs(n.Link, { href: `${u}/create?locale=${encodeURIComponent(d)}`, children: [
-          /* @__PURE__ */ e.jsx(S, {}),
+          /* @__PURE__ */ e.jsx(k, {}),
           " ",
           t("New term")
         ] }) }),
         /* @__PURE__ */ e.jsx(r.TrashHint, { count: z, onShow: () => n.router.get(u, { locale: d, status: "trashed" }) })
-      ] }) }) : g ? g.length === 0 ? /* @__PURE__ */ e.jsx("p", { className: "cms:border-t cms:border-border/60 cms:p-8 cms:text-center cms:text-muted-foreground", children: t("No terms match “:search”.", { search: b }) }) : g.map((s) => /* @__PURE__ */ e.jsx(f.Fragment, { children: v(s, null, 0) }, s.id)) : i ? a.map((s) => /* @__PURE__ */ e.jsx(f.Fragment, { children: v(s, null, 0) }, s.id)) : T(-1)
+      ] }) }) : f ? f.length === 0 ? /* @__PURE__ */ e.jsx("p", { className: "cms:border-t cms:border-border/60 cms:p-8 cms:text-center cms:text-muted-foreground", children: t("No terms match “:search”.", { search: b }) }) : f.map((s) => /* @__PURE__ */ e.jsx(g.Fragment, { children: v(s, null, 0) }, s.id)) : i ? a.map((s) => /* @__PURE__ */ e.jsx(g.Fragment, { children: v(s, null, 0) }, s.id)) : T(-1)
     ] })
   ] });
 }
@@ -203,5 +202,5 @@ function Z(c) {
   return Number.isNaN(m.getTime()) ? "—" : m.toLocaleDateString(document.documentElement.lang || void 0, { day: "numeric", month: "short", year: "numeric" });
 }
 export {
-  ue as default
+  de as default
 };

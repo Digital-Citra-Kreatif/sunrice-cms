@@ -1,12 +1,11 @@
-import { a as i, t, j as e, r as o, f as p } from "./admin-CYfPJLU2.js";
+import { a as i, t, j as e, r as o, f as p } from "./admin-4vjDOX5A.js";
 import { c as b, _ as C } from "./createLucideIcon-Ccbp7F45.js";
 import { u as l } from "./ui-Dh5wfMwT.js";
-import { u as w } from "./Confirm-C6q6hCPN.js";
-import { P as S } from "./plus-COqahUZ2.js";
-import { D as _ } from "./download-DA5N5mq4.js";
-import { C as T } from "./chevron-left-usCQl1qw.js";
-import { C as y } from "./chevron-right-9qVV6b-Q.js";
-import { T as D } from "./trash-DHN6ewjn.js";
+import { u as w, T as S } from "./Confirm-BEM1jBFC.js";
+import { P as _ } from "./plus-COqahUZ2.js";
+import { D as T } from "./download-DA5N5mq4.js";
+import { C as y } from "./chevron-left-usCQl1qw.js";
+import { C as D } from "./chevron-right-9qVV6b-Q.js";
 const f = {
   name: "inbox",
   size: 24,
@@ -23,7 +22,7 @@ const f = {
 };
 f.node;
 const k = b(f), H = 3;
-function V({ form: n, forms: h, submissions: a, can: u, createForm: m = null }) {
+function U({ form: n, forms: h, submissions: a, can: u, createForm: m = null }) {
   l.useBreadcrumbs([{ label: t("Submissions"), href: i("cms/submissions") }, ...n ? [{ label: n.title }] : []]);
   const [r, d] = C.useState(null), [j, g] = w();
   if (!n || !a)
@@ -37,7 +36,7 @@ function V({ form: n, forms: h, submissions: a, can: u, createForm: m = null }) 
           /* @__PURE__ */ e.jsx("p", { className: "cms:max-w-sm cms:text-sm cms:text-muted-foreground", children: m ? t("Create a form, put it on a page, and what visitors send shows up here.") : t("Once someone creates a form and puts it on a page, what visitors send shows up here.") })
         ] }),
         m && /* @__PURE__ */ e.jsx(l.Button, { asChild: !0, children: /* @__PURE__ */ e.jsxs(o.Link, { href: m, children: [
-          /* @__PURE__ */ e.jsx(S, {}),
+          /* @__PURE__ */ e.jsx(_, {}),
           " ",
           t("Create a form")
         ] }) })
@@ -53,7 +52,7 @@ function V({ form: n, forms: h, submissions: a, can: u, createForm: m = null }) 
       l.PageHeader,
       {
         title: n.title,
-        menu: a.total > 0 && u.export ? [{ label: t("Export CSV"), href: i(`cms/forms/${n.handle}/submissions/export`), download: !0, icon: /* @__PURE__ */ e.jsx(_, {}) }] : [],
+        menu: a.total > 0 && u.export ? [{ label: t("Export CSV"), href: i(`cms/forms/${n.handle}/submissions/export`), download: !0, icon: /* @__PURE__ */ e.jsx(T, {}) }] : [],
         children: h.length > 1 && /* @__PURE__ */ e.jsxs(l.Select, { value: n.handle, onValueChange: (s) => o.router.get(i(`cms/forms/${s}/submissions`)), children: [
           /* @__PURE__ */ e.jsx(l.SelectTrigger, { className: "cms:w-56", "aria-label": t("Form"), children: /* @__PURE__ */ e.jsx(l.SelectValue, {}) }),
           /* @__PURE__ */ e.jsx(l.SelectContent, { children: h.map((s) => /* @__PURE__ */ e.jsxs(l.SelectItem, { value: s.handle, children: [
@@ -89,7 +88,7 @@ function V({ form: n, forms: h, submissions: a, can: u, createForm: m = null }) 
             "aria-label": t("Previous page"),
             disabled: !a.prev_page_url,
             onClick: () => a.prev_page_url && o.router.get(a.prev_page_url, {}, { preserveScroll: !0 }),
-            children: /* @__PURE__ */ e.jsx(T, {})
+            children: /* @__PURE__ */ e.jsx(y, {})
           }
         ),
         /* @__PURE__ */ e.jsx(
@@ -100,7 +99,7 @@ function V({ form: n, forms: h, submissions: a, can: u, createForm: m = null }) 
             "aria-label": t("Next page"),
             disabled: !a.next_page_url,
             onClick: () => a.next_page_url && o.router.get(a.next_page_url, {}, { preserveScroll: !0 }),
-            children: /* @__PURE__ */ e.jsx(y, {})
+            children: /* @__PURE__ */ e.jsx(D, {})
           }
         )
       ] })
@@ -123,7 +122,7 @@ function V({ form: n, forms: h, submissions: a, can: u, createForm: m = null }) 
         /* @__PURE__ */ e.jsx("dd", { className: "cms:break-all cms:text-muted-foreground", children: c })
       ] }, s)) }),
       u.delete && r && /* @__PURE__ */ e.jsx(l.DialogFooter, { children: /* @__PURE__ */ e.jsxs(l.Button, { variant: "destructive", onClick: () => v(r), children: [
-        /* @__PURE__ */ e.jsx(D, {}),
+        /* @__PURE__ */ e.jsx(S, {}),
         " ",
         t("Delete")
       ] }) })
@@ -132,5 +131,5 @@ function V({ form: n, forms: h, submissions: a, can: u, createForm: m = null }) 
   ] });
 }
 export {
-  V as default
+  U as default
 };

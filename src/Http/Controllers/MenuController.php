@@ -35,6 +35,8 @@ final class MenuController
         return Inertia::render('Cms/Menus/Edit', [
             'menu' => ['handle' => $menu->handle, 'title' => $menu->title],
             'items' => self::tree($menu->items->all(), null),
+            // To refuse a save over someone else's newer one (SaveMenu).
+            'version' => $menu->version,
             'locales' => Locales::all(),
             'limits' => ['depth' => SaveMenu::MAX_DEPTH, 'items' => SaveMenu::MAX_ITEMS],
             // What else items may link to: terms with pages (shared, or in collections: `pages`), listing pages.
@@ -59,7 +61,9 @@ final class MenuController
         // one is a mistake (not "clear"), so it's refused.
         /** @var array{items: array<mixed>} $data */
         $data = $request->validate(['items' => ['present', 'array']]);
-        $save->handle($menu, $data['items']);
+        // The version the editor opened; none ("Save mine anyway") saves over whatever is there.
+        $version = $request->input('version');
+        $save->handle($menu, $data['items'], is_int($version) || is_string($version) ? $version : null);
 
         return back()->with('success', 'Menu saved.');
     }

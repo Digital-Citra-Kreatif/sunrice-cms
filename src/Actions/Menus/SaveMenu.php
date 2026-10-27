@@ -18,6 +18,7 @@ use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\SafeUrl;
+use Sunrice\Cms\Support\Versioned;
 
 /**
  * Replaces a menu's items with the given tree. Each item: entry_id (an
@@ -27,6 +28,8 @@ use Sunrice\Cms\Support\SafeUrl;
  * address), new_tab, and children (three levels at most). A listing
  * page's link may take `query`, its filters as a query string
  * ("listing_type=for-sale"), added to its address in every language.
+ * Given the menu's `version` the editor opened, a save over someone
+ * else's newer one (or a reorder since) is refused.
  *
  * @api
  */
@@ -43,11 +46,13 @@ final class SaveMenu
 
     /**
      * @param  array<mixed>  $items
+     * @param  int|string|null  $version  the one the editor opened: a save over someone else's newer one is refused (null: no check)
      *
      * @throws ValidationException
      */
-    public function handle(Menu $menu, array $items): void
+    public function handle(Menu $menu, array $items, int|string|null $version = null): void
     {
+        $expected = Versioned::expected($version);
         $rules = ['items' => ['array', 'list']];
         $count = 0;
         $this->rules($items, 'items', 1, $rules, $count);
@@ -59,7 +64,10 @@ final class SaveMenu
         });
         $validator->validate();
 
-        DB::transaction(function () use ($menu, $items): void {
+        DB::transaction(function () use ($menu, $items, $expected): void {
+            // Only if nobody saved in between: the version check and the count up are one
+            // statement, which holds the menu's row until the new tree is in.
+            Versioned::update($menu, $expected, ['updated_at' => $menu->freshTimestamp()]);
             // Unhooked from their parents first, so no row is deleted by a
             // cascade while the statement runs: MySQL's ordered delete (the
             // relation is ordered) left all but the first branch behind.
