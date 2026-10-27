@@ -13,6 +13,7 @@ import { localeName } from '@/lib/entries.ts';
 import { type FlatItem, flatten, indent, kindOf, labelFallback, type MenuKind, type MenuNode, newItem, outdent, removeItem, retarget, toTree } from '@/lib/menu.ts';
 import { childIndexes, reorderLevel } from '@/lib/tree.ts';
 import { isSafeUrl, pickerQuery } from '@/lib/values.ts';
+import { UnsavedNote } from '@/components/UnsavedNote.tsx';
 
 interface Props {
     menu: { handle: string; title: string };
@@ -144,7 +145,7 @@ function MenuEdit({ menu, items: initial, version, locales, limits, terms, listi
                     </>
                 )}
             >
-                {dirty && <span className="cms:text-sm cms:text-muted-foreground">{t('Unsaved changes')}</span>}
+                <UnsavedNote dirty={dirty} />
             </PageHeader>
             <VersionConflict message={errors.version} processing={form.processing} onSaveMine={() => send(false)} />
             <FieldError message={errors.items} />

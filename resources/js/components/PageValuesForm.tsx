@@ -15,6 +15,7 @@ import { seoFields } from '@/lib/seo.ts';
 import type { FieldDefinition } from '@/types.ts';
 import { isShown } from '@/lib/conditions.ts';
 import { fieldGrid, widthClass } from '@/lib/width.ts';
+import { UnsavedNote } from '@/components/UnsavedNote.tsx';
 
 // Field values are any JSON; see the entry editor for why `any`.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -165,7 +166,7 @@ function PageValuesEdit({ title, breadcrumbs, back, saveUrl, editUrl, params = {
                     </>
                 }
             >
-                {form.isDirty && <span className="cms:text-sm cms:text-muted-foreground">{t('Unsaved changes')}</span>}
+                <UnsavedNote dirty={form.isDirty} />
             </PageHeader>
 
             {hasTemplate ? (

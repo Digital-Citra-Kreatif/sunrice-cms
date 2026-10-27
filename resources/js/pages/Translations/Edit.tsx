@@ -9,6 +9,7 @@ import {
 import { FieldError } from '@/components/FieldError.tsx';
 import { localeName } from '@/lib/entries.ts';
 import { translationProgress } from '@/lib/translations.ts';
+import { UnsavedNote } from '@/components/UnsavedNote.tsx';
 
 interface Text {
     key: string;
@@ -75,7 +76,7 @@ export default function TranslationsEdit({ locale, main, locales, sections }: Pr
                         <Label htmlFor="untranslated-only" className="cms:font-normal">{t('Only untranslated')}</Label>
                     </span>
                     <span className="cms:ml-auto cms:flex cms:items-center cms:gap-3">
-                        {form.isDirty && <span className="cms:text-sm cms:text-muted-foreground">{t('Unsaved changes')}</span>}
+                        <UnsavedNote dirty={form.isDirty} />
                         <Button type="submit" disabled={form.processing}>{form.processing && <LoaderCircle className="cms:animate-spin" />} {t('Save')}</Button>
                     </span>
                 </CardContent>

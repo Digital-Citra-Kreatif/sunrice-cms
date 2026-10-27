@@ -8,6 +8,7 @@ import { errorKeysAt } from '@/lib/builder.ts';
 import { localeName } from '@/lib/entries.ts';
 import { localeTabs } from '@/lib/languages.ts';
 import type { FieldDefinition } from '@/types.ts';
+import { UnsavedNote } from '@/components/UnsavedNote.tsx';
 
 // Field values are any JSON; see the entry editor for why `any`.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -78,7 +79,7 @@ function GlobalsEdit({ set, fields, locale, locales, shared, values, version, ca
                     </>
                 }
             >
-                {form.isDirty && <span className="cms:text-sm cms:text-muted-foreground">{t('Unsaved changes')}</span>}
+                <UnsavedNote dirty={form.isDirty} />
             </PageHeader>
 
             <LanguageTabs value={locale} languages={localeTabs(locales, null, localeName)} onValueChange={(next: string) => router.get(url, { locale: next })} />

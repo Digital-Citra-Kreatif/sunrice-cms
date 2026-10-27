@@ -17,6 +17,7 @@ import { localeName, slugNote } from '@/lib/entries.ts';
 import { localeTabs } from '@/lib/languages.ts';
 import { seoFields } from '@/lib/seo.ts';
 import type { FieldDefinition } from '@/types.ts';
+import { UnsavedNote } from '@/components/UnsavedNote.tsx';
 
 // Field values are any JSON; see the entry editor for why `any`.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -118,7 +119,7 @@ function TermEdit({ taxonomy, term, parentId = null, terms = [], translated, fie
                     </>
                 }
             >
-                {form.isDirty && <span className="cms:text-sm cms:text-muted-foreground">{t('Unsaved changes')}</span>}
+                <UnsavedNote dirty={form.isDirty} />
             </PageHeader>
 
             <div className="cms:grid cms:items-start cms:gap-6 cms:lg:grid-cols-[minmax(0,1fr)_20rem]">
