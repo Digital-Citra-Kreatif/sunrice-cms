@@ -14,12 +14,15 @@ use Sunrice\Cms\Actions\Entries\EntryInput;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
+use Sunrice\Cms\Site\RouteConflicts;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\Versioned;
 
 /**
  * Creates a term or changes one, in one language. Input: title, slug
- * (made from the title when empty; unique in the taxonomy and language),
+ * (made from the title when empty; unique in the taxonomy and language,
+ * and not one that would put the term's page at a listing or index page's
+ * address: RouteConflicts::fixedSlugs()),
  * locale (the main one when left out) and parent_id (a term of the same
  * taxonomy, if it's hierarchical; never the term itself or one under it)
  * and version (the one the editor opened: a save over someone else's
@@ -56,6 +59,10 @@ final class SaveTerm
             $slug = $input['slug'] ?? null;
             if (is_string($slug) && $slug !== '' && is_string($locale) && self::taken($taxonomy, $locale, $slug, $existing?->id)) {
                 $validator->errors()->add('slug', __('Another term already uses ":slug".', ['slug' => $slug]));
+            } elseif (is_string($slug) && $slug !== '' && is_string($locale) && Locales::has($locale) && $slug !== $existing?->slug
+                && ($page = RouteConflicts::fixedSlugs($taxonomy, $locale)[$slug] ?? null) !== null) {
+                // Its page would be at a listing or index page's address, matched first; the slug it has stays.
+                $validator->errors()->add('slug', EntryInput::fixedMessage($page, $locale));
             }
             $parent = $input['parent_id'] ?? null;
             if (is_numeric($parent)) {
@@ -72,7 +79,7 @@ final class SaveTerm
         $validated = $validator->validate();
         /** @var string $locale */
         $title = trim($validated['title']);
-        $slug = ($validated['slug'] ?? null) ?: self::uniqueSlug($taxonomy, $locale, $title, $existing?->id);
+        $slug = ($validated['slug'] ?? null) ?: self::uniqueSlug($taxonomy, $locale, $title, $existing?->id, RouteConflicts::fixedSlugs($taxonomy, $locale));
 
         $creating = ! $term->exists;
         $expected = Versioned::expected($input['version'] ?? null);
@@ -120,11 +127,17 @@ final class SaveTerm
             ->when($except !== null, fn ($query) => $query->whereKeyNot($except))->exists();
     }
 
-    private static function uniqueSlug(Taxonomy $taxonomy, string $locale, string $title, ?int $except): string
+    /**
+     * A slug made from the title, free in the taxonomy and language and
+     * clear of fixed addresses (`$fixed`).
+     *
+     * @param  array<string, mixed>  $fixed
+     */
+    private static function uniqueSlug(Taxonomy $taxonomy, string $locale, string $title, ?int $except, array $fixed): string
     {
         $base = trim(Str::limit(Str::slug($title), 190, ''), '-') ?: 'term';
         $slug = $base;
-        for ($i = 2; self::taken($taxonomy, $locale, $slug, $except); $i++) {
+        for ($i = 2; isset($fixed[$slug]) || self::taken($taxonomy, $locale, $slug, $except); $i++) {
             $slug = "{$base}-{$i}";
         }
 

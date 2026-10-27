@@ -400,7 +400,7 @@ final class TaxonomyResource extends Resource
         foreach ($check as $collection) {
             $pivot = $collection->getRelation('pivot');
             if ($pivot instanceof CollectionTaxonomy && ($clash = RouteConflicts::forAttachment($collection, $taxonomy, $pivot)) !== null) {
-                $errors[self::pivotField($clash['page'], $collection, $clash['locale'])] = __(':title has this URL in :language already.', ['title' => $clash['title'], 'language' => Locales::name($clash['locale'])]);
+                $errors[self::pivotField($clash['page'], $collection, $clash['locale'])] = $clash['message'] ?? __(':title has this URL in :language already.', ['title' => $clash['title'], 'language' => Locales::name($clash['locale'])]);
             }
         }
         if ($errors !== []) {

@@ -72,6 +72,8 @@ final class PublishEntry
                 $translation->locale,
                 $translation->id,
                 $translation->isMain(),
+                // The slug it was published with: kept (a draft's new one is checked).
+                $translation->slug,
             );
             $values['data'] = $translation->ownData($values['data']);
             $translation->fill([

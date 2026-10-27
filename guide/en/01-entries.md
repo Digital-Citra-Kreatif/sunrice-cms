@@ -26,7 +26,7 @@ In a collection with *manual order*, click **Reorder** above the list, drag each
 ## Writing an entry
 
 1. Click **New entry**.
-2. Type the **Title**. The **Slug**, the entry's part of the web address (`/blog/my-first-post`), is made from the title when you leave it empty; only lowercase letters, numbers and dashes. Changing the slug of an entry that has been published moves its address: a note under the field says the old address will redirect to the new one once you publish (or, for an entry taken off the site, that the old address will stop working unless a redirect is added).
+2. Type the **Title**. The **Slug**, the entry's part of the web address (`/blog/my-first-post`), is made from the title when you leave it empty; only lowercase letters, numbers and dashes. A slug that would put the entry at the address of a listing page (or a taxonomy's index page) is refused, as visitors there would see that page instead: the message names it; a slug made from the title steps around it (`books-2`). Changing the slug of an entry that has been published moves its address: a note under the field says the old address will redirect to the new one once you publish (or, for an entry taken off the site, that the old address will stop working unless a redirect is added).
 3. Fill in the fields. Required ones say so; a field you leave in error is named when you save.
 4. Click **Create draft**.
 

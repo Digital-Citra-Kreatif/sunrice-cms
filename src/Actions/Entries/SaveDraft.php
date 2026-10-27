@@ -58,6 +58,7 @@ final class SaveDraft
                 $translation->locale,
                 $translation->id,
                 $translation->isMain(),
+                $translation->draft_slug,
             );
             if (array_key_exists(Seo::KEY, $input)) {
                 $values['data'][Seo::KEY] = Seo::validate($input[Seo::KEY]);

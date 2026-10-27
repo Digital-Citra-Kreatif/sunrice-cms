@@ -64,7 +64,7 @@ final class AttachCollections
         foreach ($taxonomy->collections()->whereIn('sunrice_collections.id', $ids)->get() as $collection) {
             $pivot = $collection->getRelation('pivot');
             if ($pivot instanceof CollectionTaxonomy && ($clash = RouteConflicts::forAttachment($collection, $taxonomy, $pivot)) !== null) {
-                throw ValidationException::withMessages(['collections' => __(':title has the URL :url in :language already.', ['title' => $clash['title'], 'url' => $clash['url'], 'language' => Locales::name($clash['locale'])])]);
+                throw ValidationException::withMessages(['collections' => $clash['message'] ?? __(':title has the URL :url in :language already.', ['title' => $clash['title'], 'url' => $clash['url'], 'language' => Locales::name($clash['locale'])])]);
             }
         }
     }

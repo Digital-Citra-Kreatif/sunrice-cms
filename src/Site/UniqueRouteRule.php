@@ -15,7 +15,8 @@ use Sunrice\Cms\Support\Locales;
 /**
  * No other collection (or taxonomy) may have the same URL pattern in a
  * language (RouteConflicts); a listing or index page's address no other
- * fixed page's either. For a language's own pattern ($locale),
+ * fixed page's either, and a changed entry or term page pattern may not
+ * put an entry or term at a fixed address (RouteConflicts::landing()). For a language's own pattern ($locale),
  * that language; for the main one, the main language and each language
  * that uses it: those whose own field in the form (`route_id`) is empty.
  *
@@ -63,6 +64,13 @@ final class UniqueRouteRule implements DataAwareRule, ValidationRule
             $other = RouteConflicts::find($record, $this->attribute, $locale, $value);
             if ($other !== null) {
                 $fail(__(':title has this URL in :language already.', ['title' => $other, 'language' => Locales::name($locale)]));
+
+                return;
+            }
+            // A changed entry or term page pattern that would put one of its entries (terms) at a fixed address.
+            $landing = $this->attribute === 'route' ? RouteConflicts::landing($record, $locale, $value) : null;
+            if ($landing !== null) {
+                $fail($landing);
 
                 return;
             }

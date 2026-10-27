@@ -505,7 +505,7 @@ final class StructureImporter
         foreach ($taxonomy->collections()->get() as $collection) {
             $pivot = $collection->getRelation('pivot');
             if ($pivot instanceof CollectionTaxonomy && ($clash = RouteConflicts::forAttachment($collection, $taxonomy, $pivot)) !== null) {
-                $errors["collection_pages.{$collection->handle}.".($clash['page'] === 'term' ? 'route' : 'index_route')] = "{$clash['title']} has the address {$clash['url']} in {$clash['locale']} already.";
+                $errors["collection_pages.{$collection->handle}.".($clash['page'] === 'term' ? 'route' : 'index_route')] = $clash['message'] ?? "{$clash['title']} has the address {$clash['url']} in {$clash['locale']} already.";
             }
         }
         if ($errors !== []) {
@@ -1447,15 +1447,17 @@ final class StructureImporter
         $errors = [];
         foreach (Locales::all() as $locale) {
             foreach ($attributes as $attribute) {
-                // The main language's: a unique column for its own kind, so only fixed pages (listing, index) against the other kind.
-                if ($locale === Locales::default() && $attribute === 'route') {
-                    continue;
-                }
                 $main = array_key_exists($attribute, $validated) ? $validated[$attribute] : $record->getAttribute($attribute);
                 $own = is_array($routes[$locale] ?? null) ? ($routes[$locale][$attribute] ?? null) : null;
                 $pattern = is_string($own) && $own !== '' ? $own : $main;
-                if (is_string($main) && $main !== '' && is_string($pattern) && ($other = RouteConflicts::find($record, $attribute, $locale, $pattern)) !== null) {
+                if (! is_string($main) || $main === '' || ! is_string($pattern)) {
+                    continue;
+                }
+                // The main language's: a unique column for its own kind, so only fixed pages (listing, index) against the other kind.
+                if (! ($locale === Locales::default() && $attribute === 'route') && ($other = RouteConflicts::find($record, $attribute, $locale, $pattern)) !== null) {
                     $errors["routes.{$locale}.{$attribute}"] = "{$other} has the address {$pattern} in {$locale} already.";
+                } elseif ($attribute === 'route' && ($landing = RouteConflicts::landing($record, $locale, $pattern)) !== null) {
+                    $errors[$locale === Locales::default() ? 'route' : "routes.{$locale}.route"] = $landing;
                 }
             }
         }

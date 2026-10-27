@@ -6,7 +6,7 @@
 
 Pilih taksonomi lewat menu di samping judul, dan bahasanya lewat **Bahasa**. Tabel menampilkan **Slug** setiap term, berapa **Entri** yang memakainya, dan kapan term itu **Dibuat**, sesuai tingkatannya: dalam taksonomi bertingkat, *Lokal* bisa berada di bawah *Berita*. **Cari term…** mencari term berdasarkan judul atau slug.
 
-- **Term baru** membuka penyunting term (lihat di bawah) dalam keadaan kosong: ketik **Judul** (**Slug** dibuat dari judul jika dikosongkan), pilih letaknya di **Di bawah** (atau **Tingkat teratas**), isi field-nya, lalu klik **Buat term**: Anda tetap di penyunting term baru itu. **Tambah term di bawahnya** di menu **⋯** sebuah baris langsung menaruhnya di bawah term itu.
+- **Term baru** membuka penyunting term (lihat di bawah) dalam keadaan kosong: ketik **Judul** (**Slug** dibuat dari judul jika dikosongkan; slug yang akan menaruh halaman term di alamat halaman daftar atau halaman indeks ditolak), pilih letaknya di **Di bawah** (atau **Tingkat teratas**), isi field-nya, lalu klik **Buat term**: Anda tetap di penyunting term baru itu. **Tambah term di bawahnya** di menu **⋯** sebuah baris langsung menaruhnya di bawah term itu.
 - Klik judul term untuk membukanya di penyunting yang sama, dalam bahasa yang tampil. Ikon panah di sampingnya membuka halamannya di situs web, jika term punya halaman.
 - Menu **⋯** di setiap baris: **Ubah**, **Tambah term di bawahnya**, dan **Pindahkan ke tempat sampah** (beserta term di bawahnya).
 - Seret term lewat pegangannya untuk mengubah posisinya di antara term sejajarnya; term di bawahnya ikut pindah. Untuk menempatkan term di bawah term lain, buka term itu dan pilih **Di bawah**.
