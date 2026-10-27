@@ -29,6 +29,9 @@ trait HasLanguageRoutes
     /** How many earlier patterns of a language are kept, newest first. */
     public const PREVIOUS_ROUTES = 10;
 
+    /** @var array{0: mixed, 1: array<string, array<string, string>>}|null `routes` decoded, with the stored value it was decoded from (every URL asks) */
+    private ?array $decodedRoutes = null;
+
     public static function bootHasLanguageRoutes(): void
     {
         // Whatever changes a language's pattern (the admin, an import, code): its old one is kept to redirect from.
@@ -70,7 +73,11 @@ trait HasLanguageRoutes
         if ($locale === Locales::default()) {
             return null;
         }
-        $own = ($this->routes ?? [])[$locale][$attribute] ?? null;
+        $stored = $this->attributes['routes'] ?? null;
+        if ($this->decodedRoutes === null || $this->decodedRoutes[0] !== $stored) {
+            $this->decodedRoutes = [$stored, $this->routes ?? []];
+        }
+        $own = $this->decodedRoutes[1][$locale][$attribute] ?? null;
 
         return is_string($own) && $own !== '' ? $own : null;
     }

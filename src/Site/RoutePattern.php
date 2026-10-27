@@ -26,6 +26,9 @@ final class RoutePattern
     /** What fills a parameter that links to nothing: "/projects/-/unit-1". */
     public const NONE = '-';
 
+    /** @var list<string>|null parameters(), once read */
+    private ?array $parameters = null;
+
     public function __construct(public readonly string $pattern) {}
 
     /** Whether it's a valid pattern: {slug} once, and with $parameters also {field} segments, each once. */
@@ -49,9 +52,12 @@ final class RoutePattern
      */
     public function parameters(): array
     {
-        preg_match_all('#\{([a-z][a-z0-9_]*)\}#', $this->pattern, $matches);
+        if ($this->parameters === null) {
+            preg_match_all('#\{([a-z][a-z0-9_]*)\}#', $this->pattern, $matches);
+            $this->parameters = array_values(array_filter($matches[1], fn (string $name): bool => $name !== 'slug'));
+        }
 
-        return array_values(array_filter($matches[1], fn (string $name): bool => $name !== 'slug'));
+        return $this->parameters;
     }
 
     /**

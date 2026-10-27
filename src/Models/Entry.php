@@ -248,7 +248,14 @@ class Entry extends Model
 
     public function translation(string $locale): ?EntryTranslation
     {
-        return $this->translations->firstWhere('locale', $locale);
+        // A loop, not firstWhere(): every URL and value asks.
+        foreach ($this->translations as $translation) {
+            if ($translation->locale === $locale) {
+                return $translation;
+            }
+        }
+
+        return null;
     }
 
     /**

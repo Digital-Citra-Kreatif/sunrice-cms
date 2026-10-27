@@ -49,7 +49,7 @@ final class ContentData
         $entry = $translation->entry;
         $terms = [];
         foreach ($translation->termsOf() as $term) {
-            $terms[$term->taxonomy->handle][] = self::term($term, $context->locale);
+            $terms[$term->taxonomy->handle][] = self::contextTerm($term, $context);
         }
         $data = [
             'id' => $translation->entry_id,
@@ -79,11 +79,23 @@ final class ContentData
             'id' => $term->id,
             'taxonomy' => $term->taxonomy->handle,
             'locale' => $translation?->locale,
-            'title' => $term->title($locale),
+            // As $term->title($locale), without looking for the translation again.
+            'title' => $translation->title ?? '',
             'slug' => $translation?->slug,
             'url' => $term->url($locale),
             'parent_id' => $term->parent_id,
         ];
+    }
+
+    /**
+     * A term of an entry's (its own, or a field's value) as data, made once
+     * per context: the entries of a list share most of their terms.
+     *
+     * @return TermData
+     */
+    private static function contextTerm(Term $term, HydrationContext $context): array
+    {
+        return $context->data($term, 'term|'.$context->locale, fn (): array => self::term($term, $context->locale));
     }
 
     /** @return TermData */
@@ -220,8 +232,9 @@ final class ContentData
             $value instanceof DateTimeInterface => $value->format(DateTimeInterface::ATOM),
             $value instanceof Media => $value->toData($context->locale),
             // Linked entries: without their fields, so links never go round in circles.
-            $value instanceof EntryTranslation => self::entry($value, $context, withFields: false),
-            $value instanceof Term => self::term($value, $context->locale),
+            // Made once per context: entries of a list often link to the same ones.
+            $value instanceof EntryTranslation => $context->data($value, 'entry', fn (): array => self::entry($value, $context, withFields: false)),
+            $value instanceof Term => self::contextTerm($value, $context),
             $value instanceof Collection => $value->map(fn (mixed $item): mixed => self::value($item, $context))->values()->all(),
             is_array($value) => array_map(fn (mixed $item): mixed => self::value($item, $context), $value),
             $value instanceof Htmlable => $value->toHtml(),

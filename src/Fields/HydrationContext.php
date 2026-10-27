@@ -14,6 +14,7 @@ use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
+use Sunrice\Cms\Site\Page;
 use Sunrice\Cms\Support\Ids;
 use WeakMap;
 
@@ -59,11 +60,18 @@ final class HydrationContext
     /** @var array<int, list<int>> the taxonomies attached to each collection (ids), read once, in a preview */
     private array $attached = [];
 
+    /** @var array<int, list<Term>> entries' own terms as entryTerms() gives them, by entry id, sorted once */
+    private array $sortedTerms = [];
+
+    /** @var WeakMap<Term|EntryTranslation, array<string, array<string, mixed>>> data made of its terms and linked entries (ContentData), by the page's collection */
+    private WeakMap $data;
+
     public function __construct(
         public readonly string $locale,
         public readonly bool $preview = false,
     ) {
         $this->shared = new WeakMap;
+        $this->data = new WeakMap;
     }
 
     /**
@@ -254,6 +262,9 @@ final class HydrationContext
      */
     public function entryTerms(EntryTranslation $translation): Collection
     {
+        if (isset($this->sortedTerms[$translation->entry_id])) {
+            return collect($this->sortedTerms[$translation->entry_id]);
+        }
         if (! array_key_exists($translation->entry_id, $this->entryTerms)) {
             $entries = [$translation->entry_id => $translation];
             foreach ($this->shared as $shared => $hydrated) {
@@ -294,9 +305,44 @@ final class HydrationContext
         $terms = $this->terms($this->entryTerms[$translation->entry_id])
             ->filter(fn (Term $term): bool => ($this->taxonomies[$term->taxonomy_id] ?? null)?->trashed() === false && ($attached === null || in_array($term->taxonomy_id, $attached, true)))
             ->all();
-        usort($terms, fn (Term $a, Term $b): int => [$this->taxonomies[$a->taxonomy_id]->title, $a->sort_order, $a->id] <=> [$this->taxonomies[$b->taxonomy_id]->title, $b->sort_order, $b->id]);
+        // Sorted by keys read once each, not in every comparison.
+        $keys = [];
+        foreach ($terms as $index => $term) {
+            $keys[$index] = [$this->taxonomies[$term->taxonomy_id]->title, $term->sort_order, $term->id];
+        }
+        uksort($keys, fn (int $a, int $b): int => $keys[$a] <=> $keys[$b]);
+        $sorted = [];
+        foreach (array_keys($keys) as $index) {
+            $sorted[] = $terms[$index];
+        }
 
-        return collect($terms);
+        return collect($this->sortedTerms[$translation->entry_id] = $sorted);
+    }
+
+    /**
+     * Data made of a term or a linked entry (ContentData), made once per
+     * context: a list's entries share most of their terms and links. Kept
+     * by the record (which this context loaded) and the page's
+     * collection, which their URLs follow.
+     *
+     * @internal ContentData calls it.
+     *
+     * @template T of array<string, mixed>
+     *
+     * @param  \Closure(): T  $make
+     * @return T
+     */
+    public function data(Term|EntryTranslation $record, string $key, \Closure $make): array
+    {
+        $key .= '|'.(Page::current()?->collection->id ?? '');
+        $made = $this->data[$record] ?? [];
+        if (! array_key_exists($key, $made)) {
+            $made[$key] = $make();
+            $this->data[$record] = $made;
+        }
+
+        /** @var T */
+        return $made[$key];
     }
 
     /**

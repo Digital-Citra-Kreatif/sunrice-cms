@@ -44,6 +44,12 @@ final class Site
     /** @var array<string, array<int, array<string, string>>> related entries' live slugs by language, per collection and route field */
     private array $related = [];
 
+    /** @var array<int, array<int, RouteRecord>>|null collectionTerms(), once worked out */
+    private ?array $collectionTerms = null;
+
+    /** @var array<string, RoutePattern> patterns read, by their text: each URL built asks for its own */
+    private array $compiled = [];
+
     /** The live entry translation at a path, or null. */
     public function find(string $path): ?EntryTranslation
     {
@@ -303,7 +309,7 @@ final class Site
             return null;
         }
 
-        return url(Locales::prefix($locale).(new RoutePattern($route))->path((string) $translation->slug));
+        return url(Locales::prefix($locale).$this->compiled($route)->path((string) $translation->slug));
     }
 
     /**
@@ -314,14 +320,17 @@ final class Site
      */
     public function collectionTerms(): array
     {
-        $found = [];
-        foreach ($this->routes() as $record) {
-            if ($record['type'] === 'collection-terms' && $record['collection'] !== null) {
-                $found[$record['id']][$record['collection']] = $record;
+        if ($this->collectionTerms === null) {
+            $found = [];
+            foreach ($this->routes() as $record) {
+                if ($record['type'] === 'collection-terms' && $record['collection'] !== null) {
+                    $found[$record['id']][$record['collection']] = $record;
+                }
             }
+            $this->collectionTerms = $found;
         }
 
-        return $found;
+        return $this->collectionTerms;
     }
 
     /**
@@ -490,7 +499,7 @@ final class Site
         if ($route === null || $slug === null) {
             return null;
         }
-        $pattern = new RoutePattern($route);
+        $pattern = $this->compiled($route);
 
         return Locales::prefix($locale).$pattern->path($slug, $this->parameters($translation, $pattern, $locale));
     }
@@ -713,6 +722,13 @@ final class Site
         $this->homepage = false;
         $this->fallback = null;
         $this->related = [];
+        $this->collectionTerms = null;
+    }
+
+    /** A pattern, read once per request. */
+    private function compiled(string $route): RoutePattern
+    {
+        return $this->compiled[$route] ??= new RoutePattern($route);
     }
 
     private function homepageId(): ?int

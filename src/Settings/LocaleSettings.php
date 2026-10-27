@@ -47,6 +47,9 @@ final class LocaleSettings extends Settings
     /** One language per line, "code: Name", the main one first; empty: config sunrice-cms.locales. */
     public string $languages = '';
 
+    /** @var array{0: string, 1: array<string, string>, 2: array<string, string>}|null the languages' text as last read, with its languages and prefixes (every URL asks) */
+    private ?array $parsed = null;
+
     public static function key(): string
     {
         return 'locales';
@@ -125,7 +128,7 @@ final class LocaleSettings extends Settings
      */
     public function locales(): array
     {
-        return self::parse($this->languages);
+        return $this->parsed()[1];
     }
 
     /**
@@ -160,7 +163,21 @@ final class LocaleSettings extends Settings
      */
     public function prefixes(): array
     {
-        return self::parsePrefixes($this->languages);
+        return $this->parsed()[2];
+    }
+
+    /**
+     * The languages and prefixes, read again only when the text changes.
+     *
+     * @return array{0: string, 1: array<string, string>, 2: array<string, string>}
+     */
+    private function parsed(): array
+    {
+        if ($this->parsed === null || $this->parsed[0] !== $this->languages) {
+            $this->parsed = [$this->languages, self::parse($this->languages), self::parsePrefixes($this->languages)];
+        }
+
+        return $this->parsed;
     }
 
     /** @return array<string, string> */

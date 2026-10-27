@@ -95,9 +95,21 @@ class Term extends Model
      */
     public function translation(?string $locale = null): ?TermTranslation
     {
-        return $this->translations->firstWhere('locale', $locale ?? Locales::current())
-            ?? $this->translations->firstWhere('locale', Locales::default())
+        return $this->translationIn($locale ?? Locales::current())
+            ?? $this->translationIn(Locales::default())
             ?? $this->translations->sortBy('id')->first();
+    }
+
+    /** Its own translation in a language, or null (a loop: every title and URL asks). */
+    private function translationIn(string $locale): ?TermTranslation
+    {
+        foreach ($this->translations as $translation) {
+            if ($translation->locale === $locale) {
+                return $translation;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -137,9 +149,9 @@ class Term extends Model
                 return null;
             }
         }
-        $translation = $this->translations->firstWhere('locale', $locale);
+        $translation = $this->translationIn($locale);
         if ($translation === null && $locale !== Locales::default() && Site::fallback()) {
-            $main = $this->translations->firstWhere('locale', Locales::default());
+            $main = $this->translationIn(Locales::default());
             $main?->setRelation('term', $this);
 
             return $main === null ? null : self::scoped($main, $collection, fn () => app(Site::class)->termUrlIn($main, $locale));

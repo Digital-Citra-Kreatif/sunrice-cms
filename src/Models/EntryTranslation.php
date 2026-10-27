@@ -71,6 +71,9 @@ class EntryTranslation extends Model
     /** The context values() hydrates with when given none: shared by a query's whole result (EntryQuery). */
     private ?HydrationContext $hydration = null;
 
+    /** @var array{0: mixed, 1: Carbon|null}|null published_at as isLive() last read it, with the stored value */
+    private ?array $publishedAt = null;
+
     protected static function booted(): void
     {
         // The live version's words for site search, whenever it changes.
@@ -147,7 +150,16 @@ class EntryTranslation extends Model
     /** Published with its date reached. Doesn't look at the entry or collection being deleted. */
     public function isLive(): bool
     {
-        return $this->isPublished() && $this->published_at !== null && $this->published_at->lte(now());
+        if (! $this->isPublished()) {
+            return false;
+        }
+        // The date as read last, while it's the same: every URL and link asks (a cast date is a new Carbon on each read).
+        $stored = $this->attributes['published_at'] ?? null;
+        if ($this->publishedAt === null || $this->publishedAt[0] !== $stored) {
+            $this->publishedAt = [$stored, $this->published_at];
+        }
+
+        return $this->publishedAt[1] !== null && $this->publishedAt[1]->lte(now());
     }
 
     /** "draft", "scheduled" (published with a date to come) or "published". */
