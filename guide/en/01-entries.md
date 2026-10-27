@@ -106,7 +106,7 @@ Every publish keeps a **revision**: a copy of what was published, with the date 
 
 The **⋯** button next to **Save draft** holds the rest:
 
-- **Duplicate** copies the entry, in every language, as a new draft titled "… (copy)". Until it's first published, renaming it renames its slug too (unless you typed a slug of your own).
+- **Duplicate** copies the entry, in every language, as a new draft titled "… (copy)", with the same terms in its **Taxonomies** card (the copy is listed under them once you publish it). Until it's first published, renaming it renames its slug too (unless you typed a slug of your own).
 - **Edit blueprint** opens the entry's blueprint (its fields), if your role may change blueprints.
 - **Move to trash** takes it off the website and out of the list, in every language, and can be restored. If other content uses it, the panel names where first.
 - In the trash, an entry has **Restore** and **Permanently delete** (everything, in every language, with its revisions; this can't be undone).

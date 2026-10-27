@@ -105,7 +105,7 @@ Setiap penerbitan menyimpan sebuah **revisi**: salinan dari yang diterbitkan, be
 ## Tindakan lain
 
 - Tombol **⋯** di samping **Simpan draf** berisi aksi lainnya.
-- **Duplikat** menyalin entri, dalam semua bahasa, sebagai draf baru berjudul "… (copy)". Selama belum pernah diterbitkan, mengganti judulnya ikut mengganti slug-nya (kecuali Anda mengetik slug sendiri).
+- **Duplikat** menyalin entri, dalam semua bahasa, sebagai draf baru berjudul "… (copy)", dengan term yang sama di kartu **Taksonomi**-nya (salinan baru tercantum di bawah term itu setelah Anda menerbitkannya). Selama belum pernah diterbitkan, mengganti judulnya ikut mengganti slug-nya (kecuali Anda mengetik slug sendiri).
 - **Ubah blueprint** membuka blueprint entri (field-nya), jika peran Anda boleh mengubah blueprint.
 - **Pindahkan ke tempat sampah** membuang entri: entri hilang dari situs web dan dari daftar, dalam semua bahasa, dan bisa dipulihkan. Jika dipakai konten lain, panel menyebutkan di mana terlebih dahulu.
 - Di tempat sampah, entri memiliki **Pulihkan** dan **Hapus permanen** (menghapus semuanya, dalam semua bahasa, beserta revisinya; tidak bisa dibatalkan).

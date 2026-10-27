@@ -12,13 +12,16 @@ use Sunrice\Cms\Models\EntryTranslation;
 
 /**
  * Copies an entry, every language's draft, as a new draft entry: titles
- * get " (copy)" and slugs "-copy" (made unique). Nothing is published.
+ * get " (copy)" and slugs "-copy" (made unique). Nothing is published:
+ * the copy's terms are the entry's as the editor shows them
+ * (draftTermIds()), chosen and not published yet, so the copy isn't
+ * listed under them until it's published.
  *
  * @api
  */
 final class DuplicateEntry
 {
-    public function __construct(private readonly ActivityLog $activity) {}
+    public function __construct(private readonly ActivityLog $activity, private readonly SaveEntryTerms $terms) {}
 
     public function handle(Entry $entry): Entry
     {
@@ -39,6 +42,7 @@ final class DuplicateEntry
                     'draft_data' => $translation->draft_data,
                 ]);
             }
+            $this->terms->setDraft($copy, $entry->draftTermIds());
 
             return $copy;
         });
