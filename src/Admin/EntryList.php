@@ -463,29 +463,35 @@ final class EntryList
             $key === 'slug' => $query->orderBy('draft_slug', $direction),
             $key === 'status' => $query->orderBy('status', $direction)->orderBy('published_at', $direction),
             $key === 'author' => $query->orderBy($this->authorNameQuery(), $direction),
-            str_starts_with($key, self::FIELD) => $query->orderBy($this->fieldValue($query, substr($key, strlen(self::FIELD))), $direction),
+            str_starts_with($key, self::FIELD) => $this->orderByField($query, substr($key, strlen(self::FIELD)), $direction),
             default => $query->orderBy($key, $direction),
         };
         $query->orderBy('id', $direction);
     }
 
     /**
-     * A field's value to sort by: this translation's own for translated
-     * fields, the main language's for shared ones; numbers and dates cast.
+     * Sorts by a field's value, empty ones last: this translation's own for
+     * translated fields, the main language's for shared ones; numbers and
+     * dates cast.
      *
      * @param  Builder<EntryTranslation>  $query
-     * @return Sql|Builder<EntryTranslation>
+     * @param  'asc'|'desc'  $direction
      */
-    private function fieldValue(Builder $query, string $handle): Sql|Builder
+    private function orderByField(Builder $query, string $handle, string $direction): void
     {
         $column = $this->fields[$handle];
         $cast = in_array($column['kind'], ['number', 'date'], true) ? $column['kind'] : null;
         $own = $column['translatable'] || $this->locale === Locales::default();
         $path = ($own ? self::TABLE.'.' : 'main.').'draft_data->'.$handle;
-        $value = new Sql($cast === null ? JsonCast::value($query, $path) : JsonCast::expression($query, $path, $cast));
+        $value = $cast === null ? JsonCast::value($query, $path) : JsonCast::expression($query, $path, $cast);
+        if ($own) {
+            JsonCast::orderBy($query, $value, [], $direction);
 
-        return $own ? $value : EntryTranslation::query()->from(self::TABLE.' as main')->select($value)
-            ->whereColumn('main.entry_id', self::TABLE.'.entry_id')->where('main.locale', Locales::default())->limit(1);
+            return;
+        }
+        $main = EntryTranslation::query()->from(self::TABLE.' as main')->select(new Sql($value))
+            ->whereColumn('main.entry_id', self::TABLE.'.entry_id')->where('main.locale', Locales::default())->limit(1)->toBase();
+        JsonCast::orderBy($query, '('.$main->toSql().')', $main->getBindings(), $direction);
     }
 
     /** @return Builder<Entry> the name of the entry's author, for sorting */

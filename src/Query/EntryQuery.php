@@ -311,11 +311,19 @@ final class EntryQuery
             } elseif ($column === 'title' || $column === 'slug') {
                 $q->orderBy($this->column($column), $direction);
             } else {
-                // The main language's value, cast when the field sorts as a number or date.
+                // The main language's value, cast when the field sorts as a number or date: in the
+                // main language each row's own, in another read from the main translation.
                 $cast = $this->cast($column);
-                $value = $cast === null ? JsonCast::value($q, 'main.'.$this->dataColumn().'->'.$column) : $this->castExpression($q, 'main.'.$this->dataColumn().'->'.$column, $cast);
-                $q->orderBy(EntryTranslation::query()->from(self::TABLE.' as main')->select(new Sql($value))
-                    ->whereColumn('main.entry_id', self::TABLE.'.entry_id')->where('main.locale', Locales::default())->limit(1), $direction);
+                $own = $this->locale === Locales::default();
+                $path = ($own ? self::TABLE : 'main').'.'.$this->dataColumn().'->'.$column;
+                $value = $cast === null ? JsonCast::value($q, $path) : $this->castExpression($q, $path, $cast);
+                if ($own) {
+                    JsonCast::orderBy($q, $value, [], $direction);
+                } else {
+                    $main = EntryTranslation::query()->from(self::TABLE.' as main')->select(new Sql($value))
+                        ->whereColumn('main.entry_id', self::TABLE.'.entry_id')->where('main.locale', Locales::default())->limit(1)->toBase();
+                    JsonCast::orderBy($q, '('.$main->toSql().')', $main->getBindings(), $direction);
+                }
             }
             $q->orderBy('id');
         });

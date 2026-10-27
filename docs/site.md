@@ -388,7 +388,7 @@ Cms::entries('blog')->search($request->query('q', ''))->paginate(10);
 - `whereEntry($field, $entries)`: entries whose entries field links to an entry (or any of a list).
 - `whereContains($field, $values)`: entries whose list field (a select with several choices) holds any of the values.
 - `search($text)`: entries whose title or field text holds the words, as the site's search matches them; title matches first, then in the query's order.
-- `orderBy($field, 'asc'|'desc')`: a column or a field; numbers and dates sort as such.
+- `orderBy($field, 'asc'|'desc')`: a column or a field; numbers and dates sort as such. Entries without a value come last either way, on every database. A number or date field holding text that isn't one (kept from when the field was text) counts as having no value, in `where()` too.
 - `except(...$entries)`: leave these out.
 - `remember()`: keep the matched ids in the site's cache (`SiteCache`, when it's on) until the content changes, so the query runs once; the entries themselves are always read fresh.
 - `toBase()`: the Eloquent query (`Builder<EntryTranslation>`, a new one each time) for what the methods here don't do.

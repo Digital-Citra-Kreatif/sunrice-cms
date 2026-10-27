@@ -68,7 +68,7 @@ The Blade directive prints the whole attribute: `<body @bodyClass>` or `<body @b
 | `childrenOf(Entry\|int\|null $parent)` | The entries under a parent (`null`: the top level) in a hierarchical collection. |
 | `except(Entry\|EntryTranslation\|int ...$entries)` | Leave these out. |
 | `search(string $text)` | Entries whose title or field text holds the words, as the site's search matches them, title matches first. |
-| `orderBy(string $field, string $direction = 'asc')` | A column or a field; numbers and dates sort as such. |
+| `orderBy(string $field, string $direction = 'asc')` | A column or a field; numbers and dates sort as such, entries without a value last either way. |
 | `latest()`, `oldest()`, `alphabetical()`, `ordered()` | By date, newest or oldest first; by title; in the collection's manual order. |
 | `limit(int $count)` | At most so many. |
 | `remember(bool $remember = true)` | Keep the matched ids in the site's cache until the content changes. |
