@@ -367,4 +367,55 @@ final class Schema
     {
         return array_map(fn (Field $field): array => $this->type($field)->toAdmin($field, $this), $this->fields);
     }
+
+    /**
+     * The definitions sent to the editor in another language than the
+     * main one: as toAdmin(), with the shared fields inside translated
+     * groups, repeaters and flexible blocks marked `shared`, so the editor
+     * shows them read-only with the main language's values (withShared()).
+     * The top-level shared ones aren't marked: editors list them apart
+     * (shared()).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function toAdminShared(): array
+    {
+        return self::markShared($this->toAdmin());
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $fields
+     * @return list<array<string, mixed>>
+     */
+    private static function markShared(array $fields, bool $nested = false): array
+    {
+        foreach ($fields as $i => $field) {
+            if (($field['translatable'] ?? true) === false) {
+                if ($nested) {
+                    $fields[$i]['shared'] = true;
+                }
+
+                continue;
+            }
+            if (is_array($field['fields'] ?? null)) {
+                /** @var list<array<string, mixed>> $children */
+                $children = $field['fields'];
+                $fields[$i]['fields'] = self::markShared($children, true);
+            }
+            if (is_array($field['blocks'] ?? null)) {
+                $blocks = $field['blocks'];
+                foreach ($blocks as $b => $block) {
+                    if (is_array($block) && is_array($block['fields'] ?? null)) {
+                        /** @var list<array<string, mixed>> $children */
+                        $children = $block['fields'];
+                        $block['fields'] = self::markShared($children, true);
+                        $blocks[$b] = $block;
+                    }
+                }
+                $fields[$i]['blocks'] = $blocks;
+            }
+        }
+
+        return $fields;
+    }
 }

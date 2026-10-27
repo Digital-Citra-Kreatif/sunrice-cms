@@ -32,7 +32,8 @@ final class GlobalsController
 
         return Inertia::render('Cms/Globals/Edit', [
             'set' => ['id' => $set->id, 'handle' => $set->handle, 'title' => $set->title],
-            'fields' => $set->schema()->toAdmin(),
+            // Shared fields in groups, rows and blocks read-only outside the main language.
+            'fields' => $main ? $set->schema()->toAdmin() : $set->schema()->toAdminShared(),
             'locale' => $locale,
             'locales' => Locales::all(),
             'shared' => $main ? [] : $set->schema()->shared(),

@@ -10,6 +10,7 @@ use Illuminate\Support\Carbon;
 use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Site\Site;
 use Sunrice\Cms\Support\ContentData;
+use Sunrice\Cms\Support\LanguageValues;
 use Sunrice\Cms\Support\Locales;
 
 /**
@@ -86,19 +87,17 @@ class TermTranslation extends Model
     }
 
     /**
-     * The fields as templates get them, with the main language's for fields not translated.
+     * The fields as templates get them, with the main language's for fields
+     * not translated (inside groups, rows and blocks too).
      *
      * @return array<mixed>
      */
     public function values(?HydrationContext $context = null): array
     {
         $schema = $this->term->taxonomy->schema();
-        $data = array_replace($schema->defaults(), $this->data ?? []);
-        if ($this->locale !== Locales::default()) {
-            $main = $this->term->translations->firstWhere('locale', Locales::default());
-            $data = array_replace($data, array_intersect_key(array_replace($schema->defaults(), $main->data ?? []), array_flip($schema->shared())));
-        }
+        // A term not in the main language yet has nothing to share.
+        $main = $this->locale === Locales::default() ? null : $this->term->translations->firstWhere('locale', Locales::default());
 
-        return $schema->hydrate($data, $context ?? new HydrationContext($this->locale));
+        return $schema->hydrate(LanguageValues::read($schema, $this->data ?? [], $main === null ? null : ($main->data ?? [])), $context ?? new HydrationContext($this->locale));
     }
 }

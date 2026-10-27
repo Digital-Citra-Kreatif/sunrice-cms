@@ -274,13 +274,16 @@ final class SwitchMainLanguage
         return count($rows);
     }
 
-    /** Top-level shared fields from the old main language's row to the new one's (terms, globals, listing pages). */
+    /**
+     * Shared values from the old main language's row to the new one's
+     * (terms, globals, listing pages): the shared fields, and those inside
+     * translated groups, rows and blocks (Schema::withShared()).
+     */
     private function moveShared(Schema $schema, TermTranslation|GlobalValue|CollectionListing|TaxonomyListing $old, TermTranslation|GlobalValue|CollectionListing|TaxonomyListing $new): void
     {
-        $shared = array_flip($schema->shared());
         $oldData = $old->data ?? [];
-        $new->data = array_replace($new->data ?? [], array_intersect_key($oldData, $shared));
-        $old->data = array_diff_key($oldData, $shared);
+        $new->data = self::fields($schema->withShared($new->data ?? [], $oldData));
+        $old->data = self::fields($schema->withoutShared($oldData, $new->data));
         foreach ([$new, $old] as $row) {
             if ($row->isDirty() || ! $row->exists) {
                 $row->version = $row->exists ? $row->version + 1 : 1;

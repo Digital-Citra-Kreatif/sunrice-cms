@@ -29,6 +29,7 @@ use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Site\TemplateLookup;
 use Sunrice\Cms\Support\Access;
 use Sunrice\Cms\Support\AdminUrls;
+use Sunrice\Cms\Support\LanguageValues;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\References;
 use Sunrice\Cms\Support\Seo;
@@ -203,7 +204,8 @@ final class TermController
             // The views that exist under the template prefixes, to pick from: read when the Template choice opens.
             'templateChoices' => Inertia::optional(fn (): array => TemplateHelp::choices()),
             'hasPages' => $taxonomy->hasTermPages(),
-            'fields' => $taxonomy->schema()->toAdmin(),
+            // Shared fields in groups, rows and blocks read-only outside the main language (a term not in it yet has nothing to share).
+            'fields' => $locale === Locales::default() || $term?->translations->firstWhere('locale', Locales::default()) === null ? $taxonomy->schema()->toAdmin() : $taxonomy->schema()->toAdminShared(),
             'locale' => $locale,
             'locales' => Locales::all(),
         ];
@@ -294,9 +296,11 @@ final class TermController
                 'translatedIn' => $term->translations->map(fn (TermTranslation $each): string => $each->locale)->values()->all()],
             'parentId' => $term->parent_id,
             'translated' => $translation !== null,
-            'shared' => $locale === Locales::default() ? [] : $schema->shared(),
+            // Not in the main language yet: nothing to share.
+            'shared' => $locale === Locales::default() || $main === null ? [] : $schema->shared(),
             'sharedValues' => array_intersect_key(array_replace($schema->defaults(), $main->data ?? []), array_flip($schema->shared())),
-            'values' => array_replace($schema->defaults(), $translation->data ?? []),
+            // With the main language's values of the shared fields in groups, rows and blocks.
+            'values' => LanguageValues::read($schema, $translation->data ?? [], $locale === Locales::default() || $main === null ? null : ($main->data ?? [])),
             'seo' => $translation->data[Seo::KEY] ?? null,
             'version' => $translation?->version,
             'usedBy' => References::usedBy(Reference::TERM, $term->id),

@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Sunrice\Cms\Fields\HydrationContext;
 use Sunrice\Cms\Fields\Schema;
+use Sunrice\Cms\Fields\Types\Group;
+use Sunrice\Cms\Support\LanguageValues;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\SiteRecords;
 
@@ -57,8 +59,9 @@ class GlobalSet extends Model
 
     /**
      * The stored values in a language, with the shared fields from the main
-     * language and defaults for what was never saved. In another language,
-     * a translated field it has no value for (never saved, or left empty)
+     * language (inside groups, rows and blocks too) and defaults for what
+     * was never saved. In another language, a translated field it has no
+     * value for (never saved, or left empty; in groups field by field)
      * shows the main language's, as untranslated pages do; so the editor
      * starts from them too.
      *
@@ -68,14 +71,33 @@ class GlobalSet extends Model
     {
         $schema = $this->schema();
         $stored = fn (string $code): array => $this->values->firstWhere('locale', $code)->data ?? [];
-        $data = array_replace($schema->defaults(), $stored($locale));
-        if ($locale !== Locales::default()) {
-            $main = array_replace($schema->defaults(), $stored(Locales::default()));
-            $data = array_replace($data, array_intersect_key($main, array_flip($schema->shared())));
-            foreach ($data as $handle => $value) {
-                if (($value === null || $value === '' || $value === []) && isset($main[$handle])) {
-                    $data[$handle] = $main[$handle];
-                }
+        if ($locale === Locales::default()) {
+            return LanguageValues::read($schema, $stored($locale), null);
+        }
+        $main = $stored(Locales::default());
+
+        return self::fallback($schema, LanguageValues::read($schema, $stored($locale), $main), LanguageValues::read($schema, $main, null));
+    }
+
+    /**
+     * The data with the main language's values for the fields it has none
+     * for (null, empty text or list), inside groups too; false and 0 are
+     * values.
+     *
+     * @template TKey of array-key
+     *
+     * @param  array<TKey, mixed>  $data
+     * @param  array<mixed>  $main
+     * @return array<TKey, mixed>
+     */
+    private static function fallback(Schema $schema, array $data, array $main): array
+    {
+        foreach ($data as $handle => $value) {
+            $field = is_string($handle) ? $schema->field($handle) : null;
+            if ($field?->type === Group::TYPE && is_array($value) && is_array($main[$handle] ?? null)) {
+                $data[$handle] = self::fallback(Schema::children($field, $schema->depth()), $value, $main[$handle]);
+            } elseif (($value === null || $value === '' || $value === []) && isset($main[$handle])) {
+                $data[$handle] = $main[$handle];
             }
         }
 

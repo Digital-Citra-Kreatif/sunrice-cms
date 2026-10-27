@@ -10,7 +10,7 @@
 
 Global tidak memiliki draf: nilai yang disimpan langsung tayang di situs web, di setiap halaman yang menampilkannya.
 
-Field yang dipakai bersama oleh semua bahasa (nomor telepon, logo) disunting di bahasa utama dan tampil abu-abu di bahasa lain, seperti pada entri.
+Field yang dipakai bersama oleh semua bahasa (nomor telepon, logo) disunting di bahasa utama dan tampil abu-abu di bahasa lain, seperti pada entri, termasuk di dalam group, baris repeater, dan blok flexible.
 
 Di bahasa lain, set yang belum pernah disimpan di bahasa itu dimulai dengan nilai bahasa utama, yang ditampilkan situs web sementara ini: terjemahkan, lalu simpan. Field yang Anda biarkan kosong menampilkan nilai bahasa utama di situs web.
 

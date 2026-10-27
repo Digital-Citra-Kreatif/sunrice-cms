@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Actions\Globals;
 
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
-use Sunrice\Cms\Actions\Entries\EntryInput;
 use Sunrice\Cms\Globals;
 use Sunrice\Cms\Models\GlobalSet;
 use Sunrice\Cms\Models\GlobalValue;
+use Sunrice\Cms\Support\LanguageValues;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\MediaUsage;
 use Sunrice\Cms\Support\References;
@@ -43,14 +42,10 @@ final class SaveGlobals
             throw ValidationException::withMessages(['locale' => __('Choose one of the site\'s languages: :languages.', ['languages' => implode(', ', Locales::all())])]);
         }
         $expected = Versioned::expected($version);
-        $schema = $set->editableSchema($locale);
         $value = $set->values()->firstOrNew(['locale' => $locale], ['data' => []]);
-        // What the site showed: the stored values over the defaults.
-        $before = array_replace($schema->defaults(), $value->data);
-        $merged = EntryInput::merge($schema, $before, $data);
-        $rules = $schema->rules($merged);
-        Validator::make(['data' => $merged], $rules, [], EntryInput::attributes($schema, array_keys($rules)))->validate();
-        $normalized = $schema->normalize($merged);
+        $main = $locale === Locales::default() ? null : ($set->values()->where('locale', Locales::default())->first()->data ?? []);
+        // Before: what the site showed, the stored values over the defaults.
+        ['before' => $before, 'data' => $normalized] = LanguageValues::save($set->schema(), $value->data, $data, $main);
 
         $changed = array_keys(array_filter($normalized, fn (mixed $v, int|string $k): bool => ! array_key_exists($k, $before) || $before[$k] != $v, ARRAY_FILTER_USE_BOTH));
         /** @var array<string, mixed> $normalized */

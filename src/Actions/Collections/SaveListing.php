@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Actions\Collections;
 
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
-use Sunrice\Cms\Actions\Entries\EntryInput;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\CollectionListing;
+use Sunrice\Cms\Support\LanguageValues;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\Seo;
 use Sunrice\Cms\Support\Versioned;
@@ -39,16 +38,9 @@ final class SaveListing
             throw ValidationException::withMessages(['locale' => __('Choose one of the site\'s languages: :languages.', ['languages' => implode(', ', Locales::all())])]);
         }
         $expected = Versioned::expected($version);
-        $schema = $collection->listingSchema();
-        if ($locale !== Locales::default()) {
-            $schema = $schema->except($schema->shared());
-        }
         $listing = $collection->listings()->firstOrNew(['locale' => $locale], ['data' => []]);
-        $before = array_replace($schema->defaults(), $listing->data);
-        $merged = EntryInput::merge($schema, $before, $data);
-        $rules = $schema->rules($merged);
-        Validator::make(['data' => $merged], $rules, [], EntryInput::attributes($schema, array_keys($rules)))->validate();
-        $normalized = $schema->normalize($merged);
+        $main = $locale === Locales::default() ? null : ($collection->listings()->where('locale', Locales::default())->first()->data ?? []);
+        ['before' => $before, 'data' => $normalized] = LanguageValues::save($collection->listingSchema(), $listing->data, $data, $main);
         if ($seo !== null) {
             $normalized[Seo::KEY] = Seo::validate($seo);
         }

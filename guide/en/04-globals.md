@@ -10,7 +10,7 @@
 
 Globals have no drafts: saved values are live on the website straight away, on every page that shows them.
 
-Fields shared by all languages (a phone number, a logo) are edited in the main language and shown greyed out in the others, as in entries.
+Fields shared by all languages (a phone number, a logo) are edited in the main language and shown greyed out in the others, as in entries, inside groups, repeater rows and flexible blocks too.
 
 In another language, a set not saved there yet starts with the main language's values, which the website shows meanwhile: translate them, then save. A field you leave empty shows the main language's value on the website.
 

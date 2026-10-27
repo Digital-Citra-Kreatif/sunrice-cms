@@ -14,6 +14,7 @@ use Sunrice\Cms\Fields\Schema;
 use Sunrice\Cms\Models\Concerns\HasLanguageRoutes;
 use Sunrice\Cms\Models\Concerns\TranslatesText;
 use Sunrice\Cms\Site\Site;
+use Sunrice\Cms\Support\LanguageValues;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\SiteRecords;
 
@@ -108,8 +109,8 @@ class Taxonomy extends Model
 
     /**
      * An index page's stored values in a language (the shared page's, or
-     * a collection's), over the defaults; fields not translated come from
-     * the main language.
+     * a collection's), over the defaults; fields not translated (inside
+     * groups, rows and blocks too) come from the main language.
      *
      * @return array<string, mixed>
      */
@@ -117,12 +118,8 @@ class Taxonomy extends Model
     {
         $schema ??= $this->indexSchema();
         $stored = fn (string $code): array => $this->listings->first(fn (TaxonomyListing $listing): bool => $listing->locale === $code && $listing->collection_id === $collection?->id)->data ?? [];
-        $data = array_replace($schema->defaults(), $stored($locale));
-        if ($locale !== Locales::default()) {
-            $data = array_replace($data, array_intersect_key(array_replace($schema->defaults(), $stored(Locales::default())), array_flip($schema->shared())));
-        }
 
-        return $data;
+        return LanguageValues::read($schema, $stored($locale), $locale === Locales::default() ? null : $stored(Locales::default()));
     }
 
     /**

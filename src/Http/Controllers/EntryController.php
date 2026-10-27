@@ -397,7 +397,7 @@ final class EntryController
 
         return Inertia::render('Cms/Entries/Edit', [
             'collection' => self::collection($collection),
-            'fields' => $translation->isMain() ? $schema->toAdmin() : self::markShared($schema->toAdmin()),
+            'fields' => $translation->isMain() ? $schema->toAdmin() : $schema->toAdminShared(),
             'locales' => EntryList::locales($entry),
             // Shared fields are edited in the main language; the others show its values.
             'shared' => $shared,
@@ -775,46 +775,6 @@ final class EntryController
         }
 
         return $translation;
-    }
-
-    /**
-     * Field definitions for another language than the main one: the shared
-     * fields inside translated groups, repeaters and blocks marked `shared`,
-     * so the editor shows them read-only.
-     *
-     * @param  list<array<string, mixed>>  $fields
-     * @return list<array<string, mixed>>
-     */
-    private static function markShared(array $fields, bool $nested = false): array
-    {
-        foreach ($fields as $i => $field) {
-            if (($field['translatable'] ?? true) === false) {
-                if ($nested) {
-                    $fields[$i]['shared'] = true;
-                }
-
-                continue;
-            }
-            if (is_array($field['fields'] ?? null)) {
-                /** @var list<array<string, mixed>> $children */
-                $children = $field['fields'];
-                $fields[$i]['fields'] = self::markShared($children, true);
-            }
-            if (is_array($field['blocks'] ?? null)) {
-                $blocks = $field['blocks'];
-                foreach ($blocks as $b => $block) {
-                    if (is_array($block) && is_array($block['fields'] ?? null)) {
-                        /** @var list<array<string, mixed>> $children */
-                        $children = $block['fields'];
-                        $block['fields'] = self::markShared($children, true);
-                        $blocks[$b] = $block;
-                    }
-                }
-                $fields[$i]['blocks'] = $blocks;
-            }
-        }
-
-        return $fields;
     }
 
     private static function publishAt(Request $request): ?\DateTimeInterface

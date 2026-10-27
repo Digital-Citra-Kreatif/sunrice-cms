@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Actions\Taxonomies;
 
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
-use Sunrice\Cms\Actions\Entries\EntryInput;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\TaxonomyListing;
+use Sunrice\Cms\Support\LanguageValues;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\Seo;
 use Sunrice\Cms\Support\Versioned;
@@ -46,16 +45,9 @@ final class SaveIndexPage
             throw ValidationException::withMessages(['collection' => __('This index page is switched off.')]);
         }
         $expected = Versioned::expected($version);
-        $schema = $taxonomy->indexSchema();
-        if ($locale !== Locales::default()) {
-            $schema = $schema->except($schema->shared());
-        }
         $page = $taxonomy->listings()->firstOrNew(['collection_id' => $collection?->id, 'locale' => $locale], ['data' => []]);
-        $before = array_replace($schema->defaults(), $page->data);
-        $merged = EntryInput::merge($schema, $before, $data);
-        $rules = $schema->rules($merged);
-        Validator::make(['data' => $merged], $rules, [], EntryInput::attributes($schema, array_keys($rules)))->validate();
-        $normalized = $schema->normalize($merged);
+        $main = $locale === Locales::default() ? null : ($taxonomy->listings()->where('collection_id', $collection?->id)->where('locale', Locales::default())->first()->data ?? []);
+        ['before' => $before, 'data' => $normalized] = LanguageValues::save($taxonomy->indexSchema(), $page->data, $data, $main);
         if ($seo !== null) {
             $normalized[Seo::KEY] = Seo::validate($seo);
         }

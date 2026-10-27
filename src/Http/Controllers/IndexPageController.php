@@ -53,7 +53,8 @@ final class IndexPageController
             'url' => $taxonomy->indexUrl($locale, $collection),
             // The taxonomy's index pages that are on, for the page switch.
             'pages' => self::pages($taxonomy),
-            'fields' => $schema->toAdmin(),
+            // Shared fields in groups, rows and blocks read-only outside the main language.
+            'fields' => $locale === Locales::default() ? $schema->toAdmin() : $schema->toAdminShared(),
             'locale' => $locale,
             'locales' => Locales::all(),
             // The languages with texts of their own (the main one always counts), for the language switch.

@@ -45,7 +45,8 @@ final class ListingController
             'collection' => ['handle' => $collection->handle, 'title' => $collection->title, 'url' => $collection->listingUrl($locale)],
             // Where its back link and breadcrumbs go: the collection's settings (its listing page card), for those who may change them.
             'settings' => $request->user()?->can('cms.collections.update') === true ? route('sunrice.admin.cms.collections.edit', $collection->handle) : null,
-            'fields' => $schema->toAdmin(),
+            // Shared fields in groups, rows and blocks read-only outside the main language.
+            'fields' => $locale === Locales::default() ? $schema->toAdmin() : $schema->toAdminShared(),
             'locale' => $locale,
             'locales' => Locales::all(),
             // The languages with texts of their own (the main one always counts), for the language switch.

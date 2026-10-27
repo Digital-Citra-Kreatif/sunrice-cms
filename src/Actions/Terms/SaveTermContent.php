@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace Sunrice\Cms\Actions\Terms;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
-use Sunrice\Cms\Actions\Entries\EntryInput;
 use Sunrice\Cms\Actions\Entries\SaveEntrySettings;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
+use Sunrice\Cms\Support\LanguageValues;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\References;
 use Sunrice\Cms\Support\Seo;
@@ -72,15 +71,10 @@ final class SaveTermContent
     private function content(Term $term, TermTranslation $translation, array $input, string $locale): TermTranslation
     {
         $expected = Versioned::expected($input['version'] ?? null);
-        $schema = $term->taxonomy->schema();
-        if ($locale !== Locales::default()) {
-            $schema = $schema->except($schema->shared());
-        }
-        $before = array_replace($schema->defaults(), $translation->data ?? []);
-        $merged = EntryInput::merge($schema, $before, $input['data'] ?? null);
-        $rules = $schema->rules($merged);
-        Validator::make(['data' => $merged], $rules, [], EntryInput::attributes($schema, array_keys($rules)))->validate();
-        $data = $schema->normalize($merged);
+        // Not in the main language yet (named in another first): nothing to share, all its fields are its own.
+        $main = $locale === Locales::default() ? null : $term->translations()->where('locale', Locales::default())->first();
+        $main = $main === null ? null : ($main->data ?? []);
+        ['before' => $before, 'data' => $data] = LanguageValues::save($term->taxonomy->schema(), $translation->data ?? [], $input['data'] ?? null, $main);
         if (array_key_exists(Seo::KEY, $input)) {
             $data[Seo::KEY] = Seo::validate($input[Seo::KEY]);
         }
