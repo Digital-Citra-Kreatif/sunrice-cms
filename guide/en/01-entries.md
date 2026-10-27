@@ -8,7 +8,7 @@ The list shows one collection at a time; pick another one with the collection me
 
 - **Search** finds entries by title or slug; type `#12` to find the entry with number 12.
 - **Status** shows only **Drafts**, **Published**, **Scheduled** (published, going live later) or the **Trash**.
-- Filter by author, by a term (such as a category) and by **Language**: the list shows the titles and statuses in that language.
+- Filter by author, by a term (such as a category) and by **Language**: the list shows the titles and statuses in that language. With more than two author and taxonomy filters, they're together under **Filters**, which shows how many are set.
 - Click a column's title to sort by it. **Columns** chooses which columns you see, including some of the entry's own fields (a price, a date…). The panel remembers your columns and page size.
 - The **⋮** menu beside **New entry** leads to what you might need next: the collection's listing page, its terms, its settings and its blueprint, as your role allows.
 - **Export CSV** (in the **⋮** menu) downloads the list as filtered, sorted and in its language, every page of it, for a spreadsheet. It needs its own permission: being able to see a list isn't enough to download it.

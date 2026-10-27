@@ -70,3 +70,11 @@ export function sortDirection(current: string, key: string): 'asc' | 'desc' | nu
 export function activeFilters(query: EntryListQuery): number {
     return [query.search, query.status, query.author, ...Object.values(query.terms)].filter((value) => value !== '').length;
 }
+
+/** More filters than this (author, taxonomies) go in one Filters menu instead of a select each. */
+export const INLINE_FILTERS = 2;
+
+/** How many of the Filters menu's filters (author, taxonomies) are set: its button's count. */
+export function menuFiltersSet(query: EntryListQuery, taxonomies: readonly string[]): number {
+    return [query.author, ...taxonomies.map((handle) => query.terms[handle] ?? '')].filter((value) => value !== '').length;
+}

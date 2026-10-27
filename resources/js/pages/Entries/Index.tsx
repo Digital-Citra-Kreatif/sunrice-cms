@@ -1,20 +1,20 @@
 import * as React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import {
-    ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Columns3, Download, Plus, RotateCcw, Search, Trash2, X,
+    ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Columns3, Download, ListFilter, Plus, RotateCcw, Search, Trash2, X,
 } from 'lucide-react';
 import { useConfirm } from '@/components/Confirm.tsx';
 import { EntryReorderList } from '@/components/EntryReorderList.tsx';
 import { adminUrl, t } from '@imajiner/admin-sdk';
 import {
     Badge, Button, Card, Checkbox, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel,
-    DropdownMenuSeparator, DropdownMenuTrigger, Input, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table,
+    DropdownMenuSeparator, DropdownMenuTrigger, Input, Label, PageHeader, Popover, PopoverContent, PopoverTrigger, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table,
     TableBody, TableCell, TableHead, TableHeader, TableRow, TrashBanner, TrashHint, TrashTitle, useBreadcrumbs, useTablePreferences,
 } from '@imajiner/admin-sdk/ui';
 import { type EntryLocale, type EntryStatus, formatDate, localeName, statusLabel } from '@/lib/entries.ts';
 import { EntryStatusBadges } from '@/components/EntryStatus.tsx';
 import {
-    activeFilters, type EntryListQuery, entryListParams, entryListQueryString, nextSort, sortDirection,
+    activeFilters, type EntryListQuery, entryListParams, entryListQueryString, INLINE_FILTERS, menuFiltersSet, nextSort, sortDirection,
 } from '@/lib/entry-list.ts';
 
 interface Row {
@@ -122,6 +122,19 @@ function EntryList({
 
     const trashed = query.status === 'trashed';
     const filtered = activeFilters(query) > 0;
+    // Author and taxonomies: a select each, or one Filters menu when there are many of them.
+    const moreFilters: { key: string; label: string; value: string; options: Option[]; onChange: (value: string) => void }[] = [
+        ...(filters.authors.length > 0 ? [{ key: 'author', label: t('Author'), value: query.author, options: filters.authors, onChange: (author: string) => visit({ author }) }] : []),
+        ...filters.taxonomies.filter((taxonomy) => taxonomy.terms.length > 0).map((taxonomy) => ({
+            key: `terms-${taxonomy.handle}`,
+            label: taxonomy.title,
+            value: query.terms[taxonomy.handle] ?? '',
+            options: taxonomy.terms.map((term) => ({ value: term.value, label: `${'— '.repeat(term.depth)}${term.label}` })),
+            onChange: (term: string) => visit({ terms: { ...query.terms, [taxonomy.handle]: term } }),
+        })),
+    ];
+    const inMenu = moreFilters.length > INLINE_FILTERS;
+    const menuSet = menuFiltersSet(query, filters.taxonomies.map((taxonomy) => taxonomy.handle));
     const visible = columns.filter((column) => query.columns.includes(column.key));
     const params = (changes: Partial<EntryListQuery> = {}) => entryListParams(query, changes, mainLocale);
     const visit = (changes: Partial<EntryListQuery>) => router.get(base, params(changes), { preserveState: true, preserveScroll: true, replace: true });
@@ -195,20 +208,33 @@ function EntryList({
             </PageHeader>
             {trashed && <TrashBanner items={t('entries')} onBack={() => visit({ status: '' })} />}
 
-            <div className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
+            <div className="cms:flex cms:flex-col cms:gap-2 cms:md:flex-row cms:md:items-start">
+                <div className="cms:flex cms:min-w-0 cms:flex-1 cms:flex-wrap cms:items-center cms:gap-2">
                 <div className="cms:relative cms:w-full cms:max-w-xs">
                     <Search className="cms:pointer-events-none cms:absolute cms:top-1/2 cms:left-3 cms:size-4 cms:-translate-y-1/2 cms:text-muted-foreground" />
                     <Input className="cms:pl-9" placeholder={t('Search titles, slugs or #id')} aria-label={t('Search entries')} value={search}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)} />
                 </div>
                 <FilterSelect label={t('Status')} value={query.status} options={statuses()} onChange={(status) => visit({ status })} />
-                {filters.authors.length > 0 && (
-                    <FilterSelect label={t('Author')} value={query.author} options={filters.authors} onChange={(author) => visit({ author })} />
-                )}
-                {filters.taxonomies.filter((taxonomy) => taxonomy.terms.length > 0).map((taxonomy) => (
-                    <FilterSelect key={taxonomy.handle} label={taxonomy.title} value={query.terms[taxonomy.handle] ?? ''}
-                        options={taxonomy.terms.map((term) => ({ value: term.value, label: `${'— '.repeat(term.depth)}${term.label}` }))}
-                        onChange={(term) => visit({ terms: { ...query.terms, [taxonomy.handle]: term } })} />
+                {inMenu ? (
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button variant="outline">
+                                <ListFilter /> {t('Filters')}
+                                {menuSet > 0 && <Badge variant="secondary" className="cms:ml-1 cms:px-1.5">{menuSet}</Badge>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent align="start" className="cms:flex cms:w-80 cms:flex-col cms:gap-3">
+                            {moreFilters.map((filter) => (
+                                <div key={filter.key} className="cms:flex cms:flex-col cms:gap-1.5">
+                                    <Label htmlFor={`entry-filter-${filter.key}`}>{filter.label}</Label>
+                                    <FilterSelect id={`entry-filter-${filter.key}`} wide label={filter.label} value={filter.value} options={filter.options} onChange={filter.onChange} />
+                                </div>
+                            ))}
+                        </PopoverContent>
+                    </Popover>
+                ) : moreFilters.map((filter) => (
+                    <FilterSelect key={filter.key} label={filter.label} value={filter.value} options={filter.options} onChange={filter.onChange} />
                 ))}
                 {filters.locales.length > 1 && (
                     <Select value={query.locale} onValueChange={(locale: string) => visit({ locale })}>
@@ -219,7 +245,8 @@ function EntryList({
                     </Select>
                 )}
                 {filtered && <Button variant="ghost" size="sm" onClick={clearFilters}><X /> {t('Clear')}</Button>}
-                <div className="cms:ml-auto cms:flex cms:flex-wrap cms:items-center cms:gap-2">
+                </div>
+                <div className="cms:flex cms:flex-none cms:flex-wrap cms:items-center cms:gap-2 cms:md:ml-auto">
                     {selected.length > 0 && bulkActions.length > 0 && (
                         <div role="toolbar" aria-label={t('Selected entries')} className="cms:flex cms:flex-wrap cms:items-center cms:gap-2">
                             <span className="cms:text-sm cms:text-muted-foreground">{t(':count selected', { count: selected.length })}</span>
@@ -368,10 +395,14 @@ function EntryList({
     );
 }
 
-function FilterSelect({ label, value, options, onChange }: { label: string; value: string; options: Option[]; onChange: (value: string) => void }) {
+function FilterSelect({ id, label, value, options, onChange, wide = false }: {
+    id?: string; label: string; value: string; options: Option[]; onChange: (value: string) => void;
+    /** Full width (in the Filters menu), not sized to its value. */
+    wide?: boolean;
+}) {
     return (
         <Select value={value === '' ? ALL : value} onValueChange={(next: string) => onChange(next === ALL ? '' : next)}>
-            <SelectTrigger className="cms:w-auto cms:min-w-40 cms:max-w-72" title={label} aria-label={label}><SelectValue placeholder={label} /></SelectTrigger>
+            <SelectTrigger id={id} className={wide ? 'cms:w-full' : 'cms:w-auto cms:min-w-40 cms:max-w-72'} title={label} aria-label={label}><SelectValue placeholder={label} /></SelectTrigger>
             <SelectContent>
                 <SelectItem value={ALL}>{t(':filter: all', { filter: label })}</SelectItem>
                 {options.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
