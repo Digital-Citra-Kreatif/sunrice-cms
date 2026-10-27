@@ -151,12 +151,23 @@ class EntryTranslation extends Model
             return;
         }
         $table = $this->getTable();
-        $query->where(fn (Builder $either) => $either->where($column, $locale)->orWhere(fn (Builder $stand) => $stand->where($column, $main)
-            ->whereNotExists(function (QueryBuilder $own) use ($table, $locale, $preview): void {
-                $own->selectRaw('1')->from($table.' as own')
-                    ->whereColumn('own.entry_id', $table.'.entry_id')->where('own.locale', $locale)
-                    ->when(! $preview, fn (QueryBuilder $live) => $live->where('own.status', self::PUBLISHED)->where('own.published_at', '<=', now()));
-            })));
+        $live = fn (QueryBuilder $own) => $own->when(! $preview, fn (QueryBuilder $live) => $live->where('own.status', self::PUBLISHED)->where('own.published_at', '<=', now()));
+        if ($this->getConnection()->getDriverName() === 'pgsql') {
+            // Postgres looks each main-language row up quickly enough. It would charge the NOT IN
+            // below, nested in a term's count on an index page, once per term: an estimate past
+            // its JIT thresholds, and an index page twice as slow.
+            $query->where(fn (Builder $either) => $either->where($column, $locale)->orWhere(fn (Builder $stand) => $stand->where($column, $main)
+                ->whereNotExists(fn (QueryBuilder $own) => $live($own->selectRaw('1')->from($table.' as own')
+                    ->whereColumn('own.entry_id', $table.'.entry_id')->where('own.locale', $locale)))));
+
+            return;
+        }
+        // The entries live in the language, found once rather than looked up row by row: MySQL can't
+        // turn a NOT EXISTS under an OR into an anti-join, so it checked each main-language row on its
+        // own, and SQLite scanned them. The indexes on (collection_id, locale, status, published_at,
+        // entry_id) and (locale, status, published_at, entry_id) answer both halves without the rows.
+        $query->whereIn($column, [$locale, $main])->where(fn (Builder $either) => $either->where($column, $locale)
+            ->orWhereNotIn($query->qualifyColumn('entry_id'), fn (QueryBuilder $own) => $live($own->select('own.entry_id')->from($table.' as own')->where('own.locale', $locale))));
     }
 
     public function isPublished(): bool
