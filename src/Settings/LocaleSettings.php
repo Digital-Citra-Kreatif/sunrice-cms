@@ -66,7 +66,7 @@ final class LocaleSettings extends Settings
     {
         return $form->schema([
             Pairs::make('languages')->label('Content languages')->labels(__('Code'), __('Name'))->maxLength(2000)->required()
-                ->suggest(self::KNOWN + Locales::names())->firstBadge(__('Main'))->addLabel('Add a language')
+                ->suggest(self::KNOWN + Locales::names())->firstBadge(__('Main'))->distinctKeys()->addLabel('Add a language')
                 ->rules([fn (string $attribute, mixed $value, Closure $fail) => self::check($value, $fail)])
                 ->extra(__('Address'), '/{key}', '/')
                 ->hints('en, id, pt_BR…', 'As visitors read it', 'Start of its URLs')
