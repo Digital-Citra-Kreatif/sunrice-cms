@@ -135,12 +135,27 @@ export function TermsPicker({ id, taxonomy, multiple, max, required, invalid, va
     const disabled = (index: number) => full && !ids.includes(items[index]?.id ?? -1);
     const name = (termId: number) => label(termId) ?? t('Term #:id', { id: termId });
 
+    // The list sits under the whole box, at its width, though it opens from the trigger after the chips:
+    // measured on opening, and again while open as chips come and go (the trigger moves) or the box resizes.
+    const measure = React.useCallback(() => {
+        if (!box.current || !trigger.current) return;
+        const outer = box.current.getBoundingClientRect();
+        const inner = trigger.current.getBoundingClientRect();
+        const next = { width: outer.width, alignOffset: outer.left - inner.left, sideOffset: 4 + outer.bottom - inner.bottom };
+        setPlace((now) => (now && now.width === next.width && now.alignOffset === next.alignOffset && now.sideOffset === next.sideOffset ? now : next));
+    }, []);
+    const chips = ids.join(',');
+    React.useLayoutEffect(() => {
+        if (!open) return undefined;
+        measure();
+        if (typeof ResizeObserver === 'undefined' || !box.current) return undefined;
+        const observer = new ResizeObserver(measure);
+        observer.observe(box.current);
+        return () => observer.disconnect();
+    }, [open, chips, measure]);
+
     const onOpenChange = (next: boolean) => {
-        if (next && box.current && trigger.current) {
-            const outer = box.current.getBoundingClientRect();
-            const inner = trigger.current.getBoundingClientRect();
-            setPlace({ width: outer.width, alignOffset: outer.left - inner.left, sideOffset: 4 + outer.bottom - inner.bottom });
-        }
+        if (next) measure();
         if (!next) setSearch('');
         setOpen(next);
     };
