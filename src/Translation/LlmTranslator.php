@@ -107,7 +107,8 @@ abstract class LlmTranslator implements Translator
     public static function mask(string $text): array
     {
         $tags = [];
-        $masked = preg_replace_callback('/<[^>]*>/', function (array $match) use (&$tags): string {
+        // Tags and comments only: "under <12 or over >60" in a text is words.
+        $masked = preg_replace_callback('/<\/?[A-Za-z][^>]*>|<!--.*?-->/s', function (array $match) use (&$tags): string {
             $tags[] = $match[0];
 
             return '⟦'.(count($tags) - 1).'⟧';

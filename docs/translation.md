@@ -17,7 +17,7 @@ The rest is in `config/sunrice-cms.php` under `translation`: `batch_size` (texts
 
 ## What is translated
 
-- **Entries**: the title, text, textarea and rich text fields and the texts of link fields (not where they go) that are translated (not [shared](collections.md#languages)), custom field types built on them too, inside groups, repeater rows and flexible blocks (matched to the source's by id), and the SEO title and description. A missing translation is added first (as **Adding a language** does); a slug still the source's is made from the translated title. Saved through `SaveDraft` into the **draft** (a live translation stays live, now with unpublished changes; its version counts up and it's no longer outdated), so it's validated and rich text is cleaned like an editor's. Collections that aren't translatable are left out.
+- **Entries**: the title, text, textarea and rich text fields and the texts of link fields (not where they go) that are translated (not [shared](collections.md#languages)), custom field types built on them too, inside groups, repeater rows and flexible blocks (matched to the source's by id: a row or block only the translation has is left alone), and the SEO title and description. A missing translation is added first (as **Adding a language** does); a slug still the source's is made from the translated title (190 characters at most, as one made from a title in the editor). Saved through `SaveDraft` into the **draft** (a live translation stays live, now with unpublished changes; its version counts up and it's no longer outdated), so it's validated and rich text is cleaned like an editor's. Collections that aren't translatable are left out.
 - **Not sent, never changed**: numbers, dates, choices, toggles, media, related entries and terms fields (ids), shared fields, and the entry's own terms (the editor's **Taxonomies** card, every language's). How a field presents itself in the editor (label, hint, hint tooltip, helper text, placeholder, prefix, suffix, width) is the blueprint's, not the entry's: it isn't translated here (forms' visitor-facing labels are, under **Site texts**).
 - **Terms**: the title, fields and SEO title and description (`SaveTermContent`). A slug of its own stays; one still the source's is made from the translated title.
 - **Globals**: their translated fields (`SaveGlobals`).
@@ -30,7 +30,9 @@ Each save checks the version it read: someone who saved the same entry, term, pa
 
 A text counts as translated when it's there, not empty, and not the source's text any more (a new translation starts as a copy of the main language). `--force` translates everything again.
 
-HTML never reaches the model: tags are swapped for numbered placeholders (`⟦0⟧`) on the way out and put back on the way in, and a text that comes back without its placeholders, once each, isn't used.
+HTML never reaches the model: tags and comments are swapped for numbered placeholders (`⟦0⟧`) on the way out and put back on the way in (a `<` or `>` that starts no tag, as in "under <12", is text), and a text that comes back without its placeholders, once each, isn't used.
+
+A text the service doesn't give back (or gives back without its placeholders) stays as it was and is reported as failed, with the item and how many of its texts didn't come back: the editor shows it as an error, `cms_translate_entry` answers with it, and the command lists it and fails. The texts that did come back are saved.
 
 ## From the command line
 

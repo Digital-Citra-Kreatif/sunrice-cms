@@ -29,7 +29,7 @@ Inside groups, repeater rows and flexible blocks, the same goes row by row: the 
 
 ## Translating with a machine
 
-If your developer has set up machine translation, the editor of a translation has **Translate from …** in its **⋯** menu. It fills in what isn't translated yet, from the main language, into the draft. Save your own changes first (the button waits until you do), then read the result, correct it, and publish when it's right. On a page that's already live, visitors keep seeing the live version until you publish: the translation shows **Changes pending**. The entry's terms (the **Taxonomies** card) stay as they are, and if someone else saved this translation meanwhile, their save is kept and nothing is translated. Without it, a greyed-out **Translate from …** button shows instead: ask your developer to set it up.
+If your developer has set up machine translation, the editor of a translation has **Translate from …** in its **⋯** menu. It fills in what isn't translated yet, from the main language, into the draft. Save your own changes first (the button waits until you do), then read the result, correct it, and publish when it's right. On a page that's already live, visitors keep seeing the live version until you publish: the translation shows **Changes pending**. The entry's terms (the **Taxonomies** card) stay as they are, and if someone else saved this translation meanwhile, their save is kept and nothing is translated. If the service doesn't give some texts back, an error says how many: those stay as they were, the rest are in the draft. Without it, a greyed-out **Translate from …** button shows instead: ask your developer to set it up.
 
 ## Pages not translated yet
 

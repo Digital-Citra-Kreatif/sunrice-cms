@@ -390,6 +390,12 @@ final class ContentTranslator
         }
         $this->stats->translated += $written;
         $this->report("{$label}: {$written} translated");
+        // Texts that didn't come back (or came back without their placeholders) are a failure to tell, not "translated already".
+        if (($missing = count($pending) - $written) > 0) {
+            $this->failed($label, $written === 0
+                ? "none of its {$missing} texts came back translated."
+                : "{$missing} of its ".count($pending).' texts didn\'t come back translated and were left as they were; the rest were translated.');
+        }
 
         return $written > 0 ? $work : null;
     }
@@ -437,6 +443,8 @@ final class ContentTranslator
 
     private static function freeSlug(string $slug, EntryTranslation $target): string
     {
+        // As long as a slug made from a title may be (EntryInput), with room for a -2.
+        $slug = trim(Str::limit($slug, 190, ''), '-');
         $slug = $slug !== '' ? $slug : $target->draft_slug;
         $candidate = $slug;
         for ($i = 2; EntryInput::taken($candidate, $target->collection_id, $target->locale, $target->id); $i++) {

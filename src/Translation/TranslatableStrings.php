@@ -29,7 +29,7 @@ final class TranslatableStrings
 
     /**
      * The strings of a translation, each with the source's text at the same
-     * place (rows and blocks matched by id, else by position). Fields the
+     * place (rows and blocks matched by id, those without one by position). Fields the
      * translation lacks get the source's value first, so there's a place to
      * write the translation to.
      *
@@ -124,7 +124,7 @@ final class TranslatableStrings
     }
 
     /**
-     * Each row or block with the source's of the same id (or position).
+     * Each row or block with the source's of the same id (one without an id: of the same position).
      *
      * @param  array<mixed>  $items
      * @param  array<mixed>  $source
@@ -145,8 +145,10 @@ final class TranslatableStrings
             if (! is_array($item)) {
                 continue;
             }
-            $match = is_string($item[$id] ?? null) && isset($byId[$item[$id]]) ? $byId[$item[$id]] : null;
-            $match ??= is_int($index) && is_array($sourceList[$index] ?? null) ? $sourceList[$index] : null;
+            // By id; by position only an item without one (a row or block of the translation's own is never another's).
+            $match = is_string($item[$id] ?? null)
+                ? $byId[$item[$id]] ?? null
+                : (is_int($index) && is_array($sourceList[$index] ?? null) ? $sourceList[$index] : null);
             if ($match !== null) {
                 [$items[$index], $nested] = $pair($item, $match, $path.'.'.$index);
                 $strings += $nested;
