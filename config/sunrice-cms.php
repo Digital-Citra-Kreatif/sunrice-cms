@@ -149,6 +149,21 @@ return [
         'visitor_details' => env('SUNRICE_FORMS_VISITOR_DETAILS', true),
     ],
 
+    'rich_text' => [
+        // Media library images in rich text get their sizes when pages show
+        // them: srcset, sizes, width and height when they have none, and
+        // loading="lazy" and decoding="async". Nothing stored changes.
+        // False: printed as stored.
+        'responsive_images' => true,
+        // How wide rich text is shown at most (a CSS length in px, rem or
+        // em; the starter templates' 46rem): each image's sizes is worked
+        // out from it and the image's width and alignment presets.
+        'content_width' => '46rem',
+        // One sizes for every image instead, e.g. '(min-width: 60rem) 40rem,
+        // 100vw'; null: worked out as above.
+        'sizes' => null,
+    ],
+
     'ai' => [
         // Let super admins' AI agents create and change templates in
         // resources/views/cms (cms_write_template). Off unless asked for:

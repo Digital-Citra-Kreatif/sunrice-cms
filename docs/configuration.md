@@ -85,6 +85,16 @@ See [Search](site.md#search).
 
 See [Forms](forms.md).
 
+## Rich text
+
+| Key | Default | Env | |
+| --- | --- | --- | --- |
+| `rich_text.responsive_images` | `true` | — | Give rich text's media library images `srcset`, `sizes`, `width` and `height` (when they have none), `loading="lazy"` and `decoding="async"` when pages show them; nothing stored changes. `false`: printed as stored. |
+| `rich_text.content_width` | `'46rem'` | — | How wide rich text is shown at most (a CSS length in `px`, `rem` or `em`; a number is pixels): each image's `sizes` is worked out from it and the image's width and alignment presets. |
+| `rich_text.sizes` | `null` | — | One `sizes` for every image instead (`'(min-width: 60rem) 40rem, 100vw'`); `null`: worked out. |
+
+See [rich text images](site.md#what-templates-get).
+
 ## AI and machine translation
 
 | Key | Default | Env | |

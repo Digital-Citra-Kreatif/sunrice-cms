@@ -39,7 +39,7 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 | --- | --- | --- | --- |
 | `text` | a string | the string | `max` (≤ 255; none: values up to 65535 characters pass, so longer data saved before isn't refused), `placeholder`, `prefix`, `suffix`, `default` |
 | `textarea` | a string | the string | `rows`, `max`, `placeholder` |
-| `rich_text` | HTML, cleaned on save | the HTML | |
+| `rich_text` | HTML, cleaned on save | the HTML, its media library images given `srcset`, `sizes`, dimensions and lazy loading ([rich text images](site.md#what-templates-get)) | |
 | `code` | a string, as typed (never cleaned) | the string | `language` (`html`, `css`, `javascript`, `json`, `plain`: what the editor highlights; `plain` by default), `max`, `placeholder`. Shared by all languages unless `translatable` ([below](#code-fields)) |
 | `number` | a number | the number | `min`, `max`, `step` (1 for whole numbers), `default`, `placeholder`, `prefix`, `suffix` |
 | `toggle` | true or false | the boolean | `default`; a required toggle must be on (a form's consent box: `accepted`) |

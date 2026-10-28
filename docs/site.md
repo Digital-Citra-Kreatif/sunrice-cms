@@ -143,6 +143,21 @@ Images in rich text may carry the editor's width and alignment presets as classe
 
 Only these classes are kept on images when rich text is saved (any other class or `style` is dropped), and images without a preset keep no class, so they show as before. Clear the floats after the text (`.prose::after { content: ""; display: block; clear: both; }`).
 
+Images from the media library (those with `data-media-id`) are made responsive when templates get the HTML, never in what is stored: `$values`, `$entry->values()`, `Cms::toData()`, blocks, repeaters, groups, globals, terms, listing and index pages and previews all print the same. Each gets
+
+- `srcset`: the file's sizes that keep its proportions and the original (`Media::srcset()`), so the browser downloads the size it needs;
+- `sizes`: how wide it shows, from its width and alignment presets and the text's width (`sunrice-cms.rich_text.content_width`, `46rem` as in the starter templates): `sunrice-img-w-50` is `(min-width: 46rem) 23rem, 50vw`, a floated one (`sunrice-img-left`, `-right`) takes the full width under `40em` as the starter CSS makes it (`(min-width: 46rem) 23rem, (min-width: 40em) 50vw, 100vw`; without a width preset it counts as 50%), and an image without a preset the text's full width (`(min-width: 46rem) 46rem, 100vw`). Set `sunrice-cms.rich_text.sizes` to use one `sizes` for every image instead;
+- `width` and `height` from the file when it has neither (one stored alone is kept, and the other added in proportion), so the page doesn't jump as images load. Style images with `height: auto` (the starter CSS does);
+- `loading="lazy"` and `decoding="async"`.
+
+```html
+<img src="/storage/media/saw.jpg?v=1" alt="A saw" class="sunrice-img sunrice-img-w-50 sunrice-img-left" data-media-id="7"
+     srcset="/storage/media/saw-medium.jpg?v=1 800w, /storage/media/saw-large.jpg?v=1 1600w, /storage/media/saw.jpg?v=1 2400w"
+     sizes="(min-width: 46rem) 23rem, (min-width: 40em) 50vw, 100vw" width="2400" height="1600" loading="lazy" decoding="async" />
+```
+
+The stored `src` (the original) and every other attribute, `class` included, are kept as they are: browsers pick from `srcset`, and `src` stays the full picture for feeds and crawlers that don't. A `srcset` is only added when the file has sizes to choose from (run `php artisan sunrice:media-sizes` for files uploaded before their sizes were configured). Images of files that are missing, in the trash or can't have sizes (SVGs), images from other sites (no `data-media-id`) and images with a `srcset` or `loading` of their own are printed as stored, and rich text without library images comes back byte for byte. The files are loaded with everything else the page's entries point at, so a listing of many entries with images costs no extra query. Turn it off with `sunrice-cms.rich_text.responsive_images` (see [configuration](configuration.md#rich-text)).
+
 #### Entry pages get
 
 | | |
