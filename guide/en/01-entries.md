@@ -34,7 +34,7 @@ From then on, **Save draft** keeps your work (or press **Ctrl S** / **⌘ S**). 
 
 ### Fields you'll meet
 
-- **Rich text** has a toolbar for headings, bold, italic, lists, quotes, links and images from the media library. Click an image (or move onto it with the arrow keys and press Tab) for its own toolbar: a width (25, 50, 75 or 100% of the text), an alignment (left or right with the text flowing beside it, centred, or full width), its alt text, which describes it to people who can't see it, and **Remove image**. Click a pressed button again to undo it; Esc goes back to the text. On phones, images beside the text show full width above it.
+- **Rich text** has a toolbar for headings, bold, italic, lists, quotes, links and images from the media library. Click an image (or move onto it with the arrow keys and press Tab) for its own toolbar: a width (25, 50, 75 or 100% of the text), an alignment (left or right with the text flowing beside it, centred, or full width), a **Style** your site offers (such as Rounded or Shadow, several at once; only when your developer has set some up), its alt text, which describes it to people who can't see it, and **Remove image**. Click a pressed button again to undo it; Esc goes back to the text. On phones, images beside the text show full width above it.
 - **Media** fields pick images or files from the [media library](guide:panel/media), or upload new ones.
 - **Entries** and **Terms** fields link to other entries or to terms (a "featured topic", say); search by title. The entry's own categories and tags are in the **Taxonomies** card (below).
 - **Link** fields take a web address, or another entry (choose **Entry** to follow its address even if it changes).

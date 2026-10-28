@@ -1,11 +1,11 @@
-import { j as n, t as x } from "./admin-B85tCaRI.js";
+import { j as n, t as x } from "./admin-BJZuWFbX.js";
 import { c as O, _ as N } from "./createLucideIcon-Ccbp7F45.js";
 import { u as d } from "./ui-Dh5wfMwT.js";
-import { E as X } from "./EntriesPicker-AEKmze7W.js";
-import { F as I } from "./FieldError-ol5snTmU.js";
-import { c as $, T as de, o as fe, d as z, e as pe, g as he, i as Y, n as xe, f as ge, s as ye, b as be, h as je, l as ve } from "./TermsPicker-Dqxn7i5G.js";
+import { E as X } from "./EntriesPicker-BIdhV-Id.js";
+import { F as I } from "./FieldError-CrnP2AMi.js";
+import { c as $, T as de, o as fe, d as z, e as pe, g as he, i as Y, n as xe, f as ge, s as ye, b as be, h as je, l as ve } from "./TermsPicker-BllVnJA-.js";
 import { P as J } from "./plus-COqahUZ2.js";
-import { T as Z } from "./Confirm-imtwkZTr.js";
+import { T as Z } from "./Confirm-DcnjU4f1.js";
 import { C as ke } from "./chevron-right-9qVV6b-Q.js";
 const Q = {
   name: "chevron-down",
@@ -412,7 +412,7 @@ function es({ field: e, value: s, onChange: t, errors: a, id: r, content: o, fil
         }
       );
     case "rich_text":
-      return /* @__PURE__ */ n.jsx(d.RichTextEditor, { id: r, labelledBy: `${r}-label`, invalid: i, value: typeof s == "string" ? s : "", onChange: t });
+      return /* @__PURE__ */ n.jsx(d.RichTextEditor, { id: r, labelledBy: `${r}-label`, invalid: i, imageStyles: e.imageStyles, value: typeof s == "string" ? s : "", onChange: t });
     case "number": {
       const l = he(s);
       return /* @__PURE__ */ n.jsxs("div", { className: "cms:flex cms:flex-wrap cms:items-center cms:gap-3", children: [

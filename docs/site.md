@@ -136,12 +136,25 @@ Images in rich text may carry the editor's width and alignment presets as classe
 | `sunrice-img-left`, `sunrice-img-right` | floated, the text wraps around it; on narrow screens a full-width block |
 | `sunrice-img-center` | centred on its own line |
 | `sunrice-img-full` | the text's full width |
+| your image styles | the classes of config `sunrice-admin.rich_text.image_classes` (editors turn them on under **Style**, several at once) |
 
 ```html
 <img src="/storage/media/saw.jpg" alt="A saw" class="sunrice-img sunrice-img-w-50 sunrice-img-left" data-media-id="7">
 ```
 
-Only these classes are kept on images when rich text is saved (any other class or `style` is dropped), and images without a preset keep no class, so they show as before. Clear the floats after the text (`.prose::after { content: ""; display: block; clear: both; }`).
+Image styles are your own classes, listed with a label for the editor in the panel's config (see [Rich text](../../admin/docs/resources.md#rich-text)), written after the presets':
+
+```php
+// config/sunrice-admin.php
+'rich_text' => ['image_classes' => ['rounded' => 'Rounded', 'shadow' => 'Shadow']],
+```
+
+```css
+.prose img.rounded { border-radius: 1rem; }
+.prose img.shadow { box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.15); }
+```
+
+Only these classes are kept on images when rich text is saved (any other class or `style` is dropped; a style taken out of the config is dropped the next time its text is saved), and images without a preset or style keep no class, so they show as before. Clear the floats after the text (`.prose::after { content: ""; display: block; clear: both; }`).
 
 Images from the media library (those with `data-media-id`) are made responsive when templates get the HTML, never in what is stored: `$values`, `$entry->values()`, `Cms::toData()`, blocks, repeaters, groups, globals, terms, listing and index pages and previews all print the same. Each gets
 

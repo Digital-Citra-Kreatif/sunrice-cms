@@ -153,7 +153,7 @@ function Control({ field, value, onChange, errors, id, content, fill = false, de
                 value={typeof value === 'string' ? value : ''} placeholder={stringConfig(field, 'placeholder')} onChange={(code: string) => onChange(code)} />;
         case 'rich_text':
             // The panel's editor; its code loads when the first one shows.
-            return <RichTextEditor id={id} labelledBy={`${id}-label`} invalid={invalid} value={typeof value === 'string' ? value : ''} onChange={onChange} />;
+            return <RichTextEditor id={id} labelledBy={`${id}-label`} invalid={invalid} imageStyles={field.imageStyles} value={typeof value === 'string' ? value : ''} onChange={onChange} />;
         case 'number': {
             const echo = groupedNumber(value);
             return (

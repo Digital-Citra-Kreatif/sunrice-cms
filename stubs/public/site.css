@@ -91,6 +91,10 @@ figure { margin: 1.5rem 0; }
 .sunrice-img-left:not([class*="sunrice-img-w-"]), .sunrice-img-right:not([class*="sunrice-img-w-"]) { max-width: 50%; }
 .prose::after { content: ""; display: block; clear: both; }
 .prose :is(h2, h3, h4, hr, pre, blockquote, figure) { clear: both; }
+/* Image styles of your own (config sunrice-admin.rich_text.image_classes, class => label), for example:
+.prose img.rounded { border-radius: 1rem; }
+.prose img.shadow { box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.15); }
+*/
 @media (max-width: 40em) {
     /* With the :not() selectors too, so the 50% limit of a float without a width doesn't outweigh this */
     .sunrice-img-left, .sunrice-img-right, .sunrice-img-left:not([class*="sunrice-img-w-"]), .sunrice-img-right:not([class*="sunrice-img-w-"]) { float: none; width: 100%; max-width: 100%; margin: 1.5rem 0; }

@@ -56,6 +56,8 @@ export interface FieldDefinition {
     collections?: string[];
     /** Inside a translated group, row or block of another language: the main language's value, read-only. */
     shared?: boolean;
+    /** A rich text field's image styles (config sunrice-admin.rich_text.image_classes). */
+    imageStyles?: { class: string; label: string }[];
 }
 
 /** A field type the builder offers, with its settings as fields. */

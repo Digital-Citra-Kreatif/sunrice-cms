@@ -12,8 +12,9 @@ use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
  * Cleans rich text before it is stored: only the formatting the editor
  * produces is kept, so no script, style or event handler reaches the site.
  * Images from the media library keep data-media-id, so their use is known,
- * and on images only the editor's width and alignment classes are kept
- * (the panel's RichTextImageClasses).
+ * and on images only the editor's width and alignment classes and the
+ * configured image styles are kept (the panel's RichTextImageClasses, which
+ * reads its config each time, so the shared instance below never goes stale).
  *
  * @api
  */
