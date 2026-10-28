@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Sunrice\Cms\View\Components;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Collection as Items;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\Component;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
@@ -72,11 +72,9 @@ final class Terms extends Component
         $collectionId = $collection !== null ? Collection::query()->where('handle', $collection)->value('id') : null;
         $entryId = $entry instanceof EntryTranslation ? $entry->entry_id : ($entry instanceof Entry ? $entry->id : $entry);
 
-        $entries = fn (Builder $q) => $q
-            ->when($collection !== null, fn (Builder $q) => $q->where('collection_id', $collectionId ?? 0))
-            ->whereIn('sunrice_entries.id', EntryTranslation::query()->live()->shownIn($locale)->select('entry_id'));
+        // The entries that count: live in the language, of the collection when given.
+        $entries = Term::liveIn($locale, $collection !== null ? (is_numeric($collectionId) ? (int) $collectionId : 0) : null);
         $all = Term::query()->where('taxonomy_id', $taxonomyModel->id)->with('translations')
-            ->when(! $includeChildren, fn (Builder $q) => $q->withCount(['entries' => $entries]))
             ->when($entryId !== null, fn (Builder $q) => $q->whereHas('entries', fn (Builder $e) => $e->where('sunrice_entries.id', $entryId)))
             ->orderBy('sort_order')->orderBy('id')->get()->toBase();
         // Linked without more queries: $term->url() reads the term and its taxonomy from each translation.
@@ -86,22 +84,23 @@ final class Terms extends Component
                 $translation->setRelation('term', $term);
             }
         }
-        if ($includeChildren) {
-            self::countWithChildren($all, $entries);
-        }
+        // Counted all at once (one grouped query), not each term on its own.
+        $includeChildren ? self::countWithChildren($all, $taxonomyModel->id, $entries) : Term::countEntries($all, $taxonomyModel->id, $entries);
         $terms = $hideEmpty ? self::withEntries($all, $tree) : $all;
         $terms = self::sorted($terms, $orderBy);
         $parentId = self::parentId($all, $parent);
 
+        // The terms listed, by id: looked up, not searched, for each term.
+        $shown = array_flip(array_values(array_map(fn (Term $term): int => $term->id, $terms->all())));
         if ($tree) {
             // Children under their parents; a term whose parent isn't shown goes to the top.
-            $byParent = $terms->groupBy(fn (Term $term): int => $term->parent_id !== null && $terms->contains('id', $term->parent_id) ? $term->parent_id : 0);
+            $byParent = $terms->groupBy(fn (Term $term): int => $term->parent_id !== null && isset($shown[$term->parent_id]) ? $term->parent_id : 0);
             foreach ($terms as $term) {
                 $term->setRelation('children', $byParent->get($term->id, new Items)->values());
             }
         }
         $list = match (true) {
-            $parent === null => $tree ? $terms->filter(fn (Term $term): bool => $term->parent_id === null || ! $terms->contains('id', $term->parent_id)) : $terms,
+            $parent === null => $tree ? $terms->filter(fn (Term $term): bool => $term->parent_id === null || ! isset($shown[$term->parent_id])) : $terms,
             default => $terms->filter(fn (Term $term): bool => $term->parent_id === $parentId),
         };
         $list = $list->values();
@@ -126,13 +125,11 @@ final class Terms extends Component
      * under it, each entry once (one query).
      *
      * @param  Items<int, Term>  $terms
-     * @param  \Closure(Builder<Entry>): mixed  $entries  the entries that count
+     * @param  \Closure(QueryBuilder): Builder<EntryTranslation>  $entries  the entries that count (Term::countEntries())
      */
-    private static function countWithChildren(Items $terms, \Closure $entries): void
+    private static function countWithChildren(Items $terms, int $taxonomyId, \Closure $entries): void
     {
-        $pairs = DB::table('sunrice_entry_term')->whereIn('term_id', $terms->pluck('id')->all())->whereExists(Entry::termAttached())
-            ->whereIn('entry_id', tap(Entry::query(), $entries)->select('sunrice_entries.id'))
-            ->get(['term_id', 'entry_id']);
+        $pairs = Term::entryTerms($taxonomyId, $entries)->get(['term_id', 'entry_id']);
         /** @var array<int, array<int, true>> $own */
         $own = [];
         foreach ($pairs as $pair) {

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Sunrice\Cms\Site;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -282,13 +281,12 @@ final class SiteController
         $taxonomy = $index->taxonomy;
         $collection = $index->collection;
         $taxonomy->load('listings');
-        /** @param Builder<Entry> $entries */
-        // The collection is picked among the live translations (by their index, once), not on each entry of each term.
-        $live = fn (Builder $entries) => $entries->whereHas('translations', fn (Builder $q) => $q->whereIn('id', EntryTranslation::query()->live()->shownIn($locale)
-            ->when($collection !== null, fn (Builder $q) => $q->where('sunrice_entry_translations.collection_id', $collection?->id))->select('id')));
-        $terms = Term::query()->where('taxonomy_id', $taxonomy->id)->with('translations')->withCount(['entries' => $live])
-            ->when($collection !== null, fn ($q) => $q->whereHas('entries', $live))
-            ->orderBy('sort_order')->orderBy('id')->get();
+        $terms = Term::query()->where('taxonomy_id', $taxonomy->id)->with('translations')->orderBy('sort_order')->orderBy('id')->get();
+        // Counted all at once (one grouped query), not each term on its own.
+        Term::countEntries($terms, $taxonomy->id, Term::liveIn($locale, $collection?->id));
+        if ($collection !== null) {
+            $terms = $terms->filter(fn (Term $term): bool => $term->entries_count > 0)->values();
+        }
         // Their links need no queries of their own.
         foreach ($terms as $term) {
             $term->setRelation('taxonomy', $taxonomy);

@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Models;
 
+use Closure;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Sunrice\Cms\Models;
 use Sunrice\Cms\Site\Site;
 use Sunrice\Cms\Support\ContentData;
@@ -32,7 +36,7 @@ use Sunrice\Cms\Support\Locales;
  * @property-read Term|null $parent
  * @property-read Collection<int, Term> $children
  * @property-read Collection<int, TermTranslation> $translations
- * @property-read int|null $entries_count with withCount('entries')
+ * @property-read int|null $entries_count with withCount('entries'), or countEntries()
  *
  * @phpstan-type TermData array{id: int, taxonomy: string, locale: string|null, title: string, slug: string|null, url: string|null, parent_id: int|null}
  *
@@ -87,6 +91,61 @@ class Term extends Model
     public function entries(): BelongsToMany
     {
         return $this->belongsToMany(Entry::class, 'sunrice_entry_term')->whereExists(Entry::termAttached());
+    }
+
+    /**
+     * Sets entries_count on these terms of a taxonomy, as
+     * withCount('entries') does but in one query for all of them, not one
+     * per term: how many of the entries `$entries` selects each has. It's
+     * given the ids of the collections the taxonomy is attached to (only
+     * their entries count, as in entries()) and returns a query of entry
+     * ids, of entries not in the trash. Terms with none get 0.
+     *
+     * @internal
+     *
+     * @param  iterable<Term>  $terms
+     * @param  Closure(QueryBuilder): (Builder<covariant Model>|QueryBuilder)  $entries
+     */
+    public static function countEntries(iterable $terms, int $taxonomyId, Closure $entries): void
+    {
+        $counts = self::entryTerms($taxonomyId, $entries)->groupBy('term_id')->selectRaw('term_id, count(*) as aggregate')->pluck('aggregate', 'term_id')->all();
+        foreach ($terms as $term) {
+            $count = $counts[$term->id] ?? 0;
+            $term->setAttribute('entries_count', is_numeric($count) ? (int) $count : 0);
+        }
+    }
+
+    /**
+     * The rows of sunrice_entry_term of a taxonomy's terms (those in the
+     * trash too) whose entries `$entries` selects (see countEntries()).
+     *
+     * @internal
+     *
+     * @param  Closure(QueryBuilder): (Builder<covariant Model>|QueryBuilder)  $entries
+     */
+    public static function entryTerms(int $taxonomyId, Closure $entries): QueryBuilder
+    {
+        return DB::table('sunrice_entry_term')
+            ->whereIn('term_id', self::withTrashed()->where('taxonomy_id', $taxonomyId)->select('id'))
+            ->whereIn('entry_id', $entries(DB::table('sunrice_collection_taxonomy')->where('taxonomy_id', $taxonomyId)->select('collection_id')));
+    }
+
+    /**
+     * For countEntries(): the entries live in a language as its pages show
+     * them (the main language's standing in, EntryTranslation::shownIn()),
+     * of one collection when given.
+     *
+     * @internal
+     *
+     * @return Closure(QueryBuilder): Builder<EntryTranslation>
+     */
+    public static function liveIn(string $locale, ?int $collectionId = null): Closure
+    {
+        // The translations' own collection (the entry's): no lookup of the entry per row.
+        return fn (QueryBuilder $collections): Builder => EntryTranslation::query()->live()->shownIn($locale)
+            ->whereIn('sunrice_entry_translations.collection_id', $collections)
+            ->when($collectionId !== null, fn (Builder $q) => $q->where('sunrice_entry_translations.collection_id', $collectionId))
+            ->select('sunrice_entry_translations.entry_id');
     }
 
     /**
@@ -167,9 +226,9 @@ class Term extends Model
      * A URL worked out with a translation scoped to a collection, leaving
      * it as it was (it's shared with the term's other uses).
      *
-     * @param  \Closure(): ?string  $url
+     * @param  Closure(): ?string  $url
      */
-    private static function scoped(TermTranslation $translation, ?Models\Collection $collection, \Closure $url): ?string
+    private static function scoped(TermTranslation $translation, ?Models\Collection $collection, Closure $url): ?string
     {
         if ($collection === null) {
             return $url();

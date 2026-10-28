@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Http\Controllers;
 
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -22,6 +23,7 @@ use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Fields\Types\TermsField;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\CollectionTaxonomy;
+use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
@@ -60,7 +62,9 @@ final class TermController
         $locale = $request->query('locale');
         $locale = is_string($locale) && Locales::has($locale) ? $locale : Locales::default();
         $trashed = $request->query('status') === 'trashed';
-        $terms = Term::query()->when($trashed, fn ($q) => $q->onlyTrashed())->with('translations')->withCount('entries')->where('taxonomy_id', $taxonomy->id)->orderBy('sort_order')->orderBy('id')->get();
+        $terms = Term::query()->when($trashed, fn ($q) => $q->onlyTrashed())->with('translations')->where('taxonomy_id', $taxonomy->id)->orderBy('sort_order')->orderBy('id')->get();
+        // Counted all at once (one grouped query): the entries out of the trash, as Term::entries() has them.
+        Term::countEntries($terms, $taxonomy->id, fn (QueryBuilder $collections) => Entry::query()->whereIn('collection_id', $collections)->select('id'));
         // Where each is used, to warn before trashing or deleting it: the first few, labelled, and how many in all.
         $ids = array_values(array_map(fn (Term $term): int => $term->id, $terms->all()));
         $usedBy = References::usedByMany(Reference::TERM, $ids, self::USED_BY_SHOWN);
