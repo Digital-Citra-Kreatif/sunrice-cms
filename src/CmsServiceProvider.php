@@ -200,7 +200,7 @@ final class CmsServiceProvider extends ServiceProvider
             $this->commands([
                 Console\PublishScheduledCommand::class, Console\RenameFieldCommand::class, Console\ExportStructureCommand::class, Console\ImportStructureCommand::class,
                 Console\OrphansCommand::class, Console\ReferencesCommand::class, Console\DemoContentCommand::class, Console\SwitchMainLanguageCommand::class, Console\TranslateCommand::class, Console\CachePreloadCommand::class,
-                Console\ScaffoldCollectionsCommand::class,
+                Console\ScaffoldCollectionsCommand::class, Console\MakeTemplatesCommand::class,
             ]);
             $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
                 $schedule->command('sunrice:publish-scheduled')->everyMinute()->withoutOverlapping();

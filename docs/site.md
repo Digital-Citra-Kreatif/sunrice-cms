@@ -239,6 +239,63 @@ It copies them into `resources/views/cms/`, where the rules above pick them up (
 
 Every template works on a fresh install: missing menus, globals and fields render nothing. Layouts and partials read the page from `cms_page()`, not from `$entry` or `$term`: Blade hands a page's variables to its layout, so after a listing's `@foreach` those would be its last card. Words are wrapped in `__()`, so a `lang/{locale}.json` translates them.
 
+### Templates from the blueprints
+
+To start a collection's or taxonomy's own design from its fields rather than from the generic starter templates, let the CMS write its templates:
+
+```bash
+php artisan sunrice:make-templates
+```
+
+For each collection, then each taxonomy, it offers the pages the record has (only those: a collection without a listing page URL gets no listing template), each with its URL and file, those whose file doesn't exist yet ticked; trashed collections and taxonomies are left out. Then it shows the files it will write (`write`, `skip (exists)`, `overwrite`), asks, and writes them under `resources/views/cms/`, in the files the site picks (`TemplateLookup`, [above](#templates)):
+
+| Page | File |
+| --- | --- |
+| A collection's entries | `cms/collections/{collection}/show.blade.php` |
+| Its listing page | `cms/collections/{collection}/index.blade.php` |
+| A taxonomy's term pages in it | `cms/collections/{collection}/{taxonomy}/show.blade.php` |
+| A taxonomy's index page in it | `cms/collections/{collection}/{taxonomy}/index.blade.php` |
+| A taxonomy's shared term pages | `cms/taxonomies/{taxonomy}/show.blade.php` |
+| Its shared index page | `cms/taxonomies/{taxonomy}/index.blade.php` |
+
+Each one `@extends('cms.layout')` and fills `content`, as the starter templates do, with a comment saying what it's for and which blueprints it came from: edit it freely.
+
+- **Entry pages**: the title, the date (dated collections), the entry's terms of each taxonomy with their links, then every field of the blueprint, printed for its type, each in an `@if` so an empty one prints nothing: text escaped (a textarea's line breaks kept), rich text as is (it's cleaned when saved), code with `<x-sunrice-cms::code-block>`, numbers with their prefix and suffix, dates formatted, selects' option labels, toggles as Yes or No, links, images with `altIn()`, `srcset()`, width, height and caption (other files as links), galleries, entries and terms fields as links, groups' fields, repeaters' rows and flexible blocks. A custom field type prints as the built-in type it's built on. A collection with several blueprints gets each one's fields in an `@switch` on the entry's (`$entry->entry->blueprintHandle()`; the collection's own is the `@default`).
+- **Flexible blocks** follow the starter templates' convention: each block renders with `cms/blocks/{fieldset}.blade.php` (it gets `$block`), which the command writes from the fieldset's fields, for the blocks inside blocks too; a kind of block without a view prints nothing (`@includeIf`).
+- **Listing pages** print the listing blueprint's fields, then `$entries` as cards (title and link, date, the first media field's image and an `excerpt`, `summary`, `intro`, `description` or `lead` text, else the first textarea, when the blueprints have them) with previous and next links. **Term pages** print the term's fields and its entries the same way; **index pages** the index blueprint's fields and `$terms` with their links and `entries_count`, as a tree in a hierarchical taxonomy (`cms/partials/term-tree.blade.php`).
+- **Shared files** (blocks' views, the term tree partial, and the starter layout with its menu partial when the site has no `cms.layout` yet) are written only when missing, never overwritten: other pages use them.
+
+```blade
+{{--
+    Books: Entry page (/books/{slug})
+    Written by php artisan sunrice:make-templates from the blueprint "Book" (book).
+    Edit it freely: the command never overwrites it (unless --force). Fields print only when filled in.
+--}}
+@extends('cms.layout')
+
+@section('content')
+    <article class="entry"{{ cms_page()?->langAttribute() }}>
+        <header class="entry-header">
+            <h1>{{ $title }}</h1>
+            …
+        </header>
+
+        @if (filled($values['subtitle'] ?? null))
+            <p class="field field-subtitle">{{ $values['subtitle'] }}</p>
+        @endif
+        @if (filled($values['body'] ?? null))
+            <div class="prose field field-body">{!! $values['body'] !!}</div>
+        @endif
+        @if (($media = $values['cover'] ?? null) instanceof \Sunrice\Admin\Media\Media)
+            <figure class="field field-cover">…<img src="{{ $media->url('large') }}" … alt="{{ $media->altIn() ?? '' }}" loading="lazy">…</figure>
+        @endif
+        …
+    </article>
+@endsection
+```
+
+Files that exist are skipped unless `--force`, which overwrites the pages' own files (never the shared ones). For scripts and AI agents, `--all` takes every page without asking or confirming, and `--collection=books --taxonomy=genres` (each repeatable) keeps to those records, with all their pages when it isn't asking; without a terminal (`--no-interaction`) one of them is needed, or it stops and writes nothing. It ends with what it wrote and skipped.
+
 ## SEO
 
 Each entry's **Search and sharing** card holds an SEO title, a description, a share image, *Hide from search engines* and, for a page that copies one elsewhere, a canonical address, per language, with the draft and its revisions (stored under the reserved `seo` key). Put the tags in your layout's `<head>`:
