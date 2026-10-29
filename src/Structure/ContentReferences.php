@@ -14,6 +14,7 @@ use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Support\Locales;
+use Sunrice\Cms\Support\RichTextLinks;
 use Sunrice\Cms\Support\Seo;
 
 /**
@@ -21,7 +22,9 @@ use Sunrice\Cms\Support\Seo;
  * linked entry as {"entry": "agents/ayu-pratiwi"} (its collection and its
  * slug in the main language), a term as {"term": "locations/canggu"}, a
  * media file as {"media": "<its path in the library>"}, at any depth
- * (groups, repeater rows, flexible blocks, links, the SEO card's image).
+ * (groups, repeater rows, flexible blocks, links, the SEO card's image),
+ * and rich text's links the same way inside the HTML
+ * (data-link="entry:pages/about", "term:topics/coffee", "listing:news").
  * Reading a file turns them back into ids on this site; plain ids, as
  * older files have them, are kept as they are.
  *
@@ -29,6 +32,12 @@ use Sunrice\Cms\Support\Seo;
  */
 final class ContentReferences
 {
+    /** A rich text link's data-link with an id here ("entry:12"). */
+    private const LINK_ID = '/data-link="(entry|term|listing):(\d{1,18})"/';
+
+    /** A rich text link's data-link with a portable key ("entry:pages/about", "listing:news"). */
+    private const LINK_KEY = '/(?<=\s)data-link="(entry|term|listing):([^"]*[^"\d][^"]*)"/';
+
     /** @var array<string, string|null> */
     private array $keys = [];
 
@@ -62,7 +71,59 @@ final class ContentReferences
             $data[Seo::KEY] = $seo;
         }
 
+        return $this->portableLinks($data);
+    }
+
+    /**
+     * Rich text links' data-link ids written as keys, in every string of the data.
+     *
+     * @param  array<mixed>  $data
+     * @return array<mixed>
+     */
+    private function portableLinks(array $data): array
+    {
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $data[$key] = $this->portableLinks($value);
+            } elseif (is_string($value) && str_contains($value, 'data-link="')) {
+                $data[$key] = preg_replace_callback(self::LINK_ID, function (array $match): string {
+                    $key = $match[1] === RichTextLinks::LISTING
+                        ? Collection::withTrashed()->find((int) $match[2])?->handle
+                        : $this->key($match[1], (int) $match[2]);
+
+                    return $key === null ? $match[0] : 'data-link="'.$match[1].':'.$key.'"';
+                }, $value) ?? $value;
+            }
+        }
+
         return $data;
+    }
+
+    /**
+     * Rich text links' data-link keys turned into this site's ids; one not
+     * found here loses its data-link (the link keeps its stored address),
+     * one still to come is filled in later.
+     *
+     * @param  list<string>  $missing
+     * @param  list<string>  $later
+     * @param  (callable(string): bool)|null  $pending
+     */
+    private function resolveLinks(string $html, array &$missing, array &$later, ?callable $pending): string
+    {
+        return preg_replace_callback(self::LINK_KEY, function (array $match) use (&$missing, &$later, $pending): string {
+            [, $kind, $key] = $match;
+            $id = $kind === RichTextLinks::LISTING ? Collection::query()->where('handle', $key)->value('id') : $this->id($kind, $key);
+            if (is_numeric($id)) {
+                return 'data-link="'.$kind.':'.$id.'"';
+            }
+            if ($kind === Reference::ENTRY && $pending !== null && $pending($key)) {
+                $later[] = $key;
+            } else {
+                $missing[] = $kind.' '.$key;
+            }
+
+            return '';
+        }, $html) ?? $html;
     }
 
     /**
@@ -82,7 +143,7 @@ final class ContentReferences
         $out = [];
         foreach ($data as $key => $value) {
             if (! is_array($value)) {
-                $out[$key] = $value;
+                $out[$key] = is_string($value) && str_contains($value, 'data-link="') ? $this->resolveLinks($value, $missing, $later, $pending) : $value;
 
                 continue;
             }
@@ -137,6 +198,14 @@ final class ContentReferences
     {
         $keys = [];
         $walk = function (mixed $value) use (&$walk, &$keys): void {
+            if (is_string($value) && str_contains($value, 'data-link="entry:')) {
+                preg_match_all(self::LINK_KEY, $value, $matches, PREG_SET_ORDER);
+                foreach ($matches as $match) {
+                    if ($match[1] === Reference::ENTRY) {
+                        $keys[] = $match[2];
+                    }
+                }
+            }
             if (! is_array($value)) {
                 return;
             }

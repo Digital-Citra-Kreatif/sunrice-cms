@@ -12,6 +12,7 @@ use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Fields\Schema;
 use Sunrice\Cms\Support\HtmlSanitizer;
 use Sunrice\Cms\Support\RichTextImages;
+use Sunrice\Cms\Support\RichTextLinks;
 
 /**
  * Formatted text (HTML), cleaned on save: only the formatting the editor
@@ -20,7 +21,11 @@ use Sunrice\Cms\Support\RichTextImages;
  * the editor's presets and the configured image styles are kept
  * (the panel's RichTextImageClasses). They get their sizes (srcset, sizes,
  * width and height, lazy loading) when pages show them, so the stored HTML
- * never changes (RichTextImages).
+ * never changes (RichTextImages). Links keep the editor's rel choices
+ * (nofollow, sponsored, ugc, always with noopener noreferrer), and a link
+ * to an entry, term or listing page (data-link="entry:12") gets its
+ * current URL when pages show it, or only its text once that's gone
+ * (RichTextLinks).
  */
 final class RichText extends FieldType
 {
@@ -48,12 +53,22 @@ final class RichText extends FieldType
 
     public function hydrate(mixed $value, Field $field, HydrationContext $context): mixed
     {
-        return is_string($value) ? RichTextImages::render($value, $context) : $value;
+        return is_string($value) ? RichTextLinks::render(RichTextImages::render($value, $context), $context) : $value;
     }
 
     public function references(mixed $value, Field $field): array
     {
-        return Reference::many(Reference::MEDIA, is_string($value) ? HtmlSanitizer::mediaIds($value) : []);
+        if (! is_string($value)) {
+            return [];
+        }
+        $links = RichTextLinks::targets($value);
+
+        // Its links' entries and terms too: where they're used, and loaded with the rest when pages show them.
+        return [
+            ...Reference::many(Reference::MEDIA, HtmlSanitizer::mediaIds($value)),
+            ...Reference::many(Reference::ENTRY, $links[RichTextLinks::ENTRY] ?? []),
+            ...Reference::many(Reference::TERM, $links[RichTextLinks::TERM] ?? []),
+        ];
     }
 
     /** The editor also gets the image styles to offer (config `sunrice-admin.rich_text.image_classes`). */

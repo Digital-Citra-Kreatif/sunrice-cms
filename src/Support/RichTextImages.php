@@ -35,9 +35,6 @@ final class RichTextImages
     /** An <img> tag, its attribute values quoted or not. */
     private const IMG = '/<img\b(?:[^>"\']++|"[^"]*+"|\'[^\']*+\')*+>/i';
 
-    /** One attribute of a tag: its name, and its value in double, single or no quotes. */
-    private const ATTRIBUTE = '/\s([^\s"\'>\/=]++)(?:\s*+=\s*+(?:"([^"]*+)"|\'([^\']*+)\'|([^\s>]++)))?/';
-
     public static function render(string $html, HydrationContext $context): string
     {
         if (! str_contains($html, 'data-media-id')) {
@@ -71,7 +68,7 @@ final class RichTextImages
         if (! str_contains($tag, 'data-media-id')) {
             return $tag;
         }
-        $attributes = self::attributes($tag);
+        $attributes = HtmlTag::attributes($tag);
         $id = $attributes['data-media-id'] ?? '';
         if (isset($attributes['srcset']) || isset($attributes['loading']) || ! ctype_digit($id) || strlen($id) > 18) {
             return $tag;
@@ -108,30 +105,11 @@ final class RichTextImages
         }
         $html = '';
         foreach ($added as $name => $value) {
-            $html .= ' '.$name.'="'.htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8').'"';
+            $html .= HtmlTag::attribute($name, $value);
         }
         $closing = str_ends_with($tag, '/>') ? ' />' : '>';
 
         return rtrim(substr($tag, 0, -strlen(trim($closing)))).$html.$closing;
-    }
-
-    /**
-     * A tag's attributes, by lowercase name (the first of a name counts, as
-     * in browsers), their values decoded.
-     *
-     * @return array<string, string>
-     */
-    private static function attributes(string $tag): array
-    {
-        preg_match_all(self::ATTRIBUTE, substr($tag, 4), $matches, PREG_SET_ORDER | PREG_UNMATCHED_AS_NULL);
-        $attributes = [];
-        foreach ($matches as $match) {
-            $name = strtolower((string) $match[1]);
-            $value = $match[2] ?? $match[3] ?? $match[4] ?? '';
-            $attributes[$name] ??= str_contains($value, '&') ? html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8') : $value;
-        }
-
-        return $attributes;
     }
 
     /**

@@ -56,6 +56,20 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 
 Rich text keeps only the formatting the editor produces: no scripts, styles or event handlers, and links only to web, mail and phone addresses or paths on the site. Links are checked the same way when saved and again when shown, so a link can never run script.
 
+### Rich text links
+
+A link in rich text has its own menu in the editor, like an image's: it opens when the cursor is in the link (clicking a link puts it there) or from the toolbar's **Link** for the selection. It's laid out as a [Link field](#field-types) is: **Link to** (the kind) and where it goes, the link's text (when it's one run of plain text; changing it keeps the link), **Open in a new tab** (ticked on a new address link, not on the other kinds; existing links keep theirs), and the `rel` choices `nofollow` (search engines don't follow it or count it as an endorsement), `sponsored` (paid, an advert) and `ugc` (in what visitors wrote). Every link is stored with `rel="noopener noreferrer"` after them, whatever was chosen, so a page a link opens can't reach the site's (`rel="nofollow noopener noreferrer"`); any other `rel` token is dropped when it's saved.
+
+Where it goes is one of the menu builder's kinds: **Link** (an address), **Entry**, **Term** (of a taxonomy with term pages) or **Listing** (a collection's listing page). The other three search titles (in the main language, among what the editor may view: entries of the collections they may view, terms of the taxonomies they may view, listing pages of those collections). The chosen item is stored with its current address and what it is:
+
+```html
+<a href="/about" data-link="entry:12">about us</a>
+<a href="/topics/coffee" data-link="term:5">coffee</a>
+<a href="/news" data-link="listing:3">the news</a>
+```
+
+When pages show the text, such a link gets the current address of what it points at in the page's language, as a Link field's entry links do (below): an entry's translation in that language, else its main language's (at that language's address with the fallback on); a term's page; the collection's listing page. A new slug or a translation needs no edit. When it isn't there any more (missing, in the trash, an entry not live — a preview's draft included — or no page), the link is dropped and its text kept. `data-link` itself is never printed. What every link of a text points at is read at once, one query per kind; linked entries and terms count as the text's references (Used by, and loaded with a list's other references). Links with another plugin's `data-link` are printed as stored. Structure files (`sunrice:export-structure --entries`, starters made from a site) carry them by key, as other references (`data-link="entry:pages/about"`, `"term:topics/coffee"`, `"listing:news"`); an import gives them this site's ids, and one whose target isn't on the site keeps its address without `data-link` (named in the report). The panel's side (the sources, the sanitiser rule) is in its [rich text link sources](../../admin/docs/panel.md#rich-text-link-sources).
+
 ### Code fields
 
 A `code` field is edited in the panel's code editor (line numbers, highlighting for its `language`, bracket matching, indentation; Tab indents, Esc then Tab moves on), for code an editor pastes or writes: an embed, a snippet a tutorial shows, a bit of JSON. Templates get the text as typed, a string, and **nothing cleans it**. Printed with `{{ }}` it's escaped, shown as text. To show it as code, use the code block component, which prints it escaped in `<pre><code class="language-html">`:

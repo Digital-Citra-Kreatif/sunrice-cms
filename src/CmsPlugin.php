@@ -23,6 +23,7 @@ use Sunrice\Cms\Admin\FormResource;
 use Sunrice\Cms\Admin\GlobalSetResource;
 use Sunrice\Cms\Admin\MenuResource;
 use Sunrice\Cms\Admin\RedirectResource;
+use Sunrice\Cms\Admin\RichTextLinkSources;
 use Sunrice\Cms\Admin\TaxonomyResource;
 use Sunrice\Cms\Fields\FieldType;
 use Sunrice\Cms\Fields\FieldTypes;
@@ -343,6 +344,8 @@ final class CmsPlugin extends BasePlugin
         $panel->privilegedPermissions('cms.settings.code', 'cms.blueprints.create', 'cms.blueprints.update', 'cms.blueprints.delete', 'cms.fieldsets.create', 'cms.fieldsets.update', 'cms.fieldsets.delete');
         // Cmd/Ctrl+K finds entries on every panel page, not only where the CMS's bundle has loaded.
         $panel->commandSearch('cms.entries', fn (): string => route('sunrice.admin.cms.entries.search'));
+        // Rich text links to entries, terms and listing pages (the menu builder's kinds), given their current URL when pages show them.
+        RichTextLinkSources::register($panel);
         // Served from public/vendor/sunrice-cms, versioned by the panel from the copy served (sunrice:assets publishes it).
         $panel->bundle(PluginBundle::make('cms')->named('Sunrice CMS')->publishedFrom(dirname(__DIR__).'/dist', public_path(self::ASSETS))
             ->module('admin.js')->style('admin.css')->pages('Cms/'));

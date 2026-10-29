@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sunrice\Cms\Support;
 
 use Sunrice\Admin\Resources\Forms\RichTextImageClasses;
+use Sunrice\Admin\Resources\Forms\RichTextLinkAttributes;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizer as Sanitizer;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
 
@@ -15,6 +16,10 @@ use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
  * and on images only the editor's width and alignment classes and the
  * configured image styles are kept (the panel's RichTextImageClasses, which
  * reads its config each time, so the shared instance below never goes stale).
+ * Links keep the editor's rel choices (nofollow, sponsored, ugc), always
+ * with noopener noreferrer, and what they point at on the site
+ * (data-link="entry:12", resolved when pages show them: RichTextLinks),
+ * through the panel's RichTextLinkAttributes.
  *
  * @api
  */
@@ -26,7 +31,7 @@ final class HtmlSanitizer
 
     public static function sanitize(string $html): string
     {
-        return $html === '' ? '' : self::sanitizer()->sanitize($html);
+        return $html === '' ? '' : RichTextLinkAttributes::secure(self::sanitizer()->sanitize($html));
     }
 
     /**
@@ -47,7 +52,7 @@ final class HtmlSanitizer
             return self::$sanitizer;
         }
         $config = (new HtmlSanitizerConfig)
-            ->allowElement('a', ['href', 'title', 'target'])
+            ->allowElement('a', ['href', 'title', 'target', 'rel', 'data-link'])
             ->allowElement('img', ['src', 'alt', 'title', 'width', 'height', 'data-media-id'])
             ->allowElement('th', ['colspan', 'rowspan'])
             ->allowElement('td', ['colspan', 'rowspan'])
@@ -55,9 +60,9 @@ final class HtmlSanitizer
             ->allowMediaSchemes(['https', 'http'])
             ->allowRelativeLinks()
             ->allowRelativeMedias()
-            ->forceAttribute('a', 'rel', 'noopener noreferrer')
             ->allowAttribute('class', ['p', 'figure', 'figcaption', 'blockquote', 'pre', 'code', 'table', 'img'])
             ->withAttributeSanitizer(new RichTextImageClasses)
+            ->withAttributeSanitizer(new RichTextLinkAttributes)
             ->withMaxInputLength(self::MAX_LENGTH);
         foreach (['p', 'br', 'hr', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'b', 'em', 'i', 'u', 's', 'del', 'sub', 'sup', 'mark', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li', 'figure', 'figcaption', 'table', 'thead', 'tbody', 'tr'] as $element) {
             $config = $config->allowElement($element);
