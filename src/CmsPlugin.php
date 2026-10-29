@@ -343,8 +343,9 @@ final class CmsPlugin extends BasePlugin
         $panel->privilegedPermissions('cms.settings.code', 'cms.blueprints.create', 'cms.blueprints.update', 'cms.blueprints.delete', 'cms.fieldsets.create', 'cms.fieldsets.update', 'cms.fieldsets.delete');
         // Cmd/Ctrl+K finds entries on every panel page, not only where the CMS's bundle has loaded.
         $panel->commandSearch('cms.entries', fn (): string => route('sunrice.admin.cms.entries.search'));
-        $panel->bundle(PluginBundle::make('cms')->named('Sunrice CMS')->module(self::asset('admin.js'))->style(self::asset('admin.css'))->pages('Cms/')
-            ->publishedFrom(dirname(__DIR__).'/dist', public_path(self::ASSETS)));
+        // Served from public/vendor/sunrice-cms, versioned by the panel from the copy served (sunrice:assets publishes it).
+        $panel->bundle(PluginBundle::make('cms')->named('Sunrice CMS')->publishedFrom(dirname(__DIR__).'/dist', public_path(self::ASSETS))
+            ->module('admin.js')->style('admin.css')->pages('Cms/'));
         if ($this->fieldTypes !== []) {
             $types = $this->fieldTypes;
             // Only when something needs field types.
@@ -352,20 +353,5 @@ final class CmsPlugin extends BasePlugin
                 ? app(FieldTypes::class)->register(...$types)
                 : app()->afterResolving(FieldTypes::class, fn (FieldTypes $registry) => $registry->register(...$types));
         }
-    }
-
-    /** @var array<string, string|null> the built files' versions, once per process */
-    private static array $versions = [];
-
-    /** A published asset's URL, versioned by the built file (looked at once per process) so browsers fetch a new one after an update. */
-    private static function asset(string $file): string
-    {
-        if (! array_key_exists($file, self::$versions)) {
-            $stat = @stat(dirname(__DIR__)."/dist/{$file}");
-            self::$versions[$file] = $stat === false ? null : substr(md5($stat['mtime'].$stat['size']), 0, 12);
-        }
-        $version = self::$versions[$file];
-
-        return asset(self::ASSETS."/{$file}").($version === null ? '' : "?v={$version}");
     }
 }

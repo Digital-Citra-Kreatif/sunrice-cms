@@ -23,11 +23,13 @@ Add `Sunrice\Cms\CmsPlugin::make()` to your panel (`$panel->plugin(CmsPlugin::ma
 
 ## Admin assets
 
-The CMS's admin pages are a JavaScript bundle in `dist/`. Publish it after installing or updating (Laravel apps publish `laravel-assets` on `composer update` already):
+The CMS's admin pages are a JavaScript bundle in `dist/`, served from `public/vendor/sunrice-cms`. **After installing or updating, run:**
 
 ```bash
-php artisan vendor:publish --tag=sunrice-cms-assets --force
+php artisan sunrice:assets
 ```
+
+It publishes the panel's assets and the CMS's (and other plugins') bundles, and belongs in your deploy script. With the package installed from a path (a symlinked path repository), a `git pull` doesn't publish anything: run it then too. Until it has run, the admin keeps the old scripts, under the same URLs (their `?v=` comes from the published copy), and super admins see a warning saying to run it; once it has, open admin tabs load the new code on their next click. `php artisan vendor:publish --tag=sunrice-cms-assets --force` (also part of `laravel-assets`, which Laravel apps publish on `composer update`) still works.
 
 ## Documentation
 
