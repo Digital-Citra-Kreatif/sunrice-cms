@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Sunrice\Cms\Support;
 
 use Sunrice\Cms\Fields\HydrationContext;
-use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Site\Site;
 
 /**
@@ -67,12 +66,8 @@ final class RichTextLinks
         // Each kind at once: usually loaded already, with the entries' other references.
         $context->preloadEntries($targets[self::ENTRY] ?? []);
         $context->preloadTerms($targets[self::TERM] ?? []);
-        $listings = [];
-        foreach (($targets[self::LISTING] ?? []) === [] ? [] : Collection::query()->whereKey($targets[self::LISTING])->get() as $collection) {
-            $listings[$collection->id] = $collection;
-        }
 
-        return preg_replace_callback(self::LINK, function (array $link) use ($context, $listings): string {
+        return preg_replace_callback(self::LINK, function (array $link) use ($context): string {
             if (! str_contains($link[1], 'data-link')) {
                 return $link[0];
             }
@@ -82,7 +77,7 @@ final class RichTextLinks
             if (! in_array($kind, [self::ENTRY, self::TERM, self::LISTING], true)) {
                 return $link[0];
             }
-            $url = ctype_digit($id) ? self::url($kind, (int) $id, $context, $listings) : null;
+            $url = ctype_digit($id) ? self::url($kind, (int) $id, $context) : null;
             if ($url === null) {
                 return $link[2];
             }
@@ -97,12 +92,8 @@ final class RichTextLinks
         }, $html) ?? $html;
     }
 
-    /**
-     * Where a link goes now, or null when there's nowhere.
-     *
-     * @param  array<int, Collection>  $listings
-     */
-    private static function url(string $kind, int $id, HydrationContext $context, array $listings): ?string
+    /** Where a link goes now, or null when there's nowhere. */
+    private static function url(string $kind, int $id, HydrationContext $context): ?string
     {
         if ($kind === self::ENTRY) {
             $translation = $context->entries([$id])->first();
@@ -115,7 +106,9 @@ final class RichTextLinks
             return $term === null || $term->taxonomy->trashed() ? null : $term->url($context->locale);
         }
         if ($kind === self::LISTING) {
-            return isset($listings[$id]) ? $listings[$id]->listingUrl($context->locale) : null;
+            $collection = $context->collection($id);
+
+            return $collection === null || $collection->trashed() ? null : $collection->listingUrl($context->locale);
         }
 
         return null;

@@ -51,6 +51,9 @@ final class HydrationContext
     /** @var array<int, CollectionModel> collections seen, so each is read (and its fields loaded) once */
     private array $collections = [];
 
+    /** Whether every collection is in $collections (collection()). */
+    private bool $allCollections = false;
+
     /** @var array<int, Taxonomy> taxonomies seen, read once */
     private array $taxonomies = [];
 
@@ -343,6 +346,23 @@ final class HydrationContext
 
         /** @var T */
         return $made[$key];
+    }
+
+    /**
+     * A collection by id (in the trash too), for links to its listing page:
+     * the first one asked for reads them all, a site has few, so a list of
+     * entries linking to listing pages costs one query.
+     */
+    public function collection(int $id): ?CollectionModel
+    {
+        if (! isset($this->collections[$id]) && ! $this->allCollections) {
+            foreach (CollectionModel::query()->withTrashed()->get() as $collection) {
+                $this->collections[$collection->id] ??= $collection;
+            }
+            $this->allCollections = true;
+        }
+
+        return $this->collections[$id] ?? null;
     }
 
     /**

@@ -1,19 +1,19 @@
-import { j as e, a as U, t as s, r as G, l as q } from "./admin-BtPpLgsG.js";
+import { j as e, a as U, t as s, r as G, l as $ } from "./admin-tiVz_6M3.js";
 import { c as R, _ } from "./createLucideIcon-Ccbp7F45.js";
 import { u as n } from "./ui-Dh5wfMwT.js";
-import { E as ie } from "./EntriesPicker-BRyQTTtH.js";
-import { F as re } from "./FieldError-DSwfMdpS.js";
-import { j as ce, T as oe, p as me, t as ue } from "./TermsPicker-BWZIfyFK.js";
-import { V as de } from "./VersionConflict-D4jipI5M.js";
+import { E as ie } from "./EntriesPicker-y2PJEVBu.js";
+import { F as re } from "./FieldError-CCTmblX3.js";
+import { q as ce, T as oe, r as me, t as ue } from "./TermsPicker-oIGl2OBC.js";
+import { V as de } from "./VersionConflict-CmQLCF6Q.js";
 import { c as J, r as he } from "./tree-B7sRX6dH.js";
-import { U as ge } from "./UnsavedNote-DxtvTu8T.js";
+import { U as ge } from "./UnsavedNote-DQcq9GgZ.js";
 import { P as pe } from "./plus-COqahUZ2.js";
 import { L as xe, T as fe } from "./tags-DR5XKR3w.js";
 import { L as ye } from "./link-2-BYZeXgi5.js";
 import { L as je } from "./loader-circle-ByksABXO.js";
 import { S as be } from "./settings-2-0VUe76YZ.js";
 import { P as ve } from "./pencil-D-dwWCMx.js";
-import { T as Se } from "./Confirm-CRYwBsnU.js";
+import { T as Se } from "./Confirm-n17IwOM3.js";
 const K = {
   name: "list-indent-decrease",
   size: 24,
@@ -112,15 +112,15 @@ function Ze(t) {
 function Be({ menu: t, items: a, version: i, locales: r, limits: u, terms: p, termTaxonomies: b = [], listings: I, indexes: Q = [], can: x, settings: H }) {
   const h = U(`cms/menus/${t.handle}/links`);
   n.useBreadcrumbs([{ label: s("Menus"), href: U("cms/menus") }, { label: t.title }]);
-  const [o, T] = _.useState(() => ee(a)), [D, f] = _.useState(null), [B, E] = _.useState(null), M = B === null ? null : o[B] ?? null, C = G.useForm({ items: a, version: i }), F = C.errors, [z, A] = _.useState(!1), v = r[0] ?? "en", N = (d) => {
+  const [o, T] = _.useState(() => ee(a)), [q, f] = _.useState(null), [B, D] = _.useState(null), E = B === null ? null : o[B] ?? null, C = G.useForm({ items: a, version: i }), F = C.errors, [z, A] = _.useState(!1), v = r[0] ?? "en", N = (d) => {
     T(d), A(!0);
   }, y = (d, m) => N(o.map((k, S) => S === d ? { ...k, ...m } : k)), L = (d) => {
     C.processing || (C.transform(() => ({ items: Ne(o).map(se), version: d ? i : null })), C.put(h, { preserveScroll: !0, onSuccess: () => A(!1) }));
-  }, P = () => L(!0), w = (d) => {
-    d.preventDefault(), P();
+  }, M = () => L(!0), w = (d) => {
+    d.preventDefault(), M();
   };
-  n.useUnsavedChanges(z, x.update ? P : void 0);
-  const $ = (d) => /* @__PURE__ */ e.jsx(
+  n.useUnsavedChanges(z, x.update ? M : void 0);
+  const P = (d) => /* @__PURE__ */ e.jsx(
     n.SortableList,
     {
       items: J(o, d),
@@ -139,7 +139,7 @@ function Be({ menu: t, items: a, version: i, locales: r, limits: u, terms: p, te
                 /* @__PURE__ */ e.jsx(
                   n.Input,
                   {
-                    "aria-label": s("Label (:language)", { language: q(v) }),
+                    "aria-label": s("Label (:language)", { language: $(v) }),
                     className: "cms:w-full cms:sm:max-w-xs",
                     disabled: !x.update,
                     placeholder: c.target?.title ?? s("Label"),
@@ -158,7 +158,7 @@ function Be({ menu: t, items: a, version: i, locales: r, limits: u, terms: p, te
                     " ",
                     s("New tab")
                   ] }),
-                  /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "ghost", size: "icon", className: "cms:size-8", "aria-label": s("Change where it links"), title: s("Change where it links"), onClick: () => E(m), children: /* @__PURE__ */ e.jsx(ve, {}) }),
+                  /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "ghost", size: "icon", className: "cms:size-8", "aria-label": s("Change where it links"), title: s("Change where it links"), onClick: () => D(m), children: /* @__PURE__ */ e.jsx(ve, {}) }),
                   /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "ghost", size: "icon", className: "cms:size-8", "aria-label": s("Outdent"), disabled: c.depth === 0, onClick: () => N(Le(o, m)), children: /* @__PURE__ */ e.jsx(_e, {}) }),
                   /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "ghost", size: "icon", className: "cms:size-8", "aria-label": s("Indent"), onClick: () => N(we(o, m, u.depth)), children: /* @__PURE__ */ e.jsx(ke, {}) }),
                   /* @__PURE__ */ e.jsx(n.Button, { type: "button", variant: "ghost", size: "icon", className: "cms:size-8 cms:text-destructive", "aria-label": s("Remove, with what's under it"), onClick: () => N(Ie(o, m)), children: /* @__PURE__ */ e.jsx(Se, {}) })
@@ -178,10 +178,10 @@ function Be({ menu: t, items: a, version: i, locales: r, limits: u, terms: p, te
               r.length > 1 && /* @__PURE__ */ e.jsx("div", { className: "cms:flex cms:flex-wrap cms:gap-2", children: r.slice(1).map((g) => /* @__PURE__ */ e.jsx(
                 n.Input,
                 {
-                  "aria-label": s("Label (:language)", { language: q(g) }),
+                  "aria-label": s("Label (:language)", { language: $(g) }),
                   className: "cms:w-full cms:sm:max-w-xs",
                   disabled: !x.update,
-                  placeholder: Te(c) === "title" ? s(":language: its title there, else as :main", { language: q(g), main: q(v) }) : s(":language: as :main", { language: q(g), main: q(v) }),
+                  placeholder: Te(c) === "title" ? s(":language: its title there, else as :main", { language: $(g), main: $(v) }) : s(":language: as :main", { language: $(g), main: $(v) }),
                   value: c.labels[g] ?? "",
                   onChange: (l) => y(m, { labels: { ...c.labels, [g]: l.target.value } })
                 },
@@ -189,7 +189,7 @@ function Be({ menu: t, items: a, version: i, locales: r, limits: u, terms: p, te
               )) })
             ] })
           ] }),
-          !S && J(o, m).length > 0 && /* @__PURE__ */ e.jsx("div", { className: "cms:px-2 cms:pb-2", children: $(m) })
+          !S && J(o, m).length > 0 && /* @__PURE__ */ e.jsx("div", { className: "cms:px-2 cms:pb-2", children: P(m) })
         ] });
       }
     }
@@ -240,27 +240,27 @@ function Be({ menu: t, items: a, version: i, locales: r, limits: u, terms: p, te
     /* @__PURE__ */ e.jsx(de, { message: F.version, processing: C.processing, onSaveMine: () => L(!1) }),
     /* @__PURE__ */ e.jsx(re, { message: F.items }),
     Object.keys(F).some((d) => d.startsWith("items.")) && /* @__PURE__ */ e.jsx("p", { role: "alert", className: "cms:text-sm cms:text-destructive", children: s("Some links need fixing: :error", { error: Object.values(F).filter(Boolean)[0] }) }),
-    /* @__PURE__ */ e.jsx(n.Card, { className: "cms:p-2", children: o.length === 0 ? /* @__PURE__ */ e.jsx("p", { className: "cms:p-4 cms:text-center cms:text-muted-foreground", children: s("No links yet. Add an entry or a link.") }) : $(-1) }),
+    /* @__PURE__ */ e.jsx(n.Card, { className: "cms:p-2", children: o.length === 0 ? /* @__PURE__ */ e.jsx("p", { className: "cms:p-4 cms:text-center cms:text-muted-foreground", children: s("No links yet. Add an entry or a link.") }) : P(-1) }),
     /* @__PURE__ */ e.jsx(
-      Pe,
+      Me,
       {
-        kind: D ?? (M ? le(M) : null),
-        editing: D ? null : M,
+        kind: q ?? (E ? le(E) : null),
+        editing: q ? null : E,
         terms: p,
         termTaxonomies: b,
         listings: I,
         indexes: Q,
         onClose: () => {
-          f(null), E(null);
+          f(null), D(null);
         },
         main: v,
         onAdd: (d) => {
-          if (B !== null && !D) {
+          if (B !== null && !q) {
             const { entry_id: m, term_id: k, taxonomy_id: S, collection_id: c, url: g, query: l, target: j } = d;
             N(Fe(o, B, { entry_id: m, term_id: k, taxonomy_id: S, collection_id: c, url: g, query: l, target: j }));
           } else
             N([...o, d]);
-          f(null), E(null);
+          f(null), D(null);
         }
       }
     )
@@ -269,40 +269,40 @@ function Be({ menu: t, items: a, version: i, locales: r, limits: u, terms: p, te
 function se({ target: t, children: a, ...i }) {
   return { ...i, children: a.map(se) };
 }
-const De = () => s("A menu links to entries that already exist: create the page first (Content → Entries), then add it here, or add a web address instead."), Ee = () => ({ entry: s("Link to an entry"), term: s("Link to a term's page"), listing: s("Link to a listing page"), index: s("Link to a taxonomy's index page"), url: s("Link to an address") }), Me = () => ({
+const qe = () => s("A menu links to entries that already exist: create the page first (Content → Entries), then add it here, or add a web address instead."), De = () => ({ entry: s("Link to an entry"), term: s("Link to a term's page"), listing: s("Link to a listing page"), index: s("Link to a taxonomy's index page"), url: s("Link to an address") }), Ee = () => ({
   entry: s("It follows the entry: its title (unless you give a label) and its address in each language. It shows only while the entry is on the site."),
   term: s("The page listing the term's entries, in each language. Its title is the label unless you give one."),
   listing: s("The collection's listing page, in each language, optionally with filters. The collection's title is the label unless you give one."),
   index: s("The page listing a taxonomy's terms, in each language. The taxonomy's title is the label unless you give one."),
   url: s("A web address, a path on this site (/contact), mailto: or tel:.")
 });
-function Pe({ kind: t, editing: a = null, terms: i, termTaxonomies: r, listings: u, indexes: p, onClose: b, onAdd: I, main: Q }) {
-  const [x, H] = _.useState(null), [h, o] = _.useState(""), [T, D] = _.useState(""), [f, B] = _.useState(""), [E, M] = _.useState(""), [C, F] = _.useState(""), [z, A] = _.useState("");
+function Me({ kind: t, editing: a = null, terms: i, termTaxonomies: r, listings: u, indexes: p, onClose: b, onAdd: I, main: Q }) {
+  const [x, H] = _.useState(null), [h, o] = _.useState(""), [T, q] = _.useState(""), [f, B] = _.useState(""), [D, E] = _.useState(""), [C, F] = _.useState(""), [z, A] = _.useState("");
   _.useEffect(() => {
     const l = a ? le(a) : null;
-    H(a?.entry_id ?? null), o(l === "term" ? String(a?.term_id ?? "") : l === "index" ? String(a?.taxonomy_id ?? "") : l === "listing" ? String(a?.collection_id ?? "") : ""), F(l === "term" || l === "index" ? String(a?.collection_id ?? "") : ""), A(String((l === "term" ? a?.target?.taxonomy : void 0) ?? r[0]?.id ?? "")), D(a?.url ?? ""), B(""), M(a?.query ?? "");
+    H(a?.entry_id ?? null), o(l === "term" ? String(a?.term_id ?? "") : l === "index" ? String(a?.taxonomy_id ?? "") : l === "listing" ? String(a?.collection_id ?? "") : ""), F(l === "term" || l === "index" ? String(a?.collection_id ?? "") : ""), A(String((l === "term" ? a?.target?.taxonomy : void 0) ?? r[0]?.id ?? "")), q(a?.url ?? ""), B(""), E(a?.query ?? "");
   }, [t, a, r]);
   const v = (l) => {
     o(l), F("");
-  }, N = t === "url" && !a, y = i === null ? r.find((l) => String(l.id) === z) : void 0, L = t !== "term" || h === "" ? void 0 : i !== null ? i.find((l) => String(l.id) === h) : y ? { id: Number(h), title: a?.term_id === Number(h) ? a.target?.title ?? "" : "", taxonomy: y.title, pages: y.pages } : void 0, P = L?.pages.find((l) => String(l.collection ?? "") === C) ?? L?.pages[0], w = t === "index" ? p.find((l) => String(l.id) === h) : void 0, $ = w?.pages.find((l) => String(l.collection ?? "") === C) ?? w?.pages[0], d = L ?? w, m = L ? P : $, k = T.trim() === "" || ce(T.trim()), S = f.trim() ? { [Q]: f.trim() } : {}, c = async () => {
+  }, N = t === "url" && !a, y = i === null ? r.find((l) => String(l.id) === z) : void 0, L = t !== "term" || h === "" ? void 0 : i !== null ? i.find((l) => String(l.id) === h) : y ? { id: Number(h), title: a?.term_id === Number(h) ? a.target?.title ?? "" : "", taxonomy: y.title, pages: y.pages } : void 0, M = L?.pages.find((l) => String(l.collection ?? "") === C) ?? L?.pages[0], w = t === "index" ? p.find((l) => String(l.id) === h) : void 0, P = w?.pages.find((l) => String(l.collection ?? "") === C) ?? w?.pages[0], d = L ?? w, m = L ? M : P, k = T.trim() === "" || ce(T.trim()), S = f.trim() ? { [Q]: f.trim() } : {}, c = async () => {
     if (t === "entry" && x !== null) {
       const l = await fetch(`${U("cms/entries/picker")}?${me({ ids: [x], collections: [] })}`, { headers: { Accept: "application/json" }, credentials: "same-origin" }), j = l.ok ? (await l.json()).items[0] : void 0;
       I(V({ entry_id: x, target: j ? { title: j.title, kind: j.collection, live: j.status === "published" } : null, labels: S }));
     } else if (t === "term" && h !== "") {
-      const l = L, j = P?.collection ?? null, ne = j === null ? s("Shared page") : P?.title ?? "", ae = l && y ? await fetch(`${U("cms/terms/picker")}?${ue({ taxonomy: y.handle, ids: [l.id] })}`, { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(async (W) => W.ok ? (await W.json()).items[0]?.label ?? l.title : l.title).catch(() => l.title) : l?.title;
+      const l = L, j = M?.collection ?? null, ne = j === null ? s("Shared page") : M?.title ?? "", ae = l && y ? await fetch(`${U("cms/terms/picker")}?${ue({ taxonomy: y.handle, ids: [l.id] })}`, { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(async (W) => W.ok ? (await W.json()).items[0]?.label ?? l.title : l.title).catch(() => l.title) : l?.title;
       I(V({ term_id: Number(h), collection_id: j, target: l ? { title: ae ?? "", kind: `${l.taxonomy} · ${ne}`, live: !0, ...y ? { taxonomy: y.id } : {} } : null, labels: S }));
     } else if (t === "index" && h !== "" && w) {
-      const l = $?.collection ?? null, j = l === null ? s(":taxonomy · Index page", { taxonomy: w.title }) : s(":taxonomy · :collection index", { taxonomy: w.title, collection: $?.title ?? "" });
+      const l = P?.collection ?? null, j = l === null ? s(":taxonomy · Index page", { taxonomy: w.title }) : s(":taxonomy · :collection index", { taxonomy: w.title, collection: P?.title ?? "" });
       I(V({ taxonomy_id: w.id, collection_id: l, target: { title: w.title, kind: j, live: !0 }, labels: S }));
     } else if (t === "listing" && h !== "") {
       const l = u.find((j) => String(j.id) === h);
-      I(V({ collection_id: Number(h), target: l ? { title: l.title, kind: s("Listing page"), live: !0 } : null, labels: S, query: E.trim().replace(/^\?/, "") || null }));
+      I(V({ collection_id: Number(h), target: l ? { title: l.title, kind: s("Listing page"), live: !0 } : null, labels: S, query: D.trim().replace(/^\?/, "") || null }));
     } else t === "url" && T.trim() !== "" && k && (f.trim() !== "" || !N) && I(V({ url: T.trim(), labels: S }));
   }, g = t === "entry" ? x !== null : t === "url" ? T.trim() !== "" && k && (f.trim() !== "" || !N) : h !== "";
   return /* @__PURE__ */ e.jsx(n.Dialog, { open: t !== null, onOpenChange: (l) => !l && b(), children: /* @__PURE__ */ e.jsxs(n.DialogContent, { children: [
     /* @__PURE__ */ e.jsxs(n.DialogHeader, { children: [
-      /* @__PURE__ */ e.jsx(n.DialogTitle, { children: a ? s("Change where it links") : t ? Ee()[t] : "" }),
-      /* @__PURE__ */ e.jsx(n.DialogDescription, { children: t ? Me()[t] : "" })
+      /* @__PURE__ */ e.jsx(n.DialogTitle, { children: a ? s("Change where it links") : t ? De()[t] : "" }),
+      /* @__PURE__ */ e.jsx(n.DialogDescription, { children: t ? Ee()[t] : "" })
     ] }),
     /* @__PURE__ */ e.jsxs("div", { className: "cms:flex cms:flex-col cms:gap-3", children: [
       t === "entry" && /* @__PURE__ */ e.jsx(
@@ -314,7 +314,7 @@ function Pe({ kind: t, editing: a = null, terms: i, termTaxonomies: r, listings:
           max: null,
           collections: [],
           invalid: !1,
-          emptyHint: De(),
+          emptyHint: qe(),
           onChange: (l) => H(typeof l == "number" ? l : null)
         }
       ),
@@ -371,9 +371,9 @@ function Pe({ kind: t, editing: a = null, terms: i, termTaxonomies: r, listings:
           {
             id: "menu-query",
             className: "cms:font-mono",
-            value: E,
+            value: D,
             placeholder: "filter=value&other=value",
-            onChange: (l) => M(l.target.value)
+            onChange: (l) => E(l.target.value)
           }
         ),
         /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-muted-foreground", children: s("What the listing page's filters put after the ? in its address. Each language's link gets them, and a term may be named by its slug in any language.") })
@@ -387,7 +387,7 @@ function Pe({ kind: t, editing: a = null, terms: i, termTaxonomies: r, listings:
             value: T,
             placeholder: s("https://… or /contact"),
             "aria-invalid": !k,
-            onChange: (l) => D(l.target.value)
+            onChange: (l) => q(l.target.value)
           }
         ),
         !k && /* @__PURE__ */ e.jsx("p", { className: "cms:text-sm cms:text-destructive", children: s("This address could run code; use https://, a path, mailto: or tel:.") })

@@ -746,7 +746,7 @@ $media->toData();                       // see the panel's media docs
 | date | ISO 8601 |
 | rich text | the cleaned HTML templates print |
 | code | the string, as typed: insert it as text, never as HTML |
-| link | `{type, url, label, title, new_tab}` |
+| link | `{type, url, label, title, new_tab, rel}` |
 | media | its data (`Media::toData()`), or a list; files in the trash are left out, as templates leave them out |
 | entries | each one's data **without fields**, so links never go round in circles; or a list |
 | terms | each one's data, or a list |

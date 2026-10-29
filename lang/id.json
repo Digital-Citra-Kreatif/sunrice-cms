@@ -1356,5 +1356,8 @@
     "{:name} isn't a field of the blueprint. In braces go {slug}, {handle} (the collection's handle) and Entries fields linking to one entry, like /projects/{project}/{slug}.": "{:name} bukan field dari blueprint. Di dalam kurung kurawal bisa ada {slug}, {handle} (handle koleksi) dan field Entri yang menautkan satu entri, seperti /projects/{project}/{slug}.",
     "{:name} isn't an Entries field. In braces go {slug}, {handle} (the collection's handle) and Entries fields linking to one entry, like /projects/{project}/{slug}.": "{:name} bukan field Entri. Di dalam kurung kurawal bisa ada {slug}, {handle} (handle koleksi) dan field Entri yang menautkan satu entri, seperti /projects/{project}/{slug}.",
     "{:name} links to several entries, so it can't be in the URL: switch its Several entries off, or use an Entries field linking to one entry.": "{:name} menautkan beberapa entri, jadi tidak bisa ada di URL: matikan Beberapa entri-nya, atau gunakan field Entri yang menautkan satu entri.",
-    "{slug} can be in the URL only once.": "{slug} hanya bisa ada sekali di URL."
+    "{slug} can be in the URL only once.": "{slug} hanya bisa ada sekali di URL.",
+    ":field: link attributes": ":field: atribut tautan",
+    "Link text (its title)": "Teks tautan (judulnya)",
+    ":field: search": ":field: cari"
 }

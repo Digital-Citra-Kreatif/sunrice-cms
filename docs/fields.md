@@ -45,7 +45,7 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 | `toggle` | true or false | the boolean | `default`; a required toggle must be on (a form's consent box: `accepted`) |
 | `select` | a value, or a list with `multiple` | the same | `options` (`[{value, label}]`), `multiple`, `default` |
 | `date` | `2026-10-19`, or `2026-10-19T14:30:00` with `time` | a Carbon | `time`; `future` (*Today or later only*: earlier days are refused with `sunrice-cms::site.forms.today_or_later`, "The Preferred date must be today or a later date.", and a form's date input gets `min`) |
-| `link` | `{type: url, url, label, new_tab}` or `{type: entry, entry_id, label, new_tab}` | `{type, url, label, title, new_tab}`, or null | `collections` (entry links; none: any), `placeholder` (in the address input) |
+| `link` | `{type: url, url, …}`, `{type: entry, entry_id, …}`, `{type: term, term_id, …}` or `{type: listing, collection_id, …}`, each with `label`, `new_tab` and optional `rel` (a list: `nofollow`, `sponsored`, `ugc`) | `{type, url, label, title, new_tab, rel}`, or null | `collections` (entry links; none: any), `placeholder` (in the address input) |
 | `media` | a media id, or a list with `multiple` | a `Media` model, or a collection (`$image->altIn()` and `captionIn()`: its alt text and caption in the page's language, set per language in the media library; see [media](../../admin/docs/media.md)) | `multiple`, `max`, `types` (image, video, audio, document) |
 | `group` | an object of its fields | an array | (its `fields`) |
 | `repeater` | a list of rows of its fields | `Items` of arrays | `min`, `max` (its `fields`) |
@@ -85,11 +85,11 @@ Printing it unescaped, `{!! $values['snippet'] !!}`, **runs it**: HTML and scrip
 
 A code field is shared by all languages unless its definition says `translatable` (code rarely differs per language). Even then it's never machine-translated: a new translation starts with the main language's code, to change by hand ([machine translation](translation.md)).
 
-A link goes to an address or to an entry. An entry link follows the entry: its `url` and `title` are the entry's in the page's language (its main language's page when it isn't translated), so a new slug or a translation needs no edit; the `url` is null while the entry isn't live (a preview gets its draft title, still without a URL). The linked entry must exist, outside the trash, in the chosen `collections`. Links saved before entry links existed (`{url, label, new_tab}`) are addresses.
+A link goes to one of the menu builder's kinds, chosen in the editor's **Link to** dropdown: **Link** (an address), **Entry**, **Term** (a term's page) or **Listing** (a collection's listing page). Entries are picked as in an Entries field; terms and listing pages with the search rich text links use (terms of taxonomies the editor may view, with term pages; listing pages of the collections they may view; `GET admin/rich-text-links?source=term`, see [rich text links](#rich-text-links)). A link to an entry, term or listing page follows it: its `url` and `title` are its own in the page's language (an entry's main language's page when it isn't translated, as in rich text), so a new slug or a translation needs no edit; the `url` is null while there's no page (an entry not live, where a preview gets its draft title still without a URL; a term or collection in the trash). The linked entry must exist, outside the trash, in the chosen `collections`; a term must exist outside the trash, and a listing page's collection must have one (terms and listing pages aren't restricted by a setting). The editor's text input is the link's `label`; **Open in a new tab** is ticked on a new address link and not on the other kinds (saved links keep theirs); `nofollow`, `sponsored` and `ugc` are stored as `rel`. Templates get `rel` ready to print: the choices, then `noopener noreferrer` when it opens in a new tab (`nofollow noopener noreferrer`), or null. Links saved before kinds existed (`{url, label, new_tab}`) are addresses, and those without `rel` have none.
 
 ```blade
 @if ($cta = $values['cta'])
-    @if ($cta['url'])<a href="{{ $cta['url'] }}" @if ($cta['new_tab']) target="_blank" rel="noopener" @endif>{{ $cta['label'] ?? $cta['title'] ?? $cta['url'] }}</a>@endif
+    @if ($cta['url'])<a href="{{ $cta['url'] }}"@if ($cta['new_tab']) target="_blank"@endif @if ($cta['rel'])rel="{{ $cta['rel'] }}"@endif>{{ $cta['label'] ?? $cta['title'] ?? $cta['url'] }}</a>@endif
 @endif
 ```
 

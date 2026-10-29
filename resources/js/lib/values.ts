@@ -138,25 +138,54 @@ export function termPickerQuery({ taxonomy, q, offset, except, ids }: { taxonomy
     return params.toString();
 }
 
-export type LinkKind = 'url' | 'entry';
-export type LinkTargets = { url?: unknown; entry_id?: unknown };
+/** A link field's kinds, the menu builder's and rich text links': an address, an entry, a term's page, a listing page. */
+export const LINK_KINDS = ['url', 'entry', 'term', 'listing'] as const;
 
-/** A link field's value as it's kept: no address or entry, and no text or tab choice either, is no link (null). */
+export type LinkKind = (typeof LINK_KINDS)[number];
+
+export type LinkTargets = { url?: unknown; entry_id?: unknown; term_id?: unknown; collection_id?: unknown };
+
+/** Where a kind keeps what it points at. */
+export const LINK_TARGET = { url: 'url', entry: 'entry_id', term: 'term_id', listing: 'collection_id' } as const satisfies Record<LinkKind, keyof LinkTargets>;
+
+/** A stored kind, or null for an unknown one (older values without a type are addresses). */
+export function linkKindOf(type: unknown): LinkKind | null {
+    return LINK_KINDS.includes(type as LinkKind) ? (type as LinkKind) : null;
+}
+
+/** A link field's value as it's kept: no address or target, and no text, tab or rel choice either, is no link (null). */
 export function linkValue(link: Record<string, unknown>): Record<string, unknown> | null {
-    const empty = link.type === 'entry' ? typeof link.entry_id !== 'number' : link.url === '' || link.url === undefined || link.url === null;
+    const kind = linkKindOf(link.type) ?? 'url';
+    const target = link[LINK_TARGET[kind]];
+    const empty = kind === 'url' ? target === '' || target === undefined || target === null : typeof target !== 'number';
+    const rel = Array.isArray(link.rel) && link.rel.length > 0;
 
-    return empty ? (link.label || link.new_tab ? link : null) : link;
+    return empty ? (link.label || link.new_tab || rel ? link : null) : link;
 }
 
 /**
- * Switching a link field between an address and an entry: the value keeps
- * only the chosen kind's target (what's saved), and the one it had for the
- * other kind is remembered, so switching back brings it back until the page
- * is left.
+ * Switching a link field between kinds: the value keeps only the chosen
+ * kind's target (what's saved), and the ones it had for the other kinds are
+ * remembered, so switching back brings them back until the page is left.
  */
 export function switchLink(value: Record<string, unknown>, from: LinkKind, to: LinkKind, remembered: LinkTargets): { value: Record<string, unknown> | null; remembered: LinkTargets } {
-    const kept: LinkTargets = from === 'url' ? { ...remembered, url: value.url } : { ...remembered, entry_id: value.entry_id };
-    const link = { ...value, type: to, url: to === 'url' ? kept.url : undefined, entry_id: to === 'entry' ? kept.entry_id : undefined };
+    const kept: LinkTargets = { ...remembered, [LINK_TARGET[from]]: value[LINK_TARGET[from]] };
+    const link: Record<string, unknown> = { ...value, type: to };
+    for (const kind of LINK_KINDS) link[LINK_TARGET[kind]] = kind === to ? kept[LINK_TARGET[kind]] : undefined;
 
     return { value: linkValue(link), remembered: kept };
+}
+
+/** A new link opens in a new tab when it's an address (another site, usually); the site's own pages don't. */
+export function defaultNewTab(kind: LinkKind): boolean {
+    return kind === 'url';
+}
+
+/** The link's rel choices, as stored (some of nofollow, sponsored, ugc, in that order). */
+export const LINK_REL_OPTIONS = ['nofollow', 'sponsored', 'ugc'] as const;
+
+export function linkRelOf(rel: unknown): string[] {
+    const tokens = Array.isArray(rel) ? rel.filter((token): token is string => typeof token === 'string') : typeof rel === 'string' ? rel.split(/\s+/) : [];
+
+    return LINK_REL_OPTIONS.filter((option) => tokens.includes(option));
 }

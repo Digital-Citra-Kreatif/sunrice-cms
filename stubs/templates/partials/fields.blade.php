@@ -29,6 +29,6 @@
             @endforeach
         </ul>
     @elseif (is_array($value) && isset($value['type'], $value['new_tab']) && is_string($value['url'] ?? null))
-        <p><a class="button" href="{{ $value['url'] }}"@if ($value['new_tab']) target="_blank" rel="noopener"@endif>{{ $value['label'] ?? $value['title'] ?? $value['url'] }}</a></p>
+        <p><a class="button" href="{{ $value['url'] }}"@if ($value['new_tab']) target="_blank"@endif @if ($value['rel'] ?? null)rel="{{ $value['rel'] }}"@endif>{{ $value['label'] ?? $value['title'] ?? $value['url'] }}</a></p>
     @endif
 @endforeach

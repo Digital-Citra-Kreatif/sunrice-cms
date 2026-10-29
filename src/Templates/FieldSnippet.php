@@ -78,7 +78,7 @@ final class FieldSnippet
             'toggle' => "@if (is_bool({$value} ?? null))\n    <p class=\"{$class}\"><span class=\"field-label\">{$label}:</span> {{ {$value} ? __('Yes') : __('No') }}</p>\n@endif",
             'select' => $this->select($field, $value, $label, $class),
             'date' => "@if (({$value} ?? null) instanceof \\Carbon\\CarbonInterface)\n    <p class=\"{$class}\"><span class=\"field-label\">{$label}:</span> <time datetime=\"{{ {$value}->toAtomString() }}\">{{ {$value}->translatedFormat('".($field->configBool('time') ? 'j F Y, H:i' : 'j F Y')."') }}</time></p>\n@endif",
-            'link' => "@if (is_array({$value} ?? null) && filled({$value}['url']))\n    <p class=\"{$class}\"><a href=\"{{ {$value}['url'] }}\"@if ({$value}['new_tab']) target=\"_blank\" rel=\"noopener\"@endif>{{ {$value}['label'] ?? {$value}['title'] ?? {$value}['url'] }}</a></p>\n@endif",
+            'link' => "@if (is_array({$value} ?? null) && filled({$value}['url']))\n    <p class=\"{$class}\"><a href=\"{{ {$value}['url'] }}\"@if ({$value}['new_tab']) target=\"_blank\"@endif @if ({$value}['rel'])rel=\"{{ {$value}['rel'] }}\"@endif>{{ {$value}['label'] ?? {$value}['title'] ?? {$value}['url'] }}</a></p>\n@endif",
             'media' => $this->media($field, $value, $class),
             'entries' => $this->entries($field, $value, $label, $class),
             'terms' => $this->terms($field, $value, $label, $class),

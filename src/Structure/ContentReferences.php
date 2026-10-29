@@ -82,6 +82,11 @@ final class ContentReferences
      */
     private function portableLinks(array $data): array
     {
+        // A Link field's link to a listing page: {"type": "listing", "collection_id": {"listing": "news"}}.
+        if (($data['type'] ?? null) === RichTextLinks::LISTING && is_int($data['collection_id'] ?? null)
+            && ($handle = Collection::withTrashed()->find($data['collection_id'])?->handle) !== null) {
+            $data['collection_id'] = [RichTextLinks::LISTING => $handle];
+        }
         foreach ($data as $key => $value) {
             if (is_array($value)) {
                 $data[$key] = $this->portableLinks($value);
@@ -112,7 +117,7 @@ final class ContentReferences
     {
         return preg_replace_callback(self::LINK_KEY, function (array $match) use (&$missing, &$later, $pending): string {
             [, $kind, $key] = $match;
-            $id = $kind === RichTextLinks::LISTING ? Collection::query()->where('handle', $key)->value('id') : $this->id($kind, $key);
+            $id = $kind === RichTextLinks::LISTING || str_contains($key, '/') ? $this->id($kind, $key) : null;
             if (is_numeric($id)) {
                 return 'data-link="'.$kind.':'.$id.'"';
             }
@@ -228,7 +233,7 @@ final class ContentReferences
 
     /**
      * @param  array<mixed>  $value
-     * @return array{0: string, 1: string}|null [type, key] for {"entry": "pages/about"}, {"term": "…"}, {"media": "…"}
+     * @return array{0: string, 1: string}|null [type, key] for {"entry": "pages/about"}, {"term": "…"}, {"media": "…"}, {"listing": "news"}
      */
     private static function marker(array $value): ?array
     {
@@ -244,6 +249,7 @@ final class ContentReferences
         return match (true) {
             ($type === Reference::ENTRY || $type === Reference::TERM) && preg_match('#^[a-z][a-z0-9_]*/.+$#', $key) === 1 => [$type, $key],
             $type === Reference::MEDIA => [$type, $key],
+            $type === RichTextLinks::LISTING && preg_match('/^[a-z][a-z0-9_]*$/', $key) === 1 => [$type, $key],
             default => null,
         };
     }
@@ -253,8 +259,9 @@ final class ContentReferences
         return match (true) {
             is_int($value) => ($key = $this->key($type, $value)) === null ? $value : [$type => $key],
             is_array($value) && array_is_list($value) => array_map(fn (mixed $one): mixed => $this->portableValue($one, $type), $value),
-            // A link to an entry: {"type": "entry", "entry_id": 3}.
+            // A link to an entry: {"type": "entry", "entry_id": 3}; to a term: {"type": "term", "term_id": 5}.
             is_array($value) && is_int($value['entry_id'] ?? null) => ['entry_id' => $this->portableValue($value['entry_id'], Reference::ENTRY)] + $value,
+            is_array($value) && is_int($value['term_id'] ?? null) => ['term_id' => $this->portableValue($value['term_id'], Reference::TERM)] + $value,
             default => $value,
         };
     }
@@ -299,7 +306,9 @@ final class ContentReferences
             return $this->ids[$cache];
         }
         $id = null;
-        if ($type === Reference::MEDIA) {
+        if ($type === RichTextLinks::LISTING) {
+            $id = Collection::query()->where('handle', $key)->value('id');
+        } elseif ($type === Reference::MEDIA) {
             // Its path here, else the same file uploaded here too: library paths end in "{random}-{name}.{ext}".
             $name = (string) preg_replace('/^[a-z0-9]{10}-/', '', basename($key));
             $id = Media::query()->where('path', $key)->value('id')
