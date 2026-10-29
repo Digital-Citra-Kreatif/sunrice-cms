@@ -57,7 +57,7 @@ final class FieldsetController
                 ...$user,
                 'url' => route($user['kind'] === 'blueprint' ? 'sunrice.admin.cms.blueprints.edit' : 'sunrice.admin.cms.fieldsets.edit', $user['handle']),
             ], $delete->uses($fieldset)),
-            ...$builder->toArray(),
+            ...$builder->toArray($fieldset),
         ]);
     }
 

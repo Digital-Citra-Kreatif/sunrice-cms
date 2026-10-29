@@ -35,6 +35,7 @@ use Sunrice\Cms\Actions\Taxonomies\SaveIndexPage;
 use Sunrice\Cms\Actions\Terms\SaveTerm;
 use Sunrice\Cms\Actions\Terms\SaveTermContent;
 use Sunrice\Cms\Fields\Fieldsets;
+use Sunrice\Cms\Fields\Types\EntriesField;
 use Sunrice\Cms\Fields\Types\TermsField;
 use Sunrice\Cms\Globals;
 use Sunrice\Cms\Menus;
@@ -133,6 +134,9 @@ final class StructureImporter
 
     private bool $force = false;
 
+    /** @var array<string, array<mixed>> the file's blueprints by handle, as written there */
+    private array $blueprintsInFile = [];
+
     private bool $replaceMenus = false;
 
     private ContentReferences $references;
@@ -187,6 +191,7 @@ final class StructureImporter
             $newFieldsets = $this->placeholders(Fieldset::class, $section('fieldsets'));
             $newBlueprints = $this->placeholders(Blueprint::class, $section('blueprints'));
             app(Fieldsets::class)->flush();
+            $this->blueprintsInFile = array_column(array_filter($section('blueprints'), fn (array $item): bool => is_string($item['handle'] ?? null)), null, 'handle');
             $this->each('collection', $section('collections'), fn (array $item) => $this->collection($item));
             $this->each('taxonomy', $section('taxonomies'), fn (array $item) => $this->taxonomy($item));
             $this->each('fieldset', $section('fieldsets'), fn (array $item) => $this->definition(Fieldset::class, $item, $newFieldsets));
@@ -356,6 +361,7 @@ final class StructureImporter
     private function collection(array $item): void
     {
         $item = self::withoutNulls($item, ['dated', 'translatable', 'ordered', 'hierarchical', 'comments', 'per_page']);
+        $item = self::writeHandle($item, ['route', 'listing_route'], $this->handleIsField($item['blueprint'] ?? null));
         $existing = Collection::query()->where('handle', $item['handle'] ?? null)->first();
         $id = $existing->id ?? 0;
         $validated = Validator::make($item, [
@@ -415,6 +421,7 @@ final class StructureImporter
     private function taxonomy(array $item): void
     {
         $item = self::withoutNulls($item, ['hierarchical']);
+        $item = self::writeHandle($item, ['route', 'index_route']);
         $existing = Taxonomy::query()->where('handle', $item['handle'] ?? null)->first();
         $validated = Validator::make($item, [
             'handle' => [...self::HANDLE, ...($existing === null ? [Rule::unique((new Taxonomy)->getTable(), 'handle')] : [])],
@@ -1485,6 +1492,86 @@ final class StructureImporter
                 $record->setOwnRoute((string) $locale, is_string($pattern) ? $pattern : null, $attribute);
             }
         }
+    }
+
+    /**
+     * {handle} in an item's patterns written as its handle, as saving
+     * would (RoutePattern::withHandle()), so they're checked as they'll be
+     * stored; in a taxonomy's pages in each collection (`collection_pages`)
+     * also {listing}, as that collection's listing page URL there.
+     *
+     * @param  array<mixed>  $item
+     * @param  list<string>  $attributes
+     * @return array<mixed>
+     */
+    private static function writeHandle(array $item, array $attributes, bool $handleIsField = false): array
+    {
+        $handle = $item['handle'] ?? null;
+        if (! is_string($handle) || ! str_contains((string) json_encode($item), '{')) {
+            return $item;
+        }
+        $write = fn (mixed $pattern, string $attribute, ?string $listing = null): mixed => is_string($pattern)
+            ? RoutePattern::withHandle($pattern, $handle, $listing, $handleIsField && $attribute === 'route') : $pattern;
+        foreach ($attributes as $attribute) {
+            if (array_key_exists($attribute, $item)) {
+                $item[$attribute] = $write($item[$attribute], $attribute);
+            }
+        }
+        if (is_array($item['routes'] ?? null)) {
+            $routes = [];
+            foreach ($item['routes'] as $locale => $own) {
+                $routes[$locale] = is_array($own) ? array_combine(array_keys($own), array_map(fn (mixed $pattern, int|string $attribute): mixed => $write($pattern, (string) $attribute), $own, array_keys($own))) : $own;
+            }
+            $item['routes'] = $routes;
+        }
+        if (is_array($item['collection_pages'] ?? null)) {
+            $all = [];
+            foreach ($item['collection_pages'] as $collection => $pages) {
+                $model = is_array($pages) ? Collection::query()->where('handle', $collection)->first() : null;
+                if (is_array($pages) && $model !== null) {
+                    foreach (['route', 'index_route'] as $key) {
+                        if (array_key_exists($key, $pages)) {
+                            $pages[$key] = $write($pages[$key], $key, CollectionTaxonomy::listingPath($model));
+                        }
+                        if (is_array($pages[$key.'s'] ?? null)) {
+                            $own = [];
+                            foreach ($pages[$key.'s'] as $locale => $pattern) {
+                                $own[$locale] = $write($pattern, $key, CollectionTaxonomy::listingPath($model, (string) $locale));
+                            }
+                            $pages[$key.'s'] = $own;
+                        }
+                    }
+                }
+                $all[$collection] = $pages;
+            }
+            $item['collection_pages'] = $all;
+        }
+
+        return $item;
+    }
+
+    /**
+     * Whether a blueprint, as the file has it (else as stored), has an
+     * Entries field named handle, which blueprints made before {handle}
+     * meant the handle may have: a collection's {handle} is that field.
+     */
+    private function handleIsField(mixed $blueprint): bool
+    {
+        if (! is_string($blueprint)) {
+            return false;
+        }
+        $fields = $this->blueprintsInFile[$blueprint]['fields'] ?? null;
+        if (is_array($fields)) {
+            foreach ($fields as $field) {
+                if (is_array($field) && ($field['handle'] ?? null) === 'handle') {
+                    return ($field['type'] ?? null) === EntriesField::TYPE && ! (is_array($field['config'] ?? null) && ($field['config']['multiple'] ?? false));
+                }
+            }
+
+            return false;
+        }
+
+        return RoutePatternRule::isField(Blueprint::query()->where('handle', $blueprint)->first()?->schema()->field('handle'));
     }
 
     private static function routeRule(): Closure

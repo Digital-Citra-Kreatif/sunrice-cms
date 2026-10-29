@@ -130,12 +130,12 @@ final class TaxonomyResource extends Resource
                             self::savePivots($taxonomy);
                             CollectionResource::switchPage($taxonomy, 'route', $on, '/{handle}/{slug}');
                         }),
-                    RouteInput::make('route')->language(null, 'route')->label('Shared term page URL')->placeholder('/{handle}/{slug}')->unique()->span(2)->showWhen('pages')
-                        ->rules([new RoutePatternRule(parameters: false)])
-                        ->help('Like /topics/{slug}. Empty: /{handle}/{slug}.'),
+                    RouteInput::make('route')->language(null, 'route')->label('Shared term page URL')->placeholder('/{handle}/{slug}')->placeholderFrom(null, '/{handle}/{slug}')->unique()->span(2)->showWhen('pages')
+                        ->rules([new RoutePatternRule(parameters: false, of: 'taxonomy')])
+                        ->help('Like /topics/{slug}. Empty: :default. {handle} is this taxonomy\'s handle, filled in when you save; {slug} is each term\'s slug.')->helpValues(['default' => [null, '/{handle}/{slug}']]),
                     ...TranslatedFields::routes('route', fn (RouteInput $input, string $code, string $language) => $input
                         ->label(__('Shared term page URL in :language', ['language' => $language]))->placeholderFrom('route', '/{handle}/{slug}')->span(2)->showWhen('pages')
-                        ->rules([new RoutePatternRule(parameters: false)])
+                        ->rules([new RoutePatternRule(parameters: false, of: 'taxonomy')])
                         ->help(__('Its own address in :language, like /topik/{slug}. Empty: the term page URL under :prefix.', ['language' => $language, 'prefix' => Locales::prefix($code) ?: '/']))),
                     TemplateHelp::select('template', 'cms.topic', 'For shared and collections\' term pages. Automatic: the first template that exists. A term can choose its own on its page.')
                         ->label('Term page template')->span(2)
@@ -153,12 +153,12 @@ final class TaxonomyResource extends Resource
                         ->help('A page listing all its terms, each linking to its page, like /tags.')
                         ->loadUsing(fn (Model $taxonomy): bool => $taxonomy->getAttribute('index_route') !== null)
                         ->saveUsing(fn (Model $taxonomy, mixed $on) => $taxonomy instanceof Taxonomy ? CollectionResource::switchPage($taxonomy, 'index_route', $on, '/'.str_replace('_', '-', $taxonomy->handle)) : null),
-                    RouteInput::make('index_route')->language(null, 'index_route')->label('Shared index page URL')->placeholder('/{handle}')->unique()->span(2)->showWhen('index')
-                        ->rules([CollectionResource::LISTING_ROUTE])
-                        ->help('Like /tags. Empty: /{handle}.'),
+                    RouteInput::make('index_route')->language(null, 'index_route')->label('Shared index page URL')->placeholder('/{handle}')->placeholderFrom(null, '/{handle}')->unique()->span(2)->showWhen('index')
+                        ->rules([RoutePatternRule::fixed('taxonomy')])
+                        ->help('Like /tags. Empty: :default. {handle} is this taxonomy\'s handle, filled in when you save.')->helpValues(['default' => [null, '/{handle}']]),
                     ...TranslatedFields::routes('index_route', fn (RouteInput $input, string $code, string $language) => $input
                         ->label(__('Shared index page URL in :language', ['language' => $language]))->placeholderFrom('index_route', '/{handle}')->span(2)->showWhen('index')
-                        ->rules([CollectionResource::LISTING_ROUTE])
+                        ->rules([RoutePatternRule::fixed('taxonomy')])
                         ->help(__('Its own address in :language, like /tag. Empty: the index page URL under :prefix.', ['language' => $language, 'prefix' => Locales::prefix($code) ?: '/']))
                         ->links(fn (?Model $taxonomy): array => $taxonomy instanceof Taxonomy && $taxonomy->index_route !== null && ($url = $taxonomy->indexUrl($code)) !== null
                             ? [Link::make('View on site', $url)->newTab()->showWhen('index')] : [])),
@@ -211,8 +211,8 @@ final class TaxonomyResource extends Resource
                 $fields[] = TextInput::make(self::pivotField('term', $collection, $code))->group($collection->title)->span(2)->showWhen('collections', $id)
                     ->label($main ? __('Term page URL') : __('Term page URL in :language', ['language' => $language]))
                     ->placeholder($main ? '{listing}/{handle}/{slug}' : '')
-                    ->rules(['nullable', 'string', 'max:255', new RoutePatternRule(parameters: false)])
-                    ->help(fn (?Model $taxonomy): string => $main ? __('Empty: under :collection\'s listing page, like :url.', ['collection' => $collection->title, 'url' => CollectionTaxonomy::defaultPattern($collection, self::exampleTaxonomy($taxonomy))])
+                    ->rules(['nullable', 'string', 'max:255', new RoutePatternRule(parameters: false, of: 'attachment')])
+                    ->help(fn (?Model $taxonomy): string => $main ? __('Empty: under :collection\'s listing page, like :url. {listing} (its listing page URL) and {handle} (this taxonomy\'s handle) are filled in when you save.', ['collection' => $collection->title, 'url' => CollectionTaxonomy::defaultPattern($collection, self::exampleTaxonomy($taxonomy))])
                         : __('Its own address in :language. Empty: the one above, else under :collection\'s listing page there.', ['language' => $language, 'collection' => $collection->title]))
                     ->loadUsing(fn (Model $taxonomy): ?string => self::pivotRoute(self::pivot($taxonomy, $collection), 'term', $code))
                     ->saveUsing(fn (Model $taxonomy, mixed $value) => self::setPivotRoute(self::pivot($taxonomy, $collection), 'term', $code, $value));
@@ -248,8 +248,8 @@ final class TaxonomyResource extends Resource
             $fields[] = TextInput::make(self::pivotField('index', $collection, $code))->group($collection->title)->span(2)->showWhen('collections', $id)
                 ->label($main ? __('Index page URL') : __('Index page URL in :language', ['language' => $language]))
                 ->placeholder($main ? '{listing}/{handle}' : '')
-                ->rules(['nullable', 'string', 'max:255', CollectionResource::LISTING_ROUTE])
-                ->help(fn (?Model $taxonomy): string => $main ? __('Empty: under :collection\'s listing page, like :url.', ['collection' => $collection->title, 'url' => $example($taxonomy)])
+                ->rules(['nullable', 'string', 'max:255', RoutePatternRule::fixed('attachment')])
+                ->help(fn (?Model $taxonomy): string => $main ? __('Empty: under :collection\'s listing page, like :url. {listing} (its listing page URL) and {handle} (this taxonomy\'s handle) are filled in when you save.', ['collection' => $collection->title, 'url' => $example($taxonomy)])
                     : __('Its own address in :language. Empty: the one above, else under :collection\'s listing page there.', ['language' => $language, 'collection' => $collection->title]))
                 ->links(function (?Model $taxonomy) use ($collection, $code): array {
                     // From the attachment as stored (the site's routes may be cached).

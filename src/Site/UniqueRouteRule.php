@@ -8,6 +8,7 @@ use Closure;
 use Illuminate\Contracts\Validation\DataAwareRule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Database\Eloquent\Model;
+use Sunrice\Cms\Models\Blueprint;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Support\Locales;
@@ -43,12 +44,39 @@ final class UniqueRouteRule implements DataAwareRule, ValidationRule
         return $attribute.'_'.preg_replace('/[^A-Za-z0-9]/', '_', $locale);
     }
 
+    /**
+     * A pattern from a form as it will be stored: {handle} written as the
+     * record's handle, or the new one's in the form (RoutePattern::withHandle(),
+     * as the model does on saving).
+     *
+     * @param  array<mixed>  $data  the form's values
+     */
+    public static function written(Collection|Taxonomy $record, string $attribute, string $pattern, array $data): string
+    {
+        if (! str_contains($pattern, '{handle}')) {
+            return $pattern;
+        }
+        $handle = $record->exists ? $record->handle : ($data['handle'] ?? null);
+        if (! is_string($handle) || $handle === '') {
+            return $pattern;
+        }
+        $isField = false;
+        if ($record instanceof Collection && $attribute === 'route') {
+            $blueprint = array_key_exists('blueprint', $data) ? $data['blueprint'] : $record->blueprint;
+            $isField = is_string($blueprint) && RoutePatternRule::isField(Blueprint::query()->where('handle', $blueprint)->first()?->schema()->field('handle'));
+        }
+
+        return RoutePattern::withHandle($pattern, $handle, handleIsField: $isField);
+    }
+
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         $record = $this->record;
         if (! is_string($value) || $value === '' || ! ($record instanceof Collection || $record instanceof Taxonomy)) {
             return;
         }
+        // The address as it will be stored.
+        $value = self::written($record, $this->attribute, $value, $this->data);
         $locales = $this->locale !== null ? [$this->locale] : array_values(array_filter(array_slice(Locales::all(), 1), function (string $locale) use ($record): bool {
             $field = self::field($this->attribute, $locale);
             $own = array_key_exists($field, $this->data) ? $this->data[$field] : $record->ownRoute($locale, $this->attribute);

@@ -55,7 +55,7 @@ final class BlueprintController
     {
         return Inertia::render('Cms/Blueprints/Edit', [
             'blueprint' => ['id' => $blueprint->id, 'handle' => $blueprint->handle, 'title' => $blueprint->title, 'fields' => $blueprint->fields],
-            ...$builder->toArray(),
+            ...$builder->toArray($blueprint),
         ]);
     }
 

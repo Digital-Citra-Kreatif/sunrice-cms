@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Models\Concerns;
 
+use Sunrice\Cms\Site\RoutePattern;
 use Sunrice\Cms\Support\Locales;
 
 /**
@@ -34,9 +35,10 @@ trait HasLanguageRoutes
 
     public static function bootHasLanguageRoutes(): void
     {
-        // Whatever changes a language's pattern (the admin, an import, code): its old one is kept to redirect from.
+        // Whatever changes a language's pattern (the admin, an import, code): {handle} is written in, and its old one is kept to redirect from.
         static::saving(function (self $model): void {
             if ($model->isDirty('routes') || $model->isDirty(static::routeAttributes())) {
+                $model->writeHandle();
                 $model->keepPreviousRoutes();
             }
         });
@@ -107,6 +109,64 @@ trait HasLanguageRoutes
     public function previousRoutes(string $locale, string $attribute = 'route'): array
     {
         return array_values(array_filter(($this->previous_routes ?? [])[$locale][$attribute] ?? [], fn (string $pattern): bool => $pattern !== ''));
+    }
+
+    /**
+     * Whether {handle} in its entry URL is an Entries field of its
+     * blueprint named handle (one made before {handle} meant the handle),
+     * left as it is: see Collection.
+     */
+    protected function handleIsField(): bool
+    {
+        return false;
+    }
+
+    /**
+     * {handle} in a pattern that changed, the main one or a language's
+     * own, written as the handle it has (RoutePattern::withHandle()), so
+     * the stored pattern is the address and a new handle later moves
+     * nothing. A language's own that comes out as the main one is dropped.
+     */
+    private function writeHandle(): void
+    {
+        $handle = $this->getAttribute('handle');
+        if (! is_string($handle) || $handle === '') {
+            return;
+        }
+        $isField = null;
+        $write = function (string $pattern, string $attribute) use ($handle, &$isField): string {
+            if (! str_contains($pattern, '{handle}')) {
+                return $pattern;
+            }
+            $isField ??= $this->handleIsField();
+
+            return RoutePattern::withHandle($pattern, $handle, handleIsField: $isField && $attribute === 'route');
+        };
+        foreach (static::routeAttributes() as $attribute) {
+            $pattern = $this->getAttribute($attribute);
+            if (is_string($pattern) && $this->isDirty($attribute)) {
+                $this->setAttribute($attribute, $write($pattern, $attribute));
+            }
+        }
+        if (! $this->isDirty('routes') || ! str_contains((string) json_encode($this->routes ?? []), '{handle}')) {
+            return;
+        }
+        $before = $this->getOriginal('routes');
+        $before = is_string($before) ? json_decode($before, true) : $before;
+        $routes = $this->routes ?? [];
+        foreach ($routes as $locale => $own) {
+            foreach ($own as $attribute => $pattern) {
+                $old = is_array($before) && is_array($before[$locale] ?? null) ? ($before[$locale][$attribute] ?? null) : null;
+                if ($pattern !== $old) {
+                    $routes[$locale][$attribute] = $write($pattern, $attribute);
+                }
+                if ($routes[$locale][$attribute] === $this->getAttribute($attribute)) {
+                    unset($routes[$locale][$attribute]);
+                }
+            }
+        }
+        $routes = array_filter($routes, fn (array $own): bool => $own !== []);
+        $this->routes = $routes === [] ? null : $routes;
     }
 
     /** A language's own patterns that change go to its previous ones (unless it follows that pattern again). */

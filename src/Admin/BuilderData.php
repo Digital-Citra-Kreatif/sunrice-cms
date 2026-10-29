@@ -25,7 +25,7 @@ final class BuilderData
     public function __construct(private readonly FieldTypes $types) {}
 
     /** @return array{fieldTypes: list<array<string, mixed>>, fieldsets: list<array{value: string, label: string}>, rules: list<string>, widths: list<int>, reserved: list<string>, locales: list<array{code: string, name: string}>} */
-    public function toArray(): array
+    public function toArray(Blueprint|Fieldset|null $definition = null): array
     {
         return [
             'fieldTypes' => array_values(array_map(fn (FieldType $type): array => [
@@ -40,8 +40,8 @@ final class BuilderData
             'rules' => DefinitionValidator::RULES,
             // How wide a field may be in the editor, in percent of its row (a field's "width").
             'widths' => Field::WIDTHS,
-            // Handles content keeps for itself: the builder warns as they're typed.
-            'reserved' => Blueprint::RESERVED,
+            // Handles content keeps for itself: the builder warns as they're typed (not of one the definition has had since before).
+            'reserved' => Blueprint::reservedFor($definition),
             // The content languages, the main one first: fields' labels for visitors in the others.
             'locales' => array_map(fn (string $code, string $name): array => ['code' => $code, 'name' => $name], array_keys(Locales::names()), Locales::names()),
         ];

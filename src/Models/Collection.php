@@ -12,6 +12,7 @@ use Illuminate\Support\Carbon;
 use Sunrice\Cms\Fields\Schema;
 use Sunrice\Cms\Models\Concerns\HasLanguageRoutes;
 use Sunrice\Cms\Models\Concerns\TranslatesText;
+use Sunrice\Cms\Site\RoutePatternRule;
 use Sunrice\Cms\Support\LanguageValues;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\SiteRecords;
@@ -125,6 +126,14 @@ class Collection extends Model
     public function entries(): HasMany
     {
         return $this->hasMany(Entry::class);
+    }
+
+    /** Whether {handle} in its entry URL is its blueprint's Entries field named handle, which blueprints made before {handle} meant the handle may have. */
+    protected function handleIsField(): bool
+    {
+        $blueprint = is_string($this->blueprint) ? Blueprint::query()->where('handle', $this->blueprint)->first() : null;
+
+        return RoutePatternRule::isField($blueprint?->schema()->field('handle'));
     }
 
     /**

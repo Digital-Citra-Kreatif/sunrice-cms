@@ -41,7 +41,8 @@ final class SaveBlueprint
             'handle' => $blueprint->exists ? ['prohibited'] : ['required', 'string', 'max:64', new HandleRule, Rule::notIn(HandleField::RESERVED), Rule::unique($blueprint->getTable(), 'handle')],
             'title' => ['required', 'string', 'max:255'],
         ])->validate();
-        $fields = $this->definitions->validate($input['fields'] ?? null, reserved: Blueprint::RESERVED);
+        // A handle reserved since it has a field with it stays (Blueprint::reservedFor()).
+        $fields = $this->definitions->validate($input['fields'] ?? null, reserved: Blueprint::reservedFor($blueprint));
 
         $action = $blueprint->exists ? 'updated' : 'created';
         if (! $blueprint->exists) {

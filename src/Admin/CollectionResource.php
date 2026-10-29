@@ -39,9 +39,6 @@ final class CollectionResource extends Resource
 {
     protected static string $model = Collection::class;
 
-    /** A listing page's URL: a path of lowercase segments, like /blog. */
-    public const LISTING_ROUTE = 'regex:#^(/[a-z0-9\-_]+)+$#';
-
     public static function navigationGroup(): string
     {
         return 'Structure';
@@ -94,9 +91,10 @@ final class CollectionResource extends Resource
                         ->help('Off: entries have no address, like FAQs or team members shown by a template.')
                         ->loadUsing(fn (Model $collection): bool => $collection->getAttribute('route') !== null)
                         ->saveUsing(fn (Model $collection, mixed $on) => self::switchPage($collection, 'route', $on, '/{handle}/{slug}')),
-                    RouteInput::make('route')->language(null, 'route')->label('Entry URL')->placeholder('/{handle}/{slug}')->unique()->span(2)->showWhen('pages')
+                    RouteInput::make('route')->language(null, 'route')->label('Entry URL')->placeholder('/{handle}/{slug}')->placeholderFrom(null, '/{handle}/{slug}')->unique()->span(2)->showWhen('pages')
                         ->rules([new RoutePatternRule])
-                        ->help('Like /blog/{slug}, or / for the site root. Empty: /{handle}/{slug}.'),
+                        ->help('Like /blog/{slug}, or /{slug} for pages at the site root. Empty: :default.')->helpValues(['default' => [null, '/{handle}/{slug}']])
+                        ->helpDetails('What can go in braces?', '{slug} is each entry\'s slug, once; {handle} is this collection\'s handle, filled in when you save, so a new handle later moves no pages; any other {name} is the slug of the entry an Entries field of the blueprint links to (one without Several entries), like {project} in /projects/{project}/{slug}. So no field may be named slug or handle.'),
                     ...TranslatedFields::routes('route', fn (RouteInput $input, string $code, string $language) => $input
                         ->label(__('Entry URL in :language', ['language' => $language]))->placeholderFrom('route', '/{handle}/{slug}')->span(2)->showWhen('pages')
                         ->rules([new RoutePatternRule])
@@ -121,12 +119,12 @@ final class CollectionResource extends Resource
                     Toggle::make('listing')->label('Has a listing page')->span(2)
                         ->loadUsing(fn (Model $collection): bool => $collection->getAttribute('listing_route') !== null)
                         ->saveUsing(fn (Model $collection, mixed $on) => self::switchPage($collection, 'listing_route', $on, '/{handle}')),
-                    RouteInput::make('listing_route')->language(null, 'listing_route')->label('Listing page URL')->placeholder('/{handle}')->unique()->span(2)->showWhen('listing')
-                        ->rules([self::LISTING_ROUTE])
-                        ->help('Like /blog. Empty: /{handle}.'),
+                    RouteInput::make('listing_route')->language(null, 'listing_route')->label('Listing page URL')->placeholder('/{handle}')->placeholderFrom(null, '/{handle}')->unique()->span(2)->showWhen('listing')
+                        ->rules([RoutePatternRule::fixed()])
+                        ->help('Like /blog. Empty: :default. {handle} is this collection\'s handle, filled in when you save.')->helpValues(['default' => [null, '/{handle}']]),
                     ...TranslatedFields::routes('listing_route', fn (RouteInput $input, string $code, string $language) => $input
                         ->label(__('Listing page URL in :language', ['language' => $language]))->placeholderFrom('listing_route', '/{handle}')->span(2)->showWhen('listing')
-                        ->rules([self::LISTING_ROUTE])
+                        ->rules([RoutePatternRule::fixed()])
                         ->help(__('Its own address in :language, like /buku. Empty: the listing page URL under :prefix.', ['language' => $language, 'prefix' => Locales::prefix($code) ?: '/']))
                         ->links(fn (?Model $collection): array => $collection instanceof Collection && ($url = $collection->listingUrl($code)) !== null
                             ? [Link::make('View on site', $url)->newTab()->showWhen('listing')] : [])),

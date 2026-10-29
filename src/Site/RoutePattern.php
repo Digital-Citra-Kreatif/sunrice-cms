@@ -26,6 +26,9 @@ final class RoutePattern
     /** What fills a parameter that links to nothing: "/projects/-/unit-1". */
     public const NONE = '-';
 
+    /** The words in braces that never name a field: {slug}, and {handle}, written in when a pattern is saved (withHandle()). */
+    public const RESERVED = ['slug', 'handle'];
+
     /** @var list<string>|null parameters(), once read */
     private ?array $parameters = null;
 
@@ -43,6 +46,70 @@ final class RoutePattern
         $names = (new self($pattern))->parameters();
 
         return count($names) === count(array_unique($names));
+    }
+
+    /**
+     * The pattern as it's stored: {handle} replaced with the handle of the
+     * collection or taxonomy it's saved for, and in a taxonomy's pattern
+     * in a collection, {listing} with that collection's listing page URL
+     * ("{listing}/{handle}/{slug}" → "/books/tags/{slug}"). With
+     * $handleIsField (a blueprint made before {handle} was kept, whose
+     * Entries field is named handle), {handle} is that field, as it was.
+     */
+    public static function withHandle(string $pattern, string $handle, ?string $listing = null, bool $handleIsField = false): string
+    {
+        if (! $handleIsField) {
+            $pattern = str_replace('{handle}', $handle, $pattern);
+        }
+
+        return $listing === null ? $pattern : str_replace('{listing}', rtrim($listing, '/'), $pattern);
+    }
+
+    /**
+     * What's wrong with a pattern, or null: the first problem found, as
+     * [what, the segment or name]: 'slash' (not starting with one),
+     * 'empty' (an empty part), 'segment' (a fixed part with other
+     * characters), 'no-slug', 'slugs' ({slug} more than once), 'twice' (a
+     * {field} more than once), 'braces' (a {name} where none may be: any
+     * but {slug} without $parameters, any at all with $fixed).
+     *
+     * @return array{0: 'slash'|'empty'|'segment'|'no-slug'|'slugs'|'twice'|'braces', 1: string}|null
+     */
+    public static function problem(string $pattern, bool $parameters = false, bool $fixed = false): ?array
+    {
+        if (! str_starts_with($pattern, '/')) {
+            return ['slash', ''];
+        }
+        $slugs = 0;
+        $names = [];
+        foreach (explode('/', substr($pattern, 1)) as $segment) {
+            if ($segment === '') {
+                return ['empty', ''];
+            }
+            if (preg_match('#^\{([a-z][a-z0-9_]*)\}$#', $segment, $m) === 1) {
+                if ($fixed || ($m[1] !== 'slug' && ! $parameters)) {
+                    return ['braces', $m[1]];
+                }
+                if ($m[1] === 'slug') {
+                    $slugs++;
+                } elseif (in_array($m[1], $names, true)) {
+                    return ['twice', $m[1]];
+                } else {
+                    $names[] = $m[1];
+                }
+            } elseif (preg_match('#^[a-z0-9\-_]+$#', $segment) !== 1) {
+                return ['segment', $segment];
+            }
+        }
+        if ($fixed) {
+            return null;
+        }
+
+        return match (true) {
+            $slugs === 0 => ['no-slug', ''],
+            $slugs > 1 => ['slugs', 'slug'],
+            default => null,
+        };
     }
 
     /**
