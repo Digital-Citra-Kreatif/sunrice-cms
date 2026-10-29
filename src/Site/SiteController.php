@@ -36,42 +36,42 @@ final class SiteController
 {
     public function show(Request $request, Site $site): Response|RedirectResponse
     {
+        // What answers the address before any redirect (Site::served()).
+        $served = $site->served($request->path());
         // Every language has its own prefix (the main one too, /en): a plain address goes to the main language's.
-        [, $rest, $matched] = Locales::split($request->path());
-        if (! $matched) {
+        if ($served?->kind === Served::UNPREFIXED) {
+            [, $rest] = Locales::split($request->path());
+
             return SiteRedirect::to(self::withQuery(url(Locales::prefix(Locales::default()).($rest === '/' ? '' : $rest)), $request), 301);
         }
         // The search page (/search, /id/search) before any page at that address.
-        if (Search::enabled() && ($locale = $site->searchLocale($request->path())) !== null) {
-            return app(SearchController::class)($request, app(Search::class), $locale);
+        if ($served?->kind === Served::SEARCH) {
+            return app(SearchController::class)($request, app(Search::class), $served->locale);
         }
         // Listing pages first: their URLs are fixed, more specific than any {slug}.
-        $listing = $site->listing($request->path());
-        if ($listing !== null) {
-            return $this->renderListing($listing, $request);
+        if ($served?->listing !== null) {
+            return $this->renderListing($served->listing, $request);
         }
         // Taxonomies' index pages (/tags, /books/tags): fixed too.
-        $index = $site->taxonomyIndex($request->path());
-        if ($index !== null) {
-            return $this->renderIndex($index);
+        if ($served?->index !== null) {
+            return $this->renderIndex($served->index);
         }
-        $page = $site->match($request->path());
         // The address's language: another than the page's when it stands in for a translation (Site::fallback()).
-        $locale = $site->locale($request->path());
-        if ($page instanceof TermTranslation) {
-            return $this->renderTerm($page, $locale);
+        $locale = $served === null ? $site->locale($request->path()) : $served->locale;
+        if ($served?->term !== null) {
+            return $this->renderTerm($served->term, $locale);
         }
-        $translation = $page;
+        $translation = $served?->entry;
         $path = '/'.trim($request->path(), '/');
         if ($translation !== null && $translation->locale !== $locale) {
             // The homepage in a language it isn't translated into is at /{locale}.
             if ($site->isHomepage($translation) && $path !== (Locales::prefix($locale) ?: '/')) {
                 return SiteRedirect::to(self::withQuery(url(Locales::prefix($locale) ?: '/'), $request), 301);
             }
-        } elseif ($translation !== null && ($own = $site->ownPath($translation)) !== null && ($served = $site->path($translation, $translation->slug)) !== $own
+        } elseif ($translation !== null && ($own = $site->ownPath($translation)) !== null && ($at = $site->path($translation, $translation->slug)) !== $own
             && $path === $own) {
             // The homepage is at /: its own address goes there.
-            return SiteRedirect::to(self::withQuery(url((string) $served), $request), 301);
+            return SiteRedirect::to(self::withQuery(url((string) $at), $request), 301);
         }
         if ($translation === null) {
             $redirect = $site->redirect($request->path());

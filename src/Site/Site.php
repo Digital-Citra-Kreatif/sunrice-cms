@@ -90,39 +90,236 @@ final class Site
         return $page;
     }
 
-    private function resolve(string $locale, string $rest): EntryTranslation|TermTranslation|null
+    /**
+     * What answers a path before any redirect from it would, in the order
+     * SiteController::show() checks: an address without a language's
+     * prefix (when the main language has one too, it's sent on to the main
+     * language's), the search page, a listing page, a taxonomy's index
+     * page, then a live entry's page (the homepage's at its own address
+     * too) or a term's. Null when nothing does: a redirect from the path
+     * applies there.
+     *
+     * @internal
+     */
+    public function served(string $path): ?Served
     {
-        foreach ($this->patterns($locale) as [$type, $id, $pattern, $collection]) {
-            $matched = $pattern->match($rest);
-            if ($matched === null) {
+        [$locale, , $prefixed] = Locales::split($path);
+        if (! $prefixed) {
+            return Served::unprefixed($locale);
+        }
+        if (Search::enabled() && $this->searchLocale($path) !== null) {
+            return Served::search($locale);
+        }
+        // Fixed addresses before any {slug}.
+        if (($listing = $this->listing($path)) !== null) {
+            return Served::listing($listing);
+        }
+        if (($index = $this->taxonomyIndex($path)) !== null) {
+            return Served::index($index);
+        }
+        $page = $this->match($path);
+
+        return $page === null ? null : Served::page($page, $locale);
+    }
+
+    /**
+     * served() for many paths at once, by path (those something answers):
+     * one query per kind of page whatever their number (the collections
+     * and taxonomies of listing and index pages, the homepage, entries and
+     * terms: resolveAll()), for lists that show it on every row.
+     *
+     * @internal
+     *
+     * @param  list<string>  $paths
+     * @return array<string, Served>
+     */
+    public function servedAll(array $paths): array
+    {
+        $served = [];
+        $listings = [];
+        $indexes = [];
+        $pages = [];
+        foreach (array_unique(array_map(fn (string $path): string => '/'.trim($path, '/'), $paths)) as $path) {
+            [$locale, $rest, $prefixed] = Locales::split($path);
+            if (! $prefixed) {
+                $served[$path] = Served::unprefixed($locale);
+
                 continue;
             }
-            if ($type !== 'collection') {
-                $term = $this->termQuery()->where('taxonomy_id', $id)->where('locale', $locale)->where('slug', $matched['slug'])->first();
-                // Not translated: the main language's, at this language's address.
-                if ($term === null && $this->fallsBack($locale)) {
-                    $term = $this->termQuery()->where('taxonomy_id', $id)->where('locale', Locales::default())->where('slug', $matched['slug'])
-                        ->whereDoesntHave('term.translations', fn (Builder $q) => $q->where('locale', $locale))->first();
+            if (Search::enabled() && $this->searchLocale($path) !== null) {
+                $served[$path] = Served::search($locale);
+
+                continue;
+            }
+            if ($rest !== '/' && ($id = $this->listingRoutes()[$locale][$rest] ?? null) !== null) {
+                $listings[$path] = [$id, $locale];
+            }
+            if ($rest !== '/' && ($found = $this->indexRoutes()[$locale][$rest] ?? null) !== null) {
+                $indexes[$path] = [$found[0], $found[1], $locale];
+            }
+            $pages[$path] = [$locale, $rest];
+        }
+        $collectionIds = [...array_column($listings, 0), ...array_filter(array_column($indexes, 1))];
+        $collections = $collectionIds === [] ? [] : Collection::query()->whereKey(array_values(array_unique($collectionIds)))->get()->keyBy('id')->all();
+        $taxonomies = $indexes === [] ? [] : Taxonomy::query()->whereKey(array_values(array_unique(array_column($indexes, 0))))->get()->keyBy('id')->all();
+        foreach ($pages as $path => [$locale]) {
+            $collection = isset($listings[$path]) ? $collections[$listings[$path][0]] ?? null : null;
+            if ($collection !== null) {
+                $served[$path] = Served::listing(new Listing($collection, $locale));
+                unset($pages[$path]);
+
+                continue;
+            }
+            [$taxonomy, $in] = isset($indexes[$path]) ? [$taxonomies[$indexes[$path][0]] ?? null, $indexes[$path][1]] : [null, null];
+            $collection = $in === null ? null : $collections[$in] ?? null;
+            if ($taxonomy !== null && ($in === null || $collection !== null)) {
+                $served[$path] = Served::index(new TaxonomyIndex($taxonomy, $collection, $locale));
+                unset($pages[$path]);
+            }
+        }
+        // The homepage at / and /{locale}: each language's at once (the main language's standing in).
+        $roots = array_filter($pages, fn (array $page): bool => $page[1] === '/');
+        $id = $roots === [] ? null : $this->homepageId();
+        if ($id !== null) {
+            $locales = array_unique([...array_column($roots, 0), Locales::default()]);
+            $homepages = $this->entryQuery()->where('entry_id', $id)->whereIn('locale', $locales)->get()->keyBy('locale');
+            foreach ($roots as $path => [$locale]) {
+                $homepage = $homepages->get($locale) ?? ($this->fallsBack($locale) ? $homepages->get(Locales::default()) : null);
+                if ($homepage !== null) {
+                    $served[$path] = Served::page($homepage, $locale);
                 }
-
-                // A collection's term page lists only its entries.
-                return $collection === null ? $term : $term?->in(Collection::query()->find($collection));
             }
-            $found = $this->entryQuery()->where('collection_id', $id)->where('locale', $locale)->where('slug', $matched['slug'])->first();
-            // Not live in this language: the main language's, at this language's address.
-            if ($found === null && $this->fallsBack($locale)) {
-                $found = $this->entryQuery()->where('collection_id', $id)->where('locale', Locales::default())->where('slug', $matched['slug'])
-                    ->whereDoesntHave('entry.translations', fn (Builder $q) => $q->live()->where('locale', $locale))->first();
-            }
-            // Slugs are unique in a collection and language; the related entries' must be theirs now (an old one redirects).
-            if ($found !== null && $matched['parameters'] !== [] && $this->parameters($found, $pattern, $locale) !== $matched['parameters']) {
-                return null;
-            }
-
-            return $found;
+        }
+        foreach ($this->resolveAll(array_filter($pages, fn (array $page): bool => $page[1] !== '/')) as $path => $page) {
+            $served[$path] = Served::page($page, $pages[$path][0]);
         }
 
-        return null;
+        return $served;
+    }
+
+    private function resolve(string $locale, string $rest): EntryTranslation|TermTranslation|null
+    {
+        return $this->resolveAll([[$locale, $rest]])[0] ?? null;
+    }
+
+    /**
+     * What's at each of these paths (a language and the path without its
+     * prefix) by their patterns, all at once: one query for the entries,
+     * one for the terms, and only when needed one each for the main
+     * language's standing in and for the collections of term pages in
+     * collections, however many paths. The most specific pattern that
+     * matches a path decides; there's no falling through to the next.
+     *
+     * @template TKey of array-key
+     *
+     * @param  array<TKey, array{0: string, 1: string}>  $paths
+     * @return array<TKey, EntryTranslation|TermTranslation> the paths something is at
+     */
+    private function resolveAll(array $paths): array
+    {
+        /** @var array<TKey, array{0: RouteType, 1: int, 2: RoutePattern, 3: int|null, 4: string, 5: string, 6: array<string, string>}> $wanted */
+        $wanted = [];
+        foreach ($paths as $key => [$locale, $rest]) {
+            foreach ($this->patterns($locale) as [$type, $id, $pattern, $collection]) {
+                $matched = $pattern->match($rest);
+                if ($matched !== null) {
+                    $wanted[$key] = [$type, $id, $pattern, $collection, $locale, $matched['slug'], $matched['parameters']];
+                    break;
+                }
+            }
+        }
+        $lookups = ['entry' => [], 'term' => []];
+        foreach ($wanted as [$type, $id, , , $locale, $slug]) {
+            $lookups[$type === 'collection' ? 'entry' : 'term'][$id][$locale][$slug] = true;
+        }
+        $entries = $this->lookUp('entry', $lookups['entry']);
+        $terms = $this->lookUp('term', $lookups['term']);
+        $scopes = [];
+        foreach ($wanted as [$type, $id, , $collection, $locale, $slug]) {
+            if ($type !== 'collection' && $collection !== null && isset($terms["{$id}|{$locale}|{$slug}"])) {
+                $scopes[] = $collection;
+            }
+        }
+        $scopes = $scopes === [] ? [] : Collection::query()->whereKey(array_values(array_unique($scopes)))->get()->keyBy('id')->all();
+        $found = [];
+        foreach ($wanted as $key => [$type, $id, $pattern, $collection, $locale, $slug, $parameters]) {
+            if ($type !== 'collection') {
+                $term = $terms["{$id}|{$locale}|{$slug}"] ?? null;
+                if ($term instanceof TermTranslation) {
+                    // A collection's term page lists only its entries.
+                    $found[$key] = $collection === null ? $term : (clone $term)->in($scopes[$collection] ?? null);
+                }
+
+                continue;
+            }
+            $entry = $entries["{$id}|{$locale}|{$slug}"] ?? null;
+            // Slugs are unique in a collection and language; the related entries' must be theirs now (an old one redirects).
+            if ($entry instanceof EntryTranslation && ($parameters === [] || $this->parameters($entry, $pattern, $locale) === $parameters)) {
+                $found[$key] = $entry;
+            }
+        }
+
+        return $found;
+    }
+
+    /**
+     * Live entry translations (or terms) by collection (or taxonomy), language and slug, keyed
+     * "id|locale|slug", in one query; then for those not there, in each language the main
+     * language's stands in for (Site::fallback()), the main language's when the entry isn't live
+     * (the term isn't translated) in that language: one query per such language.
+     *
+     * @param  'entry'|'term'  $kind
+     * @param  array<int, array<string, array<string, true>>>  $wanted  slugs by id and language
+     * @return array<string, EntryTranslation|TermTranslation>
+     */
+    private function lookUp(string $kind, array $wanted): array
+    {
+        if ($wanted === []) {
+            return [];
+        }
+        $column = $kind === 'entry' ? 'collection_id' : 'taxonomy_id';
+        $query = fn (): Builder => $kind === 'entry' ? $this->entryQuery() : $this->termQuery();
+        // The main language's, standing in where the entry isn't live (the term isn't translated).
+        $standIn = fn (string $locale): Builder => $kind === 'entry'
+            ? $this->entryQuery()->whereDoesntHave('entry.translations', fn (Builder $q) => $q->live()->where('locale', $locale))
+            : $this->termQuery()->whereDoesntHave('term.translations', fn (Builder $q) => $q->where('locale', $locale));
+        $idOf = fn (EntryTranslation|TermTranslation $row): int => $row instanceof EntryTranslation ? $row->collection_id : $row->taxonomy_id;
+        $found = [];
+        $rows = $query()->where(function (Builder $q) use ($wanted, $column): void {
+            foreach ($wanted as $id => $locales) {
+                foreach ($locales as $locale => $slugs) {
+                    $q->orWhere(fn (Builder $q) => $q->where($column, $id)->where('locale', $locale)->whereIn('slug', array_map('strval', array_keys($slugs))));
+                }
+            }
+        })->get();
+        foreach ($rows as $row) {
+            $found[$idOf($row).'|'.$row->locale.'|'.$row->slug] = $row;
+        }
+        // Not live (or translated) in this language: the main language's, at this language's address.
+        $missing = [];
+        foreach ($wanted as $at => $locales) {
+            foreach ($locales as $locale => $slugs) {
+                foreach (array_keys($slugs) as $slug) {
+                    if (! isset($found["{$at}|{$locale}|{$slug}"]) && $this->fallsBack($locale)) {
+                        $missing[$locale][$at][] = (string) $slug;
+                    }
+                }
+            }
+        }
+        foreach ($missing as $locale => $ids) {
+            $rows = $standIn($locale)->where('locale', Locales::default())
+                ->where(function (Builder $q) use ($ids, $column): void {
+                    foreach ($ids as $at => $slugs) {
+                        $q->orWhere(fn (Builder $q) => $q->where($column, $at)->whereIn('slug', $slugs));
+                    }
+                })
+                ->get();
+            foreach ($rows as $row) {
+                $found[$idOf($row).'|'.$locale.'|'.$row->slug] = $row;
+            }
+        }
+
+        return $found;
     }
 
     /**
