@@ -140,11 +140,23 @@ function EntryList({
     const inMenu = moreFilters.length > INLINE_FILTERS || moreFilters.some((filter) => filter.taxonomy);
     const menuSet = menuFiltersSet(query, filters.taxonomies.map((taxonomy) => taxonomy.handle));
     const visible = columns.filter((column) => query.columns.includes(column.key));
-    const params = (changes: Partial<EntryListQuery> = {}) => entryListParams(query, changes, mainLocale);
-    const visit = (changes: Partial<EntryListQuery>) => router.get(base, params(changes), { preserveState: true, preserveScroll: true, replace: true });
+    // What was last asked for: the page's query until a visit's answer comes, so a visit made before then (a
+    // filter picked while the search waits, or Clear) builds on the one before it instead of undoing it.
+    const requested = React.useRef(query);
+    const answered = React.useRef(query);
+    if (answered.current !== query) {
+        answered.current = query;
+        requested.current = query;
+    }
+    const params = (changes: Partial<EntryListQuery> = {}) => entryListParams(requested.current, changes, mainLocale);
+    const visit = (changes: Partial<EntryListQuery>) => {
+        const next = params(changes);
+        requested.current = { ...requested.current, ...changes };
+        router.get(base, next, { preserveState: true, preserveScroll: true, replace: true });
+    };
 
     React.useEffect(() => {
-        if (search === query.search) return;
+        if (search === requested.current.search) return;
         const timer = window.setTimeout(() => visit({ search }), 300);
         return () => window.clearTimeout(timer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -185,7 +197,7 @@ function EntryList({
     // In the trash, each row has its own Restore (the bulk bar has it too).
     const restorable = trashed && !!can?.delete;
     const span = 1 + visible.length + (bulkActions.length > 0 ? 1 : 0) + (moveable ? 1 : 0) + (restorable ? 1 : 0);
-    const exportQuery = entryListQueryString(params());
+    const exportQuery = entryListQueryString(entryListParams(query, {}, mainLocale));
 
     return (
         <div className="cms:flex cms:flex-col cms:gap-6">
