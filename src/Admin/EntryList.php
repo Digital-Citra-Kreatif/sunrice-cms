@@ -58,6 +58,9 @@ final class EntryList
     /** The columns besides the title (always shown), in their order. */
     public const COLUMNS = ['slug' => 'Slug', 'status' => 'Status', 'author' => 'Author', 'published_at' => 'Published', 'updated_at' => 'Updated', 'created_at' => 'Created'];
 
+    /** The most entries the Reorder mode loads to drag (fullOrder()); beyond it, Move to position. */
+    public const ORDER_LIMIT = 1000;
+
     /** Cell text of field columns is cut to this many characters. */
     public const CELL_LIMIT = 80;
 
@@ -181,6 +184,48 @@ final class EntryList
     {
         return $this->collection->ordered && $this->sort === '' && $this->search === '' && $this->author === null
             && $this->terms === [] && $this->status === '';
+    }
+
+    /**
+     * The collection's whole manual order, for the list's Reorder mode,
+     * whatever page the list is on: each entry's id, title (in the list's
+     * language), status and parent, in order (by `sort_order`, then id, as
+     * ReorderEntries and MoveEntry number a level). One query with only
+     * those columns; outside the trash. Null when the list isn't in that
+     * order (filtered, searched, sorted, in the trash, or a collection not
+     * in manual order). Above ORDER_LIMIT entries, `entries` is null: too
+     * many to drag, and the rows' Move to position stays.
+     *
+     * @return array{entries: list<array{id: int, title: string, status: string, parentId: int|null}>|null, limit: int}|null
+     */
+    public function fullOrder(): ?array
+    {
+        if (! $this->inManualOrder()) {
+            return null;
+        }
+        $entries = (new Entry)->getTable();
+        $translations = EntryTranslation::query()
+            ->join($entries, $entries.'.id', '=', self::TABLE.'.entry_id')
+            ->where(self::TABLE.'.collection_id', $this->collection->id)
+            ->where(self::TABLE.'.locale', $this->locale)
+            ->whereNull($entries.'.deleted_at')
+            ->orderBy($entries.'.sort_order')->orderBy($entries.'.id')
+            ->limit(self::ORDER_LIMIT + 1)
+            ->get([self::TABLE.'.entry_id', self::TABLE.'.draft_title', self::TABLE.'.status', self::TABLE.'.published_at', $entries.'.parent_id']);
+        if ($translations->count() > self::ORDER_LIMIT) {
+            return ['entries' => null, 'limit' => self::ORDER_LIMIT];
+        }
+
+        return ['entries' => array_values($translations->map(function (EntryTranslation $translation): array {
+            $parent = $translation->getAttribute('parent_id');
+
+            return [
+                'id' => $translation->entry_id,
+                'title' => $translation->draft_title,
+                'status' => $translation->status(),
+                'parentId' => is_numeric($parent) ? (int) $parent : null,
+            ];
+        })->all()), 'limit' => self::ORDER_LIMIT];
     }
 
     /**

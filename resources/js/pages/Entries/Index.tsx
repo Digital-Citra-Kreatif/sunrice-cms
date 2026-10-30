@@ -4,7 +4,8 @@ import {
     ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Columns3, Download, ListFilter, Plus, RotateCcw, Search, Trash2, X,
 } from 'lucide-react';
 import { useConfirm } from '@/components/Confirm.tsx';
-import { EntryReorderList } from '@/components/EntryReorderList.tsx';
+import { EntryReorderList, type ReorderRow } from '@/components/EntryReorderList.tsx';
+import { MoveToMenu, type MoveTarget } from '@/components/MoveToMenu.tsx';
 import { TermsPicker } from '@/components/TermsPicker.tsx';
 import { adminUrl, t } from '@imajiner/admin-sdk';
 import {
@@ -78,6 +79,8 @@ interface Props {
     links?: { group: string; label: string; href: string; external?: boolean }[];
     /** The collection's manual order, unfiltered: Move up and Move down. */
     manualOrder?: boolean;
+    /** The whole order, every page's entries, loaded for Reorder (an optional prop); `entries` null above `limit`. */
+    order?: { entries: ReorderRow[] | null; limit: number } | null;
     perPageOptions?: number[];
     preferencesKey?: string;
     /** Outside the trash, how many entries are in it. */
@@ -111,13 +114,22 @@ export default function EntriesIndex(props: Props) {
 
 function EntryList({
     collection, collections, entries, query, columns = [], filters = { authors: [], taxonomies: [], locales: [] }, links = [],
-    manualOrder = false, perPageOptions = [10, 25, 50, 100], preferencesKey, trashedCount = 0, can,
+    manualOrder = false, order, perPageOptions = [10, 25, 50, 100], preferencesKey, trashedCount = 0, can,
 }: Props & { collection: NonNullable<Props['collection']>; entries: NonNullable<Props['entries']>; query: EntryListQuery }) {
     const base = adminUrl(`cms/collections/${collection.handle}/entries`);
     const mainLocale = filters.locales[0] ?? query.locale;
     const [search, setSearch] = React.useState(query.search);
     const [selected, setSelected] = React.useState<number[]>([]);
     const [reordering, setReordering] = React.useState(false);
+    // The order as last loaded: a save's answer (a whole page visit) doesn't carry it again.
+    const [fullOrder, setFullOrder] = React.useState<Props['order']>(undefined);
+    React.useEffect(() => {
+        if (order === undefined) return;
+        setFullOrder(order);
+        // Not in the collection's own order any more (or not allowed): nothing to drag.
+        if (order === null) setReordering(false);
+    }, [order]);
+    const loadOrder = () => router.reload({ only: ['order'] });
     const [confirm, confirmDialog] = useConfirm();
     const { setColumns, setPerPage } = useTablePreferences(preferencesKey ?? `table.cms.entries.${collection.handle}`, { columns: query.columns, perPage: query.perPage });
     React.useEffect(() => setSelected([]), [entries]);
@@ -192,8 +204,17 @@ function EntryList({
     };
 
     const moveable = manualOrder && !!can?.update;
-    // Dragging saves the order of what's shown, the rest of its level after it: only when the whole collection is on this page.
-    const draggable = moveable && entries !== null && entries.lastPage <= 1 && entries.data.length > 1;
+    // Reorder loads the whole order (every page's entries) to drag; beyond its limit, each row's menu moves an entry to a position.
+    const draggable = moveable && entries.total > 1;
+    const startReorder = () => {
+        setFullOrder(undefined);
+        setReordering(true);
+        loadOrder();
+    };
+    const tooMany = reordering && fullOrder?.entries === null;
+    // Why there's no Reorder: the list isn't in the collection's own order.
+    const orderHint = !moveable && collection.ordered && !!can?.update && !trashed && entries.total > 1;
+    const move = (row: Row, to: MoveTarget) => router.post(adminUrl(`cms/entries/${row.id}/move`), typeof to === 'number' ? { position: to } : { direction: to }, { preserveScroll: true });
     // In the trash, each row has its own Restore (the bulk bar has it too).
     const restorable = trashed && !!can?.delete;
     const span = 1 + visible.length + (bulkActions.length > 0 ? 1 : 0) + (moveable ? 1 : 0) + (restorable ? 1 : 0);
@@ -276,10 +297,11 @@ function EntryList({
                         </div>
                     )}
                     {draggable && (
-                        <Button variant={reordering ? 'secondary' : 'outline'} aria-pressed={reordering} onClick={() => setReordering(!reordering)}>
+                        <Button variant={reordering ? 'secondary' : 'outline'} aria-pressed={reordering} onClick={() => (reordering ? setReordering(false) : startReorder())}>
                             <ArrowUpDown /> {reordering ? t('Done') : t('Reorder')}
                         </Button>
                     )}
+                    {orderHint && <span className="cms:text-xs cms:text-muted-foreground">{t('Clear the search, filters and sorting to reorder.')}</span>}
                     {columns.length > 0 && (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -311,7 +333,16 @@ function EntryList({
                 </div>
             </div>
 
-            {reordering && draggable ? <EntryReorderList collection={collection.handle} rows={entries.data} hierarchical={collection.hierarchical === true} /> : <Card className="cms:gap-0 cms:overflow-hidden cms:py-0">
+            {tooMany && fullOrder && (
+                <p role="status" className="cms:rounded-lg cms:border cms:bg-muted/40 cms:px-4 cms:py-3 cms:text-sm">
+                    {t('This collection has more than :limit entries, too many to drag. Use each row\'s ⋯ menu to move an entry to the top, the bottom or a position, or its arrows to move it a place.', { limit: fullOrder.limit })}
+                </p>
+            )}
+            {reordering && draggable && !tooMany ? (
+                fullOrder?.entries
+                    ? <EntryReorderList collection={collection.handle} rows={fullOrder.entries} hierarchical={collection.hierarchical === true} onError={loadOrder} />
+                    : <Card className="cms:p-6 cms:text-center cms:text-sm cms:text-muted-foreground" role="status">{t('Loading the order…')}</Card>
+            ) : <Card className="cms:gap-0 cms:overflow-hidden cms:py-0">
                 <Table>
                     <TableHeader className="cms:bg-muted/60">
                         <TableRow className="cms:hover:bg-transparent">
@@ -367,6 +398,8 @@ function EntryList({
                                         <span className="cms:flex">
                                             <Button variant="ghost" size="icon" aria-label={t('Move :title up', { title: row.title })} onClick={() => router.post(adminUrl(`cms/entries/${row.id}/move`), { direction: 'up' }, { preserveScroll: true })}><ArrowUp /></Button>
                                             <Button variant="ghost" size="icon" aria-label={t('Move :title down', { title: row.title })} onClick={() => router.post(adminUrl(`cms/entries/${row.id}/move`), { direction: 'down' }, { preserveScroll: true })}><ArrowDown /></Button>
+                                            {/* A flat collection's row knows its place (the list is the whole level); a nested one's is among its siblings, counted on the server. */}
+                                            <MoveToMenu title={row.title} {...(collection.hierarchical ? {} : { position: (entries.from ?? 1) + i, count: entries.total })} onMove={(to) => move(row, to)} />
                                         </span>
                                     </TableCell>
                                 )}

@@ -86,28 +86,34 @@ final class EntryController
     {
         $user = $request->user();
         $list = new EntryList($collection, $request, $user instanceof Authenticatable ? $user : null, $preferences);
-        $page = $list->query()->paginate($list->perPage)->withQueryString();
 
+        // Closures: Reorder's partial reload (only "order") runs none of them.
         return Inertia::render('Cms/Entries/Index', [
             'collection' => self::collection($collection),
-            'collections' => Access::collections($request->user())->map(fn (Collection $c): array => ['handle' => $c->handle, 'title' => $c->title])->all(),
-            'entries' => [
-                'data' => $list->rows($page->items()),
-                'total' => $page->total(),
-                'from' => $page->firstItem(),
-                'to' => $page->lastItem(),
-                'currentPage' => $page->currentPage(),
-                'lastPage' => $page->lastPage(),
-                'prev_page_url' => $page->previousPageUrl(),
-                'next_page_url' => $page->nextPageUrl(),
-            ],
+            'collections' => fn (): array => Access::collections($request->user())->map(fn (Collection $c): array => ['handle' => $c->handle, 'title' => $c->title])->all(),
+            'entries' => function () use ($list): array {
+                $page = $list->query()->paginate($list->perPage)->withQueryString();
+
+                return [
+                    'data' => $list->rows($page->items()),
+                    'total' => $page->total(),
+                    'from' => $page->firstItem(),
+                    'to' => $page->lastItem(),
+                    'currentPage' => $page->currentPage(),
+                    'lastPage' => $page->lastPage(),
+                    'prev_page_url' => $page->previousPageUrl(),
+                    'next_page_url' => $page->nextPageUrl(),
+                ];
+            },
             'query' => $list->state(),
             'columns' => array_values($list->columnList()),
-            'filters' => $list->filterOptions(),
-            'links' => $list->links(),
+            'filters' => fn (): array => $list->filterOptions(),
+            'links' => fn (): array => $list->links(),
             'manualOrder' => $list->inManualOrder(),
+            // The whole order for Reorder, every page's entries: asked for when Reorder is pressed (router.reload({ only: ['order'] })).
+            'order' => Inertia::optional(fn (): ?array => Access::entries($request->user(), 'update', $collection) ? $list->fullOrder() : null),
             // Outside the trash, how many are in it, for an empty list to say so.
-            'trashedCount' => $list->state()['status'] === 'trashed' ? 0 : Entry::onlyTrashed()->where('collection_id', $collection->id)->count(),
+            'trashedCount' => fn (): int => $list->state()['status'] === 'trashed' ? 0 : Entry::onlyTrashed()->where('collection_id', $collection->id)->count(),
             'perPageOptions' => EntryList::PER_PAGE,
             'preferencesKey' => EntryList::preferenceKey($collection),
             'can' => self::can($request, $collection),

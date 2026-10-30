@@ -1359,5 +1359,16 @@
     "{slug} can be in the URL only once.": "{slug} hanya bisa ada sekali di URL.",
     ":field: link attributes": ":field: atribut tautan",
     "Link text (its title)": "Teks tautan (judulnya)",
-    ":field: search": ":field: cari"
+    ":field: search": ":field: cari",
+    "More ways to move :title": "Cara lain memindahkan :title",
+    "Move to top": "Pindahkan ke paling atas",
+    "Move to bottom": "Pindahkan ke paling bawah",
+    "Move to position…": "Pindahkan ke posisi…",
+    "It's number :position of :count at its level. 1 puts it first.": "Sekarang di urutan :position dari :count di tingkatnya. 1 menaruhnya paling depan.",
+    "Among the entries at its level: 1 puts it first, a number past the last puts it last.": "Di antara entri di tingkatnya: 1 menaruhnya paling depan, angka melebihi yang terakhir menaruhnya paling belakang.",
+    "Position": "Posisi",
+    "Clear the search, filters and sorting to reorder.": "Kosongkan pencarian, filter, dan pengurutan untuk mengatur urutan.",
+    "This collection has more than :limit entries, too many to drag. Use each row's ⋯ menu to move an entry to the top, the bottom or a position, or its arrows to move it a place.": "Koleksi ini punya lebih dari :limit entri, terlalu banyak untuk diseret. Pakai menu ⋯ di tiap baris untuk memindahkan entri ke paling atas, paling bawah, atau ke suatu posisi, atau panahnya untuk memindahkannya satu tempat.",
+    "Loading the order…": "Memuat urutan…",
+    "Give a position from 1.": "Isi posisi mulai dari 1."
 }

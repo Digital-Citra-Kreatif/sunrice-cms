@@ -134,7 +134,10 @@ final class EntryManageController
     {
         // The order is every language's: not for translators.
         abort_unless(Access::entries($request->user(), 'update', $entry->collection, $entry), 403);
-        $move->handle($entry, $request->string('direction')->toString());
+        // "direction" (up, down, top, bottom), or "position" among its siblings (from 1; past the last is the last).
+        $request->validate(['position' => ['nullable', 'integer', 'min:1', 'max:1000000']]);
+        $position = $request->input('position');
+        $move->handle($entry, is_numeric($position) ? (int) $position : $request->string('direction')->toString());
 
         return back();
     }

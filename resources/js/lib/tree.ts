@@ -57,7 +57,9 @@ export function treeOrder<T extends { id: number }>(items: readonly T[], parentO
     for (const item of items) {
         const parent = parentOf(item);
         const key = parent !== null && parent !== undefined && ids.has(parent) ? parent : null;
-        children.set(key, [...(children.get(key) ?? []), item]);
+        const level = children.get(key);
+        if (level) level.push(item);
+        else children.set(key, [item]);
     }
     const out: (T & Depthed)[] = [];
     const placed = new Set<number>();
@@ -80,4 +82,40 @@ export function treeOrder<T extends { id: number }>(items: readonly T[], parentO
     }
 
     return out;
+}
+
+/** The index of the item's parent: the nearest item before it one level up (-1: it's at the top). */
+export function parentIndex(items: readonly Depthed[], index: number): number {
+    const depth = items[index]?.depth ?? 0;
+    for (let i = index - 1; i >= 0; i--) {
+        if (items[i]!.depth < depth) return i;
+    }
+
+    return -1;
+}
+
+/** Where the item stands among its siblings: its parent's index, its position (from 1) and how many they are. */
+export function levelPosition(items: readonly Depthed[], index: number): { parent: number; position: number; count: number } {
+    const parent = parentIndex(items, index);
+    const siblings = childIndexes(items, parent);
+
+    return { parent, position: siblings.indexOf(index) + 1, count: siblings.length };
+}
+
+/**
+ * The order of the item's level (indexes, as childIndexes() gives them)
+ * with the item at `position` among its siblings: 1 is the first, past
+ * the last is the last, below 1 the first. Null when it doesn't move.
+ */
+export function moveToPosition(items: readonly Depthed[], index: number, position: number): { parent: number; order: number[] } | null {
+    const { parent } = levelPosition(items, index);
+    const siblings = childIndexes(items, parent);
+    const from = siblings.indexOf(index);
+    if (from < 0 || !Number.isFinite(position)) return null;
+    const to = Math.min(Math.max(Math.trunc(position), 1), siblings.length) - 1;
+    if (to === from) return null;
+    const order = siblings.filter((i) => i !== index);
+    order.splice(to, 0, index);
+
+    return { parent, order };
 }
