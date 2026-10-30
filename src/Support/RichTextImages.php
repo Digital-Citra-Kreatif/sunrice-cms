@@ -9,11 +9,13 @@ use Sunrice\Cms\Fields\HydrationContext;
 /**
  * Makes rich text's media library images responsive when pages show
  * them (the rich_text field's hydrate()): each `<img data-media-id>`
- * gets the file's `srcset`, a `sizes` worked out from its width preset,
- * `width` and `height` when it has none (no layout shift), and
- * `loading="lazy"` and `decoding="async"`. Only attributes are added,
- * before the tag's end: everything stored (its `src`, `alt`, `class`) and
- * all other markup is printed byte for byte, and nothing stored changes.
+ * gets the file's `srcset`, a `sizes` worked out from its width preset
+ * (its figure's for a captioned image: `<figure class="sunrice-img
+ * sunrice-img-w-50"><img …><figcaption>`), `width` and `height` when it
+ * has none (no layout shift), and `loading="lazy"` and `decoding="async"`.
+ * Only attributes are added, before the tag's end: everything stored (its
+ * `src`, `alt`, `class`) and all other markup is printed byte for byte,
+ * and nothing stored changes.
  *
  * Left as stored: images of files that are missing, in the trash or can't
  * have sizes (SVGs, other files), external images (no data-media-id), and
@@ -32,8 +34,8 @@ final class RichTextImages
     /** Below this viewport width the starter templates' floated images take the text's full width (site.css). */
     private const FLOAT_BREAKPOINT = '40em';
 
-    /** An <img> tag, its attribute values quoted or not. */
-    private const IMG = '/<img\b(?:[^>"\']++|"[^"]*+"|\'[^\']*+\')*+>/i';
+    /** An <img> tag, its attribute values quoted or not, with the <figure> start tag right before it when it's a captioned image's. */
+    private const IMG = '/(<figure\b(?:[^>"\']++|"[^"]*+"|\'[^\']*+\')*+>\s*+)?<img\b(?:[^>"\']++|"[^"]*+"|\'[^\']*+\')*+>/i';
 
     public static function render(string $html, HydrationContext $context): string
     {
@@ -55,15 +57,22 @@ final class RichTextImages
         $sizes = is_string($sizes) && trim($sizes) !== '' ? trim($sizes) : null;
         $width = self::length($config['content_width'] ?? '46rem');
 
-        return preg_replace_callback(self::IMG, fn (array $tag): string => self::image($tag[0], $context, $sizes, $width), $html) ?? $html;
+        return preg_replace_callback(self::IMG, function (array $match) use ($context, $sizes, $width): string {
+            // A captioned image's presets are on its figure: <figure class="sunrice-img sunrice-img-w-50"><img class="rounded" …>.
+            $figure = $match[1] ?? '';
+            $presets = $figure === '' ? '' : (HtmlTag::attributes($figure)['class'] ?? '');
+
+            return $figure.self::image(substr($match[0], strlen($figure)), $context, $sizes, $width, $presets);
+        }, $html) ?? $html;
     }
 
     /**
      * The tag with the attributes it lacks, or as it is.
      *
      * @param  array{0: float, 1: string}|null  $width
+     * @param  string  $presets  the classes of the image's figure, when it's captioned
      */
-    private static function image(string $tag, HydrationContext $context, ?string $sizes, ?array $width): string
+    private static function image(string $tag, HydrationContext $context, ?string $sizes, ?array $width, string $presets = ''): string
     {
         if (! str_contains($tag, 'data-media-id')) {
             return $tag;
@@ -83,7 +92,7 @@ final class RichTextImages
         if (str_contains($srcset, ',')) {
             $added['srcset'] = $srcset;
             if (! isset($attributes['sizes'])) {
-                $added['sizes'] = $sizes ?? self::sizes($attributes['class'] ?? '', $width);
+                $added['sizes'] = $sizes ?? self::sizes(trim($presets.' '.($attributes['class'] ?? '')), $width);
             }
         }
         [$storedWidth, $storedHeight] = [$attributes['width'] ?? null, $attributes['height'] ?? null];

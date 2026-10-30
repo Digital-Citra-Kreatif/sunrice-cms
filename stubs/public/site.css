@@ -89,6 +89,12 @@ figure { margin: 1.5rem 0; }
 .sunrice-img-left { float: left; margin: 0.35rem 1.5rem 1.5rem 0; }
 .sunrice-img-right { float: right; margin: 0.35rem 0 1.5rem 1.5rem; }
 .sunrice-img-left:not([class*="sunrice-img-w-"]), .sunrice-img-right:not([class*="sunrice-img-w-"]) { max-width: 50%; }
+/* A captioned image: a <figure> with the presets, the picture filling the width they give it, the caption under it */
+figure.sunrice-img > img { display: block; max-width: 100%; height: auto; margin-inline: auto; }
+figure:is([class*="sunrice-img-w-"], .sunrice-img-full) > img { width: 100%; }
+figure.sunrice-img-center:not([class*="sunrice-img-w-"]) { width: fit-content; }
+.prose figure:is(.sunrice-img-left, .sunrice-img-right) { clear: none; }
+.prose figcaption { margin-top: 0.5rem; font-size: 0.875rem; color: var(--muted); }
 .prose::after { content: ""; display: block; clear: both; }
 .prose :is(h2, h3, h4, hr, pre, blockquote, figure) { clear: both; }
 /* Image styles of your own (config sunrice-admin.rich_text.image_classes, class => label), for example:

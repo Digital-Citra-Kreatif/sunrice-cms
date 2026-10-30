@@ -39,7 +39,7 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 | --- | --- | --- | --- |
 | `text` | a string | the string | `max` (≤ 255; none: values up to 65535 characters pass, so longer data saved before isn't refused), `placeholder`, `prefix`, `suffix`, `default` |
 | `textarea` | a string | the string | `rows`, `max`, `placeholder` |
-| `rich_text` | HTML, cleaned on save | the HTML, its media library images given `srcset`, `sizes`, dimensions and lazy loading ([rich text images](site.md#what-templates-get)) | |
+| `rich_text` | HTML, cleaned on save; a captioned image is a `<figure>` with its `<figcaption>` | the HTML, its media library images given `srcset`, `sizes`, dimensions and lazy loading ([rich text images](site.md#what-templates-get)) | |
 | `code` | a string, as typed (never cleaned) | the string | `language` (`html`, `css`, `javascript`, `json`, `plain`: what the editor highlights; `plain` by default), `max`, `placeholder`. Shared by all languages unless `translatable` ([below](#code-fields)) |
 | `number` | a number | the number | `min`, `max`, `step` (1 for whole numbers), `default`, `placeholder`, `prefix`, `suffix` |
 | `toggle` | true or false | the boolean | `default`; a required toggle must be on (a form's consent box: `accepted`) |
@@ -55,6 +55,17 @@ Each field is stored as JSON and read as a `Sunrice\Cms\Fields\Field`:
 | `entries` | an entry id (`null` or `[]` clears it), or a list with `multiple` | one `EntryTranslation` (or null), or with `multiple` a collection of them | `collections`, `multiple`, `max` |
 
 Rich text keeps only the formatting the editor produces: no scripts, styles or event handlers, and links only to web, mail and phone addresses or paths on the site. Links are checked the same way when saved and again when shown, so a link can never run script.
+
+### Rich text images
+
+Images come from the media library (the toolbar's image button) and keep their `data-media-id`, so the library knows where they're used (Used by) and pages make them responsive. Clicking an image opens its own menu: width (25, 50, 75 or 100% of the text), alignment, the site's image styles, a **Caption**, its alt text and removing it. The presets are classes, never inline styles ([the classes](site.md#what-templates-get)). An image with a caption is saved as a figure, the presets on the `<figure>` and the styles on the `<img>`; emptying the caption makes it a plain `<img>` again, and images without one are saved as they always were:
+
+```html
+<img src="/storage/media/saw.jpg" alt="A saw" class="sunrice-img sunrice-img-w-50 sunrice-img-left rounded" data-media-id="7">
+<figure class="sunrice-img sunrice-img-w-50 sunrice-img-left"><img src="/storage/media/saw.jpg" alt="A saw" class="rounded" data-media-id="7"><figcaption>An old saw</figcaption></figure>
+```
+
+The caption is plain text in the editor. When rich text is saved, a figure keeps only the image classes (the panel's `RichTextImageClasses`) and its caption only text and inline formatting; no other element keeps a `class`.
 
 ### Rich text links
 

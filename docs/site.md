@@ -148,6 +148,22 @@ Images in rich text may carry the editor's width and alignment presets as classe
 <img src="/storage/media/saw.jpg" alt="A saw" class="sunrice-img sunrice-img-w-50 sunrice-img-left" data-media-id="7">
 ```
 
+An image with a caption is a `<figure>` holding it and its `<figcaption>`: the presets go on the figure (so the caption floats and sizes with the picture) and the image styles stay on the `<img>`. Without a caption an image is a plain `<img>`, as above.
+
+```html
+<figure class="sunrice-img sunrice-img-w-50 sunrice-img-left"><img src="/storage/media/saw.jpg" alt="A saw" class="rounded" data-media-id="7"><figcaption>An old saw</figcaption></figure>
+```
+
+So the preset rules apply to `.sunrice-img` whatever the element; the starter templates' `site.css` adds these for figures (a floated figure doesn't clear the floats before it, as an image doesn't):
+
+```css
+figure.sunrice-img > img { display: block; max-width: 100%; height: auto; margin-inline: auto; }
+figure:is([class*="sunrice-img-w-"], .sunrice-img-full) > img { width: 100%; }
+figure.sunrice-img-center:not([class*="sunrice-img-w-"]) { width: fit-content; }
+.prose figure:is(.sunrice-img-left, .sunrice-img-right) { clear: none; }
+.prose figcaption { margin-top: 0.5rem; font-size: 0.875rem; color: var(--muted); }
+```
+
 Image styles are your own classes, listed with a label for the editor in the panel's config (see [Rich text](../../admin/docs/resources.md#rich-text)), written after the presets':
 
 ```php
@@ -160,12 +176,12 @@ Image styles are your own classes, listed with a label for the editor in the pan
 .prose img.shadow { box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.15); }
 ```
 
-Only these classes are kept on images when rich text is saved (any other class or `style` is dropped; a style taken out of the config is dropped the next time its text is saved), and images without a preset or style keep no class, so they show as before. Clear the floats after the text (`.prose::after { content: ""; display: block; clear: both; }`).
+Only these classes are kept on images and a captioned image's `<figure>` when rich text is saved (any other class or `style` is dropped, on every element; a style taken out of the config is dropped the next time its text is saved), and images without a preset or style keep no class, so they show as before. Clear the floats after the text (`.prose::after { content: ""; display: block; clear: both; }`).
 
 Images from the media library (those with `data-media-id`) are made responsive when templates get the HTML, never in what is stored: `$values`, `$entry->values()`, `Cms::toData()`, blocks, repeaters, groups, globals, terms, listing and index pages and previews all print the same. Each gets
 
 - `srcset`: the file's sizes that keep its proportions and the original (`Media::srcset()`), so the browser downloads the size it needs;
-- `sizes`: how wide it shows, from its width and alignment presets and the text's width (`sunrice-cms.rich_text.content_width`, `46rem` as in the starter templates): `sunrice-img-w-50` is `(min-width: 46rem) 23rem, 50vw`, a floated one (`sunrice-img-left`, `-right`) takes the full width under `40em` as the starter CSS makes it (`(min-width: 46rem) 23rem, (min-width: 40em) 50vw, 100vw`; without a width preset it counts as 50%), and an image without a preset the text's full width (`(min-width: 46rem) 46rem, 100vw`). Set `sunrice-cms.rich_text.sizes` to use one `sizes` for every image instead;
+- `sizes`: how wide it shows, from its width and alignment presets (a captioned image's are on its `<figure>`) and the text's width (`sunrice-cms.rich_text.content_width`, `46rem` as in the starter templates): `sunrice-img-w-50` is `(min-width: 46rem) 23rem, 50vw`, a floated one (`sunrice-img-left`, `-right`) takes the full width under `40em` as the starter CSS makes it (`(min-width: 46rem) 23rem, (min-width: 40em) 50vw, 100vw`; without a width preset it counts as 50%), and an image without a preset the text's full width (`(min-width: 46rem) 46rem, 100vw`). Set `sunrice-cms.rich_text.sizes` to use one `sizes` for every image instead;
 - `width` and `height` from the file when it has neither (one stored alone is kept, and the other added in proportion), so the page doesn't jump as images load. Style images with `height: auto` (the starter CSS does);
 - `loading="lazy"` and `decoding="async"`.
 
