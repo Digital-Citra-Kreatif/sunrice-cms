@@ -14,15 +14,20 @@ Pengaturan langsung berlaku begitu Anda mengeklik **Simpan**.
 - **Deskripsi**: dipakai jika halaman tidak punya sendiri.
 - **Deskripsi dalam bahasa lain** (jika ada lebih dari satu bahasa): satu kotak per bahasa, untuk halaman dalam bahasa itu. Kosong: deskripsi di atas.
 
+**Ikon dan logo**:
+
+- **Ikon situs**: gambar persegi, minimal 512 × 512 piksel (PNG atau JPEG), yang tampil di tab browser, bookmark, dan layar utama ponsel. Saat Anda menyimpan, situs web membuat ukuran-ukuran kecil yang dibutuhkan browser dan ponsel darinya; ikon baru tampil setelah browser pengunjung mengambilnya lagi (memuat ulang, atau beberapa saat kemudian). Kosong: ikon yang dipasang developer di situs, jika ada.
+- **Logo**: persegi atau melebar. Tampil di situs web di tempat yang ditampilkan desainnya (bagian atas setiap halaman, pada desain starter, menggantikan nama situs), di bagian atas email yang dikirim situs web dan admin (kode login, reset kata sandi, kiriman formulir, komentar…), dan untuk mesin pencari. Email tidak bisa menampilkan gambar SVG: dengan logo SVG, email mungkin menampilkan nama situs, jadi PNG adalah pilihan paling aman. Kosong: nama situs.
+
 **Bahasa** (jika ada lebih dari satu bahasa): **Tampilkan halaman yang belum diterjemahkan dalam bahasa utama** (menyala secara bawaan). Halaman yang belum diterjemahkan ke suatu bahasa lalu menampilkan isi bahasa utamanya di alamat bahasa tersebut (`/id/about`), sehingga tautan dan pengalih bahasa tetap berfungsi; jika dimatikan, halaman itu tidak ditemukan dalam bahasa tersebut dan daftar hanya menampilkan yang sudah diterjemahkan. Jika developer sudah mengaturnya di konfigurasi aplikasi, sakelarnya berwarna abu-abu. Lihat [Halaman yang belum diterjemahkan](guide:website/languages#halaman-yang-belum-diterjemahkan).
 
-Gambar berbagi, nama situs di judul beserta pemisahnya, akun X (Twitter), menyembunyikan seluruh situs dari mesin pencari, dan structured data ada di **Pengaturan → SEO**, tepat setelah Situs pada menu Pengaturan.
+Gambar berbagi, nama situs di judul beserta pemisahnya, akun X (Twitter), menyembunyikan seluruh situs dari mesin pencari, dan structured data ada di **Pengaturan → SEO**, tepat setelah Situs pada menu Pengaturan. Logo dulu dipilih di sana, di bawah Structured data: sekarang ada di sini, dan logonya tetap sama.
 
 ## SEO
 
 Apa yang dilihat mesin pencari dan tautan yang dibagikan dari situs web, dengan izin yang sama seperti **Situs**. **Mesin pencari dan berbagi** serta **Field yang dipakai untuk SEO** dijelaskan di [SEO](guide:website/seo#pengaturan-bawaan-situs).
 
-**Structured data**: **Tambahkan structured data ke halaman** (biarkan menyala kecuali ada alasan), apakah situs diterbitkan oleh organisasi atau perorangan (**Diterbitkan oleh**), dan **Logo** organisasi (persegi atau melebar, minimal 112 piksel). Mesin pencari juga menyukai detail penerbit: **Nama** (kosong: nama situs), **Jenis organisasi** (cari di daftar: *Usaha lokal*, *Agen properti*, *Restoran*…; atau pilih **Lainnya…** dan ketik jenis schema.org apa pun sebagai satu kata, misalnya *Brewery*), **Telepon**, **Alamat**, dan **Profil di tempat lain** (halaman Instagram, LinkedIn… penerbit: **Tambah profil** untuk masing-masing, alamat yang diawali https://; situsnya tampil di sebelahnya).
+**Structured data**: **Tambahkan structured data ke halaman** (biarkan menyala kecuali ada alasan), apakah situs diterbitkan oleh organisasi atau perorangan (**Diterbitkan oleh**; logo organisasi adalah **Logo** situs, yang diatur di **Pengaturan → Situs**). Mesin pencari juga menyukai detail penerbit: **Nama** (kosong: nama situs), **Jenis organisasi** (cari di daftar: *Usaha lokal*, *Agen properti*, *Restoran*…; atau pilih **Lainnya…** dan ketik jenis schema.org apa pun sebagai satu kata, misalnya *Brewery*), **Telepon**, **Alamat**, dan **Profil di tempat lain** (halaman Instagram, LinkedIn… penerbit: **Tambah profil** untuk masing-masing, alamat yang diawali https://; situsnya tampil di sebelahnya).
 
 ## Bahasa
 

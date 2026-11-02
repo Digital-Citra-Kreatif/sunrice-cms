@@ -5,6 +5,8 @@
     page has no SEO title of its own), description, noindex, author (an article's author for structured data: a name,
     or a node like ['@type' => 'Person', 'name' => …, 'url' => …]; default: who publishes the site).
     Structured data (JSON-LD) follows; :schema="[[ '@type' => 'Event', … ]]" adds nodes of the template's own.
+    With a site icon (Settings → Site), its <link rel="icon"> and <link rel="apple-touch-icon"> tags come first
+    (SiteSettings::iconLinks()); without one, none, and the app's public/favicon.ico is what browsers ask for.
 --}}
 @props(['entry' => null, 'term' => null, 'collection' => null, 'preview' => false, 'title' => null, 'defaultTitle' => null, 'description' => null, 'noindex' => false, 'schema' => [], 'author' => null])
 @php
@@ -17,6 +19,9 @@
     }, $title, $description, $defaultTitle, (bool) $noindex);
 @endphp
 <title>{{ $seo['title'] }}</title>
+@foreach (app(\Sunrice\Cms\Settings\SiteSettings::class)->iconLinks() as $icon)
+<link {{ new \Illuminate\View\ComponentAttributeBag(array_filter($icon, fn ($value) => $value !== null)) }}>
+@endforeach
 @if ($seo['description'])
 <meta name="description" content="{{ $seo['description'] }}">
 @endif

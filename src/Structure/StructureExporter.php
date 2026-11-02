@@ -186,7 +186,7 @@ final class StructureExporter
     private function siteSettings(): array
     {
         $values = array_intersect_key((new SiteSettings)->toArray(), array_flip(StructureImporter::SITE_SETTINGS));
-        foreach (['homepage' => Reference::ENTRY, 'logo' => Reference::MEDIA, 'image' => Reference::MEDIA] as $name => $type) {
+        foreach (['homepage' => Reference::ENTRY, 'logo' => Reference::MEDIA, 'icon' => Reference::MEDIA, 'image' => Reference::MEDIA] as $name => $type) {
             $values[$name] = is_int($values[$name] ?? null) ? $this->references->reference($type, $values[$name]) : null;
         }
 

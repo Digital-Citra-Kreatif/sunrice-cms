@@ -27,7 +27,14 @@
 
     <header class="site-header">
         <div class="container site-header-inner">
-            <a class="site-name" href="{{ $home }}" @if ($page?->home) aria-current="page" @endif>{{ \Sunrice\Cms\Content::site()->name() }}</a>
+            {{-- The site's logo (Settings → Site) when there is one, named by the site's name; else the name. --}}
+            <a class="site-name" href="{{ $home }}" @if ($page?->home) aria-current="page" @endif>
+                @if ($logo = \Sunrice\Cms\Content::site()->logoImage())
+                    <img class="site-logo" src="{{ $logo->url() }}" alt="{{ \Sunrice\Cms\Content::site()->name() }}"@if ($logo->width && $logo->height) width="{{ $logo->width }}" height="{{ $logo->height }}"@endif>
+                @else
+                    {{ \Sunrice\Cms\Content::site()->name() }}
+                @endif
+            </a>
             @if (($menu = cms_menu('main')) !== [])
                 <nav class="site-menu" aria-label="{{ __('Main') }}">
                     @include('cms.partials.menu', ['items' => $menu])

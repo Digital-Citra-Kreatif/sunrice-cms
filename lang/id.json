@@ -646,7 +646,7 @@
     "Someone else saved this entry after you opened it. Reload to see their changes.": "Orang lain menyimpan entri ini setelah Anda membukanya. Muat ulang untuk melihat perubahannya.",
     "Spam": "Spam",
     "Spam protection": "Perlindungan spam",
-    "Square or wide, at least 112 pixels.": "Persegi atau lebar, minimal 112 piksel.",
+    "Square, at least 512 × 512 pixels; shown in browser tabs, bookmarks and on phones' home screens. PNG or JPEG; an SVG or ICO is used as it is.": "Persegi, minimal 512 × 512 piksel; tampil di tab browser, bookmark, dan layar utama ponsel. PNG atau JPEG; SVG atau ICO dipakai apa adanya.",
     "Status": "Status",
     "Step": "Kelipatan",
     "Still to do before the site goes live": "Yang masih perlu dikerjakan sebelum situs tayang",
@@ -712,7 +712,7 @@
     "the fieldset \":title\"": "fieldset \":title\"",
     "the form \":title\"": "formulir \":title\"",
     "the global set \":title\"": "set global \":title\"",
-    "The homepage, and the site's name and description.": "Beranda, serta nama dan deskripsi situs.",
+    "The homepage, and the site's name, description, icon and logo.": "Beranda, serta nama, deskripsi, ikon, dan logo situs.",
     "The languages content is written in, the main one first.": "Bahasa yang dipakai untuk menulis konten, bahasa utama lebih dulu.",
     "The listing page has no fields of its own: choose a listing blueprint for the collection under Structure → Collections.": "Halaman daftar tidak punya field sendiri: pilih blueprint halaman daftar untuk koleksi di Struktur → Koleksi.",
     "the listing page of \":title\"": "halaman daftar \":title\"",
@@ -810,7 +810,7 @@
     "Website": "Situs web",
     "What search engines and shared links see of the site, and the structured data that tells them what its pages are.": "Apa yang dilihat mesin pencari dan tautan yang dibagikan dari situs, serta structured data yang memberi tahu mereka apa saja halamannya.",
     "What search engines are told its entries are. Empty: Article if dated, else Web page.": "Jenis entri yang diberitahukan ke mesin pencari. Kosong: Artikel jika bertanggal, selain itu Halaman web.",
-    "What search engines are told pages are (schema.org), for richer results: articles, breadcrumbs, the site's search box.": "Jenis halaman yang diberitahukan ke mesin pencari (schema.org), untuk hasil yang lebih kaya: artikel, breadcrumb, kotak pencarian situs.",
+    "What search engines are told pages are (schema.org), for richer results: articles, breadcrumbs, the site's search box. An organization's logo is the site's, set in Settings → Site.": "Jenis halaman yang diberitahukan ke mesin pencari (schema.org), untuk hasil yang lebih kaya: artikel, breadcrumb, kotak pencarian situs. Logo organisasi adalah logo situs, yang diatur di Pengaturan → Situs.",
     "What the listing page's filters put after the ? in its address. Each language's link gets them, and a term may be named by its slug in any language.": "Yang ditambahkan filter halaman daftar setelah ? di alamatnya. Tautan setiap bahasa mendapatkannya, dan term boleh disebut dengan slug-nya dalam bahasa apa pun.",
     "What visitors read in :language on its term pages.": "Yang dibaca pengunjung dalam :language di halaman term-nya.",
     "What visitors read in :language: the listing page, breadcrumbs, menus.": "Yang dibaca pengunjung dalam :language: halaman daftar, breadcrumb, menu.",
@@ -1376,5 +1376,8 @@
     "Search engines are asked not to index this site, so it won't appear in Google and other search results. If the site is live, turn off \":setting\" in SEO settings.": "Mesin pencari diminta tidak mengindeks situs ini, jadi situs tidak akan muncul di Google dan hasil pencarian lainnya. Jika situs sudah tayang, matikan \":setting\" di pengaturan SEO.",
     "SUNRICE_NOINDEX is on in the .env file, so search engines are asked not to index this site and it won't appear in Google and other search results. If the site is live, set SUNRICE_NOINDEX=false in .env, then run php artisan config:cache.": "SUNRICE_NOINDEX menyala di file .env, jadi mesin pencari diminta tidak mengindeks situs ini dan situs tidak akan muncul di Google dan hasil pencarian lainnya. Jika situs sudah tayang, setel SUNRICE_NOINDEX=false di .env, lalu jalankan php artisan config:cache.",
     "Search engines are asked not to index this site, so it won't appear in Google and other search results. If the site is live, turn this off.": "Mesin pencari diminta tidak mengindeks situs ini, jadi situs tidak akan muncul di Google dan hasil pencarian lainnya. Jika situs sudah tayang, matikan ini.",
-    "SUNRICE_NOINDEX is on in the .env file, so the site is hidden from search engines whatever this says.": "SUNRICE_NOINDEX menyala di file .env, jadi situs tetap tersembunyi dari mesin pencari apa pun pilihan di sini."
+    "SUNRICE_NOINDEX is on in the .env file, so the site is hidden from search engines whatever this says.": "SUNRICE_NOINDEX menyala di file .env, jadi situs tetap tersembunyi dari mesin pencari apa pun pilihan di sini.",
+    "Icon and logo": "Ikon dan logo",
+    "Site icon": "Ikon situs",
+    "Shown on the site (where its templates show it), at the top of the emails it sends and to search engines. Square or wide; emails show a PNG made from it (not from an SVG).": "Tampil di situs (di tempat yang ditampilkan template-nya), di bagian atas email yang dikirim, dan untuk mesin pencari. Persegi atau lebar; email menampilkan PNG yang dibuat darinya (tidak dari SVG)."
 }

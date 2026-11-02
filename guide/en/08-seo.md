@@ -25,7 +25,7 @@ A term's own page and a collection's listing page have the same **SEO** card: in
 
 ## The site's defaults
 
-**Settings → Site** holds the **Site name** and a **Description**, used by pages that don't have their own. The homepage's title is the site name. See [The website's settings](guide:website/settings#site).
+**Settings → Site** holds the **Site name** and a **Description**, used by pages that don't have their own, and the site's **Logo** and **Site icon**. The homepage's title is the site name. See [The website's settings](guide:website/settings#site).
 
 **Settings → SEO** (next to Site in the Settings menu) holds the rest. In **Search engines and sharing**: the **Default share image**, whether to **Add the site name to page titles** and the **Separator** between them (the `|` in "About | Acme"), and the site's **X (Twitter) account**. Below it, **Fields used for SEO** says, for each collection and taxonomy, which of their fields fill in an empty meta title, description or share image.
 

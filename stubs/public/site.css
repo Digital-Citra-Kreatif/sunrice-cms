@@ -55,6 +55,7 @@ main:focus { outline: none; }
 .site-header { border-bottom: 1px solid var(--border); background: var(--surface); }
 .site-header-inner { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.5rem; padding-block: 1rem; }
 .site-name { color: var(--text); font-weight: 600; text-decoration: none; margin-right: auto; }
+.site-logo { display: block; width: auto; height: 2.5rem; max-width: 12rem; object-fit: contain; object-position: left center; }
 .site-menu ul, .site-footer nav ul, .language-switcher ul { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; margin: 0; padding: 0; list-style: none; }
 .site-menu li { position: relative; }
 .site-menu a { color: var(--text); text-decoration: none; }

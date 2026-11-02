@@ -40,12 +40,12 @@ final class MediaUsage
             "Globals: {$set->title} (".strtoupper($value->locale).')', $url, $value->locale);
     }
 
-    /** Settings → SEO's share image and structured data logo (SiteSettings), as "Settings: SEO". */
+    /** Settings → SEO's share image (SiteSettings), as "Settings: SEO"; the logo is Settings → Site's (SaveSettings records it). */
     public static function seo(): void
     {
         $site = new SiteSettings;
         $url = Route::has('sunrice.admin.settings.seo.edit') ? route('sunrice.admin.settings.seo.edit') : null;
-        app(MediaUsages::class)->sync('cms.settings', 'seo', array_values(array_filter([$site->image, $site->logo], is_int(...))), 'Settings: SEO', $url);
+        app(MediaUsages::class)->sync('cms.settings', 'seo', $site->image !== null ? [$site->image] : [], 'Settings: SEO', $url);
     }
 
     /**

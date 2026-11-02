@@ -11,6 +11,7 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -137,6 +138,13 @@ final class CmsServiceProvider extends ServiceProvider
                 Event::listen("eloquent.{$event}: {$class}", fn () => Support\ScopedPermissions::flush());
             }
         }
+        // The site icon's sizes and the logo's PNG for emails, made once when they're chosen (after the
+        // save commits). Before ContentWatch, which then clears the pages kept with the old <head>.
+        Event::listen(SettingsSaved::class, function (SettingsSaved $event): void {
+            if ($event->section === Settings\SiteSettings::key() && array_intersect($event->changed, ['icon', 'logo']) !== []) {
+                DB::afterCommit(fn () => app(Actions\Settings\MakeSiteImages::class)->handle());
+            }
+        });
         // Changes to what the site shows clear its caches.
         Support\ContentWatch::register();
         // A new homepage: forget the one read.
@@ -145,7 +153,8 @@ final class CmsServiceProvider extends ServiceProvider
                 app(Site\Site::class)->flush();
             }
         });
-        // The share image and logo: used by Settings → SEO, where they're chosen (not on Settings → Site's form).
+        // The share image: used by Settings → SEO, where it's chosen (not on Settings → Site's form, whose
+        // icon and logo SaveSettings records). The logo was chosen there before: a changed one leaves it.
         Event::listen(SettingsSaved::class, function (SettingsSaved $event): void {
             if ($event->section === Settings\SiteSettings::key() && array_intersect($event->changed, ['image', 'logo']) !== []) {
                 Support\MediaUsage::seo();

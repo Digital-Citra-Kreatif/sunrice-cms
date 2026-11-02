@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Settings;
 
+use Illuminate\Support\Facades\Storage;
+use Sunrice\Admin\Media\Media;
 use Sunrice\Admin\Resources\Forms\Form;
 use Sunrice\Admin\Resources\Forms\ListInput;
 use Sunrice\Admin\Resources\Forms\MediaPicker;
@@ -14,18 +16,23 @@ use Sunrice\Admin\Resources\Forms\Textarea;
 use Sunrice\Admin\Resources\Forms\TextInput;
 use Sunrice\Admin\Resources\Forms\Toggle;
 use Sunrice\Admin\Settings\Settings;
+use Sunrice\Admin\Support\AppUrl;
+use Sunrice\Cms\Actions\Settings\MakeSiteImages;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Site\Site;
 use Sunrice\Cms\Support\Locales;
 
 /**
- * Settings → Site, guarded by cms.settings.site: the homepage, and what
- * search results and shared links show when a page doesn't say (see Seo).
- * Settings → SEO edits the search and sharing settings and the
- * structured data ones (structuredDataForm()), stored here too.
+ * Settings → Site, guarded by cms.settings.site: the homepage, the site's
+ * icon and logo, and what search results and shared links show when a
+ * page doesn't say (see Seo). Settings → SEO edits the search and sharing
+ * settings and the structured data ones (structuredDataForm()), stored
+ * here too.
  *
  *     Cms::site()->name()
+ *     Cms::site()->logoImage()   // the logo (Media), or null
+ *     Cms::site()->iconUrl(192)  // the icon as a 192 pixel PNG, or null
  *
  * @api
  */
@@ -70,8 +77,18 @@ final class SiteSettings extends Settings
     /** Who publishes the site: Organization or Person. */
     public string $publisher = 'Organization';
 
-    /** The organization's logo (media id), for structured data. */
+    /**
+     * The site's logo (media id): for templates (logoImage()), emails (a
+     * PNG made when it's saved, emailLogo()) and structured data.
+     */
     public ?int $logo = null;
+
+    /**
+     * The site icon (media id, a square image): browser tabs, bookmarks and
+     * home screens. Its PNG sizes are made when it's saved (iconLinks(),
+     * iconUrl()).
+     */
+    public ?int $icon = null;
 
     /** The publisher's name in structured data; empty: the site name. */
     public string $publisherName = '';
@@ -132,7 +149,7 @@ final class SiteSettings extends Settings
 
     public static function description(): string
     {
-        return 'The homepage, and the site\'s name and description.';
+        return 'The homepage, and the site\'s name, description, icon and logo.';
     }
 
     public static function form(Form $form): Form
@@ -147,6 +164,12 @@ final class SiteSettings extends Settings
                 ...(count(Locales::all()) > 1 ? [Pairs::make('descriptions')->label('Description in other languages')->maxLength(3000)->span(2)
                     ->fixed(array_slice(Locales::names(), 1, null, true))
                     ->help('What pages in each language say about the site. Empty: the description above.')] : []),
+            ]),
+            Section::make('Icon and logo')->columns(2)->schema([
+                MediaPicker::make('icon')->label('Site icon')->images()
+                    ->help('Square, at least 512 × 512 pixels; shown in browser tabs, bookmarks and on phones\' home screens. PNG or JPEG; an SVG or ICO is used as it is.'),
+                MediaPicker::make('logo')->label('Logo')->images()
+                    ->help('Shown on the site (where its templates show it), at the top of the emails it sends and to search engines. Square or wide; emails show a PNG made from it (not from an SVG).'),
             ]),
             // Only matters with other languages; SUNRICE_FALLBACK, when set, decides instead.
             ...(count(Locales::all()) > 1 ? [Section::make('Languages')->schema([
@@ -165,10 +188,9 @@ final class SiteSettings extends Settings
     public static function structuredDataForm(Form $form): Form
     {
         return $form->schema([
-            Section::make('Structured data')->description('What search engines are told pages are (schema.org), for richer results: articles, breadcrumbs, the site\'s search box.')->columns(2)->schema([
+            Section::make('Structured data')->description('What search engines are told pages are (schema.org), for richer results: articles, breadcrumbs, the site\'s search box. An organization\'s logo is the site\'s, set in Settings → Site.')->columns(2)->schema([
                 Toggle::make('structuredData')->label('Add structured data to pages')->span(2),
                 Select::make('publisher')->label('Published by')->options(['Organization' => 'An organization', 'Person' => 'A person']),
-                MediaPicker::make('logo')->label('Logo')->images()->help('Square or wide, at least 112 pixels.'),
                 TextInput::make('publisherName')->label('Name')->maxLength(150)->placeholder(self::appName())
                     ->help('Empty: the site name.'),
                 Select::make('publisherType')->label('Organization type')->options(self::ORGANIZATION_TYPES)->searchable()
@@ -182,6 +204,93 @@ final class SiteSettings extends Settings
                     ->help('The publisher\'s pages on other sites: Instagram, LinkedIn, Wikipedia…'),
             ]),
         ]);
+    }
+
+    /**
+     * The site icon's tags for the page's <head>, as <x-sunrice-cms::seo>
+     * prints them: PNGs of 32 and 16 pixels and the 180 pixel
+     * apple-touch-icon (an SVG or ICO as it is). None without an icon.
+     *
+     * @return list<array{rel: string, type: string|null, sizes: string|null, href: string}>
+     */
+    public function iconLinks(): array
+    {
+        $made = (new SiteImages)->icon;
+        if ($this->icon === null || ($made['media'] ?? null) !== $this->icon) {
+            return [];
+        }
+        $links = [];
+        if (($any = self::madeUrl($made, 'any')) !== null) {
+            $type = is_string($made['type'] ?? null) ? $made['type'] : null;
+            $links[] = ['rel' => 'icon', 'type' => $type, 'sizes' => $type === 'image/svg+xml' ? 'any' : null, 'href' => $any];
+        }
+        foreach ([32, 16] as $size) {
+            if (($url = self::madeUrl($made, (string) $size)) !== null) {
+                $links[] = ['rel' => 'icon', 'type' => 'image/png', 'sizes' => "{$size}x{$size}", 'href' => $url];
+            }
+        }
+        if (($url = self::madeUrl($made, (string) MakeSiteImages::APPLE_TOUCH)) !== null) {
+            $links[] = ['rel' => 'apple-touch-icon', 'type' => null, 'sizes' => '180x180', 'href' => $url];
+        }
+
+        return $links;
+    }
+
+    /**
+     * The site icon as a square PNG: 16, 32, 180 (on an opaque background),
+     * 192 or 512 pixels; null without an icon, for an SVG or ICO icon, or
+     * another size. A new icon has new URLs.
+     */
+    public function iconUrl(int $size = 512): ?string
+    {
+        $made = (new SiteImages)->icon;
+
+        return $this->icon !== null && ($made['media'] ?? null) === $this->icon ? self::madeUrl($made, (string) $size) : null;
+    }
+
+    /**
+     * The site's logo, a media file (url(), srcset(), width, height,
+     * altIn()), or null without one (or when it's no longer an image in
+     * the library). Runs one query. In a template, show it named by the
+     * site's name (alt="{{ Cms::site()->name() }}"), else the name: the
+     * CMS's starter layout does.
+     */
+    public function logoImage(): ?Media
+    {
+        $media = $this->logo === null ? null : Media::query()->find($this->logo);
+
+        return $media instanceof Media && $media->isImage() ? $media : null;
+    }
+
+    /**
+     * The logo's PNG for emails: its absolute URL and pixel size (twice
+     * the size it's shown at), or null without a logo or when none could
+     * be made (an SVG without Imagick). The panel's emails show it (the
+     * CMS gives it to Panel::mailBrandUsing()).
+     *
+     * @return array{url: string, width: int, height: int}|null
+     */
+    public function emailLogo(): ?array
+    {
+        $made = (new SiteImages)->logo;
+        $disk = $made['disk'] ?? null;
+        $path = $made['path'] ?? null;
+        $width = $made['width'] ?? null;
+        $height = $made['height'] ?? null;
+        if ($this->logo === null || ($made['media'] ?? null) !== $this->logo || ! is_string($disk) || ! is_string($path) || ! is_int($width) || ! is_int($height)) {
+            return null;
+        }
+
+        return ['url' => AppUrl::url(url(Storage::disk($disk)->url($path))), 'width' => $width, 'height' => $height];
+    }
+
+    /** @param array<string, mixed> $made a SiteImages entry */
+    private static function madeUrl(array $made, string $size): ?string
+    {
+        $disk = $made['disk'] ?? null;
+        $path = is_array($made['files'] ?? null) ? ($made['files'][$size] ?? null) : null;
+
+        return is_string($disk) && is_string($path) ? Storage::disk($disk)->url($path) : null;
     }
 
     /** @return list<string> the profile addresses (sameAs), one per line */

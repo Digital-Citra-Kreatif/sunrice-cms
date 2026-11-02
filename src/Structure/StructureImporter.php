@@ -100,7 +100,7 @@ final class StructureImporter
      * which are the app's own or hold addresses and keys.
      */
     public const SITE_SETTINGS = ['homepage', 'name', 'description', 'descriptions', 'separator', 'appendName', 'image', 'twitter',
-        'fallback', 'structuredData', 'publisher', 'logo', 'publisherName', 'publisherType', 'telephone', 'address', 'sameAs'];
+        'fallback', 'structuredData', 'publisher', 'logo', 'icon', 'publisherName', 'publisherType', 'telephone', 'address', 'sameAs'];
 
     /** A collection's settings in the file. */
     public const COLLECTION = ['handle', 'title', 'blueprint', 'blueprints', 'dated', 'translatable', 'ordered', 'hierarchical', 'route', 'listing_route', 'listing_blueprint', 'per_page', 'comments', 'schema_type', 'template', 'listing_template', 'translations', 'routes', ...self::SEO_FIELDS];

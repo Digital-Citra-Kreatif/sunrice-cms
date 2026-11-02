@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <body style="font-family: sans-serif; color: #111;">
+    <x-sunrice-admin::mail-brand />
     <p>Someone sent the <strong>{{ $form->title }}</strong> form in {{ $language }}@if ($page), from <a href="{{ $page }}">{{ $page }}</a>@endif:</p>
     <table cellpadding="6" style="border-collapse: collapse;">
         @foreach ($rows as $row)

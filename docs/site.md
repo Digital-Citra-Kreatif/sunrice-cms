@@ -360,7 +360,7 @@ On the CMS's pages it reads the page shown (entry, term or listing page; or name
 
 **SEO from fields**: **Settings → SEO** (`/admin/settings/seo`, routes `sunrice.admin.settings.seo.edit` and `.update`, `cms.settings.site`, in the Settings menu after Site: `Panel::settingsPage('seo', …, after: 'site')`; the old `/admin/cms/seo` redirects there (301); a collection's and taxonomy's rows for those who may edit them, `cms.collections.update`, `cms.taxonomies.update`) names, for each collection and taxonomy, the fields that fill in what an entry's or term page's SEO card leaves empty: a text field for the title, a text or textarea field for the description (plain text, at most 300 characters) and a media field whose first image is the share image (`seo_title_field`, `seo_description_field`, `seo_image_field`). A listing page has a **Search and sharing** card of its own on its page in the admin (stored per language with the listing page's fields, under `seo`), read by `Seo::forListing()`; its title falls back to the collection's. So does each taxonomy index page (`Seo::forTaxonomyIndex()`, its title falling back to the taxonomy's).
 
-**Settings → Site** (`cms.settings.site`) holds the homepage, the site name (else `app.name`) and a description; **Settings → SEO** the rest of what pages don't set: hiding the whole site from search engines, a share image, whether titles get the site name and its separator, the site's X account (`twitter:site`) and [structured data](#structured-data), all stored in `SiteSettings` (`app(SiteSettings::class)->structuredData`, `->publisher` … as before). In code, `Actions\Seo\SaveSeoSettings` (`@api`) saves that page: `site`, `structured` (the structured data fields of `SiteSettings::structuredDataForm()`, optional, checked as the page checks them) and `mappings`. The media library lists the share image and the logo as used by "Settings: SEO". The homepage's title is the site name. `Cms::site()` gives these settings to templates (`->name()`, `->title('About')`).
+**Settings → Site** (`cms.settings.site`) holds the homepage, the site name (else `app.name`), a description, and the [site icon and logo](#site-icon-and-logo); **Settings → SEO** the rest of what pages don't set: hiding the whole site from search engines, a share image, whether titles get the site name and its separator, the site's X account (`twitter:site`) and [structured data](#structured-data), all stored in `SiteSettings` (`app(SiteSettings::class)->structuredData`, `->publisher` … as before). In code, `Actions\Seo\SaveSeoSettings` (`@api`) saves that page: `site`, `structured` (the structured data fields of `SiteSettings::structuredDataForm()`, optional, checked as the page checks them) and `mappings`. The media library lists the share image as used by "Settings: SEO", and the icon and logo by "Settings: Site". The homepage's title is the site name. `Cms::site()` gives these settings to templates (`->name()`, `->title('About')`).
 
 *Hide the whole site from search engines* (or `SUNRICE_NOINDEX=true`, config `sunrice-cms.seo.noindex`, for a staging copy) marks every page noindex, also in an `X-Robots-Tag` header, and empties the sitemap. So it isn't left on by mistake at launch, the dashboard warns site managers while the setting is on, and about `SUNRICE_NOINDEX` in production (`cms.seo.noindex`, see [the dashboard](collections.md#the-dashboard)); the SEO settings page says so beside the switch.
 
@@ -372,7 +372,7 @@ Past the first page of a listing, term or search page, the canonical and `hrefla
 
 The seo component also prints structured data (schema.org, as JSON-LD), so search engines know what pages are and can show richer results:
 
-- every page: the **WebSite** (one per language: its `@id` is the language's home), with its search box (a SearchAction, when the search page is on), and who publishes it (Settings → SEO → Structured data, which can also turn it all off): an **Organization**, or the more specific type chosen as **Organization type** (a searchable list of common ones, `SiteSettings::ORGANIZATION_TYPES`: `LocalBusiness`, `RealEstateAgent` …; **Other…** takes any schema.org type written as one word), with its logo, or a **Person**; with its **Name** (else the site name), phone, address (as text) and profiles elsewhere (`sameAs`, https addresses, edited as a list and kept one per line; `SiteSettings::profiles()`);
+- every page: the **WebSite** (one per language: its `@id` is the language's home), with its search box (a SearchAction, when the search page is on), and who publishes it (Settings → SEO → Structured data, which can also turn it all off): an **Organization**, or the more specific type chosen as **Organization type** (a searchable list of common ones, `SiteSettings::ORGANIZATION_TYPES`: `LocalBusiness`, `RealEstateAgent` …; **Other…** takes any schema.org type written as one word), with the site's logo (Settings → Site), or a **Person**; with its **Name** (else the site name), phone, address (as text) and profiles elsewhere (`sameAs`, https addresses, edited as a list and kept one per line; `SiteSettings::profiles()`);
 - entries: an **Article** (dated collections) or a **WebPage**, or the collection's **Structured data type** (Structure → Collections: Article, Blog post, News article, Web page, About page, Contact page, Real estate listing; or a thing the page is about: Person, on a **ProfilePage**, Place, on a **WebPage**, Product, on an **ItemPage**, as the page's `mainEntity` with its name, URL, description and share image, `@id` the page's URL with `#main`, so a template's node with that `@id` adds to it: `:schema="[['@id' => $entry->url().'#main', 'offers' => [...]]]"`). Articles get a headline, publish and change dates, the share image, author and publisher (the author is who publishes the site, unless the template names one: `author="Ayu Lestari"` for a Person, or a node of its own, `:author="['@type' => 'Person', 'name' => $agent->title, 'url' => $agent->url()]"`);
 - **BreadcrumbList**: Home (`sunrice-cms::site.home`), the collection's listing page (its title in the page's language), parent entries (as visitors in that language see them), the page;
 - listing, term and taxonomy index pages: a **CollectionPage** (a collection's index page under its listing page in the breadcrumbs); the search page: a **SearchResultsPage**.
@@ -389,6 +389,46 @@ A template adds nodes of its own (an event, a product, FAQs) with `:schema`:
 ```
 
 What's printed can't end the script (`<`, `>`, `&` and quotes are escaped). `Sunrice\Cms\Support\StructuredData::graph($page, $extra, $author)` gives the nodes as an array. Turn it off in Settings → SEO (`SiteSettings::$structuredData`).
+
+### Site icon and logo
+
+**Settings → Site → Icon and logo** holds two images from the media library, stored as media ids in `SiteSettings` (`icon`, `logo`):
+
+- **Site icon**: square, at least 512 × 512 pixels; browser tabs, bookmarks and phones' home screens. When it's saved (and when a [structure import](structure.md) or a starter sets it), the CMS makes it once into 16 and 32 pixel PNGs, a 180 pixel `apple-touch-icon` on an opaque background (white where the image is transparent) and 192 and 512 pixel PNGs, with `intervention/image` (GD, or Imagick when installed), on the image's disk (the public disk) under `sunrice-site/icon-{id}-{version}-{random}/`. A new icon (or a new version of the same image) gets a new folder, so new URLs that browsers fetch again, and the old folder's files are deleted. An SVG or ICO is used as it is, with no sizes made. A non-square image is fitted in the square, with transparent space.
+- **Logo**: square or wide; the site's one logo, for templates, emails and search engines (the structured data's Organization logo; it used to be chosen on Settings → SEO, and is the same setting). When it's saved, the CMS makes a PNG for emails, which don't show SVGs: 96 pixels tall (twice the 48 it's shown at), at most 480 wide, its proportions kept, under `sunrice-site/logo-…/logo-email.png`. An SVG logo gets one only where Imagick reads SVGs; else emails show the site's name. A logo chosen before 0.5 gets its PNG when the first email needs it.
+
+Where the files are is kept in a settings row of its own (`site-images`), so pages print the links without looking at the disk; structure files carry the two images (`{"media": "<path>"}`) but never the files made from them, which an import makes again.
+
+[`<x-sunrice-cms::seo>`](#seo) prints the icon's tags first, after the `<title>`, only when there's an icon (with none, nothing: browsers ask for the app's `public/favicon.ico`, which keeps working):
+
+```html
+<link rel="icon" type="image/png" sizes="32x32" href="…/icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="…/icon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="…/apple-touch-icon.png">
+```
+
+(an SVG icon: `<link rel="icon" type="image/svg+xml" sizes="any" href="…">`). No web app manifest is made. For templates, through `Cms::site()` (`SiteSettings`, `@api`):
+
+| Method | Gives |
+| --- | --- |
+| `iconUrl(int $size = 512)` | The icon as a square PNG: 16, 32, 180, 192 or 512 pixels; null without an icon, for an SVG or ICO icon or another size. |
+| `iconLinks()` | The tags above, as `['rel' => …, 'type' => …, 'sizes' => …, 'href' => …]` (null for what a tag leaves out). |
+| `logoImage()` | The logo, a media file (`url()`, `srcset()`, `width`, `height`), or null. Runs one query. |
+| `emailLogo()` | The logo's PNG for emails: `['url' => …, 'width' => …, 'height' => …]` (absolute URL, pixel size), or null. |
+
+Show the logo named by the site's name, and the name without one, as the starter layout does:
+
+```blade
+<a class="site-name" href="{{ url('/') }}">
+    @if ($logo = Cms::site()->logoImage())
+        <img class="site-logo" src="{{ $logo->url() }}" alt="{{ Cms::site()->name() }}"@if ($logo->width && $logo->height) width="{{ $logo->width }}" height="{{ $logo->height }}"@endif>
+    @else
+        {{ Cms::site()->name() }}
+    @endif
+</a>
+```
+
+**Emails**: the CMS gives the panel's emails ([the logo at the top of emails](../../admin/docs/mail.md#the-logo-at-the-top-of-emails)) the site's name and the logo's PNG, in place of Settings → Branding's, so login codes, password resets, invitations and test emails show the site's brand; so do the CMS's own (form submissions, comments, reviews), which put `<x-sunrice-admin::mail-brand />` at their top. Without a logo (or with an SVG one and no Imagick) they show the site's name.
 
 ## Site code
 
@@ -568,7 +608,7 @@ Each term has `entries_count` (its live entries in the current language). `$comp
 
 #### `<x-sunrice-cms::seo>`
 
-See [SEO](#seo): `entry` with `preview`, `term`, `collection` (a `Collection` or handle: its listing page), or none (the page shown); `title` (instead of the page's), `default-title` (when the page has no SEO title of its own), `description` (instead of the page's), `noindex` (keep this page out of search results), `author` (an article's author: a name or a schema.org node), `schema` (JSON-LD nodes of your own). Titles and descriptions given are taken as plain text.
+See [SEO](#seo) (and the [site icon](#site-icon-and-logo)'s tags it prints): `entry` with `preview`, `term`, `collection` (a `Collection` or handle: its listing page), or none (the page shown); `title` (instead of the page's), `default-title` (when the page has no SEO title of its own), `description` (instead of the page's), `noindex` (keep this page out of search results), `author` (an article's author: a name or a schema.org node), `schema` (JSON-LD nodes of your own). Titles and descriptions given are taken as plain text.
 
 #### `<x-sunrice-cms::search>`
 

@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 use Sunrice\Admin\Assets\PluginBundle;
 use Sunrice\Admin\BasePlugin;
 use Sunrice\Admin\Console\InstallOutput;
+use Sunrice\Admin\Mail\MailBrand;
 use Sunrice\Admin\Navigation\NavigationItem;
 use Sunrice\Admin\Panel;
 use Sunrice\Admin\Permissions\Permission;
@@ -97,6 +98,8 @@ final class CmsPlugin extends BasePlugin
         $panel->settingsPage('seo', 'SEO', SeoController::class, 'cms.settings.site', after: 'site', fields: SaveSeoSettings::structuredData(...));
         // Each permission for one collection, taxonomy or form too (see Support\Access).
         $panel->permissionsUsing(fn (): array => Support\ScopedPermissions::all());
+        // The top of every email: the site's name and logo (its PNG for emails), not the panel's branding.
+        $panel->mailBrandUsing(fn (): MailBrand => Support\SiteMailBrand::make());
         // Media files take alt text and captions in each content language.
         $panel->contentLocales(fn (): array => Locales::names());
         // Every screen names the languages as Settings → Languages does.

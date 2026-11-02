@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <body style="font-family: sans-serif; color: #111;">
+    <x-sunrice-admin::mail-brand />
     @if ($changes)
     <p><strong>{{ $requester }}</strong> asks you to review the unpublished changes to <strong>{{ $title }}</strong> ({{ $collection }}) and publish them when they're ready. Visitors see the live page until then.</p>
     @else

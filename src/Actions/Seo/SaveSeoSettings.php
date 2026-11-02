@@ -25,8 +25,9 @@ use Sunrice\Cms\Settings\SiteSettings;
  *
  * Input: `site` (noindex, appendName, separator, twitter, image),
  * `structured` (optional: SiteSettings::structuredDataForm()'s fields,
- * structuredData, publisher, logo, publisherName, publisherType,
- * telephone, address, sameAs; checked as Settings pages check theirs)
+ * structuredData, publisher, publisherName, publisherType, telephone,
+ * address, sameAs; checked as Settings pages check theirs; the logo
+ * structured data uses is Settings → Site's)
  * and `mappings`, a list of {kind: collection|taxonomy, id, title,
  * description, image}. Every error is reported at once; nothing is saved
  * then.
