@@ -268,6 +268,7 @@ The CMS adds these widgets to the panel's [dashboard](../../admin/docs/panel.md#
 
 | Widget | Shows | Who sees it |
 | --- | --- | --- |
+| `cms.seo.noindex` (a [notice](../../admin/docs/panel.md#notices), above the tiles) | A warning when the site asks search engines not to index it: always when Settings → SEO's *Hide the whole site from search engines* is on, with a link there; when only `SUNRICE_NOINDEX` (config `sunrice-cms.seo.noindex`) is, only where `APP_ENV` is `production`, saying it comes from the `.env` file (on staging that's what it's for). | `cms.settings.site`, as the SEO settings page. |
 | `cms.collections` (Content) | Each collection's entries in the main language: live, drafts and scheduled, linking to its list. | Users who may view some collection's entries. |
 | `cms.setup` (Getting the site ready) | What's left to set up a new site: the first entries, the homepage, menus without links; gone once done. | `cms.settings.site` |
 | `cms.review` (Waiting for review) | Drafts sent for review (**Submit for review**), oldest first, with who sent them and how many wait. | Users who may publish in some collection; each sees the collections they may publish in. |
@@ -276,4 +277,4 @@ The CMS adds these widgets to the panel's [dashboard](../../admin/docs/panel.md#
 | `cms.scheduled` (Coming up) | The next eight entries scheduled to go live. | Users who may view some collection's entries. |
 | `cms.submissions` (Latest submissions) | The last eight submissions of the forms the user may read, each summed up by its first text field. | `cms.submissions.view`, or a form's own. |
 
-Each reads its data in one query (the comments widget a second one for signed-in commenters' names, the review widget a count and the requesters' names), after the page has painted. Entries in the trash and deleted collections are left out.
+The notice reads the site settings and config only, with the page. Each of the others reads its data in one query (the comments widget a second one for signed-in commenters' names, the review widget a count and the requesters' names), after the page has painted. Entries in the trash and deleted collections are left out.

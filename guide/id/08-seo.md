@@ -29,7 +29,7 @@ Halaman sebuah term dan halaman daftar sebuah koleksi memiliki kartu **SEO** yan
 
 **Pengaturan → SEO** (di sebelah Situs pada menu Pengaturan) menyimpan sisanya. Di **Mesin pencari dan berbagi**: **Gambar berbagi bawaan**, apakah nama situs ditambahkan ke judul (**Tambahkan nama situs ke judul halaman**) beserta **Pemisah** di antaranya (tanda `|` dalam "Tentang | Acme"), dan **Akun X (Twitter)** situs. Di bawahnya, **Field yang dipakai untuk SEO** menentukan, untuk tiap koleksi dan taksonomi, field mana yang mengisi judul meta, deskripsi meta, atau gambar berbagi yang kosong.
 
-**Sembunyikan seluruh situs dari mesin pencari** (di halaman yang sama) untuk salinan situs yang belum publik (situs *staging*). Pengaturan ini menyembunyikan semua halaman dan mengosongkan peta situs. Pastikan mati di situs yang sebenarnya.
+**Sembunyikan seluruh situs dari mesin pencari** (di halaman yang sama) untuk salinan situs yang belum publik (situs *staging*). Pengaturan ini menyembunyikan semua halaman dan mengosongkan peta situs. Pastikan mati di situs yang sebenarnya: selama menyala, Dashboard menampilkan peringatan di bagian atas, dengan tautan kembali ke pengaturan ini.
 
 **Structured data** (di Pengaturan → SEO, di bawah Mesin pencari dan berbagi; lihat [Pengaturan situs](guide:website/settings#seo)) menjelaskan halaman Anda kepada mesin pencari dalam bentuk yang langsung mereka pahami: organisasi atau nama Anda, logo, artikel, dan jejak halaman. Biarkan menyala kecuali developer menyarankan lain.
 

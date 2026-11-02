@@ -29,7 +29,7 @@ A term's own page and a collection's listing page have the same **SEO** card: in
 
 **Settings → SEO** (next to Site in the Settings menu) holds the rest. In **Search engines and sharing**: the **Default share image**, whether to **Add the site name to page titles** and the **Separator** between them (the `|` in "About | Acme"), and the site's **X (Twitter) account**. Below it, **Fields used for SEO** says, for each collection and taxonomy, which of their fields fill in an empty meta title, description or share image.
 
-**Hide the whole site from search engines** (on the same page) is for a copy of the site that isn't public yet (a staging site). It hides every page and empties the sitemap. Make sure it's off on the real website.
+**Hide the whole site from search engines** (on the same page) is for a copy of the site that isn't public yet (a staging site). It hides every page and empties the sitemap. Make sure it's off on the real website: while it's on, the dashboard shows a warning at the top, with a link back to this setting.
 
 **Structured data** (in Settings → SEO, under Search engines and sharing; see [The website's settings](guide:website/settings#seo)) describes your pages to search engines in a form they read directly: your organisation or your name, your logo, articles and breadcrumbs. Leave it on unless your developer says otherwise.
 

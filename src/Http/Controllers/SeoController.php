@@ -53,6 +53,8 @@ final class SeoController
         return Inertia::render('Cms/Seo/Edit', [
             'site' => ['noindex' => $site->noindex, 'appendName' => $site->appendName, 'separator' => $site->separator, 'twitter' => $site->twitter, 'image' => $site->image],
             'siteName' => $site->name(),
+            // SUNRICE_NOINDEX hides the site whatever the toggle says: the page says so beside it.
+            'envNoindex' => SiteSettings::noindexByConfig(),
             // SiteSettings' structured data fields, drawn as the Settings pages draw theirs.
             'structured' => SaveSeoSettings::structuredData()->props(),
             'collections' => $may['collection'] ? Collection::query()->orderBy('title')->get()->map($row)->all() : null,

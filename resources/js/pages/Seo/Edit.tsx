@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Head, useForm } from '@inertiajs/react';
+import { TriangleAlert } from 'lucide-react';
 import {
     Button, CollapsibleCard, FormSections, Input, Label, MediaPickerInput, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SettingsLayout, Switch,
     useBreadcrumbs, useUnsavedChanges, type SettingsFieldsProps, type SettingsNavEntry, type SettingsValue,
@@ -22,6 +23,8 @@ interface Row {
 interface Props {
     site: { noindex: boolean; appendName: boolean; separator: string; twitter: string; image: number | null };
     siteName: string;
+    /** SUNRICE_NOINDEX (config sunrice-cms.seo.noindex) is on: the site is hidden whatever the toggle says. */
+    envNoindex?: boolean;
     /** Structured data's fields (SiteSettings::structuredDataForm(), SettingsFields::props()). */
     structured: SettingsFieldsProps;
     /** Null: the user may not edit collections (or taxonomies). */
@@ -39,7 +42,7 @@ const roles = (): { role: Role; label: string; automatic: string }[] => [
 const AUTO = '__auto';
 
 /** Settings → SEO: search engines and sharing, structured data, and the fields each collection and taxonomy fills its SEO from. */
-export default function SeoEdit({ site, siteName, structured, collections, taxonomies, settingsNav }: Props) {
+export default function SeoEdit({ site, siteName, envNoindex = false, structured, collections, taxonomies, settingsNav }: Props) {
     useBreadcrumbs([{ label: t('Settings'), href: adminUrl('settings') }, { label: t('SEO') }]);
     const rows = [...(collections ?? []), ...(taxonomies ?? [])];
     const form = useForm({
@@ -99,6 +102,18 @@ export default function SeoEdit({ site, siteName, structured, collections, taxon
                         <div className="cms:flex cms:flex-col cms:gap-0.5">
                             <Label htmlFor="seo-noindex">{t('Hide the whole site from search engines')}</Label>
                             <p className="cms:text-xs cms:text-muted-foreground">{t('Every page asks not to be indexed and the sitemap is empty. For a site still being built, or staging.')}</p>
+                            {form.data.site.noindex && (
+                                <p role="status" className="cms:mt-1 cms:flex cms:items-start cms:gap-1.5 cms:text-xs cms:text-amber-800 cms:dark:text-amber-300">
+                                    <TriangleAlert aria-hidden="true" className="cms:mt-px cms:size-3.5 cms:shrink-0" />
+                                    {t('Search engines are asked not to index this site, so it won\'t appear in Google and other search results. If the site is live, turn this off.')}
+                                </p>
+                            )}
+                            {envNoindex && (
+                                <p role="status" className="cms:mt-1 cms:flex cms:items-start cms:gap-1.5 cms:text-xs cms:text-amber-800 cms:dark:text-amber-300">
+                                    <TriangleAlert aria-hidden="true" className="cms:mt-px cms:size-3.5 cms:shrink-0" />
+                                    {t('SUNRICE_NOINDEX is on in the .env file, so the site is hidden from search engines whatever this says.')}
+                                </p>
+                            )}
                         </div>
                     </div>
                     <div className="cms:flex cms:flex-wrap cms:items-start cms:justify-between cms:gap-4">

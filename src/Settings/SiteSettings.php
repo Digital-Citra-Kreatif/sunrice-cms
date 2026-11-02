@@ -208,7 +208,13 @@ final class SiteSettings extends Settings
     /** Whether the whole site asks not to be indexed (here, or SUNRICE_NOINDEX for staging). */
     public function hidden(): bool
     {
-        return $this->noindex || filter_var(config('sunrice-cms.seo.noindex', false), FILTER_VALIDATE_BOOL);
+        return $this->noindex || self::noindexByConfig();
+    }
+
+    /** Whether config sunrice-cms.seo.noindex (SUNRICE_NOINDEX, for staging) hides the site, whatever the setting says. */
+    public static function noindexByConfig(): bool
+    {
+        return filter_var(config('sunrice-cms.seo.noindex', false), FILTER_VALIDATE_BOOL);
     }
 
     /** "About" → "About | Acme", unless titles don't get the name or it's the name already. */

@@ -1370,5 +1370,11 @@
     "Clear the search, filters and sorting to reorder.": "Kosongkan pencarian, filter, dan pengurutan untuk mengatur urutan.",
     "This collection has more than :limit entries, too many to drag. Use each row's ⋯ menu to move an entry to the top, the bottom or a position, or its arrows to move it a place.": "Koleksi ini punya lebih dari :limit entri, terlalu banyak untuk diseret. Pakai menu ⋯ di tiap baris untuk memindahkan entri ke paling atas, paling bawah, atau ke suatu posisi, atau panahnya untuk memindahkannya satu tempat.",
     "Loading the order…": "Memuat urutan…",
-    "Give a position from 1.": "Isi posisi mulai dari 1."
+    "Give a position from 1.": "Isi posisi mulai dari 1.",
+    "The site is hidden from search engines": "Situs disembunyikan dari mesin pencari",
+    "Open SEO settings": "Buka pengaturan SEO",
+    "Search engines are asked not to index this site, so it won't appear in Google and other search results. If the site is live, turn off \":setting\" in SEO settings.": "Mesin pencari diminta tidak mengindeks situs ini, jadi situs tidak akan muncul di Google dan hasil pencarian lainnya. Jika situs sudah tayang, matikan \":setting\" di pengaturan SEO.",
+    "SUNRICE_NOINDEX is on in the .env file, so search engines are asked not to index this site and it won't appear in Google and other search results. If the site is live, set SUNRICE_NOINDEX=false in .env, then run php artisan config:cache.": "SUNRICE_NOINDEX menyala di file .env, jadi mesin pencari diminta tidak mengindeks situs ini dan situs tidak akan muncul di Google dan hasil pencarian lainnya. Jika situs sudah tayang, setel SUNRICE_NOINDEX=false di .env, lalu jalankan php artisan config:cache.",
+    "Search engines are asked not to index this site, so it won't appear in Google and other search results. If the site is live, turn this off.": "Mesin pencari diminta tidak mengindeks situs ini, jadi situs tidak akan muncul di Google dan hasil pencarian lainnya. Jika situs sudah tayang, matikan ini.",
+    "SUNRICE_NOINDEX is on in the .env file, so the site is hidden from search engines whatever this says.": "SUNRICE_NOINDEX menyala di file .env, jadi situs tetap tersembunyi dari mesin pencari apa pun pilihan di sini."
 }

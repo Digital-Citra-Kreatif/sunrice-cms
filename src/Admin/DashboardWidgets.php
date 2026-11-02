@@ -24,7 +24,8 @@ use Sunrice\Cms\Support\Handles;
 use Sunrice\Cms\Support\Locales;
 
 /**
- * The CMS's dashboard widgets: what's left to set up, entries per collection, recent edits,
+ * The CMS's dashboard widgets: a notice when the site asks search engines
+ * not to index it, what's left to set up, entries per collection, recent edits,
  * what's scheduled, comments waiting and the latest submissions. Each
  * reads only what the user may see (Support\Access), in one query (the
  * comments widget a second one for signed-in authors' names).
@@ -38,7 +39,38 @@ final class DashboardWidgets
     /** @return list<Widget> */
     public static function all(): array
     {
-        return [self::setup(), self::collections(), self::review(), self::recentEdits(), self::comments(), self::scheduled(), self::submissions()];
+        return [self::noindex(), self::setup(), self::collections(), self::review(), self::recentEdits(), self::comments(), self::scheduled(), self::submissions()];
+    }
+
+    /**
+     * A warning, for those who may change the SEO settings (the page's own
+     * permission, cms.settings.site), when the site asks search engines not
+     * to index it: always when it's the "Hide the whole site from search
+     * engines" setting, which is easy to forget on at launch; SUNRICE_NOINDEX
+     * only in production, as on staging it's what it's for. Reads the
+     * settings and config only, with the page.
+     */
+    public static function noindex(): Widget
+    {
+        return Widget::notice('cms.seo.noindex')->title('The site is hidden from search engines')
+            ->sort(0)->permission('cms.settings.site')->link('settings/seo', 'Open SEO settings')
+            ->data(fn (): ?array => self::noindexNotice());
+    }
+
+    /** @return array{text: string, url?: null}|null */
+    private static function noindexNotice(): ?array
+    {
+        if (app(SiteSettings::class)->noindex) {
+            $setting = self::said(__('Hide the whole site from search engines'), 'Hide the whole site from search engines');
+
+            return ['text' => self::said(__('Search engines are asked not to index this site, so it won\'t appear in Google and other search results. If the site is live, turn off ":setting" in SEO settings.', ['setting' => $setting]), '')];
+        }
+        if (SiteSettings::noindexByConfig() && config('app.env') === 'production') {
+            // It's not the settings page's doing: no link to it.
+            return ['text' => self::said(__('SUNRICE_NOINDEX is on in the .env file, so search engines are asked not to index this site and it won\'t appear in Google and other search results. If the site is live, set SUNRICE_NOINDEX=false in .env, then run php artisan config:cache.'), ''), 'url' => null];
+        }
+
+        return null;
     }
 
     /**
