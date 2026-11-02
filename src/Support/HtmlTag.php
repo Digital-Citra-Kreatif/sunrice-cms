@@ -40,4 +40,24 @@ final class HtmlTag
     {
         return ' '.$name.'="'.htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8').'"';
     }
+
+    /**
+     * The start tag with the first attribute of that name given a new value
+     * (however it was quoted), or with the attribute added before its end.
+     */
+    public static function withAttribute(string $tag, string $name, string $value): string
+    {
+        $start = strcspn($tag, " \t\n\r\f/>", 1) + 1;
+        $rest = substr($tag, $start);
+        if (preg_match_all(self::ATTRIBUTE, $rest, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE) > 0) {
+            foreach ($matches as $match) {
+                if (strtolower($match[1][0]) === strtolower($name)) {
+                    return substr($tag, 0, $start + $match[0][1]).self::attribute($name, $value).substr($rest, $match[0][1] + strlen($match[0][0]));
+                }
+            }
+        }
+        $closing = str_ends_with($tag, '/>') ? ' />' : '>';
+
+        return rtrim(substr($tag, 0, -strlen(trim($closing)))).self::attribute($name, $value).$closing;
+    }
 }

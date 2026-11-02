@@ -13,19 +13,24 @@ use Sunrice\Cms\Fields\HydrationContext;
  * (its figure's for a captioned image: `<figure class="sunrice-img
  * sunrice-img-w-50"><img …><figcaption>`), `width` and `height` when it
  * has none (no layout shift), and `loading="lazy"` and `decoding="async"`.
- * Only attributes are added, before the tag's end: everything stored (its
- * `src`, `alt`, `class`) and all other markup is printed byte for byte,
- * and nothing stored changes.
+ * Only attributes are added, before the tag's end, and `src` is the
+ * file's own URL now (its disk's URL and version as they are, not as they
+ * were when the image was inserted: a site moved to another domain, a
+ * disk moved to a CDN or a file replaced keeps its images); everything
+ * else stored (`alt`, `class`) and all other markup is printed byte for
+ * byte, and nothing stored changes. The file is read anyway for srcset,
+ * so this costs no query more.
  *
- * Left as stored: images of files that are missing, in the trash or can't
- * have sizes (SVGs, other files), external images (no data-media-id), and
- * images with a `srcset` or `loading` of their own. Rich text without a
+ * Left as stored: images of files that are missing or in the trash, and
+ * external images (no data-media-id). Files that can't have sizes (SVGs,
+ * other files) and images with a `srcset` or `loading` of their own get
+ * their `src` only. Rich text without a
  * data-media-id costs one str_contains(). The files are read with the
  * context's other references (Schema::references() has them), so a list
  * of entries costs no query more.
  *
- * Config `sunrice-cms.rich_text`: `responsive_images` (false: printed as
- * stored), `content_width` and `sizes`.
+ * Config `sunrice-cms.rich_text`: `responsive_images` (false: only the
+ * `src`), `content_width` and `sizes`.
  *
  * @internal RichText::hydrate() calls it.
  */
@@ -44,9 +49,7 @@ final class RichTextImages
         }
         $config = config('sunrice-cms.rich_text');
         $config = is_array($config) ? $config : [];
-        if (! (bool) ($config['responsive_images'] ?? true)) {
-            return $html;
-        }
+        $responsive = (bool) ($config['responsive_images'] ?? true);
         $ids = HtmlSanitizer::mediaIds($html);
         if ($ids === []) {
             return $html;
@@ -57,12 +60,12 @@ final class RichTextImages
         $sizes = is_string($sizes) && trim($sizes) !== '' ? trim($sizes) : null;
         $width = self::length($config['content_width'] ?? '46rem');
 
-        return preg_replace_callback(self::IMG, function (array $match) use ($context, $sizes, $width): string {
+        return preg_replace_callback(self::IMG, function (array $match) use ($context, $sizes, $width, $responsive): string {
             // A captioned image's presets are on its figure: <figure class="sunrice-img sunrice-img-w-50"><img class="rounded" …>.
             $figure = $match[1] ?? '';
             $presets = $figure === '' ? '' : (HtmlTag::attributes($figure)['class'] ?? '');
 
-            return $figure.self::image(substr($match[0], strlen($figure)), $context, $sizes, $width, $presets);
+            return $figure.self::image(substr($match[0], strlen($figure)), $context, $sizes, $width, $presets, $responsive);
         }, $html) ?? $html;
     }
 
@@ -72,18 +75,26 @@ final class RichTextImages
      * @param  array{0: float, 1: string}|null  $width
      * @param  string  $presets  the classes of the image's figure, when it's captioned
      */
-    private static function image(string $tag, HydrationContext $context, ?string $sizes, ?array $width, string $presets = ''): string
+    private static function image(string $tag, HydrationContext $context, ?string $sizes, ?array $width, string $presets = '', bool $responsive = true): string
     {
         if (! str_contains($tag, 'data-media-id')) {
             return $tag;
         }
         $attributes = HtmlTag::attributes($tag);
         $id = $attributes['data-media-id'] ?? '';
-        if (isset($attributes['srcset']) || isset($attributes['loading']) || ! ctype_digit($id) || strlen($id) > 18) {
+        if (! ctype_digit($id) || strlen($id) > 18) {
             return $tag;
         }
         $media = $context->media((int) $id);
-        if ($media === null || ! $media->isResizable() || $media->trashed()) {
+        if ($media === null || $media->trashed()) {
+            return $tag;
+        }
+        // The file's URL as it is now, whatever domain, disk or version it had when inserted.
+        $src = $media->url();
+        if (($attributes['src'] ?? null) !== $src) {
+            $tag = HtmlTag::withAttribute($tag, 'src', $src);
+        }
+        if (! $responsive || isset($attributes['srcset']) || isset($attributes['loading']) || ! $media->isResizable()) {
             return $tag;
         }
         $added = [];
