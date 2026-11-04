@@ -5,7 +5,7 @@
     (the starter templates have one in the site's layout).
 --}}
 <!doctype html>
-<html lang="{{ str_replace('_', '-', $locale) }}">
+<html lang="{{ str_replace('_', '-', $locale) }}" dir="{{ \Sunrice\Cms\Support\Locales::dir($locale) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">

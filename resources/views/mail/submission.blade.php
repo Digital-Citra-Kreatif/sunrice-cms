@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" dir="ltr">
 <body style="font-family: sans-serif; color: #111;">
     <x-sunrice-admin::mail-brand />
     <p>Someone sent the <strong>{{ $form->title }}</strong> form in {{ $language }}@if ($page), from <a href="{{ $page }}">{{ $page }}</a>@endif:</p>
@@ -10,7 +10,7 @@
                 @if ($row['files'] !== [])
                 <td style="border-bottom: 1px solid #ddd;">@foreach ($row['files'] as $one)<a href="{{ $one['url'] }}">{{ $one['name'] }}</a>@if ($one['size']) ({{ $one['size'] }})@endif @if (! $loop->last)<br>@endif @endforeach</td>
                 @else
-                <td style="border-bottom: 1px solid #ddd; white-space: pre-wrap;">@if ($row['file'])<a href="{{ $row['file'] }}">{{ $row['value'] }}</a>@else{{ $row['value'] }}@endif</td>
+                <td dir="auto" style="border-bottom: 1px solid #ddd; white-space: pre-wrap;">@if ($row['file'])<a href="{{ $row['file'] }}">{{ $row['value'] }}</a>@else{{ $row['value'] }}@endif</td>
                 @endif
             </tr>
         @endforeach

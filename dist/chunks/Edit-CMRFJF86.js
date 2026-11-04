@@ -1,13 +1,13 @@
-import { j as e, a as S, t as i, r as j, l as x, h as A } from "./admin-CgARVB-e.js";
+import { j as e, a as S, t as i, r as j, l as x, h as A } from "./admin-DO6X19YK.js";
 import { u as l } from "./ui-BzV6lfEf.js";
-import { F as v } from "./FieldError-BUd4h_F7.js";
-import { z as B, b as q, h as H, A as M } from "./FieldInput-CWnY1i7z.js";
-import { l as z, F as G } from "./languages-DbyTCLy0.js";
-import { S as J } from "./SlugNote-9yUSo1Do.js";
-import { s as R, T as Q, w as W } from "./seo-X1i0HKpa.js";
-import { T as X } from "./TermsPicker-Dxk6ovVz.js";
-import { V as Y } from "./VersionConflict-C2GlNeoh.js";
-import { U as Z } from "./UnsavedNote-CWFzRnZ0.js";
+import { F as v } from "./FieldError-BwAb83SC.js";
+import { z as B, b as q, h as H, A as M } from "./FieldInput-BnbpsmS3.js";
+import { l as z, F as G } from "./languages-CvK0lHxM.js";
+import { S as J } from "./SlugNote-BQOmSqki.js";
+import { s as R, T as Q, w as W } from "./seo-DV4g5clz.js";
+import { T as X } from "./TermsPicker-COfTvxHm.js";
+import { V as Y } from "./VersionConflict-BikAQb3f.js";
+import { U as Z } from "./UnsavedNote-Cn9TNFCu.js";
 import { E as ee } from "./external-link-Mqd1ZxLN.js";
 import { L as se } from "./loader-circle-CjVcQmAV.js";
 import { L as ae } from "./layout-template-Btp-VVsS.js";
@@ -95,6 +95,7 @@ function te({ taxonomy: r, term: t, parentId: k = null, terms: N = [], translate
               l.Input,
               {
                 id: "term-title",
+                dir: "auto",
                 value: a.data.title,
                 required: !0,
                 autoFocus: t === null,

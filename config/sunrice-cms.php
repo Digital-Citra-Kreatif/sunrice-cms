@@ -20,6 +20,11 @@ return [
     // addresses (/about), the others under their code (/id/tentang).
     'locale_prefixes' => [],
 
+    // Languages written right to left, by their primary subtag ("ar" also
+    // counts for "ar_EG" and "ar-SA"): their pages get dir="rtl" (see
+    // Locales::dir(), cms_dir()). Add a code to this list, or take one out.
+    'rtl_locales' => ['ar', 'arc', 'ckb', 'dv', 'fa', 'he', 'khw', 'ks', 'nqo', 'ps', 'sd', 'syr', 'ug', 'ur', 'yi'],
+
     'site' => [
         // Serve entries at their collections' routes. The CMS's route is
         // the app's fallback: the app's own routes always come first.

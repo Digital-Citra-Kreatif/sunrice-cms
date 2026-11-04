@@ -142,7 +142,7 @@ function TermEdit({ taxonomy, term, parentId = null, terms = [], translated, fie
                     <fieldset disabled={!writable} className="cms:grid cms:min-w-0 cms:gap-4 cms:sm:grid-cols-2">
                         <div className="cms:flex cms:flex-col cms:gap-2">
                             <Label htmlFor="term-title">{t('Title')}</Label>
-                            <Input id="term-title" value={form.data.title} required autoFocus={term === null} placeholder={term?.mainTitle ?? ''} maxLength={255} aria-invalid={errors.title !== undefined}
+                            <Input id="term-title" dir="auto" value={form.data.title} required autoFocus={term === null} placeholder={term?.mainTitle ?? ''} maxLength={255} aria-invalid={errors.title !== undefined}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => { form.setData('title', e.target.value); clearErrorsAt('title'); }} />
                             <FieldError message={errors.title} />
                         </div>

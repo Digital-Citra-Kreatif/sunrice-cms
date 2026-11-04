@@ -1,15 +1,15 @@
-import { j as e, t as s, f as S, a as M, r as b, b as Me, d as as, e as ls, l as U, c as ns, g as is, h as rs, i as cs, k as os, s as ds } from "./admin-CgARVB-e.js";
+import { j as e, t as s, f as S, a as M, r as b, b as Me, d as as, e as ls, l as U, c as ns, g as is, h as rs, i as cs, k as os, s as ds } from "./admin-DO6X19YK.js";
 import { c as F, _ as k, u as a } from "./ui-BzV6lfEf.js";
-import { u as ms, T as ve } from "./Confirm-DonTKJUG.js";
-import { s as us, w as hs, T as ps } from "./seo-X1i0HKpa.js";
-import { E as we, a as _e, C as Z, T as xs } from "./TermsPicker-Dxk6ovVz.js";
-import { E as gs } from "./EntriesPicker-BLSIYSid.js";
+import { u as ms, T as ve } from "./Confirm-DLVtrvJb.js";
+import { s as us, w as hs, T as ps } from "./seo-DV4g5clz.js";
+import { E as we, a as _e, C as Z, T as xs } from "./TermsPicker-COfTvxHm.js";
+import { E as gs } from "./EntriesPicker-DNifzmNV.js";
 import { C as Be } from "./check-Cvm5ZpBE.js";
 import { S as fs, M as bs, U as re } from "./undo-2-B1yF9-es.js";
-import { F as js, e as vs } from "./languages-DbyTCLy0.js";
-import { S as ws } from "./SlugNote-9yUSo1Do.js";
-import { F as P } from "./FieldError-BUd4h_F7.js";
-import { C as ks, z as Ns, b as Cs, h as Ss, A as ys } from "./FieldInput-CWnY1i7z.js";
+import { F as js, e as vs } from "./languages-CvK0lHxM.js";
+import { S as ws } from "./SlugNote-BQOmSqki.js";
+import { F as P } from "./FieldError-BwAb83SC.js";
+import { C as ks, z as Ns, b as Cs, h as Ss, A as ys } from "./FieldInput-BnbpsmS3.js";
 import { R as Ds } from "./rotate-ccw-BxpZ9siY.js";
 import { L as $s } from "./link-2-HefnCw8K.js";
 import { C as Le } from "./copy-D11fpdhs.js";
@@ -504,6 +504,7 @@ function Os({ collection: n, fields: i, locales: r = [], shared: d = [], sharedV
               a.Input,
               {
                 id: "title",
+                dir: "auto",
                 value: o.data.title,
                 "aria-invalid": C.title !== void 0,
                 onChange: (l) => {

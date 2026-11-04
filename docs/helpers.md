@@ -9,7 +9,8 @@ Templates reach the CMS through one class, `Sunrice\Cms\Content` (`@api`), alias
 | `Cms::entries(string ...$collections)` | An [`EntryQuery`](#entryquery) over the live entries of those collections (all when none given), in the current language. |
 | `Cms::menu(string $handle)` | A menu's links in the current language: `label`, `url`, `new_tab`, `active`, `active_trail`, `children`. Links to pages that aren't live are left out. See [Menus](menus.md). |
 | `Cms::global(string $handle)` | A global set's values in the current language, as templates get fields (media as `Media`, dates as Carbon …); an unknown handle gives `[]`. See [Globals](globals.md). |
-| `Cms::page()` | The CMS page being shown (`Sunrice\Cms\Site\Page`: `type`, `locale`, `view`, `entry`, `collection`, `term`, `preview`, `home`, `pageNumber`, `fallback`, `draft`; `contentLocale()`, the language its content is in, and `langAttribute()`, ` lang="en"` on an untranslated page), or `null` on your app's own pages. |
+| `Cms::page()` | The CMS page being shown (`Sunrice\Cms\Site\Page`: `type`, `locale`, `view`, `entry`, `collection`, `term`, `preview`, `home`, `pageNumber`, `fallback`, `draft`; `contentLocale()`, the language its content is in, and `langAttribute()`, ` lang="en"` on an untranslated page; `dir()`, `'rtl'` or `'ltr'` for the page's language, `contentDir()` for its content's, and `dirAttribute()`, ` dir="ltr"` on an untranslated page whose content is written in the other direction), or `null` on your app's own pages. |
+| `Cms::dir(?string $locale = null)` | `'rtl'` or `'ltr'`: the direction a language is written in (config `sunrice-cms.rtl_locales`; null: the app's locale, the page's), for `<html dir="{{ Cms::dir() }}">`. No queries. See [Right-to-left languages](site.md#right-to-left-languages). |
 | `Cms::bodyClass(array\|string $extra = [])` | The page's body classes as one string (kind of page, collection, entry or term, template, language, `logged-in` …), plus yours. See [Layout helpers](site.md#layout-helpers). |
 | `Cms::localeUrls()` | `[locale => url]`: the page shown in each language it's on, for a language switcher of your own (`[]` on your app's own pages); `<x-sunrice-cms::language-switcher />` is a ready-made one ([Components](site.md#components)). |
 | `Cms::site()` | Settings → Site (`Sunrice\Cms\Settings\SiteSettings`): `name()`, `title('About')` ("About \| Acme"), `hidden()` (the whole site hidden from search engines), `twitterHandle()`, `logoImage()` (the logo, a media file, or null), `iconUrl(192)` (the site icon as a PNG of that size, or null), `iconLinks()`, `emailLogo()` (see [Site icon and logo](site.md#site-icon-and-logo)), and its properties (`description`, `image` and `logo` (media ids), `separator` …). |
@@ -45,6 +46,7 @@ Defined in `packages/cms/src/helpers.php` (Composer `files` autoload), each only
 | `cms_locale_urls()` | `Cms::localeUrls()` |
 | `cms_body_class(array\|string $extra = [])` | `Cms::bodyClass()` |
 | `cms_page()` | `Cms::page()` |
+| `cms_dir(?string $locale = null)` | `Cms::dir()`: `<html lang="…" dir="{{ cms_dir() }}">` |
 | `cms_nonce()` | The nonce of the site's CSP, `''` while it's off or has none: `<script nonce="{{ cms_nonce() }}">` (`SiteCsp::nonce()`, see [Content-Security-Policy](site.md#content-security-policy)) |
 
 ## `@bodyClass`

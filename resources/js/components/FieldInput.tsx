@@ -148,7 +148,7 @@ function Control({ field, value, onChange, errors, id, content, fill = false, de
             // Visitors send files with forms; entries use a media field.
             return <p className="cms:text-sm cms:text-muted-foreground">{t('Visitors attach a file here when they send a form.')}</p>;
         case 'textarea':
-            return <Textarea id={id} aria-invalid={invalid} aria-describedby={describedBy} value={typeof value === 'string' ? value : ''} rows={numberConfig(field, 'rows') ?? 4}
+            return <Textarea id={id} dir="auto" aria-invalid={invalid} aria-describedby={describedBy} value={typeof value === 'string' ? value : ''} rows={numberConfig(field, 'rows') ?? 4}
                 placeholder={stringConfig(field, 'placeholder')} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)} />;
         case 'code':
             // The panel's code editor (CodeMirror); its code loads when the first one shows, a textarea meanwhile.
@@ -215,7 +215,7 @@ function Control({ field, value, onChange, errors, id, content, fill = false, de
             // No maxLength: a pasted text that's too long would be cut silently; the counter shows it instead.
             return (
                 <Affixed prefix={prefix} suffix={suffix} id={id}>
-                    <Input id={id} aria-invalid={invalid} aria-describedby={describedBy} className={affixed ? AFFIXED_INPUT : undefined} value={typeof value === 'string' ? value : ''}
+                    <Input id={id} dir="auto" aria-invalid={invalid} aria-describedby={describedBy} className={affixed ? AFFIXED_INPUT : undefined} value={typeof value === 'string' ? value : ''}
                         placeholder={stringConfig(field, 'placeholder')} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)} />
                 </Affixed>
             );
@@ -350,7 +350,7 @@ function LinkInput({ label, value, onChange, errors, id, collections, placeholde
                         onChange={(item) => set({ [target]: item?.id ?? undefined })} />
                 )}
             </div>
-            <Input aria-label={t(':field: link text', { field: label })} placeholder={type === 'url' ? t('Link text') : t('Link text (its title)')} value={typeof value.label === 'string' ? value.label : ''}
+            <Input dir="auto" aria-label={t(':field: link text', { field: label })} placeholder={type === 'url' ? t('Link text') : t('Link text (its title)')} value={typeof value.label === 'string' ? value.label : ''}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => set({ label: e.target.value })} />
             {/* The same as the rich text editor's link menu (the panel's LinkAttributes). */}
             <LinkAttributes label={t(':field: link attributes', { field: label })} newTab={newTab} rel={rel}
@@ -432,7 +432,7 @@ function Rows({ field, value, onChange, errors, id, content = false }: Omit<Prop
                         <SortableHandle {...handle} label={t('Move :item :number', { item: noun, number: index + 1 })} className="cms:mt-1" />
                         {columns.map((column) => (
                             <div key={column.handle} className="cms:flex cms:flex-1 cms:flex-col cms:gap-1">
-                                <Input aria-label={column.label || column.handle} placeholder={column.label || column.handle}
+                                <Input dir="auto" aria-label={column.label || column.handle} placeholder={column.label || column.handle}
                                     value={typeof row[column.handle] === 'string' ? row[column.handle] as string : ''}
                                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => set(index, { ...row, [column.handle]: e.target.value })} />
                                 <FieldError message={errors[`${index}.${column.handle}`]} />

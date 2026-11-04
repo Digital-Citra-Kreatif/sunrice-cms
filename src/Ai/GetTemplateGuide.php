@@ -58,7 +58,7 @@ A template set by name (an entry's or term's Page settings, a collection's or ta
 
 ## In the layout
 
-`<x-sunrice-cms::seo />` in `<head>` (title, description, canonical, hreflang, share tags, structured data); `<x-sunrice-cms::code place="head|body-start|body-end" />` for the site code (it prints nothing where the site code is switched off: "site_code"); `{{ Cms::bodyClass() }}` on `<body>`; `<x-sunrice-cms::language-switcher />` for a language switcher (`Cms::localeUrls()` for one of your own); `Cms::page()` for what's shown. Share a layout with `@extends('cms.layout')` and `@section('content')`, and parts with `@include('cms.partials.card', ['entry' => $post])`.
+`<x-sunrice-cms::seo />` in `<head>` (title, description, canonical, hreflang, share tags, structured data); `<x-sunrice-cms::code place="head|body-start|body-end" />` for the site code (it prints nothing where the site code is switched off: "site_code"); `<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ cms_dir() }}">` (`dir` is `rtl` for Arabic, Hebrew, Persian…; write CSS with logical properties, `margin-inline-start`, `text-align: start`, so it mirrors), and `{{ cms_page()?->langAttribute() }}{{ cms_page()?->dirAttribute() }}` on the element around an entry's or term's content; `{{ Cms::bodyClass() }}` on `<body>`; `<x-sunrice-cms::language-switcher />` for a language switcher (`Cms::localeUrls()` for one of your own); `Cms::page()` for what's shown. Share a layout with `@extends('cms.layout')` and `@section('content')`, and parts with `@include('cms.partials.card', ['entry' => $post])`.
 
 ## Data
 

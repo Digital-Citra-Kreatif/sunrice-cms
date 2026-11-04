@@ -125,7 +125,7 @@ final class TemplateWriter
 
         return $this->head($page, $blueprints, '$page, $entry (the EntryTranslation), $collection, $title, $values (its fields), $richText, $code, $locale, $preview, $draft, $fallback and $contentLocale.')
             ."@extends('cms.layout')\n\n@section('content')\n"
-            ."    <article class=\"entry\"{{ cms_page()?->langAttribute() }}>\n"
+            ."    <article class=\"entry\"{{ cms_page()?->langAttribute() }}{{ cms_page()?->dirAttribute() }}>\n"
             ."        <header class=\"entry-header\">\n".FieldSnippet::indent(implode("\n", $header), 12)."\n        </header>\n"
             .($body === '' ? '' : "\n".FieldSnippet::indent($body, 8)."\n")
             ."    </article>\n\n"
@@ -168,7 +168,7 @@ final class TemplateWriter
             ."@extends('cms.layout')\n\n@section('content')\n"
             ."    <header class=\"page-header\">\n"
             ."        <p class=\"eyebrow\">{{ \$taxonomy->titleIn(\$locale) }}</p>\n"
-            ."        <div{{ cms_page()?->langAttribute() }}>\n            <h1>{{ \$title }}</h1>\n"
+            ."        <div{{ cms_page()?->langAttribute() }}{{ cms_page()?->dirAttribute() }}>\n            <h1>{{ \$title }}</h1>\n"
             .($fields === '' ? '' : FieldSnippet::indent($fields, 12)."\n")
             ."        </div>\n    </header>\n\n"
             .FieldSnippet::indent($this->entries($schemas), 4)."\n"

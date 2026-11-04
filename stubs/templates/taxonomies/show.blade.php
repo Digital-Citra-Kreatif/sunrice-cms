@@ -4,14 +4,15 @@
     cms/collections/{collection}/{taxonomy}/show.blade.php.
     Gets $page (Cms::page()), $term (TermTranslation), $taxonomy, $collection (null on the shared term page), $title,
     $entries (a paginator of the live entries with the term), $values and $richText (the term's fields), $locale,
-    $fallback and $contentLocale (the language of the term's own content: lang marks it on untranslated pages).
+    $fallback and $contentLocale (the language of the term's own content: lang, and dir when its direction differs, mark it
+    on untranslated pages).
 --}}
 @extends('cms.layout')
 
 @section('content')
     <header class="page-header">
         <p class="eyebrow">{{ $taxonomy->title }}</p>
-        <div{{ cms_page()?->langAttribute() }}>
+        <div{{ cms_page()?->langAttribute() }}{{ cms_page()?->dirAttribute() }}>
             <h1>{{ $title }}</h1>
             @include('cms.partials.fields', ['values' => $values, 'richText' => $richText])
         </div>

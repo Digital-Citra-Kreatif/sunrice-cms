@@ -401,7 +401,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                             <fieldset disabled={!writable} className="cms:grid cms:gap-4 cms:md:grid-cols-[2fr_1fr]">
                                 <div className="cms:flex cms:flex-col cms:gap-2">
                                     <Label htmlFor="title">{t('Title')}{marker('title')}</Label>
-                                    <Input id="title" value={form.data.title} aria-invalid={errors.title !== undefined}
+                                    <Input id="title" dir="auto" value={form.data.title} aria-invalid={errors.title !== undefined}
                                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                             const title = e.target.value;
                                             // A slug made from the title (a duplicate's "-copy") follows it until first published.

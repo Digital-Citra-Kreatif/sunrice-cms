@@ -6,7 +6,7 @@ declare(strict_types=1);
  * Short functions for templates, the same as the `Cms` alias
  * (Sunrice\Cms\Content): cms_entries('blog'), cms_menu('main'),
  * cms_global('contact'), cms_locale_urls(), cms_body_class(), cms_page(),
- * cms_nonce().
+ * cms_dir(), cms_nonce().
  * An app may define any of them itself first.
  */
 
@@ -80,6 +80,20 @@ if (! function_exists('cms_page')) {
     function cms_page(): ?Page
     {
         return Content::page();
+    }
+}
+
+if (! function_exists('cms_dir')) {
+    /**
+     * The direction a language is written in, 'ltr' or 'rtl' (null: the
+     * app's locale, the page's on the site): Cms::dir().
+     * `<html lang="…" dir="{{ cms_dir() }}">`.
+     *
+     * @return 'ltr'|'rtl'
+     */
+    function cms_dir(?string $locale = null): string
+    {
+        return Content::dir($locale);
     }
 }
 

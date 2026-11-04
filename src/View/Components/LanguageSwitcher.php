@@ -20,7 +20,8 @@ use Sunrice\Cms\Support\Locales;
  *
  * A `<nav>` (labelled with the site's words, `sunrice-cms::site.languages.label`)
  * with a list: each language's own name, linked with `hreflang` and
- * `lang`; the current one isn't a link but `aria-current="true"`.
+ * `lang` (and `dir` when its language is written in the other direction
+ * than the page's); the current one isn't a link but `aria-current="true"`.
  * `variant="dropdown"`: the same links in a `<details>` disclosure, no
  * script (works under a strict Content-Security-Policy). `labels="code"`:
  * "EN", "ID" (the name stays the link's accessible name and title).
@@ -41,6 +42,13 @@ final class LanguageSwitcher extends Component
     public array $languages = [];
 
     /**
+     * The page's direction: a link to a language written in the other one gets `dir` too.
+     *
+     * @var 'ltr'|'rtl'
+     */
+    public string $dir = 'ltr';
+
+    /**
      * @param  'list'|'dropdown'|string  $variant
      * @param  'name'|'code'|string  $labels
      * @param  'home'|'hide'|string  $missing
@@ -57,7 +65,9 @@ final class LanguageSwitcher extends Component
                 throw new InvalidArgumentException("<x-sunrice-cms::language-switcher> {$prop}=\"{$value}\": use ".implode(' or ', $allowed).'.');
             }
         }
-        $this->languages = self::languagesOf(Page::current(), $missing === 'home');
+        $page = Page::current();
+        $this->languages = self::languagesOf($page, $missing === 'home');
+        $this->dir = $page?->dir() ?? Locales::dir();
     }
 
     /**

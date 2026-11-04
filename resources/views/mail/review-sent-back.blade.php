@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" dir="ltr">
 <body style="font-family: sans-serif; color: #111;">
     <x-sunrice-admin::mail-brand />
     <p><strong>{{ $reviewer }}</strong> sent <strong>{{ $title }}</strong> ({{ $collection }}) back to you without publishing it.</p>

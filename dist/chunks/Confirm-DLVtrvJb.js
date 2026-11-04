@@ -1,5 +1,5 @@
 import { c as u, _ as d, u as e } from "./ui-BzV6lfEf.js";
-import { j as n, t as i } from "./admin-CgARVB-e.js";
+import { j as n, t as i } from "./admin-DO6X19YK.js";
 const s = {
   name: "trash",
   size: 24,

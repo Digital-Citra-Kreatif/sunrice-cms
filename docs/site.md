@@ -45,7 +45,7 @@ They're stored in `routes` (`{"id": {"route": "/buku/{slug}", "listing_route": "
 An entry that isn't live in a language other than the main one (no translation there, or one still a draft or scheduled) shows its main language's content at that language's address, with the main language's slug: `/id/blog/hello`. The same goes for term pages without a translation and for the homepage (`/id`). On such a page:
 
 - the app's locale and `$locale` are the address's language, so the layout's own words are in it; templates get `$fallback = true` (and `Cms::page()->fallback`), to say "Not translated yet" if you like (the starter templates show nothing);
-- the content is in another language than the page: `$contentLocale` (and `Cms::page()->contentLocale()`) is its language, and `Cms::page()->langAttribute()` prints ` lang="en"` on such pages (nothing on others) for the element around it, so screen readers read it in the right language: `<article{{ cms_page()?->langAttribute() }}>`. The CMS's plain pages and the starter templates do this;
+- the content is in another language than the page: `$contentLocale` (and `Cms::page()->contentLocale()`) is its language, and `Cms::page()->langAttribute()` prints ` lang="en"` on such pages (nothing on others) for the element around it, so screen readers read it in the right language, and `Cms::page()->dirAttribute()` prints ` dir="ltr"` when that language is written in the other direction than the page's (English content on an Arabic page; see [Right-to-left languages](#right-to-left-languages)): `<article{{ cms_page()?->langAttribute() }}{{ cms_page()?->dirAttribute() }}>`. The CMS's plain pages and the starter templates do this;
 - `<x-sunrice-cms::seo />` gives the main language's page as the canonical URL and no `hreflang` links, and the main page's `hreflang` links leave the language out; the sitemap lists only the main page;
 - menus, entry and term links (`$translation->url()` of a linked entry or a listed one, `$term->url()`), `Cms::localeUrls()` and the language switcher (`<x-sunrice-cms::language-switcher>`, [Components](#components)) link it in that language, so visitors stay in it (the switcher marks the link `data-fallback`);
 - listing pages, term pages, site search, `Cms::entries()` and the components (`<x-sunrice-cms::entries>`, `<x-sunrice-cms::entry-filter>`, the counts of `<x-sunrice-cms::terms>`) include it, in the main language: one row per entry, its translation where that's live, else the main language's, whose `url()` is its page at that language's address. `Cms::entries(...)->fallback(false)` keeps a query to what's translated.
@@ -139,7 +139,7 @@ Images in rich text may carry the editor's width and alignment presets as classe
 | --- | --- |
 | `sunrice-img` | on every image with a preset |
 | `sunrice-img-w-25`, `-w-50`, `-w-75`, `-w-100` | that share of the text's width (`height: auto`, at most 100%) |
-| `sunrice-img-left`, `sunrice-img-right` | floated, the text wraps around it; on narrow screens a full-width block |
+| `sunrice-img-left`, `sunrice-img-right` | floated at the start or the end of the line, the text wrapping around it: on the left or right of a left-to-right page, swapped on a [right-to-left](#right-to-left-languages) one (the class names stay); on narrow screens a full-width block |
 | `sunrice-img-center` | centred on its own line |
 | `sunrice-img-full` | the text's full width |
 | your image styles | the classes of config `sunrice-admin.rich_text.image_classes` (editors turn them on under **Style**, several at once) |
@@ -272,7 +272,7 @@ It copies them into `resources/views/cms/`, where the rules above pick them up (
 
 | File | Used for | Shows how to |
 | --- | --- | --- |
-| `cms/layout.blade.php` | every page (`@extends('cms.layout')`, `@section('content')`, `@push('head')`) | `<x-sunrice-cms::seo>`, site code, the `main` and `footer` menus, the language switcher (`<x-sunrice-cms::language-switcher>`), a footer (the `footer` global's `text`), `@bodyClass`, a skip link |
+| `cms/layout.blade.php` | every page (`@extends('cms.layout')`, `@section('content')`, `@push('head')`) | `lang` and `dir` on `<html>` ([Right-to-left languages](#right-to-left-languages)), `<x-sunrice-cms::seo>`, site code, the `main` and `footer` menus, the language switcher (`<x-sunrice-cms::language-switcher>`), a footer (the `footer` global's `text`), `@bodyClass`, a skip link |
 | `cms/collections/show.blade.php` | any entry | the title, date, terms and fields (with `lang` marking the content's language on [untranslated pages](#untranslated-pages)); comments |
 | `cms/collections/index.blade.php` | listing pages | the listing's fields, cards, pagination |
 | `cms/taxonomies/show.blade.php` | term pages, shared and collections' | the term's fields and its entries |
@@ -285,7 +285,7 @@ It copies them into `resources/views/cms/`, where the rules above pick them up (
 | `cms/partials/pagination.blade.php` | lists of entries | previous and next links |
 | `cms/partials/menu.blade.php` | the layout | a menu with its sub-menus, `aria-current` on the page shown |
 | `errors/404.blade.php`, `errors/500.blade.php` | error pages | the 404 in the layout with a search box; the 500 on its own (whatever failed would fail again in the layout) |
-| `public/cms/site.css` | all of the above | plain CSS with light and dark colours; replace it with your own build and change the `<link>` in the layout |
+| `public/cms/site.css` | all of the above | plain CSS with light and dark colours, in logical properties so it mirrors on right-to-left pages; replace it with your own build and change the `<link>` in the layout |
 
 Every template works on a fresh install: missing menus, globals and fields render nothing. Layouts and partials read the page from `cms_page()`, not from `$entry` or `$term`: Blade hands a page's variables to its layout, so after a listing's `@foreach` those would be its last card. Words are wrapped in `__()`, so a `lang/{locale}.json` translates them.
 
@@ -345,6 +345,36 @@ Each one `@extends('cms.layout')` and fills `content`, as the starter templates 
 ```
 
 Files that exist are skipped unless `--force`, which overwrites the pages' own files (never the shared ones). For scripts and AI agents, `--all` takes every page without asking or confirming, and `--collection=books --taxonomy=genres` (each repeatable) keeps to those records, with all their pages when it isn't asking; without a terminal (`--no-interaction`) one of them is needed, or it stops and writes nothing. It ends with what it wrote and skipped.
+
+## Right-to-left languages
+
+Arabic, Hebrew, Persian, Urdu and other languages written right to left get `dir="rtl"` on their pages, so the browser lays the page out from the right: text starts on the right, a flex row's first item is on the right, and logical CSS properties (`margin-inline-start`, `padding-inline-end`, `text-align: start`, `float: inline-start`) take the other side. Which languages these are is config `sunrice-cms.rtl_locales` ([configuration](configuration.md#languages)), matched by a code's primary subtag, so `ar` counts for `ar_EG` and `ar-SA` too.
+
+```blade
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ cms_dir() }}">
+```
+
+- `cms_dir($locale = null)` (`Cms::dir()`, `Locales::dir()`): `'rtl'` or `'ltr'` for a language, the app's locale (the page's) when null. It reads the config only, no settings or queries, so the layout, error pages and emails can use it.
+- `Cms::page()->dir()`: the page's language's; `contentDir()`: its content's, which differs on an [untranslated page](#untranslated-pages) in a language of the other direction (the English post at `/ar/blog/hello`).
+- `Cms::page()->dirAttribute()`: ` dir="ltr"` (or `rtl`) on such a page, else nothing; print it beside `langAttribute()` on the element around the content, so English text on an Arabic page reads left to right: `<article{{ cms_page()?->langAttribute() }}{{ cms_page()?->dirAttribute() }}>`.
+- The language switcher gives a link to a language of the other direction its own `dir` ([Components](#components)).
+
+The CMS's plain pages, the starter templates and the Blog starter do all of this, and their CSS is written with logical properties, so their header, menus, quotes, comment replies and image presets mirror on an Arabic page with nothing more to do. For your own CSS:
+
+- Use logical properties instead of `left` and `right`: `margin-inline-start` for `margin-left`, `padding-inline-end` for `padding-right`, `inset-inline-start` for `left`, `border-inline-start` for `border-left`, `text-align: start` and `end`, `float: inline-start` and `inline-end`. Flex and grid already follow the direction.
+- What has no logical form (`object-position`, a background's position, a `translateX()`, an icon that points somewhere: an arrow, a chevron, "next") gets a rule for right-to-left pages: `[dir="rtl"] .next-icon { transform: scaleX(-1); }`. Text arrows typed into words ("Next →") don't flip: use an icon, or translate the arrow with the words (`site.php`).
+- Tailwind has the same as utilities: `ms-4`, `pe-2`, `start-0`, `text-start`, `float-start`, and `rtl:` for the rest.
+
+**Image presets.** Rich text images' `sunrice-img-left` and `sunrice-img-right` mean the start and end of the line: the starter CSS floats them `inline-start` and `inline-end`, so on a right-to-left page "left" is on the right, where its text starts, and editors place an image the same way in every language. The classes keep their names (content saved before is unchanged):
+
+```css
+.sunrice-img-left { float: inline-start; margin-block: 0.35rem 1.5rem; margin-inline: 0 1.5rem; }
+.sunrice-img-right { float: inline-end; margin-block: 0.35rem 1.5rem; margin-inline: 1.5rem 0; }
+```
+
+`float: inline-start` needs a browser from 2023 on (Chrome and Edge 118, Safari 15, Firefox 55); on an older one the image doesn't float. A site that must keep those floating can write `float: left` and add `[dir="rtl"] .sunrice-img-left { float: right; }` (and the reverse) instead.
+
+In the panel, text inputs, text areas and the rich text editor take their direction from what's typed (`dir="auto"`), so Arabic typed into a field starts on the right, whatever the panel's own language.
 
 ## SEO
 
@@ -461,11 +491,12 @@ A site that doesn't need it can switch it off with `SUNRICE_SITE_CODE=false` (`s
 
 - `Cms::bodyClass($extra)`: what the page is, for CSS and scripts. Entries: `page-entry collection-{handle} entry-{id} entry-{slug}`, with `home`, `has-parent parent-{id}` and `is-preview` when they apply; listing pages: `page-listing collection-{handle}`; term pages: `page-term taxonomy-{handle} term-{id} term-{slug}`, with `collection-{handle}` on a collection's; taxonomy index pages: `page-taxonomy taxonomy-{handle}`, with `collection-{handle}` on a collection's; pages past the first: `paged paged-{n}`; always `template-{view} lang-{locale}`, and `logged-in` for people signed in to the panel. On your app's own pages: `lang-{locale}` and your extras.
 - `Cms::localeUrls()`: the page shown in each language it's live in (and, with the [main-language fallback](#untranslated-pages), the others), in the order of `sunrice-cms.locales`, for a language switcher of your own (none on your app's own pages); a listing's or term page's keep its query string (filters, sort, page; with the [page cache](caching.md) on, only the parameters kept pages are told apart by, so `?utm_source=…` never ends up in kept links). `<x-sunrice-cms::language-switcher />` is a ready-made one ([Components](#components)).
-- `Cms::page()`: the page shown (`Sunrice\Cms\Site\Page`: `type`, `locale`, `view`, `entry`, `collection`, `term`, `preview`, `home`, `pageNumber`, `fallback`; `contentLocale()`, `langAttribute()` and `localeLinks()`, `localeUrls()` with whether each is the main language's page standing in), or null.
+- `Cms::page()`: the page shown (`Sunrice\Cms\Site\Page`: `type`, `locale`, `view`, `entry`, `collection`, `term`, `preview`, `home`, `pageNumber`, `fallback`; `contentLocale()`, `langAttribute()`, `dir()`, `contentDir()`, `dirAttribute()` and `localeLinks()`, `localeUrls()` with whether each is the main language's page standing in), or null.
+- `Cms::dir($locale = null)`: `'rtl'` or `'ltr'`, the direction a language (the page's when null) is written in, for `<html dir>` ([Right-to-left languages](#right-to-left-languages)).
 
 `@bodyClass` prints the whole attribute: `<body @bodyClass>` or `<body @bodyClass('dark')>` gives `<body class="page-entry … dark">`.
 
-The same as functions, for templates that prefer them (each defined only if the app hasn't defined it first): `cms_entries(...$collections)`, `cms_menu($handle, $locale = null)`, `cms_global($handle, $locale = null)`, `cms_locale_urls()`, `cms_body_class($extra = [])` and `cms_page()`. `cms_nonce()` gives the request's nonce for inline `<script>` and `<style>` under the site's [Content-Security-Policy](#content-security-policy) (`''` while it's off).
+The same as functions, for templates that prefer them (each defined only if the app hasn't defined it first): `cms_entries(...$collections)`, `cms_menu($handle, $locale = null)`, `cms_global($handle, $locale = null)`, `cms_locale_urls()`, `cms_body_class($extra = [])`, `cms_page()` and `cms_dir($locale = null)`. `cms_nonce()` gives the request's nonce for inline `<script>` and `<style>` under the site's [Content-Security-Policy](#content-security-policy) (`''` while it's off).
 
 ### Hooks
 
@@ -651,7 +682,7 @@ Links to the page shown in each language, from `Cms::localeUrls()` (no queries o
 </nav>
 ```
 
-Each language is named in its own words (`Locales::nativeName()`: its name in Settings → Languages or `locale_names`, or, named by its code only, "Bahasa Indonesia", "Deutsch"), and its link has `hreflang` (where it leads) and `lang` (how a screen reader says its name). The current language isn't a link, since it would lead to the page you're on, but it's in the list with `aria-current="true"` (the current item of a set, not a page of the site's navigation), so everyone hears which one is selected. The `<nav>`'s label is the site's words, `sunrice-cms::site.languages.label` ("Languages", "Bahasa"; see [The site's words](#the-sites-words)).
+Each language is named in its own words (`Locales::nativeName()`: its name in Settings → Languages or `locale_names`, or, named by its code only, "Bahasa Indonesia", "Deutsch"), and its link has `hreflang` (where it leads) and `lang` (how a screen reader says its name), and `dir` when its language is written in the other direction than the page's (`<a … lang="ar" dir="rtl">العربية</a>` on an English page), so its name shows the right way round. The current language isn't a link, since it would lead to the page you're on, but it's in the list with `aria-current="true"` (the current item of a set, not a page of the site's navigation), so everyone hears which one is selected. The `<nav>`'s label is the site's words, `sunrice-cms::site.languages.label` ("Languages", "Bahasa"; see [The site's words](#the-sites-words)).
 
 | Attribute | |
 | --- | --- |
@@ -663,7 +694,7 @@ Each language is named in its own words (`Locales::nativeName()`: its name in Se
 
 Other attributes (`class`, `id` …) go on the `<nav>`. It renders nothing when fewer than two languages are left to show: on a site with one language, on your app's own pages (where `Cms::localeUrls()` is empty: there's no page to translate), and with `missing="hide"` on a page in its language only. A listing's, term page's or search page's links keep the query string (filters, sort, page number): `/id/blog?page=2`. With the [page cache](caching.md#whole-pages) on, they keep only the parameters kept pages are told apart by (`PageCacheQuery::query()`: `page`, `sunrice-cms.cache.query` and Settings → Cache's), so `?utm_source=…` never ends up in kept links.
 
-With a slot, the markup is yours; `$component->languages` lists the page's languages (`Sunrice\Cms\Site\PageLanguage`: `code` "pt_BR", `tag` "pt-BR" for `lang` and `hreflang`, `name`, `url`, `current`, `fallback`, `home`):
+With a slot, the markup is yours; `$component->languages` lists the page's languages (`Sunrice\Cms\Site\PageLanguage`: `code` "pt_BR", `tag` "pt-BR" for `lang` and `hreflang`, `dir` (`ltr` or `rtl`), `name`, `url`, `current`, `fallback`, `home`; `$component->dir` is the page's):
 
 ```blade
 <x-sunrice-cms::language-switcher missing="hide">

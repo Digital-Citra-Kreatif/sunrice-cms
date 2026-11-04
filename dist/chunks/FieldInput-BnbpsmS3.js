@@ -1,10 +1,10 @@
-import { j as n, t as h } from "./admin-CgARVB-e.js";
+import { j as n, t as h } from "./admin-DO6X19YK.js";
 import { c as R, _, u as m } from "./ui-BzV6lfEf.js";
-import { E as Z } from "./EntriesPicker-BLSIYSid.js";
-import { F as O } from "./FieldError-BUd4h_F7.js";
-import { c as S, T as he, o as xe, d as z, e as ge, g as ye, i as Q, n as be, f as je, l as H, h as P, j as ve, L as ke, s as we, b as Ne, k as _e, m as $e, p as Se } from "./TermsPicker-Dxk6ovVz.js";
+import { E as Z } from "./EntriesPicker-DNifzmNV.js";
+import { F as O } from "./FieldError-BwAb83SC.js";
+import { c as S, T as he, o as xe, d as z, e as ge, g as ye, i as Q, n as be, f as je, l as H, h as P, j as ve, L as ke, s as we, b as Ne, k as _e, m as $e, p as Se } from "./TermsPicker-COfTvxHm.js";
 import { P as ee } from "./plus-Cn7AaagX.js";
-import { T as se } from "./Confirm-DonTKJUG.js";
+import { T as se } from "./Confirm-DLVtrvJb.js";
 import { C as Ae } from "./chevron-right-1BqdTUoX.js";
 const te = {
   name: "chevron-down",
@@ -388,6 +388,7 @@ function ls({ field: e, value: s, onChange: t, errors: a, id: r, content: c, fil
         m.Textarea,
         {
           id: r,
+          dir: "auto",
           "aria-invalid": i,
           "aria-describedby": d,
           value: typeof s == "string" ? s : "",
@@ -538,6 +539,7 @@ function ls({ field: e, value: s, onChange: t, errors: a, id: r, content: c, fil
         m.Input,
         {
           id: r,
+          dir: "auto",
           "aria-invalid": i,
           "aria-describedby": d,
           className: b ? G : void 0,
@@ -654,6 +656,7 @@ function ms({ label: e, value: s, onChange: t, errors: a, id: r, collections: c,
     /* @__PURE__ */ n.jsx(
       m.Input,
       {
+        dir: "auto",
         "aria-label": h(":field: link text", { field: e }),
         placeholder: x === "url" ? h("Link text") : h("Link text (its title)"),
         value: typeof s.label == "string" ? s.label : "",
@@ -731,6 +734,7 @@ function us({ field: e, value: s, onChange: t, errors: a, id: r, content: c = !1
             /* @__PURE__ */ n.jsx(
               m.Input,
               {
+                dir: "auto",
                 "aria-label": y.label || y.handle,
                 placeholder: y.label || y.handle,
                 value: typeof p[y.handle] == "string" ? p[y.handle] : "",

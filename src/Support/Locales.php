@@ -63,6 +63,31 @@ final class Locales
         return $locales === [] ? [self::fallback() => self::displayName(self::fallback())] : $locales;
     }
 
+    /**
+     * The direction a language is written in, for `dir` beside `lang`:
+     * 'rtl' when its primary subtag ("ar" of "ar_EG" or "ar-SA") is one of
+     * config sunrice-cms.rtl_locales, else 'ltr'. Null: the app's locale
+     * (the page's, on the site). Reads the config only, so error pages
+     * and emails can use it too.
+     *
+     *     <html lang="…" dir="{{ cms_dir() }}">
+     *
+     * @return 'ltr'|'rtl'
+     */
+    public static function dir(?string $locale = null): string
+    {
+        return self::rtl($locale) ? 'rtl' : 'ltr';
+    }
+
+    /** Whether a language (null: the app's locale) is written right to left: see dir(). */
+    public static function rtl(?string $locale = null): bool
+    {
+        $primary = strtolower(strtok($locale ?? app()->getLocale(), '_-') ?: '');
+        $rtl = config('sunrice-cms.rtl_locales', []);
+
+        return $primary !== '' && is_array($rtl) && in_array($primary, array_map(fn (mixed $code): string => is_string($code) ? strtolower($code) : '', $rtl), true);
+    }
+
     /** A content language's name ("id" → "Indonesian", or as set); any other code as it is. */
     public static function name(string $locale): string
     {

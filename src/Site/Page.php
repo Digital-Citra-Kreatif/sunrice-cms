@@ -101,6 +101,44 @@ final readonly class Page
         return new HtmlString($this->fallback ? ' lang="'.e(str_replace('_', '-', $this->contentLocale())).'"' : '');
     }
 
+    /**
+     * The direction of the page's language, for `<html dir>`: 'rtl' for a
+     * language written right to left (config sunrice-cms.rtl_locales),
+     * else 'ltr' (Locales::dir()).
+     *
+     * @return 'ltr'|'rtl'
+     */
+    public function dir(): string
+    {
+        return Locales::dir($this->locale);
+    }
+
+    /**
+     * The direction of the page's content: its language's (contentLocale()),
+     * which differs from the page's on an untranslated page in another
+     * script (English content on an Arabic page).
+     *
+     * @return 'ltr'|'rtl'
+     */
+    public function contentDir(): string
+    {
+        return Locales::dir($this->contentLocale());
+    }
+
+    /**
+     * ` dir="ltr"` (or `rtl`) when the content is written in another
+     * direction than the page (an untranslated page, $fallback, in a
+     * language of the other direction), else nothing: beside
+     * langAttribute() on the element around the content
+     * (`<article{{ cms_page()?->langAttribute() }}{{ cms_page()?->dirAttribute() }}>`).
+     */
+    public function dirAttribute(): HtmlString
+    {
+        $dir = $this->contentDir();
+
+        return new HtmlString($this->fallback && $dir !== $this->dir() ? ' dir="'.$dir.'"' : '');
+    }
+
     /** The same page rendered with another view. */
     public function withView(string $view): self
     {

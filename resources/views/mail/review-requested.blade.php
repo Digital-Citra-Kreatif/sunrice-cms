@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" dir="ltr">
 <body style="font-family: sans-serif; color: #111;">
     <x-sunrice-admin::mail-brand />
     @if ($changes)

@@ -28,11 +28,12 @@ use Sunrice\Cms\Support\ContentData;
  *     <body class="{{ Cms::bodyClass('dark') }}">
  *
  *     <nav>@foreach (Cms::localeUrls() as $locale => $url) … @endforeach</nav>
+ *     <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ Cms::dir() }}">
  *     Cms::site()->name()
  *     Cms::toData(Cms::entries('places')->get(), ['location'])  // plain arrays for a script
  *
  * The same as functions: cms_entries(), cms_menu(), cms_global(),
- * cms_locale_urls(), cms_body_class(), cms_page(); and `<body @bodyClass>`.
+ * cms_locale_urls(), cms_body_class(), cms_page(), cms_dir(); and `<body @bodyClass>`.
  * In a service provider's boot(), hooks for every page:
  *
  *     Cms::resolveTemplateUsing(fn (Page $page): ?string => $page->collection?->handle === 'shop' ? 'shop.product' : null);
@@ -76,6 +77,19 @@ final class Content
     public static function page(): ?Page
     {
         return Page::current();
+    }
+
+    /**
+     * The direction a language is written in, 'ltr' or 'rtl' (config
+     * sunrice-cms.rtl_locales; null: the app's locale, the page's on the
+     * site), for `<html lang="…" dir="{{ Cms::dir() }}">`. No queries, so
+     * error pages and emails can use it too (Locales::dir()).
+     *
+     * @return 'ltr'|'rtl'
+     */
+    public static function dir(?string $locale = null): string
+    {
+        return Support\Locales::dir($locale);
     }
 
     /**

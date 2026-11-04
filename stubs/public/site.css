@@ -47,15 +47,16 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid 
 main.container { padding-block: 2.5rem 4rem; }
 main:focus { outline: none; }
 
-.skip-link { position: absolute; left: 1rem; top: -3rem; padding: 0.5rem 1rem; background: var(--surface); border-radius: var(--radius); z-index: 10; }
+.skip-link { position: absolute; inset-inline-start: 1rem; top: -3rem; padding: 0.5rem 1rem; background: var(--surface); border-radius: var(--radius); z-index: 10; }
 .skip-link:focus { top: 1rem; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 /* Header, menus and the language switcher */
 .site-header { border-bottom: 1px solid var(--border); background: var(--surface); }
 .site-header-inner { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.5rem; padding-block: 1rem; }
-.site-name { color: var(--text); font-weight: 600; text-decoration: none; margin-right: auto; }
+.site-name { color: var(--text); font-weight: 600; text-decoration: none; margin-inline-end: auto; }
 .site-logo { display: block; width: auto; height: 2.5rem; max-width: 12rem; object-fit: contain; object-position: left center; }
+[dir="rtl"] .site-logo { object-position: right center; }
 .site-menu ul, .site-footer nav ul, .language-switcher ul { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; margin: 0; padding: 0; list-style: none; }
 .site-menu li { position: relative; }
 .site-menu a { color: var(--text); text-decoration: none; }
@@ -66,29 +67,30 @@ main:focus { outline: none; }
 .language-switcher [aria-current="true"] { color: var(--text); font-weight: 600; text-decoration: none; }
 .site-menu .is-active > a { font-weight: 600; }
 /* Sub-menus open on hover and keyboard focus. */
-.site-menu li ul { display: none; position: absolute; top: 100%; left: 0; min-width: 12rem; flex-direction: column; padding: 0.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); z-index: 5; }
+.site-menu li ul { display: none; position: absolute; top: 100%; inset-inline-start: 0; min-width: 12rem; flex-direction: column; padding: 0.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); z-index: 5; }
 .site-menu li:hover > ul, .site-menu li:focus-within > ul { display: flex; }
 .language-switcher { font-size: 0.875rem; }
 
 /* Pages */
 .page-header, .entry-header { margin-bottom: 2rem; }
-.notice { padding: 0.75rem 1rem; border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); background: var(--surface); }
+.notice { padding: 0.75rem 1rem; border: 1px solid var(--border); border-inline-start: 4px solid var(--accent); border-radius: var(--radius); background: var(--surface); }
 .prose > :first-child { margin-top: 0; }
-.prose blockquote { margin-inline: 0; padding-left: 1rem; border-left: 3px solid var(--border); color: var(--muted); }
+.prose blockquote { margin-inline: 0; padding-inline-start: 1rem; border-inline-start: 3px solid var(--border); color: var(--muted); }
 figure { margin: 1.5rem 0; }
 .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); gap: 0.75rem; padding: 0; list-style: none; }
 .block { margin-block: 2rem; }
 .button, button { display: inline-block; padding: 0.55rem 1.1rem; border: 0; border-radius: var(--radius); background: var(--accent); color: var(--accent-text); font: inherit; font-weight: 600; text-decoration: none; cursor: pointer; }
 
-/* Rich text images: the editor's width and alignment presets (no inline styles) */
+/* Rich text images: the editor's width and alignment presets (no inline styles). Left and right mean the start and
+   end of the line, so they swap on right-to-left pages (dir="rtl"), where the text starts on the right. */
 .sunrice-img { display: block; max-width: 100%; height: auto; margin-block: 1.5rem; }
 .sunrice-img-w-25 { width: 25%; }
 .sunrice-img-w-50 { width: 50%; }
 .sunrice-img-w-75 { width: 75%; }
 .sunrice-img-w-100, .sunrice-img-full { width: 100%; }
 .sunrice-img-center { margin-inline: auto; }
-.sunrice-img-left { float: left; margin: 0.35rem 1.5rem 1.5rem 0; }
-.sunrice-img-right { float: right; margin: 0.35rem 0 1.5rem 1.5rem; }
+.sunrice-img-left { float: inline-start; margin-block: 0.35rem 1.5rem; margin-inline: 0 1.5rem; }
+.sunrice-img-right { float: inline-end; margin-block: 0.35rem 1.5rem; margin-inline: 1.5rem 0; }
 .sunrice-img-left:not([class*="sunrice-img-w-"]), .sunrice-img-right:not([class*="sunrice-img-w-"]) { max-width: 50%; }
 /* A captioned image: a <figure> with the presets, the picture filling the width they give it, the caption under it */
 figure.sunrice-img > img { display: block; max-width: 100%; height: auto; margin-inline: auto; }

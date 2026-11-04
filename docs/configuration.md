@@ -20,6 +20,7 @@ A dash in the *Env* column means the key has no environment variable: change it 
 | --- | --- | --- | --- |
 | `locales` | `APP_LOCALE` (`['en']`) | `SUNRICE_LOCALES` (`en,id`) | The content languages, the first being the main one, until Settings → Languages is saved. Codes as `app.locale` uses them (`en`, `id`, `pt_BR`). |
 | `locale_names` | `[]` | — | Their names by code (`['id' => 'Bahasa Indonesia']`); others are named in English (with `intl`). Settings → Languages, once saved, replaces both. |
+| `rtl_locales` | `['ar', 'arc', 'ckb', 'dv', 'fa', 'he', 'khw', 'ks', 'nqo', 'ps', 'sd', 'syr', 'ug', 'ur', 'yi']` | — | Languages written right to left, by primary subtag (`ar` counts for `ar_EG` and `ar-SA`): their pages get `dir="rtl"` (`cms_dir()`, `Cms::page()->dir()`). A list you set replaces this one. See [Right-to-left languages](site.md#right-to-left-languages). |
 
 See [Languages](collections.md#languages).
 
