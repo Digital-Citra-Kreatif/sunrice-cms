@@ -3,6 +3,10 @@ import * as React from 'react';
 import { usePage } from '@inertiajs/react';
 import { definePlugin } from '@imajiner/admin-sdk';
 import { setLocaleNames } from '@/lib/entries.ts';
+import { installCmsApi } from '@/lib/field-inputs.ts';
+
+// For plugins' bundles that add to the CMS's pages (their field types' inputs): set before they load.
+installCmsApi();
 
 /** A page that first takes the content languages' names the panel shares (`cms.locales`), so localeName() says them as the site does. */
 function withLocaleNames<P extends object>(Page: React.ComponentType<P>): React.ComponentType<P> {

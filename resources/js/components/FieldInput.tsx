@@ -10,6 +10,7 @@ import { FieldError } from '@/components/FieldError.tsx';
 import { AFFIXED_INPUT, Affixed, FieldHint, HelperText, SharedHint } from '@/components/FieldPresentation.tsx';
 import { TermsPicker } from '@/components/TermsPicker.tsx';
 import { errorsAt } from '@/lib/builder.ts';
+import { fieldInputFor } from '@/lib/field-inputs.ts';
 import { codeLanguageOf } from '@/lib/code.ts';
 import { isShown } from '@/lib/conditions.ts';
 import { affixesOf, CONTAINER_TYPES, hintOf } from '@/lib/presentation.ts';
@@ -211,7 +212,13 @@ function Control({ field, value, onChange, errors, id, content, fill = false, de
             return <Rows field={field} value={Array.isArray(value) ? value : []} onChange={onChange} errors={errors} id={id} content={content} />;
         case 'flexible':
             return <Blocks field={field} value={Array.isArray(value) ? value : []} onChange={onChange} errors={errors} id={id} />;
-        default:
+        default: {
+            // A plugin's field type with an input of its own (registerFieldInput()).
+            const Own = fieldInputFor(field.type);
+            if (Own) {
+                return <Own field={field} value={value} onChange={onChange} errors={errors} id={id} describedBy={describedBy} />;
+            }
+
             // No maxLength: a pasted text that's too long would be cut silently; the counter shows it instead.
             return (
                 <Affixed prefix={prefix} suffix={suffix} id={id}>
@@ -219,6 +226,7 @@ function Control({ field, value, onChange, errors, id, content, fill = false, de
                         placeholder={stringConfig(field, 'placeholder')} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)} />
                 </Affixed>
             );
+        }
     }
 }
 
