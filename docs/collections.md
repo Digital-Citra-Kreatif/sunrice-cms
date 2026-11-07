@@ -262,6 +262,24 @@ Every save records which entries and terms an entry's fields point at, and the e
 
 Every action is written to the [activity log](../../admin/docs/activity.md): created, duplicated, updated (with the fields that changed), published, unpublished, reverted, trashed, restored and deleted.
 
+## In the sidebar
+
+Each collection is listed under **Content** and each taxonomy under **Taxonomies**. A plugin that lists
+some of them in a group of its own (a shop's products and product categories under **Shop**) keeps
+them out of those two groups, so each shows once, with `Sunrice\Cms\Admin\ContentNavigation` (`@api`)
+in its `register()`:
+
+```php
+app(ContentNavigation::class)->listElsewhere(
+    collections: fn () => ['products'],
+    taxonomies: fn () => ['product_categories', 'brands'],
+);
+```
+
+The closures run when the sidebar is built, so the handles may come from settings. Only the sidebar
+changes: the pages, permissions and Structure entries stay as they are, and the plugin's own items
+should link to the same pages (`cms/collections/{handle}/entries`, `cms/taxonomies/{handle}/terms`).
+
 ## The dashboard
 
 The CMS adds these widgets to the panel's [dashboard](../../admin/docs/panel.md#dashboard-widgets), each showing only what the user may see (per collection and per form, as `Support\Access` decides):

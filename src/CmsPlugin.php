@@ -19,6 +19,7 @@ use Sunrice\Admin\Permissions\Permission;
 use Sunrice\Cms\Actions\Seo\SaveSeoSettings;
 use Sunrice\Cms\Actions\Users\ReleaseUserContent;
 use Sunrice\Cms\Admin\CollectionResource;
+use Sunrice\Cms\Admin\ContentNavigation;
 use Sunrice\Cms\Admin\DashboardWidgets;
 use Sunrice\Cms\Admin\FormResource;
 use Sunrice\Cms\Admin\GlobalSetResource;
@@ -152,17 +153,24 @@ final class CmsPlugin extends BasePlugin
             Permission::make('cms.fieldsets.update', 'Edit fieldsets', 'Content structure'),
             Permission::make('cms.fieldsets.delete', 'Delete fieldsets', 'Content structure'),
         );
-        // Each collection under Content, each taxonomy under Taxonomies (from the cached handles).
-        $panel->navigationUsing(fn (): array => [
-            ...array_map(fn (string $handle, array $collection): NavigationItem => NavigationItem::make("cms-collection-{$handle}")
-                ->label($collection['title'])->verbatim()->url("cms/collections/{$handle}/entries")->icon($collection['listing'] ? 'newspaper' : 'file-text')
-                ->group('Content')->sort(10)->visible(fn (Authorizable $user): bool => Access::entries($user, 'view', $handle)),
-                array_keys(Support\Handles::collectionTitles()), Support\Handles::collectionTitles()),
-            ...array_map(fn (string $handle, string $title): NavigationItem => NavigationItem::make("cms-taxonomy-{$handle}")
-                ->label($title)->verbatim()->url("cms/taxonomies/{$handle}/terms")->icon('tag')
-                ->group('Taxonomies')->sort(60)->visible(fn (Authorizable $user): bool => Access::terms($user, 'view', $handle)),
-                array_keys(Support\Handles::taxonomyTitles()), Support\Handles::taxonomyTitles()),
-        ]);
+        // Each collection under Content, each taxonomy under Taxonomies (from the cached handles),
+        // but those a plugin lists in its own group (ContentNavigation).
+        $panel->navigationUsing(function (): array {
+            $elsewhere = app(ContentNavigation::class);
+            $collections = array_diff_key(Support\Handles::collectionTitles(), array_flip($elsewhere->collectionsElsewhere()));
+            $taxonomies = array_diff_key(Support\Handles::taxonomyTitles(), array_flip($elsewhere->taxonomiesElsewhere()));
+
+            return [
+                ...array_map(fn (string $handle, array $collection): NavigationItem => NavigationItem::make("cms-collection-{$handle}")
+                    ->label($collection['title'])->verbatim()->url("cms/collections/{$handle}/entries")->icon($collection['listing'] ? 'newspaper' : 'file-text')
+                    ->group('Content')->sort(10)->visible(fn (Authorizable $user): bool => Access::entries($user, 'view', $handle)),
+                    array_keys($collections), $collections),
+                ...array_map(fn (string $handle, string $title): NavigationItem => NavigationItem::make("cms-taxonomy-{$handle}")
+                    ->label($title)->verbatim()->url("cms/taxonomies/{$handle}/terms")->icon('tag')
+                    ->group('Taxonomies')->sort(60)->visible(fn (Authorizable $user): bool => Access::terms($user, 'view', $handle)),
+                    array_keys($taxonomies), $taxonomies),
+            ];
+        });
         $panel->navigation(
             NavigationItem::make('cms-comments')->label('Comments')->url('cms/comments')->icon('message-square')
                 ->group('Content')->sort(45)->permission('cms.comments.view'),
