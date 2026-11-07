@@ -1,9 +1,9 @@
-import { Card, CardContent, CollapsibleCard } from '@imajiner/admin-sdk/ui';
+import { Card, CardContent, cardSummary, CollapsibleCard, CollapsibleCardGroup } from '@imajiner/admin-sdk/ui';
 import { FieldError, FieldInput, Fields, labelOf } from '@/components/FieldInput.tsx';
 import { ChangedMarker } from '@/components/EntryStatus.tsx';
 import { FieldHint, HelperText, MainLanguage, SharedHint } from '@/components/FieldPresentation.tsx';
 import { errorsAt, hasErrors } from '@/lib/builder.ts';
-import { isShown } from '@/lib/conditions.ts';
+import { isShown, visibleValues } from '@/lib/conditions.ts';
 import { hintOf } from '@/lib/presentation.ts';
 import { fieldGrid, widthClass } from '@/lib/width.ts';
 import type { Errors, FieldDefinition } from '@/types.ts';
@@ -59,6 +59,7 @@ export function FieldSections({ fields, values, onChange, errors, storageKey, sh
     // Shared fields say under them where to edit them, in the main language (SharedHint).
     return (
         <MainLanguage.Provider value={mainLanguage}>
+        <CollapsibleCardGroup className="cms:gap-6">
         <div className={fieldGrid('cms:gap-6')}>
             {sections.map((section) => {
                 if (Array.isArray(section)) {
@@ -89,7 +90,8 @@ export function FieldSections({ fields, values, onChange, errors, storageKey, sh
                 const fieldErrors = errorsAt(errors, `data.${section.handle}`);
 
                 return (
-                    <CollapsibleCard key={section.handle} className={widthClass(section)} title={changed.includes(section.handle) ? <>{labelOf(section)}<ChangedMarker /></> : labelOf(section)} titleClassName="cms:text-base"
+                    <CollapsibleCard key={section.handle} className={widthClass(section)}
+                        summary={cardSummary(visibleValues(section.fields ?? [], value)) || undefined} title={changed.includes(section.handle) ? <>{labelOf(section)}<ChangedMarker /></> : labelOf(section)} titleClassName="cms:text-base"
                         headerAction={hasHint(section) ? <FieldHint field={section} id={`data-${section.handle}`} label={labelOf(section)} maxWidth="cms:max-w-40 cms:sm:max-w-64" /> : undefined}
                         storageKey={`${storageKey}:${section.handle}`} hasErrors={!isShared && hasErrors(errors, `data.${section.handle}`)}>
                         <fieldset disabled={isShared || disabled} role="group" aria-label={labelOf(section)} className={`cms:flex cms:flex-col cms:gap-2 ${isShared ? 'cms:opacity-60' : ''}`}>
@@ -106,6 +108,7 @@ export function FieldSections({ fields, values, onChange, errors, storageKey, sh
                 );
             })}
         </div>
+        </CollapsibleCardGroup>
         </MainLanguage.Provider>
     );
 }

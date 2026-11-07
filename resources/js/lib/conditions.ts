@@ -122,3 +122,18 @@ export function startValue(input: ConditionValueInput): string | number | boolea
             return '';
     }
 }
+
+/**
+ * The values a reader can see in a group: only its shown fields, groups
+ * inside it read the same way. Hidden fields keep their values (so a
+ * layout switched back finds them), but those don't belong in a summary.
+ */
+export function visibleValues(fields: FieldDefinition[], value: unknown): unknown[] {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return [];
+    const values = value as Record<string, unknown>;
+
+    // Flat: a group's values sit beside the others (as an array they'd be summed up as "N items").
+    return fields.filter((field) => isShown(field, values)).flatMap((field) => field.type === 'group' && field.fields
+        ? visibleValues(field.fields, values[field.handle])
+        : [values[field.handle]]);
+}
