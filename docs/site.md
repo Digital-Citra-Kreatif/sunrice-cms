@@ -585,7 +585,25 @@ A result's entries share one `HydrationContext`: the first `values()` loads what
 
 ### Components
 
-For a part of a template without PHP, `<x-sunrice-cms::entries>` and `<x-sunrice-cms::terms>` run the query and leave the markup to you, as `$component->entries` and `$component->terms`. Every component and its attributes are listed below.
+The CMS's Blade components, each described below:
+
+| Component | For |
+| --- | --- |
+| [`<x-sunrice-cms::entries>`](#x-sunrice-cmsentries) | A list of entries (latest posts, related ones), the markup yours. |
+| [`<x-sunrice-cms::terms>`](#x-sunrice-cmsterms) | A taxonomy's terms (categories with counts, a tree). |
+| [`<x-sunrice-cms::seo>`](#x-sunrice-cmsseo) | The `<head>`'s title, description, canonical and `hreflang` links, social cards, structured data and the site icon. |
+| [`<x-sunrice-cms::search>`](#x-sunrice-cmssearch) | The search form and results. |
+| [`<x-sunrice-cms::entry-filter>`](#x-sunrice-cmsentry-filter) | Filters and sorting for a list of entries. |
+| [`<x-sunrice-cms::form>`](#x-sunrice-cmsform) | A form built in Content → Forms. |
+| [`<x-sunrice-cms::comments>`](#x-sunrice-cmscomments) | An entry's comments and the comment form. |
+| [`<x-sunrice-cms::code>`](#x-sunrice-cmscode) | Settings → Site code (analytics, a chat widget) in its place. |
+| [`<x-sunrice-cms::code-block>`](#x-sunrice-cmscode-block) | A code field's value shown as code. |
+| [`<x-sunrice-cms::link>`](#x-sunrice-cmslink) | A Link field's value as an `<a>`, in the page's language. |
+| [`<x-sunrice-cms::language-switcher>`](#x-sunrice-cmslanguage-switcher) | Links to the page shown in its other languages. |
+
+Menus have no component, as their markup is always the site's own: loop over `Cms::menu('main')` (see [Menus](menus.md#in-templates); the starter templates' `cms/partials/menu.blade.php` is one with sub-menus). Nor do globals: `Cms::global('footer')` gives a global set's values, as fields come ([Globals](globals.md)).
+
+For a part of a template without PHP, `<x-sunrice-cms::entries>` and `<x-sunrice-cms::terms>` run the query and leave the markup to you, as `$component->entries` and `$component->terms`.
 
 ```blade
 <x-sunrice-cms::entries collection="blog" :limit="3" :term="$news" :except="$entry" order="-date">
@@ -664,6 +682,23 @@ See [Site code](#site-code): `place` (`head`, `body-start`, `body-end`).
 #### `<x-sunrice-cms::code-block>`
 
 A [code field](fields.md#code-fields)'s value shown as code, escaped: `<x-sunrice-cms::code-block :value="$values['snippet']" language="html" />` prints `<pre><code class="language-html">…</code></pre>`, nothing when it's empty; other attributes go on the `<pre>`. Add Prism or highlight.js yourself for colours.
+
+#### `<x-sunrice-cms::link>`
+
+A [Link field](fields.md#printing-a-link)'s value as a link, at its address in the page's language: an entry, term or listing link follows its page (`/about` on English pages, `/id/tentang` on Indonesian ones), an address stays as typed.
+
+```blade
+<x-sunrice-cms::link :link="$values['cta']" class="button" />
+{{-- <a href="https://example.com/id/tentang" class="button">Tentang</a> --}}
+```
+
+| Attribute | |
+| --- | --- |
+| `link` | The field's value (`$values['cta']`, a repeater row's `$row['link']` …). Nothing is printed when it's null or has no `url` (a page not live, a term in the trash). |
+| `rel` | Added to the link's own (`nofollow`, `sponsored`, `ugc`, and `noopener noreferrer` with a new tab), each word once. |
+| `target` | Instead of the link's (`_blank` when the editor ticked **Open in a new tab**). |
+
+The text is the editor's, else the page's title in the page's language, else the address; a slot replaces it (an image, a card). Other attributes (`class`, `id`, `data-…`, `aria-…`) go on the `<a>`; `href` is always the link's. Everything printed is escaped. It runs no queries: the field's value already has the address, loaded with the page's other fields.
 
 #### `<x-sunrice-cms::language-switcher>`
 

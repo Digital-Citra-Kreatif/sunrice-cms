@@ -77,7 +77,7 @@ A template set by name (an entry's or term's Page settings, a collection's or ta
 - Data only through the CMS (`Cms::…`, components, `$values`): no database queries or models, no `@php` beyond small formatting.
 - Every field can be empty: `@if`, `?->`, `?? ''`.
 - Images: a media field's value has `->url()` (and sizes, `->url('medium')`) and `->altIn()` (its alt text in the page's language): always `alt="{{ $image->altIn() }}"`.
-- Links: `->url()` of entries and terms, menus' `url`; never build them from slugs.
+- Links: `->url()` of entries and terms, menus' `url`; never build them from slugs; a Link field with `<x-sunrice-cms::link :link="$values['cta']" />` (nothing when it has no address).
 - After writing, open the page with cms_render_page and fix what it reports.
 MD;
 

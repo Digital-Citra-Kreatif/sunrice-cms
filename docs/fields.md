@@ -98,9 +98,39 @@ A code field is shared by all languages unless its definition says `translatable
 
 A link goes to one of the menu builder's kinds, chosen in the editor's **Link to** dropdown: **Link** (an address), **Entry**, **Term** (a term's page) or **Listing** (a collection's listing page). Entries are picked as in an Entries field; terms and listing pages with the search rich text links use (terms of taxonomies the editor may view, with term pages; listing pages of the collections they may view; `GET admin/rich-text-links?source=term`, see [rich text links](#rich-text-links)). A link to an entry, term or listing page follows it: its `url` and `title` are its own in the page's language (an entry's main language's page when it isn't translated, as in rich text), so a new slug or a translation needs no edit; the `url` is null while there's no page (an entry not live, where a preview gets its draft title still without a URL; a term or collection in the trash). The linked entry must exist, outside the trash, in the chosen `collections`; a term must exist outside the trash, and a listing page's collection must have one (terms and listing pages aren't restricted by a setting). The editor's text input is the link's `label`; **Open in a new tab** is ticked on a new address link and not on the other kinds (saved links keep theirs); `nofollow`, `sponsored` and `ugc` are stored as `rel`. Templates get `rel` ready to print: the choices, then `noopener noreferrer` when it opens in a new tab (`nofollow noopener noreferrer`), or null. Links saved before kinds existed (`{url, label, new_tab}`) are addresses, and those without `rel` have none.
 
+#### Printing a link
+
+Use the link component: it prints the `<a>` with the link's address in the page's language, `target="_blank"` and `rel` when the editor chose them, and the editor's text (else the page's title, else the address). It prints nothing when there's no address, so it needs no `@if`:
+
 ```blade
-@if ($cta = $values['cta'])
-    @if ($cta['url'])<a href="{{ $cta['url'] }}"@if ($cta['new_tab']) target="_blank"@endif @if ($cta['rel'])rel="{{ $cta['rel'] }}"@endif>{{ $cta['label'] ?? $cta['title'] ?? $cta['url'] }}</a>@endif
+<x-sunrice-cms::link :link="$values['cta']" class="button" />
+```
+
+An entry link to an About page translated as Tentang prints, on each language's page:
+
+```html
+<!-- /contact (English) -->
+<a href="https://example.com/about" class="button">About</a>
+<!-- /id/kontak (Indonesian) -->
+<a href="https://example.com/id/tentang" class="button">Tentang</a>
+```
+
+The address is in the page itself (no redirect), and follows the page: a new slug or a new translation needs no edit. Where the target isn't translated, it's the page's language's address of the main language's page (`/id/about`, see [untranslated pages](site.md#untranslated-pages)). Only a **Link** (an address typed in) stays as typed in every language, so link to your own pages with **Entry**, **Term** or **Listing**.
+
+A slot replaces the text; other attributes go on the `<a>`, and a `rel` of yours is added to the link's own:
+
+```blade
+<x-sunrice-cms::link :link="$values['cta']" class="card" rel="external">
+    <img src="{{ $values['image']?->url('medium') }}" alt="">
+    <span>{{ $values['cta']['label'] ?? __('Read more') }}</span>
+</x-sunrice-cms::link>
+```
+
+See [`<x-sunrice-cms::link>`](site.md#components) in the components for every attribute. To write the tag yourself, the value has `url`, `label`, `title`, `new_tab` and `rel` (above):
+
+```blade
+@if (($cta = $values['cta']) && $cta['url'])
+    <a href="{{ $cta['url'] }}"@if ($cta['new_tab']) target="_blank"@endif @if ($cta['rel'])rel="{{ $cta['rel'] }}"@endif>{{ $cta['label'] ?? $cta['title'] ?? $cta['url'] }}</a>
 @endif
 ```
 
