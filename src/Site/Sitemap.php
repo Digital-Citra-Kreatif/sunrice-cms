@@ -190,11 +190,13 @@ final class Sitemap
             }
             yield $xml.self::remember($links, $collection->id.':'.$term->term_id, fn (): string => self::links(Seo::termAlternates($term))).'</url>';
         }
-        // Listing pages, in every language.
-        foreach (Collection::query()->whereNotNull('listing_route')->orderBy('id')->get() as $collection) {
+        // Listing pages, in every language, but those that ask not to be indexed.
+        foreach (Collection::query()->with('listings')->whereNotNull('listing_route')->orderBy('id')->get() as $collection) {
             $links = self::links(Seo::listingAlternates($collection));
             foreach (Locales::all() as $locale) {
-                yield '<url><loc>'.e(AppUrl::url((string) $collection->listingUrl($locale))).'</loc>'.$links.'</url>';
+                if (! self::listingNoindex($collection, $locale) && ($url = $collection->listingUrl($locale)) !== null) {
+                    yield '<url><loc>'.e(AppUrl::url($url)).'</loc>'.$links.'</url>';
+                }
             }
         }
         // Taxonomies' index pages, shared and in collections, in every language, but those that ask not to be indexed.
@@ -236,6 +238,14 @@ final class Sitemap
     }
 
     /** Whether an index page asks not to be indexed in a language (its SEO card). */
+    /** Whether a collection's listing page asks not to be indexed in a language: its own SEO card there, as the page's head reads it (Seo::forListing()). */
+    private static function listingNoindex(Collection $collection, string $locale): bool
+    {
+        $seo = $collection->listings->firstWhere('locale', $locale)?->data[Seo::KEY] ?? null;
+
+        return is_array($seo) && ($seo['noindex'] ?? false) === true;
+    }
+
     private static function indexNoindex(Taxonomy $taxonomy, ?Collection $collection, string $locale): bool
     {
         $seo = $taxonomy->listings->first(fn (TaxonomyListing $listing): bool => $listing->locale === $locale && $listing->collection_id === $collection?->id)?->data[Seo::KEY] ?? null;
@@ -279,9 +289,9 @@ final class Sitemap
                 yield ['url' => AppUrl::url($url), 'collection' => $collection->handle];
             }
         }
-        foreach (Collection::query()->whereNotNull('listing_route')->orderBy('id')->get() as $collection) {
+        foreach (Collection::query()->with('listings')->whereNotNull('listing_route')->orderBy('id')->get() as $collection) {
             foreach (Locales::all() as $code) {
-                if (($locale === null || $locale === $code) && ($url = $collection->listingUrl($code)) !== null) {
+                if (($locale === null || $locale === $code) && ! self::listingNoindex($collection, $code) && ($url = $collection->listingUrl($code)) !== null) {
                     yield ['url' => AppUrl::url($url), 'collection' => $collection->handle];
                 }
             }
