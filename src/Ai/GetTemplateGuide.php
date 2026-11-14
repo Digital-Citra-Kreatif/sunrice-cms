@@ -12,13 +12,15 @@ use Sunrice\Cms\Settings\CodeSettings;
 use Sunrice\Cms\Support\Templates;
 
 #[IsReadOnly]
-#[Description('Read this before creating or changing the site\'s templates: how a page picks its Blade view, what each kind of page gets, how to read fields, query entries, show menus, globals, forms and SEO, the rules to keep; which view every collection and taxonomy uses now, and the template files there are. Whether you may write them: "can_write".')]
+#[Description('Read this before creating or changing the site\'s templates (and read_docs "cms/building-a-site" before building a site): how a page picks its Blade view, what each kind of page gets, how to read fields, query entries, show menus, globals, forms and SEO, the rules to keep; which view every collection and taxonomy uses now, and the template files there are. Whether you may write them: "can_write".')]
 final class GetTemplateGuide extends CmsTool
 {
     protected string $name = 'cms_get_template_guide';
 
     public const GUIDE = <<<'MD'
 # Templates
+
+This is the short version for templates. For the whole workflow (planning the content model, languages, SEO, collections, the layout, what each field gives a template, turning a static HTML site into Sunrice, and the checks before finishing) read read_docs "cms/building-a-site" first.
 
 The site's templates are Blade views in `resources/views/cms/` (view names `cms.…`: `pages/landing.blade.php` is `cms.pages.landing`). The CMS's plain fallbacks are `sunrice-cms::entry`, `::listing`, `::term`, `::taxonomy-index` and `::search`: read them with cms_read_template (source "default") for complete, working examples.
 

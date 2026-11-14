@@ -38,8 +38,15 @@ Writing templates is off unless the site turns it on, and then only for super ad
 ],
 ```
 
-The CMS registers its docs (the `docs` folder it ships) for `read_docs` ("cms/site", "cms/fields" …). Its command `sunrice:publish-scheduled` can be added to the panel's `sunrice-admin.ai.commands` for `run_command`.
+The CMS registers its docs (the `docs` folder it ships) for `read_docs` ("cms/site", "cms/fields" …). [Building a site](building-a-site.md) (`read_docs` "cms/building-a-site") is the task-ordered guide for agents building or converting a site: the content model, settings, templates, a static site turned into Sunrice and the checks before finishing. The CMS's instructions to agents and `cms_get_template_guide` point to it. Its command `sunrice:publish-scheduled` can be added to the panel's `sunrice-admin.ai.commands` for `run_command`.
 
 Collections, taxonomies, global sets, menus, redirects and forms themselves are resources, reached with the panel's `list_records`, `get_record` and `save_record`. Media for media fields comes from `list_media`.
 
 The panel's `get_settings` and `update_settings` reach the CMS's settings sections (`site`, `locales`, `code`, `comments`, `cache`) and Settings → SEO's structured data as the section `seo` (`SiteSettings::structuredDataForm()`'s fields: `structuredData`, `publisher`, `publisherName`, `publisherType`, `telephone`, `address`, `sameAs`), behind `cms.settings.site`, checked as the page checks them. With `SUNRICE_SITE_CODE=false` the `code` section is gone: `get_settings` and `update_settings` say there's no such section, and `get_panel_info` doesn't list it.
+
+## For coding agents in the app's code
+
+Agents working in the app's repository (Claude Code, Codex, Cursor) read files, not the MCP server. Two things lead them to the same guide, `vendor/sunrice/cms/docs/building-a-site.md`:
+
+- **`AGENTS.md`.** `php artisan sunrice:install` offers to add a Sunrice section to the app's `AGENTS.md` (creating the file when there's none): where the guide is and the rules that matter most. `php artisan sunrice:agents` writes it at any time, and after an upgrade brings it up to date. The section sits between `<!-- sunrice:start -->` and `<!-- sunrice:end -->`, so writing it again replaces only that and never touches the rest of the file (`Actions\Install\WriteAgentsFile`). Claude Code reads `CLAUDE.md` rather than `AGENTS.md`: an app without a `CLAUDE.md` gets one holding `@AGENTS.md`, which imports it; an app's own `CLAUDE.md` is never changed, and when it doesn't mention `AGENTS.md` the command says to add the line `@AGENTS.md` to it.
+- **[Laravel Boost](https://github.com/laravel/boost).** The CMS ships a guideline, `resources/boost/guidelines/core.blade.php`, which Boost adds to the agents' guidelines it writes (`php artisan boost:install`, then pick `sunrice/cms`) when the app requires `sunrice/cms` itself, as installed apps do. It sums up the essentials and points to the guide.

@@ -109,6 +109,8 @@ final class CmsPlugin extends BasePlugin
         $panel->installStep('cms.home-route', fn (InstallOutput $output) => app(Site\AppHomeRoute::class)->install($output));
         // sunrice:install: offers the Pages and Posts collections a site that has none of them starts with.
         $panel->installStep('cms.collections', fn (InstallOutput $output) => app(Actions\Install\ScaffoldCollections::class)->install($output));
+        // sunrice:install: the Sunrice section of the app's AGENTS.md, pointing AI coding agents to docs/building-a-site.md.
+        $panel->installStep('cms.agents', fn (InstallOutput $output) => app(Actions\Install\WriteAgentsFile::class)->install($output));
         // sunrice:roles: people who write and look after the content (globals' values and menus' links,
         // not their handles: cms.globals.configure, cms.menus.configure), not the structure or the people,
         // nor form submissions (visitors' personal details): those are given per form.
@@ -330,6 +332,7 @@ final class CmsPlugin extends BasePlugin
             - Structure: cms_field_types, then cms_get_blueprint and cms_save_blueprint; collections, taxonomies, global sets, menus, redirects and forms themselves are resources (list_records, save_record).
             - Forms: cms_list_submissions, cms_delete_submissions (ask first).
             - SEO: cms_seo_audit, then fix with cms_save_entry ("seo") and update_media (alt text).
+            - Building or converting a site (content model, settings, templates, a static site turned into Sunrice, the checks before finishing): read read_docs "cms/building-a-site" first.
             - Templates: read cms_get_template_guide first, then cms_read_template / cms_write_template, and check pages with cms_render_page.
             MD);
         // The CMS's developer docs (docs/) for Help → Docs and read_docs, and its user guide (guide/), shipped with the package.

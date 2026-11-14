@@ -33,6 +33,7 @@ It publishes the panel's assets and the CMS's (and other plugins') bundles, and 
 
 ## Documentation
 
+- [Building a site](https://github.com/Digital-Citra-Kreatif/sunrice/blob/main/packages/cms/docs/building-a-site.md): the task-ordered guide for AI agents building or converting a site (also `read_docs` "cms/building-a-site", and in `vendor/sunrice/cms/docs/`)
 - [Collections and entries](https://github.com/Digital-Citra-Kreatif/sunrice/blob/main/packages/cms/docs/collections.md), [Fields](https://github.com/Digital-Citra-Kreatif/sunrice/blob/main/packages/cms/docs/fields.md), [The site](https://github.com/Digital-Citra-Kreatif/sunrice/blob/main/packages/cms/docs/site.md), [Helpers and the `Cms` facade](https://github.com/Digital-Citra-Kreatif/sunrice/blob/main/packages/cms/docs/helpers.md)
 - [Configuration](https://github.com/Digital-Citra-Kreatif/sunrice/blob/main/packages/cms/docs/configuration.md), [Commands](https://github.com/Digital-Citra-Kreatif/sunrice/blob/main/packages/cms/docs/commands.md)
 - [All the docs](https://github.com/Digital-Citra-Kreatif/sunrice/blob/main/docs/README.md) and [Upgrading](https://github.com/Digital-Citra-Kreatif/sunrice/blob/main/docs/upgrading.md)
