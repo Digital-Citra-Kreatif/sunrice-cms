@@ -140,14 +140,14 @@ Media must exist, not be in the trash and be of the allowed kinds. Templates get
 
 ### Repeaters and flexible blocks
 
-In the editor, rows and blocks are dragged into order by their handle (or with the keyboard), and a top-level group field is a card of its own that folds away. Every repeater row gets a stable `_id`, an optional `_key` and a `_hidden` switch; every flexible block is stored as `{id, type, key, hidden, values}`, where `type` is a fieldset's handle. Templates get `Items` (a Laravel collection) without the hidden ones, and can pick out a keyed one:
+In the editor, rows and blocks are dragged into order by their handle (or with the keyboard), and a top-level group field is a card of its own that folds away. Every repeater row gets a stable `_id`, an optional `_key` and a `_hidden` switch; every flexible block is stored as `{id, type, key, hidden, values}`, where `type` is a fieldset's handle. Templates get them in `$values` as `Items` (a Laravel collection) without the hidden ones, and can pick out a keyed one (`byKey()`, null when no row has that key):
 
 ```blade
-@foreach ($entry->get('sections') as $block)
-    @include('blocks.'.$block->type, ['block' => $block])
+@foreach ($values['sections'] ?? [] as $block)
+    @include('cms.blocks.'.$block->type, ['block' => $block])
 @endforeach
 
-{{ $entry->get('features')->byKey('pricing')['title'] }}
+{{ ($values['features'] ?? null)?->byKey('pricing')['title'] ?? '' }}
 ```
 
 A block's values are readable as properties (`$block->heading`) or keys (`$block['heading']`). A new row or block starts with its fields' defaults (a select's or toggle's `default`; the editor gets them as the repeater's `defaults` and each kind of block's `defaults`). An error inside a row or block names the field by its label ("The Unit price field is required.") and shows under its input there (`data.sections.2.values.rows.1.price`). A block whose fieldset was deleted keeps its values; it can't be deleted while used. A fieldset may use itself (or one that uses it) as a kind of block, for sections within sections: the editor offers blocks within blocks `Schema::MAX_DEPTH` (5) levels deep, and stored content nests as deep as it goes.
