@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Panel;
+use Sunrice\Cms\Events\CommentPosted as CommentPostedEvent;
+use Sunrice\Cms\Events\CommentPosting;
 use Sunrice\Cms\Mail\CommentPosted;
 use Sunrice\Cms\Models\Comment;
 use Sunrice\Cms\Models\Entry;
@@ -26,7 +28,8 @@ use Throwable;
  * A visitor comments on an entry, or replies to a comment: checked,
  * published or held as Settings → Comments says, and moderators told.
  * Input: body, parent_id, and for guests author_name and author_email;
- * notify_replies.
+ * notify_replies. Listeners of CommentPosting may change the comment's
+ * text and status or refuse it; CommentPosted follows.
  *
  * @api
  */
@@ -81,13 +84,26 @@ final class PostComment
         $notify = $this->settings->replyNotifications && filter_var($valid['notify_replies'] ?? false, FILTER_VALIDATE_BOOL)
             && ($user !== null || $status === Comment::PENDING || ($trusted !== null && $trusted->notify_replies));
         $key = $user?->getKey();
+        $body = trim(str_replace("\r\n", "\n", $valid['body']));
+        // Listeners may change the text and status (a spam filter), or refuse; what they leave is checked again.
+        event($posting = new CommentPosting($entry, $parent, $name, $email, $locale, $body, $status));
+        $body = trim(str_replace("\r\n", "\n", $posting->body));
+        Validator::make(['body' => $body, 'status' => $posting->status], [
+            'body' => ['required', 'string', 'max:'.self::MAX_LENGTH],
+            'status' => ['required', 'in:'.implode(',', [Comment::APPROVED, Comment::PENDING, Comment::SPAM])],
+        ], [], ['body' => 'comment'])->validate();
+        if ($posting->status !== $status) {
+            $status = $posting->status;
+            // Signed up for replies only as the status it ends with allows (see above).
+            $notify = $notify && ($user !== null || $status === Comment::PENDING || ($trusted !== null && $trusted->notify_replies));
+        }
 
         $comment = $entry->comments()->create([
             'parent_id' => $parent?->id,
             'user_id' => is_int($key) ? $key : (is_numeric($key) ? (int) $key : null),
             'author_name' => $name,
             'author_email' => $email,
-            'body' => trim(str_replace("\r\n", "\n", $valid['body'])),
+            'body' => $body,
             'status' => $status,
             'locale' => $locale,
             'notify_replies' => $notify,
@@ -97,9 +113,11 @@ final class PostComment
         if ($comment->isApproved()) {
             SetCommentStatus::notifyParent($comment);
         }
-        if (! $moderator && $this->settings->notifyModerators) {
+        // Spam isn't worth a look.
+        if (! $moderator && $this->settings->notifyModerators && $status !== Comment::SPAM) {
             $this->tellModerators($comment);
         }
+        CommentPostedEvent::dispatch($comment, 'site');
 
         return $comment;
     }

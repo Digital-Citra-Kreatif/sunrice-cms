@@ -7,6 +7,8 @@ namespace Sunrice\Cms\Actions\Terms;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
+use Sunrice\Cms\Events\TermDeleted;
+use Sunrice\Cms\Events\TermDeleting;
 use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Models\ContentReference;
 use Sunrice\Cms\Models\MenuItem;
@@ -27,13 +29,14 @@ final class DeleteTerm
 {
     public function __construct(private readonly ActivityLog $activity) {}
 
-    /** @throws ValidationException when the term is used elsewhere and $force is false */
+    /** @throws ValidationException when the term is used elsewhere and $force is false, or a TermDeleting listener refuses */
     public function handle(Term $term, bool $force = false): void
     {
         $usedBy = References::usedBy(Reference::TERM, $term->id);
         if (! $force && $usedBy !== []) {
             throw ValidationException::withMessages(['term' => __('This term is used by :uses. Delete it anyway to leave those fields without it.', ['uses' => References::sentence($usedBy)])]);
         }
+        TermDeleting::dispatch($term, true);
         $title = $term->title(Locales::default());
         DB::transaction(function () use ($term): void {
             Term::query()->withTrashed()->where('parent_id', $term->id)->update(['parent_id' => $term->parent_id]);
@@ -46,5 +49,6 @@ final class DeleteTerm
             References::forget(ContentReference::TERM, $term->id);
         });
         $this->activity->record('deleted', 'term', $term, $title);
+        TermDeleted::dispatch($term, true);
     }
 }

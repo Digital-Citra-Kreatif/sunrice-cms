@@ -513,7 +513,7 @@ Cms::resolveTemplateUsing(fn (Page $page): ?string => $page->entry?->entry->pare
 Cms::bodyClassUsing(fn (Page $page): array => $page->collection?->dated ? ['has-date'] : []);
 ```
 
-Hooks run in the order they were registered, on every request; keep them cheap. How long the page cache keeps a page has its own hook, [`PageCache::lifetimeUsing()`](caching.md).
+Hooks run in the order they were registered, on every request; keep them cheap. How long the page cache keeps a page has its own hook, [`PageCache::lifetimeUsing()`](caching.md). Every hook and event, in one place: [Events and hooks](events.md).
 
 ## Redirects
 

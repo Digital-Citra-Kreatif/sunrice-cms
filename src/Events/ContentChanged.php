@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sunrice\Cms\Events;
 
 use Illuminate\Foundation\Events\Dispatchable;
+use Sunrice\Admin\Events\RecordsActor;
 
 /**
  * Something the site shows changed: an entry went live or off, a term,
@@ -13,13 +14,18 @@ use Illuminate\Foundation\Events\Dispatchable;
  * then. It may fire several times for one save (once per record), so
  * keep listeners cheap or queue them.
  *
- * `$what` names what changed, like "entry 12" or "menu".
+ * `$what` names what changed, like "entry 12" or "menu". It fires once
+ * the database transaction the change is part of commits; `$user` and
+ * `$source` say who made it (RecordsActor).
  *
  * @api
  */
 final class ContentChanged
 {
-    use Dispatchable;
+    use Dispatchable, RecordsActor;
 
-    public function __construct(public readonly string $what) {}
+    public function __construct(public readonly string $what)
+    {
+        $this->recordActor();
+    }
 }

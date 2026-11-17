@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
 use Sunrice\Cms\Events\EntryPublished;
+use Sunrice\Cms\Events\EntryPublishing;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Revision;
 use Sunrice\Cms\Site\Site;
@@ -25,7 +26,9 @@ use Sunrice\Cms\Support\SearchText;
  * published yet (SaveEntryTerms) go live with it, whichever language is
  * published: now, or for a date to come when that comes (the
  * sunrice:publish-scheduled command). The draft is checked again, as the
- * blueprint may have changed since it was saved.
+ * blueprint may have changed since it was saved. Listeners of
+ * EntryPublishing may change the title, slug and fields published or
+ * refuse; EntryPublished follows.
  *
  * @api
  */
@@ -57,16 +60,19 @@ final class PublishEntry
             // Where the live page was, to redirect from if its address changes.
             $oldPath = $translation->isPublished() ? $site->path($translation, $translation->slug) : null;
             $oldSlug = $translation->isPublished() ? $translation->slug : null;
+            // Listeners may change what's published, or refuse it; what they leave is validated below.
+            $schema = $translation->editableSchema();
+            event($publishing = new EntryPublishing($translation, $publishAt, $translation->draft_title, $translation->draft_slug, $translation->draft_data));
             // As SaveDraft does: validated with the main language's shared values in rows and blocks, which ownData() drops again.
-            $data = $translation->draft_data;
+            $data = EntryInput::merge($schema, $translation->draft_data, $publishing->data);
             $main = $translation->entry->mainTranslation();
             if ($main !== null && ! $main->is($translation)) {
                 $data = $translation->entry->schema()->withShared($data, $main->draft_data);
             }
             $values = EntryInput::validate(
-                $translation->editableSchema(),
-                $translation->draft_title,
-                $translation->draft_slug,
+                $schema,
+                $publishing->title,
+                $publishing->slug,
                 $data,
                 $translation->collection_id,
                 $translation->locale,

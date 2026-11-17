@@ -6,6 +6,8 @@ namespace Sunrice\Cms\Actions\Entries;
 
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
+use Sunrice\Cms\Events\EntrySaved;
+use Sunrice\Cms\Events\EntrySaving;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Support\MediaUsage;
 use Sunrice\Cms\Support\References;
@@ -20,6 +22,8 @@ use Sunrice\Cms\Support\Seo;
  * save over someone else's newer one is refused; with terms_base (the
  * terms the editor loaded, by taxonomy handle), so is a change of terms
  * over someone else's newer one, from any language (SaveEntryTerms).
+ * Listeners of EntrySaving may change the title, slug and fields or
+ * refuse; EntrySaved follows when something changed.
  *
  * @api
  */
@@ -44,6 +48,13 @@ final class SaveDraft
             // Another language than the main one leaves the shared fields alone.
             $schema = $translation->editableSchema();
             $data = EntryInput::merge($schema, $translation->draft_data, $input['data'] ?? null);
+            // Listeners may change what's saved, or refuse it; what they leave is validated below.
+            event($saving = new EntrySaving($translation->entry->collection, $translation->locale, $translation,
+                array_key_exists('title', $input) ? $input['title'] : $translation->draft_title,
+                array_key_exists('slug', $input) ? $input['slug'] : $translation->draft_slug, $data));
+            $data = EntryInput::merge($schema, $translation->draft_data, $saving->data);
+            $input['title'] = $saving->title;
+            $input['slug'] = $saving->slug;
             // Validated with the main language's shared values in rows and blocks; ownData() drops them again.
             $main = $translation->entry->mainTranslation();
             if ($main !== null && ! $main->is($translation)) {
@@ -51,8 +62,8 @@ final class SaveDraft
             }
             $values = EntryInput::validate(
                 $schema,
-                array_key_exists('title', $input) ? $input['title'] : $translation->draft_title,
-                array_key_exists('slug', $input) ? $input['slug'] : $translation->draft_slug,
+                $input['title'],
+                $input['slug'],
                 $data,
                 $translation->collection_id,
                 $translation->locale,
@@ -112,6 +123,7 @@ final class SaveDraft
         MediaUsage::entry($translation);
         References::entry($translation);
         $this->activity->updated('entry', $translation->entry, $translation->draft_title, $changed);
+        EntrySaved::dispatch($translation, false, $changed);
 
         return $translation;
     }

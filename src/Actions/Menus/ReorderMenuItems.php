@@ -7,6 +7,7 @@ namespace Sunrice\Cms\Actions\Menus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
+use Sunrice\Cms\Events\MenuSaved;
 use Sunrice\Cms\Menus;
 use Sunrice\Cms\Models\Menu;
 use Sunrice\Cms\Models\MenuItem;
@@ -78,6 +79,7 @@ final class ReorderMenuItems
         $menu->unsetRelation('items');
         $this->menus->flush();
         $this->activity->record('reordered', 'menu', $menu, $menu->title, ['note' => 'items']);
+        MenuSaved::dispatch($menu);
         $this->cache->changed("menu {$menu->handle}", SiteCache::MENUS, SiteCache::PAGES);
 
         return true;

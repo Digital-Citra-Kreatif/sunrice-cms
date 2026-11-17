@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Cms\Actions\Entries\EntryInput;
+use Sunrice\Cms\Events\FormSubmitted;
+use Sunrice\Cms\Events\FormSubmitting;
 use Sunrice\Cms\Fields\Types\FileField;
 use Sunrice\Cms\Mail\SubmissionReceived;
 use Sunrice\Cms\Models\Form;
@@ -22,7 +24,8 @@ use Sunrice\Cms\Support\RoleMembers;
  * kept on the private upload disk), with who sent it (IP address, user
  * agent, referrer; unless sunrice-cms.forms.visitor_details is off), and
  * emails it to the form's addresses and the members of its roles (queued
- * when the app has a queue).
+ * when the app has a queue). Listeners of FormSubmitting may change or add
+ * to the values or refuse them; FormSubmitted follows.
  *
  * @api
  */
@@ -37,7 +40,21 @@ final class SubmitForm
     public function handle(Form $form, array $input, ?string $locale = null, ?string $ip = null, ?string $userAgent = null, ?string $referrer = null): Submission
     {
         $schema = $form->schema();
-        $data = array_intersect_key($input, array_flip(array_map(fn ($field): string => $field->handle, $schema->fields())));
+        $handles = array_flip(array_map(fn ($field): string => $field->handle, $schema->fields()));
+        $data = array_intersect_key($input, $handles);
+        // Listeners may change or add to the values, or refuse them (under a field's handle, with or
+        // without "data.", or any other key); what they leave is validated below.
+        try {
+            event($submitting = new FormSubmitting($form, $locale !== null && Locales::has($locale) ? $locale : Locales::default(), $data));
+        } catch (ValidationException $e) {
+            $errors = [];
+            foreach ($e->errors() as $key => $messages) {
+                $key = str_starts_with($key, 'data.') ? substr($key, 5) : $key;
+                $errors[$key] = [...($errors[$key] ?? []), ...(array) $messages];
+            }
+            throw ValidationException::withMessages($errors);
+        }
+        $data = array_intersect_key($submitting->data, $handles);
         $rules = $schema->rules($data);
         // Fields named as the visitor reads them (their label in the form's language).
         $attributes = EntryInput::attributes($schema, array_keys($rules), $locale !== null && Locales::has($locale) ? $locale : Locales::default());
@@ -91,6 +108,7 @@ final class SubmitForm
         foreach (array_unique([...$addresses, ...RoleMembers::emails($form->notify_roles ?? [])]) as $address) {
             Mail::to($address)->queue(new SubmissionReceived($submission));
         }
+        FormSubmitted::dispatch($submission);
 
         return $submission;
     }

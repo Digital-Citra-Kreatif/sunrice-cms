@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Validator as ValidatorInstance;
 use Sunrice\Admin\Activity\ActivityLog;
+use Sunrice\Cms\Events\MenuSaved;
 use Sunrice\Cms\Menus;
 use Sunrice\Cms\Models\Collection;
 use Sunrice\Cms\Models\Entry;
@@ -79,6 +80,7 @@ final class SaveMenu
         $menu->unsetRelation('items');
         $this->menus->flush();
         $this->activity->record('updated', 'menu', $menu, $menu->title, ['note' => $count.' '.($count === 1 ? 'link' : 'links')]);
+        MenuSaved::dispatch($menu);
     }
 
     /**

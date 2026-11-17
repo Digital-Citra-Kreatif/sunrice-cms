@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
+use Sunrice\Cms\Events\CommentPosted;
 use Sunrice\Cms\Models\Comment;
 
 /**
@@ -42,6 +43,7 @@ final class ReplyToComment
         ]);
         $this->activity->record('replied', 'comments', $comment, $comment->authorName());
         SetCommentStatus::notifyParent($reply);
+        CommentPosted::dispatch($reply);
 
         return $reply;
     }

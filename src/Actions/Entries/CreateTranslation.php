@@ -6,6 +6,7 @@ namespace Sunrice\Cms\Actions\Entries;
 
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
+use Sunrice\Cms\Events\EntryTranslationCreated;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Support\Locales;
@@ -59,6 +60,7 @@ final class CreateTranslation
         });
         $entry->unsetRelation('translations');
         $this->activity->record('translated', 'entry', $entry, $main->draft_title, ['locale' => $locale]);
+        EntryTranslationCreated::dispatch($translation);
 
         return $translation;
     }

@@ -53,7 +53,7 @@ See [Languages](collections.md#languages).
 | `cache.preload.batch` | `25` | — | Pages each queued preload job requests ([preloading](caching.md#preloading)). |
 | `cache.preload.delay` | `100` | — | Milliseconds between two preloaded pages. |
 
-See [Caching, events and scheduled publishing](caching.md).
+See [Caching and scheduled publishing](caching.md).
 
 ## Search
 

@@ -11,6 +11,8 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Validator as ValidatorInstance;
 use Sunrice\Admin\Activity\ActivityLog;
 use Sunrice\Cms\Actions\Entries\EntryInput;
+use Sunrice\Cms\Events\TermSaved;
+use Sunrice\Cms\Events\TermSaving;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
@@ -26,7 +28,8 @@ use Sunrice\Cms\Support\Versioned;
  * locale (the main one when left out) and parent_id (a term of the same
  * taxonomy, if it's hierarchical; never the term itself or one under it)
  * and version (the one the editor opened: a save over someone else's
- * newer one is refused).
+ * newer one is refused). Listeners of TermSaving may change the title and
+ * slug or refuse; TermSaved follows.
  *
  * @api
  */
@@ -40,6 +43,28 @@ final class SaveTerm
      * @throws ValidationException
      */
     public function handle(Taxonomy $taxonomy, array $input, ?Term $term = null): Term
+    {
+        $locale = is_string($input['locale'] ?? null) ? $input['locale'] : Locales::default();
+        $created = $term === null || ! $term->exists;
+        // Listeners may change the title and slug, or refuse; what they leave is validated in save().
+        event($saving = new TermSaving($taxonomy, $locale, $created ? null : $term, $input['title'] ?? null, $input['slug'] ?? null, null));
+        $term = $this->save($taxonomy, ['title' => $saving->title, 'slug' => $saving->slug] + $input, $term);
+        TermSaved::dispatch($term, $locale, $created);
+
+        return $term;
+    }
+
+    /**
+     * As handle(), without the events: for the term editor's actions,
+     * which fire them once for the whole save.
+     *
+     * @internal
+     *
+     * @param  array<mixed>  $input
+     *
+     * @throws ValidationException
+     */
+    public function save(Taxonomy $taxonomy, array $input, ?Term $term = null): Term
     {
         $term ??= new Term(['taxonomy_id' => $taxonomy->id]);
         $locale = $input['locale'] ?? Locales::default();

@@ -7,6 +7,7 @@ namespace Sunrice\Cms\Actions\Entries;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Sunrice\Admin\Activity\ActivityLog;
+use Sunrice\Cms\Events\EntryCreated;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\EntryTranslation;
 
@@ -48,6 +49,10 @@ final class DuplicateEntry
         });
         $copy->load('translations');
         $this->activity->record('duplicated', 'entry', $copy, TrashEntry::label($copy), ['from' => $entry->id]);
+        $first = $copy->translations->sortBy('id')->first();
+        if ($first !== null) {
+            EntryCreated::dispatch($first, $entry);
+        }
 
         return $copy;
     }

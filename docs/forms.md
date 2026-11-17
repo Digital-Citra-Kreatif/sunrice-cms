@@ -119,6 +119,8 @@ Plugins use the same captcha: `app(\Sunrice\Admin\Security\Captcha::class)->widg
 
 Visitors go back to the form on the page they were on, or to the form's **After sending, go to** page, with the thank-you message in the session, in the language the form was sent from (`$form->successMessage($locale)`). JSON requests get `201 {"message": "…", "redirect_url": "/thanks" | null}` ([more](#submitting-without-a-page-reload)).
 
+Your code hears of it: `FormSubmitting` fires before a submission is checked and kept (a listener can add values, or refuse it with a message shown on the form), and `FormSubmitted` once it's kept, to send it to a CRM or a mailing list from a queued listener. See [Events and hooks](events.md).
+
 ## Submissions
 
 Under **Content → Submissions** (`cms.submissions.view`): each form's submissions, newest first (the CSV's and the emails' dates in the app's time zone, `APP_TIMEZONE`); open one to read all of it, with who sent it (IP address, browser and the page it was sent from). **Export CSV** (`cms.submissions.export`, or `cms.submissions.{form}.export`) downloads them all, a column per field, then `IP address`, `User agent` and `Referrer`, with values spreadsheets would run as formulas escaped. Exports are recorded in the security log. `cms.submissions.delete` deletes them permanently.

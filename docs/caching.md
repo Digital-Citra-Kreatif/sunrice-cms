@@ -1,18 +1,8 @@
-# Caching, events and scheduled publishing
+# Caching and scheduled publishing
 
 ## Events
 
-Listen to these (`Sunrice\Cms\Events`) to react to content, from the admin, AI tools or code alike:
-
-| Event | When |
-| --- | --- |
-| `EntryPublished` (`$translation`, `$scheduled`) | A language of an entry was published. One published for a later date fires again with `$scheduled` true when its time comes (see [Scheduled publishing](#scheduled-publishing)). |
-| `EntryUnpublished` (`$translation`) | A language was taken off the site. |
-| `EntryTrashed`, `EntryRestored` (`$entry`) | An entry went to the trash, or came back. |
-| `EntryDeleted` (`$entry`) | An entry was permanently deleted. |
-| `ContentChanged` (`$what`, like `"menu 3"`) | Anything the site shows changed: an entry going live or off, terms, menus, global sets, collections, taxonomies, blueprints, fieldsets, redirects, forms, media files, Settings → Site and Site code. Saving a draft isn't a change, and neither is a comment (they're read from the database on every render), except an approved one appearing, changing or going while whole pages are kept. |
-
-They fire after the database transaction they're part of commits. `ContentChanged` may fire several times for one save (once per record), so keep its listeners cheap, or queue them:
+The CMS's events (entries published, terms, menus, globals, forms, comments, and what's about to be saved) are all on [Events and hooks](events.md). For the cache, the one that matters is `ContentChanged` (`$what`, like `"menu 3"`): anything the site shows changed, once its cache is cleared for it and the database transaction commits. It may fire several times for one save (once per record), so keep its listeners cheap, or queue them:
 
 ```php
 Event::listen(ContentChanged::class, fn () => Http::post('https://api.example.com/purge')); // better: a queued listener
@@ -174,7 +164,7 @@ So leave HTML to the origin: don't use a "cache everything" rule with an edge TT
 - Never cache the panel (`/admin` and everything under it, or the path set with `$panel->path()`), previews (`/cms-preview/*`), any address with `?draft`, the site search with `?q=`, signed links (`/comments/{id}/unsubscribe`), or anything but `GET` and `HEAD` (form posts to `/forms/{handle}` and `/comments/{id}`).
 - Leave out pages with a form or comments: a page kept at the edge gives every visitor the first one's CSRF token and honeypot fields, and their submissions fail (419, page expired). The whole-page cache swaps in each visitor's own; an edge cache can't.
 - With the site's [Content-Security-Policy](site.md#content-security-policy) on, a page kept at the edge repeats one nonce for every visitor, which lets an attacker who can inject HTML reuse it. Leave pages to the whole-page cache (which swaps in a new nonce), or set `site.csp.nonce` to `false` and allow inline code with `'unsafe-inline'` instead.
-- Purge the edge when the content changes: listen to `ContentChanged` (see [Events](#events)) and call your CDN's purge API from a queued listener, or keep edge lifetimes short.
+- Purge the edge when the content changes: listen to `ContentChanged` (see [Events and hooks](events.md)) and call your CDN's purge API from a queued listener, or keep edge lifetimes short.
 
 Files are another matter. Those with a hash in their name that changes with their content can be kept for a year (`Cache-Control: public, max-age=31536000, immutable`): the panel's under `/vendor/sunrice-admin/assets/` and your front end's Vite build under `/build/assets/`. Plugin bundles (`/vendor/sunrice-cms/` and other plugins') keep their names between versions, so give them a short lifetime. See [Compression and caching](../../admin/docs/installation.md#compression-and-caching) for the web server's side.
 

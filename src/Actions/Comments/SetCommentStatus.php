@@ -7,6 +7,7 @@ namespace Sunrice\Cms\Actions\Comments;
 use Illuminate\Support\Facades\Mail;
 use InvalidArgumentException;
 use Sunrice\Admin\Activity\ActivityLog;
+use Sunrice\Cms\Events\CommentStatusChanged;
 use Sunrice\Cms\Mail\CommentReplied;
 use Sunrice\Cms\Models\Comment;
 use Sunrice\Cms\Settings\CommentSettings;
@@ -14,6 +15,7 @@ use Sunrice\Cms\Settings\CommentSettings;
 /**
  * Approves a comment, holds it again (pending) or marks it spam. A reply
  * approved for the first time emails its parent's author, when they asked.
+ * CommentStatusChanged follows a change.
  *
  * @api
  */
@@ -29,6 +31,7 @@ final class SetCommentStatus
         if ($comment->status === $status) {
             return $comment;
         }
+        $previous = $comment->status;
         $comment->status = $status;
         $comment->save();
         $this->activity->record(match ($status) {
@@ -39,6 +42,7 @@ final class SetCommentStatus
         if ($comment->isApproved()) {
             self::notifyParent($comment);
         }
+        CommentStatusChanged::dispatch($comment, $previous);
 
         return $comment;
     }

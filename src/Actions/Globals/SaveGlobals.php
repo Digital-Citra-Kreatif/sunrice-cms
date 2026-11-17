@@ -6,6 +6,7 @@ namespace Sunrice\Cms\Actions\Globals;
 
 use Illuminate\Validation\ValidationException;
 use Sunrice\Admin\Activity\ActivityLog;
+use Sunrice\Cms\Events\GlobalsSaved;
 use Sunrice\Cms\Globals;
 use Sunrice\Cms\Models\GlobalSet;
 use Sunrice\Cms\Models\GlobalValue;
@@ -61,7 +62,9 @@ final class SaveGlobals
         }
         $set->unsetRelation('values');
         $this->globals->flush();
-        $this->activity->updated('globals', $set, $set->title, array_map(strval(...), $changed));
+        $changed = array_map(strval(...), $changed);
+        $this->activity->updated('globals', $set, $set->title, $changed);
+        GlobalsSaved::dispatch($set, $value, $locale, $changed);
 
         return $value;
     }
