@@ -27,6 +27,13 @@ import {
 import { entryLanguageTabs } from '@/lib/languages.ts';
 import type { FieldDefinition } from '@/types.ts';
 
+interface EntryLabels {
+    create: string;
+    save: string;
+    organization: string;
+    pickers: Record<string, { select: string; search: string }>;
+}
+
 interface Props {
     collection: { handle: string; title: string; dated: boolean; hierarchical?: boolean; ordered?: boolean; comments?: boolean; pages?: boolean };
     /** Every language's: the parent entry and the entry's own Blade view. */
@@ -142,7 +149,9 @@ export default function EntryEditorPage(props: Props) {
 function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, comments, termLabels, usedBy = [], undoRestore = null, machineTranslate = null, machineTranslateMissing = false, settings, taxonomies = [], blueprints = [], blueprintUrl = null, homepage, redirectsUrl = null, templates = null, templateChoices, links = [], can }: Props) {
     const list = adminUrl(`cms/collections/${collection.handle}/entries`);
     const url = entry ? adminUrl(`cms/entries/${entry.id}`) : list;
-    const heading = entry ? values.title : t('New entry');
+    const { cmsEditor } = usePage<{ cmsEditor?: { entry?: EntryLabels } }>().props;
+    const presentation = cmsEditor?.entry;
+    const heading = entry ? values.title : presentation?.create ?? t('New entry');
     useBreadcrumbs([{ label: collection.title, href: list }, { label: heading }]);
     const [confirm, confirmDialog] = useConfirm();
     const [scheduling, setScheduling] = React.useState(false);
@@ -310,7 +319,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                         {writable && (
                             <Button type="submit" variant={entry ? 'outline' : 'default'} disabled={form.processing}>
                                 {form.processing && <LoaderCircle className="cms:animate-spin" />}
-                                {entry ? t('Save draft') : t('Create draft')}
+                                {presentation?.save ?? (entry ? t('Save draft') : t('Create draft'))}
                             </Button>
                         )}
                         {entry && !entry.trashed && writable && !can.publish && (entry.status === 'draft' || entry.hasUnpublishedChanges || form.isDirty) && (
@@ -446,7 +455,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                                 </fieldset>
                             </CollapsibleCard>
                         )}
-                        <TaxonomiesCard taxonomies={taxonomies} value={form.data.terms} labels={labels} errors={errors} changed={changed} disabled={!writable || can.terms !== true}
+                        <TaxonomiesCard presentation={presentation} taxonomies={taxonomies} value={form.data.terms} labels={labels} errors={errors} changed={changed} disabled={!writable || can.terms !== true}
                             onChange={(handle, ids) => { form.setData('terms', { ...form.data.terms, [handle]: ids }); clearErrorsAt(`terms.${handle}`); }} />
                     </aside>
                 )}
@@ -519,7 +528,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                         {settings && <PageSettings entryUrl={url} collection={collection} settings={settings} templates={withTemplateChoices(templates, templateChoices)} blueprints={blueprints} disabled={!writable}
                             values={form.data} errors={errors} onChange={setSettings} draftDirty={form.isDirty}
                             commentCount={comments ? comments.counts.pending + comments.counts.approved : null} />}
-                        <TaxonomiesCard taxonomies={taxonomies} value={form.data.terms} labels={labels} errors={errors} changed={changed} disabled={!writable || can.terms !== true}
+                        <TaxonomiesCard presentation={presentation} taxonomies={taxonomies} value={form.data.terms} labels={labels} errors={errors} changed={changed} disabled={!writable || can.terms !== true}
                             onChange={(handle, ids) => { form.setData('terms', { ...form.data.terms, [handle]: ids }); clearErrorsAt(`terms.${handle}`); }} />
                         {comments !== null && collection.comments && <EntryComments entryId={entry.id} comments={comments} />}
                         <CollapsibleCard title={t('Revisions')} titleClassName="cms:text-base" storageKey="cms:entry:revisions" contentClassName="cms:flex cms:flex-col cms:gap-2 cms:text-sm">
@@ -1018,7 +1027,8 @@ function PageSettings({ entryUrl, collection, settings, templates, blueprints, d
  * with the draft and published with it. Hidden when the collection has no
  * taxonomies (or none the user may see).
  */
-function TaxonomiesCard({ taxonomies, value, labels, errors, changed, disabled, onChange }: {
+function TaxonomiesCard({ presentation, taxonomies, value, labels, errors, changed, disabled, onChange }: {
+    presentation?: EntryLabels;
     taxonomies: EntryTaxonomy[];
     value: TermsByTaxonomy;
     labels: Record<string, string>;
@@ -1031,9 +1041,10 @@ function TaxonomiesCard({ taxonomies, value, labels, errors, changed, disabled, 
     if (taxonomies.length === 0) return null;
     const anyChanged = changed.some((key) => key.startsWith('terms.'));
     const hasErrors = errors.terms !== undefined || taxonomies.some((taxonomy) => errors[`terms.${taxonomy.handle}`] !== undefined);
+    const title = presentation?.organization ?? t('Taxonomies');
 
     return (
-        <CollapsibleCard title={anyChanged ? <>{t('Taxonomies')}<ChangedMarker /></> : t('Taxonomies')} titleClassName="cms:text-base" storageKey="cms:entry:taxonomies" hasErrors={hasErrors}>
+        <CollapsibleCard title={anyChanged ? <>{title}<ChangedMarker /></> : title} titleClassName="cms:text-base" storageKey="cms:entry:taxonomies" hasErrors={hasErrors}>
             <TermLabels.Provider value={labels}>
                 {/* min-w-0: a fieldset is as wide as its content by default. */}
                 <fieldset disabled={disabled} className="cms:flex cms:min-w-0 cms:flex-col cms:gap-4 cms:text-sm">
@@ -1041,6 +1052,7 @@ function TaxonomiesCard({ taxonomies, value, labels, errors, changed, disabled, 
                         const id = `terms-${taxonomy.handle}`;
                         const ids = value[taxonomy.handle] ?? [];
                         const error = errors[`terms.${taxonomy.handle}`];
+                        const picker = presentation?.pickers[taxonomy.handle];
                         return (
                             <div key={taxonomy.handle} className="cms:flex cms:min-w-0 cms:flex-col cms:gap-2">
                                 <Label htmlFor={id}>
@@ -1048,9 +1060,10 @@ function TaxonomiesCard({ taxonomies, value, labels, errors, changed, disabled, 
                                     {changed.includes(`terms.${taxonomy.handle}`) && <ChangedMarker />}
                                 </Label>
                                 <TermsPicker id={id} taxonomy={taxonomy.handle} multiple={!taxonomy.single} max={null} required={false} invalid={error !== undefined}
+                                    placeholder={picker?.select} searchPlaceholder={picker?.search}
                                     value={taxonomy.single ? (ids[0] ?? null) : ids}
                                     onChange={(next) => onChange(taxonomy.handle, next === null ? [] : Array.isArray(next) ? next : [next])} />
-                                {taxonomy.single && <p className="cms:text-xs cms:text-muted-foreground">{t('One term only.')}</p>}
+                                {taxonomy.single && !picker && <p className="cms:text-xs cms:text-muted-foreground">{t('One term only.')}</p>}
                                 <FieldError message={error} />
                             </div>
                         );

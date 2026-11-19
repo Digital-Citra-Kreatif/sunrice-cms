@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { ExternalLink, LayoutTemplate, LoaderCircle } from 'lucide-react';
 import { adminUrl, t } from '@imajiner/admin-sdk';
 import {
@@ -65,6 +65,12 @@ interface Props {
 
 const TOP = '__top';
 
+interface EditorSummarySection {
+    title: string;
+    description?: string;
+    items: { label: string; detail?: string; href?: string }[];
+}
+
 export default function TermEditPage(props: Props) {
     // A fresh form per language and after each save.
     return <TermEdit key={`${props.term?.id ?? 'new'}:${props.locale}:${props.version}:${JSON.stringify([props.values, props.seo, props.term?.template, props.parentId])}`} {...props} />;
@@ -72,6 +78,7 @@ export default function TermEditPage(props: Props) {
 
 /** One editor for a term, new or not: title, slug, where it sits, its fields, SEO and template, in a language. */
 function TermEdit({ taxonomy, term, parentId = null, terms = [], translated, fields, locale, locales, shared, sharedValues, values, seo, version, usedBy = [], redirectsUrl = null, blueprint = null, templates = null, templateChoices }: Props) {
+    const { cmsEditor } = usePage<{ cmsEditor?: { term?: EditorSummarySection[] } }>().props;
     const list = adminUrl(`cms/taxonomies/${taxonomy.handle}/terms`);
     const url = term ? adminUrl(`cms/terms/${term.id}/content`) : list;
     const heading = term ? term.title : t('New term');
@@ -189,6 +196,17 @@ function TermEdit({ taxonomy, term, parentId = null, terms = [], translated, fie
                     </CollapsibleCard>
                 </div>
                 <aside className="cms:flex cms:min-w-0 cms:flex-col cms:gap-6">
+                    {cmsEditor?.term?.map((section) => (
+                        <CollapsibleCard key={section.title} title={section.title} description={section.description} titleClassName="cms:text-base"
+                            contentClassName="cms:grid cms:gap-3 cms:text-sm">
+                            {section.items.map((item, index) => (
+                                <div key={index} className="cms:grid cms:gap-0.5">
+                                    {item.href ? <Link className="cms:font-medium cms:underline cms:underline-offset-2" href={item.href}>{item.label}</Link> : <span>{item.label}</span>}
+                                    {item.detail && <span className="cms:text-xs cms:text-muted-foreground">{item.detail}</span>}
+                                </div>
+                            ))}
+                        </CollapsibleCard>
+                    ))}
                     <CollapsibleCard title={t('Page settings')} titleClassName="cms:text-base" storageKey="cms:term:page-settings" hasErrors={errors.template !== undefined}
                         contentClassName="cms:flex cms:flex-col cms:gap-2">
                         <fieldset disabled={!writable} className="cms:flex cms:min-w-0 cms:flex-col cms:gap-2">

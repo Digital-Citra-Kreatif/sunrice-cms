@@ -39,6 +39,7 @@ interface Props {
     onChange: (value: number | number[] | null) => void;
     /** What the button says while nothing is chosen. */
     placeholder?: string;
+    searchPlaceholder?: string;
     /** A term not to offer, nor the terms under it (a term's own Under). */
     except?: number | null;
 }
@@ -51,7 +52,7 @@ interface Known { label: string; parents?: string[] }
  * list of the taxonomy's terms (cms/terms/picker, loaded when it opens, a
  * page at a time, searched on the server).
  */
-export function TermsPicker({ id, taxonomy, multiple, max, required, invalid, value, onChange, placeholder: placeholderText, except = null }: Props) {
+export function TermsPicker({ id, taxonomy, multiple, max, required, invalid, value, onChange, placeholder: placeholderText, searchPlaceholder, except = null }: Props) {
     const given = React.useContext(TermLabels);
     // So a chip's tooltip says "News › Local" before the list is opened.
     const parentsGiven = givenParents(usePage().props as Record<string, unknown>);
@@ -255,7 +256,7 @@ export function TermsPicker({ id, taxonomy, multiple, max, required, invalid, va
                     <input ref={input} type="text" role="combobox" aria-expanded="true" aria-controls={listId} aria-autocomplete="list" aria-label={t('Search terms')}
                         aria-activedescendant={active >= 0 && items[active] ? `${id}-option-${items[active].id}` : undefined}
                         className="cms:h-10 cms:w-full cms:bg-transparent cms:pr-3 cms:pl-9 cms:text-sm cms:outline-none cms:placeholder:text-muted-foreground"
-                        placeholder={t('Search terms')} autoComplete="off" value={search} onKeyDown={onKeyDown}
+                        placeholder={searchPlaceholder ?? t('Search terms')} autoComplete="off" value={search} onKeyDown={onKeyDown}
                         onChange={(event: React.ChangeEvent<HTMLInputElement>) => setSearch(event.target.value)} />
                 </div>
                 {body}
