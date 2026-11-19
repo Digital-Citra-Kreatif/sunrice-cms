@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Sunrice\Cms\Models\Blueprint;
+use Sunrice\Cms\Models\Collection as CollectionModel;
+use Sunrice\Cms\Models\Taxonomy;
 
 /**
  * Records every page reads (global sets, fieldsets, forms and their
@@ -87,5 +89,29 @@ final class SiteRecords
             ->mapWithKeys(fn (Blueprint $blueprint): array => [$blueprint->handle => $blueprint->getAttributes()])->all());
 
         return isset($rows[$handle]) ? Blueprint::hydrate([$rows[$handle]])->first() : null;
+    }
+
+    /**
+     * Active collection IDs for public entry queries, from the site cache.
+     *
+     * @param  list<string>  $handles
+     * @return list<int>
+     */
+    public static function collectionIds(array $handles): array
+    {
+        $collections = self::many('collections', CollectionModel::class, fn (): iterable => CollectionModel::query()->get());
+
+        $ids = [];
+        foreach ($collections->whereInStrict('handle', $handles) as $collection) {
+            $ids[] = $collection->id;
+        }
+
+        return $ids;
+    }
+
+    /** @return Collection<int, Taxonomy> */
+    public static function taxonomies(): Collection
+    {
+        return self::many('taxonomies', Taxonomy::class, fn (): iterable => Taxonomy::query()->withTrashed()->get());
     }
 }

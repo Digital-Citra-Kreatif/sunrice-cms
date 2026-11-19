@@ -24,6 +24,7 @@ use Sunrice\Cms\Site\Site;
 use Sunrice\Cms\Support\Ids;
 use Sunrice\Cms\Support\Locales;
 use Sunrice\Cms\Support\SiteCache;
+use Sunrice\Cms\Support\SiteRecords;
 
 /**
  * Live entries for templates, in one language:
@@ -450,7 +451,7 @@ final class EntryQuery
         $this->preview ? $query->notTrashed() : $query->live();
         if ($this->collections !== []) {
             // Their ids, not a subquery: MySQL joins a subquery's collections with the rows and sorts them whole.
-            $query->whereIn('collection_id', $this->collectionIds ??= Ids::of(Collection::query()->whereIn('handle', $this->collections)->pluck('id')));
+            $query->whereIn('collection_id', $this->collectionIds ??= SiteRecords::collectionIds($this->collections));
         }
         if ($this->searchOrder !== null) {
             ($this->searchOrder)($query); // title matches first, before the orders asked for

@@ -16,6 +16,7 @@ use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
 use Sunrice\Cms\Site\Page;
 use Sunrice\Cms\Support\Ids;
+use Sunrice\Cms\Support\SiteRecords;
 use WeakMap;
 
 /**
@@ -216,7 +217,7 @@ final class HydrationContext
         $found = Term::query()->with('translations')->whereKey($missing)->get()->keyBy('id');
         $taxonomies = array_values(array_diff(array_unique($found->map(fn (Term $term): int => $term->taxonomy_id)->all()), array_keys($this->taxonomies)));
         if ($taxonomies !== []) {
-            foreach (Taxonomy::query()->withTrashed()->whereKey($taxonomies)->get() as $taxonomy) {
+            foreach (SiteRecords::taxonomies()->whereInStrict('id', $taxonomies) as $taxonomy) {
                 $this->taxonomies[$taxonomy->id] = $taxonomy;
             }
         }

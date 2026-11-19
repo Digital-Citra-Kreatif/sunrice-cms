@@ -53,7 +53,7 @@ final class SiteCache
     private const VERSION = 'sunrice-cms:content-version:';
 
     /** What nearly every page reads, by area: read together, once, before the first. */
-    private const EVERY_PAGE = [self::ROUTES => ['language-routes'], self::PAGES => ['records:blueprints', 'records:fieldsets', 'records:global-sets', 'records:global-values']];
+    private const EVERY_PAGE = [self::ROUTES => ['language-routes'], self::PAGES => ['records:blueprints', 'records:fieldsets', 'records:global-sets', 'records:global-values', 'records:collections', 'records:taxonomies']];
 
     /** Values kept in memory at most (a preload run renders many pages in one process). */
     private const KEPT = 500;
