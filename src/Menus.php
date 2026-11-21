@@ -7,6 +7,7 @@ namespace Sunrice\Cms;
 use Sunrice\Cms\Models\Entry;
 use Sunrice\Cms\Models\Menu;
 use Sunrice\Cms\Models\MenuItem;
+use Sunrice\Cms\Site\EntryVisibility;
 use Sunrice\Cms\Site\Page;
 use Sunrice\Cms\Site\Site;
 use Sunrice\Cms\Support\Locales;
@@ -32,6 +33,9 @@ final class Menus
     /** @var array<string, list<array{label: string, url: string, new_tab: bool, children: list<mixed>}>> */
     private array $resolved = [];
 
+    /** @var array<int, int> the menus' linked entries the visitor may see (id => position), while they're built */
+    private array $visibleEntries = [];
+
     /**
      * A menu's items: [['label' => …, 'url' => …, 'new_tab' => …, 'active' => …,
      * 'active_trail' => …, 'children' => […]], …]; empty for an unknown menu.
@@ -45,9 +49,14 @@ final class Menus
         if (! array_key_exists($key, $this->resolved)) {
             // All the menus in a language under one key (a page shows several). Their links are full URLs: per host.
             /** @var array<string, list<array{label: string, url: string, new_tab: bool, children: list<mixed>}>> $menus */
-            $menus = app(SiteCache::class)->remember('menus:'.sha1(url('/').'|'.$locale), function () use ($locale): array {
+            // Per kind of visitor when plugins hide entries from some (Cms::hideEntriesUsing()).
+            $menus = app(SiteCache::class)->remember('menus:'.sha1(url('/').'|'.$locale.'|'.app(EntryVisibility::class)->key()), function () use ($locale): array {
                 $menus = [];
-                foreach (Menu::query()->with('items.entry.translations', 'items.entry.collection', 'items.term.translations', 'items.term.taxonomy', 'items.collection', 'items.taxonomy')->get() as $menu) {
+                $all = Menu::query()->with('items.entry.translations', 'items.entry.collection', 'items.term.translations', 'items.term.taxonomy', 'items.collection', 'items.taxonomy')->get();
+                // Links to entries hidden from this visitor are left out, with what's under them.
+                $linked = $all->flatMap(fn (Menu $menu) => $menu->items->pluck('entry_id'))->filter(fn (mixed $id): bool => is_int($id))->unique()->values()->all();
+                $this->visibleEntries = array_flip(app(EntryVisibility::class)->visibleEntryIds(array_values($linked)));
+                foreach ($all as $menu) {
                     $menus[$menu->handle] = $this->tree($menu->items->all(), null, $locale);
                 }
 
@@ -241,7 +250,7 @@ final class Menus
             return $item->url === null ? null : ['label' => $own ?? $main ?? $item->url, 'url' => $item->url];
         }
         $entry = $item->entry;
-        if (! $entry instanceof Entry || $entry->trashed() || $entry->collection->trashed()) {
+        if (! $entry instanceof Entry || $entry->trashed() || $entry->collection->trashed() || ! isset($this->visibleEntries[$entry->id])) {
             return null;
         }
         $translation = $entry->translation($locale);

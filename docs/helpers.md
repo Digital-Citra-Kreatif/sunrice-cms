@@ -17,6 +17,8 @@ Templates reach the CMS through one class, `Sunrice\Cms\Content` (`@api`), alias
 | `Cms::resolveTemplateUsing(Closure(Page): ?string $hook)` | In a service provider's `boot()`: choose the view of the CMS's pages. See [Hooks](site.md#hooks). |
 | `Cms::bodyClassUsing(Closure(Page): array $hook)` | In a service provider's `boot()`: add body classes. |
 | `Cms::entryLinksUsing(Closure(EntryTranslation, Authorizable): array $hook)` | In a plugin's `boot()`: add links to the ⋮ menu of an entry's page in the panel. See [Links from plugins](collections.md#links-from-plugins). |
+| `Cms::editorCard(EditorCard $card)` | In a plugin's `register()` or `boot()`: add a card to the entry and term editors' sidebar. See [Editor cards](collections.md#editor-cards). |
+| `Cms::hideEntriesUsing(Closure $hide, Closure $viewer)` | In a plugin's `boot()`: hide entries from visitors who may not see them, wherever the site lists entries. See [Entries some visitors may not see](site.md#entries-some-visitors-may-not-see). |
 
 ```blade
 <body @bodyClass('dark')>

@@ -20,6 +20,7 @@ use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
+use Sunrice\Cms\Site\EntryVisibility;
 use Sunrice\Cms\Site\Site;
 use Sunrice\Cms\Support\Ids;
 use Sunrice\Cms\Support\Locales;
@@ -449,6 +450,10 @@ final class EntryQuery
     {
         $query = EntryTranslation::query()->with(['entry.collection', 'entry.translations'])->shownIn($this->locale, $this->fallback, $this->preview);
         $this->preview ? $query->notTrashed() : $query->live();
+        if (! $this->preview) {
+            // Not what plugins hide from this visitor (Cms::hideEntriesUsing()); previews show everything.
+            app(EntryVisibility::class)->apply($query);
+        }
         if ($this->collections !== []) {
             // Their ids, not a subquery: MySQL joins a subquery's collections with the rows and sorts them whole.
             $query->whereIn('collection_id', $this->collectionIds ??= SiteRecords::collectionIds($this->collections));
@@ -484,7 +489,8 @@ final class EntryQuery
     /** @param  Closure(): mixed  $make */
     private function remembered(string $what, Closure $make): mixed
     {
-        return app(SiteCache::class)->remember('entries:'.md5((string) json_encode([$this->collections, $this->locale, $this->fallback ?? Site::fallback(), $this->calls, $this->limit, $what])), $make);
+        // Per kind of visitor when plugins hide entries from some (Cms::hideEntriesUsing()).
+        return app(SiteCache::class)->remember('entries:'.md5((string) json_encode([$this->collections, $this->locale, $this->fallback ?? Site::fallback(), $this->calls, $this->limit, $what, app(EntryVisibility::class)->key()])), $make);
     }
 
     /**

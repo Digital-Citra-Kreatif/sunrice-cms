@@ -226,6 +226,8 @@ Not every extension point is an event. These change how Sunrice behaves; registe
 | `Cms::resolveTemplateUsing(Closure(Page): ?string)` | The view a CMS page renders. | [Hooks](site.md#hooks) |
 | `Cms::bodyClassUsing(Closure(Page): array)` | Body classes (`@bodyClass`). | [Hooks](site.md#hooks) |
 | `Cms::entryLinksUsing(Closure(EntryTranslation, Authorizable): array)` | Links in the ⋮ menu of an entry's page in the panel. | [Links from plugins](collections.md#links-from-plugins) |
+| `Cms::editorCard(EditorCard)` | A plugin's card in the entry and term editors' sidebar. | [Editor cards](collections.md#editor-cards) |
+| `Cms::hideEntriesUsing(Closure(Builder, bool), Closure(): string)` | Which entries the site lists to whom. | [Entries some visitors may not see](site.md#entries-some-visitors-may-not-see) |
 | `PageCache::lifetimeUsing(Closure(Request, ?Page): ?int)` | How long a whole page is kept. | [Whole pages](caching.md#whole-pages) |
 | Your own field types | New field types made from built-in ones (PHP only). | [Your own field types](fields.md#your-own-field-types) |
 | A `Translator` bound in the container | Another machine translation service. | [Machine translation](translation.md#in-code) |

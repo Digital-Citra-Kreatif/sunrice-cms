@@ -515,6 +515,27 @@ Cms::bodyClassUsing(fn (Page $page): array => $page->collection?->dated ? ['has-
 
 Hooks run in the order they were registered, on every request; keep them cheap. How long the page cache keeps a page has its own hook, [`PageCache::lifetimeUsing()`](caching.md). Every hook and event, in one place: [Events and hooks](events.md).
 
+### Entries some visitors may not see
+
+A plugin that keeps some entries for some visitors (members only) hides them from the visitors who may not see them, wherever the site lists entries, with `Cms::hideEntriesUsing()`, in its `boot()`:
+
+```php
+use Illuminate\Database\Eloquent\Builder;
+
+Cms::hideEntriesUsing(
+    // Narrow the query of entry translations to what this visitor may see; with $everyone, to what every visitor may.
+    fn (Builder $query, bool $everyone) => $query->whereNotIn('entry_id', Members::hiddenEntryIds($everyone ? null : Members::user())),
+    // Who's looking, as a short key: the same for visitors who see the same entries.
+    fn (): string => Members::user() === null ? 'guest' : 'roles:'.implode(',', Members::roles()),
+);
+```
+
+- **Where it applies:** listing pages and term pages (`$entries`), `Cms::entries()` and `<x-sunrice-cms::entries>`, search, menus (a link to a hidden entry is left out, with the links under it), entries fields and links resolved for a template (a hidden entry is as if it weren't published), and term counts.
+- **The sitemap** asks with `$everyone` true: no one is signed in for search engines, whoever builds it.
+- **Caches:** what's cached (remembered queries, search results, menus) is kept per viewer key. The page cache keeps pages for visitors who aren't signed in; skip it for your signed-in visitors with `PageCache::skipWhen()` ([Caching](caching.md)).
+- **An entry's own page** still resolves at its address. Decide what it shows with `Cms::resolveTemplateUsing()` (above): a sign-in prompt, a message, a redirect.
+- **Previews** show everything.
+
 ## Redirects
 
 When a published entry's address changes (a new slug), publishing it adds a permanent redirect from the old address, so links and search results keep working. Chains are flattened: every old address points straight at the newest. The query string comes along (`/old?utm_source=mail` → `/new?utm_source=mail`). Structure → Redirects (`cms.redirects.*`) lists them and takes your own, from a path on the site to a path or a web address, of the type permanent (301) or temporary (302). On a multilingual site, **In every language** (`every_language`, off by default) makes one apply from the same path in each language too, to its target in that language: `/listings` → `/properties` also sends `/id/listings` to `/id/properties` (a web address as target stays as it is); `Site::redirect($path)` finds it and `Redirect::targetFor($path)` gives the address.

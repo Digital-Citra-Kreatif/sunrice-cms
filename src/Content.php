@@ -7,6 +7,7 @@ namespace Sunrice\Cms;
 use Closure;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Sunrice\Admin\Media\Media;
 use Sunrice\Cms\Admin\EntryLinks;
 use Sunrice\Cms\Editor\EditorCard;
@@ -15,6 +16,7 @@ use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Query\EntryQuery;
 use Sunrice\Cms\Settings\SiteSettings;
+use Sunrice\Cms\Site\EntryVisibility;
 use Sunrice\Cms\Site\Page;
 use Sunrice\Cms\Site\SiteHooks;
 use Sunrice\Cms\Support\ContentData;
@@ -170,6 +172,30 @@ final class Content
     public static function editorCard(EditorCard $card): void
     {
         app(EditorCards::class)->add($card);
+    }
+
+    /**
+     * Hide entries from visitors who may not see them, wherever the site
+     * lists entries: listing and term pages, Cms::entries() and
+     * `<x-sunrice-cms::entries>`, search, menus, entries fields and term
+     * counts, and (with `$everyone` true, for what every visitor gets) the
+     * sitemap. `$hide` narrows the query; `$viewer` says who's looking as a
+     * short key, the same for visitors who see the same entries (`guest`,
+     * their roles), so cached lists are kept per kind of visitor. An
+     * entry's own page is not hidden by it: gate that with
+     * resolveTemplateUsing(). Previews show everything.
+     *
+     *     Cms::hideEntriesUsing(
+     *         fn (Builder $query, bool $everyone) => $query->whereNotIn('entry_id', Restricted::hiddenFor($everyone ? null : Account::user())),
+     *         fn (): string => Restricted::viewerKey(Account::user()),
+     *     );
+     *
+     * @param  Closure(Builder<EntryTranslation>, bool): void  $hide
+     * @param  Closure(): string  $viewer
+     */
+    public static function hideEntriesUsing(Closure $hide, Closure $viewer): void
+    {
+        app(EntryVisibility::class)->add($hide, $viewer);
     }
 
     /** Settings → Site: name(), description, title(…), hidden() … */

@@ -14,6 +14,7 @@ use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Taxonomy;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Models\TermTranslation;
+use Sunrice\Cms\Site\EntryVisibility;
 use Sunrice\Cms\Site\Page;
 use Sunrice\Cms\Support\Ids;
 use Sunrice\Cms\Support\SiteRecords;
@@ -392,8 +393,10 @@ final class HydrationContext
             }
         }
         $loaded = [];
+        // What plugins hide from this visitor (Cms::hideEntriesUsing()) is as if it weren't there; previews show everything.
+        $visible = $this->preview ? null : array_flip(app(EntryVisibility::class)->visibleEntryIds(array_values(array_map(intval(...), $found->keys()->all()))));
         foreach ($missing as $id) {
-            $entry = $found->get($id);
+            $entry = $visible === null || isset($visible[$id]) ? $found->get($id) : null;
             // Each translation knows its entry (and so its collection and fields) without asking again.
             $entry?->translations->each(fn (EntryTranslation $translation) => $translation->setRelation('entry', $entry));
             $translation = null;

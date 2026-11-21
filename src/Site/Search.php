@@ -87,7 +87,8 @@ final class Search
         $page = Paginator::resolveCurrentPage($pageName);
 
         $found = $query === '' ? ['ids' => [], 'total' => 0] : $this->cache->remember(
-            'search:'.sha1(serialize([$locale, Site::fallback(), $query, $collections, $perPage, $page])),
+            // Per kind of visitor when plugins hide entries from some (Cms::hideEntriesUsing()).
+            'search:'.sha1(serialize([$locale, Site::fallback(), $query, $collections, $perPage, $page, app(EntryVisibility::class)->key()])),
             fn (): array => $this->find($query, $collections, $perPage, $locale, $page),
             ttl: self::CACHE_TTL,
         );
@@ -108,7 +109,8 @@ final class Search
     private function find(string $query, ?array $collections, int $perPage, string $locale, int $page): array
     {
         // Entries not live in the language, in the main one (with the fallback), as their pages are shown.
-        $builder = EntryTranslation::query()->live()->shownIn($locale)
+        // Not what plugins hide from this visitor (Cms::hideEntriesUsing()).
+        $builder = app(EntryVisibility::class)->apply(EntryTranslation::query()->live()->shownIn($locale))
             ->whereIn('collection_id', Collection::query()->whereNotNull('route')
                 ->when($collections !== null, fn (Builder $q) => $q->whereIn('handle', $collections ?? []))->select('id'));
         $this->matching($builder, $query);

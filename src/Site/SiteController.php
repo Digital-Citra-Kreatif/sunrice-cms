@@ -201,7 +201,8 @@ final class SiteController
         // Run when the template first uses $entries: those of the term and, in a hierarchy, of the terms under it.
         $entries = new LazyEntries(function () use ($term, $taxonomy, $locale, $collection): LengthAwarePaginator {
             $terms = [$term->id, ...($taxonomy->hierarchical ? $term->descendantIds() : [])];
-            $entries = EntryPaginator::from(EntryTranslation::query()->live()->with(self::listed($locale))->shownIn($locale)
+            // Not what plugins hide from this visitor (Cms::hideEntriesUsing()).
+            $entries = EntryPaginator::from(app(EntryVisibility::class)->apply(EntryTranslation::query()->live()->with(self::listed($locale))->shownIn($locale))
                 ->when($collection !== null, fn ($q) => $q->where('collection_id', $collection?->id))
                 ->whereHas('entry.terms', fn ($q) => $q->whereIn('sunrice_terms.id', $terms))
                 ->orderByDesc('published_at')->orderByDesc('id')->paginate(10))->withQueryString();
@@ -238,7 +239,8 @@ final class SiteController
         // Run when the template first uses $entries.
         $entries = new LazyEntries(function () use ($collection, $listing): LengthAwarePaginator {
             // The page's ids first, then its rows (IdPage): a deep page doesn't sort every translation whole.
-            $entries = EntryPaginator::from(IdPage::paginate(EntryTranslation::query()->live()->with(self::listed($listing->locale))
+            // Not what plugins hide from this visitor (Cms::hideEntriesUsing()).
+            $entries = EntryPaginator::from(IdPage::paginate(app(EntryVisibility::class)->apply(EntryTranslation::query()->live()->with(self::listed($listing->locale)))
                 ->where('collection_id', $collection->id)->shownIn($listing->locale)
                 ->when($collection->ordered,
                     fn ($q) => $q->orderBy(Entry::query()->select('sort_order')->whereColumn('sunrice_entries.id', 'sunrice_entry_translations.entry_id'))->orderBy('id'),

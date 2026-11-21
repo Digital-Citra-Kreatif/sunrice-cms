@@ -16,6 +16,7 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Sunrice\Cms\Models;
+use Sunrice\Cms\Site\EntryVisibility;
 use Sunrice\Cms\Site\Site;
 use Sunrice\Cms\Support\ContentData;
 use Sunrice\Cms\Support\Locales;
@@ -142,7 +143,8 @@ class Term extends Model
     public static function liveIn(string $locale, ?int $collectionId = null): Closure
     {
         // The translations' own collection (the entry's): no lookup of the entry per row.
-        return fn (QueryBuilder $collections): Builder => EntryTranslation::query()->live()->shownIn($locale)
+        // Not what plugins hide from this visitor (Cms::hideEntriesUsing()).
+        return fn (QueryBuilder $collections): Builder => app(EntryVisibility::class)->apply(EntryTranslation::query()->live()->shownIn($locale))
             ->whereIn('sunrice_entry_translations.collection_id', $collections)
             ->when($collectionId !== null, fn (Builder $q) => $q->where('sunrice_entry_translations.collection_id', $collectionId))
             ->select('sunrice_entry_translations.entry_id');

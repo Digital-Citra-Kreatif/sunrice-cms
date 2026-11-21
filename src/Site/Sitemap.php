@@ -146,7 +146,7 @@ final class Sitemap
     {
         $routed = Collection::query()->whereNotNull('route')->get();
         $fields = self::withRouteFields($routed);
-        $translations = self::lean(EntryTranslation::query()->live(), self::ENTRY_COLUMNS, $fields, noindex: true)
+        $translations = self::lean(self::visible(EntryTranslation::query()->live()), self::ENTRY_COLUMNS, $fields, noindex: true)
             ->with(['entry' => fn (BelongsTo $q) => $q->select(self::ENTRY_PARENT_COLUMNS), 'entry.collection',
                 'entry.translations' => fn (HasMany $q) => self::lean($q->getQuery(), self::ENTRY_COLUMNS, $fields)])
             ->whereIn('collection_id', $routed->modelKeys());
@@ -266,7 +266,7 @@ final class Sitemap
     {
         $routed = Collection::query()->whereNotNull('route')->get();
         $handles = $routed->pluck('handle', 'id');
-        $translations = self::lean(EntryTranslation::query()->live(), self::ENTRY_COLUMNS, self::withRouteFields($routed), noindex: true)
+        $translations = self::lean(self::visible(EntryTranslation::query()->live()), self::ENTRY_COLUMNS, self::withRouteFields($routed), noindex: true)
             ->with(['entry' => fn (BelongsTo $q) => $q->select(self::ENTRY_PARENT_COLUMNS), 'entry.collection'])->whereIn('collection_id', $routed->modelKeys())
             ->when($locale !== null, fn ($q) => $q->where('locale', $locale));
         foreach (self::chunks($translations) as $translation) {
@@ -443,6 +443,18 @@ final class Sitemap
     }
 
     /**
+     * Only what every visitor may see: no one is signed in for search
+     * engines (Cms::hideEntriesUsing(), with `$everyone`).
+     *
+     * @param  Builder<EntryTranslation>  $query
+     * @return Builder<EntryTranslation>
+     */
+    private static function visible(Builder $query): Builder
+    {
+        return app(EntryVisibility::class)->apply($query, everyone: true);
+    }
+
+    /**
      * The ids of a collection's live entry translations shown in a
      * language, as its pages there list them.
      *
@@ -450,7 +462,7 @@ final class Sitemap
      */
     private static function shown(int $collection, string $locale): Builder
     {
-        return EntryTranslation::query()->live()->shownIn($locale)->where('sunrice_entry_translations.collection_id', $collection)->select('sunrice_entry_translations.id');
+        return self::visible(EntryTranslation::query()->live()->shownIn($locale))->where('sunrice_entry_translations.collection_id', $collection)->select('sunrice_entry_translations.id');
     }
 
     /**
