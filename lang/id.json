@@ -1379,5 +1379,6 @@
     "SUNRICE_NOINDEX is on in the .env file, so the site is hidden from search engines whatever this says.": "SUNRICE_NOINDEX menyala di file .env, jadi situs tetap tersembunyi dari mesin pencari apa pun pilihan di sini.",
     "Icon and logo": "Ikon dan logo",
     "Site icon": "Ikon situs",
-    "Shown on the site (where its templates show it), at the top of the emails it sends and to search engines. Square or wide; emails show a PNG made from it (not from an SVG).": "Tampil di situs (di tempat yang ditampilkan template-nya), di bagian atas email yang dikirim, dan untuk mesin pencari. Persegi atau lebar; email menampilkan PNG yang dibuat darinya (tidak dari SVG)."
+    "Shown on the site (where its templates show it), at the top of the emails it sends and to search engines. Square or wide; emails show a PNG made from it (not from an SVG).": "Tampil di situs (di tempat yang ditampilkan template-nya), di bagian atas email yang dikirim, dan untuk mesin pencari. Persegi atau lebar; email menampilkan PNG yang dibuat darinya (tidak dari SVG).",
+    ":card saved.": ":card disimpan."
 }

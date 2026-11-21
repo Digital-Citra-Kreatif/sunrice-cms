@@ -18,6 +18,7 @@ import { SlugNote } from '@/components/SlugNote.tsx';
 import { TermLabels, TermsPicker } from '@/components/TermsPicker.tsx';
 import { seoFields } from '@/lib/seo.ts';
 import { FieldError } from '@/components/FieldError.tsx';
+import { type PluginCard, PluginCards } from '@/components/PluginCards.tsx';
 import { Fields } from '@/components/FieldInput.tsx';
 import { errorKeysAt, errorsAt, hasErrors } from '@/lib/builder.ts';
 import { termsToSend, type TermsByTaxonomy } from '@/lib/entry-terms.ts';
@@ -82,6 +83,8 @@ interface Props {
     redirectsUrl?: string | null;
     /** Plugins' links for the ⋮ menu (Cms::entryLinksUsing()): a page of theirs about this entry. */
     links?: { label: string; href: string }[];
+    /** Plugins' sidebar cards (Cms::editorCard()), for who may update the entry. */
+    cards?: PluginCard[];
     /** The views tried for its page, in order, and which exist. */
     templates?: TemplateLookup | null;
     /** The views to pick a template from: loaded when the Template choice first opens. */
@@ -146,7 +149,7 @@ export default function EntryEditorPage(props: Props) {
     return <EntryEditor key={entry ? `${entry.id}:${entry.locale}:${entry.version}:${entry.status}:${entry.trashed}:${entry.publishedAt}` : 'new'} {...props} />;
 }
 
-function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, comments, termLabels, usedBy = [], undoRestore = null, machineTranslate = null, machineTranslateMissing = false, settings, taxonomies = [], blueprints = [], blueprintUrl = null, homepage, redirectsUrl = null, templates = null, templateChoices, links = [], can }: Props) {
+function EntryEditor({ collection, fields, locales = [], shared = [], sharedValues = {}, entry, values, revisions, comments, termLabels, usedBy = [], undoRestore = null, machineTranslate = null, machineTranslateMissing = false, settings, taxonomies = [], blueprints = [], blueprintUrl = null, homepage, redirectsUrl = null, templates = null, templateChoices, links = [], cards = [], can }: Props) {
     const list = adminUrl(`cms/collections/${collection.handle}/entries`);
     const url = entry ? adminUrl(`cms/entries/${entry.id}`) : list;
     const { cmsEditor } = usePage<{ cmsEditor?: { entry?: EntryLabels } }>().props;
@@ -528,6 +531,7 @@ function EntryEditor({ collection, fields, locales = [], shared = [], sharedValu
                         {settings && <PageSettings entryUrl={url} collection={collection} settings={settings} templates={withTemplateChoices(templates, templateChoices)} blueprints={blueprints} disabled={!writable}
                             values={form.data} errors={errors} onChange={setSettings} draftDirty={form.isDirty}
                             commentCount={comments ? comments.counts.pending + comments.counts.approved : null} />}
+                        <PluginCards cards={cards} disabled={!writable} storageKey="cms:entry:card" />
                         <TaxonomiesCard presentation={presentation} taxonomies={taxonomies} value={form.data.terms} labels={labels} errors={errors} changed={changed} disabled={!writable || can.terms !== true}
                             onChange={(handle, ids) => { form.setData('terms', { ...form.data.terms, [handle]: ids }); clearErrorsAt(`terms.${handle}`); }} />
                         {comments !== null && collection.comments && <EntryComments entryId={entry.id} comments={comments} />}

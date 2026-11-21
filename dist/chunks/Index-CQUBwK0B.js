@@ -1,6 +1,6 @@
-import { r as t, j as e, t as i, a as o } from "./admin-CfeUugq5.js";
-import { F as a } from "./FieldError-DpUNvmpt.js";
-import { S as d } from "./StructureList-NsjaXzg2.js";
+import { r as t, j as e, t as i, a as o } from "./admin-DkIqfqBq.js";
+import { F as a } from "./FieldError-D3x0EZGt.js";
+import { S as d } from "./StructureList-w9TYUD4u.js";
 function m({ fieldsets: s }) {
   const r = t.usePage().props.errors;
   return /* @__PURE__ */ e.jsxs(e.Fragment, { children: [

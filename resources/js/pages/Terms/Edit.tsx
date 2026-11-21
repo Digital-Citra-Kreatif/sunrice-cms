@@ -7,6 +7,7 @@ import {
     useBreadcrumbs, useEditLock, useUnsavedChanges, ViewingNotice,
 } from '@imajiner/admin-sdk/ui';
 import { FieldError } from '@/components/FieldError.tsx';
+import { type PluginCard, PluginCards } from '@/components/PluginCards.tsx';
 import { Fields } from '@/components/FieldInput.tsx';
 import { FieldSections } from '@/components/FieldSections.tsx';
 import { SlugNote } from '@/components/SlugNote.tsx';
@@ -61,6 +62,8 @@ interface Props {
     version: number | null;
     /** Where other content points at this term. */
     usedBy?: { label: string; url: string | null; field: string; fieldLabel?: string }[];
+    /** Plugins' sidebar cards (Cms::editorCard()), for who may update the term. */
+    cards?: PluginCard[];
 }
 
 const TOP = '__top';
@@ -77,7 +80,7 @@ export default function TermEditPage(props: Props) {
 }
 
 /** One editor for a term, new or not: title, slug, where it sits, its fields, SEO and template, in a language. */
-function TermEdit({ taxonomy, term, parentId = null, terms = [], translated, fields, locale, locales, shared, sharedValues, values, seo, version, usedBy = [], redirectsUrl = null, blueprint = null, templates = null, templateChoices }: Props) {
+function TermEdit({ taxonomy, term, parentId = null, terms = [], translated, fields, locale, locales, shared, sharedValues, values, seo, version, usedBy = [], redirectsUrl = null, blueprint = null, templates = null, templateChoices, cards = [] }: Props) {
     const { cmsEditor } = usePage<{ cmsEditor?: { term?: EditorSummarySection[] } }>().props;
     const list = adminUrl(`cms/taxonomies/${taxonomy.handle}/terms`);
     const url = term ? adminUrl(`cms/terms/${term.id}/content`) : list;
@@ -214,6 +217,7 @@ function TermEdit({ taxonomy, term, parentId = null, terms = [], translated, fie
                                 example={`cms.${taxonomy.handle}-special`} automatic={t('Automatic uses the taxonomy\'s template.')} error={errors.template} disabled={!writable} />
                         </fieldset>
                     </CollapsibleCard>
+                    {term && <PluginCards cards={cards} disabled={!writable} storageKey="cms:term:card" />}
 {term && (
                     <CollapsibleCard title={t('Used by')} titleClassName="cms:text-base" storageKey="cms:term:used-by" contentClassName="cms:flex cms:flex-col cms:gap-1 cms:text-sm">
                         {usedBy.length === 0 && <p className="cms:text-muted-foreground">{t('No content links here through its fields.')}</p>}

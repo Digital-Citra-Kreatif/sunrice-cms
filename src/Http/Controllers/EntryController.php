@@ -41,6 +41,7 @@ use Sunrice\Cms\Admin\EntryLinks;
 use Sunrice\Cms\Admin\EntryList;
 use Sunrice\Cms\Admin\RevisionList;
 use Sunrice\Cms\Admin\TemplateHelp;
+use Sunrice\Cms\Editor\EditorCards;
 use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Fields\Types\TermsField;
 use Sunrice\Cms\Models\Blueprint;
@@ -502,8 +503,24 @@ final class EntryController
             'machineTranslateMissing' => ! $translation->isMain() && ! app(TranslatorFactory::class)->configured(),
             // Plugins' links for the ⋮ menu (Cms::entryLinksUsing()).
             'links' => app(EntryLinks::class)->for($translation, $request->user() instanceof Authorizable ? $request->user() : null),
+            // Plugins' sidebar cards (Cms::editorCard()), for who may update the entry; not in the trash.
+            'cards' => self::cards($request, $entry, $collection),
             'can' => self::can($request, $collection, $entry, $translation->locale) + ['terms' => $taxonomies['editable'] && ! $entry->trashed()],
         ]);
+    }
+
+    /**
+     * Plugins' sidebar cards (Cms::editorCard()), for who may update the
+     * entry; none in the trash.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private static function cards(Request $request, Entry $entry, Collection $collection): array
+    {
+        $user = $request->user();
+        $user = $user instanceof Authorizable ? $user : null;
+
+        return ! $entry->trashed() && Access::entries($user, 'update', $collection, $entry) ? app(EditorCards::class)->for($entry, $user) : [];
     }
 
     /**

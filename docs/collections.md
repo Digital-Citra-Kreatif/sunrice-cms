@@ -125,6 +125,34 @@ public function boot(Panel $panel): void
 }
 ```
 
+### Editor cards
+
+A plugin adds a card of its own to the sidebar of the entry editor, the term editor or both with `Cms::editorCard()` (`Sunrice\Cms\Editor\EditorCard`, `@api`), in its plugin's `register()` or `boot()`: settings about an entry or a term that the plugin keeps (who may see it, what a shop sells it for), not its content. The card is a form of the panel's [form fields](../../admin/docs/resources.md#forms) (no JavaScript of the plugin's), drawn as Settings forms are, with its own **Save**: it saves at once, apart from the draft, and works while the editor has unsaved changes.
+
+```php
+use Sunrice\Admin\Resources\Forms\{CheckboxList, Form, Toggle};
+use Sunrice\Cms\Content as Cms;
+use Sunrice\Cms\Editor\EditorCard;
+
+Cms::editorCard(EditorCard::make('access', 'Access')
+    ->description('Who may open this page.')
+    ->entries(fn (Collection $collection): bool => $collection->handle !== 'legal')   // every collection without the closure
+    ->terms()                                                                          // and every taxonomy's terms
+    ->form(fn (Entry|Term $record, Form $form): Form => $form->schema([
+        Toggle::make('restricted')->label('Members only'),
+        CheckboxList::make('roles')->label('Roles')->options(fn (): array => Roles::names()),
+    ]))
+    ->load(fn (Entry|Term $record): array => AccessRule::for($record)?->only(['restricted', 'roles']) ?? [])
+    ->save(fn (Entry|Term $record, array $values, Authorizable $user) => AccessRule::put($record, $values))
+    ->can(fn (Authorizable $user, Entry|Term $record): bool => $user->can('members.access.update')));
+```
+
+- It shows on an entry's or a term's editor (not while creating one, nor in the trash) to those who may update it there, and whom `can()` allows; the same checks guard its save (`PUT /admin/cms/entries/{entry}/cards/{key}`, `.../terms/{term}/cards/{key}`).
+- `load()` gives the values the form starts from; a field without one shows its `->default()`.
+- The input is checked with the fields' rules (as resource and Settings forms check theirs) before `save()` gets every field's value: a switch left off is `false`, a checkbox list with nothing ticked `[]`. Errors show under the card's fields.
+- Keys are lowercase letters, numbers and dashes, and unique: a second card with the same key throws.
+- Keep the values in the plugin's own table (by `entry_id` or `term_id`), and clear what depends on them yourself (`SiteCache::changed()` for pages).
+
 ## The entries list
 
 Each collection's list (`EntryController::index`, built by `Sunrice\Cms\Admin\EntryList`) shows the entries of one language, 25 to a page, and keeps everything it shows in the address, so a list can be bookmarked or shared:

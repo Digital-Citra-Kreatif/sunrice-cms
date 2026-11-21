@@ -32,6 +32,7 @@ use Sunrice\Cms\Fields\FieldTypes;
 use Sunrice\Cms\Http\Controllers\BlueprintController;
 use Sunrice\Cms\Http\Controllers\CacheController;
 use Sunrice\Cms\Http\Controllers\CommentController;
+use Sunrice\Cms\Http\Controllers\EditorCardController;
 use Sunrice\Cms\Http\Controllers\EntryController;
 use Sunrice\Cms\Http\Controllers\EntryManageController;
 use Sunrice\Cms\Http\Controllers\FieldsetController;
@@ -257,6 +258,8 @@ final class CmsPlugin extends BasePlugin
                     Route::get('terms/{term}/edit', 'open')->name('terms.edit')->middleware($guard('terms', 'view'));
                     Route::put('terms/{term}', 'update')->name('terms.update')->middleware($guard('terms', 'update'));
                     Route::put('terms/{term}/content', 'content')->name('terms.content')->middleware($guard('terms', 'update'));
+                    // A plugin's card in the term editor (Cms::editorCard()); the card checks its own permission too.
+                    Route::put('terms/{term}/cards/{card}', [EditorCardController::class, 'term'])->name('terms.cards.update')->middleware($guard('terms', 'update'));
                     Route::post('terms/{term}/move', 'move')->name('terms.move')->middleware($guard('terms', 'update'));
                     Route::delete('terms/{term}', 'destroy')->name('terms.destroy')->middleware($guard('terms', 'delete'));
                     Route::post('terms/{term}/restore', 'restore')->name('terms.restore')->middleware($guard('terms', 'delete'))->withTrashed();
@@ -275,6 +278,8 @@ final class CmsPlugin extends BasePlugin
                     // An entry's short address: on to the one under its collection.
                     Route::get('entries/{entry}/edit', 'open')->name('entries.edit')->middleware($guard('entries', 'view'))->withTrashed();
                     Route::put('entries/{entry}', 'update')->name('entries.update')->middleware($guard('entries', 'update'));
+                    // A plugin's card in the entry editor (Cms::editorCard()); the card checks its own permission too.
+                    Route::put('entries/{entry}/cards/{card}', [EditorCardController::class, 'entry'])->name('entries.cards.update')->middleware($guard('entries', 'update'));
                     Route::post('entries/{entry}/publish', 'publish')->name('entries.publish')->middleware($guard('entries', 'publish'));
                     Route::post('entries/{entry}/review', 'requestReview')->name('entries.review')->middleware($guard('entries', 'update'));
                     Route::post('entries/{entry}/review/withdraw', 'withdrawReview')->name('entries.review.withdraw')->middleware($guard('entries', 'update'));

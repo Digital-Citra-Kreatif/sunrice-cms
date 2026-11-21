@@ -9,6 +9,8 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Sunrice\Admin\Media\Media;
 use Sunrice\Cms\Admin\EntryLinks;
+use Sunrice\Cms\Editor\EditorCard;
+use Sunrice\Cms\Editor\EditorCards;
 use Sunrice\Cms\Models\EntryTranslation;
 use Sunrice\Cms\Models\Term;
 use Sunrice\Cms\Query\EntryQuery;
@@ -157,6 +159,17 @@ final class Content
     public static function entryLinksUsing(Closure $hook): void
     {
         app(EntryLinks::class)->add($hook);
+    }
+
+    /**
+     * Add a card to the sidebar of the entry and term editors: a form of
+     * the panel's fields whose values the plugin keeps, saved with the
+     * card's own button (see EditorCard). Register it in a plugin's
+     * register() or boot(); keys are unique.
+     */
+    public static function editorCard(EditorCard $card): void
+    {
+        app(EditorCards::class)->add($card);
     }
 
     /** Settings → Site: name(), description, title(…), hidden() … */

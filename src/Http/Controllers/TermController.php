@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Cms\Http\Controllers;
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,6 +20,7 @@ use Sunrice\Cms\Actions\Terms\SaveTermContent;
 use Sunrice\Cms\Actions\Terms\TrashTerm;
 use Sunrice\Cms\Admin\BlueprintLinks;
 use Sunrice\Cms\Admin\TemplateHelp;
+use Sunrice\Cms\Editor\EditorCards;
 use Sunrice\Cms\Fields\Reference;
 use Sunrice\Cms\Fields\Types\TermsField;
 use Sunrice\Cms\Models\Collection;
@@ -291,6 +293,8 @@ final class TermController
         $schema = $taxonomy->schema();
         $translation = $term->translations->firstWhere('locale', $locale);
         $main = $term->translations->firstWhere('locale', Locales::default());
+        $editor = $request->user();
+        $editor = $editor instanceof Authorizable ? $editor : null;
 
         return Inertia::render('Cms/Terms/Edit', [
             ...$this->editorProps($request, $taxonomy, $term, $locale),
@@ -311,6 +315,8 @@ final class TermController
             'seo' => $translation->data[Seo::KEY] ?? null,
             'version' => $translation?->version,
             'usedBy' => References::usedBy(Reference::TERM, $term->id),
+            // Plugins' sidebar cards (Cms::editorCard()), for who may update its terms; not in the trash.
+            'cards' => ! $term->trashed() && Access::terms($editor, 'update', $taxonomy) ? app(EditorCards::class)->for($term, $editor) : [],
         ]);
     }
 
